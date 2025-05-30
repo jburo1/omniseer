@@ -5,9 +5,15 @@ theme:
   palette:
     scheme: default
     primary: indigo
+  features:
+    - navigation.sections            
+    - navigation.instant
 markdown_extensions:
   - toc:
       permalink: true
+  - admonition
+  - pymdownx.highlight
+  - pymdownx.superfences
 plugins:
   - search
   - git-revision-date-localized
