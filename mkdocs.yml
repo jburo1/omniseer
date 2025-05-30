@@ -1,0 +1,22 @@
+site_name: omniseer
+repo_url: https://github.com/jburo1/omniseer
+theme:
+  name: material
+  palette:
+    scheme: default
+    primary: indigo
+markdown_extensions:
+  - toc:
+      permalink: true
+plugins:
+  - search
+  - git-revision-date-localized
+nav:
+  - Home: index.md
+  - Architecture: architecture.md
+  - Software:
+    - Build pipeline: software/build_pipeline.md
+    - ROS packages: software/ros_packages.md
+  - Hardware:
+    - Circuit: hardware/circuit.md
+    - Wiring guide: hardware/wiring.md
