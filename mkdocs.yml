@@ -1,5 +1,5 @@
 site_name: omniseer
-repo_url: https://github.com/jburo1/omniseer
+repo_url: https://github.com/jburo1/omniseer 
 theme:
   name: material
   palette:
