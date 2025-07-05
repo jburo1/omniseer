@@ -341,16 +341,15 @@
       </collision>
     </link>
     <link name="lidar_top_1">
-      <pose relative_to="__model__">2.353672812205332e-16 1.2567724638756772e-15 0.32419341774698607 3.141592653589793 -0.0 0.0</pose>
       <inertial>
-        <pose>-2.954093418429609e-17 9.549997065143469e-16 0.16209670887349303 -3.141592653589793 -0.0 0.0</pose>
+        <pose>-2.954093418429609e-17 9.748508280817712e-16 0.16209670887349303 0.0 -0.0 0.0</pose>
         <mass>0.6042068071016563</mass>
         <inertia>
           <ixx>0.0002051785615782703</ixx>
-          <ixy>-9.281393431592714e-18</ixy>
-          <ixz>-1.256616622738599e-18</ixz>
+          <ixy>9.281393431592714e-18</ixy>
+          <ixz>1.2566166227386013e-18</ixz>
           <iyy>0.0002051785615782599</iyy>
-          <iyz>4.224665266698072e-18</iyz>
+          <iyz>4.224665266698078e-18</iyz>
           <izz>0.000370076669349746</izz>
         </inertia>
       </inertial>
@@ -363,10 +362,10 @@
         </geometry>
       </visual>
       <collision name="lidar_top_1__body1_collision">
-        <pose relative_to="__model__">-5.3734794391857575e-16 5.195843755245732e-16 0.16209670887349348 -0.0 -1.5707963267948966 0</pose>
+        <pose relative_to="__model__">-7.727152251391089e-16 7.416289804496045e-16 0.16209670887349262 -0.0 -1.5707963267948966 0</pose>
         <geometry>
           <box>
-            <size>0.02 0.07 0.07</size>
+            <size>0.019999999999999983 0.07 0.07</size>
           </box>
         </geometry>
       </collision>
@@ -403,7 +402,7 @@
         <xyz expressed_in="__model__">-1.2698175844150216e-15 1.0 -1.1018963519404669e-14</xyz>
       </axis>
     </joint>
-    <joint name="revolute_21" type="continuous">
+    <joint name="revolute_22" type="continuous">
       <pose relative_to="__model__">-5.3734794391857575e-16 5.151434834260726e-16 0.15209670887349305 0.0 -0.0 0.0</pose>
       <parent>base_link_1</parent>
       <child>lidar_top_1</child>
