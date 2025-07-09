@@ -1,0 +1,147 @@
+<?xml version='1.0' encoding='utf-8'?>
+<robot name="omniseer_urdf_export">
+    <link name="fl_wheel">
+        <inertial>
+            <origin xyz="1.7993153278439422e-09 2.26380317489938e-09 0.02100000076677828" rpy="0.0 -0.0 0.0" />
+            <mass value="0.1449437592188408" />
+            <inertia ixx="0.00010654272201079539" iyy="0.00010654272201080037" izz="0.00017047197881125639" ixy="-4.7460314825842516e-20" iyz="-5.1880768019325896e-20" ixz="0.0" />
+        </inertial>
+        <visual name="fl_wheel_visual">
+            <origin xyz="1.7993155232431945e-09 1.1387656346129211e-09 0.021000000766778337" rpy="1.5707963267948968 1.2281842209915656e-15 3.1554436208840444e-30" />
+            <geometry>
+                <mesh filename="meshes/fl_wheel.stl" scale="0.001 0.001 0.001" />
+            </geometry>
+        </visual>
+        <collision name="fl_wheel_collision">
+            <origin xyz="1.7993155232431945e-09 1.1387656346129211e-09 0.021000000766778337" rpy="1.5707963267948968 1.2281842209915656e-15 3.1554436208840444e-30" />
+            <geometry>
+                <mesh filename="meshes/fl_wheel.stl" scale="0.001 0.001 0.001" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="bl_wheel">
+        <inertial>
+            <origin xyz="-1.7993153278439422e-09 2.26380317489938e-09 0.02100000076677828" rpy="0.0 -0.0 0.0" />
+            <mass value="0.1449437592188408" />
+            <inertia ixx="0.00010654272201079539" iyy="0.0001065427220107995" izz="0.00017047197881125617" ixy="-4.7460314825842516e-20" iyz="-5.1880768019325896e-20" ixz="0.0" />
+        </inertial>
+        <visual name="bl_wheel_visual">
+            <origin xyz="-1.7993151324446899e-09 1.1387656346129211e-09 0.021000000766778337" rpy="1.5707963267948968 1.2281842209915656e-15 3.1554436208840444e-30" />
+            <geometry>
+                <mesh filename="meshes/bl_wheel.stl" scale="0.001 0.001 0.001" />
+            </geometry>
+        </visual>
+        <collision name="bl_wheel_collision">
+            <origin xyz="-1.7993151324446899e-09 1.1387656346129211e-09 0.021000000766778337" rpy="1.5707963267948968 1.2281842209915656e-15 3.1554436208840444e-30" />
+            <geometry>
+                <mesh filename="meshes/bl_wheel.stl" scale="0.001 0.001 0.001" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="fr_wheel">
+        <inertial>
+            <origin xyz="1.7993153811346474e-09 -2.26380317489938e-09 0.02100000076677828" rpy="0.0 -0.0 0.0" />
+            <mass value="0.1449437592188408" />
+            <inertia ixx="0.00010654272201079539" iyy="0.00010654272201079994" izz="0.00017047197881125639" ixy="4.7460314825842516e-20" iyz="-5.1880768019325896e-20" ixz="0.0" />
+        </inertial>
+        <visual name="fr_wheel_visual">
+            <origin xyz="1.7993155765338997e-09 -1.1387656346129211e-09 0.02100000076677823" rpy="-1.5707963267948966 -1.2281842209915656e-15 -3.1554436208840444e-30" />
+            <geometry>
+                <mesh filename="meshes/fr_wheel.stl" scale="0.001 0.001 0.001" />
+            </geometry>
+        </visual>
+        <collision name="fr_wheel_collision">
+            <origin xyz="1.7993155765338997e-09 -1.1387656346129211e-09 0.02100000076677823" rpy="-1.5707963267948966 -1.2281842209915656e-15 -3.1554436208840444e-30" />
+            <geometry>
+                <mesh filename="meshes/fr_wheel.stl" scale="0.001 0.001 0.001" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="br_wheel">
+        <inertial>
+            <origin xyz="-1.7993152745532372e-09 -2.26380317489938e-09 0.02100000076677828" rpy="0.0 -0.0 0.0" />
+            <mass value="0.1449437592188408" />
+            <inertia ixx="0.00010654272201079539" iyy="0.00010654272201080037" izz="0.00017047197881125617" ixy="4.7460314825842516e-20" iyz="-5.1880768019325896e-20" ixz="-4.336808689942018e-19" />
+        </inertial>
+        <visual name="br_wheel_visual">
+            <origin xyz="-1.7993150791539846e-09 -1.1387656346129211e-09 0.02100000076677823" rpy="-1.5707963267948966 -1.2281842209915656e-15 -3.1554436208840444e-30" />
+            <geometry>
+                <mesh filename="meshes/br_wheel.stl" scale="0.001 0.001 0.001" />
+            </geometry>
+        </visual>
+        <collision name="br_wheel_collision">
+            <origin xyz="-1.7993150791539846e-09 -1.1387656346129211e-09 0.02100000076677823" rpy="-1.5707963267948966 -1.2281842209915656e-15 -3.1554436208840444e-30" />
+            <geometry>
+                <mesh filename="meshes/br_wheel.stl" scale="0.001 0.001 0.001" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="chassis">
+        <inertial>
+            <origin xyz="0.015255860402233874 0.00044882299423251547 0.05333371024181444" rpy="0.0 0.0 0.0" />
+            <mass value="5.320840769031529" />
+            <inertia ixx="0.024460730291649475" iyy="0.051291345440382746" izz="0.042444773249914435" ixy="3.555570989810459e-05" iyz="0.00014378429529634938" ixz="0.0026756715987900814" />
+        </inertial>
+        <visual name="chassis_visual">
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+            <geometry>
+                <mesh filename="meshes/chassis.stl" scale="0.001 0.001 0.001" />
+            </geometry>
+        </visual>
+        <collision name="chassis_collision">
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+            <geometry>
+                <mesh filename="meshes/chassis.stl" scale="0.001 0.001 0.001" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="lidar_top">
+        <inertial>
+            <origin xyz="-2.954093418429609e-17 9.748508280817712e-16 0.009999998873493041" rpy="0.0 -0.0 0.0" />
+            <mass value="0.6042068071016563" />
+            <inertia ixx="0.0002051785615782703" iyy="0.0002051785615782599" izz="0.000370076669349746" ixy="9.281393431592715e-18" iyz="4.224665266698078e-18" ixz="1.2566166227386013e-18" />
+        </inertial>
+        <visual name="lidar_top_visual">
+            <origin xyz="0.0 0.0 -0.15209671" rpy="0.0 -0.0 0.0" />
+            <geometry>
+                <mesh filename="meshes/lidar_top.stl" scale="0.001 0.001 0.001" />
+            </geometry>
+        </visual>
+        <collision name="lidar_top_collision">
+            <origin xyz="0.0 0.0 -0.15209671" rpy="0.0 -0.0 0.0" />
+            <geometry>
+                <mesh filename="meshes/lidar_top.stl" scale="0.001 0.001 0.001" />
+            </geometry>
+        </collision>
+    </link>
+    <joint name="chassis_br_wheel_joint" type="continuous">
+        <origin xyz="-0.0971 -0.08661705 8.94e-06" rpy="1.5707963267948966 -0.0 0.0" />
+        <parent link="chassis" />
+        <child link="br_wheel" />
+        <axis xyz="0.0 0.0 1.0" />
+    </joint>
+    <joint name="chassis_fr_wheel_joint" type="continuous">
+        <origin xyz="0.0976 -0.08661705 8.94e-06" rpy="1.5707963267948966 -0.0 0.0" />
+        <parent link="chassis" />
+        <child link="fr_wheel" />
+        <axis xyz="-0.0 -0.0 1.0" />
+    </joint>
+    <joint name="chassis_bl_wheel_joint" type="continuous">
+        <origin xyz="-0.0971 0.08661705 8.94e-06" rpy="-1.5707963267948966 -0.0 0.0" />
+        <parent link="chassis" />
+        <child link="bl_wheel" />
+        <axis xyz="0.0 0.0 1.0" />
+    </joint>
+    <joint name="chassis_fl_wheel_joint" type="continuous">
+        <origin xyz="0.0976 0.08661705 8.94e-06" rpy="-1.5707963267948966 -0.0 0.0" />
+        <parent link="chassis" />
+        <child link="fl_wheel" />
+        <axis xyz="0.0 0.0 1.0" />
+    </joint>
+    <joint name="chassis_lidar_joint" type="continuous">
+        <origin xyz="0.0 0.0 0.15209671" rpy="0.0 -0.0 0.0" />
+        <parent link="chassis" />
+        <child link="lidar_top" />
+        <axis xyz="0.0 0.0 1.0" />
+    </joint>
+</robot>
