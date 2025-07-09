@@ -1,0 +1,172 @@
+<?xml version="1.0" ?>
+<robot name="omniseer">
+  <link name="base_link">
+    <inertial>
+      <mass value="0.0001"/>
+      <inertia ixx="1e-09" ixy="0" ixz="0" iyy="1e-09" iyz="0" izz="1e-09"/>
+    </inertial>
+  </link>
+  <link name="fl_wheel">
+    <origin rpy="-1.4216528736923893e-29 3.1554436208840444e-30 -1.2281842209915656e-15" xyz="0.09760000179931552 0.10761705076677833 8.938861234365387e-06"/>
+    <inertial>
+      <mass value="0.1449437592188408"/>
+      <inertia ixx="0.0001065427220107956" ixy="0.0" ixz="4.7460314825842516e-20" iyy="0.00017047197881125617" iyz="5.190723779892759e-20" izz="0.00010654272201080081"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh filename="file:///home/sslab/Desktop/omniseer/sim/models/meshes/fl_wheel_1/body1_visual.obj" scale="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="bl_wheel_1">
+    <origin rpy="-1.4216528736923893e-29 3.1554436208840444e-30 -1.2281842209915656e-15" xyz="-0.09710000179931515 0.10761705076677833 8.938861234365387e-06"/>
+    <inertial>
+      <mass value="0.1449437592188408"/>
+      <inertia ixx="0.0001065427220107956" ixy="2.168404344971009e-19" ixz="4.743384504624082e-20" iyy="0.00017047197881125617" iyz="5.190723779892759e-20" izz="0.00010654272201080037"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh filename="file:///home/sslab/Desktop/omniseer/sim/models/meshes/bl_wheel_1/body1_visual.obj" scale="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="fr_wheel_1">
+    <origin rpy="-1.4216528736923893e-29 3.1554436208840444e-30 -1.2281842209915656e-15" xyz="0.09760000179931558 -0.10761705076677823 8.938861234365387e-06"/>
+    <inertial>
+      <mass value="0.1449437592188408"/>
+      <inertia ixx="0.0001065427220107956" ixy="0.0" ixz="4.7460314825842516e-20" iyy="0.00017047197881125617" iyz="5.1880768019325896e-20" izz="0.00010654272201079994"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh filename="file:///home/sslab/Desktop/omniseer/sim/models/meshes/fr_wheel_1/body1_visual.obj" scale="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="br_wheel_1">
+    <origin rpy="-1.4216528736923893e-29 3.1554436208840444e-30 -1.2281842209915656e-15" xyz="-0.09710000179931509 -0.10761705076677823 8.938861234365387e-06"/>
+    <inertial>
+      <mass value="0.1449437592188408"/>
+      <inertia ixx="0.0001065427220107956" ixy="0.0" ixz="4.7460314825842516e-20" iyy="0.00017047197881125617" iyz="5.1880768019325896e-20" izz="0.00010654272201079994"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh filename="file:///home/sslab/Desktop/omniseer/sim/models/meshes/br_wheel_1/body1_visual.obj" scale="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="chassis_1">
+    <inertial>
+      <origin rpy="0.0 -0.0 0.0" xyz="0.015255860402233874 0.00044882299423251547 0.05333371024181444"/>
+      <mass value="5.320840769031529"/>
+      <inertia ixx="0.02446073029164947" ixy="3.555570989810459e-05" ixz="0.0026756715987900814" iyy="0.051291345440382746" iyz="0.00014378429529634938" izz="0.042444773249914435"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh filename="file:///home/sslab/Desktop/omniseer/sim/models/meshes/chassis_1/body_visual.obj" scale="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+    <visual>
+      <geometry>
+        <mesh filename="file:///home/sslab/Desktop/omniseer/sim/models/meshes/chassis_1/powerbank_visual.obj" scale="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+    <visual>
+      <geometry>
+        <mesh filename="file:///home/sslab/Desktop/omniseer/sim/models/meshes/chassis_1/battery_visual.obj" scale="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+    <visual>
+      <geometry>
+        <mesh filename="file:///home/sslab/Desktop/omniseer/sim/models/meshes/chassis_1/bl_motor_visual.obj" scale="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+    <visual>
+      <geometry>
+        <mesh filename="file:///home/sslab/Desktop/omniseer/sim/models/meshes/chassis_1/br_motor_visual.obj" scale="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+    <visual>
+      <geometry>
+        <mesh filename="file:///home/sslab/Desktop/omniseer/sim/models/meshes/chassis_1/fl_motor_visual.obj" scale="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+    <visual>
+      <geometry>
+        <mesh filename="file:///home/sslab/Desktop/omniseer/sim/models/meshes/chassis_1/fr_motor_visual.obj" scale="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+    <visual>
+      <geometry>
+        <mesh filename="file:///home/sslab/Desktop/omniseer/sim/models/meshes/chassis_1/hs_visual.obj" scale="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+    <visual>
+      <geometry>
+        <mesh filename="file:///home/sslab/Desktop/omniseer/sim/models/meshes/chassis_1/imu_visual.obj" scale="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+    <visual>
+      <geometry>
+        <mesh filename="file:///home/sslab/Desktop/omniseer/sim/models/meshes/chassis_1/upper_plate_visual.obj" scale="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+    <visual>
+      <geometry>
+        <mesh filename="file:///home/sslab/Desktop/omniseer/sim/models/meshes/chassis_1/camera_visual.obj" scale="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+    <visual>
+      <geometry>
+        <mesh filename="file:///home/sslab/Desktop/omniseer/sim/models/meshes/chassis_1/lidar_body_visual.obj" scale="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="lidar_top_1">
+    <inertial>
+      <origin rpy="0.0 -0.0 0.0" xyz="-2.954093418429609e-17 9.748508280817712e-16 0.16209670887349303"/>
+      <mass value="0.6042068071016563"/>
+      <inertia ixx="0.0002051785615782703" ixy="9.281393431592714e-18" ixz="1.2566166227386013e-18" iyy="0.0002051785615782599" iyz="4.224665266698078e-18" izz="0.000370076669349746"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh filename="file:///home/sslab/Desktop/omniseer/sim/models/meshes/lidar_top_1/body1_visual.obj" scale="0.01 0.01 0.01"/>
+      </geometry>
+    </visual>
+  </link>
+  <joint name="br_wheel_joint" type="continuous">
+    <origin rpy="0.0 -0.0 0.0" xyz="-0.09710000179931534 -0.08661705076677828 8.937736196800161e-06"/>
+    <parent link="chassis_1"/>
+    <child link="br_wheel_1"/>
+    <axis xyz="0 1.0 0"/>
+  </joint>
+  <joint name="fr_wheel_joint" type="continuous">
+    <origin rpy="0.0 -0.0 0.0" xyz="0.09760000179931533 -0.08661705076677828 8.937736196800161e-06"/>
+    <parent link="chassis_1"/>
+    <child link="fr_wheel_1"/>
+    <axis xyz="0 1.0 0"/>
+  </joint>
+  <joint name="bl_wheel_joint" type="continuous">
+    <origin rpy="0.0 -0.0 0.0" xyz="-0.09710000179931534 0.08661705076677828 8.937736196800161e-06"/>
+    <parent link="chassis_1"/>
+    <child link="bl_wheel_1"/>
+    <axis xyz="0 1.0 0"/>
+  </joint>
+  <joint name="fl_wheel_joint" type="continuous">
+    <origin rpy="0.0 -0.0 0.0" xyz="0.09760000179931533 0.08661705076677828 8.937736196800161e-06"/>
+    <parent link="chassis_1"/>
+    <child link="fl_wheel"/>
+    <axis xyz="0 1.0 0"/>
+  </joint>
+  <joint name="lidar_joint" type="continuous">
+    <origin rpy="0.0 -0.0 0.0" xyz="-5.3734794391857575e-16 5.151434834260726e-16 0.15209670887349305"/>
+    <parent link="chassis_1"/>
+    <child link="lidar_top_1"/>
+    <axis xyz="0 0 1.0"/>
+  </joint>
+  <joint name="base_link_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="chassis_1"/>
+    <axis/>
+    <origin/>
+  </joint>
+</robot>
