@@ -1,15 +1,26 @@
+# bringup/setup.py
+from glob import glob
 from setuptools import find_packages, setup
+from pathlib import Path
 
 package_name = 'bringup'
+share_dir = f'share/{package_name}'
 
 setup(
     name=package_name,
     version='1.0.0',
     packages=find_packages(exclude=['test']),
     data_files=[
+        # mandatory index + package.xml
         ('share/ament_index/resource_index/packages',
-            ['resource/' + package_name]),
-        ('share/' + package_name, ['package.xml']),
+         [f'resource/{package_name}']),
+        (share_dir, ['package.xml']),
+
+        # --- runtime assets ------------------------------------------------
+        (f'{share_dir}/launch',  glob('launch/*.launch.py')),
+        (f'{share_dir}/config',  glob('config/*.yaml')),
+        (f'{share_dir}/rviz',    glob('rviz/*.rviz')),
+        # add more lines if you have worlds, maps, etc.
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -20,6 +31,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            # eg. 'teleop=bringup.scripts.teleop:main',
         ],
     },
 )
