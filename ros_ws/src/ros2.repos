@@ -1,0 +1,5 @@
+repositories:
+  rviz:
+    type: git
+    url: https://github.com/ros2/rviz.git
+    version: 15.0.4

@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<robot name="omniseer_urdf_export">
+<robot name="omniseer">
     <link name="fl_wheel">
         <inertial>
             <origin xyz="1.7993153278439422e-09 2.26380317489938e-09 0.02100000076677828" rpy="0.0 -0.0 0.0" />
