@@ -5,9 +5,14 @@ from launch_ros.substitutions import FindPackageShare   # nice shorthand
 
 def generate_launch_description():
     # Path to the Xacro in the *install* space
+    pkg_omniseer = FindPackageShare('omniseer_description')
+
     xacro_path = PathJoinSubstitution([
-        FindPackageShare('omniseer_description'),
-        'urdf', 'xacro', 'omniseer.urdf.xacro'
+        pkg_omniseer, 'urdf', 'xacro', 'omniseer.urdf.xacro'
+    ])
+
+    rviz_cfg_path = PathJoinSubstitution([
+        pkg_omniseer, 'rviz', 'display_omniseer.rviz'
     ])
 
     robot_description = Command(['xacro ', xacro_path])
@@ -31,6 +36,6 @@ def generate_launch_description():
             executable='rviz2',
             name='rviz',
             output='screen',
-            # arguments=['-d', '<optional RViz config>'],
+            arguments=['-d', rviz_cfg_path],
         ),
     ])
