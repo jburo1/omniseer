@@ -1,10 +1,21 @@
+"""
+bringup for complete Gazebo - ROS2 simulation
+alternative headless CI mode
+
+Example usage:
+--------------
+
+ros2 launch bringup sim.launch.py                            - Full sim
+ros2 launch bringup sim.launch.py gui:=false headless:= true - CI
+"""
+
 # Launches the bot in simulation
 # Components:
 # GZ server + client
 # robot_state_publisher
 # controllers
 # ros gz bridge
-# Usage: ros2 launch sim.launch.py
+# Usage examples: ros2 launch sim.launch.py
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, GroupAction
@@ -19,7 +30,7 @@ def generate_launch_description():
     world_arg = DeclareLaunchArgument(
         'world',
         default_value=PathJoinSubstitution(
-            [FindPackageShare('omniseer_sim'), 'worlds', 'simple_world.world']
+            [FindPackageShare('bringup'), 'worlds', 'simple_world.world']
         )
     )
 
@@ -30,6 +41,7 @@ def generate_launch_description():
         default_value=PathJoinSubstitution(
             [FindPackageShare('omniseer_description'), 'urdf', 'omniseer.urdf.xacro'])
     )
+
     bridge_arg = DeclareLaunchArgument('with_bridge', default_value='false')
 
 
