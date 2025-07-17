@@ -1,5 +1,7 @@
-src/rviz
-rviz/
+**/rviz
+!/ros_ws/src/omniseer_description/rviz
+!/ros_ws/src/omniseer_description/rviz/**
+__pycache__/
 log/
 install/
 notes/
@@ -30,28 +32,4 @@ devel_isolated/
 *.dox
 *.wikidoc
 
-# eclipse stuff
-.project
-.cproject
-
-# qcreator stuff
-CMakeLists.txt.user
-
-srv/_*.py
-*.pcd
-*.pyc
-qtcreator-*
-*.user
-
-/planning/cfg
-/planning/docs
-/planning/src
-
 *~
-
-# Emacs
-.#*
-
-# Catkin custom files
-CATKIN_IGNORE
-.git/lfs

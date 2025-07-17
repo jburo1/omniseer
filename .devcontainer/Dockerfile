@@ -8,12 +8,10 @@ ARG USERNAME=sslab
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
-# Delete user if it exists in container (e.g Ubuntu Noble: ubuntu)
 RUN if id -u $USER_UID ; then userdel `id -un $USER_UID` ; fi
 
 RUN apt-get update
 
-# Create the user
 RUN groupadd --gid $USER_GID $USERNAME \
     && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
     && apt-get update \
