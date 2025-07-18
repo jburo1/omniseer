@@ -1,37 +1,53 @@
+"""
+
+
+
+"""
+
 from launch import LaunchDescription
 from launch.actions import ExecuteProcess, SetEnvironmentVariable
-from launch.substitutions import PathJoinSubstitution, LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, Command
 from launch_ros.substitutions import FindPackageShare
-from launch.conditions import IfCondition
+from launch.conditions import IfCondition, UnlessCondition
 
 def generate_launch_description():
-    # ——— configurable params (exposed by LaunchConfiguration so sim.launch.py can override) ———
-    world   = LaunchConfiguration('world',   default='simple_world.sdf')
-    verbose = LaunchConfiguration('verbose', default='false')
-    gui     = LaunchConfiguration('gui',     default='true')
+    world    = LaunchConfiguration('world',    default='simple_world.world')
+    headless = LaunchConfiguration('headless', default='false')
+
+    bringup_share  = FindPackageShare('bringup')
 
     world_path = PathJoinSubstitution([
-        FindPackageShare('bringup'), 'worlds', world
+        bringup_share, 'worlds', world
     ])
 
-    gzserver = ExecuteProcess(
-        cmd=['gz', 'sim', '--server',
-             world_path,
-             '--render-engine', 'ogre2',
-             ('--verbose' if verbose == 'true' else '')
-        ],
-        output='screen'
+    config_path = PathJoinSubstitution([
+        bringup_share, 'cofig','gz_config.config'
+    ])
+
+    # set_plugin_path = SetEnvironmentVariable(
+    #         'GAZEBO_PLUGIN_PATH',
+    #         PathJoinSubstitution([FindPackageShare('omniseer_gazebo'), 'lib']))
+
+    set_resource_path = SetEnvironmentVariable(
+        'GZ_SIM_RESOURCE_PATH',
+        PathJoinSubstitution([FindPackageShare('omniseer_description'), '..'])
     )
 
-    gzclient = ExecuteProcess(
-        cmd=["gz", "sim", "--client"],
-        output="screen",
-        condition=IfCondition(gui),
+    gz_gui = ExecuteProcess(
+        cmd=['gz', 'sim', world_path, '-v', '--gui-config', config_path],
+        output='screen',
+        condition=UnlessCondition(headless)
     )
 
+    gz_headless = ExecuteProcess(
+        cmd=['gz', 'sim', '-s', world_path, '-v'],
+        output='screen',
+        condition=IfCondition(headless)
+    )
 
     return LaunchDescription([
-        # set_plugin_path,
-        gzserver,
-        gzclient,
+        # set_plugin_path
+        set_resource_path,
+        gz_gui,
+        gz_headless
     ])

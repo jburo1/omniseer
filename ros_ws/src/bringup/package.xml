@@ -11,6 +11,8 @@
   <depend>launch</depend>
   <depend>launch_ros</depend>
 
+  <exec_depend>ros2launch</exec_depend>
+
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
   <test_depend>ament_pep257</test_depend>
@@ -19,5 +21,7 @@
 
   <export>
     <build_type>ament_python</build_type>
+    <!-- <gazebo_ros gazebo_model_path="${prefix}/share"/> -->
   </export>
+
 </package>

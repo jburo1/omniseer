@@ -11,16 +11,15 @@ setup(
     version='1.0.0',
     packages=find_packages(exclude=['test']),
     data_files=[
-        # mandatory index + package.xml
         ('share/ament_index/resource_index/packages',
          [f'resource/{package_name}']),
         (share_dir, ['package.xml']),
 
         # --- runtime assets ------------------------------------------------
         (f'{share_dir}/launch',  glob('launch/*.launch.py')),
-        (f'{share_dir}/config',  glob('config/*.yaml')),
+        (f'{share_dir}/config',  glob('config/*')),
         (f'{share_dir}/rviz',    glob('rviz/*.rviz')),
-        # add more lines if you have worlds, maps, etc.
+        (f'{share_dir}/worlds',  glob('worlds/*.world')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
