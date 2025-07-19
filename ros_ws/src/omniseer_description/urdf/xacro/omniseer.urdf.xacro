@@ -1,5 +1,32 @@
 <?xml version='1.0' encoding='utf-8'?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="omniseer">
+    <xacro:property name="lx" value="0.0976"/>
+    <xacro:property name="ly" value="0.0866"/>
+    <xacro:property name="wheel_radius" value="0.021"/>
+    <xacro:property name="wheel_joints"
+                    value="['chassis_fl_wheel_joint',
+                            'chassis_fr_wheel_joint',
+                            'chassis_bl_wheel_joint',
+                            'chassis_br_wheel_joint']"/>
+
+    <xacro:macro name="wheel_transmission" params="joint">
+        <transmission name="${joint}_tr">
+            <type>transmission_interface/SimpleTransmission</type>
+            <joint name="${joint}">
+                <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+            </joint>
+            <actuator name="${joint}_motor">
+                <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+                <mechanicalReduction>1</mechanicalReduction>
+            </actuator>
+        </transmission>
+    </xacro:macro>
+
+    <xacro:wheel_transmission joint="chassis_fl_wheel_joint"/>
+    <xacro:wheel_transmission joint="chassis_fr_wheel_joint"/>
+    <xacro:wheel_transmission joint="chassis_bl_wheel_joint"/>
+    <xacro:wheel_transmission joint="chassis_br_wheel_joint"/>
+
     <link name="fl_wheel">
         <inertial>
             <origin xyz="1.7993153278439422e-09 2.26380317489938e-09 0.02100000076677828" rpy="0.0 -0.0 0.0" />
@@ -146,8 +173,40 @@
     </joint>
     <link name="base_link"/>
     <joint name="base_to_chassis" type="fixed">
-    <parent link="base_link"/>
-    <child  link="chassis"/>
-    <origin xyz="0 0 0" rpy="0 0 0"/>
+        <parent link="base_link"/>
+        <child  link="chassis"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
     </joint>
+
+    <ros2_control name="mecanum_hw" type="system">
+        <hardware>
+            <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+        </hardware>
+
+        <joint name="chassis_fl_wheel_joint">
+            <command_interface name="velocity"/>
+            <state_interface   name="velocity"/>
+        </joint>
+
+        <joint name="chassis_fr_wheel_joint">
+            <command_interface name="velocity"/>
+            <state_interface   name="velocity"/>
+        </joint>
+
+        <joint name="chassis_bl_wheel_joint">
+            <command_interface name="velocity"/>
+            <state_interface   name="velocity"/>
+        </joint>
+
+        <joint name="chassis_br_wheel_joint">
+            <command_interface name="velocity"/>
+            <state_interface   name="velocity"/>
+        </joint>
+    </ros2_control>
+
+    <gazebo>
+        <plugin name="ros2_control" filename="libgz_ros2_control.so">
+            <update_rate>100</update_rate>
+        </plugin>
+    </gazebo>
 </robot>

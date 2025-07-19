@@ -1,6 +1,7 @@
 """
+bringup for gazebo server and optional client
 
-
+consumed by simulation.launch.py
 
 """
 

@@ -16,7 +16,7 @@ Example usage:
 --------------
 
 ros2 launch bringup sim.launch.py                            - Full sim
-ros2 launch bringup sim.launch.py gui:=false headless:= true - CI
+ros2 launch bringup sim.launch.py headless:= true            - CI
 """
 
 from launch import LaunchDescription
@@ -27,14 +27,12 @@ from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node, SetParameter
 
 def generate_launch_description():
-    # args
     declared_arguments = [
         DeclareLaunchArgument('world',    default_value='simple_world.world'),
         DeclareLaunchArgument('headless', default_value='false'),
         DeclareLaunchArgument('x',        default_value='0'),
         DeclareLaunchArgument('y',        default_value='0'),
         DeclareLaunchArgument('z',        default_value='0.15'),
-        DeclareLaunchArgument('rviz',     default_value='false'),
     ]
 
     bringup_share = FindPackageShare('bringup')
@@ -96,5 +94,5 @@ def generate_launch_description():
             rsp,
             spawn,
             bridge,
-            # Later: Include tele-op, bag recorders, etc.
+            # Later: bag recorders, etc.
         ])
