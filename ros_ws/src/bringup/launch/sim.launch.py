@@ -55,6 +55,19 @@ def generate_launch_description():
         }.items(),
     )
 
+    twist_mux = Node(
+        package='twist_mux',
+        executable='twist_mux',
+        name='twist_mux',
+        output='screen',
+        parameters=[
+            PathJoinSubstitution([
+                FindPackageShare('bringup'),
+                'config', 'twist_mux.yaml'
+            ])
+        ]
+    )
+
     rsp = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
@@ -90,6 +103,7 @@ def generate_launch_description():
 
     return LaunchDescription(
         declared_arguments + [
+            twist_mux,
             gazebo_launch,
             rsp,
             spawn,
