@@ -20,7 +20,10 @@
                 "donjayamanne.python-extension-pack",
                 "eamodio.gitlens",
                 "ms-iot.vscode-ros"
-            ]
+            ],
+            "settings": {
+                "terminal.integrated.shellArgs.linux": [ "-lc", "tmux new -ADs dev" ]
+            }
         }
     },
     "containerEnv": {
@@ -32,7 +35,10 @@
         "--net=host",
         "--pid=host",
         "--ipc=host",
-        "-e", "DISPLAY=${env:DISPLAY}"
+        "-e", "DISPLAY=${env:DISPLAY}",
+        "-v", "/tmp/.X11-unix:/tmp/.X11-unix:rw",
+        "-e", "QT_X11_NO_MITSHM=1",
+        "--device=/dev/dri"
     ],
     "mounts": [
        "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=cached",

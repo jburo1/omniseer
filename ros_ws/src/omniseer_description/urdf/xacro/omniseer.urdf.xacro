@@ -1,8 +1,9 @@
 <?xml version='1.0' encoding='utf-8'?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="omniseer">
-    <xacro:property name="lx" value="0.0976"/>
+    <xacro:property name="body_rgba" value="0.0 0.6 1.0 1.0"/>  <!-- cyan-ish -->
+    <xacro:property name="lx" value="0.0974"/>
     <xacro:property name="ly" value="0.0866"/>
-    <xacro:property name="wheel_radius" value="0.021"/>
+    <xacro:property name="wheel_radius" value="0.0485"/>
     <xacro:property name="wheel_joints"
                     value="['chassis_fl_wheel_joint',
                             'chassis_fr_wheel_joint',
@@ -178,35 +179,51 @@
         <origin xyz="0 0 0" rpy="0 0 0"/>
     </joint>
 
-    <ros2_control name="mecanum_hw" type="system">
+    <ros2_control name="GazeboSimSystem" type="system">
         <hardware>
-            <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+            <plugin>gz_ros2_control/GazeboSimSystem</plugin>
         </hardware>
 
         <joint name="chassis_fl_wheel_joint">
-            <command_interface name="velocity"/>
+            <command_interface name="velocity">
+                <param name="min">-1</param>
+                <param name="max">1</param>
+            </command_interface>
             <state_interface   name="velocity"/>
         </joint>
 
         <joint name="chassis_fr_wheel_joint">
-            <command_interface name="velocity"/>
+            <command_interface name="velocity">
+                <param name="min">-1</param>
+                <param name="max">1</param>
+            </command_interface>
             <state_interface   name="velocity"/>
         </joint>
 
         <joint name="chassis_bl_wheel_joint">
-            <command_interface name="velocity"/>
+            <command_interface name="velocity">
+                <param name="min">-1</param>
+                <param name="max">1</param>
+            </command_interface>
             <state_interface   name="velocity"/>
         </joint>
 
         <joint name="chassis_br_wheel_joint">
-            <command_interface name="velocity"/>
+            <command_interface name="velocity">
+                <param name="min">-1</param>
+                <param name="max">1</param>
+            </command_interface>
             <state_interface   name="velocity"/>
         </joint>
     </ros2_control>
 
     <gazebo>
-        <plugin name="ros2_control" filename="libgz_ros2_control.so">
-            <update_rate>100</update_rate>
+        <plugin name="gz_ros2_control::GazeboSimROS2ControlPlugin" filename="libgz_ros2_control-system">
+            <verbose>true</verbose>
+            <parameters>
+                $(find bringup)/config/controllers.yaml
+            </parameters>
+            <controller_manager_prefix_node_name>controller_manager</controller_manager_prefix_node_name>
         </plugin>
     </gazebo>
 </robot>

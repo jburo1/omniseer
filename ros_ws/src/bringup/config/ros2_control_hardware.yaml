@@ -1,0 +1,16 @@
+gazebo_ros2_control:
+  ros__parameters:
+    update_rate: 100
+    use_external_rate: false
+
+joint_state_interfaces:
+- name: chassis_fl_wheel_joint
+- name: chassis_fr_wheel_joint
+- name: chassis_bl_wheel_joint
+- name: chassis_br_wheel_joint
+
+command_interfaces:
+- {name: chassis_fl_wheel_joint, interface: velocity}
+- {name: chassis_fr_wheel_joint, interface: velocity}
+- {name: chassis_bl_wheel_joint, interface: velocity}
+- {name: chassis_br_wheel_joint, interface: velocity}

@@ -13,5 +13,5 @@ twist_mux:
     locks:
       e_stop:
         topic: emergency_stop
-        timeout: 0.0            # 0 → never times out
+        timeout: 0.0
         priority: 255
