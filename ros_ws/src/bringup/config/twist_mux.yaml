@@ -1,17 +1,17 @@
 twist_mux:
   ros__parameters:
-    use_stamped: false
+    use_stamped: true
     topics:
-      # navigation:
-      #   topic: nav_vel
-      #   timeout: 0.50           # [s] before this source is considered stale
-      #   priority: 10            # 0-255, higher wins
+      navigation:
+        topic: /cmd_vel_nav
+        timeout: 0.50           # [s] before this source is considered stale
+        priority: 1            # 0-255, higher wins
       keyboard:
-        topic: cmd_vel_keyboard
+        topic: /cmd_vel_keyboard
         timeout: 0.50
-        priority: 100
+        priority: 2
     locks:
       e_stop:
-        topic: emergency_stop
+        topic: /cmd_vel_emergency_stop
         timeout: 0.0
         priority: 255

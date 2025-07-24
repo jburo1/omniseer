@@ -9,7 +9,7 @@ Components:
 GZ server + client via ros_gz wrapper launcher
 robot spawn via XACRO->URDF
 controller_manager via gazebo plugin in URDF
-input mux
+input mux for teleoperation/nav2
 ros gz bridge
 
 Example usage:
@@ -106,6 +106,9 @@ def generate_launch_description():
             PathJoinSubstitution([
                 pkg_bringup, 'config', 'twist_mux.yaml'
             ])
+        ],
+        remappings=[
+            ('/cmd_vel_out', '/mecanum_drive_controller/reference')
         ]
     )
 
