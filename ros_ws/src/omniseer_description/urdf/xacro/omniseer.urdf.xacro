@@ -1,6 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
-<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="omniseer">
-    <xacro:property name="body_rgba" value="0.0 0.6 1.0 1.0"/>  <!-- cyan-ish -->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="omniseer" xmlns:gz="http://gazebosim.org/schema">
+    <xacro:property name="body_rgba"   value="0.671 0.663 0.506 1.0"/>
+    <xacro:property name="sensor_rgba" value="0.0 0.0 0.0 1.0"/>
     <xacro:property name="lx" value="0.0974"/>
     <xacro:property name="ly" value="0.0866"/>
     <xacro:property name="wheel_radius" value="0.0485"/>
@@ -39,6 +40,9 @@
             <geometry>
                 <mesh filename="package://omniseer_description/meshes/fl_wheel.stl" scale="0.001 0.001 0.001" />
             </geometry>
+            <material name='body_mat'>
+                <color rgba="${body_rgba}"/>
+            </material>
         </visual>
         <collision name="fl_wheel_collision">
             <origin xyz="1.7993155232431945e-09 1.1387656346129211e-09 0.021000000766778337" rpy="1.5707963267948968 1.2281842209915656e-15 3.1554436208840444e-30" />
@@ -58,6 +62,9 @@
             <geometry>
                 <mesh filename="package://omniseer_description/meshes/bl_wheel.stl" scale="0.001 0.001 0.001" />
             </geometry>
+            <material name='body_mat'>
+                <color rgba="${body_rgba}"/>
+            </material>
         </visual>
         <collision name="bl_wheel_collision">
             <origin xyz="-1.7993151324446899e-09 1.1387656346129211e-09 0.021000000766778337" rpy="1.5707963267948968 1.2281842209915656e-15 3.1554436208840444e-30" />
@@ -77,6 +84,9 @@
             <geometry>
                 <mesh filename="package://omniseer_description/meshes/fr_wheel.stl" scale="0.001 0.001 0.001" />
             </geometry>
+            <material name='body_mat'>
+                <color rgba="${body_rgba}"/>
+            </material>
         </visual>
         <collision name="fr_wheel_collision">
             <origin xyz="1.7993155765338997e-09 -1.1387656346129211e-09 0.02100000076677823" rpy="-1.5707963267948966 -1.2281842209915656e-15 -3.1554436208840444e-30" />
@@ -96,6 +106,9 @@
             <geometry>
                 <mesh filename="package://omniseer_description/meshes/br_wheel.stl" scale="0.001 0.001 0.001" />
             </geometry>
+            <material name='body_mat'>
+                <color rgba="${body_rgba}"/>
+            </material>
         </visual>
         <collision name="br_wheel_collision">
             <origin xyz="-1.7993150791539846e-09 -1.1387656346129211e-09 0.02100000076677823" rpy="-1.5707963267948966 -1.2281842209915656e-15 -3.1554436208840444e-30" />
@@ -115,6 +128,9 @@
             <geometry>
                 <mesh filename="package://omniseer_description/meshes/chassis.stl" scale="0.001 0.001 0.001" />
             </geometry>
+            <material name='body_mat'>
+                <color rgba="${body_rgba}"/>
+            </material>
         </visual>
         <collision name="chassis_collision">
             <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
@@ -134,6 +150,9 @@
             <geometry>
                 <mesh filename="package://omniseer_description/meshes/lidar_top.stl" scale="0.001 0.001 0.001" />
             </geometry>
+            <material name='sensor_mat'>
+                <color rgba="${sensor_rgba}"/>
+            </material>
         </visual>
         <collision name="lidar_top_collision">
             <origin xyz="0.0 0.0 -0.15209671" rpy="0.0 -0.0 0.0" />
@@ -146,13 +165,13 @@
         <origin xyz="-0.0971 -0.08661705 8.94e-06" rpy="1.5707963267948966 -0.0 0.0" />
         <parent link="chassis" />
         <child link="br_wheel" />
-        <axis xyz="0.0 0.0 1.0" />
+        <axis xyz="0.0 0.0 -1.0" />
     </joint>
     <joint name="chassis_fr_wheel_joint" type="continuous">
         <origin xyz="0.0976 -0.08661705 8.94e-06" rpy="1.5707963267948966 -0.0 0.0" />
         <parent link="chassis" />
         <child link="fr_wheel" />
-        <axis xyz="-0.0 -0.0 1.0" />
+        <axis xyz="-0.0 -0.0 -1.0" />
     </joint>
     <joint name="chassis_bl_wheel_joint" type="continuous">
         <origin xyz="-0.0971 0.08661705 8.94e-06" rpy="-1.5707963267948966 -0.0 0.0" />
@@ -166,11 +185,11 @@
         <child link="fl_wheel" />
         <axis xyz="0.0 0.0 1.0" />
     </joint>
-    <joint name="chassis_lidar_joint" type="continuous">
+    <joint name="chassis_lidar_joint" type="fixed">
         <origin xyz="0.0 0.0 0.15209671" rpy="0.0 -0.0 0.0" />
         <parent link="chassis" />
         <child link="lidar_top" />
-        <axis xyz="0.0 0.0 1.0" />
+        <!-- <axis xyz="0.0 0.0 1.0" /> -->
     </joint>
     <link name="base_link"/>
     <joint name="base_to_chassis" type="fixed">
@@ -190,6 +209,9 @@
                 <param name="max">10</param>
             </command_interface>
             <state_interface   name="velocity"/>
+            <state_interface   name="position"/>
+            <state_interface   name="effort"/>
+
         </joint>
 
         <joint name="chassis_fr_wheel_joint">
@@ -198,6 +220,8 @@
                 <param name="max">10</param>
             </command_interface>
             <state_interface   name="velocity"/>
+            <state_interface   name="position"/>
+            <state_interface   name="effort"/>
         </joint>
 
         <joint name="chassis_bl_wheel_joint">
@@ -206,6 +230,8 @@
                 <param name="max">10</param>
             </command_interface>
             <state_interface   name="velocity"/>
+            <state_interface   name="position"/>
+            <state_interface   name="effort"/>
         </joint>
 
         <joint name="chassis_br_wheel_joint">
@@ -214,8 +240,63 @@
                 <param name="max">10</param>
             </command_interface>
             <state_interface   name="velocity"/>
+            <state_interface   name="position"/>
+            <state_interface   name="effort"/>
         </joint>
     </ros2_control>
+
+    <gazebo reference='fl_wheel'>
+        <collision>
+            <surface>
+                <friction>
+                    <ode>
+                        <mu>1.0</mu>
+                        <mu2>0.0</mu2>
+                        <fdir1 gz:expressed_in="base_link">1 -1 0</fdir1>
+                    </ode>
+                </friction>
+            </surface>
+        </collision>
+    </gazebo>
+    <gazebo reference='fr_wheel'>
+        <collision>
+            <surface>
+                <friction>
+                <ode>
+                    <mu>1.0</mu>
+                    <mu2>0.0</mu2>
+                    <fdir1 gz:expressed_in="base_link">1 1 0</fdir1>
+                </ode>
+                </friction>
+            </surface>
+        </collision>
+    </gazebo>
+    <gazebo reference='bl_wheel'>
+        <collision>
+            <surface>
+                <friction>
+                    <ode>
+                        <mu>1.0</mu>
+                        <mu2>0.0</mu2>
+                        <fdir1 gz:expressed_in="base_link">1 1 0</fdir1>
+                    </ode>
+                </friction>
+            </surface>
+        </collision>
+    </gazebo>
+    <gazebo reference='br_wheel'>
+        <collision>
+            <surface>
+                <friction>
+                    <ode>
+                        <mu>1.0</mu>
+                        <mu2>0.0</mu2>
+                        <fdir1 gz:expressed_in="base_link">1 -1 0</fdir1>
+                    </ode>
+                </friction>
+            </surface>
+        </collision>
+    </gazebo>
 
     <gazebo>
         <plugin name="gz_ros2_control::GazeboSimROS2ControlPlugin" filename="libgz_ros2_control-system">

@@ -9,8 +9,8 @@ Components:
 GZ server + client via ros_gz wrapper launcher
 robot spawn via XACRO->URDF
 controller_manager via gazebo plugin in URDF
-input mux for teleoperation/nav2
-ros gz bridge
+input mux for teleoperation/nav/emergency stop
+ros gz bridge - clock/tf
 
 Example usage:
 --------------
@@ -24,14 +24,17 @@ from launch.actions import RegisterEventHandler, SetEnvironmentVariable
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, LaunchConfiguration, PathJoinSubstitution, EnvironmentVariable
-from launch_ros.actions import Node
+from launch_ros.actions import Node, SetParameter
 from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
     declared_arguments = [
         DeclareLaunchArgument('world',    default_value='simple_world.world'),
+        DeclareLaunchArgument('use_sim_time', default_value='true'),
     ]
+
+    use_sim_time = LaunchConfiguration('use_sim_time', default='true')
 
     pkg_bringup  = FindPackageShare('bringup')
     pkg_omniseer = FindPackageShare('omniseer_description')
@@ -52,12 +55,32 @@ def generate_launch_description():
         LaunchConfiguration('world')
     ])
 
-    gz_ros_ld = IncludeLaunchDescription(
+    gz_config_path = PathJoinSubstitution([
+        pkg_bringup, 'config', 'gz_config.config'
+    ])
+
+    gz_ros_gui_ld = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [PathJoinSubstitution([FindPackageShare('ros_gz_sim'),
                                     'launch',
                                     'gz_sim.launch.py'])]),
-        launch_arguments=[('gz_args', [' -r -v 1 ', world_path])])
+        # launch_arguments=[('gz_args', [' -r -v 1 ', world_path])])
+        launch_arguments={
+            "gz_args": [
+                " -r -v 1 ",
+                world_path,
+                " --gui-config ", gz_config_path,
+            ]
+        }.items()
+        )
+
+    # gz_ros_headless_ld = IncludeLaunchDescription(
+    #     PythonLaunchDescriptionSource(
+    #         [FindPackageShare("ros_gz_sim"), "/launch/gz_sim.launch.py"]
+    #     ),
+    #     launch_arguments=[("gz_args", ["--headless-rendering -s -r -v 3 empty.sdf"])],
+    #     condition=UnlessCondition(gui),
+    # )
 
     bridge_node = Node(
         package='ros_gz_bridge',
@@ -65,10 +88,28 @@ def generate_launch_description():
         arguments=[
             '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
             '/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V',
-            '/tf_static@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V'
+            # '/tf_static@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V'
         ],
-        parameters=[{'use_sim_time': True}],
+        parameters=[{'use_sim_time': use_sim_time}],
         output='screen'
+    )
+
+    # ------------- RVIZ ------------- #
+
+    rviz_config_path = PathJoinSubstitution([
+        pkg_bringup, 'config', 'rviz_config.rviz'
+    ])
+
+    rviz_node = Node(
+        package="rviz2",
+        executable="rviz2",
+        name="rviz2",
+        output="log",
+        arguments = [
+            '-d', rviz_config_path
+        ],
+        parameters=[{'use_sim_time': use_sim_time}],
+        # condition=IfCondition(gui),
     )
 
     # ------------- SPAWN ROBOT ------------- #
@@ -78,10 +119,10 @@ def generate_launch_description():
     rsp_node = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
-        parameters=[{
-            'robot_description': robot_description_urdf,
-        }],
-        output='both'
+        parameters=[{'robot_description': robot_description_urdf,
+                     'use_sim_time': use_sim_time
+                     }],
+        output='both',
     )
 
     robot_spawn_node = Node(
@@ -94,6 +135,8 @@ def generate_launch_description():
                    '-z', '0.5',
                    ],
         output='screen',
+        parameters=[{'use_sim_time': use_sim_time}],
+
     )
 
     # ------------- TWIST MUX ------------- #
@@ -105,11 +148,13 @@ def generate_launch_description():
         parameters=[
             PathJoinSubstitution([
                 pkg_bringup, 'config', 'twist_mux.yaml'
-            ])
+            ]),
+            {'use_sim_time': use_sim_time}
         ],
         remappings=[
             ('/cmd_vel_out', '/mecanum_drive_controller/reference')
-        ]
+        ],
+
     )
 
 
@@ -120,6 +165,7 @@ def generate_launch_description():
         name = 'jsb',
         arguments = ['joint_state_broadcaster'],
         output    = 'screen',
+        parameters=[{'use_sim_time': use_sim_time}],
     )
 
     jsb_eh = RegisterEventHandler(
@@ -136,8 +182,10 @@ def generate_launch_description():
         executable= 'spawner',
         arguments = ['mecanum_drive_controller',
                      '--param-file', controller_file,
+                     '--controller-ros-args', '-r /mecanum_drive_controller/tf_odometry:=/tf',
                      '--controller-manager-timeout', '10.0'],
         output    = 'screen',
+        parameters=[{'use_sim_time': use_sim_time}],
     )
 
     mecanum_drive_eh = RegisterEventHandler(
@@ -151,11 +199,12 @@ def generate_launch_description():
         declared_arguments + [
         set_sim_system_path,
         set_resource_path,
-        gz_ros_ld,
+        gz_ros_gui_ld,
         bridge_node,
         robot_spawn_node,
         jsb_eh,
         mecanum_drive_eh,
         rsp_node,
-        twist_mux
+        twist_mux,
+        rviz_node,
     ])

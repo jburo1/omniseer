@@ -25,4 +25,8 @@ mecanum_drive_controller:
       sum_of_robot_center_projection_on_X_Y_axis: 0.184
     base_frame_id: "base_link"
     odom_frame_id: "odom"
+    # publish_tf: true
     enable_odom_tf: true
+    open_loop: false
+    publish_rate: 50.0
+
