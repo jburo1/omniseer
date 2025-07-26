@@ -6,9 +6,9 @@ alternative headless CI mode
 Components:
 --------------
 
-GZ server + client via ros_gz wrapper launcher
+GZ server + optional client via ros_gz wrapper launcher
 robot spawn via XACRO->URDF
-controller_manager via gazebo plugin in URDF
+controller_manager via gazebo plugin init in URDF
 input mux for teleoperation/nav/emergency stop
 ros gz bridge - clock/tf
 
@@ -16,7 +16,7 @@ Example usage:
 --------------
 
 ros2 launch bringup sim.launch.py                            - Full sim
-ros2 launch bringup sim.launch.py headless:= true            - CI
+ros2 launch bringup sim.launch.py headless:=true             - CI
 """
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
@@ -24,22 +24,27 @@ from launch.actions import RegisterEventHandler, SetEnvironmentVariable
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, LaunchConfiguration, PathJoinSubstitution, EnvironmentVariable
-from launch_ros.actions import Node, SetParameter
+from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
+from launch.conditions import IfCondition, UnlessCondition
+
 
 
 def generate_launch_description():
     declared_arguments = [
         DeclareLaunchArgument('world',    default_value='simple_world.world'),
         DeclareLaunchArgument('use_sim_time', default_value='true'),
+        DeclareLaunchArgument('headless', default_value="false")
     ]
 
     use_sim_time = LaunchConfiguration('use_sim_time', default='true')
+    headless = LaunchConfiguration('headless', default='false')
 
     pkg_bringup  = FindPackageShare('bringup')
     pkg_omniseer = FindPackageShare('omniseer_description')
 
     # ------------- ROS_GZ ------------- #
+
     set_sim_system_path = SetEnvironmentVariable(
         'GZ_SIM_SYSTEM_PLUGIN_PATH',
         [EnvironmentVariable('GZ_SIM_SYSTEM_PLUGIN_PATH', default_value=''), ':/opt/ros/kilted/lib']
@@ -64,23 +69,27 @@ def generate_launch_description():
             [PathJoinSubstitution([FindPackageShare('ros_gz_sim'),
                                     'launch',
                                     'gz_sim.launch.py'])]),
-        # launch_arguments=[('gz_args', [' -r -v 1 ', world_path])])
         launch_arguments={
             "gz_args": [
                 " -r -v 1 ",
                 world_path,
                 " --gui-config ", gz_config_path,
             ]
-        }.items()
-        )
+        }.items(),
+        condition=UnlessCondition(headless)
+    )
 
-    # gz_ros_headless_ld = IncludeLaunchDescription(
-    #     PythonLaunchDescriptionSource(
-    #         [FindPackageShare("ros_gz_sim"), "/launch/gz_sim.launch.py"]
-    #     ),
-    #     launch_arguments=[("gz_args", ["--headless-rendering -s -r -v 3 empty.sdf"])],
-    #     condition=UnlessCondition(gui),
-    # )
+    gz_ros_headless_ld = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [FindPackageShare("ros_gz_sim"), "/launch/gz_sim.launch.py"]
+        ),
+        launch_arguments={
+            "gz_args": [
+                "-s -r -v 1 ", world_path
+            ]
+        }.items(),
+        condition=IfCondition(headless),
+    )
 
     bridge_node = Node(
         package='ros_gz_bridge',
@@ -113,6 +122,7 @@ def generate_launch_description():
     )
 
     # ------------- SPAWN ROBOT ------------- #
+
     xacro_file   = PathJoinSubstitution([pkg_omniseer, 'urdf', 'xacro', 'omniseer.urdf.xacro'])
     robot_description_urdf = Command(['xacro ', xacro_file])
 
@@ -140,6 +150,7 @@ def generate_launch_description():
     )
 
     # ------------- TWIST MUX ------------- #
+
     twist_mux = Node(
         package='twist_mux',
         executable='twist_mux',
@@ -159,6 +170,7 @@ def generate_launch_description():
 
 
     # ------------- CONTROLLERS/BROADCASTERS ------------- #
+
     jsb_node = Node(
         package   = 'controller_manager',
         executable= 'spawner',
@@ -200,6 +212,7 @@ def generate_launch_description():
         set_sim_system_path,
         set_resource_path,
         gz_ros_gui_ld,
+        gz_ros_headless_ld,
         bridge_node,
         robot_spawn_node,
         jsb_eh,
