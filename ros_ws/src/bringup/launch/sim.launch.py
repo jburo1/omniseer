@@ -15,8 +15,8 @@ ros gz bridge - clock/tf
 Example usage:
 --------------
 
-ros2 launch bringup sim.launch.py                            - Full sim
-ros2 launch bringup sim.launch.py headless:=true             - CI
+ros2 launch bringup sim.launch.py                              - Full sim
+ros2 launch bringup sim.launch.py 'headless:=true'             - CI
 """
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
@@ -47,7 +47,9 @@ def generate_launch_description():
 
     set_sim_system_path = SetEnvironmentVariable(
         'GZ_SIM_SYSTEM_PLUGIN_PATH',
-        [EnvironmentVariable('GZ_SIM_SYSTEM_PLUGIN_PATH', default_value=''), ':/opt/ros/kilted/lib']
+        [':/opt/ros/kilted/lib',
+        '/opt/ros/kilted/opt/gz_sim_vendor/lib/gz-sim-9/plugins',
+        ':/opt/ros/kilted/opt/gz_sim_vendor/lib']
     )
 
     set_resource_path = SetEnvironmentVariable(
@@ -85,7 +87,7 @@ def generate_launch_description():
         ),
         launch_arguments={
             "gz_args": [
-                "-s -r -v 1 ", world_path
+                "-s -r -v 4 ", world_path, " --verbose"
             ]
         }.items(),
         condition=IfCondition(headless),
@@ -96,8 +98,6 @@ def generate_launch_description():
         executable='parameter_bridge',
         arguments=[
             '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
-            '/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V',
-            # '/tf_static@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V'
         ],
         parameters=[{'use_sim_time': use_sim_time}],
         output='screen'
@@ -106,7 +106,7 @@ def generate_launch_description():
     # ------------- RVIZ ------------- #
 
     rviz_config_path = PathJoinSubstitution([
-        pkg_bringup, 'config', 'rviz_config.rviz'
+        pkg_bringup, 'config', 'rviz_config.config'
     ])
 
     rviz_node = Node(

@@ -1,0 +1,6 @@
+- ros_topic_name: "/tf_gz"
+  gz_topic_name: "/world/simple_world/pose"
+  ros_type_name: "tf2_msgs/msg/TFMessage"
+  gz_type_name: "gz.msgs.Pose_V"
+  lazy: true
+  direction: GZ_TO_ROS
