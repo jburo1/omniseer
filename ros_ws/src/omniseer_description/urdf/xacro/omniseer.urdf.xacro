@@ -1,5 +1,9 @@
 <?xml version='1.0' encoding='utf-8'?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="omniseer" xmlns:gz="http://gazebosim.org/schema">
+    <xacro:property name="min_vel" value="-50"/>
+    <xacro:property name="max_vel" value="50"/>
+    <xacro:property name="slip1" value="0.001"/>
+    <xacro:property name="slip2" value="0.001"/>
     <xacro:property name="kp"   value="1e5"/>
     <xacro:property name="kd"   value="1.0"/>
     <xacro:property name="mu"   value="1.0"/>
@@ -9,6 +13,7 @@
     <xacro:property name="lx" value="0.0974"/>
     <xacro:property name="ly" value="0.0866"/>
     <xacro:property name="wheel_radius" value="0.0485"/>
+    <xacro:property name="wheel_width" value="0.0445"/>
 
     <xacro:macro name="wheel_transmission" params="joint">
         <transmission name="${joint}_tr">
@@ -44,9 +49,10 @@
             </material>
         </visual>
         <collision name="fl_wheel_collision">
-            <origin xyz="1.7993155232431945e-09 1.1387656346129211e-09 0.021000000766778337" rpy="1.5707963267948968 1.2281842209915656e-15 3.1554436208840444e-30" />
+            <origin xyz="1.7993155232431945e-09 1.1387656346129211e-09 0.021000000766778337" rpy="0 1.2281842209915656e-15 3.1554436208840444e-30" />
             <geometry>
-                <mesh filename="package://omniseer_description/meshes/fl_wheel.stl" scale="0.001 0.001 0.001" />
+                <!-- <mesh filename="package://omniseer_description/meshes/fl_wheel.stl" scale="0.001 0.001 0.001" /> -->
+                <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
             </geometry>
         </collision>
     </link>
@@ -66,9 +72,10 @@
             </material>
         </visual>
         <collision name="bl_wheel_collision">
-            <origin xyz="-1.7993151324446899e-09 1.1387656346129211e-09 0.021000000766778337" rpy="1.5707963267948968 1.2281842209915656e-15 3.1554436208840444e-30" />
+            <origin xyz="-1.7993151324446899e-09 1.1387656346129211e-09 0.021000000766778337" rpy="0 1.2281842209915656e-15 3.1554436208840444e-30" />
             <geometry>
-                <mesh filename="package://omniseer_description/meshes/bl_wheel.stl" scale="0.001 0.001 0.001" />
+                <!-- <mesh filename="package://omniseer_description/meshes/bl_wheel.stl" scale="0.001 0.001 0.001" /> -->
+                <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
             </geometry>
         </collision>
     </link>
@@ -88,9 +95,10 @@
             </material>
         </visual>
         <collision name="fr_wheel_collision">
-            <origin xyz="1.7993155765338997e-09 -1.1387656346129211e-09 0.02100000076677823" rpy="-1.5707963267948966 -1.2281842209915656e-15 -3.1554436208840444e-30" />
+            <origin xyz="1.7993155765338997e-09 -1.1387656346129211e-09 0.02100000076677823" rpy="0 -1.2281842209915656e-15 -3.1554436208840444e-30" />
             <geometry>
-                <mesh filename="package://omniseer_description/meshes/fr_wheel.stl" scale="0.001 0.001 0.001" />
+                <!-- <mesh filename="package://omniseer_description/meshes/fr_wheel.stl" scale="0.001 0.001 0.001" /> -->
+                <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
             </geometry>
         </collision>
     </link>
@@ -110,9 +118,10 @@
             </material>
         </visual>
         <collision name="br_wheel_collision">
-            <origin xyz="-1.7993150791539846e-09 -1.1387656346129211e-09 0.02100000076677823" rpy="-1.5707963267948966 -1.2281842209915656e-15 -3.1554436208840444e-30" />
+            <origin xyz="-1.7993150791539846e-09 -1.1387656346129211e-09 0.02100000076677823" rpy="0 -1.2281842209915656e-15 -3.1554436208840444e-30" />
             <geometry>
-                <mesh filename="package://omniseer_description/meshes/br_wheel.stl" scale="0.001 0.001 0.001" />
+                <!-- <mesh filename="package://omniseer_description/meshes/br_wheel.stl" scale="0.001 0.001 0.001" /> -->
+                <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
             </geometry>
         </collision>
     </link>
@@ -165,24 +174,28 @@
         <parent link="chassis" />
         <child link="br_wheel" />
         <axis xyz="0.0 0.0 -1.0" />
+        <dynamics damping="0.1"/>
     </joint>
     <joint name="chassis_fr_wheel_joint" type="continuous">
         <origin xyz="0.0976 -0.08661705 8.94e-06" rpy="1.5707963267948966 -0.0 0.0" />
         <parent link="chassis" />
         <child link="fr_wheel" />
         <axis xyz="-0.0 -0.0 -1.0" />
+        <dynamics damping="0.1"/>
     </joint>
     <joint name="chassis_bl_wheel_joint" type="continuous">
         <origin xyz="-0.0971 0.08661705 8.94e-06" rpy="-1.5707963267948966 -0.0 0.0" />
         <parent link="chassis" />
         <child link="bl_wheel" />
         <axis xyz="0.0 0.0 1.0" />
+        <dynamics damping="0.1"/>
     </joint>
     <joint name="chassis_fl_wheel_joint" type="continuous">
         <origin xyz="0.0976 0.08661705 8.94e-06" rpy="-1.5707963267948966 -0.0 0.0" />
         <parent link="chassis" />
         <child link="fl_wheel" />
         <axis xyz="0.0 0.0 1.0" />
+        <dynamics damping="0.1"/>
     </joint>
     <joint name="chassis_lidar_joint" type="fixed">
         <origin xyz="0.0 0.0 0.15209671" rpy="0.0 -0.0 0.0" />
@@ -203,8 +216,8 @@
 
         <joint name="chassis_fl_wheel_joint">
             <command_interface name="velocity">
-                <param name="min">-10</param>
-                <param name="max">10</param>
+                <param name="min">${min_vel}</param>
+                <param name="max">${max_vel}</param>
             </command_interface>
             <state_interface   name="velocity"/>
             <state_interface   name="position"/>
@@ -214,8 +227,8 @@
 
         <joint name="chassis_fr_wheel_joint">
             <command_interface name="velocity">
-                <param name="min">-10</param>
-                <param name="max">10</param>
+                <param name="min">${min_vel}</param>
+                <param name="max">${max_vel}</param>
             </command_interface>
             <state_interface   name="velocity"/>
             <state_interface   name="position"/>
@@ -224,8 +237,8 @@
 
         <joint name="chassis_bl_wheel_joint">
             <command_interface name="velocity">
-                <param name="min">-10</param>
-                <param name="max">10</param>
+                <param name="min">${min_vel}</param>
+                <param name="max">${max_vel}</param>
             </command_interface>
             <state_interface   name="velocity"/>
             <state_interface   name="position"/>
@@ -234,8 +247,8 @@
 
         <joint name="chassis_br_wheel_joint">
             <command_interface name="velocity">
-                <param name="min">-10</param>
-                <param name="max">10</param>
+                <param name="min">${min_vel}</param>
+                <param name="max">${max_vel}</param>
             </command_interface>
             <state_interface   name="velocity"/>
             <state_interface   name="position"/>
@@ -250,6 +263,8 @@
                     <ode>
                         <mu>${mu}</mu>
                         <mu2>${mu2}</mu2>
+                        <slip1>${slip1}</slip1>
+                        <slip2>${slip2}</slip2>
                         <fdir1 gz:expressed_in="base_link">1 -1 0</fdir1>
                     </ode>
                 </friction>
@@ -269,6 +284,8 @@
                 <ode>
                     <mu>${mu}</mu>
                     <mu2>${mu2}</mu2>
+                    <slip1>${slip1}</slip1>
+                    <slip2>${slip2}</slip2>
                     <fdir1 gz:expressed_in="base_link">1 1 0</fdir1>
                 </ode>
                 </friction>
@@ -288,6 +305,8 @@
                     <ode>
                         <mu>${mu}</mu>
                         <mu2>${mu2}</mu2>
+                        <slip1>${slip1}</slip1>
+                        <slip2>${slip2}</slip2>
                         <fdir1 gz:expressed_in="base_link">1 1 0</fdir1>
                     </ode>
                 </friction>
@@ -307,6 +326,8 @@
                     <ode>
                         <mu>${mu}</mu>
                         <mu2>${mu2}</mu2>
+                        <slip1>${slip1}</slip1>
+                        <slip2>${slip2}</slip2>
                         <fdir1 gz:expressed_in="base_link">1 -1 0</fdir1>
                     </ode>
                 </friction>

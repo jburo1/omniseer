@@ -1,9 +1,21 @@
 <?xml version="1.0" ?>
 <sdf version="1.11">
     <world name="simple_world">
-        <physics name="1ms" type="ignored">
+        <physics name="default_physics" type="ode">
             <max_step_size>0.001</max_step_size>
-            <real_time_factor>1.0</real_time_factor>
+            <real_time_update_rate>1000</real_time_update_rate>
+            <ode>
+                <solver>
+                <!-- quick = PGS; world = direct Dantzig -->
+                <type>quick</type>
+                <!-- PGS_ITERS: number of Gauss–Seidel sweeps per step -->
+                <iters>100</iters>
+                <!-- SOR_PRECON_ITERS: number of preconditioning iterations -->
+                <precon_iters>50</precon_iters>
+                <!-- optional over-relaxation -->
+                <sor>1.3</sor>
+                </solver>
+            </ode>
         </physics>
         <plugin
             filename="gz-sim-physics-system"

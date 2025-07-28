@@ -52,7 +52,7 @@ class PathRecorder(Node):
 
         self.max_path_length = max_path_length
 
-    def odom_callback(self, msg):
+    def odom_callback(self, msg: Odometry):
         ps = PoseStamped()
         ps.header = msg.header
         ps.pose   = msg.pose.pose
