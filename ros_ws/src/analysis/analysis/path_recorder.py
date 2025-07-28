@@ -1,77 +1,87 @@
-from rclpy import init, shutdown
+#!/usr/bin/env python3
+from rclpy import init, shutdown, spin
 from rclpy.node import Node
-from nav_msgs.msg import Path
+from nav_msgs.msg import Path, Odometry
 from geometry_msgs.msg import PoseStamped
-from tf2_ros import Buffer, TransformListener
-from rclpy.executors import MultiThreadedExecutor
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
-from rclpy.duration import Duration
+from collections import deque
 
 class PathRecorder(Node):
-    def __init__(self, source_frame, target_topic):
+    def __init__(self):
         super().__init__('path_recorder')
 
-        self.declare_parameter('source_frame', source_frame)
-        self.declare_parameter('target_topic', target_topic)
-        self.declare_parameter('rate', 20)
+        self.declare_parameter('odom_topic', '/mecanum_drive_controller/odometry')
+        self.declare_parameter('sim_topic', '/gz_odom')
+        self.declare_parameter('odom_path_topic', '/odom_path')
+        self.declare_parameter('sim_path_topic', '/sim_path')
+        self.declare_parameter('queue_size', 100)
+        self.declare_parameter('max_path_length', 500)
 
-        src = self.get_parameter('source_frame').get_parameter_value().string_value
-        topic = self.get_parameter('target_topic').get_parameter_value().string_value
-        rate = self.get_parameter('rate').get_parameter_value().integer_value
+        odom_topic      = self.get_parameter('odom_topic').value
+        sim_topic       = self.get_parameter('sim_topic').value
+        odom_path_topic = self.get_parameter('odom_path_topic').value
+        sim_path_topic  = self.get_parameter('sim_path_topic').value
+        queue_size      = self.get_parameter('queue_size').value
+        max_path_length = self.get_parameter('max_path_length').value
 
-        self.buf = Buffer()
-        TransformListener(self.buf, self)
-        self.path = Path()
-        self.path.header.frame_id = src
-        self.path.poses = []
+        self.get_logger().info(
+            f'PathRecorder starting: odom_topic={odom_topic}, sim_topic={sim_topic}')
 
         qos = QoSProfile(
             reliability=QoSReliabilityPolicy.RELIABLE,
             history=QoSHistoryPolicy.KEEP_LAST,
-            depth=500
+            depth=queue_size
         )
 
-        self.pub = self.create_publisher(Path, topic, qos)
+        self.odom_buffer = deque(maxlen=max_path_length)
+        self.sim_buffer = deque(maxlen=max_path_length)
+        self.odom_path = Path()
+        self.odom_path.header.frame_id = 'odom'
+        self.sim_path  = Path()
+        self.sim_path.header.frame_id  = 'odom'
 
-        self.timer = self.create_timer(1 / rate, self.timer_callback)
+        # Publishers
+        self.odom_pub = self.create_publisher(Path, odom_path_topic, qos)
+        self.sim_pub  = self.create_publisher(Path, sim_path_topic, qos)
 
-    def timer_callback(self):
-        now = self.get_clock().now().to_msg()
-        try:
-            tf = self.buf.lookup_transform(
-                self.path.header.frame_id,
-                'base_link',
-                now,
-                timeout=Duration(seconds=0.1))
+        # Subscribers
+        self.create_subscription(
+            Odometry, odom_topic, self.odom_callback, qos)
+        self.create_subscription(
+            Odometry, sim_topic,  self.sim_callback,  qos)
 
-            ps = PoseStamped()
-            ps.header = tf.header
-            ps.pose.position = tf.transform.translation
-            ps.pose.orientation = tf.transform.rotation
+        self.max_path_length = max_path_length
 
-            self.path.header.stamp = ps.header.stamp
-            self.path.poses.append(ps)
-            self.pub.publish(self.path)
-        except Exception:
-            pass
+    def odom_callback(self, msg):
+        ps = PoseStamped()
+        ps.header = msg.header
+        ps.pose   = msg.pose.pose
+
+        self.odom_path.header.stamp = msg.header.stamp
+        self.odom_buffer.append(ps)
+        self.odom_path.poses = list(self.odom_buffer)
+        self.odom_pub.publish(self.odom_path)
+
+    def sim_callback(self, msg: Odometry):
+        ps = PoseStamped()
+        ps.header = msg.header
+        ps.pose   = msg.pose.pose
+
+        self.sim_path.header.stamp = msg.header.stamp
+        self.sim_buffer.append(ps)
+        self.sim_path.poses = list(self.sim_buffer)
+        self.sim_pub.publish(self.sim_path)
 
 def main():
     init(args=None)
-    node_odom = PathRecorder('odom', 'odom_path')
-    node_gt = PathRecorder('', 'gr_path')
-    executor = MultiThreadedExecutor()
-    executor.add_node(node_odom)
-    executor.add_node(node_gt)
-
+    node = PathRecorder()
     try:
-        executor.spin()
+        spin(node)
     # swallow Ctrl-C
     except KeyboardInterrupt:
         pass
     finally:
-        executor.shutdown()
-        node_odom.destroy_node()
-        node_gt.destroy_node()
+        node.destroy_node()
         shutdown()
 
 if __name__ == '__main__':

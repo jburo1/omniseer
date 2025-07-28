@@ -93,13 +93,18 @@ def generate_launch_description():
         condition=IfCondition(headless),
     )
 
+    bridge_config_path = PathJoinSubstitution([
+        pkg_bringup, 'config', 'bridge_config.yaml'
+    ])
+
     bridge_node = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
         arguments=[
-            '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
+            # '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
         ],
-        parameters=[{'use_sim_time': use_sim_time}],
+        parameters=[{'use_sim_time': use_sim_time},
+                    {'config_file' : bridge_config_path}],
         output='screen'
     )
 
@@ -119,6 +124,17 @@ def generate_launch_description():
         ],
         parameters=[{'use_sim_time': use_sim_time}],
         # condition=IfCondition(gui),
+    )
+
+    path_recorder = Node(
+        package='analysis',
+        executable='path_recorder',
+        name='path_recorder',
+        output='screen',
+        parameters=[
+            {'use_sim_time': use_sim_time},
+            # {'max_path_length': 500},
+        ],
     )
 
     # ------------- SPAWN ROBOT ------------- #
@@ -220,4 +236,5 @@ def generate_launch_description():
         rsp_node,
         twist_mux,
         rviz_node,
+        path_recorder,
     ])
