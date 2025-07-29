@@ -3,11 +3,9 @@ controller_manager:
     update_rate: 100
     use_sim_time: true
 
-    # --- broadcasters --------------------------------------------------
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
-    # --- controllers ---------------------------------------------------
     mecanum_drive_controller:
       type: mecanum_drive_controller/MecanumDriveController
 

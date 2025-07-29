@@ -9,7 +9,8 @@
     <xacro:property name="mu"   value="1.0"/>
     <xacro:property name="mu2"   value="0.05"/>
     <xacro:property name="body_rgba"   value="0.671 0.663 0.506 1.0"/>
-    <xacro:property name="sensor_rgba" value="0.0 0.0 0.0 1.0"/>
+    <xacro:property name="sensor_rgba" value="0.671 0.663 0.506 1.0"/>
+    <xacro:property name="debug_rgba" value="1.0 0.0 0.0 1.0"/>
     <xacro:property name="lx" value="0.0974"/>
     <xacro:property name="ly" value="0.0866"/>
     <xacro:property name="wheel_radius" value="0.0485"/>
@@ -148,6 +149,9 @@
         </collision>
     </link>
     <link name="lidar_top">
+        <frame name="lidar_frame" attached_to="lidar_top">
+            <pose>0 0 -0.076 0 0 0</pose>
+        </frame>
         <inertial>
             <origin xyz="-2.954093418429609e-17 9.748508280817712e-16 0.009999998873493041" rpy="0.0 -0.0 0.0" />
             <mass value="0.6042068071016563" />
@@ -169,6 +173,37 @@
             </geometry>
         </collision>
     </link>
+    <link name="lidar_frame"/>
+    <link name="imu_link">
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="0.01"/>
+            <inertia
+                ixx="1e-7" ixy="0.0" ixz="0.0"
+                iyy="1e-7" iyz="0.0"
+                izz="1e-7"/>
+        </inertial>
+        <!-- no collision/visual required -->
+        <visual name="imu_viz">
+            <!-- <geometry><box size="0.01 0.01 0.003"/></geometry> -->
+            <geometry><box size="0.01 0.01 0.01"/></geometry>
+            <material name='r'>
+                <color rgba="${debug_rgba}"/>
+            </material>
+        </visual>
+    </link>
+
+    <joint name="lidar_top_to_frame" type="fixed">
+        <parent link="lidar_top"/>
+        <child  link="lidar_frame"/>
+        <!-- offset halfway up the cylinder -->
+        <origin xyz="0 0 -0.076" rpy="0 0 0"/>
+    </joint>
+    <joint name="chassis_imu_joint" type="fixed">
+        <parent link="chassis"/>
+        <child  link="imu_link"/>
+        <origin xyz="0.01 0 0.045" rpy="0 0 0"/>
+    </joint>
     <joint name="chassis_br_wheel_joint" type="continuous">
         <origin xyz="-0.0971 -0.08661705 8.94e-06" rpy="1.5707963267948966 -0.0 0.0" />
         <parent link="chassis" />
@@ -256,6 +291,56 @@
         </joint>
     </ros2_control>
 
+    <gazebo reference="lidar_top">
+        <sensor name="rplidar_a1" type="gpu_lidar">
+            <frame_id>lidar_frame</frame_id>
+            <pose>0 0 0 0 0 0</pose>
+            <topic>lidar</topic>
+            <update_rate>10</update_rate>
+            <ray>
+                <scan>
+                    <horizontal>
+                    <samples>360</samples>
+                    <resolution>1</resolution>
+                    <min_angle>-3.14159</min_angle>
+                    <max_angle> 3.14159</max_angle>
+                    </horizontal>
+                </scan>
+                <range>
+                    <min>0.12</min>
+                    <max>12.0</max>
+                    <resolution>0.01</resolution>
+                </range>
+            </ray>
+
+            <always_on>1</always_on>
+            <visualize>true</visualize>
+        </sensor>
+    </gazebo>
+
+
+    <gazebo reference="imu_link">
+        <sensor name="imu_sensor" type="imu">
+            <pose>0 0 0 0 0 0</pose>
+            <always_on>1</always_on>
+            <update_rate>200</update_rate>
+            <topic>imu</topic>
+            <imu>
+                <!-- <orientation_reference_frame>ENU</orientation_reference_frame> -->
+                <angular_velocity>
+                    <x><noise type="gaussian"><mean>0</mean><stddev>0.001</stddev></noise></x>
+                    <y><noise type="gaussian"><mean>0</mean><stddev>0.001</stddev></noise></y>
+                    <z><noise type="gaussian"><mean>0</mean><stddev>0.001</stddev></noise></z>
+                </angular_velocity>
+
+                <linear_acceleration>
+                    <x><noise type="gaussian"><mean>0</mean><stddev>0.10</stddev></noise></x>
+                    <y><noise type="gaussian"><mean>0</mean><stddev>0.10</stddev></noise></y>
+                    <z><noise type="gaussian"><mean>0</mean><stddev>0.10</stddev></noise></z>
+                </linear_acceleration>
+            </imu>
+        </sensor>
+    </gazebo>
     <gazebo reference='fl_wheel'>
         <collision>
             <surface>
@@ -352,11 +437,11 @@
     </gazebo>
 
     <gazebo>
-        <plugin filename="gz-sim-odometry-publisher-system" name="gz::sim::systems::OdometryPublisher">
+        <plugin name="gz::sim::systems::OdometryPublisher" filename="gz-sim-odometry-publisher-system">
             <dimensions>3</dimensions>
             <odom_publish_frequency>50</odom_publish_frequency>
-            <odom_frame>odom</odom_frame>
             <odom_topic>/model_odom</odom_topic>
+            <odom_frame>odom</odom_frame>
             <robot_base_frame>base_link</robot_base_frame>
         </plugin>
     </gazebo>

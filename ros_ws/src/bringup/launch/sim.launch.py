@@ -17,6 +17,7 @@ Example usage:
 
 ros2 launch bringup sim.launch.py                              - Full sim
 ros2 launch bringup sim.launch.py 'headless:=true'             - CI
+ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -p stamped:=true -r cmd_vel:=/mecanum_drive_controller/reference
 """
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
@@ -111,7 +112,7 @@ def generate_launch_description():
     # ------------- RVIZ ------------- #
 
     rviz_config_path = PathJoinSubstitution([
-        pkg_bringup, 'config', 'rviz_config.config'
+        pkg_bringup, 'config', 'rviz_config.rviz'
     ])
 
     rviz_node = Node(
@@ -191,7 +192,7 @@ def generate_launch_description():
         package   = 'controller_manager',
         executable= 'spawner',
         name = 'jsb',
-        arguments = ['joint_state_broadcaster'],
+        arguments = ['joint_state_broadcaster', '--controller-manager-timeout', '15.0'],
         output    = 'screen',
         parameters=[{'use_sim_time': use_sim_time}],
     )
@@ -211,7 +212,7 @@ def generate_launch_description():
         arguments = ['mecanum_drive_controller',
                      '--param-file', controller_file,
                      '--controller-ros-args', '-r /mecanum_drive_controller/tf_odometry:=/tf',
-                     '--controller-manager-timeout', '10.0'],
+                     '--controller-manager-timeout', '15.0'],
         output    = 'screen',
         parameters=[{'use_sim_time': use_sim_time}],
     )
