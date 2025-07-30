@@ -34,6 +34,8 @@
     <xacro:wheel_transmission joint="chassis_bl_wheel_joint"/>
     <xacro:wheel_transmission joint="chassis_br_wheel_joint"/>
 
+    <!-- Links -->
+
     <link name="fl_wheel">
         <inertial>
             <origin xyz="1.7993153278439422e-09 2.26380317489938e-09 0.02100000076677828" rpy="0.0 -0.0 0.0" />
@@ -52,7 +54,6 @@
         <collision name="fl_wheel_collision">
             <origin xyz="1.7993155232431945e-09 1.1387656346129211e-09 0.021000000766778337" rpy="0 1.2281842209915656e-15 3.1554436208840444e-30" />
             <geometry>
-                <!-- <mesh filename="package://omniseer_description/meshes/fl_wheel.stl" scale="0.001 0.001 0.001" /> -->
                 <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
             </geometry>
         </collision>
@@ -75,7 +76,6 @@
         <collision name="bl_wheel_collision">
             <origin xyz="-1.7993151324446899e-09 1.1387656346129211e-09 0.021000000766778337" rpy="0 1.2281842209915656e-15 3.1554436208840444e-30" />
             <geometry>
-                <!-- <mesh filename="package://omniseer_description/meshes/bl_wheel.stl" scale="0.001 0.001 0.001" /> -->
                 <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
             </geometry>
         </collision>
@@ -98,7 +98,6 @@
         <collision name="fr_wheel_collision">
             <origin xyz="1.7993155765338997e-09 -1.1387656346129211e-09 0.02100000076677823" rpy="0 -1.2281842209915656e-15 -3.1554436208840444e-30" />
             <geometry>
-                <!-- <mesh filename="package://omniseer_description/meshes/fr_wheel.stl" scale="0.001 0.001 0.001" /> -->
                 <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
             </geometry>
         </collision>
@@ -121,7 +120,6 @@
         <collision name="br_wheel_collision">
             <origin xyz="-1.7993150791539846e-09 -1.1387656346129211e-09 0.02100000076677823" rpy="0 -1.2281842209915656e-15 -3.1554436208840444e-30" />
             <geometry>
-                <!-- <mesh filename="package://omniseer_description/meshes/br_wheel.stl" scale="0.001 0.001 0.001" /> -->
                 <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
             </geometry>
         </collision>
@@ -174,6 +172,22 @@
         </collision>
     </link>
     <link name="lidar_frame"/>
+    <link name="sonar_link">
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="0.01"/>
+            <inertia
+                ixx="1e-7" ixy="0.0" ixz="0.0"
+                iyy="1e-7" iyz="0.0"
+                izz="1e-7"/>
+        </inertial>
+        <visual name="sonar_viz">
+            <geometry><box size="0.01 0.01 0.01"/></geometry>
+            <material name='r'>
+                <color rgba="${debug_rgba}"/>
+            </material>
+        </visual>
+    </link>
     <link name="imu_link">
         <inertial>
             <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -183,9 +197,7 @@
                 iyy="1e-7" iyz="0.0"
                 izz="1e-7"/>
         </inertial>
-        <!-- no collision/visual required -->
         <visual name="imu_viz">
-            <!-- <geometry><box size="0.01 0.01 0.003"/></geometry> -->
             <geometry><box size="0.01 0.01 0.01"/></geometry>
             <material name='r'>
                 <color rgba="${debug_rgba}"/>
@@ -193,10 +205,16 @@
         </visual>
     </link>
 
+    <!-- Joints -->
+
+    <joint name="chassis_sonar_joint" type="fixed">
+        <parent link="chassis"/>
+        <child  link="sonar_link"/>
+        <origin xyz="0.1775 0 0.015" rpy="0 0 0"/>
+    </joint>
     <joint name="lidar_top_to_frame" type="fixed">
         <parent link="lidar_top"/>
         <child  link="lidar_frame"/>
-        <!-- offset halfway up the cylinder -->
         <origin xyz="0 0 -0.076" rpy="0 0 0"/>
     </joint>
     <joint name="chassis_imu_joint" type="fixed">
@@ -291,6 +309,33 @@
         </joint>
     </ros2_control>
 
+    <!-- Gazebo -->
+
+    <gazebo reference="sonar_link">
+        <sensor name="sonar" type="gpu_lidar">
+            <frame_id>sonar_link</frame_id>
+            <pose>0 0 0 0 0 0</pose>
+            <update_rate>20</update_rate>
+            <topic>sonar</topic>
+            <ray>
+                <scan>
+                    <horizontal>
+                        <samples>21</samples>
+                        <min_angle>-0.131</min_angle>
+                        <max_angle> 0.131</max_angle>
+                    </horizontal>
+                </scan>
+                <range>
+                    <min>0.02</min>
+                    <max>4.0</max>
+                    <resolution>0.01</resolution>
+                </range>
+            </ray>
+            <always_on>1</always_on>
+            <visualize>true</visualize>
+        </sensor>
+    </gazebo>
+
     <gazebo reference="lidar_top">
         <sensor name="rplidar_a1" type="gpu_lidar">
             <frame_id>lidar_frame</frame_id>
@@ -326,7 +371,6 @@
             <update_rate>200</update_rate>
             <topic>imu</topic>
             <imu>
-                <!-- <orientation_reference_frame>ENU</orientation_reference_frame> -->
                 <angular_velocity>
                     <x><noise type="gaussian"><mean>0</mean><stddev>0.001</stddev></noise></x>
                     <y><noise type="gaussian"><mean>0</mean><stddev>0.001</stddev></noise></y>
@@ -341,6 +385,7 @@
             </imu>
         </sensor>
     </gazebo>
+
     <gazebo reference='fl_wheel'>
         <collision>
             <surface>

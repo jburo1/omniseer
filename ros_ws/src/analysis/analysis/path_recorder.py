@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+"""
+Create corresponding Path topics from MDC's odom and gz
+Track differences between where controller thinks we are vs. where we are actually
+"""
 from rclpy import init, shutdown, spin
 from rclpy.node import Node
 from nav_msgs.msg import Path, Odometry

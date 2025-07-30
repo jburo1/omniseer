@@ -15,12 +15,13 @@ setup(
     zip_safe=True,
     maintainer='selfsim',
     maintainer_email='jonas.buro1@gmail.com',
-    description='Analysis tooling',
+    description='Analysis + misc. tooling',
     license='Apache-2.0',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
             'path_recorder = analysis.path_recorder:main',
+            'scan_to_range = analysis.scan_to_range:main',
         ],
     },
 )

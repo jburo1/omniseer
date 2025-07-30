@@ -94,6 +94,8 @@ def generate_launch_description():
         condition=IfCondition(headless),
     )
 
+    # ------------- BRIDGE ------------- #
+
     bridge_config_path = PathJoinSubstitution([
         pkg_bringup, 'config', 'bridge_config.yaml'
     ])
@@ -101,13 +103,21 @@ def generate_launch_description():
     bridge_node = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
-        arguments=[
-            # '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
-        ],
         parameters=[{'use_sim_time': use_sim_time},
                     {'config_file' : bridge_config_path}],
         output='screen'
     )
+
+    # ------------- DATA TRANSFORMATION ------------- #
+
+    scan_to_range_node = Node(
+        package='analysis',
+        executable='scan_to_range',
+        name='scan_to_range',
+        parameters=[{'use_sim_time': use_sim_time}],
+        output='screen',
+    )
+
 
     # ------------- RVIZ ------------- #
 
@@ -127,7 +137,9 @@ def generate_launch_description():
         # condition=IfCondition(gui),
     )
 
-    path_recorder = Node(
+    # ------------- ANALYSIS ------------- #
+
+    path_recorder_node = Node(
         package='analysis',
         executable='path_recorder',
         name='path_recorder',
@@ -168,7 +180,7 @@ def generate_launch_description():
 
     # ------------- TWIST MUX ------------- #
 
-    twist_mux = Node(
+    twist_mux_node = Node(
         package='twist_mux',
         executable='twist_mux',
         name='twist_mux',
@@ -235,7 +247,8 @@ def generate_launch_description():
         jsb_eh,
         mecanum_drive_eh,
         rsp_node,
-        twist_mux,
+        twist_mux_node,
         rviz_node,
-        path_recorder,
+        path_recorder_node,
+        scan_to_range_node,
     ])
