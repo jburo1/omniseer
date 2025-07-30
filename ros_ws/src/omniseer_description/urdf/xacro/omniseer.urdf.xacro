@@ -222,6 +222,7 @@
     </link>
 
     <!-- Joints -->
+
     <joint name="chassis_camera_joint" type="fixed">
         <parent link="chassis"/>
         <child  link="camera_link"/>

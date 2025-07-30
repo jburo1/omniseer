@@ -76,7 +76,7 @@
             </link>
         </model>
         <model name="wall_north">
-            <pose>0 5 1.25 0 0 0</pose>        <!-- x y z roll pitch yaw -->
+            <pose>0 5 1.25 0 0 0</pose>
             <static>true</static>
             <link name="link">
                 <collision name="col"><geometry><box><size>10 0.2 2.5</size></box></geometry></collision>

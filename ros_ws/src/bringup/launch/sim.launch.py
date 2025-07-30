@@ -53,6 +53,7 @@ def generate_launch_description():
             'bash','-c', r'''
             echo "[cleanup] Gazebo…"
             pkill -TERM -f 'gz[ _](sim|server|client|gui)' || true
+            echo "[cleanup] ROS2 Daemon…"
             ros2 daemon stop  || true
             ros2 daemon start || true
             '''
@@ -110,7 +111,7 @@ def generate_launch_description():
         condition=IfCondition(headless),
     )
 
-    # ------------- BRIDGE ------------- #
+    # ------------- BRIDGES ------------- #
 
     bridge_config_path = PathJoinSubstitution([
         pkg_bringup, 'config', 'bridge_config.yaml'
@@ -122,6 +123,16 @@ def generate_launch_description():
         parameters=[{'use_sim_time': use_sim_time},
                     {'config_file' : bridge_config_path}],
         output='screen'
+    )
+
+    image_bridge_node = Node(
+        package    = "ros_gz_image",
+        executable = "image_bridge",
+        arguments  = ["/front_camera/image"],
+        parameters = [{
+            'front_camera.image.compressed.jpeg_quality': 75,
+        }],
+        output = "screen",
     )
 
     # ------------- DATA TRANSFORMATION ------------- #
@@ -213,7 +224,6 @@ def generate_launch_description():
 
     )
 
-
     # ------------- CONTROLLERS/BROADCASTERS ------------- #
 
     jsb_node = Node(
@@ -260,6 +270,7 @@ def generate_launch_description():
         gz_ros_gui_ld,
         gz_ros_headless_ld,
         bridge_node,
+        image_bridge_node,
         robot_spawn_node,
         jsb_eh,
         mecanum_drive_eh,
