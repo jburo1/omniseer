@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 bringup for complete Gazebo - ROS2 simulation
-alternative headless CI mode
+alternative headless mode
 
 Components:
 --------------
@@ -10,7 +10,7 @@ GZ server + optional client via ros_gz wrapper launcher
 robot spawn via XACRO->URDF
 controller_manager via gazebo plugin init in URDF
 input mux for teleoperation/nav/emergency stop
-ros gz bridge - clock/tf
+ros gz bridge
 
 Example usage:
 --------------
@@ -20,14 +20,14 @@ ros2 launch bringup sim.launch.py 'headless:=true'             - CI
 ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -p stamped:=true -r cmd_vel:=/mecanum_drive_controller/reference
 """
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
-from launch.actions import RegisterEventHandler, SetEnvironmentVariable
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, ExecuteProcess
+from launch.actions import RegisterEventHandler, SetEnvironmentVariable, GroupAction
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import Command, LaunchConfiguration, PathJoinSubstitution, EnvironmentVariable
+from launch.substitutions import Command, LaunchConfiguration, PathJoinSubstitution
+from launch.conditions import IfCondition, UnlessCondition
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
-from launch.conditions import IfCondition, UnlessCondition
 
 
 
@@ -43,6 +43,22 @@ def generate_launch_description():
 
     pkg_bringup  = FindPackageShare('bringup')
     pkg_omniseer = FindPackageShare('omniseer_description')
+
+    # ------------- CLEANUP ------------- #
+
+    cleanup = ExecuteProcess(
+        name='pre_flight_cleanup',
+        shell=True,
+        cmd=[
+            'bash','-c', r'''
+            echo "[cleanup] Gazebo…"
+            pkill -TERM -f 'gz[ _](sim|server|client|gui)' || true
+            ros2 daemon stop  || true
+            ros2 daemon start || true
+            '''
+        ],
+        output='screen'
+    )
 
     # ------------- ROS_GZ ------------- #
 
@@ -236,8 +252,9 @@ def generate_launch_description():
         )
     )
 
-    return LaunchDescription(
-        declared_arguments + [
+    # ------------- GROUPACTION POST CLEANUP ------------- #
+
+    post_cleanup_actions = GroupAction(actions=[
         set_sim_system_path,
         set_resource_path,
         gz_ros_gui_ld,
@@ -251,4 +268,17 @@ def generate_launch_description():
         rviz_node,
         path_recorder_node,
         scan_to_range_node,
+    ])
+
+    after_cleanup = RegisterEventHandler(
+        OnProcessExit(
+        target_action=cleanup,
+        on_exit=[post_cleanup_actions]
+        )
+    )
+
+    return LaunchDescription(
+        declared_arguments + [
+        cleanup,
+        after_cleanup
     ])
