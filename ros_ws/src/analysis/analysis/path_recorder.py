@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Create corresponding Path topics from MDC's odom and gz
-Track differences between where controller thinks we are vs. where we are actually
+Track differences between where ekf thinks we are vs. where we are actually
 """
 from rclpy import init, shutdown, spin
 from rclpy.node import Node
@@ -14,7 +14,8 @@ class PathRecorder(Node):
     def __init__(self):
         super().__init__('path_recorder')
 
-        self.declare_parameter('odom_topic', '/mecanum_drive_controller/odometry')
+        self.declare_parameter('odom_topic', '/odometry/filtered')
+        # self.declare_parameter('odom_topic', '/mecanum_drive_controller/odometry')
         self.declare_parameter('sim_topic', '/gz_odom')
         self.declare_parameter('odom_path_topic', '/odom_path')
         self.declare_parameter('sim_path_topic', '/sim_path')

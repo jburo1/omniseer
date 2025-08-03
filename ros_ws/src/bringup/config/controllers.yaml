@@ -19,11 +19,13 @@ mecanum_drive_controller:
     kinematics:
       base_frame_offset: {x: 0.0, y: 0.0, theta: 0.0}
       wheels_radius: 0.0485
-      # lx = 0.0974, ly = 0.0866
-      sum_of_robot_center_projection_on_X_Y_axis: 0.184
+      # sum_of_robot_center_projection_on_X_Y_axis: 0.184
+      sum_of_robot_center_projection_on_X_Y_axis: 0.20622
+
+
     base_frame_id: "base_link"
     odom_frame_id: "odom"
-    enable_odom_tf: true
+    enable_odom_tf: false
     open_loop: false
     publish_rate: 50.0
     velocity_lim:

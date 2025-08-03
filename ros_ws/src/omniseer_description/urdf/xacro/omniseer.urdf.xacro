@@ -11,10 +11,9 @@
     <xacro:property name="body_rgba"   value="0.671 0.663 0.506 1.0"/>
     <xacro:property name="sensor_rgba" value="0.671 0.663 0.506 1.0"/>
     <xacro:property name="debug_rgba" value="1.0 0.0 0.0 1.0"/>
-    <xacro:property name="lx" value="0.0974"/>
-    <xacro:property name="ly" value="0.0866"/>
     <xacro:property name="wheel_radius" value="0.0485"/>
     <xacro:property name="wheel_width" value="0.0445"/>
+
 
     <xacro:macro name="wheel_transmission" params="joint">
         <transmission name="${joint}_tr">
@@ -38,12 +37,12 @@
 
     <link name="fl_wheel">
         <inertial>
-            <origin xyz="1.7993153278439422e-09 2.26380317489938e-09 0.02100000076677828" rpy="0.0 -0.0 0.0" />
+            <origin xyz="1.7993153278439422e-09 0 0" rpy="0.0 -0.0 0.0" />
             <mass value="0.1449437592188408" />
             <inertia ixx="0.00010654272201079539" iyy="0.00010654272201080037" izz="0.00017047197881125639" ixy="-4.7460314825842516e-20" iyz="-5.1880768019325896e-20" ixz="0.0" />
         </inertial>
         <visual name="fl_wheel_visual">
-            <origin xyz="1.7993155232431945e-09 1.1387656346129211e-09 0.021000000766778337" rpy="1.5707963267948968 1.2281842209915656e-15 3.1554436208840444e-30" />
+            <origin xyz="1.7993155232431945e-09 0 0" rpy="1.5707963267948968 1.2281842209915656e-15 3.1554436208840444e-30" />
             <geometry>
                 <mesh filename="package://omniseer_description/meshes/fl_wheel.stl" scale="0.001 0.001 0.001" />
             </geometry>
@@ -52,7 +51,7 @@
             </material>
         </visual>
         <collision name="fl_wheel_collision">
-            <origin xyz="1.7993155232431945e-09 1.1387656346129211e-09 0.021000000766778337" rpy="0 1.2281842209915656e-15 3.1554436208840444e-30" />
+            <origin xyz="1.7993155232431945e-09 0 0" rpy="0 1.2281842209915656e-15 3.1554436208840444e-30" />
             <geometry>
                 <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
             </geometry>
@@ -60,12 +59,12 @@
     </link>
     <link name="bl_wheel">
         <inertial>
-            <origin xyz="-1.7993153278439422e-09 2.26380317489938e-09 0.02100000076677828" rpy="0.0 -0.0 0.0" />
+            <origin xyz="-1.7993153278439422e-09 0 0" rpy="0.0 -0.0 0.0" />
             <mass value="0.1449437592188408" />
             <inertia ixx="0.00010654272201079539" iyy="0.0001065427220107995" izz="0.00017047197881125617" ixy="-4.7460314825842516e-20" iyz="-5.1880768019325896e-20" ixz="0.0" />
         </inertial>
         <visual name="bl_wheel_visual">
-            <origin xyz="-1.7993151324446899e-09 1.1387656346129211e-09 0.021000000766778337" rpy="1.5707963267948968 1.2281842209915656e-15 3.1554436208840444e-30" />
+            <origin xyz="-1.7993151324446899e-09 0 0" rpy="1.5707963267948968 1.2281842209915656e-15 3.1554436208840444e-30" />
             <geometry>
                 <mesh filename="package://omniseer_description/meshes/bl_wheel.stl" scale="0.001 0.001 0.001" />
             </geometry>
@@ -74,7 +73,7 @@
             </material>
         </visual>
         <collision name="bl_wheel_collision">
-            <origin xyz="-1.7993151324446899e-09 1.1387656346129211e-09 0.021000000766778337" rpy="0 1.2281842209915656e-15 3.1554436208840444e-30" />
+            <origin xyz="-1.7993151324446899e-09 0 0" rpy="0 1.2281842209915656e-15 3.1554436208840444e-30" />
             <geometry>
                 <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
             </geometry>
@@ -82,12 +81,12 @@
     </link>
     <link name="fr_wheel">
         <inertial>
-            <origin xyz="1.7993153811346474e-09 -2.26380317489938e-09 0.02100000076677828" rpy="0.0 -0.0 0.0" />
+            <origin xyz="1.7993153811346474e-09 0.0 -0" rpy="0.0 -0.0 0.0" />
             <mass value="0.1449437592188408" />
             <inertia ixx="0.00010654272201079539" iyy="0.00010654272201079994" izz="0.00017047197881125639" ixy="4.7460314825842516e-20" iyz="-5.1880768019325896e-20" ixz="0.0" />
         </inertial>
         <visual name="fr_wheel_visual">
-            <origin xyz="1.7993155765338997e-09 -1.1387656346129211e-09 0.02100000076677823" rpy="-1.5707963267948966 -1.2281842209915656e-15 -3.1554436208840444e-30" />
+            <origin xyz="1.7993155765338997e-09 0 -0" rpy="-1.5707963267948966 -1.2281842209915656e-15 -3.1554436208840444e-30" />
             <geometry>
                 <mesh filename="package://omniseer_description/meshes/fr_wheel.stl" scale="0.001 0.001 0.001" />
             </geometry>
@@ -96,7 +95,7 @@
             </material>
         </visual>
         <collision name="fr_wheel_collision">
-            <origin xyz="1.7993155765338997e-09 -1.1387656346129211e-09 0.02100000076677823" rpy="0 -1.2281842209915656e-15 -3.1554436208840444e-30" />
+            <origin xyz="1.7993155765338997e-09 0 -0" rpy="0 -1.2281842209915656e-15 -3.1554436208840444e-30" />
             <geometry>
                 <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
             </geometry>
@@ -104,12 +103,12 @@
     </link>
     <link name="br_wheel">
         <inertial>
-            <origin xyz="-1.7993152745532372e-09 -2.26380317489938e-09 0.02100000076677828" rpy="0.0 -0.0 0.0" />
+            <origin xyz="-1.7993152745532372e-09 0 -0" rpy="0.0 -0.0 0.0" />
             <mass value="0.1449437592188408" />
             <inertia ixx="0.00010654272201079539" iyy="0.00010654272201080037" izz="0.00017047197881125617" ixy="4.7460314825842516e-20" iyz="-5.1880768019325896e-20" ixz="-4.336808689942018e-19" />
         </inertial>
         <visual name="br_wheel_visual">
-            <origin xyz="-1.7993150791539846e-09 -1.1387656346129211e-09 0.02100000076677823" rpy="-1.5707963267948966 -1.2281842209915656e-15 -3.1554436208840444e-30" />
+            <origin xyz="-1.7993150791539846e-09 0 -0" rpy="-1.5707963267948966 -1.2281842209915656e-15 -3.1554436208840444e-30" />
             <geometry>
                 <mesh filename="package://omniseer_description/meshes/br_wheel.stl" scale="0.001 0.001 0.001" />
             </geometry>
@@ -118,7 +117,7 @@
             </material>
         </visual>
         <collision name="br_wheel_collision">
-            <origin xyz="-1.7993150791539846e-09 -1.1387656346129211e-09 0.02100000076677823" rpy="0 -1.2281842209915656e-15 -3.1554436208840444e-30" />
+            <origin xyz="-1.7993150791539846e-09 0 -0" rpy="0 -1.2281842209915656e-15 -3.1554436208840444e-30" />
             <geometry>
                 <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
             </geometry>
@@ -244,28 +243,28 @@
         <origin xyz="0.01 0 0.045" rpy="0 0 0"/>
     </joint>
     <joint name="chassis_br_wheel_joint" type="continuous">
-        <origin xyz="-0.0971 -0.08661705 8.94e-06" rpy="1.5707963267948966 -0.0 0.0" />
+        <origin xyz="-0.0971 -0.10886705 8.94e-06" rpy="1.5707963267948966 -0.0 0.0" />
         <parent link="chassis" />
         <child link="br_wheel" />
         <axis xyz="0.0 0.0 -1.0" />
         <dynamics damping="0.1"/>
     </joint>
     <joint name="chassis_fr_wheel_joint" type="continuous">
-        <origin xyz="0.0976 -0.08661705 8.94e-06" rpy="1.5707963267948966 -0.0 0.0" />
+        <origin xyz="0.0976 -0.10886705 8.94e-06" rpy="1.5707963267948966 -0.0 0.0" />
         <parent link="chassis" />
         <child link="fr_wheel" />
         <axis xyz="-0.0 -0.0 -1.0" />
         <dynamics damping="0.1"/>
     </joint>
     <joint name="chassis_bl_wheel_joint" type="continuous">
-        <origin xyz="-0.0971 0.08661705 8.94e-06" rpy="-1.5707963267948966 -0.0 0.0" />
+        <origin xyz="-0.0971 0.10886705 8.94e-06" rpy="-1.5707963267948966 -0.0 0.0" />
         <parent link="chassis" />
         <child link="bl_wheel" />
         <axis xyz="0.0 0.0 1.0" />
         <dynamics damping="0.1"/>
     </joint>
     <joint name="chassis_fl_wheel_joint" type="continuous">
-        <origin xyz="0.0976 0.08661705 8.94e-06" rpy="-1.5707963267948966 -0.0 0.0" />
+        <origin xyz="0.0976 0.10886705 8.94e-06" rpy="-1.5707963267948966 -0.0 0.0" />
         <parent link="chassis" />
         <child link="fl_wheel" />
         <axis xyz="0.0 0.0 1.0" />
@@ -408,6 +407,7 @@
 
     <gazebo reference="imu_link">
         <sensor name="imu_sensor" type="imu">
+            <frame_id>imu_link</frame_id>
             <pose>0 0 0 0 0 0</pose>
             <always_on>1</always_on>
             <update_rate>200</update_rate>
@@ -516,9 +516,8 @@
     <gazebo>
         <plugin name="gz_ros2_control::GazeboSimROS2ControlPlugin" filename="libgz_ros2_control-system">
             <verbose>true</verbose>
-            <parameters>
-                $(find bringup)/config/controllers.yaml
-            </parameters>
+            <parameters>$(find bringup)/config/controllers.yaml</parameters>
+            <param name="config_file" value="$(find bringup)/config/controllers.yaml"/>
             <controller_manager_prefix_node_name>controller_manager</controller_manager_prefix_node_name>
         </plugin>
     </gazebo>

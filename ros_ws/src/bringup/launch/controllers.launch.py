@@ -1,29 +1,26 @@
-# bringup/launch/controllers.launch.py
+#!/usr/bin/env python3
+'''
+
+'''
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, RegisterEventHandler
-from launch.event_handlers import OnProcessExit
+from launch.actions import DeclareLaunchArgument, TimerAction
 from launch_ros.actions import Node
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, Command
 from launch_ros.substitutions import FindPackageShare
 from launch.conditions import UnlessCondition
 
 def generate_launch_description():
-    bringup_share = FindPackageShare('bringup')
+    pkg_bringup = FindPackageShare('bringup')
+    pkg_omniseer = FindPackageShare('omniseer_description')
 
     declared_arguments = [
-            DeclareLaunchArgument('sim_mode',
-                default_value='true',
-                description='true → controller_manager is spawned inside Gazebo'),
-            DeclareLaunchArgument('use_sim_time',
-                description='Clock = /clock from gz',
-                default_value='true'),
+            DeclareLaunchArgument('sim_mode', default_value='true',
+                description='sim or real'),
+            DeclareLaunchArgument('use_sim_time', default_value='true'),
             DeclareLaunchArgument('controller_yaml',
-                description='Path to controllers parameter file',
-                default_value=PathJoinSubstitution([bringup_share, 'config', 'controllers.yaml'])),
+                default_value=PathJoinSubstitution([pkg_bringup, 'config', 'controllers.yaml'])),
     ]
 
-    pkg_omniseer = FindPackageShare('omniseer_description')
-    pkg_bringup  = FindPackageShare('bringup')
     xacro_file   = PathJoinSubstitution([pkg_omniseer, 'urdf', 'xacro', 'omniseer.urdf.xacro'])
     controller_file = PathJoinSubstitution([pkg_bringup, 'config', 'controllers.yaml'])
     robot_description_content = Command(['xacro ', xacro_file])
@@ -41,7 +38,7 @@ def generate_launch_description():
         parameters= [
             {'robot_description' : robot_description_content},
             controller_yaml,
-            # {"use_sim_time" : use_sim_time}
+            {"use_sim_time" : use_sim_time}
         ],
         output    = 'both',
         condition = UnlessCondition(sim_mode)
@@ -49,34 +46,36 @@ def generate_launch_description():
 
 
     # time gate these spawners making sure that the controller is ready
-    joint_state_broadcaster = Node(
-        package   = 'controller_manager',
-        executable= 'spawner',
-        name = 'jsb',
-        arguments = ['joint_state_broadcaster'],
-        output    = 'screen',
-        parameters=[{'use_sim_time': use_sim_time}]
+    jsb_spawner = TimerAction(
+        period=2.0,
+        actions= [Node(
+            package   = 'controller_manager',
+            executable= 'spawner',
+            name = 'jsb',
+            arguments = ['joint_state_broadcaster',
+                        '--controller-manager', '/controller_manager'],
+            output    = 'screen',
+            parameters=[{'use_sim_time': use_sim_time}]
+        )]
     )
 
-    mecanum_drive = Node(
-        package   = 'controller_manager',
-        executable= 'spawner',
-        arguments = ['mecanum_drive_controller',
-                     '--param-file', controller_file,
-                     '--controller-manager-timeout', '10.0'],
-        output    = 'screen',
-        parameters=[{'use_sim_time': use_sim_time}]
+    mecanum_drive_spawner = TimerAction(
+        period=2.0,
+        actions = [Node(
+            package   = 'controller_manager',
+            executable= 'spawner',
+            arguments = ['mecanum_drive_controller',
+                        '--param-file', controller_file,
+                        '--controller-manager-timeout', '10.0'],
+            output    = 'screen',
+            parameters=[{'use_sim_time': use_sim_time}]
+        )]
     )
-
-    # RegisterEventHandler(
-    #     event_handler = OnProcessExit(
-    #         target_action =
-    # ))
 
     return LaunchDescription(
         declared_arguments + [
             control_node,
-            joint_state_broadcaster,
-            mecanum_drive
+            jsb_spawner,
+            mecanum_drive_spawner,
         ]
     )

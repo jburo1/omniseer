@@ -129,9 +129,9 @@ def generate_launch_description():
         package    = "ros_gz_image",
         executable = "image_bridge",
         arguments  = ["/front_camera/image"],
-        parameters = [{
-            'front_camera.image.compressed.jpeg_quality': 75,
-        }],
+        parameters = [
+            {'front_camera.image.compressed.jpeg_quality': 75,},
+            {'use_sim_time': use_sim_time}],
         output = "screen",
     )
 
@@ -161,7 +161,6 @@ def generate_launch_description():
             '-d', rviz_config_path
         ],
         parameters=[{'use_sim_time': use_sim_time}],
-        # condition=IfCondition(gui),
     )
 
     # ------------- ANALYSIS ------------- #
@@ -173,7 +172,6 @@ def generate_launch_description():
         output='screen',
         parameters=[
             {'use_sim_time': use_sim_time},
-            # {'max_path_length': 500},
         ],
     )
 
@@ -224,6 +222,18 @@ def generate_launch_description():
 
     )
 
+    # ------------- SENSOR FUSION ------------- #
+
+    robot_localization_config   = PathJoinSubstitution([pkg_bringup, 'config', 'ekf_fusion.yaml'])
+
+    robot_localization_node = Node(
+        package='robot_localization',
+        executable='ekf_node',
+        name='ekf_filter',
+        output='screen',
+        parameters=[robot_localization_config, {'use_sim_time': use_sim_time}],
+    )
+
     # ------------- CONTROLLERS/BROADCASTERS ------------- #
 
     jsb_node = Node(
@@ -235,13 +245,6 @@ def generate_launch_description():
         parameters=[{'use_sim_time': use_sim_time}],
     )
 
-    jsb_eh = RegisterEventHandler(
-        event_handler=OnProcessExit(
-            target_action=robot_spawn_node,
-            on_exit=[jsb_node]
-        )
-    )
-
     controller_file = PathJoinSubstitution([pkg_bringup, 'config', 'controllers.yaml'])
 
     mecanum_drive_node = Node(
@@ -249,11 +252,12 @@ def generate_launch_description():
         executable= 'spawner',
         arguments = ['mecanum_drive_controller',
                      '--param-file', controller_file,
-                     '--controller-ros-args', '-r /mecanum_drive_controller/tf_odometry:=/tf',
                      '--controller-manager-timeout', '15.0'],
         output    = 'screen',
         parameters=[{'use_sim_time': use_sim_time}],
     )
+
+    # ------------- EVENT HANDLERS ------------- #
 
     mecanum_drive_eh = RegisterEventHandler(
         event_handler=OnProcessExit(
@@ -262,23 +266,55 @@ def generate_launch_description():
         )
     )
 
+    jsb_eh = RegisterEventHandler(
+        event_handler=OnProcessExit(
+            target_action=robot_spawn_node,
+            on_exit=[jsb_node]
+        )
+    )
+
+
+    ekf_eh = RegisterEventHandler(
+        event_handler=OnProcessExit(
+            target_action=mecanum_drive_node,
+            on_exit=[robot_localization_node]
+        )
+    )
+
+    image_bridge_eh = RegisterEventHandler(
+        event_handler=OnProcessExit(
+            target_action=robot_spawn_node,
+            on_exit=[image_bridge_node]
+        )
+    )
+
     # ------------- GROUPACTION POST CLEANUP ------------- #
 
     post_cleanup_actions = GroupAction(actions=[
+        # env vars
         set_sim_system_path,
         set_resource_path,
+
+        # gazebo
         gz_ros_gui_ld,
         gz_ros_headless_ld,
-        bridge_node,
-        image_bridge_node,
+
+        # robot core
+        rsp_node,
         robot_spawn_node,
         jsb_eh,
         mecanum_drive_eh,
-        rsp_node,
+        ekf_eh,
+
+        # support nodes, can start async
+        bridge_node,
         twist_mux_node,
         rviz_node,
-        path_recorder_node,
+        # path_recorder_node,
         scan_to_range_node,
+
+        # topic-timing bridges
+        image_bridge_eh,
     ])
 
     after_cleanup = RegisterEventHandler(

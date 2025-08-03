@@ -2,8 +2,8 @@
 <sdf version="1.11">
     <world name="simple_world">
         <physics name="default_physics" type="ode">
-            <max_step_size>0.001</max_step_size>
-            <real_time_update_rate>1000</real_time_update_rate>
+            <max_step_size>0.003</max_step_size>
+            <real_time_update_rate>500</real_time_update_rate>
             <ode>
                 <solver>
                 <type>quick</type>
