@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """
 orchestrate bringup for simulation
+
+Usage examples:
+    ros2 launch bringup orchestrate_sim.launch.py
+    ros2 launch bringup orchestrate_sim.launch.py headless=true -d
 """
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription

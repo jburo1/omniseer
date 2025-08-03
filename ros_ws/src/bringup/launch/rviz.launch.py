@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-launch rviz
+launch rviz / path recorder
 """
 from launch import LaunchDescription
 from launch_ros.actions import Node

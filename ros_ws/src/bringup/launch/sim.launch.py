@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 """
+%% DEPRECATED
+
 bringup for complete Gazebo - ROS2 simulation
 alternative headless mode
 
