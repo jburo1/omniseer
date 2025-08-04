@@ -79,6 +79,16 @@ def generate_launch_description():
     )
 
     # ────────────────────────────────
+    # slam
+    # ────────────────────────────────
+    slam_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [PathJoinSubstitution([pkg_bringup, 'launch', 'slam.launch.py'])]
+        ),
+        launch_arguments={'use_sim_time': use_sim_time}.items()
+    )
+
+    # ────────────────────────────────
     # nav
     # ────────────────────────────────
     nav_launch = IncludeLaunchDescription(
@@ -101,11 +111,12 @@ def generate_launch_description():
 
     return LaunchDescription(declared_arguments + [
         gz_launch,
-        spawn_robot_launch,
         bridge_launch,
+        spawn_robot_launch,
         sensor_launch,
         controllers_launch,
-        nav_launch,
+        # slam_launch,
+        # nav_launch,
         rviz_launch
     ])
 

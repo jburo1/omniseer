@@ -1,0 +1,19 @@
+slam_toolbox:
+  ros__parameters:
+    map_frame:  map
+    odom_frame: odom
+    base_frame: base_link
+    scan_topic: /scan
+    mode: mapping
+
+    transform_publish_period: 0.05  # 20 Hz
+    map_update_interval: 3.0
+    resolution: 0.05
+
+    minimum_travel_distance: 0.10
+    minimum_travel_heading: 0.017
+
+    solver_plugin: solver_plugins::CeresSolver
+    ceres_linear_solver: SPARSE_NORMAL_CHOLESKY
+    ceres_preconditioner: SCHUR_JACOBI
+    ceres_trust_strategy: LEVENBERG_MARQUARDT

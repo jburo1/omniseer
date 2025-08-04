@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 '''
-
 '''
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
@@ -31,11 +30,24 @@ def generate_launch_description():
         remappings=[
             ('/cmd_vel_out', '/mecanum_drive_controller/reference')
         ],
+    )
 
+    lifecycle_mgr = Node(
+        package     = 'nav2_lifecycle_manager',
+        executable  = 'lifecycle_manager',
+        name        = 'lifecycle_manager',
+        output      = 'screen',
+        parameters  = [{
+            'use_sim_time': use_sim_time,
+            'autostart':    True,
+            'node_names':   ['slam_toolbox'],
+            'bond_timeout': 0.0
+        }]
     )
 
     return LaunchDescription(
         declared_arguments + [
             twist_mux_node,
+            lifecycle_mgr
         ]
     )
