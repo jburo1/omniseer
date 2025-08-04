@@ -36,6 +36,7 @@
         "--pid=host",
         "--ipc=host",
         "-e", "DISPLAY=${env:DISPLAY}",
+        "-v", "/tmp/.X11-unix:/tmp/.X11-unix:rw",
         "-e", "QT_X11_NO_MITSHM=1",
         "--device=/dev/dri"
     ],
@@ -43,5 +44,5 @@
        "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=cached",
        "source=/dev/dri,target=/dev/dri,type=bind,consistency=cached"
     ],
-    "postCreateCommand": "sudo chown -R $(whoami) /home/ws/ "
+    "postCreateCommand": "sudo rosdep update && sudo rosdep install --from-paths ./ros_ws/src --ignore-src -y && sudo chown -R $(whoami) /home/ws/ "
 }
