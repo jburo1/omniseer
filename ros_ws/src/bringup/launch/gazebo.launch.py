@@ -13,6 +13,7 @@ from launch.conditions import IfCondition, UnlessCondition
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, TextSubstitution
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.substitutions import FindPackageShare
+from launch.actions import ExecuteProcess
 
 def generate_launch_description():
     # ────────────────────────────────
@@ -65,8 +66,8 @@ def generate_launch_description():
             'gz_args': [
                 ' -r -v 4 ',
                 world_path,
-                ' --gui-config ',
-                gz_config_path,
+                # ' --gui-config ',
+                # gz_config_path,
             ]
         }.items(),
         condition=UnlessCondition(headless)
@@ -85,6 +86,7 @@ def generate_launch_description():
     )
 
     ld = LaunchDescription( declared_arguments + [
+        # ExecuteProcess(cmd=['env'], output='screen'),
         set_plugin_path,
         set_resource_path,
         gz_ros_gui,

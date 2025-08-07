@@ -1,0 +1,6 @@
+{
+  "features": {
+    "ghcr.io/devcontainers/features/nvidia-cuda:2": {}
+  },
+  "runArgs": [ "--gpus", "all" ]
+}

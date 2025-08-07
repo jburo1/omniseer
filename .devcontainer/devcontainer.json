@@ -1,14 +1,18 @@
 {
     "name": "ROS 2 Development Container",
-    "privileged": true,
-    "remoteUser": "sslab",
+    "remoteUser": "user",
     "build": {
+        "context": "..",
         "dockerfile": "Dockerfile",
         "target": "dev",
         "args": {
-            "USERNAME": "sslab"
+            "USERNAME": "user"
         }
     },
+    "features": {
+        "ghcr.io/devcontainers/features/nvidia-cuda:2": {}
+    },
+    "hostRequirements": { "gpu": "optional" },
     "workspaceFolder": "/home/ws",
     "workspaceMount": "source=${localWorkspaceFolder},target=/home/ws,type=bind",
     "customizations": {
@@ -22,26 +26,37 @@
                 "ms-iot.vscode-ros"
             ],
             "settings": {
-                "terminal.integrated.shellArgs.linux": [ "-lc", "tmux new -ADs dev" ]
+                "terminal.integrated.shellArgs.linux": [ "-lc", "tmux new -ADs dev" ],
+                "terminal.integrated.profiles.linux": {
+                    "tmux": {
+                        "path": "tmux",
+                        "args": ["new-session", "-A", "-s", "vscode:${workspaceFolder}"]
+                    }
+                }
             }
         }
     },
     "containerEnv": {
-        "DISPLAY": "unix:0",
         "ROS_AUTOMATIC_DISCOVERY_RANGE": "LOCALHOST",
-        "ROS_DOMAIN_ID": "42"
+        "ROS_DOMAIN_ID": "42",
+        "__GLX_VENDOR_LIBRARY_NAME": "nvidia", 
+        "LIBGL_DRI3_DISABLE": "1",
+        "NVIDIA_VISIBLE_DEVICES": "all",
+        "NVIDIA_DRIVER_CAPABILITIES": "graphics,utility,compute"
     },
     "runArgs": [
-        "--net=host",
-        "--pid=host",
-        "--ipc=host",
-        "-e", "DISPLAY=${env:DISPLAY}",
+        "--gpus", "all",
+        "--runtime=nvidia",
+        "--net=host", "--pid=host", "--ipc=host",
+        "--group-add", "video",
+        "-e", "DISPLAY=${localEnv:DISPLAY}",
         "-e", "QT_X11_NO_MITSHM=1",
-        "--device=/dev/dri"
+        "--device=/dev/dri",
+        "-v", "/tmp/.X11-unix:/tmp/.X11-unix"
     ],
     "mounts": [
-       "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=cached",
-       "source=/dev/dri,target=/dev/dri,type=bind,consistency=cached"
+        "source=/dev/dri,target=/dev/dri,type=bind,consistency=cached"
     ],
-    "postCreateCommand": "sudo chown -R $(whoami) /home/ws/ "
+
+    "postCreateCommand": "bash -lc 'sudo chown -R $(whoami) /home/ws/ && cd /home/ws/ros_ws && source /opt/ros/${ROS_DISTRO}/setup.bash && sudo apt-get update && rosdep update && sudo rosdep install --from-paths src --ignore-src -r -y && colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release'"
 }

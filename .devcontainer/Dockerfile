@@ -3,31 +3,47 @@
 #########################################
 ARG ROS_DISTRO=kilted
 FROM osrf/ros:${ROS_DISTRO}-desktop-full-noble AS dev
+#osrf/ros@sha256:923b7b953ada90a90535a211af71273a6b674d0098b1c0adc8e72962f48cd8c4
 
-ARG USERNAME=sslab
+ARG USERNAME=user
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
+
+# create user
 RUN if id -u $USER_UID 2>/dev/null; then userdel $(id -un $USER_UID); fi \
  && groupadd --gid $USER_GID $USERNAME \
  && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME
 
-COPY apt-packages.txt /tmp/apt-packages.txt
-RUN apt-get update \
- && xargs -a /tmp/apt-packages.txt apt-get install -y --no-install-recommends \
- && rm -rf /var/lib/apt/lists/*
+# bring in opengl passthrough / misc tooling
+RUN apt-get update && \
+    apt-get install -y \
+        curl gnupg lsb-release software-properties-common\
+        python3-pip sudo tmux \
+        libnvidia-gl-575 mesa-utils
 
-RUN apt-get update \
- && apt-get install -y --no-install-recommends \
-      sudo \
-      python3-rosdep \
-      ros-${ROS_DISTRO}-gazebo-ros-pkgs \
-      ros-${ROS_DISTRO}-gazebo-ros \
- && rm -rf /var/lib/apt/lists/* \
- && rosdep init || true \
- && rosdep update \
- && echo "$USERNAME ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/$USERNAME \
- && chmod 0440 /etc/sudoers.d/$USERNAME
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl gnupg2 ca-certificates
 
+RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
+      -o /usr/share/keyrings/ros-archive-keyring.gpg
+
+# enable the building repo
+RUN echo "deb [arch=$(dpkg --print-architecture) \
+           signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] \
+           http://repo.ros2.org/ubuntu/building noble main" \
+        > /etc/apt/sources.list.d/ros2-building.list && \
+    apt-get update && \
+    sudo apt install --only-upgrade -y 'ros-kilted-rviz*'
+
+RUN rosdep init || true && \
+    rosdep update
+
+RUN echo "$USERNAME ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/$USERNAME && \
+ chmod 0440 /etc/sudoers.d/$USERNAME
+
+RUN echo "set -g mouse on" > /home/${USERNAME}/.tmux.conf \
+    && chown ${USERNAME}:${USERNAME} /home/${USERNAME}/.tmux.conf
+    
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 \
     COLCON_HOME=/home/${USERNAME}/.colcon \
@@ -35,10 +51,10 @@ ENV DEBIAN_FRONTEND=noninteractive \
     ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST \
     SHELL=/bin/bash
 
-# Source ROS on every shell
 RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> /etc/bash.bashrc
 
-# Switch to non-root user
+RUN usermod -aG video ${USERNAME}
+
 USER ${USERNAME}
 WORKDIR /home/${USERNAME}
 CMD ["/bin/bash"]
@@ -49,8 +65,9 @@ CMD ["/bin/bash"]
 #########################################
 FROM dev AS builder
 
-WORKDIR /home/${USERNAME}/ros_ws
+WORKDIR /home/ws/ros_ws
 COPY --chown=${USERNAME}:${USERNAME} src/ src/
+RUN apt-get update
 RUN rosdep update && \
     rosdep install --from-paths src --ignore-src -r -y && \
     colcon build --merge-install --cmake-args -DCMAKE_BUILD_TYPE=Release
@@ -65,8 +82,9 @@ ENV ROS_DOMAIN_ID=42 \
     LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
 
 # Copy in only the built install space
-COPY --from=builder /home/${USERNAME}/ros_ws/install /opt/ros_ws
+COPY --from=builder /home/ws/ros_ws/install /opt/ros_ws
 
+RUN echo "source /opt/ros_ws/setup.bash" >> /etc/bash.bashrc
 # COPY entrypoint.sh /entrypoint.sh
 # RUN chmod +x /entrypoint.sh
 # ENTRYPOINT ["/entrypoint.sh"]

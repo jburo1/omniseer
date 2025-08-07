@@ -1,3 +1,4 @@
+*.swp
 **/rviz
 !/ros_ws/src/omniseer_description/rviz
 !/ros_ws/src/omniseer_description/rviz/**
