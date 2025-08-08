@@ -5,6 +5,9 @@ orchestrate bringup for simulation
 Usage examples:
     ros2 launch bringup orchestrate_sim.launch.py
     ros2 launch bringup orchestrate_sim.launch.py headless=true -d
+    
+    ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -p stamped:=true -r cmd_vel:=/mecanum_drive_controller/reference
+    
 """
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
@@ -115,8 +118,8 @@ def generate_launch_description():
         spawn_robot_launch,
         sensor_launch,
         controllers_launch,
-        # slam_launch,
-        # nav_launch,
+        slam_launch,
+        nav_launch,
         rviz_launch
     ])
 
