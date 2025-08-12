@@ -20,17 +20,8 @@ def generate_launch_description():
     # launch arguments
     # ────────────────────────────────
     declared_arguments = [
-        DeclareLaunchArgument(
-            name='world',
-            default_value='simple_world.world',
-            description='Name of target SDF world file'
-        ),
-        DeclareLaunchArgument(
-            name='headless',
-            default_value='false',
-            choices=['true', 'false'],
-            description='If true, run only gz server with headless rendering'
-        )
+        DeclareLaunchArgument(name='world',default_value='simple_world.world'),
+        DeclareLaunchArgument(name='headless', default_value='false')
     ]
 
     world_file      = LaunchConfiguration('world')
@@ -48,6 +39,7 @@ def generate_launch_description():
         name='GZ_SIM_SYSTEM_PLUGIN_PATH',
         value=TextSubstitution(text=f'/opt/ros/kilted/lib:/opt/ros/kilted/opt/gz_sim_vendor/lib/gz-sim-9/plugins')
     )
+    
     set_resource_path = AppendEnvironmentVariable(
         name='GZ_SIM_RESOURCE_PATH',
         value=PathJoinSubstitution([FindPackageShare('omniseer_description'), '..'])
@@ -57,18 +49,13 @@ def generate_launch_description():
     # ros_gz_sim launcher
     # ────────────────────────────────
     ros_gz_launch =  PythonLaunchDescriptionSource(
-        [PathJoinSubstitution([FindPackageShare('ros_gz_sim'),'launch','gz_sim.launch.py'])]
+        [PathJoinSubstitution([FindPackageShare('ros_gz_sim'), 'launch', 'gz_sim.launch.py'])]
     )
-
+    
     gz_ros_gui = IncludeLaunchDescription(
         ros_gz_launch,
         launch_arguments={
-            'gz_args': [
-                ' -r -v 4 ',
-                world_path,
-                # ' --gui-config ',
-                # gz_config_path,
-            ]
+            'gz_args': [TextSubstitution(text='-r -v 1 '),  world_path]
         }.items(),
         condition=UnlessCondition(headless)
     )
@@ -76,11 +63,7 @@ def generate_launch_description():
     gz_ros_headless = IncludeLaunchDescription(
         ros_gz_launch,
         launch_arguments={
-            'gz_args': [
-                '-s -r -v 4 ',
-                world_path,
-                ' --headless-rendering',
-            ]
+            'gz_args': [TextSubstitution(text='-s -r -v 1 '), world_path, TextSubstitution(text=' --headless-rendering')]
         }.items(),
         condition=IfCondition(headless)
     )

@@ -29,8 +29,7 @@ def generate_launch_description():
         package='robot_state_publisher',
         executable='robot_state_publisher',
         parameters=[{'robot_description': robot_description_urdf,
-                     'use_sim_time': use_sim_time
-                     }],
+                    'use_sim_time': use_sim_time}],
         output='both',
     )
 
@@ -44,10 +43,8 @@ def generate_launch_description():
                    '-z', '0.5',
                    ],
         output='screen',
-        parameters=[{
-            'use_sim_time': use_sim_time,
-            'robot_description': robot_description_urdf
-            }],
+        parameters=[{'robot_description': robot_description_urdf,
+                     'use_sim_time': use_sim_time}],
     )
 
     spawn_event_handler = RegisterEventHandler(

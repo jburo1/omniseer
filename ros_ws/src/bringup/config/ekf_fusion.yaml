@@ -1,12 +1,12 @@
 # ekf_fusion.yaml
-# Robot Localization EKF for wheel encoders + IMU on Omniseer
+# Robot Localization EKF for wheel encoders + IMU + Lidar on Omniseer
 ekf_filter:
   ros__parameters:
     # --------------------------------------------------------
     # Core filter
     # --------------------------------------------------------
     frequency: 30.0
-    sensor_timeout: 0.1
+    sensor_timeout: 0.2
     two_d_mode: true
     transform_timeout: 0.1
     publish_tf: true
@@ -22,35 +22,50 @@ ekf_filter:
     world_frame:        odom
 
     # ========================================================
-    #  SENSOR 0 : Wheel-encoder odometry
+    #  Wheel-encoder odometry
     # ========================================================
     odom0: /mecanum_drive_controller/odometry
     # odom0_differential: false
     # odom0_relative:     false
-    odom0_queue_size:   3
+    odom0_queue_size:   5
     odom0_nodelay:      true
     odom0_config:
       [ false,  false,  false, # x, y, z
         false, false, false,   # roll, pitch, yaw
         true,  true,  false,   # vx, vy, vz
-        false, false, true,    # vroll, vpitch, vyaw
+        false, false, false,    # vroll, vpitch, vyaw
         false, false, false ]  # ax, ay, az
 
     # ========================================================
-    #  SENSOR 1 : IMU (raw)
+    #  LaserScan odometry
+    # ========================================================
+    odom1: /odom_rf2o
+    # odom0_differential: false
+    # odom0_relative:     false
+    odom1_queue_size:   5
+    odom1_nodelay:      true
+    odom1_config:
+      [ true,  true,  false,  # x, y, z
+        false, false, true,   # roll, pitch, yaw
+        false, false, false,  # vx, vy, vz
+        false, false, false,  # vroll, vpitch, vyaw
+        false, false, false ] # ax, ay, az
+
+    # ========================================================
+    #  IMU (raw)
     # ========================================================
     imu0: /imu
     imu0_remove_gravitational_acceleration: true
     # imu0_differential: false
     # imu0_relative:     false`
-    imu0_queue_size:   3
+    imu0_queue_size:   10
     imu0_nodelay:      true
     imu0_config:
       [ false, false, false,  # x, y, z
-        false, false,  true,  # roll, pitch, yaw
+        false, false,  false,  # roll, pitch, yaw
         false, false, false,  # vx, vy, vz
-        false,  false, true,  # vroll, vpitch, vyaw
-        true, true, false ]   # ax, ay, az
+        false, false, true,   # vroll, vpitch, vyaw
+        false, false, false ]   # ax, ay, az
 
     process_noise_covariance: [0.2, 0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                               0.0,    0.2, 0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
@@ -73,4 +88,9 @@ ekf_filter:
         # question. Users should take care not to use large values for variables that will not be measured directly. The values
         # are ordered as x, y, z, roll, pitch, yaw, vx, vy, vz, vroll, vpitch, vyaw, ax, ay, az. Defaults to the diagonal values below
         # if unspecified. In this example, we specify only the diagonal of the matrix.
-    initial_estimate_covariance: [1e-9, 1e-9, 1e-9, 1e-9, 1e-9, 1e-9, 1e-9, 1e-9, 1e-9, 1e-9, 1e-9, 1e-9, 1e-9, 1e-9, 1e-9]
+    initial_estimate_covariance:
+      [ 1e3,  1e3,  1e-9,    # x y z
+        1e-9, 1e-9, 1e2,     # roll pitch yaw
+        10.0, 10.0, 1e-9,    # vx vy vz
+        1e-9, 1e-9, 10.0,    # vroll vpitch vyaw
+        1.0,  1.0,  1e-9 ]   # ax ay az

@@ -11,8 +11,13 @@ from launch_ros.substitutions import FindPackageShare
 def generate_launch_description():
 
     declared_arguments = [
-        DeclareLaunchArgument('use_sim_time', default_value='true'),
+        DeclareLaunchArgument(
+            'use_sim_time',
+            default_value='true',
+            description='Use simulation clock'
+        ),
     ]
+
     use_sim_time = LaunchConfiguration('use_sim_time')
 
     pkg_bringup  = FindPackageShare('bringup')
@@ -24,15 +29,15 @@ def generate_launch_description():
         executable='ekf_node',
         name='ekf_filter',
         output='screen',
-        parameters=[robot_localization_config, {'use_sim_time': use_sim_time}],
+        parameters=[{'use_sim_time' : use_sim_time}, robot_localization_config]
     )
 
     scan_to_range_node = Node(
         package='analysis',
         executable='scan_to_range',
         name='scan_to_range',
-        parameters=[{'use_sim_time': use_sim_time}],
-        output='screen',
+        parameters=[{'use_sim_time' : use_sim_time}],
+        output='screen'
     )
 
     return LaunchDescription(declared_arguments + [

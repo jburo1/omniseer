@@ -11,8 +11,13 @@ from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 
 def generate_launch_description():
     declared_arguments = [
-        DeclareLaunchArgument('use_sim_time', default_value='true'),
+        DeclareLaunchArgument(
+            'use_sim_time',
+            default_value='true',
+            description='Use simulation clock'
+        ),
     ]
+
     use_sim_time = LaunchConfiguration('use_sim_time')
 
     pkg_bringup = FindPackageShare('bringup')
@@ -26,20 +31,18 @@ def generate_launch_description():
         executable="rviz2",
         name="rviz2",
         output="both",
+        parameters=[{'use_sim_time' : use_sim_time}],
         arguments = [
             '-d', rviz_config_path
-        ],
-        parameters=[{'use_sim_time': use_sim_time}],
+        ]
     )
 
     path_recorder_node = Node(
         package='analysis',
         executable='path_recorder',
         name='path_recorder',
-        output='screen',
-        parameters=[
-            {'use_sim_time': use_sim_time},
-        ],
+        parameters=[{'use_sim_time' : use_sim_time}],
+        output='screen'
     )
 
     return LaunchDescription(declared_arguments +[

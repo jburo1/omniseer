@@ -10,10 +10,11 @@ Usage examples:
     
 """
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, GroupAction, TimerAction, OpaqueFunction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
+from launch_ros.actions import SetParameter
 
 def generate_launch_description():
     declared_arguments = [
@@ -22,11 +23,12 @@ def generate_launch_description():
         DeclareLaunchArgument('headless', default_value="false"),
     ]
 
-    world     = LaunchConfiguration('world')
-    headless  = LaunchConfiguration('headless')
-    use_sim_time = LaunchConfiguration('use_sim_time')
-
+    world           = LaunchConfiguration('world')
+    headless        = LaunchConfiguration('headless')
+    use_sim_time    = LaunchConfiguration('use_sim_time')
+        
     pkg_bringup = FindPackageShare('bringup')
+    pkg_rf2o    = FindPackageShare('rf2o_laser_odometry')
 
     # ────────────────────────────────
     # gz launch
@@ -82,17 +84,7 @@ def generate_launch_description():
     )
 
     # ────────────────────────────────
-    # slam
-    # ────────────────────────────────
-    slam_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            [PathJoinSubstitution([pkg_bringup, 'launch', 'slam.launch.py'])]
-        ),
-        launch_arguments={'use_sim_time': use_sim_time}.items()
-    )
-
-    # ────────────────────────────────
-    # nav
+    # slam / nav
     # ────────────────────────────────
     nav_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -101,25 +93,49 @@ def generate_launch_description():
         launch_arguments={'use_sim_time': use_sim_time}.items()
     )
 
+    # ────────────────────────────────
+    # rf2o
+    # ────────────────────────────────
+    rf2o_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [PathJoinSubstitution([pkg_bringup, 'launch', 'rf2o.launch.py'])]
+        ),
+        launch_arguments={'use_sim_time': use_sim_time}.items()
+    )
 
     # ────────────────────────────────
     # rviz
     # ────────────────────────────────
     rviz_launch = IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                [PathJoinSubstitution([pkg_bringup, 'launch', 'rviz.launch.py'])]
-            ),
-            launch_arguments={'use_sim_time': use_sim_time}.items()
-        )
+        PythonLaunchDescriptionSource(
+            [PathJoinSubstitution([pkg_bringup, 'launch', 'rviz.launch.py'])]
+        ),
+        launch_arguments={'use_sim_time': use_sim_time}.items()
+    )
+        
+    # def _dump_configs(context, *args, **kwargs):
+    #     print('\n=== LAUNCH CONFIG DUMP ===')
+    #     for k, v in sorted(context.launch_configurations.items()):
+    #         print(f"{k}: {type(v).__name__} -> {v!r}")
+    #     print('=== END DUMP ===\n')
+    #     return []
 
-    return LaunchDescription(declared_arguments + [
-        gz_launch,
+    # OpaqueFunction(function=_dump_configs)
+    
+    
+    ros_group = GroupAction(actions=[
         bridge_launch,
         spawn_robot_launch,
         sensor_launch,
         controllers_launch,
-        slam_launch,
-        nav_launch,
-        rviz_launch
+        # OpaqueFunction(function=_dump_configs),
+        TimerAction(period=5.0, actions=[nav_launch]),        
+        TimerAction(period=10.0, actions=[rf2o_launch]),
+        TimerAction(period=10.0, actions=[rviz_launch])
+    ])
+
+    return LaunchDescription(declared_arguments + [
+        gz_launch,
+        ros_group
     ])
 

@@ -11,8 +11,13 @@ from launch_ros.substitutions import FindPackageShare
 def generate_launch_description():
 
     declared_arguments = [
-        DeclareLaunchArgument('use_sim_time', default_value='true'),
+        DeclareLaunchArgument(
+            'use_sim_time',
+            default_value='true',
+            description='Use simulation clock'
+        ),
     ]
+
     use_sim_time = LaunchConfiguration('use_sim_time')
 
     pkg_bringup  = FindPackageShare('bringup')
@@ -24,8 +29,8 @@ def generate_launch_description():
     bridge_node = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
-        parameters=[{'use_sim_time': use_sim_time},
-                    {'config_file' : bridge_config_path}],
+        parameters=[{'config_file' : bridge_config_path,
+                     'use_sim_time' : use_sim_time}],
         output='screen'
     )
 
@@ -33,8 +38,8 @@ def generate_launch_description():
         package    = "ros_gz_image",
         executable = "image_bridge",
         arguments  = ["/front_camera/image"],
-        parameters = [{'front_camera.image.compressed.jpeg_quality': 75,},
-                      {'use_sim_time': use_sim_time}],
+        parameters = [{'front_camera.image.compressed.jpeg_quality': 75,
+                       'use_sim_time' : use_sim_time}],
         output = "screen",
     )
 

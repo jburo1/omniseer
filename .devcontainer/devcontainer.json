@@ -42,7 +42,7 @@
         "__GLX_VENDOR_LIBRARY_NAME": "nvidia", 
         "LIBGL_DRI3_DISABLE": "1",
         "NVIDIA_VISIBLE_DEVICES": "all",
-        "NVIDIA_DRIVER_CAPABILITIES": "graphics,utility,compute"
+        "NVIDIA_DRIVER_CAPABILITIES": "all"
     },
     "runArgs": [
         "--gpus", "all",

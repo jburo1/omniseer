@@ -6,15 +6,11 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
-        - /RobotModel1
         - /RobotModel1/Description Topic1
         - /Odometry1/Topic1
         - /Odometry1/Shape1
         - /Odometry1/Covariance1
-        - /LaserScan1/Topic1
         - /Image1/Topic1
-        - /Map1
-        - /Map1/Status1
       Splitter Ratio: 0.5200803279876709
     Tree Height: 827
   - Class: rviz_common/Selection
@@ -34,7 +30,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: ""
+    SyncSource: LaserScan
 Visualization Manager:
   Class: ""
   Displays:
@@ -202,8 +198,8 @@ Visualization Manager:
       Color: 255; 255; 255
       Color Transformer: Intensity
       Decay Time: 0
-      Enabled: false
-      Invert Rainbow: false
+      Enabled: true
+      Invert Rainbow: true
       Max Color: 255; 255; 255
       Max Intensity: 0
       Min Color: 0; 0; 0
@@ -211,19 +207,19 @@ Visualization Manager:
       Name: LaserScan
       Position Transformer: XYZ
       Selectable: true
-      Size (Pixels): 3
+      Size (Pixels): 5
       Size (m): 0.5
-      Style: Flat Squares
+      Style: Points
       Topic:
         Depth: 10
         Durability Policy: Volatile
         Filter size: 100
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /lidar
+        Value: /scan
       Use Fixed Frame: true
       Use rainbow: true
-      Value: false
+      Value: true
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -397,16 +393,16 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 13.491705894470215
+      Distance: 6.897714138031006
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.7486980557441711
-        Y: 0.1426214724779129
-        Z: 0.9664343595504761
+        X: 0.18384411931037903
+        Y: 0.22894538938999176
+        Z: 0.45097362995147705
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false

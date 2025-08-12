@@ -17,12 +17,10 @@ RUN if id -u $USER_UID 2>/dev/null; then userdel $(id -un $USER_UID); fi \
 # bring in opengl passthrough / misc tooling
 RUN apt-get update && \
     apt-get install -y \
-        curl gnupg lsb-release software-properties-common\
+        curl gnupg lsb-release ca-certificates software-properties-common\
+        htop less nano \
         python3-pip sudo tmux \
         libnvidia-gl-575 mesa-utils
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends curl gnupg2 ca-certificates
 
 RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
       -o /usr/share/keyrings/ros-archive-keyring.gpg
@@ -33,7 +31,8 @@ RUN echo "deb [arch=$(dpkg --print-architecture) \
            http://repo.ros2.org/ubuntu/building noble main" \
         > /etc/apt/sources.list.d/ros2-building.list && \
     apt-get update && \
-    sudo apt install --only-upgrade -y 'ros-kilted-rviz*'
+    sudo apt install --only-upgrade -y 'ros-kilted-rviz*' && \
+        ros-kilted-rqt-gui ros-kilted-rqt-gui-py ros-kilted-rqt-graph ros-kilted-rqt-tf-tree
 
 RUN rosdep init || true && \
     rosdep update

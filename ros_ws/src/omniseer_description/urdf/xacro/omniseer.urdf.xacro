@@ -15,24 +15,6 @@
     <xacro:property name="wheel_width" value="0.0445"/>
 
 
-    <xacro:macro name="wheel_transmission" params="joint">
-        <transmission name="${joint}_tr">
-            <type>transmission_interface/SimpleTransmission</type>
-            <joint name="${joint}">
-                <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
-            </joint>
-            <actuator name="${joint}_motor">
-                <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
-                <mechanicalReduction>1</mechanicalReduction>
-            </actuator>
-        </transmission>
-    </xacro:macro>
-
-    <xacro:wheel_transmission joint="chassis_fl_wheel_joint"/>
-    <xacro:wheel_transmission joint="chassis_fr_wheel_joint"/>
-    <xacro:wheel_transmission joint="chassis_bl_wheel_joint"/>
-    <xacro:wheel_transmission joint="chassis_br_wheel_joint"/>
-
     <!-- Links -->
 
     <link name="fl_wheel">
@@ -145,6 +127,7 @@
             </geometry>
         </collision>
     </link>
+    <link name="lidar_frame"/>
     <link name="lidar_top">
         <frame name="lidar_frame" attached_to="lidar_top">
             <pose>0 0 -0.076 0 0 0</pose>
@@ -170,7 +153,6 @@
             </geometry>
         </collision>
     </link>
-    <link name="lidar_frame"/>
     <link name="sonar_link">
         <inertial>
             <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -381,13 +363,13 @@
         <sensor name="rplidar_a1" type="gpu_lidar">
             <frame_id>lidar_frame</frame_id>
             <pose>0 0 0 0 0 0</pose>
-            <topic>lidar</topic>
+            <topic>scan</topic>
             <update_rate>10</update_rate>
             <ray>
                 <scan>
                     <horizontal>
                     <samples>360</samples>
-                    <resolution>1</resolution>
+                    <resolution>1</resolution> 
                     <min_angle>-3.14159</min_angle>
                     <max_angle> 3.14159</max_angle>
                     </horizontal>
@@ -516,7 +498,6 @@
         <plugin name="gz_ros2_control::GazeboSimROS2ControlPlugin" filename="libgz_ros2_control-system">
             <verbose>true</verbose>
             <parameters>$(find bringup)/config/controllers.yaml</parameters>
-            <param name="config_file" value="$(find bringup)/config/controllers.yaml"/>
             <controller_manager_prefix_node_name>controller_manager</controller_manager_prefix_node_name>
         </plugin>
     </gazebo>
