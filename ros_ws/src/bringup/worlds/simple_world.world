@@ -80,8 +80,20 @@
             <static>true</static>
             <link name="link">
                 <collision name="col"><geometry><box><size>10 0.2 2.5</size></box></geometry></collision>
-                <visual    name="vis"><geometry><box><size>10 0.2 2.5</size></box></geometry>
-                <material><ambient>0.7 0.7 0.7 1</ambient></material>
+                <visual    name="vis">
+                    <geometry><box><size>10 0.2 2.5</size></box></geometry>
+                    <material>
+                        <ambient>0.7 0.7 0.7 1</ambient>
+                        <diffuse>0.7 0.7 0.7 1</diffuse>
+                        <specular>0 0 0 1</specular>
+                        <emissive>0.03 0.03 0.03 1</emissive>
+                        <pbr>
+                            <metal>
+                                <roughness>0.9</roughness>
+                                <metalness>0.0</metalness>
+                            </metal>
+                        </pbr>
+                    </material>
                 </visual>
             </link>
         </model>
@@ -91,7 +103,21 @@
             <static>true</static>
             <link name="link">
                 <collision name="col"><geometry><box><size>10 0.2 2.5</size></box></geometry></collision>
-                <visual    name="vis"><geometry><box><size>10 0.2 2.5</size></box></geometry></visual>
+                <visual    name="vis">
+                    <geometry><box><size>10 0.2 2.5</size></box></geometry>
+                    <material>
+                        <ambient>0.7 0.7 0.7 1</ambient>
+                        <diffuse>0.7 0.7 0.7 1</diffuse>
+                        <specular>0 0 0 1</specular>
+                        <emissive>0.03 0.03 0.03 1</emissive>
+                        <pbr>
+                            <metal>
+                                <roughness>0.9</roughness>
+                                <metalness>0.0</metalness>
+                            </metal>
+                        </pbr>
+                    </material>
+                </visual>
             </link>
         </model>
 
@@ -100,7 +126,21 @@
             <static>true</static>
             <link name="link">
                 <collision name="col"><geometry><box><size>10 0.2 2.5</size></box></geometry></collision>
-                <visual    name="vis"><geometry><box><size>10 0.2 2.5</size></box></geometry></visual>
+                <visual    name="vis">
+                    <geometry><box><size>10 0.2 2.5</size></box></geometry>
+                    <material>
+                        <ambient>0.7 0.7 0.7 1</ambient>
+                        <diffuse>0.7 0.7 0.7 1</diffuse>
+                        <specular>0 0 0 1</specular>
+                        <emissive>0.03 0.03 0.03 1</emissive>
+                        <pbr>
+                            <metal>
+                                <roughness>0.9</roughness>
+                                <metalness>0.0</metalness>
+                            </metal>
+                        </pbr>
+                    </material>
+                </visual>
             </link>
         </model>
 
@@ -109,7 +149,21 @@
         <static>true</static>
         <link name="link">
             <collision name="col"><geometry><box><size>10 0.2 2.5</size></box></geometry></collision>
-            <visual    name="vis"><geometry><box><size>10 0.2 2.5</size></box></geometry></visual>
+            <visual    name="vis">
+                    <geometry><box><size>10 0.2 2.5</size></box></geometry>
+                    <material>
+                        <ambient>0.7 0.7 0.7 1</ambient>
+                        <diffuse>0.7 0.7 0.7 1</diffuse>
+                        <specular>0 0 0 1</specular>
+                        <emissive>0.03 0.03 0.03 1</emissive>
+                        <pbr>
+                            <metal>
+                                <roughness>0.9</roughness>
+                                <metalness>0.0</metalness>
+                            </metal>
+                        </pbr>
+                    </material>
+                </visual>
         </link>
         </model>
 

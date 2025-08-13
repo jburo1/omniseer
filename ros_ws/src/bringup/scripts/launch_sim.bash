@@ -2,7 +2,7 @@
 
 source ./install/setup.bash
 
-PATTERN='(^|[[:space:]/])(ros2|rviz2|gazebo(server|client)?|gz([[:space:]]+|-)?(sim|gui)|gz|ros_gz(_(sim|bridge))?|nav2|slam_toolbox|ekf_filter|gz_ros_control|scan_to_range|robot_state_publisher|controller_manager(/spawner)?|parameter_bridge|image_bridge|mecanum_drive_controller|joint_state_publisher|jsb|lifecycle_manager)\b'
+PATTERN='(^|[[:space:]/])(ros2|rviz2|gazebo(server|client)?|gz([[:space:]]+|-)?(sim|gui)|gz|ros_gz(_(sim|bridge))?|nav2|slam_toolbox|ekf_filter|gz_ros_control|scan_to_range|robot_state_publisher|controller_manager(/spawner)?|parameter_bridge|image_bridge|mecanum_drive_controller|joint_state_publisher|jsb|lifecycle_manager|rf2o)\b'
 
 ros2 daemon stop >/dev/null 2>&1 || true
 

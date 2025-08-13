@@ -62,10 +62,10 @@ ekf_filter:
     imu0_nodelay:      true
     imu0_config:
       [ false, false, false,  # x, y, z
-        false, false,  false,  # roll, pitch, yaw
+        false, false,  true,  # roll, pitch, yaw
         false, false, false,  # vx, vy, vz
         false, false, true,   # vroll, vpitch, vyaw
-        false, false, false ]   # ax, ay, az
+        true, true, true ]   # ax, ay, az
 
     process_noise_covariance: [0.2, 0.0,    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,
                               0.0,    0.2, 0.0,    0.0,    0.0,    0.0,    0.0,     0.0,     0.0,    0.0,    0.0,    0.0,    0.0,    0.0,    0.0,

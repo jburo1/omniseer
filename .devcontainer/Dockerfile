@@ -9,6 +9,13 @@ ARG USERNAME=user
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
+ENV DEBIAN_FRONTEND=noninteractive \
+    LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 \
+    COLCON_HOME=/home/${USERNAME}/.colcon \
+    ROS_DOMAIN_ID=42 \
+    ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST \
+    SHELL=/bin/bash
+
 # create user
 RUN if id -u $USER_UID 2>/dev/null; then userdel $(id -un $USER_UID); fi \
  && groupadd --gid $USER_GID $USERNAME \
@@ -31,7 +38,7 @@ RUN echo "deb [arch=$(dpkg --print-architecture) \
            http://repo.ros2.org/ubuntu/building noble main" \
         > /etc/apt/sources.list.d/ros2-building.list && \
     apt-get update && \
-    sudo apt install --only-upgrade -y 'ros-kilted-rviz*' && \
+    sudo apt install -y 'ros-kilted-rviz*' \
         ros-kilted-rqt-gui ros-kilted-rqt-gui-py ros-kilted-rqt-graph ros-kilted-rqt-tf-tree
 
 RUN rosdep init || true && \
@@ -42,13 +49,6 @@ RUN echo "$USERNAME ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/$USERNAME && \
 
 RUN echo "set -g mouse on" > /home/${USERNAME}/.tmux.conf \
     && chown ${USERNAME}:${USERNAME} /home/${USERNAME}/.tmux.conf
-    
-ENV DEBIAN_FRONTEND=noninteractive \
-    LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 \
-    COLCON_HOME=/home/${USERNAME}/.colcon \
-    ROS_DOMAIN_ID=42 \
-    ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST \
-    SHELL=/bin/bash
 
 RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> /etc/bash.bashrc
 
