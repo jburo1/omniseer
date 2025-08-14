@@ -2,12 +2,14 @@
 '''
 '''
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, GroupAction, RegisterEventHandler, TimerAction
+from launch.actions import DeclareLaunchArgument, GroupAction, RegisterEventHandler, TimerAction, IncludeLaunchDescription
 from launch.event_handlers import OnProcessStart
-from launch_ros.actions import Node
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch_ros.actions import Node, SetParameter
 from launch_ros.substitutions import FindPackageShare
 from launch_ros.parameter_descriptions import ParameterFile
+
 
 def generate_launch_description():
     pkg_bringup = FindPackageShare('bringup')
@@ -54,6 +56,19 @@ def generate_launch_description():
             # respawn_delay=2.0
         ]
     )
+    
+    yolo_include = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [PathJoinSubstitution([pkg_bringup, 'launch', 'yolov11.launch.py'])]
+        ),
+    )
+    
+    yolo_group = GroupAction([
+        SetParameter(name='use_sim_time', value=use_sim_time),
+        yolo_include,
+    ])
+
+
 
     lifecycle_mgr = Node(
         package     = 'nav2_lifecycle_manager',
@@ -73,6 +88,7 @@ def generate_launch_description():
         declared_arguments + [
             twist_mux_node,
             slam_toolbox_node,
+            yolo_group,
             RegisterEventHandler(
                 OnProcessStart(
                     target_action=slam_toolbox_node,

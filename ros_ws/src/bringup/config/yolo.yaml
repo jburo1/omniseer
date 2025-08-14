@@ -1,0 +1,20 @@
+yolo:
+  ros__parameters:
+    # pick your model; start with a small one for sanity
+    model: yolov11n.pt               
+    device: cuda:0
+    threshold: 0.4
+    iou: 0.65
+    imgsz_width:  640
+    imgsz_height: 480
+    # half: true                      # only if device is CUDA with FP16
+    use_tracking: true
+    use_debug: true
+
+    # <-- hook into your topics
+    input_image_topic: /front_camera/image
+    image_reliability: 2            # 0=default, 1=Reliable, 2=BestEffort
+
+    # frame to express 3D boxes/keypoints in
+    target_frame: base_link
+    use_sim_time: true            

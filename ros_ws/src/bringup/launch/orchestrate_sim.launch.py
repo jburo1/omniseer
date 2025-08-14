@@ -83,7 +83,7 @@ def generate_launch_description():
     )
 
     # ────────────────────────────────
-    # slam / nav
+    # slam / nav / yolo
     # ────────────────────────────────
     nav_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(

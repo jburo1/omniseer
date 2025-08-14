@@ -24,10 +24,10 @@ RUN if id -u $USER_UID 2>/dev/null; then userdel $(id -un $USER_UID); fi \
 # bring in opengl passthrough / misc tooling
 RUN apt-get update && \
     apt-get install -y \
-        curl gnupg lsb-release ca-certificates software-properties-common\
+        curl gnupg lsb-release ca-certificates software-properties-common \
         htop less nano \
-        python3-pip sudo tmux \
-        libnvidia-gl-575 mesa-utils
+        python3-pip python3-dev sudo tmux \
+        libnvidia-gl-575 mesa-utils \
 
 RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
       -o /usr/share/keyrings/ros-archive-keyring.gpg
@@ -40,6 +40,8 @@ RUN echo "deb [arch=$(dpkg --print-architecture) \
     apt-get update && \
     sudo apt install -y 'ros-kilted-rviz*' \
         ros-kilted-rqt-gui ros-kilted-rqt-gui-py ros-kilted-rqt-graph ros-kilted-rqt-tf-tree
+
+RUN  python3 -m pip install --no-cache-dir --break-system-packages -r requirements.txt
 
 RUN rosdep init || true && \
     rosdep update
@@ -57,6 +59,12 @@ RUN usermod -aG video ${USERNAME}
 USER ${USERNAME}
 WORKDIR /home/${USERNAME}
 CMD ["/bin/bash"]
+
+# test me - yolo build
+RUN python3 -m pip install --upgrade pip && \
+    python3 -m pip config set global.break-system-packages true && \
+    python3 -m pip install --no-cache-dir \
+        -r src/yolo_ros/requirements.txt
 
 
 #########################################
