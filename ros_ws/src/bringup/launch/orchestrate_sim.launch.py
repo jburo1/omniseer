@@ -20,14 +20,16 @@ def generate_launch_description():
         DeclareLaunchArgument('world',    default_value='simple_world.world'),
         DeclareLaunchArgument('use_sim_time', default_value='true'),
         DeclareLaunchArgument('headless', default_value="false"),
+        # DeclareLaunchArgument('use_debug', default_value="true"),
     ]
 
     world           = LaunchConfiguration('world')
     headless        = LaunchConfiguration('headless')
     use_sim_time    = LaunchConfiguration('use_sim_time')
+    # use_debug       = LaunchConfiguration('use_debug')
+    
         
     pkg_bringup = FindPackageShare('bringup')
-    pkg_rf2o    = FindPackageShare('rf2o_laser_odometry')
 
     # ────────────────────────────────
     # gz launch
@@ -89,7 +91,9 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             [PathJoinSubstitution([pkg_bringup, 'launch', 'nav.launch.py'])]
         ),
-        launch_arguments={'use_sim_time': use_sim_time}.items()
+        launch_arguments={'use_sim_time': use_sim_time
+                        #   'use_debug': use_debug
+                        }.items()
     )
 
     # ────────────────────────────────
@@ -135,6 +139,6 @@ def generate_launch_description():
 
     return LaunchDescription(declared_arguments + [
         gz_launch,
-        ros_group
+        TimerAction(period=2.0, actions=[ros_group])
     ])
 

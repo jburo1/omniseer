@@ -21,11 +21,13 @@ def generate_launch_description():
             description='Use simulation clock'
         ),
         DeclareLaunchArgument('slam_tb_config_file', default_value='slam_toolbox_async_online.yaml'),
+        # DeclareLaunchArgument('use_debug', default_value='false',    description='Enable YOLO debug images')
     ]
 
     use_sim_time = LaunchConfiguration('use_sim_time')
     slam_tb_config_file      = LaunchConfiguration("slam_tb_config_file")
-
+    # use_debug = LaunchConfiguration('use_debug')
+    
     twist_mux_node = Node(
         package='twist_mux',
         executable='twist_mux',
@@ -52,8 +54,6 @@ def generate_launch_description():
             allow_substs=True
             ),
             {'use_sim_time': use_sim_time},
-            # respawn=True, 
-            # respawn_delay=2.0
         ]
     )
     
@@ -65,10 +65,8 @@ def generate_launch_description():
     
     yolo_group = GroupAction([
         SetParameter(name='use_sim_time', value=use_sim_time),
-        yolo_include,
+        yolo_include
     ])
-
-
 
     lifecycle_mgr = Node(
         package     = 'nav2_lifecycle_manager',

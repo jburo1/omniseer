@@ -47,5 +47,5 @@ def generate_launch_description():
 
     return LaunchDescription(declared_arguments +[
         rviz_node,
-        path_recorder_node,
+        # path_recorder_node,
     ])

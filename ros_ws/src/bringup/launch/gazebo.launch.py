@@ -40,9 +40,14 @@ def generate_launch_description():
         value=TextSubstitution(text=f'/opt/ros/kilted/lib:/opt/ros/kilted/opt/gz_sim_vendor/lib/gz-sim-9/plugins')
     )
     
-    set_resource_path = AppendEnvironmentVariable(
+    set_resource_path_desc = AppendEnvironmentVariable(
         name='GZ_SIM_RESOURCE_PATH',
         value=PathJoinSubstitution([FindPackageShare('omniseer_description'), '..'])
+    )
+    
+    set_resource_path_assets = AppendEnvironmentVariable(
+        name='GZ_SIM_RESOURCE_PATH',
+        value=PathJoinSubstitution([FindPackageShare('omniseer_gz_assets'), 'models'])
     )
 
     # ────────────────────────────────
@@ -71,7 +76,8 @@ def generate_launch_description():
     ld = LaunchDescription( declared_arguments + [
         # ExecuteProcess(cmd=['env'], output='screen'),
         set_plugin_path,
-        set_resource_path,
+        set_resource_path_desc,
+        set_resource_path_assets,
         gz_ros_gui,
         gz_ros_headless,
     ])

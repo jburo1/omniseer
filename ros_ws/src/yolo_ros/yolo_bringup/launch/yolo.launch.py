@@ -193,7 +193,7 @@ def generate_launch_description():
             description="Divisor used to convert the raw depth image values into metres",
         )
 
-        maximum_detection_threshold = LaunchConfiguration("maximum_detection_threshold")
+        maximum_detection_threshold = LaunchConfiguration("maximum_detection_thresheold")
         maximum_detection_threshold_cmd = DeclareLaunchArgument(
             "maximum_detection_threshold",
             default_value="0.3",
@@ -210,7 +210,7 @@ def generate_launch_description():
         use_debug = LaunchConfiguration("use_debug")
         use_debug_cmd = DeclareLaunchArgument(
             "use_debug",
-            default_value="True",
+            default_value="False",
             description="Whether to activate the debug node",
         )
 

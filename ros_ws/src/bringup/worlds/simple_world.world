@@ -75,6 +75,21 @@
                 </visual>
             </link>
         </model>
+
+        <include>
+            <uri>model://coke</uri>
+            <name>coke</name>
+            <pose>1 0 0 0 0 1.5</pose>
+            <static>true</static>
+        </include>
+
+        <include>
+            <uri>model://chair</uri>
+            <name>chair</name>
+            <pose>2 0 0 0 0 2</pose>
+            <static>true</static>
+        </include>
+
         <model name="wall_north">
             <pose>0 5 1.25 0 0 0</pose>
             <static>true</static>

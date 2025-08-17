@@ -25,7 +25,7 @@ RUN if id -u $USER_UID 2>/dev/null; then userdel $(id -un $USER_UID); fi \
 RUN apt-get update && \
     apt-get install -y \
         curl gnupg lsb-release ca-certificates software-properties-common \
-        htop less nano \
+        htop less nano rsync \
         python3-pip python3-dev sudo tmux \
         libnvidia-gl-575 mesa-utils \
 
