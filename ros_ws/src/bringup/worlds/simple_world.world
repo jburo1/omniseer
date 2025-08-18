@@ -79,15 +79,106 @@
         <include>
             <uri>model://coke</uri>
             <name>coke</name>
-            <pose>1 0 0 0 0 1.5</pose>
-            <static>true</static>
+            <pose>1 0 0.05 0 0 1.5</pose>
+            <static>false</static>
         </include>
 
         <include>
             <uri>model://chair</uri>
             <name>chair</name>
-            <pose>2 0 0 0 0 2</pose>
-            <static>true</static>
+            <pose>2 0 0.05 0 0 2</pose>
+            <static>false</static>
+        </include>
+
+        <include>
+            <uri>model://hammer</uri>
+            <name>hammer</name>
+            <pose>-2 0 0.1 0 0 0</pose>
+            <static>false</static>
+        </include>
+
+        <include>
+            <uri>model://fire_extinguisher</uri>
+            <name>fire extinguiser</name>
+            <pose>-2 1 0.05 0 0 0</pose>
+            <static>false</static>
+        </include>
+
+        <include>
+            <uri>model://cardboard_box</uri>
+            <name>box</name>
+            <pose>-2 -1 0.05 0 0 0</pose>
+            <static>false</static>
+        </include>
+
+        <include>
+            <uri>model://construction_barrel</uri>
+            <name>barrel</name>
+            <pose>-2 2 0.05 0 0 0</pose>
+            <static>false</static>
+        </include>
+
+        <include>
+            <uri>model://jansport_backpack_red</uri>
+            <name>backpack</name>
+            <pose>2 -3 0.05 0 0 0</pose>
+            <static>false</static>
+        </include>
+
+        <include>
+            <uri>model://construction_cone</uri>
+            <name>cone</name>
+            <pose>1 2 0.05 0 0 0</pose>
+            <static>false</static>
+        </include>
+
+        <include>
+            <uri>model://trash_can</uri>
+            <name>trash</name>
+            <pose>0 -2 0.05 0 0 0</pose>
+            <static>false</static>
+        </include>
+
+        <include>
+            <uri>model://ball</uri>
+            <name>ball</name>
+            <pose>-1 -2 0.2 0 0 0</pose>
+            <static>false</static>
+        </include>
+
+        <include>
+            <uri>model://kanex_multisync_wireless_keyboard</uri>
+            <name>keyboard</name>
+            <pose>-1 -3 0.2 0 0 0</pose>
+            <static>false</static>
+        </include>
+
+        <include>
+            <uri>model://retail_leadership_summit_ect3zqhyikx</uri>
+            <name>retail</name>
+            <pose>0 2 0.02 0 0 0</pose>
+            <static>false</static>
+        </include>
+
+        <include>
+            <uri>model://threshold_porcelain_teapot_white</uri>
+            <name>teapot</name>
+            <pose>0 3 0.02 0 0 0</pose>
+            <static>false</static>
+        </include>
+
+        <include>
+            <uri>model://timberland_mens_earthkeepers_stormbuck_plain_toe_oxford</uri>
+            <name>shoes</name>
+            <pose>-1 3 0.05 0 0 0</pose>
+            <static>false</static>
+        </include>
+
+        <include>
+            <uri>model://travel_mate_p_series_notebook</uri>
+            <name>laptop</name>
+            <pose>-2 3 0.02 0 0 0</pose>
+            <static>false</static>
         </include>
 
         <model name="wall_north">
