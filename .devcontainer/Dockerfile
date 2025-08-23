@@ -1,98 +1,85 @@
 #########################################
-# Stage 1: Development (“dev”)
+# Development (“dev”) stage
 #########################################
 ARG ROS_DISTRO=kilted
 FROM osrf/ros:${ROS_DISTRO}-desktop-full-noble AS dev
-#osrf/ros@sha256:923b7b953ada90a90535a211af71273a6b674d0098b1c0adc8e72962f48cd8c4
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 ARG USERNAME=user
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
-ENV DEBIAN_FRONTEND=noninteractive \
-    LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 \
-    COLCON_HOME=/home/${USERNAME}/.colcon \
-    ROS_DOMAIN_ID=42 \
-    ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST \
-    SHELL=/bin/bash
+ARG DEBIAN_FRONTEND=noninteractive
+ENV LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 \
+    PYTHONUNBUFFERED=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1 \
+    ROS_DISTRO=${ROS_DISTRO} 
 
-# create user
-RUN if id -u $USER_UID 2>/dev/null; then userdel $(id -un $USER_UID); fi \
- && groupadd --gid $USER_GID $USERNAME \
- && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME
+# Add user to group
+RUN if id -u $USER_UID ; then userdel `id -un $USER_UID` ; fi
 
-# bring in opengl passthrough / misc tooling
+RUN set -eux; \
+  getent group "${USER_GID}" || groupadd -g "${USER_GID}" "${USERNAME}"; \
+  id -u "${USERNAME}" >/dev/null 2>&1 || useradd -m -s /bin/bash -u "${USER_UID}" -g "${USER_GID}" "${USERNAME}"
+
+# Add sudo support for the non-root user
 RUN apt-get update && \
-    apt-get install -y \
-        curl gnupg lsb-release ca-certificates software-properties-common \
-        htop less nano rsync sudo tmux tree \
-        python3-pip python3-dev \
-        libnvidia-gl-575 mesa-utils \
+    apt-get install -y sudo locales \
+    && echo "$USERNAME ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME \
+    && locale-gen en_US.UTF-8
 
-RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
-      -o /usr/share/keyrings/ros-archive-keyring.gpg
+# Base deps, tools, GL
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3-venv python3-rosdep python3-lark python3-pip python3-dev build-essential \
+    git curl gnupg lsb-release ca-certificates software-properties-common \
+    htop less nano rsync tmux tree xclip \
+    libglvnd0 libgl1 libglx0 libegl1 \
+    libx11-6 libxext6 libxrender1 libxrandr2 libxi6 mesa-utils \
+    && rm -rf /var/lib/apt/lists/*
 
-# enable the building repo
-RUN echo "deb [arch=$(dpkg --print-architecture) \
-           signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] \
-           http://repo.ros2.org/ubuntu/building noble main" \
-        > /etc/apt/sources.list.d/ros2-building.list && \
-    apt-get update && \
-    sudo apt install -y 'ros-kilted-rviz*' \
-        ros-kilted-rqt-gui ros-kilted-rqt-gui-py ros-kilted-rqt-graph ros-kilted-rqt-tf-tree
+# Create hybrid venv 
+RUN python3 -m venv /opt/venv --system-site-packages
+ENV VIRTUAL_ENV=/opt/venv
+ENV PATH=/opt/venv/bin:$PATH
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1 PIP_NO_CACHE_DIR=1
+RUN chown -R ${USERNAME}:${USERNAME} /opt/venv
+RUN set -eux; \
+  { \
+    printf '%s\n' 'if [ -n "$ROS_DISTRO" ] && [ -r "/opt/ros/$ROS_DISTRO/setup.sh" ]; then'; \
+    printf '%s\n' '  . "/opt/ros/$ROS_DISTRO/setup.sh"'; \
+    printf '%s\n' 'fi'; \
+  } > /etc/profile.d/10-ros.sh; \
+  { \
+    printf '%s\n' 'if [ -d /opt/venv/bin ]; then'; \
+    printf '%s\n' '  case ":$PATH:" in *":/opt/venv/bin:"*) ;; *) PATH="/opt/venv/bin:$PATH";; esac'; \
+    printf '%s\n' '  export PATH'; \
+    printf '%s\n' 'fi'; \
+  } > /etc/profile.d/20-venv.sh; \
+  chmod 0644 /etc/profile.d/10-ros.sh /etc/profile.d/20-venv.sh
 
-RUN  python3 -m pip install --no-cache-dir --break-system-packages -r requirements.txt
 
-RUN rosdep init || true && \
-    rosdep update
-
-RUN echo "$USERNAME ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/$USERNAME && \
- chmod 0440 /etc/sudoers.d/$USERNAME
-
-RUN echo "set -g mouse on" > /home/${USERNAME}/.tmux.conf \
-    && chown ${USERNAME}:${USERNAME} /home/${USERNAME}/.tmux.conf
-
-RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> /etc/bash.bashrc
-
-RUN usermod -aG video ${USERNAME}
+# pip (torch/yolo stack)
+COPY ros_ws/src/yolo_ros/requirements.txt /tmp/reqs.yolo.txt
 
 USER ${USERNAME}
-WORKDIR /home/${USERNAME}
-CMD ["/bin/bash"]
+RUN python -m pip install -U pip setuptools wheel \
+  && pip install --extra-index-url https://download.pytorch.org/whl/cu121 \
+    torch torchvision torchaudio colcon-common-extensions \
+  && pip install -r /tmp/reqs.yolo.txt
+USER root
 
-# test me - yolo build
-RUN python3 -m pip install --upgrade pip && \
-    python3 -m pip config set global.break-system-packages true && \
-    python3 -m pip install --no-cache-dir \
-        -r src/yolo_ros/requirements.txt
+# Rosdep
+RUN rosdep init || true
 
+# Copy custom bash commands
+COPY .devcontainer/bash_commands.txt /etc/profile.d/99-commands.sh
+RUN chmod 0644 /etc/profile.d/99-commands.sh && \
+    echo '[ -f /etc/profile.d/99-commands.sh ] && . /etc/profile.d/99-commands.sh' >> /etc/bash.bashrc
 
-#########################################
-# Stage 2: Builder (“builder”)
-#########################################
-FROM dev AS builder
+# Tmux
+RUN printf '%s\n' 'set -g mouse on' 'set -g history-limit 20000' >> /etc/tmux.conf
 
-WORKDIR /home/ws/ros_ws
-COPY --chown=${USERNAME}:${USERNAME} src/ src/
-RUN apt-get update
-RUN rosdep update && \
-    rosdep install --from-paths src --ignore-src -r -y && \
-    colcon build --merge-install --cmake-args -DCMAKE_BUILD_TYPE=Release
-
-#########################################
-# Stage 3: Runtime (“runtime”)
-#########################################
-FROM osrf/ros:${ROS_DISTRO}-ros-base-noble AS runtime
-
-ENV ROS_DOMAIN_ID=42 \
-    ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST \
-    LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
-
-# Copy in only the built install space
-COPY --from=builder /home/ws/ros_ws/install /opt/ros_ws
-
-RUN echo "source /opt/ros_ws/setup.bash" >> /etc/bash.bashrc
-# COPY entrypoint.sh /entrypoint.sh
-# RUN chmod +x /entrypoint.sh
-# ENTRYPOINT ["/entrypoint.sh"]
-# CMD ["ros2","launch","my_pkg","robot.launch.py"]
+USER ${USERNAME}

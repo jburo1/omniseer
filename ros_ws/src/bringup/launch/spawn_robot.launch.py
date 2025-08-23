@@ -40,7 +40,7 @@ def generate_launch_description():
                    '-param', 'robot_description',
                    '-x', '0',
                    '-y', '0',
-                   '-z', '0.5',
+                   '-z', '0.25',
                    ],
         output='screen',
         parameters=[{'robot_description': robot_description_urdf,

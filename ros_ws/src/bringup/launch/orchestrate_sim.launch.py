@@ -6,7 +6,7 @@ Usage examples:
     ros2 launch bringup orchestrate_sim.launch.py
     ros2 launch bringup orchestrate_sim.launch.py headless=true -d
     
-    ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -p stamped:=true -r cmd_vel:=/mecanum_drive_controller/reference
+ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -p stamped:=true -r cmd_vel:=/mecanum_drive_controller/reference
     
 """
 from launch import LaunchDescription
@@ -83,9 +83,21 @@ def generate_launch_description():
         ),
         launch_arguments={'use_sim_time': use_sim_time}.items()
     )
-
+    
     # ────────────────────────────────
-    # slam / nav / yolo
+    # perception
+    # ────────────────────────────────
+    perception_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [PathJoinSubstitution([pkg_bringup, 'launch', 'perception.launch.py'])]
+        ),
+        launch_arguments={'use_sim_time': use_sim_time
+                        #   'use_debug': use_debug
+                        }.items()
+    )
+    
+    # ────────────────────────────────
+    # nav
     # ────────────────────────────────
     nav_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -95,7 +107,7 @@ def generate_launch_description():
                         #   'use_debug': use_debug
                         }.items()
     )
-
+    
     # ────────────────────────────────
     # rf2o
     # ────────────────────────────────
@@ -132,7 +144,8 @@ def generate_launch_description():
         sensor_launch,
         controllers_launch,
         # OpaqueFunction(function=_dump_configs),
-        TimerAction(period=5.0, actions=[nav_launch]),        
+        TimerAction(period=5.0, actions=[perception_launch]),        
+        # TimerAction(period=7.5, actions=[nav_launch]),        
         TimerAction(period=10.0, actions=[rf2o_launch]),
         TimerAction(period=10.0, actions=[rviz_launch])
     ])

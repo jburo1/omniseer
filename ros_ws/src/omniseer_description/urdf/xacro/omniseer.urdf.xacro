@@ -26,7 +26,7 @@
         <visual name="fl_wheel_visual">
             <origin xyz="1.7993155232431945e-09 0 0" rpy="1.5707963267948968 1.2281842209915656e-15 3.1554436208840444e-30" />
             <geometry>
-                <mesh filename="package://omniseer_description/meshes/fl_wheel.stl" scale="0.001 0.001 0.001" />
+                <mesh filename="file://$(find omniseer_description)/meshes/fl_wheel.stl" scale="0.001 0.001 0.001"/>
             </geometry>
             <material name='body_mat'>
                 <color rgba="${body_rgba}"/>
@@ -48,7 +48,7 @@
         <visual name="bl_wheel_visual">
             <origin xyz="-1.7993151324446899e-09 0 0" rpy="1.5707963267948968 1.2281842209915656e-15 3.1554436208840444e-30" />
             <geometry>
-                <mesh filename="package://omniseer_description/meshes/bl_wheel.stl" scale="0.001 0.001 0.001" />
+                <mesh filename="file://$(find omniseer_description)/meshes/bl_wheel.stl" scale="0.001 0.001 0.001"/>
             </geometry>
             <material name='body_mat'>
                 <color rgba="${body_rgba}"/>
@@ -70,7 +70,7 @@
         <visual name="fr_wheel_visual">
             <origin xyz="1.7993155765338997e-09 0 -0" rpy="-1.5707963267948966 -1.2281842209915656e-15 -3.1554436208840444e-30" />
             <geometry>
-                <mesh filename="package://omniseer_description/meshes/fr_wheel.stl" scale="0.001 0.001 0.001" />
+                <mesh filename="file://$(find omniseer_description)/meshes/fr_wheel.stl" scale="0.001 0.001 0.001"/>
             </geometry>
             <material name='body_mat'>
                 <color rgba="${body_rgba}"/>
@@ -92,7 +92,7 @@
         <visual name="br_wheel_visual">
             <origin xyz="-1.7993150791539846e-09 0 -0" rpy="-1.5707963267948966 -1.2281842209915656e-15 -3.1554436208840444e-30" />
             <geometry>
-                <mesh filename="package://omniseer_description/meshes/br_wheel.stl" scale="0.001 0.001 0.001" />
+                <mesh filename="file://$(find omniseer_description)/meshes/br_wheel.stl" scale="0.001 0.001 0.001"/>
             </geometry>
             <material name='body_mat'>
                 <color rgba="${body_rgba}"/>
@@ -114,7 +114,7 @@
         <visual name="chassis_visual">
             <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
             <geometry>
-                <mesh filename="package://omniseer_description/meshes/chassis.stl" scale="0.001 0.001 0.001" />
+                <mesh filename="file://$(find omniseer_description)/meshes/chassis.stl" scale="0.001 0.001 0.001"/>
             </geometry>
             <material name='body_mat'>
                 <color rgba="${body_rgba}"/>
@@ -123,7 +123,7 @@
         <collision name="chassis_collision">
             <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
             <geometry>
-                <mesh filename="package://omniseer_description/meshes/chassis.stl" scale="0.001 0.001 0.001" />
+                <mesh filename="file://$(find omniseer_description)/meshes/chassis.stl" scale="0.001 0.001 0.001"/>
             </geometry>
         </collision>
     </link>
@@ -140,7 +140,7 @@
         <visual name="lidar_top_visual">
             <origin xyz="0.0 0.0 -0.15209671" rpy="0.0 -0.0 0.0" />
             <geometry>
-                <mesh filename="package://omniseer_description/meshes/lidar_top.stl" scale="0.001 0.001 0.001" />
+                <mesh filename="file://$(find omniseer_description)/meshes/lidar_top.stl" scale="0.001 0.001 0.001"/>
             </geometry>
             <material name='sensor_mat'>
                 <color rgba="${sensor_rgba}"/>
@@ -149,7 +149,7 @@
         <collision name="lidar_top_collision">
             <origin xyz="0.0 0.0 -0.15209671" rpy="0.0 -0.0 0.0" />
             <geometry>
-                <mesh filename="package://omniseer_description/meshes/lidar_top.stl" scale="0.001 0.001 0.001" />
+                <mesh filename="file://$(find omniseer_description)/meshes/lidar_top.stl" scale="0.001 0.001 0.001"/>
             </geometry>
         </collision>
     </link>

@@ -7,8 +7,8 @@
             <ode>
                 <solver>
                 <type>quick</type>
-                <iters>100</iters>
-                <precon_iters>50</precon_iters>
+                <iters>20</iters>
+                <precon_iters>0</precon_iters>
                 <sor>1.3</sor>
                 </solver>
             </ode>
@@ -77,6 +77,34 @@
         </model>
 
         <include>
+            <uri>model://trash_can</uri>
+            <name>trash</name>
+            <pose>0 -2 0.0 0 0 0</pose>
+            <static>true</static>
+        </include>
+
+        <include>
+            <uri>model://orange</uri>
+            <name>orange</name>
+            <pose>0 -1 0.05 0 0 0</pose>
+            <static>false</static>
+        </include>
+
+        <include>
+            <uri>model://pallet</uri>
+            <name>pallet</name>
+            <pose>0 1 0.0 0 0 0</pose>
+            <static>true</static>
+        </include>
+
+        <include>
+            <uri>model://scissors</uri>
+            <name>scissors</name>
+            <pose>0 3 0.05 0 0 1.5</pose>
+            <static>false</static>
+        </include>
+
+        <include>
             <uri>model://coke</uri>
             <name>coke</name>
             <pose>1 0 0.05 0 0 1.5</pose>
@@ -84,22 +112,64 @@
         </include>
 
         <include>
-            <uri>model://chair</uri>
-            <name>chair</name>
-            <pose>2 0 0.05 0 0 2</pose>
+            <uri>model://coffee_mug</uri>
+            <name>mug</name>
+            <pose>1 1 0.05 0 0 0</pose>
             <static>false</static>
         </include>
 
         <include>
-            <uri>model://hammer</uri>
-            <name>hammer</name>
-            <pose>-2 0 0.1 0 0 0</pose>
+            <uri>model://construction_cone</uri>
+            <name>cone</name>
+            <pose>1 2 0.00 0 0 0</pose>
+            <static>true</static>
+        </include>
+
+        <include>
+            <uri>model://cole_hardware_hammer_black</uri>
+            <name>hw_hammer</name>
+            <pose>1 3 0.05 0 0 0</pose>
             <static>false</static>
+        </include>
+
+        <include>
+            <uri>model://chair</uri>
+            <name>chair</name>
+            <pose>2 0 0.0 0 0 2</pose>
+            <static>true</static>
+        </include>
+
+        <include>
+            <uri>model://cordless_drill</uri>
+            <name>drill</name>
+            <pose>2 1 0.05 0 0 2</pose>
+            <static>false</static>
+        </include>
+
+        <include>
+            <uri>model://fire_hydrant</uri>
+            <name>hydrant</name>
+            <pose>0 2 0.0 0 0 2</pose>
+            <static>true</static>
+        </include>
+
+        <include>
+            <uri>model://jansport_backpack_red</uri>
+            <name>backpack</name>
+            <pose>2 -3 0.0 0 0 3</pose>
+            <static>true</static>
+        </include>
+
+        <include>
+            <uri>model://big_banana_for_scale</uri>
+            <name>banana</name>
+            <pose>-1 4 0.05 0 0 0</pose>
+            <static>true</static>
         </include>
 
         <include>
             <uri>model://fire_extinguisher</uri>
-            <name>fire extinguiser</name>
+            <name>fire_extinguiser</name>
             <pose>-2 1 0.05 0 0 0</pose>
             <static>false</static>
         </include>
@@ -107,36 +177,36 @@
         <include>
             <uri>model://cardboard_box</uri>
             <name>box</name>
-            <pose>-2 -1 0.05 0 0 0</pose>
-            <static>false</static>
+            <pose>-2 -1 0.0 0 0 0</pose>
+            <static>true</static>
         </include>
 
         <include>
             <uri>model://construction_barrel</uri>
             <name>barrel</name>
-            <pose>-2 2 0.05 0 0 0</pose>
-            <static>false</static>
+            <pose>-2 2 0.0 0 0 0</pose>
+            <static>true</static>
         </include>
 
         <include>
-            <uri>model://jansport_backpack_red</uri>
-            <name>backpack</name>
-            <pose>2 -3 0.05 0 0 0</pose>
-            <static>false</static>
+            <uri>model://table</uri>
+            <name>table</name>
+            <pose>-2 -2 0.0 0 0 0</pose>
+            <static>true</static>
         </include>
 
         <include>
-            <uri>model://construction_cone</uri>
-            <name>cone</name>
-            <pose>1 2 0.05 0 0 0</pose>
-            <static>false</static>
+            <uri>model://lampandstand</uri>
+            <name>lampandstand</name>
+            <pose>-1 -3 0 0 0 0</pose>
+            <static>true</static>
         </include>
 
         <include>
-            <uri>model://trash_can</uri>
-            <name>trash</name>
-            <pose>0 -2 0.05 0 0 0</pose>
-            <static>false</static>
+            <uri>model://woodenchair</uri>
+            <name>woodenchair</name>
+            <pose>-3 0 0 0 0 0</pose>
+            <static>true</static>
         </include>
 
         <include>
@@ -147,38 +217,10 @@
         </include>
 
         <include>
-            <uri>model://kanex_multisync_wireless_keyboard</uri>
-            <name>keyboard</name>
-            <pose>-1 -3 0.2 0 0 0</pose>
-            <static>false</static>
-        </include>
-
-        <include>
-            <uri>model://retail_leadership_summit_ect3zqhyikx</uri>
-            <name>retail</name>
-            <pose>0 2 0.02 0 0 0</pose>
-            <static>false</static>
-        </include>
-
-        <include>
-            <uri>model://threshold_porcelain_teapot_white</uri>
-            <name>teapot</name>
-            <pose>0 3 0.02 0 0 0</pose>
-            <static>false</static>
-        </include>
-
-        <include>
-            <uri>model://timberland_mens_earthkeepers_stormbuck_plain_toe_oxford</uri>
-            <name>shoes</name>
-            <pose>-1 3 0.05 0 0 0</pose>
-            <static>false</static>
-        </include>
-
-        <include>
-            <uri>model://travel_mate_p_series_notebook</uri>
-            <name>laptop</name>
-            <pose>-2 3 0.02 0 0 0</pose>
-            <static>false</static>
+            <uri>model://standard_toilet</uri>
+            <name>standard_toilet</name>
+            <pose>-1 -1 0 0 0 3.14</pose>
+            <static>true</static>
         </include>
 
         <model name="wall_north">

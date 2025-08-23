@@ -8,7 +8,7 @@ Usage examples:
 '''
 from launch import LaunchDescription
 from launch.actions import (
-    DeclareLaunchArgument, IncludeLaunchDescription, SetEnvironmentVariable, AppendEnvironmentVariable)
+    DeclareLaunchArgument, IncludeLaunchDescription, SetEnvironmentVariable, AppendEnvironmentVariable, TimerAction)
 from launch.conditions import IfCondition, UnlessCondition
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, TextSubstitution
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -40,15 +40,21 @@ def generate_launch_description():
         value=TextSubstitution(text=f'/opt/ros/kilted/lib:/opt/ros/kilted/opt/gz_sim_vendor/lib/gz-sim-9/plugins')
     )
     
-    set_resource_path_desc = AppendEnvironmentVariable(
-        name='GZ_SIM_RESOURCE_PATH',
-        value=PathJoinSubstitution([FindPackageShare('omniseer_description'), '..'])
-    )
-    
-    set_resource_path_assets = AppendEnvironmentVariable(
-        name='GZ_SIM_RESOURCE_PATH',
+    set_res_old = SetEnvironmentVariable(
+        name='IGN_GAZEBO_RESOURCE_PATH',
         value=PathJoinSubstitution([FindPackageShare('omniseer_gz_assets'), 'models'])
     )
+    
+    set_gz_assets = SetEnvironmentVariable(
+        name='GZ_SIM_RESOURCE_PATH',
+        value=PathJoinSubstitution([FindPackageShare('omniseer_gz_assets'), 'models/'])
+    )
+
+    set_desc_res = AppendEnvironmentVariable(
+        name='GZ_SIM_RESOURCE_PATH',
+        value=PathJoinSubstitution([FindPackageShare('omniseer_description')])
+    )
+
 
     # ────────────────────────────────
     # ros_gz_sim launcher
@@ -74,12 +80,16 @@ def generate_launch_description():
     )
 
     ld = LaunchDescription( declared_arguments + [
-        # ExecuteProcess(cmd=['env'], output='screen'),
         set_plugin_path,
-        set_resource_path_desc,
-        set_resource_path_assets,
-        gz_ros_gui,
-        gz_ros_headless,
+        set_gz_assets,
+        set_desc_res,
+        set_res_old,
+        TimerAction(period=1.0, actions=[
+            # ExecuteProcess(cmd=['env'],output='screen'), 
+            gz_ros_gui, 
+            gz_ros_headless
+            ]
+        ),
     ])
 
     return ld

@@ -361,7 +361,7 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /front_camera/image
+        Value: /yolo/dbg_image
       Value: true
   Enabled: true
   Global Options:

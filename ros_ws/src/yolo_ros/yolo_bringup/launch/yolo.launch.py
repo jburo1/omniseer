@@ -60,7 +60,7 @@ def generate_launch_description():
         yolo_encoding = LaunchConfiguration("yolo_encoding")
         yolo_encoding_cmd = DeclareLaunchArgument(
             "yolo_encoding",
-            default_value="bgr8",
+            default_value="rgb8",
             description="Encoding of the input image topic",
         )
 
@@ -88,7 +88,7 @@ def generate_launch_description():
         imgsz_height = LaunchConfiguration("imgsz_height")
         imgsz_height_cmd = DeclareLaunchArgument(
             "imgsz_height",
-            default_value="480",
+            default_value="384",
             description="Image height for inference",
         )
 
@@ -102,7 +102,7 @@ def generate_launch_description():
         half = LaunchConfiguration("half")
         half_cmd = DeclareLaunchArgument(
             "half",
-            default_value="False",
+            default_value="True",
             description="Whether to enable half-precision (FP16) inference speeding up model inference with minimal impact on accuracy",
         )
 
@@ -137,7 +137,7 @@ def generate_launch_description():
         input_image_topic = LaunchConfiguration("input_image_topic")
         input_image_topic_cmd = DeclareLaunchArgument(
             "input_image_topic",
-            default_value="/camera/rgb/image_raw",
+            default_value="/front_camera/image",
             description="Name of the input image topic",
         )
 
@@ -193,7 +193,7 @@ def generate_launch_description():
             description="Divisor used to convert the raw depth image values into metres",
         )
 
-        maximum_detection_threshold = LaunchConfiguration("maximum_detection_thresheold")
+        maximum_detection_threshold = LaunchConfiguration("maximum_detection_threshold")
         maximum_detection_threshold_cmd = DeclareLaunchArgument(
             "maximum_detection_threshold",
             default_value="0.3",
@@ -210,7 +210,7 @@ def generate_launch_description():
         use_debug = LaunchConfiguration("use_debug")
         use_debug_cmd = DeclareLaunchArgument(
             "use_debug",
-            default_value="False",
+            default_value="True",
             description="Whether to activate the debug node",
         )
 

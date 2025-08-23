@@ -1,0 +1,39 @@
+model {
+  file: "model.sdf"
+}
+name: "Mens_ASV_Billfish_Boat_Shoe_in_Dark_Brown_Leather_zdHVHXueI3w"
+description: "Men\'s ASV Billfish Boat Shoe in Dark Brown Leather\nMen\'s ASV Billfish Boat Shoe"
+version: 1
+authors {
+  name: "Google"
+  email: "scanned-objects@google.com"
+}
+legal {
+  copyright: "Copyright 2020 Google LLC."
+  license: "Creative Commons Attribution 4.0 International"
+}
+annotations {
+  key: "brand"
+  value: "Sperry Top-Sider"
+}
+annotations {
+  key: "gtin"
+  value: "886129046392"
+}
+annotations {
+  key: "mpn"
+  value: "0785980"
+}
+annotations {
+  key: "sku"
+  value: "ASVBillfishBoatShoeF1102-7"
+}
+compatibilities {
+  name: "Gazebo"
+  version {
+    major: 11
+  }
+}
+categories {
+  first: "Shoe"
+}

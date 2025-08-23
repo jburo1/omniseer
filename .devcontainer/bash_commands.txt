@@ -1,0 +1,12 @@
+PS1='\[\e]0;\u:\w\a\]\[\033[01;32m\]sslab\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]$ '
+export RCUTILS_COLORIZED_OUTPUT=1
+export PROMPT_DIRTRIM=2
+alias gzlog='cd ~/.gz/sim/log/'
+alias cu='xacro /omniseer/ros_ws/src/omniseer_description/urdf/xacro/omniseer.urdf.xacro | check_urdf -'
+alias c='clear'
+rc() {
+  "$@" |& tee >(xclip -selection clipboard -i)
+}
+rs() {
+  rc bash /omniseer/ros_ws/src/bringup/scripts/launch_sim.bash
+}

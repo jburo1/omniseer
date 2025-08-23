@@ -1,21 +1,41 @@
 {
-    "name": "ROS 2 Development Container",
-    "remoteUser": "user",
-    "build": {
-        "context": "..",
-        "dockerfile": "Dockerfile",
-        "target": "dev",
-        "args": {
-            "USERNAME": "user"
-        }
-    },
-    "features": {
-        "ghcr.io/devcontainers/features/nvidia-cuda:2": {}
-    },
-    "hostRequirements": { "gpu": "optional" },
-    "workspaceFolder": "/home/ws",
-    "workspaceMount": "source=${localWorkspaceFolder},target=/home/ws,type=bind",
-    "customizations": {
+  "name": "kilted desktop-full dev container",
+  // non root
+  "remoteUser": "user",
+  // for permissions
+  "updateRemoteUserUID": true,
+  "build": { 
+    "dockerfile": "Dockerfile",
+    "target": "dev",
+    "context": ".."
+  },
+  "runArgs": [
+    // host namespace
+    "--privileged",
+    "--network=host", "--pid=host", "--ipc=host", "--uts=host",
+    "--init",
+    // nvidia
+    "--gpus=all",
+    "-e", "NVIDIA_VISIBLE_DEVICES=all",
+    "-e", "NVIDIA_DRIVER_CAPABILITIES=all",
+    // GUI
+    "-v", "/tmp/.X11-unix:/tmp/.X11-unix",
+    "-e", "DISPLAY=${localEnv:DISPLAY}",
+    "-e", "QT_X11_NO_MITSHM=1",
+    // docker CLI in container
+    "-v", "/var/run/docker.sock:/var/run/docker.sock"
+  ],
+  "workspaceMount": "source=${localWorkspaceFolder},target=/${localWorkspaceFolderBasename},type=bind",
+  "workspaceFolder": "/${localWorkspaceFolderBasename}",
+  "mounts": [
+    "source=${localEnv:HOME}/.bash_history,target=/home/user/.bash_history,type=bind"
+  ],
+  "containerEnv": {
+        "ROS_AUTOMATIC_DISCOVERY_RANGE": "LOCALHOST",
+        "ROS_DOMAIN_ID": "42",
+        "__GLX_VENDOR_LIBRARY_NAME": "nvidia"
+  },
+  "customizations": {
         "vscode": {
             "extensions":[
                 "ms-vscode.cpptools",
@@ -36,27 +56,6 @@
             }
         }
     },
-    "containerEnv": {
-        "ROS_AUTOMATIC_DISCOVERY_RANGE": "LOCALHOST",
-        "ROS_DOMAIN_ID": "42",
-        "__GLX_VENDOR_LIBRARY_NAME": "nvidia", 
-        "LIBGL_DRI3_DISABLE": "1",
-        "NVIDIA_VISIBLE_DEVICES": "all",
-        "NVIDIA_DRIVER_CAPABILITIES": "all"
-    },
-    "runArgs": [
-        "--gpus", "all",
-        "--runtime=nvidia",
-        "--net=host", "--pid=host", "--ipc=host",
-        "--group-add", "video",
-        "-e", "DISPLAY=${localEnv:DISPLAY}",
-        "-e", "QT_X11_NO_MITSHM=1",
-        "--device=/dev/dri",
-        "-v", "/tmp/.X11-unix:/tmp/.X11-unix"
-    ],
-    "mounts": [
-        "source=/dev/dri,target=/dev/dri,type=bind,consistency=cached"
-    ],
-
-    "postCreateCommand": "bash -lc 'sudo chown -R $(whoami) /home/ws/ && cd /home/ws/ros_ws && source /opt/ros/${ROS_DISTRO}/setup.bash && sudo apt-get update && rosdep update && sudo rosdep install --from-paths src --ignore-src -r -y && colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release'"
+    "postCreateCommand": "bash -lc 'set -e; sed -i \"s/\\r$//\" .devcontainer/bootstrap.sh; chmod 755 .devcontainer/bootstrap.sh;'",
+    "postStartCommand": "bash -lc '.devcontainer/bootstrap.sh'"
 }

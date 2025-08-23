@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sdf version="1.6">
+    <model name="Toilet">
+        <static>true</static>
+        <link name="base_link">
+            <visual name="visual">
+                <geometry>
+                    <mesh>
+                        <uri>meshes/toilet.dae</uri>
+                    </mesh>
+                </geometry>
+                <material>
+                    <diffuse>1.0 1.0 1.0</diffuse>
+                    <specular>1.0 1.0 1.0</specular>
+                    <pbr>
+                        <metal>
+                            <albedo_map>materials/textures/Toilet_Albedo.png</albedo_map>
+                            <normal_map>materials/textures/Toilet_Normal.png</normal_map>
+                            <roughness_map>materials/textures/Toilet_Roughness.png</roughness_map>
+                        </metal>
+                    </pbr>
+                </material>
+            </visual>
+            <collision name="toilet_collision">
+            <geometry>
+            <mesh>
+                <uri>meshes/toilet.dae</uri>
+                <!-- uncomment if your DAE units are centimeters -->
+                <!-- <scale>0.01 0.01 0.01</scale> -->
+            </mesh>
+            </geometry>
+        </collision>
+        </link>
+    </model>
+</sdf>

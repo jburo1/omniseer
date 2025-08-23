@@ -1,0 +1,35 @@
+model {
+  file: "model.sdf"
+}
+name: "Jansport_School_Backpack_Blue_Streak"
+description: "Jansport School Backpack, Blue Streak"
+version: 1
+authors {
+  name: "Google"
+  email: "scanned-objects@google.com"
+}
+legal {
+  copyright: "Copyright 2020 Google LLC."
+  license: "Creative Commons Attribution 4.0 International"
+}
+annotations {
+  key: "brand"
+  value: "Jansport"
+}
+annotations {
+  key: "gtin"
+  value: "00884805770838"
+}
+annotations {
+  key: "sku"
+  value: "00884805770838"
+}
+compatibilities {
+  name: "Gazebo"
+  version {
+    major: 11
+  }
+}
+categories {
+  first: "Bag"
+}

@@ -6,8 +6,12 @@ PATTERN='(^|[^[:alnum:]_])(ros2|rviz2|gazebo(server|client)?|gz([[:space:]]+|-)?
 
 ros2 daemon stop >/dev/null 2>&1 || true
 
+echo "=== Initializing simulation ==="
+
+echo "=== Cleaning environment ==="
+
 echo "=== Lingering ROS/GZ processes ==="
-pgrep -fa -l -f "$PATTERN" || true
+pgrep -fa -l -f "$PATTERN" || echo "(none)"
 
 kill_phase() {
   local sig="$1" delay="${2:-1}"
