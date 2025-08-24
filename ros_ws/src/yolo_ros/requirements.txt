@@ -3,3 +3,4 @@ opencv-python>=4.8.1.78
 typing-extensions>=4.4.0
 ultralytics==8.3.168
 lap>=0.5.12
+clip @ git+https://github.com/ultralytics/CLIP.git@a6238961f9fab312d99c7709f8c7485b3f9a9b50

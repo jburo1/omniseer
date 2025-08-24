@@ -26,7 +26,6 @@ def generate_launch_description():
     ]
 
     use_sim_time             = LaunchConfiguration('use_sim_time')
-    slam_tb_config_file      = LaunchConfiguration("slam_tb_config_file")
     nav2_params_file      = LaunchConfiguration("nav2_params_file")
     
     # use_debug = LaunchConfiguration('use_debug')
@@ -46,30 +45,6 @@ def generate_launch_description():
             ('/cmd_vel_out', '/mecanum_drive_controller/reference')
         ],
     )
-    
-    slam_toolbox_node = Node(
-        package   = 'slam_toolbox',
-        executable= 'async_slam_toolbox_node',
-        name      = 'slam_toolbox',
-        output    = 'screen',
-        parameters=[ParameterFile(
-            PathJoinSubstitution([pkg_bringup, 'config', slam_tb_config_file]),
-            allow_substs=True
-            ),
-            {'use_sim_time': use_sim_time},
-        ]
-    )
-    
-    yolo_include = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            [PathJoinSubstitution([pkg_bringup, 'launch', 'yolov11.launch.py'])]
-        ),
-    )
-    
-    yolo_group = GroupAction([
-        SetParameter(name='use_sim_time', value=use_sim_time),
-        yolo_include
-    ])
     
     planner_server = Node(
         package='nav2_planner',
@@ -104,7 +79,7 @@ def generate_launch_description():
         parameters=[nav2_params_file, {'use_sim_time': use_sim_time}],
     )
 
-    behavior_server = Node(   # if on older Nav2, switch to nav2_recoveries/recoveries_server
+    behavior_server = Node(   
         package='nav2_behaviors',
         executable='behavior_server',
         name='behavior_server',

@@ -1,22 +1,20 @@
 import os
 from launch import LaunchDescription
-from launch.substitutions import LaunchConfiguration
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from ament_index_python.packages import get_package_share_directory
+from launch_ros.substitutions import FindPackageShare
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 
 
 def generate_launch_description():
+    
+    pkg_yolo_bringup = FindPackageShare('yolo_bringup')
 
-    return LaunchDescription(
-        [
+    return LaunchDescription([
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
-                    os.path.join(
-                        get_package_share_directory("yolo_bringup"),
-                        "launch",
-                        "yolo.launch.py",
-                    )
+                    [PathJoinSubstitution([pkg_yolo_bringup, 'launch', 'yolo.launch.py'])]
                 ),
                 launch_arguments={
                     "model_type": "World",

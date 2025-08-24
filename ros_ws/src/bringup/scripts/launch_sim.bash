@@ -8,8 +8,6 @@ ros2 daemon stop >/dev/null 2>&1 || true
 
 echo "=== Initializing simulation ==="
 
-echo "=== Cleaning environment ==="
-
 echo "=== Lingering ROS/GZ processes ==="
 pgrep -fa -l -f "$PATTERN" || echo "(none)"
 
@@ -24,7 +22,7 @@ kill_phase -TERM 1
 kill_phase -KILL 1
 
 echo "=== After cleanup ==="
-pgrep -fa -l -f "$PATTERN" || echo "(none)"
+pgrep -fa -l -f "$PATTERN" || echo "(clean)"
 
 ros2 daemon start >/dev/null 2>&1 || true
 

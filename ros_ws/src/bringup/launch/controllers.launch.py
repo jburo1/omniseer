@@ -52,7 +52,7 @@ def generate_launch_description():
             parameters = [{'use_sim_time' : use_sim_time}],
             arguments  = ['joint_state_broadcaster',
                         '--controller-manager', '/controller_manager',
-                        '--controller-manager-timeout', '20.0'],
+                        '--controller-manager-timeout', '60.0'],
             output     = 'screen',
         )]
     )
@@ -65,7 +65,7 @@ def generate_launch_description():
             parameters = [{'use_sim_time' : use_sim_time}],
             arguments = ['mecanum_drive_controller',
                         '--param-file', controller_file,
-                        '--controller-manager-timeout', '20.0'],
+                        '--controller-manager-timeout', '60.0'],
             output    = 'screen',
         )]
     )

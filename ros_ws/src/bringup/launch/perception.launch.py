@@ -39,6 +39,21 @@ def generate_launch_description():
         ]
     )
     
+    lifecycle_manager_slam = Node(
+        package='nav2_lifecycle_manager',
+        executable='lifecycle_manager',
+        name='lifecycle_manager_slam',
+        output='screen',
+        parameters=[{
+            'use_sim_time': False,
+            'autostart': True,
+            'node_names': ['slam_toolbox'],
+            'bond_timeout': 0.0,
+            'bond_heartbeat_period': 0.0,
+            'attempt_respawn_reconnection': True,
+        }],
+    )
+    
     yolo_include = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [PathJoinSubstitution([pkg_bringup, 'launch', 'yolo-world.launch.py'])]
@@ -54,6 +69,12 @@ def generate_launch_description():
     return LaunchDescription(
         declared_arguments + [
             slam_toolbox_node,
+            RegisterEventHandler(
+                OnProcessStart(
+                    target_action=slam_toolbox_node,
+                    on_start=[TimerAction(period=2.0, actions=[lifecycle_manager_slam])]
+                )
+            ),
             yolo_group
         ]
     )
