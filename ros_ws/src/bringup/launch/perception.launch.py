@@ -69,6 +69,7 @@ def generate_launch_description():
         package='rf2o_laser_odometry',
         executable='rf2o_laser_odometry_node',
         output='screen',
+        # drop rf2o spam
         arguments=['--ros-args', '--log-level', 'error'],
         parameters=[{
             'use_sim_time': use_sim_time,

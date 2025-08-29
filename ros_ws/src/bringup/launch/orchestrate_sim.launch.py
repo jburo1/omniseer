@@ -141,7 +141,7 @@ def generate_launch_description():
         OnProcessExit(
             target_action=wait_map,
             on_exit=[rviz_launch,
-                    #  nav_launch
+                     nav_launch
                     ]
         )
     )

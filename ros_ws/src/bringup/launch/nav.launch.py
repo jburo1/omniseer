@@ -15,17 +15,16 @@ def generate_launch_description():
     pkg_bringup = FindPackageShare('bringup')
 
     declared_arguments = [
-        DeclareLaunchArgument(
-            'use_sim_time',
-            default_value='true',
-            description='Use simulation clock'
-        ),
+        DeclareLaunchArgument('use_sim_time', default_value='true'),
+        DeclareLaunchArgument('log_level', default_value='info'),
         DeclareLaunchArgument('slam_tb_config_file', default_value='slam_toolbox_async_online.yaml'),
         DeclareLaunchArgument('nav2_params_file', default_value='nav2_params.yaml'),
     ]
 
     use_sim_time             = LaunchConfiguration('use_sim_time')
     nav2_params_file         = LaunchConfiguration("nav2_params_file")
+    log_level                = LaunchConfiguration('log_level')
+    
     
     nav2_params = ParameterFile(
         PathJoinSubstitution([pkg_bringup, "config", nav2_params_file]),
@@ -37,6 +36,7 @@ def generate_launch_description():
         executable='twist_mux',
         name='twist_mux',
         output='screen',
+        arguments=['--ros-args', '--log-level', log_level],
         parameters=[
             PathJoinSubstitution([pkg_bringup, 'config', 'twist_mux.yaml']),
             {'use_sim_time' : use_sim_time}
@@ -48,10 +48,10 @@ def generate_launch_description():
     
     # name, package, plugin
     nav2_specs = [
-        ("planner_server",    "nav2_planner",           "nav2_planner::PlannerServer"),
+        # ("planner_server",    "nav2_planner",           "nav2_planner::PlannerServer"),
         ("controller_server", "nav2_controller",        "nav2_controller::ControllerServer"),
-        ("smoother_server",   "nav2_smoother",          "nav2_smoother::SmootherServer"),
-        ("bt_navigator",      "nav2_bt_navigator",      "nav2_bt_navigator::BtNavigator"),
+        # ("smoother_server",   "nav2_smoother",          "nav2_smoother::SmootherServer"),
+        # ("bt_navigator",      "nav2_bt_navigator",      "nav2_bt_navigator::BtNavigator"),
         # ("behavior_server",   "nav2_behaviors",         "nav2_behaviors::BehaviorServer"),
         # ("waypoint_follower", "nav2_waypoint_follower", "nav2_waypoint_follower::WaypointFollower"),
         # ("velocity_smoother", "nav2_velocity_smoother", "nav2_velocity_smoother::VelocitySmoother"),
@@ -75,6 +75,7 @@ def generate_launch_description():
         executable="component_container_mt",
         output="screen",
         emulate_tty=True,
+        arguments=['--ros-args', '--log-level', log_level],
         composable_node_descriptions=nav2_components,
     )
     
@@ -83,6 +84,7 @@ def generate_launch_description():
         executable  = 'lifecycle_manager',
         name        = 'lifecycle_manager_nav',
         output      = 'screen',
+        arguments=['--ros-args', '--log-level', log_level],
         parameters  = [{
             'autostart':    True,
             'node_names':   [name for (name, _, _) in nav2_specs],
@@ -98,8 +100,8 @@ def generate_launch_description():
     return LaunchDescription(
         declared_arguments + [
             twist_mux_node,
-            # nav2_container,
-            # delayed_lifecycle,
-            lifecycle_mgr
+            nav2_container,
+            delayed_lifecycle,
+            # lifecycle_mgr
         ]
     )
