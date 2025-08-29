@@ -10,148 +10,151 @@ ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -p stamped:=true
     
 """
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, GroupAction, TimerAction
+from launch.actions import (LogInfo, DeclareLaunchArgument, IncludeLaunchDescription,
+                            SetEnvironmentVariable, ExecuteProcess, RegisterEventHandler)
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
+from launch.event_handlers import OnProcessExit, OnProcessStart
 
 def generate_launch_description():
     declared_arguments = [
         DeclareLaunchArgument('world',    default_value='simple_world.world'),
         DeclareLaunchArgument('use_sim_time', default_value='true'),
         DeclareLaunchArgument('headless', default_value="false"),
-        # DeclareLaunchArgument('use_debug', default_value="true"),
+        DeclareLaunchArgument('log_level', default_value='info',
+                              description='debug|info|warn|error|fatal'),
     ]
 
     world           = LaunchConfiguration('world')
     headless        = LaunchConfiguration('headless')
     use_sim_time    = LaunchConfiguration('use_sim_time')
-    # use_debug       = LaunchConfiguration('use_debug')
+    log_level       = LaunchConfiguration('log_level')
     
-        
     pkg_bringup = FindPackageShare('bringup')
 
-    # ────────────────────────────────
-    # gz launch
-    # ────────────────────────────────
     gz_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [PathJoinSubstitution([pkg_bringup, 'launch', 'gazebo.launch.py'])]
         ),
         launch_arguments={
             'world': world,
-            'headless': headless
+            'headless': headless,
+            'log_level': log_level
         }.items()
     )
 
-    # ────────────────────────────────
-    # spawn robot
-    # ────────────────────────────────
     spawn_robot_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [PathJoinSubstitution([pkg_bringup, 'launch', 'spawn_robot.launch.py'])]
         ),
-        launch_arguments={'use_sim_time': use_sim_time}.items()
+        launch_arguments={'use_sim_time': use_sim_time,
+                          'log_level': log_level}.items()
     )
 
-    # ────────────────────────────────
-    # bridge
-    # ────────────────────────────────
     bridge_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [PathJoinSubstitution([pkg_bringup, 'launch', 'bridge.launch.py'])]
         ),
-        launch_arguments={'use_sim_time': use_sim_time}.items()
+        launch_arguments={'use_sim_time': use_sim_time,
+                          'log_level': log_level}.items()
     )
 
-    # ────────────────────────────────
-    # controllers
-    # ────────────────────────────────
     controllers_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [PathJoinSubstitution([pkg_bringup, 'launch', 'controllers.launch.py'])]
         ),
-        launch_arguments={'use_sim_time': use_sim_time}.items()
+        launch_arguments={'use_sim_time': use_sim_time,
+                          'log_level': log_level}.items()
     )
 
-    # ────────────────────────────────
-    # sensor fusion
-    # ────────────────────────────────
     sensor_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [PathJoinSubstitution([pkg_bringup, 'launch', 'sensors.launch.py'])]
         ),
-        launch_arguments={'use_sim_time': use_sim_time}.items()
+        launch_arguments={'use_sim_time': use_sim_time,
+                          'log_level': log_level}.items()
     )
     
-    # ────────────────────────────────
-    # perception
-    # ────────────────────────────────
     perception_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [PathJoinSubstitution([pkg_bringup, 'launch', 'perception.launch.py'])]
         ),
-        launch_arguments={'use_sim_time': use_sim_time
-                        #   'use_debug': use_debug
-                        }.items()
+        launch_arguments={'use_sim_time': use_sim_time,
+                          'log_level': log_level}.items()
     )
     
-    # ────────────────────────────────
-    # nav
-    # ────────────────────────────────
     nav_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [PathJoinSubstitution([pkg_bringup, 'launch', 'nav.launch.py'])]
         ),
-        launch_arguments={'use_sim_time': use_sim_time
-                        #   'use_debug': use_debug
-                        }.items()
+        launch_arguments={'use_sim_time': use_sim_time,
+                          'log_level': log_level}.items()
     )
     
-    # ────────────────────────────────
-    # rf2o
-    # ────────────────────────────────
-    rf2o_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            [PathJoinSubstitution([pkg_bringup, 'launch', 'rf2o.launch.py'])]
-        ),
-        launch_arguments={'use_sim_time': use_sim_time}.items()
-    )
-
-    # ────────────────────────────────
-    # rviz
-    # ────────────────────────────────
     rviz_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [PathJoinSubstitution([pkg_bringup, 'launch', 'rviz.launch.py'])]
         ),
-        launch_arguments={'use_sim_time': use_sim_time}.items()
+        launch_arguments={'use_sim_time': use_sim_time,
+                          'log_level': log_level}.items()
     )
-        
-    # def _dump_configs(context, *args, **kwargs):
-    #     print('\n=== LAUNCH CONFIG DUMP ===')
-    #     for k, v in sorted(context.launch_configurations.items()):
-    #         print(f"{k}: {type(v).__name__} -> {v!r}")
-    #     print('=== END DUMP ===\n')
-    #     return []
+    
+    # Poll until /clock exists
+    wait_clock = ExecuteProcess(
+        cmd=['bash','-lc', 'until ros2 topic list | grep -qx /clock; do sleep 0.2; done'],
+        name='wait_clock'
+    )
 
-    # OpaqueFunction(function=_dump_configs)
-    
-    
-    ros_group = GroupAction(actions=[
-        bridge_launch,
-        spawn_robot_launch,
-        sensor_launch,
-        controllers_launch,
-        # OpaqueFunction(function=_dump_configs),
-        TimerAction(period=5.0, actions=[perception_launch]),        
-        # TimerAction(period=7.5, actions=[nav_launch]),        
-        TimerAction(period=10.0, actions=[rf2o_launch]),
-        TimerAction(period=10.0, actions=[rviz_launch])
-    ])
+    # Poll until /tf_static exists
+    wait_tf_static = ExecuteProcess(
+        cmd=['bash','-lc', 'until ros2 topic list | grep -qx /tf_static; do sleep 0.2; done'],
+        name='wait_tf_static'
+    )
+
+    # Poll until /map has a publisher (stronger than just existence)
+    wait_map = ExecuteProcess(
+        cmd=['bash','-lc', 'until ros2 topic list | grep -qx /map; do sleep 0.2; done'],
+        name='wait_map'
+    )
+
+    # Events
+    on_clock = RegisterEventHandler(
+        OnProcessExit(
+            target_action=wait_clock,
+            on_exit=[
+                LogInfo(msg="/clock found"), 
+                spawn_robot_launch, wait_tf_static]
+        )
+    )
+
+    on_tf = RegisterEventHandler(
+        OnProcessExit(
+            target_action=wait_tf_static,
+            on_exit=[
+                LogInfo(msg="/tf_static found"), 
+                controllers_launch, sensor_launch, perception_launch, wait_map]
+        )
+    )
+
+    on_map = RegisterEventHandler(
+        OnProcessExit(
+            target_action=wait_map,
+            on_exit=[rviz_launch,
+                    #  nav_launch
+                    ]
+        )
+    )
 
     return LaunchDescription(declared_arguments + [
+        SetEnvironmentVariable('RCUTILS_LOGGING_DEFAULT_LEVEL', log_level),
+
         gz_launch,
-        TimerAction(period=2.0, actions=[ros_group])
+        bridge_launch,
+        wait_clock,
+
+        on_clock,
+        on_tf,
+        on_map,
     ])
 

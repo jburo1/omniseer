@@ -8,5 +8,5 @@ rc() {
   "$@" |& tee >(xclip -selection clipboard -i)
 }
 rs() {
-  rc bash /omniseer/ros_ws/src/bringup/scripts/launch_sim.bash
+  rc bash /omniseer/ros_ws/src/bringup/scripts/launch_sim.bash "$@"
 }
