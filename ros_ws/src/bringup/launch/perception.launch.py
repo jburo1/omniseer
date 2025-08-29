@@ -15,14 +15,12 @@ def generate_launch_description():
     pkg_bringup = FindPackageShare('bringup')
 
     declared_arguments = [
-        DeclareLaunchArgument(
-            'use_sim_time',
-            default_value='true',
-            description='Use simulation clock'
-        ),
+        DeclareLaunchArgument('use_sim_time',default_value='true'),
+        DeclareLaunchArgument('log_level', default_value='info'),
         DeclareLaunchArgument('slam_tb_config_file', default_value='slam_toolbox_async_online.yaml'),
     ]
 
+    log_level = LaunchConfiguration('log_level')
     use_sim_time             = LaunchConfiguration('use_sim_time')
     slam_tb_config_file      = LaunchConfiguration("slam_tb_config_file")    
     
@@ -31,6 +29,7 @@ def generate_launch_description():
         executable= 'async_slam_toolbox_node',
         name      = 'slam_toolbox',
         output    = 'screen',
+        arguments=['--ros-args', '--log-level', log_level],
         parameters=[ParameterFile(
             PathJoinSubstitution([pkg_bringup, 'config', slam_tb_config_file]),
             allow_substs=True
@@ -44,6 +43,7 @@ def generate_launch_description():
         executable='lifecycle_manager',
         name='lifecycle_manager_slam',
         output='screen',
+        arguments=['--ros-args', '--log-level', log_level],
         parameters=[{
             'use_sim_time': False,
             'autostart': True,
@@ -68,8 +68,8 @@ def generate_launch_description():
     rf2o_laser_odom_node = Node(
         package='rf2o_laser_odometry',
         executable='rf2o_laser_odometry_node',
-        name='rf2o_laser_odometry',
         output='screen',
+        arguments=['--ros-args', '--log-level', 'error'],
         parameters=[{
             'use_sim_time': use_sim_time,
             'laser_scan_topic' : '/scan',
@@ -77,12 +77,10 @@ def generate_launch_description():
             'publish_tf' : False,
             'base_frame_id' : 'base_link',
             'odom_frame_id' : 'odom',
-            # 'init_pose_from_topic' : '',
-            'freq' : 20.0
+            'init_pose_from_topic' : '',
+            'freq' : 8.0
         }],
-        arguments=['--ros-args', '--log-level', 'rf2o_laser_odometry:=error'],
     )
-    
     
     return LaunchDescription(
         declared_arguments + [

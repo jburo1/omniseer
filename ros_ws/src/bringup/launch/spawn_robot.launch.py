@@ -12,15 +12,13 @@ from launch_ros.actions import Node
 def generate_launch_description():
 
     declared_arguments = [
-        DeclareLaunchArgument(
-            'use_sim_time',
-            default_value='true',
-            description='Use simulation clock'
-        ),
+        DeclareLaunchArgument('use_sim_time', default_value='true'),
+        DeclareLaunchArgument('log_level', default_value='info'),
     ]
 
     use_sim_time = LaunchConfiguration('use_sim_time')
-
+    log_level = LaunchConfiguration('log_level')
+    
     pkg_omniseer = FindPackageShare('omniseer_description')
     xacro_file   = PathJoinSubstitution([pkg_omniseer, 'urdf', 'xacro', 'omniseer.urdf.xacro'])
     robot_description_urdf = Command(['xacro ', xacro_file])
@@ -30,6 +28,7 @@ def generate_launch_description():
         executable='robot_state_publisher',
         parameters=[{'robot_description': robot_description_urdf,
                     'use_sim_time': use_sim_time}],
+        arguments=['--ros-args', '--log-level', log_level],
         output='both',
     )
 
@@ -41,6 +40,7 @@ def generate_launch_description():
                    '-x', '0',
                    '-y', '0',
                    '-z', '0.25',
+                   '--ros-args', '--log-level', log_level
                    ],
         output='screen',
         parameters=[{'robot_description': robot_description_urdf,

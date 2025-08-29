@@ -17,10 +17,12 @@ def generate_launch_description():
     declared_arguments = [
         DeclareLaunchArgument('use_sim_time',default_value='true'),
         DeclareLaunchArgument('sim_mode', default_value='true'),
+        DeclareLaunchArgument('log_level', default_value='info'),
         DeclareLaunchArgument('controller_yaml', default_value=PathJoinSubstitution([pkg_bringup, 'config', 'controllers.yaml']))
     ]
 
     use_sim_time = LaunchConfiguration('use_sim_time')
+    log_level = LaunchConfiguration('log_level')
 
     xacro_file   = PathJoinSubstitution([pkg_omniseer, 'urdf', 'xacro', 'omniseer.urdf.xacro'])
     controller_file = PathJoinSubstitution([pkg_bringup, 'config', 'controllers.yaml'])
@@ -39,6 +41,7 @@ def generate_launch_description():
             {'robot_description' : robot_description_content,
              'use_sim_time': use_sim_time},
             controller_yaml_param_file],
+        arguments=['--ros-args', '--log-level', log_level],
         output    = 'screen',
         condition = UnlessCondition(sim_mode)
     )
@@ -52,7 +55,8 @@ def generate_launch_description():
             parameters = [{'use_sim_time' : use_sim_time}],
             arguments  = ['joint_state_broadcaster',
                         '--controller-manager', '/controller_manager',
-                        '--controller-manager-timeout', '60.0'],
+                        '--controller-manager-timeout', '60.0',
+                        '--ros-args', '--log-level', log_level],
             output     = 'screen',
         )]
     )
@@ -65,7 +69,8 @@ def generate_launch_description():
             parameters = [{'use_sim_time' : use_sim_time}],
             arguments = ['mecanum_drive_controller',
                         '--param-file', controller_file,
-                        '--controller-manager-timeout', '60.0'],
+                        '--controller-manager-timeout', '60.0',
+                        '--ros-args', '--log-level', log_level],
             output    = 'screen',
         )]
     )
@@ -75,7 +80,5 @@ def generate_launch_description():
             control_node,
             jsb_spawner,
             mecanum_drive_spawner
-            # jsb_spawner_node,
-            # mecanum_drive_spawner_node
         ]
     )

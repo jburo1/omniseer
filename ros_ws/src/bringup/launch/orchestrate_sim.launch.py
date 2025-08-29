@@ -33,6 +33,7 @@ def generate_launch_description():
     
     pkg_bringup = FindPackageShare('bringup')
 
+    # Launch descriptions
     gz_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [PathJoinSubstitution([pkg_bringup, 'launch', 'gazebo.launch.py'])]
@@ -40,7 +41,6 @@ def generate_launch_description():
         launch_arguments={
             'world': world,
             'headless': headless,
-            'log_level': log_level
         }.items()
     )
 
@@ -112,7 +112,7 @@ def generate_launch_description():
         name='wait_tf_static'
     )
 
-    # Poll until /map has a publisher (stronger than just existence)
+    # Poll until /map exists
     wait_map = ExecuteProcess(
         cmd=['bash','-lc', 'until ros2 topic list | grep -qx /map; do sleep 0.2; done'],
         name='wait_map'
