@@ -83,6 +83,15 @@ def generate_launch_description():
         }],
     )
     
+    sonar_to_range_node = Node(
+        package='analysis',
+        executable='scan_to_range',
+        name='scan_to_range',
+        arguments=['--ros-args', '--log-level', 'error'],
+        parameters=[{'use_sim_time': use_sim_time}],
+        output='screen',
+    )
+    
     return LaunchDescription(
         declared_arguments + [
             slam_toolbox_node,
@@ -93,6 +102,7 @@ def generate_launch_description():
                 )
             ),
             yolo_group,
-            rf2o_laser_odom_node
+            rf2o_laser_odom_node,
+            sonar_to_range_node
         ]
     )

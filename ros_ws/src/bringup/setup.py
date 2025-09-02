@@ -16,6 +16,7 @@ setup(
         (share_dir, ['package.xml']),
 
         # --- runtime assets ------------------------------------------------
+        (f'{share_dir}/bringup', glob('bringup/*.py')),
         (f'{share_dir}/launch',  glob('launch/*.launch.py')),
         (f'{share_dir}/config',  glob('config/*')),
         (f'{share_dir}/rviz',    glob('rviz/*.rviz')),
@@ -31,6 +32,7 @@ setup(
     entry_points={
         'console_scripts': [
             # eg. 'teleop=bringup.scripts.teleop:main',
+            # 'wait_for_tf = bringup.wait_for_tf:main'
         ],
     },
 )

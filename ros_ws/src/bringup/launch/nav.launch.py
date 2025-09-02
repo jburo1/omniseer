@@ -1,36 +1,237 @@
-#!/usr/bin/env python3
 '''
 '''
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, TimerAction, RegisterEventHandler
+from launch.actions import GroupAction, DeclareLaunchArgument, SetEnvironmentVariable, LogInfo, ExecuteProcess, RegisterEventHandler
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
-from launch_ros.actions import Node, ComposableNodeContainer
+from launch_ros.actions import Node, ComposableNodeContainer, SetParameter, LoadComposableNodes
 from launch_ros.descriptions import ComposableNode
 from launch_ros.substitutions import FindPackageShare
 from launch_ros.parameter_descriptions import ParameterFile
-from launch.event_handlers import OnProcessStart
-
+from nav2_common.launch import RewrittenYaml
+from launch.event_handlers import OnProcessExit
 
 def generate_launch_description():
     pkg_bringup = FindPackageShare('bringup')
+    
+    use_sim_time             = LaunchConfiguration('use_sim_time')
+    nav2_params_file         = LaunchConfiguration("nav2_params_file")
+    # costmap_params_file      = LaunchConfiguration("costmap_params_file")
+    log_level                = LaunchConfiguration('log_level')
 
     declared_arguments = [
         DeclareLaunchArgument('use_sim_time', default_value='true'),
         DeclareLaunchArgument('log_level', default_value='info'),
         DeclareLaunchArgument('slam_tb_config_file', default_value='slam_toolbox_async_online.yaml'),
         DeclareLaunchArgument('nav2_params_file', default_value='nav2_params.yaml'),
+        # DeclareLaunchArgument('costmap_params_file', default_value='costmaps_overlay.yaml'),
     ]
 
-    use_sim_time             = LaunchConfiguration('use_sim_time')
-    nav2_params_file         = LaunchConfiguration("nav2_params_file")
-    log_level                = LaunchConfiguration('log_level')
+    nav2_params_path = PathJoinSubstitution([pkg_bringup, "config", nav2_params_file])
+    # costmaps_params_path = PathJoinSubstitution([pkg_bringup, "config", costmap_params_file])
     
-    
-    nav2_params = ParameterFile(
-        PathJoinSubstitution([pkg_bringup, "config", nav2_params_file]),
+    stdout_linebuf_envvar = SetEnvironmentVariable(
+        'RCUTILS_LOGGING_BUFFERED_STREAM', '1'
+    )
+    # configured_costmap = ParameterFile(costmap_params_file)
+    configured_params = ParameterFile(
+        RewrittenYaml(
+            source_file=nav2_params_path,
+            root_key='',
+            param_rewrites={'use_sim_time': use_sim_time},
+            convert_types=True,
+        ),
         allow_substs=True,
     )
+    
+    rewrite = RewrittenYaml(
+        source_file=nav2_params_path,
+        root_key='',
+        param_rewrites={'use_sim_time': use_sim_time},
+        convert_types=True,
+    )
+    
+    lifecycle_nodes = [
+        'controller_server',
+        # 'smoother_server',
+        # 'planner_server',
+        # 'route_server',
+        # 'behavior_server',
+        # 'velocity_smoother',
+        # 'collision_monitor',
+        # 'bt_navigator',
+        # 'waypoint_follower',
+        # 'docking_server',
+    ]
+    
+    nav2_container = ComposableNodeContainer(
+        name="nav2_container",
+        namespace="",
+        package="rclcpp_components",
+        executable="component_container_mt",
+        output="screen",
+        emulate_tty=True,
+        # arguments=['--ros-args', '--log-level', 'debug'],
+        arguments=['--ros-args', '--log-level', log_level, '--params-file', rewrite],
+    )
+    
+    load_composable_nodes = GroupAction(
+        actions=[
+            SetParameter('use_sim_time', use_sim_time),
+            LoadComposableNodes(
+                target_container=nav2_container,
+                composable_node_descriptions=[
+                    ComposableNode(
+                        package='nav2_controller',
+                        plugin='nav2_controller::ControllerServer',
+                        name='controller_server',
+                        parameters=[configured_params],
+                        remappings=[('cmd_vel', 'cmd_vel_nav')],
+                    ),
+                    # ComposableNode(
+                    #     package='nav2_smoother',
+                    #     plugin='nav2_smoother::SmootherServer',
+                    #     name='smoother_server',
+                    #     parameters=[configured_params],
+                    #     remappings=remappings,
+                    # ),
+                    # ComposableNode(
+                    #     package='nav2_planner',
+                    #     plugin='nav2_planner::PlannerServer',
+                    #     name='planner_server',
+                    #     parameters=[configured_params],
+                    #     remappings=remappings,
+                    # ),
+                    # ComposableNode(
+                    #     package='nav2_behaviors',
+                    #     plugin='behavior_server::BehaviorServer',
+                    #     name='behavior_server',
+                    #     parameters=[configured_params],
+                    #     remappings=remappings + [('cmd_vel', 'cmd_vel_nav')],
+                    # ),
+                    # ComposableNode(
+                    #     package='nav2_bt_navigator',
+                    #     plugin='nav2_bt_navigator::BtNavigator',
+                    #     name='bt_navigator',
+                    #     parameters=[configured_params],
+                    #     remappings=remappings,
+                    # ),
+                    # ComposableNode(
+                    #     package='nav2_waypoint_follower',
+                    #     plugin='nav2_waypoint_follower::WaypointFollower',
+                    #     name='waypoint_follower',
+                    #     parameters=[configured_params],
+                    #     remappings=remappings,
+                    # ),
+                    # ComposableNode(
+                    #     package='nav2_velocity_smoother',
+                    #     plugin='nav2_velocity_smoother::VelocitySmoother',
+                    #     name='velocity_smoother',
+                    #     parameters=[configured_params],
+                    #     remappings=remappings
+                    #     + [('cmd_vel', 'cmd_vel_nav')],
+                    # ),
+                    # ComposableNode(
+                    #     package='nav2_collision_monitor',
+                    #     plugin='nav2_collision_monitor::CollisionMonitor',
+                    #     name='collision_monitor',
+                    #     parameters=[configured_params],
+                    #     remappings=remappings,
+                    # ),
+                    ComposableNode(
+                        package='nav2_lifecycle_manager',
+                        plugin='nav2_lifecycle_manager::LifecycleManager',
+                        name='lifecycle_manager_navigation',
+                        parameters=[
+                            {
+                                'use_sim_time' : use_sim_time,
+                                'autostart':    False,
+                                'node_names':   lifecycle_nodes,
+                                'bond_timeout': 4.0,
+                                'bond_respawn_max_duration': 10.0,
+                                'attempt_respawn_reconnection': True,
+                            }
+                        ]
+                    ),
+                ],
+            ),
+        ],
+    )
+    
+    
+    # # poll until costmap param service to exist
+    # wait_local_costmap_param_srv = ExecuteProcess(
+    #     cmd=['bash','-lc', 'until ros2 service list | grep -qx /local_costmap/local_costmap/set_parameters; do sleep 0.05; done'],
+    #     name='wait_costmap_param_srv'
+    # )
 
+    # # load local costmap 
+    # load_local_costmap = ExecuteProcess(
+    #     cmd=['ros2','param','load','/local_costmap/local_costmap', costmaps_params_path],
+    #     name='load_local_costmap'
+    # )
+    
+    # # load global costmap     
+    # load_global_costmap = ExecuteProcess(
+    #     cmd=['ros2','param','load','/global_costmap/global_costmap', costmaps_params_path],
+    #     name='load_global_costmap'
+    # )
+
+    # # poll until LM service
+    # wait_lm_srv = ExecuteProcess(
+    #     cmd=['bash','-lc', 'until ros2 service list | grep -qx /lifecycle_manager_nav/manage_nodes; do sleep 0.05; done'],
+    #     name='wait_lm_srv'
+    # )
+
+    # # activate LM nodes
+    # lm_startup = ExecuteProcess(
+    #     cmd=['ros2','service','call','/lifecycle_manager_nav/manage_nodes',
+    #         'nav2_msgs/srv/ManageLifecycleNodes','{command: 0}'],
+    #     name='lm_startup'
+    # )
+    
+    # # Events
+    # on_local_costmap_param_serv = RegisterEventHandler(
+    #     OnProcessExit(
+    #         target_action=wait_local_costmap_param_srv,
+    #         on_exit=[
+    #             LogInfo(msg="local costmap parameter service found.. loading local costmap"), 
+    #             load_local_costmap, 
+    #             wait_lm_srv
+    #             ]
+    #     )
+    # )
+    
+    # on_local_costmap_loaded = RegisterEventHandler(
+    #     OnProcessExit(
+    #         target_action=load_local_costmap,
+    #         on_exit=[
+    #             LogInfo(msg="local costmap parameters loaded.. waiting for lifecycle manager service"), 
+    #             wait_lm_srv
+    #             ]
+    #     )
+    # )
+    
+    # on_global_costmap_param_serv = RegisterEventHandler(
+    #     OnProcessExit(
+    #         target_action=wait_costmap_param_srv,
+    #         on_exit=[
+    #             LogInfo(msg="local costmap parameter service found"), 
+    #             load_local_costmap, 
+    #             wait_lm_srv
+    #             ]
+    #     )
+    # )
+    
+    # on_lm_serv = RegisterEventHandler(
+    #     OnProcessExit(
+    #         target_action=wait_lm_srv,
+    #         on_exit=[
+    #             LogInfo(msg="lifecycle manager service found.. activating nodes"), 
+    #             lm_startup, 
+    #             ]
+    #     )
+    # )
+    
     twist_mux_node = Node(
         package='twist_mux',
         executable='twist_mux',
@@ -46,62 +247,16 @@ def generate_launch_description():
         ],
     )
     
-    # name, package, plugin
-    nav2_specs = [
-        # ("planner_server",    "nav2_planner",           "nav2_planner::PlannerServer"),
-        ("controller_server", "nav2_controller",        "nav2_controller::ControllerServer"),
-        # ("smoother_server",   "nav2_smoother",          "nav2_smoother::SmootherServer"),
-        # ("bt_navigator",      "nav2_bt_navigator",      "nav2_bt_navigator::BtNavigator"),
-        # ("behavior_server",   "nav2_behaviors",         "nav2_behaviors::BehaviorServer"),
-        # ("waypoint_follower", "nav2_waypoint_follower", "nav2_waypoint_follower::WaypointFollower"),
-        # ("velocity_smoother", "nav2_velocity_smoother", "nav2_velocity_smoother::VelocitySmoother"),
-    ]
-    
-    nav2_components = [
-        ComposableNode(
-            package=pkg,
-            plugin=plugin,
-            name=name,
-            parameters=[nav2_params, {"use_sim_time": use_sim_time}],
-            extra_arguments=[{"use_intra_process_comms": True}],
-        )
-        for (name, pkg, plugin) in nav2_specs
-    ]
-    
-    nav2_container = ComposableNodeContainer(
-        name="nav2_container",
-        namespace="",
-        package="rclcpp_components",
-        executable="component_container_mt",
-        output="screen",
-        emulate_tty=True,
-        arguments=['--ros-args', '--log-level', log_level],
-        composable_node_descriptions=nav2_components,
-    )
-    
-    lifecycle_mgr = Node(
-        package     = 'nav2_lifecycle_manager',
-        executable  = 'lifecycle_manager',
-        name        = 'lifecycle_manager_nav',
-        output      = 'screen',
-        arguments=['--ros-args', '--log-level', log_level],
-        parameters  = [{
-            'autostart':    True,
-            'node_names':   [name for (name, _, _) in nav2_specs],
-            'bond_timeout': 4.0,
-            'bond_respawn_max_duration': 10.0,
-            'use_sim_time' : False,
-            'attempt_respawn_reconnection': True
-        }]
-    )
-    
-    delayed_lifecycle = RegisterEventHandler(OnProcessStart(target_action=nav2_container, on_start=[lifecycle_mgr]))
-    
     return LaunchDescription(
         declared_arguments + [
+            stdout_linebuf_envvar,
             twist_mux_node,
             nav2_container,
-            delayed_lifecycle,
-            # lifecycle_mgr
+            load_composable_nodes
+            # wait_local_costmap_param_srv,
+            
+            # on_local_costmap_param_serv,
+            # on_local_costmap_loaded,
+            # on_lm_serv,
         ]
     )
