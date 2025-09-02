@@ -54,6 +54,7 @@ local_costmap:
     ros__parameters:
       update_frequency: 5.0 
       publish_frequency: 2.0
+      always_send_full_costmap: true
       global_frame: odom
       robot_base_frame: base_link
       rolling_window: true
@@ -64,13 +65,18 @@ local_costmap:
       plugins: ["obstacle_layer","range_layer","inflation_layer"]
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
-        obstacle_range: 10.0
-        raytrace_range: 12.0
         observation_sources: scan
         scan:
           topic: /scan
+          obstacle_max_range: 2.5
+          obstacle_min_range: 0.0
+          raytrace_max_range: 3.0
+          raytrace_min_range: 0.0
+          max_obstacle_height: 2.0
+          min_obstacle_height: 0.0
           clearing: true
           marking: true
+          inf_is_valid: false
       range_layer:
         plugin: "nav2_costmap_2d::RangeSensorLayer"
         topics: ["/range"]
@@ -159,7 +165,7 @@ global_costmap:
 #       scan:
 #         topic: /scan
 #         clearing: true
-#         marking: true
+#         marking: truen
 #     range_layer:
 #       plugin: "nav2_costmap_2d::RangeSensorLayer"
 #       topics: ['/range']

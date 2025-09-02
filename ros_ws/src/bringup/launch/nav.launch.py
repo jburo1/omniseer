@@ -15,24 +15,20 @@ def generate_launch_description():
     
     use_sim_time             = LaunchConfiguration('use_sim_time')
     nav2_params_file         = LaunchConfiguration("nav2_params_file")
-    # costmap_params_file      = LaunchConfiguration("costmap_params_file")
     log_level                = LaunchConfiguration('log_level')
 
     declared_arguments = [
         DeclareLaunchArgument('use_sim_time', default_value='true'),
         DeclareLaunchArgument('log_level', default_value='info'),
-        DeclareLaunchArgument('slam_tb_config_file', default_value='slam_toolbox_async_online.yaml'),
         DeclareLaunchArgument('nav2_params_file', default_value='nav2_params.yaml'),
-        # DeclareLaunchArgument('costmap_params_file', default_value='costmaps_overlay.yaml'),
     ]
 
     nav2_params_path = PathJoinSubstitution([pkg_bringup, "config", nav2_params_file])
-    # costmaps_params_path = PathJoinSubstitution([pkg_bringup, "config", costmap_params_file])
     
     stdout_linebuf_envvar = SetEnvironmentVariable(
         'RCUTILS_LOGGING_BUFFERED_STREAM', '1'
     )
-    # configured_costmap = ParameterFile(costmap_params_file)
+    
     configured_params = ParameterFile(
         RewrittenYaml(
             source_file=nav2_params_path,
@@ -144,7 +140,7 @@ def generate_launch_description():
                         parameters=[
                             {
                                 'use_sim_time' : use_sim_time,
-                                'autostart':    False,
+                                'autostart':    True,
                                 'node_names':   lifecycle_nodes,
                                 'bond_timeout': 4.0,
                                 'bond_respawn_max_duration': 10.0,
@@ -156,81 +152,6 @@ def generate_launch_description():
             ),
         ],
     )
-    
-    
-    # # poll until costmap param service to exist
-    # wait_local_costmap_param_srv = ExecuteProcess(
-    #     cmd=['bash','-lc', 'until ros2 service list | grep -qx /local_costmap/local_costmap/set_parameters; do sleep 0.05; done'],
-    #     name='wait_costmap_param_srv'
-    # )
-
-    # # load local costmap 
-    # load_local_costmap = ExecuteProcess(
-    #     cmd=['ros2','param','load','/local_costmap/local_costmap', costmaps_params_path],
-    #     name='load_local_costmap'
-    # )
-    
-    # # load global costmap     
-    # load_global_costmap = ExecuteProcess(
-    #     cmd=['ros2','param','load','/global_costmap/global_costmap', costmaps_params_path],
-    #     name='load_global_costmap'
-    # )
-
-    # # poll until LM service
-    # wait_lm_srv = ExecuteProcess(
-    #     cmd=['bash','-lc', 'until ros2 service list | grep -qx /lifecycle_manager_nav/manage_nodes; do sleep 0.05; done'],
-    #     name='wait_lm_srv'
-    # )
-
-    # # activate LM nodes
-    # lm_startup = ExecuteProcess(
-    #     cmd=['ros2','service','call','/lifecycle_manager_nav/manage_nodes',
-    #         'nav2_msgs/srv/ManageLifecycleNodes','{command: 0}'],
-    #     name='lm_startup'
-    # )
-    
-    # # Events
-    # on_local_costmap_param_serv = RegisterEventHandler(
-    #     OnProcessExit(
-    #         target_action=wait_local_costmap_param_srv,
-    #         on_exit=[
-    #             LogInfo(msg="local costmap parameter service found.. loading local costmap"), 
-    #             load_local_costmap, 
-    #             wait_lm_srv
-    #             ]
-    #     )
-    # )
-    
-    # on_local_costmap_loaded = RegisterEventHandler(
-    #     OnProcessExit(
-    #         target_action=load_local_costmap,
-    #         on_exit=[
-    #             LogInfo(msg="local costmap parameters loaded.. waiting for lifecycle manager service"), 
-    #             wait_lm_srv
-    #             ]
-    #     )
-    # )
-    
-    # on_global_costmap_param_serv = RegisterEventHandler(
-    #     OnProcessExit(
-    #         target_action=wait_costmap_param_srv,
-    #         on_exit=[
-    #             LogInfo(msg="local costmap parameter service found"), 
-    #             load_local_costmap, 
-    #             wait_lm_srv
-    #             ]
-    #     )
-    # )
-    
-    # on_lm_serv = RegisterEventHandler(
-    #     OnProcessExit(
-    #         target_action=wait_lm_srv,
-    #         on_exit=[
-    #             LogInfo(msg="lifecycle manager service found.. activating nodes"), 
-    #             lm_startup, 
-    #             ]
-    #     )
-    # )
     
     twist_mux_node = Node(
         package='twist_mux',
@@ -253,10 +174,5 @@ def generate_launch_description():
             twist_mux_node,
             nav2_container,
             load_composable_nodes
-            # wait_local_costmap_param_srv,
-            
-            # on_local_costmap_param_serv,
-            # on_local_costmap_loaded,
-            # on_lm_serv,
         ]
     )
