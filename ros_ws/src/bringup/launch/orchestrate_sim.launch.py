@@ -168,13 +168,6 @@ def generate_launch_description():
         )
     )
     
-    # on_scan = RegisterEventHandler(
-    #     OnProcessExit(
-    #         target_action=wait_scan,
-    #         on_exit=[]
-    #     )
-    # )
-    
     on_odom_map_tf = RegisterEventHandler(
         OnProcessExit(
             target_action=wait_map_base_link_tf,
@@ -195,7 +188,6 @@ def generate_launch_description():
         on_clock,
         on_tf,
         on_map,
-        # on_scan,
         on_odom_map_tf
     ])
 
