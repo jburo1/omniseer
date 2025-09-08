@@ -1,0 +1,48 @@
+# ROS2-friendly, modern C++17/20, 2-space indent
+BasedOnStyle: LLVM
+Language: Cpp
+
+# Indentation
+IndentWidth: 2
+TabWidth: 2
+UseTab: Never
+ContinuationIndentWidth: 4
+NamespaceIndentation: All
+AccessModifierOffset: -2
+
+# Line breaking
+ColumnLimit: 100
+BreakBeforeBraces: Allman        # use Allman for braces-on-new-line
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+PenaltyBreakBeforeFirstCallParameter: 100
+PenaltyReturnTypeOnItsOwnLine: 200
+
+# Spacing
+SpaceBeforeParens: ControlStatements
+SpacesInAngles: Never
+SpacesInParentheses: false
+SpaceAfterCStyleCast: true
+
+# Alignment
+AlignAfterOpenBracket: Align
+AlignOperands:   true
+AlignConsecutiveAssignments: Consecutive
+AlignConsecutiveDeclarations: Consecutive
+AlignTrailingComments: true
+
+# Includes
+SortIncludes: true
+IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex: '^<[^"]+>$'      # system headers
+    Priority: 1
+  - Regex: '^"[^"]+"$'      # local headers
+    Priority: 2
+
+# C++ specifics
+Standard: Latest
+DerivePointerAlignment: false
+PointerAlignment: Left
+QualifierAlignment: Left

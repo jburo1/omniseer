@@ -1,0 +1,6 @@
+<library path="omniseer_bt_nodes">
+  <class
+    name="SelectFrontierFromCostmap"
+    type="omniseer::SelectFrontierFromCostmap"
+    base_class_type="BT::ActionNodeBase"/>
+</library>

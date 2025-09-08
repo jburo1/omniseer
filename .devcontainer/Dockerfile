@@ -34,7 +34,7 @@ RUN apt-get update && \
 # Base deps, tools, GL
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-venv python3-rosdep python3-lark python3-pip python3-dev build-essential \
-    git curl gnupg lsb-release ca-certificates software-properties-common \
+    git curl wget gnupg lsb-release ca-certificates software-properties-common \
     htop less nano rsync tmux tree xclip \
     libglvnd0 libgl1 libglx0 libegl1 \
     libx11-6 libxext6 libxrender1 libxrandr2 libxi6 mesa-utils \
