@@ -1,7 +1,7 @@
 #include <cmath>
 #include <gtest/gtest.h>
 
-#include "omniseer/grid.hpp"
+#include "omniseer/grid_io.hpp"
 /*
 This test verifies:
 

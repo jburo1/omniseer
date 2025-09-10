@@ -1,12 +1,16 @@
+#include "omniseer/grid_io.hpp"
+
 #include <cstring>
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
 
 #include "nlohmann/json.hpp"
-#include "omniseer/grid.hpp"
 using nlohmann::json;
-
+/*
+This file provides utilities to load occupancy grid maps stored as a .pgm image plus a companion
+.json metadata file
+*/
 static void read_pgm(const std::string& path, uint32_t& W, uint32_t& H, std::vector<uint8_t>& bytes)
 {
   std::ifstream f(path, std::ios::binary);
