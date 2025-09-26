@@ -2,6 +2,8 @@
 #include <gtest/gtest.h>
 
 #include "omniseer/grid_io.hpp"
+
+using namespace omniseer;
 /*
 This test verifies:
 

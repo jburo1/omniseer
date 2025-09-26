@@ -6,6 +6,10 @@
     "C_Cpp.clang_format_style": "file",
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
     "C_Cpp.default.compileCommands": "${workspaceFolder}/build/omniseer_description/compile_commands.json",
+    "C_Cpp.default.includePath": [
+        "${workspaceFolder}/include", // so omniseer/... works
+        "${workspaceFolder}/**"
+    ],
     "cmake.ignoreCMakeListsMissing": true,
     "files.associations": {
         "cctype": "cpp",
@@ -88,6 +92,7 @@
         "ranges": "cpp",
         "shared_mutex": "cpp",
         "stdfloat": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "filesystem": "cpp"
     }
 }
