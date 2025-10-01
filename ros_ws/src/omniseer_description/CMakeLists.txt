@@ -104,6 +104,14 @@ if(BUILD_TESTING)
     OMNISEER_ARTIFACTS_DIR="${OMNISEER_ARTIFACTS_DIR}"
   )
 
+  ament_add_gtest(test_goals_select test/test_goals_select.cpp)
+  target_link_libraries(test_goals_select omniseer_frontier_core)
+  target_include_directories(test_goals_select PRIVATE ${TEST_INC})
+  target_compile_definitions(test_goals_select PRIVATE 
+    TEST_DIR="${CMAKE_SOURCE_DIR}"
+    OMNISEER_ARTIFACTS_DIR="${OMNISEER_ARTIFACTS_DIR}"
+  )
+
   # more here
 endif()
 

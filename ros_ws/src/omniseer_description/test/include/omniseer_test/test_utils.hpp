@@ -1,4 +1,4 @@
-// Test utility functions, mostly for generating artifacts
+// Test utility functions
 #pragma once
 #include <algorithm>
 #include <array>
@@ -14,9 +14,7 @@ namespace omniseer_test
 {
   namespace fs = std::filesystem;
 
-  /*
-  Generates artifact directory for current test
-  */
+  // Generates artifact directory for current test
   inline fs::path artifact_dir()
   {
     fs::path        root = fs::path(OMNISEER_ARTIFACTS_DIR); // CMake defined
@@ -27,9 +25,7 @@ namespace omniseer_test
     return dir;
   }
 
-  /*
-  Writes the given bytes into a standard P5 PGM grayscale image file
-  */
+  // Writes the given bytes into a standard P5 PGM grayscale image file
   inline void write_pgm(const fs::path& p, uint32_t w, uint32_t h,
                         const std::vector<uint8_t>& bytes)
   {
@@ -40,9 +36,7 @@ namespace omniseer_test
     ASSERT_TRUE(f.good()) << "short write " << p.string();
   }
 
-  /*
-  Writes a PPM color image overlaying a red mask on a grayscale grid
-  */
+  // Writes a PPM color image overlaying a red mask on a grayscale grid
   inline void write_ppm_overlay(const fs::path& p, const omniseer::GridU8& g,
                                 const std::vector<uint8_t>& mask01)
   {
@@ -58,7 +52,7 @@ namespace omniseer_test
         r  = 255;
         gg = 16;
         b  = 16;
-      } // punchy red
+      }
       f.put(char(r));
       f.put(char(gg));
       f.put(char(b));
@@ -130,9 +124,7 @@ namespace omniseer_test
     return hsv2rgb(h, s, v);
   }
 
-  /*
-  Writes a PPM color image where each pixel is colored based on its label ID
-  */
+  // Writes a PPM color image where each pixel is colored based on its label ID
   inline void write_labels_ppm(const fs::path& p, const omniseer::GridU8& g,
                                const std::vector<int32_t>& labels)
   {
@@ -157,9 +149,7 @@ namespace omniseer_test
     ASSERT_TRUE(f.good());
   }
 
-  /*
-  Creates a GridU8 object with specified width, height, and optional cell data (defaults to zeros)
-  */
+  // Creates a GridU8 object with specified width, height, and optional cell data
   inline omniseer::GridU8 mk_grid(int w, int h, const std::vector<uint8_t>& cells = {})
   {
     omniseer::GridU8 g;

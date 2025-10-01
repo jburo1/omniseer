@@ -15,7 +15,11 @@ static inline int I(int x, int y, int W)
   return y * W + x;
 }
 
-// --- Test 1: two disjoint blobs, 8-connectivity, verify sizes + centroids ---
+/*
+This test verifies:
+
+Components labeled for two blobs, correct centroids and sizes
+*/
 TEST(ComponentLabel, TwoBlobs_EightConn_CentroidAndSizes)
 {
   GridU8               g = mk_grid(8, 6); // origin=(0,0), res=1 for easy math
@@ -80,7 +84,11 @@ TEST(ComponentLabel, TwoBlobs_EightConn_CentroidAndSizes)
   write_pgm(out / "two_blobs_rim_mask.pgm", g.width, g.height, rim_mask);
 }
 
-// --- Test 2: diagonal chain — 4-conn splits, 8-conn merges ---
+/*
+This test verifies:
+
+Components labeled for diagonal chain, correct centroids and sizes
+*/
 TEST(ComponentLabel, DiagonalChain_Connectivity)
 {
   GridU8               g = mk_grid(5, 5);
@@ -115,7 +123,11 @@ TEST(ComponentLabel, DiagonalChain_Connectivity)
   write_labels_ppm(out / "diag_8conn_rims.ppm", g, L8);
 }
 
-// --- Test 3: min_component_size filters speckles ---
+/*
+This test verifies:
+
+Minimum size components axed
+*/
 TEST(ComponentLabel, MinComponentSize_FiltersSmallIslands)
 {
   GridU8               g = mk_grid(6, 4);
@@ -146,7 +158,11 @@ TEST(ComponentLabel, MinComponentSize_FiltersSmallIslands)
   write_labels_ppm(artifact_dir() / "filtered_components_rims.ppm", g, L);
 }
 
-// --- Test 4: integration with real map frontier mask (overlay & components) ---
+/*
+This test verifies:
+
+Functionality on a real costmap
+*/
 TEST(ComponentLabel, RealMap_RimsOverlayAndComponents)
 {
   // Load the costmap
