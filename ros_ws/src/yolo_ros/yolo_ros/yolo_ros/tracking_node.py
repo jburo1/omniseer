@@ -14,33 +14,23 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-import rclpy
-from rclpy.qos import QoSProfile
-from rclpy.qos import QoSHistoryPolicy
-from rclpy.qos import QoSDurabilityPolicy
-from rclpy.qos import QoSReliabilityPolicy
-from rclpy.lifecycle import LifecycleNode
-from rclpy.lifecycle import TransitionCallbackReturn
-from rclpy.lifecycle import LifecycleState
-
 import cv2
-import numpy as np
 import message_filters
+import numpy as np
+import rclpy
 from cv_bridge import CvBridge
-
-from ultralytics.engine.results import Boxes
-from ultralytics.trackers.basetrack import BaseTrack
-from ultralytics.trackers import BOTSORT, BYTETracker
-from ultralytics.utils import IterableSimpleNamespace, YAML
-from ultralytics.utils.checks import check_requirements, check_yaml
-
+from rclpy.lifecycle import LifecycleNode, LifecycleState, TransitionCallbackReturn
+from rclpy.qos import QoSDurabilityPolicy, QoSHistoryPolicy, QoSProfile, QoSReliabilityPolicy
 from sensor_msgs.msg import Image
-from yolo_msgs.msg import Detection
-from yolo_msgs.msg import DetectionArray
+from ultralytics.engine.results import Boxes
+from ultralytics.trackers import BOTSORT, BYTETracker
+from ultralytics.trackers.basetrack import BaseTrack
+from ultralytics.utils import YAML, IterableSimpleNamespace
+from ultralytics.utils.checks import check_requirements, check_yaml
+from yolo_msgs.msg import Detection, DetectionArray
 
 
 class TrackingNode(LifecycleNode):
-
     def __init__(self) -> None:
         super().__init__("tracking_node")
 
@@ -55,9 +45,7 @@ class TrackingNode(LifecycleNode):
 
         tracker_name = self.get_parameter("tracker").get_parameter_value().string_value
 
-        self.image_reliability = (
-            self.get_parameter("image_reliability").get_parameter_value().integer_value
-        )
+        self.image_reliability = self.get_parameter("image_reliability").get_parameter_value().integer_value
 
         self.tracker = self.create_tracker(tracker_name)
         self._pub = self.create_publisher(DetectionArray, "tracking", 10)
@@ -78,16 +66,10 @@ class TrackingNode(LifecycleNode):
         )
 
         # subs
-        image_sub = message_filters.Subscriber(
-            self, Image, "image_raw", qos_profile=image_qos_profile
-        )
-        detections_sub = message_filters.Subscriber(
-            self, DetectionArray, "detections", qos_profile=10
-        )
+        image_sub = message_filters.Subscriber(self, Image, "image_raw", qos_profile=image_qos_profile)
+        detections_sub = message_filters.Subscriber(self, DetectionArray, "detections", qos_profile=10)
 
-        self._synchronizer = message_filters.ApproximateTimeSynchronizer(
-            (image_sub, detections_sub), 10, 0.5
-        )
+        self._synchronizer = message_filters.ApproximateTimeSynchronizer((image_sub, detections_sub), 10, 0.5)
         self._synchronizer.registerCallback(self.detections_cb)
 
         super().on_activate(state)
@@ -126,7 +108,6 @@ class TrackingNode(LifecycleNode):
         return TransitionCallbackReturn.SUCCESS
 
     def create_tracker(self, tracker_yaml: str) -> BaseTrack:
-
         TRACKER_MAP = {"bytetrack": BYTETracker, "botsort": BOTSORT}
         check_requirements("lap")  # for linear_assignment
 
@@ -141,7 +122,6 @@ class TrackingNode(LifecycleNode):
         return tracker
 
     def detections_cb(self, img_msg: Image, detections_msg: DetectionArray) -> None:
-
         tracked_detections_msg = DetectionArray()
         tracked_detections_msg.header = img_msg.header
 
@@ -153,7 +133,6 @@ class TrackingNode(LifecycleNode):
         detection_list = []
         detection: Detection
         for detection in detections_msg.detections:
-
             detection_list.append(
                 [
                     detection.bbox.center.position.x - detection.bbox.size.x / 2,
@@ -167,14 +146,11 @@ class TrackingNode(LifecycleNode):
 
         # tracking
         if len(detection_list) > 0:
-
             det = Boxes(np.array(detection_list), (img_msg.height, img_msg.width))
             tracks = self.tracker.update(det, cv_image)
 
             if len(tracks) > 0:
-
                 for t in tracks:
-
                     tracked_box = Boxes(t[:-1], (img_msg.height, img_msg.width))
                     tracked_detection: Detection = detections_msg.detections[int(t[-1])]
 

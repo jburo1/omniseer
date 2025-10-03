@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 """
-zero_small.py   – overwrite an SDF/URDF in-place, turning any numeric token
+zero_small.py   overwrite an SDF/URDF in-place, turning any numeric token
                   whose absolute value is below EPS into 0
 usage:  ./zero_small.py robot.sdf [EPS]
 """
 
-import sys, xml.etree.ElementTree as ET, math
+import sys
+import xml.etree.ElementTree as ET
 
 EPS = float(sys.argv[2]) if len(sys.argv) > 2 else 1e-6
 fname = sys.argv[1]
 
 tree = ET.parse(fname)
 root = tree.getroot()
+
 
 def is_number(tok: str) -> bool:
     try:
@@ -20,8 +22,9 @@ def is_number(tok: str) -> bool:
     except ValueError:
         return False
 
+
 for el in root.iter():
-    # skip <uri> and friends – they often contain version strings or filenames
+    # skip <uri> and friends they often contain version strings or filenames
     if el.tag in {"uri"}:
         continue
     if el.text:

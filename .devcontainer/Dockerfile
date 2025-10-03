@@ -15,7 +15,7 @@ ENV LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 \
     PYTHONUNBUFFERED=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_NO_CACHE_DIR=1 \
-    ROS_DISTRO=${ROS_DISTRO} 
+    ROS_DISTRO=${ROS_DISTRO}
 
 # Add user to group
 RUN if id -u $USER_UID ; then userdel `id -un $USER_UID` ; fi
@@ -40,7 +40,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libx11-6 libxext6 libxrender1 libxrandr2 libxi6 mesa-utils \
     && rm -rf /var/lib/apt/lists/*
 
-# Create hybrid venv 
+# Create hybrid venv
 RUN python3 -m venv /opt/venv --system-site-packages
 ENV VIRTUAL_ENV=/opt/venv
 ENV PATH=/opt/venv/bin:$PATH
@@ -68,7 +68,8 @@ USER ${USERNAME}
 RUN python -m pip install -U pip setuptools wheel \
   && pip install --extra-index-url https://download.pytorch.org/whl/cu121 \
     torch torchvision torchaudio colcon-common-extensions \
-  && pip install -r /tmp/reqs.yolo.txt
+  && pip install -r /tmp/reqs.yolo.txt \
+  && pip install ruff pre-commit pytest pytest-cov
 USER root
 
 # Rosdep

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-TOPIC=/cmd_vel          
-RATE=1                               
+TOPIC=/cmd_vel
+RATE=1
 
 step () { gz topic -t $TOPIC -m gz.msgs.Twist -p "$1" ; sleep $RATE ; }
 

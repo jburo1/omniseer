@@ -4,7 +4,7 @@
   "remoteUser": "user",
   // for permissions
   "updateRemoteUserUID": true,
-  "build": { 
+  "build": {
     "dockerfile": "Dockerfile",
     "target": "dev",
     "context": ".."

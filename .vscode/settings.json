@@ -1,98 +1,44 @@
 {
+    // ===== General =====
     "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "modificationsIfAvailable",
+    "editor.codeActionsOnSave": {
+        "source.fixAll": "explicit"
+    },
+    // ===== Python via Ruff =====
+    "python.analysis.typeCheckingMode": "off",
+    "python.formatting.provider": "none",
+    "[python]": {
+        "editor.defaultFormatter": "charliermarsh.ruff"
+    },
+    "ruff.enable": true,
+    "ruff.organizeImports": true,
+    // ===== C/C++ via clang-format =====
+    "C_Cpp.formatting": "clangFormat",
+    "C_Cpp.clang_format_style": "file",
     "[cpp]": {
         "editor.defaultFormatter": "ms-vscode.cpptools"
     },
-    "C_Cpp.clang_format_style": "file",
+    "[c]": {
+        "editor.defaultFormatter": "ms-vscode.cpptools"
+    },
+    // IntelliSense & compilation database
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
     "C_Cpp.default.compileCommands": "${workspaceFolder}/build/omniseer_description/compile_commands.json",
     "C_Cpp.default.includePath": [
-        "${workspaceFolder}/include", // so omniseer/... works
+        "${workspaceFolder}/include",
         "${workspaceFolder}/**"
     ],
+    // ===== CMake =====
     "cmake.ignoreCMakeListsMissing": true,
-    "files.associations": {
-        "cctype": "cpp",
-        "clocale": "cpp",
-        "cmath": "cpp",
-        "cstdarg": "cpp",
-        "cstddef": "cpp",
-        "cstdio": "cpp",
-        "cstdlib": "cpp",
-        "cstring": "cpp",
-        "ctime": "cpp",
-        "cwchar": "cpp",
-        "cwctype": "cpp",
-        "array": "cpp",
-        "atomic": "cpp",
-        "bit": "cpp",
-        "bitset": "cpp",
-        "charconv": "cpp",
-        "chrono": "cpp",
-        "compare": "cpp",
-        "complex": "cpp",
-        "concepts": "cpp",
-        "condition_variable": "cpp",
-        "cstdint": "cpp",
-        "deque": "cpp",
-        "forward_list": "cpp",
-        "list": "cpp",
-        "map": "cpp",
-        "set": "cpp",
-        "string": "cpp",
-        "unordered_map": "cpp",
-        "unordered_set": "cpp",
-        "vector": "cpp",
-        "exception": "cpp",
-        "algorithm": "cpp",
-        "functional": "cpp",
-        "iterator": "cpp",
-        "memory": "cpp",
-        "memory_resource": "cpp",
-        "numeric": "cpp",
-        "optional": "cpp",
-        "random": "cpp",
-        "ratio": "cpp",
-        "string_view": "cpp",
-        "system_error": "cpp",
-        "tuple": "cpp",
-        "type_traits": "cpp",
-        "utility": "cpp",
-        "format": "cpp",
-        "fstream": "cpp",
-        "initializer_list": "cpp",
-        "iomanip": "cpp",
-        "iosfwd": "cpp",
-        "iostream": "cpp",
-        "istream": "cpp",
-        "limits": "cpp",
-        "mutex": "cpp",
-        "new": "cpp",
-        "numbers": "cpp",
-        "ostream": "cpp",
-        "semaphore": "cpp",
-        "span": "cpp",
-        "sstream": "cpp",
-        "stdexcept": "cpp",
-        "stop_token": "cpp",
-        "streambuf": "cpp",
-        "thread": "cpp",
-        "cinttypes": "cpp",
-        "typeindex": "cpp",
-        "typeinfo": "cpp",
-        "variant": "cpp",
-        "csignal": "cpp",
-        "any": "cpp",
-        "strstream": "cpp",
-        "cfenv": "cpp",
-        "codecvt": "cpp",
-        "expected": "cpp",
-        "source_location": "cpp",
-        "future": "cpp",
-        "ranges": "cpp",
-        "shared_mutex": "cpp",
-        "stdfloat": "cpp",
-        "valarray": "cpp",
-        "filesystem": "cpp"
-    }
+    "files.exclude": {
+        "**/build": true,
+        "**/install": true,
+        "**/log": true
+    },
+    "search.exclude": {
+        "**/build": true,
+        "**/install": true,
+        "**/log": true
+    },
 }

@@ -84,14 +84,14 @@ if(BUILD_TESTING)
   ament_add_gtest(test_grid_io test/test_grid_io.cpp)
   target_link_libraries(test_grid_io omniseer_frontier_core)
   target_include_directories(test_grid_io PRIVATE ${TEST_INC})
-  target_compile_definitions(test_grid_io PRIVATE 
+  target_compile_definitions(test_grid_io PRIVATE
     TEST_DIR="${CMAKE_SOURCE_DIR}"
   )
 
   ament_add_gtest(test_frontier_mask test/test_frontier_mask.cpp)
   target_link_libraries(test_frontier_mask omniseer_frontier_core)
   target_include_directories(test_frontier_mask PRIVATE ${TEST_INC})
-  target_compile_definitions(test_frontier_mask PRIVATE 
+  target_compile_definitions(test_frontier_mask PRIVATE
     TEST_DIR="${CMAKE_SOURCE_DIR}"
     OMNISEER_ARTIFACTS_DIR="${OMNISEER_ARTIFACTS_DIR}"
   )
@@ -99,7 +99,7 @@ if(BUILD_TESTING)
   ament_add_gtest(test_components test/test_components.cpp)
   target_link_libraries(test_components omniseer_frontier_core)
   target_include_directories(test_components PRIVATE ${TEST_INC})
-  target_compile_definitions(test_components PRIVATE 
+  target_compile_definitions(test_components PRIVATE
     TEST_DIR="${CMAKE_SOURCE_DIR}"
     OMNISEER_ARTIFACTS_DIR="${OMNISEER_ARTIFACTS_DIR}"
   )
@@ -107,7 +107,7 @@ if(BUILD_TESTING)
   ament_add_gtest(test_goals_select test/test_goals_select.cpp)
   target_link_libraries(test_goals_select omniseer_frontier_core)
   target_include_directories(test_goals_select PRIVATE ${TEST_INC})
-  target_compile_definitions(test_goals_select PRIVATE 
+  target_compile_definitions(test_goals_select PRIVATE
     TEST_DIR="${CMAKE_SOURCE_DIR}"
     OMNISEER_ARTIFACTS_DIR="${OMNISEER_ARTIFACTS_DIR}"
   )

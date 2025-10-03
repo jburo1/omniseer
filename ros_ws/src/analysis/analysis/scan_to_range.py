@@ -1,49 +1,62 @@
 #!/usr/bin/env python3
-"""
-Convert a LaserScan from /sonar into a Range message on /range.
-"""
+"""Convert a LaserScan from /sonar into a Range message."""
+
+import math
+
 from rclpy import init, shutdown, spin
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import LaserScan, Range
-import math
+
 
 class ScanToRange(Node):
-    def __init__(self):
-        super().__init__('scan_to_range')
-        self.declare_parameter('scan_topic', '/sonar')
-        self.declare_parameter('range_topic', '/range')
+    """Publish a range message using the closest valid beam."""
 
-        scan_topic  = self.get_parameter('scan_topic').value
-        range_topic = self.get_parameter('range_topic').value
+    def __init__(self) -> None:
+        super().__init__("scan_to_range")
+        self.declare_parameter("scan_topic", "/sonar")
+        self.declare_parameter("range_topic", "/range")
 
-        self.pub = self.create_publisher(Range, range_topic, qos_profile_sensor_data)
-        self.create_subscription(LaserScan, scan_topic, self.scan_cb, qos_profile_sensor_data)
+        scan_topic = self.get_parameter("scan_topic").value
+        range_topic = self.get_parameter("range_topic").value
 
-        self.get_logger().info(f'ScanToRange: {scan_topic} -> {range_topic}')
+        self.publisher = self.create_publisher(Range, range_topic, qos_profile_sensor_data)
+        self.create_subscription(
+            LaserScan,
+            scan_topic,
+            self.scan_callback,
+            qos_profile_sensor_data,
+        )
 
-    def scan_cb(self, scan: LaserScan):
-        # one pass, no allocations
+        self.get_logger().info("ScanToRange: %s -> %s", scan_topic, range_topic)
+
+    def scan_callback(self, scan: LaserScan) -> None:
         best = None
-        for v in scan.ranges:
-            if math.isfinite(v) and scan.range_min <= v <= scan.range_max:
-                best = v if best is None or v < best else best
+        for value in scan.ranges:
+            if not math.isfinite(value):
+                continue
+            if scan.range_min <= value <= scan.range_max:
+                if best is None or value < best:
+                    best = value
 
-        rng = Range()
-        rng.header         = scan.header
-        rng.radiation_type = Range.ULTRASOUND
-        rng.field_of_view  = scan.angle_max - scan.angle_min
-        rng.min_range      = scan.range_min
-        rng.max_range      = scan.range_max
-        rng.range          = best if best is not None else scan.range_max  # exact max => clear_on_max_reading works
-        # clamp for safety
-        if rng.range < rng.min_range: rng.range = rng.min_range
-        if rng.range > rng.max_range: rng.range = rng.max_range
+        message = Range()
+        message.header = scan.header
+        message.radiation_type = Range.ULTRASOUND
+        message.field_of_view = scan.angle_max - scan.angle_min
+        message.min_range = scan.range_min
+        message.max_range = scan.range_max
+        message.range = best if best is not None else scan.range_max
 
-        self.pub.publish(rng)
+        if message.range < message.min_range:
+            message.range = message.min_range
+        if message.range > message.max_range:
+            message.range = message.max_range
 
-def main():
-    init()
+        self.publisher.publish(message)
+
+
+def main() -> None:
+    init(args=None)
     node = ScanToRange()
     try:
         spin(node)
@@ -53,6 +66,6 @@ def main():
         node.destroy_node()
         shutdown()
 
-if __name__ == '__main__':
-    main()
 
+if __name__ == "__main__":
+    main()

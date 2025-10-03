@@ -1,29 +1,37 @@
-import time, sys, argparse
-from rclpy.time import Time
-from rclpy.node import Node
-from tf2_ros import Buffer, TransformListener
-from rclpy import init, ok, spin_once, shutdown
+"""Wait for a transform to become available before exiting."""
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("source")                 
-    ap.add_argument("target")                 
-    args = ap.parse_args()
-    
+import argparse
+import sys
+import time
+from typing import Optional
+
+from rclpy import init, ok, shutdown, spin_once
+from rclpy.node import Node
+from rclpy.time import Time
+from tf2_ros import Buffer, TransformListener
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("source")
+    parser.add_argument("target")
+    args = parser.parse_args()
+
     init(args=None)
+    node: Optional[Node] = None
+    found = False
     try:
-        node=Node("wait_tf")
-        buf=Buffer() 
-        tl=TransformListener(buf, node)
-        end=time.time()+60
-        found=False
-        while ok() and time.time()<end:
+        node = Node("wait_tf")
+        buffer = Buffer()
+        _listener = TransformListener(buffer, node)
+        deadline = time.time() + 60.0
+
+        while ok() and time.time() < deadline:
             spin_once(node, timeout_sec=0.1)
-            if buf.can_transform(args.source, args.target, Time()):
-                found=True 
+            if buffer.can_transform(args.source, args.target, Time()):
+                found = True
                 break
             time.sleep(0.1)
-    # swallow Ctrl-C
     except KeyboardInterrupt:
         pass
     finally:
@@ -31,6 +39,7 @@ def main():
             node.destroy_node()
         shutdown()
         sys.exit(0 if found else 1)
-        
-if __name__ == '__main__':
+
+
+if __name__ == "__main__":
     main()

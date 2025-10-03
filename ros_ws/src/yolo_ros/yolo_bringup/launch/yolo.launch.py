@@ -14,17 +14,15 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from launch import LaunchDescription, LaunchContext
+from launch import LaunchContext, LaunchDescription
 from launch.actions import DeclareLaunchArgument, OpaqueFunction
+from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch_ros.actions import Node
-from launch.conditions import IfCondition
 
 
 def generate_launch_description():
-
     def run_yolo(context: LaunchContext, use_tracking, use_3d):
-
         use_tracking = eval(context.perform_substitution(use_tracking))
         use_3d = eval(context.perform_substitution(use_3d))
 

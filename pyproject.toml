@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.ruff]
+target-version = "py39"        # ROS Python
+line-length = 120
+extend-exclude = ["build", "install", "log", ".venv", "ros_ws/src/omniseer_gz_assets", "sim/models"]
+src = ["ros_ws/src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "RUF"]
+ignore = ["D203", "D213", "UP031", "RUF005"]
+
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.ruff.lint.per-file-ignores]
+# Long help/doc strings in launchers
+"ros_ws/src/bringup/launch/orchestrate_sim.launch.py" = ["E501"]
+"ros_ws/src/bringup/launch/sim.launch.py" = ["E501"]
+"ros_ws/src/yolo_ros/yolo_bringup/launch/yolo.launch.py" = ["E501"]

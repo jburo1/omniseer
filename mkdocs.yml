@@ -1,12 +1,12 @@
 site_name: omniseer
-repo_url: https://github.com/jburo1/omniseer 
+repo_url: https://github.com/jburo1/omniseer
 theme:
   name: material
   palette:
     scheme: default
     primary: indigo
   features:
-    - navigation.sections            
+    - navigation.sections
     - navigation.instant
 markdown_extensions:
   - toc:

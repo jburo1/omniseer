@@ -1,7 +1,7 @@
 yolo:
   ros__parameters:
     # pick your model; start with a small one for sanity
-    model: yolov11n.pt               
+    model: yolov11n.pt
     device: cuda:0
     threshold: 0.4
     iou: 0.65
@@ -17,4 +17,4 @@ yolo:
 
     # frame to express 3D boxes/keypoints in
     target_frame: base_link
-    use_sim_time: true            
+    use_sim_time: true

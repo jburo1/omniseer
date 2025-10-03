@@ -14,37 +14,23 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-import cv2
 import random
-import numpy as np
-from typing import Tuple
 
-import rclpy
-from rclpy.duration import Duration
-from rclpy.qos import QoSProfile
-from rclpy.qos import QoSHistoryPolicy
-from rclpy.qos import QoSDurabilityPolicy
-from rclpy.qos import QoSReliabilityPolicy
-from rclpy.lifecycle import LifecycleNode
-from rclpy.lifecycle import TransitionCallbackReturn
-from rclpy.lifecycle import LifecycleState
-
+import cv2
 import message_filters
+import numpy as np
+import rclpy
 from cv_bridge import CvBridge
-from ultralytics.utils.plotting import Annotator, colors
-
+from rclpy.duration import Duration
+from rclpy.lifecycle import LifecycleNode, LifecycleState, TransitionCallbackReturn
+from rclpy.qos import QoSDurabilityPolicy, QoSHistoryPolicy, QoSProfile, QoSReliabilityPolicy
 from sensor_msgs.msg import Image
-from visualization_msgs.msg import Marker
-from visualization_msgs.msg import MarkerArray
-from yolo_msgs.msg import BoundingBox2D
-from yolo_msgs.msg import KeyPoint2D
-from yolo_msgs.msg import KeyPoint3D
-from yolo_msgs.msg import Detection
-from yolo_msgs.msg import DetectionArray
+from ultralytics.utils.plotting import Annotator, colors
+from visualization_msgs.msg import Marker, MarkerArray
+from yolo_msgs.msg import BoundingBox2D, Detection, DetectionArray, KeyPoint2D, KeyPoint3D
 
 
 class DebugNode(LifecycleNode):
-
     def __init__(self) -> None:
         super().__init__("debug_node")
 
@@ -58,9 +44,7 @@ class DebugNode(LifecycleNode):
         self.get_logger().info(f"[{self.get_name()}] Configuring...")
 
         self.image_qos_profile = QoSProfile(
-            reliability=self.get_parameter("image_reliability")
-            .get_parameter_value()
-            .integer_value,
+            reliability=self.get_parameter("image_reliability").get_parameter_value().integer_value,
             history=QoSHistoryPolicy.KEEP_LAST,
             durability=QoSDurabilityPolicy.VOLATILE,
             depth=1,
@@ -80,16 +64,10 @@ class DebugNode(LifecycleNode):
         self.get_logger().info(f"[{self.get_name()}] Activating...")
 
         # subs
-        self.image_sub = message_filters.Subscriber(
-            self, Image, "image_raw", qos_profile=self.image_qos_profile
-        )
-        self.detections_sub = message_filters.Subscriber(
-            self, DetectionArray, "detections", qos_profile=10
-        )
+        self.image_sub = message_filters.Subscriber(self, Image, "image_raw", qos_profile=self.image_qos_profile)
+        self.detections_sub = message_filters.Subscriber(self, DetectionArray, "detections", qos_profile=10)
 
-        self._synchronizer = message_filters.ApproximateTimeSynchronizer(
-            (self.image_sub, self.detections_sub), 10, 0.5
-        )
+        self._synchronizer = message_filters.ApproximateTimeSynchronizer((self.image_sub, self.detections_sub), 10, 0.5)
         self._synchronizer.registerCallback(self.detections_cb)
 
         super().on_activate(state)
@@ -132,9 +110,8 @@ class DebugNode(LifecycleNode):
         self,
         cv_image: np.ndarray,
         detection: Detection,
-        color: Tuple[int],
+        color: tuple[int],
     ) -> np.ndarray:
-
         # get detection info
         class_name = detection.class_name
         score = detection.score
@@ -179,7 +156,7 @@ class DebugNode(LifecycleNode):
         # write text
         label = f"{class_name}"
         label += f" ({track_id})" if track_id else ""
-        label += " ({:.3f})".format(score)
+        label += f" ({score:.3f})"
         pos = (min_pt[0] + 5, min_pt[1] + 25)
         font = cv2.FONT_HERSHEY_SIMPLEX
         cv2.putText(cv_image, label, pos, font, 1, color, 1, cv2.LINE_AA)
@@ -190,9 +167,8 @@ class DebugNode(LifecycleNode):
         self,
         cv_image: np.ndarray,
         detection: Detection,
-        color: Tuple[int],
+        color: tuple[int],
     ) -> np.ndarray:
-
         mask_msg = detection.mask
         mask_array = np.array([[int(ele.x), int(ele.y)] for ele in mask_msg.data])
 
@@ -211,18 +187,13 @@ class DebugNode(LifecycleNode):
         return cv_image
 
     def draw_keypoints(self, cv_image: np.ndarray, detection: Detection) -> np.ndarray:
-
         keypoints_msg = detection.keypoints
 
         ann = Annotator(cv_image)
 
         kp: KeyPoint2D
         for kp in keypoints_msg.data:
-            color_k = (
-                [int(x) for x in ann.kpt_color[kp.id - 1]]
-                if len(keypoints_msg.data) == 17
-                else colors(kp.id - 1)
-            )
+            color_k = [int(x) for x in ann.kpt_color[kp.id - 1]] if len(keypoints_msg.data) == 17 else colors(kp.id - 1)
 
             cv2.circle(
                 cv_image,
@@ -243,7 +214,7 @@ class DebugNode(LifecycleNode):
                 cv2.LINE_AA,
             )
 
-        def get_pk_pose(kp_id: int) -> Tuple[int]:
+        def get_pk_pose(kp_id: int) -> tuple[int]:
             for kp in keypoints_msg.data:
                 if kp.id == kp_id:
                     return (int(kp.point.x), int(kp.point.y))
@@ -265,8 +236,7 @@ class DebugNode(LifecycleNode):
 
         return cv_image
 
-    def create_bb_marker(self, detection: Detection, color: Tuple[int]) -> Marker:
-
+    def create_bb_marker(self, detection: Detection, color: tuple[int]) -> Marker:
         bbox3d = detection.bbox3d
 
         marker = Marker()
@@ -300,7 +270,6 @@ class DebugNode(LifecycleNode):
         return marker
 
     def create_kp_marker(self, keypoint: KeyPoint3D) -> Marker:
-
         marker = Marker()
 
         marker.ns = "yolo_3d"
@@ -337,7 +306,6 @@ class DebugNode(LifecycleNode):
 
         detection: Detection
         for detection in detection_msg.detections:
-
             # random color
             class_name = detection.class_name
 
@@ -368,9 +336,7 @@ class DebugNode(LifecycleNode):
                     kp_marker_array.markers.append(marker)
 
         # publish dbg image
-        self._dbg_pub.publish(
-            self.cv_bridge.cv2_to_imgmsg(cv_image, encoding="bgr8", header=img_msg.header)
-        )
+        self._dbg_pub.publish(self.cv_bridge.cv2_to_imgmsg(cv_image, encoding="bgr8", header=img_msg.header))
         self._bb_markers_pub.publish(bb_marker_array)
         self._kp_markers_pub.publish(kp_marker_array)
 

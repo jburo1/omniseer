@@ -2,22 +2,22 @@ name: docs
 on:
   push:
     branches: [master]
-    paths:       
+    paths:
       - "docs/**"
       - "mkdocs.yml"
-  workflow_dispatch: {}     
+  workflow_dispatch: {}
 
 jobs:
   deploy:
     runs-on: ubuntu-24.04
     permissions:
-      contents: write         
-      pages: write            
+      contents: write
+      pages: write
     steps:
       # 1. Checkout full history so mkdocs can create gh-pages
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0     
+          fetch-depth: 0
 
       # 2. Install Python + MkDocs + theme
       - uses: actions/setup-python@v5

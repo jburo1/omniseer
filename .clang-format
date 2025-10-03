@@ -1,4 +1,3 @@
-# ROS2-friendly, modern C++17/20, 2-space indent
 BasedOnStyle: LLVM
 Language: Cpp
 
@@ -12,7 +11,7 @@ AccessModifierOffset: -2
 
 # Line breaking
 ColumnLimit: 100
-BreakBeforeBraces: Allman        # use Allman for braces-on-new-line
+BreakBeforeBraces: Allman
 AllowShortFunctionsOnASingleLine: Empty
 AllowShortIfStatementsOnASingleLine: Never
 AllowShortLoopsOnASingleLine: false
@@ -27,7 +26,7 @@ SpaceAfterCStyleCast: true
 
 # Alignment
 AlignAfterOpenBracket: Align
-AlignOperands:   true
+AlignOperands: true
 AlignConsecutiveAssignments: Consecutive
 AlignConsecutiveDeclarations: Consecutive
 AlignTrailingComments: true
