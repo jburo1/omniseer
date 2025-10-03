@@ -11,7 +11,7 @@
 
 /**
  * \file
- * \brief ROS-agnostic frontier detection and goal selection API.
+ * \brief ROS-agnostic costmap frontier detection and goal selection API.
  *
  * Given an occupancy/cost grid (GridU8), identify frontier cells,
  * group them into connected components, propose feasible goal poses using callbacks,
@@ -174,13 +174,13 @@ namespace omniseer
   /**
    * \brief Propose feasible goal poses for each component using user callbacks.
    *
-   * \param g Input grid (for bounds/resolution if needed by implementations).
+   * \param g Input grid.
    * \param p Parameters (radii, clearances, max distance).
    * \param robot Current robot pose.
    * \param cb Callback bundle: feasibility (\c is_pose_navigable), \c plan_cost, \c
    * information_gain.
    * \param comps Frontier components to seed goal proposals.
-   * \return Candidate goals (not yet scored/sorted).
+   * \return Candidate goals.
    */
   std::vector<FrontierGoal> select_component_goals(const GridU8& g, const Params& p,
                                                    const Pose2D& robot, const Callbacks& cb,
@@ -191,14 +191,17 @@ namespace omniseer
    *
    * \param p Parameters with scoring weights.
    * \param robot Current robot pose.
+   * \param cb Callback bundle: feasibility (\c is_pose_navigable), \c plan_cost, \c
+   * information_gain.
    * \param[in,out] goals Goals to score and sort.
    *
    * \post \p goals is sorted in descending order of \c score.
    */
-  void rank_goals(const Params& p, const Pose2D& robot, std::vector<FrontierGoal>& goals);
+  void rank_goals(const Params& p, const Pose2D& robot, const Callbacks& cb,
+                  std::vector<FrontierGoal>& goals);
 
   /**
-   * \brief Full pipeline: frontier detection -> components -> goal proposals -> ranking.
+   * \brief Full pipeline: frontier detection -> components -> goal proposals -> ranking -> sorting.
    *
    * \param g Input grid.
    * \param p Parameters.

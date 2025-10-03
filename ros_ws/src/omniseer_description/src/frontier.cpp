@@ -2,7 +2,7 @@
 
 #include <cmath>
 #include <limits>
-#include <queue> // reserved for future use (e.g., BFS variants)
+#include <random>
 
 /**
  * \file
@@ -15,72 +15,123 @@
  *  - \ref omniseer::rank_goals
  *  - \ref omniseer::find_frontier_goals
  *
- * Helper utilities in this file are marked \internal to keep public docs clean.
  * \ingroup omniseer_frontier
  */
 
 namespace omniseer
 {
-  // --------- Helper functions ----------
-
-  /**
-   * \internal
-   * \brief Check whether (x,y) lies within [0,w)×[0,h).
-   */
-  static inline bool in_bounds(int x, int y, int w, int h)
+  namespace
   {
-    return (unsigned) x < (unsigned) w && (unsigned) y < (unsigned) h;
-  }
+    // --------- Helpers ----------
 
-  /**
-   * \internal
-   * \brief Convert (x,y) coordinates to row-major linear index.
-   * \return y * w + x
-   */
-  static inline int idx(int x, int y, int w)
-  {
-    return y * w + x;
-  }
-
-  /**
-   * \internal
-   * \brief Test whether a cell value equals \ref Params::unknown_cost.
-   */
-  static inline bool is_unknown(uint8_t v, const Params& p)
-  {
-    return v == p.unknown_cost;
-  }
-
-  /**
-   * \internal
-   * \brief Test whether a cell value is considered traversable (<= \ref Params::free_cost_max).
-   */
-  static inline bool is_freeish(uint8_t v, const Params& p)
-  {
-    return v <= p.free_cost_max;
-  }
-
-  /**
-   * \internal
-   * \brief Return neighbor offset table for the chosen connectivity.
-   *
-   * For 4-connectivity, returns 4 (dx,dy) pairs; for 8-connectivity, returns 8 pairs.
-   * \param c Connectivity (Four or Eight).
-   * \param[out] count Number of neighbor pairs provided (4 or 8).
-   * \return Pointer to static interleaved array: {dx0,dy0, dx1,dy1, ... }.
-   */
-  static inline const int* neighbor_table(Conn c, int& count)
-  {
-    static const int N4[8]  = {1, 0, -1, 0, 0, 1, 0, -1};
-    static const int N8[16] = {1, 0, -1, 0, 0, 1, 0, -1, 1, 1, 1, -1, -1, 1, -1, -1};
-    if (c == Conn::Four)
+    /**
+     * \internal
+     * \brief Return euclidean distance between a and b.
+     */
+    inline double euclid(const Pose2D& a, const Pose2D& b)
     {
-      count = 4;
-      return N4;
+      const double dx = a.x - b.x, dy = a.y - b.y;
+      return std::sqrt(dx * dx + dy * dy);
     }
-    count = 8;
-    return N8;
-  }
+
+    /**
+     * \internal
+     * \brief Check whether v is finite.
+     */
+    constexpr bool is_finite(double v) noexcept
+    {
+      return std::isfinite(v);
+    }
+    /**
+     * \internal
+     * \brief Check whether (x,y) lies within [0,w)×[0,h).
+     */
+    constexpr bool in_bounds(int x, int y, int w, int h) noexcept
+    {
+      return (unsigned) x < (unsigned) w && (unsigned) y < (unsigned) h;
+    }
+
+    /**
+     * \internal
+     * \brief Convert (x,y) coordinates to row-major linear index.
+     * \return y * w + x
+     */
+    constexpr inline int idx(int x, int y, int w) noexcept
+    {
+      return y * w + x;
+    }
+
+    /**
+     * \internal
+     * \brief Test whether a cell value equals \ref Params::unknown_cost.
+     */
+    constexpr inline bool is_unknown(uint8_t v, const Params& p) noexcept
+    {
+      return v == p.unknown_cost;
+    }
+
+    /**
+     * \internal
+     * \brief Test whether a cell value is considered traversable (<= \ref Params::free_cost_max).
+     */
+    constexpr inline bool is_freeish(uint8_t v, const Params& p) noexcept
+    {
+      return v <= p.free_cost_max;
+    }
+
+    /**
+     * \internal
+     * \brief Return neighbor offset table for the chosen connectivity.
+     *
+     * For 4-connectivity, returns 4 (dx,dy) pairs; for 8-connectivity, returns 8 pairs.
+     * \param c Connectivity (Four or Eight).
+     * \param[out] count Number of neighbor pairs provided (4 or 8).
+     * \return Pointer to static interleaved array: {dx0,dy0, dx1,dy1, ... }.
+     */
+    inline const int* neighbor_table(Conn c, int& count) noexcept
+    {
+      static const int N4[8]  = {1, 0, -1, 0, 0, 1, 0, -1};
+      static const int N8[16] = {1, 0, -1, 0, 0, 1, 0, -1, 1, 1, 1, -1, -1, 1, -1, -1};
+      if (c == Conn::Four)
+      {
+        count = 4;
+        return N4;
+      }
+      count = 8;
+      return N8;
+    }
+    /**
+     * \internal
+     * \brief Stateful/streaming Min–max - normalize values to [0,1].
+     * \details
+     * Maintains the smallest (\ref lo) and largest (\ref hi) values observed so far via
+     * \ref observe. The \ref map function linearly normalizes an input \p v to the
+     * closed unit interval.
+     *
+     * * \code
+     * MinMax mm;
+     * for (double x : {3.0, 7.0, 5.0}) mm.observe(x);
+     * double y = mm.map(5.0); // y == 0.5
+     * \endcode
+     */
+    struct MinMax
+    {
+      double lo{std::numeric_limits<double>::infinity()};
+      double hi{-std::numeric_limits<double>::infinity()};
+
+      void observe(double v)
+      {
+        lo = std::min(lo, v);
+        hi = std::max(hi, v);
+      }
+      double map(double v) const
+      {
+        if (!is_finite(v) || !is_finite(lo) || !is_finite(hi) || hi <= lo)
+          return 0.0;
+        return (v - lo) / (hi - lo);
+      }
+    };
+  } // namespace
 
   // --------- Public API ----------
 
@@ -290,11 +341,16 @@ namespace omniseer
       // Calculate how many samples per component based on sqrt(size) to bound work.
       const int target_samples =
           std::clamp<int>(static_cast<int>(std::sqrt(std::max(1, comp.size_cells))), 1, 16);
-      const int stride = std::max(1, R / target_samples);
+
+      std::vector<int> rim = comp.rim_indices;
+      std::mt19937     rng(0x9e3779b9u ^ static_cast<uint32_t>(comp.id) ^ static_cast<uint32_t>(R));
+      std::shuffle(rim.begin(), rim.end(), rng);
+
+      const int stride = std::max(1, (R + target_samples - 1) / target_samples);
 
       for (int s = 0; s < R; s += stride)
       {
-        const int i  = comp.rim_indices[s];
+        const int i  = rim[s];
         const int cx = i % W;
         const int cy = i / W;
 
@@ -325,11 +381,59 @@ namespace omniseer
    * \note Stub: intended scoring is \f$ w_{info}\cdot IG - w_{dist}\cdot C \f$,
    * where \c IG = \ref Callbacks::information_gain and \c C = \ref Callbacks::plan_cost.
    */
-  void rank_goals(const Params& p, const Pose2D& robot, std::vector<FrontierGoal>& goals)
+  void rank_goals(const Params& p, const Pose2D& robot, const Callbacks& cb,
+                  std::vector<FrontierGoal>& goals)
   {
-    (void) p;
-    (void) robot;
-    (void) goals;
+    if (goals.empty())
+      return;
+
+    std::vector<double> infos(goals.size(), 0.0);
+    std::vector<double> costs(goals.size(), 0.0);
+
+    // If callbacks are missing, degrade gracefully (distance-only, info=0)
+    const bool have_info = static_cast<bool>(cb.information_gain);
+    const bool have_cost = static_cast<bool>(cb.plan_cost);
+
+    for (size_t i = 0; i < goals.size(); ++i)
+    {
+      const Pose2D& g    = goals[i].pose;
+      double        info = 0.0;
+      double        cost = euclid(robot, g);
+
+      if (have_info)
+      {
+        info = cb.information_gain(g);
+        if (!is_finite(info) || info < 0.0)
+          info = 0.0;
+      }
+      if (have_cost)
+      {
+        cost = cb.plan_cost(robot, g);
+        if (!is_finite(cost) || cost < 0.0)
+          cost = std::numeric_limits<double>::infinity();
+      }
+      infos[i] = info;
+      costs[i] = cost;
+    }
+
+    // Normalize to [0,1] to make weights meaningful across units
+    MinMax mm_info, mm_cost;
+    for (double v : infos)
+      mm_info.observe(v);
+    for (double v : costs)
+      mm_cost.observe(v);
+
+    for (size_t i = 0; i < goals.size(); ++i)
+    {
+      const double info_n = mm_info.map(infos[i]); // higher is better
+      const double cost_n = mm_cost.map(costs[i]); // higher is worse
+      const double score  = (p.w_information * info_n) - (p.w_distance_cost * cost_n);
+      goals[i].score      = std::isfinite(score) ? score : -std::numeric_limits<double>::infinity();
+    }
+
+    // Sort by score desc, stable for determinism on ties
+    std::stable_sort(goals.begin(), goals.end(), [](const FrontierGoal& A, const FrontierGoal& B)
+                     { return A.score > B.score; });
   }
 
   /**
