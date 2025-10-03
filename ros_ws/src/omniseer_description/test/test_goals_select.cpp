@@ -19,6 +19,7 @@ static inline int I(int x, int y, int W)
 }
 
 // --- Utilities ---
+
 static std::unordered_map<int, const FrontierComponent*> index_components_by_id(
     const std::vector<FrontierComponent>& comps)
 {
