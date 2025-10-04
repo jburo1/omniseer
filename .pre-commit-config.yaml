@@ -5,6 +5,10 @@ exclude: |
     log/|
     \.venv/|
     ros_ws/src/omniseer_gz_assets/|
+    firmware/|
+    hardware/|
+    docs/|
+    notes/|
     sim/models/|
     ros_ws/src/.*/models/|
     ros_ws/src/.*/meshes/|
@@ -31,4 +35,5 @@ repos:
     rev: v18.1.8
     hooks:
       - id: clang-format
-        files: \.(c|cc|cpp|cxx|h|hh|hpp|hxx|cu|cuh)$
+        files: ^(include/|src/|ros_ws/src/(analysis|bringup|omniseer_description|omniseer_test|yolo_ros)/).*\.(c|cc|cpp|cxx|h|hh|hpp|hxx|cu|cuh)$
+        exclude: ^(third_party/|external/|vendor/|ros_ws/src/.*/(models|meshes|gazebo|deps|third_party|external)/|build/|install/|log/)
