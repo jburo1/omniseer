@@ -62,17 +62,23 @@ RUN set -eux; \
   chmod 0644 /etc/profile.d/10-ros.sh /etc/profile.d/20-venv.sh
 
 
-## Pin Python dependencies (torch/dev tools/yolo) via requirements and constraints
-COPY requirements-ml.txt /tmp/requirements-ml.txt
-COPY requirements-dev.txt /tmp/requirements-dev.txt
-COPY ros_ws/src/yolo_ros/requirements.txt /tmp/reqs.yolo.txt
-COPY constraints.txt /tmp/constraints.txt
+## Python dependencies via uv (lockfile)
+# Copy project metadata and lockfile early for layer caching
+COPY pyproject.toml /tmp/app/pyproject.toml
+COPY uv.lock /tmp/app/uv.lock
 
 USER ${USERNAME}
-RUN python -m pip install -U pip setuptools wheel \
-  && pip install -r /tmp/requirements-ml.txt \
-  && pip install -r /tmp/requirements-dev.txt -c /tmp/constraints.txt \
-  && pip install -r /tmp/reqs.yolo.txt -c /tmp/constraints.txt
+# Install uv and verify
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh && ~/.local/bin/uv --version
+
+# Use the existing venv; sync base + dev deps from the lockfile
+RUN source /opt/venv/bin/activate \
+  && ~/.local/bin/uv sync --frozen --extra dev
+
+# Install PyTorch CUDA wheels from the official index
+RUN source /opt/venv/bin/activate \
+  && ~/.local/bin/uv pip install --index-url https://download.pytorch.org/whl/cu121 \
+     torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0
 USER root
 
 # Rosdep
