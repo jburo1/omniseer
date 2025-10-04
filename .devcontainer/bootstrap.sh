@@ -14,4 +14,5 @@ python -m colcon build --symlink-install --merge-install \
   --cmake-args \
   -DCMAKE_BUILD_TYPE=RelWithDebInfo \
   -DPython3_EXECUTABLE=/opt/venv/bin/python \
-  -DPython3_ROOT_DIR=/opt/venv
+  -DPython3_ROOT_DIR=/opt/venv \
+  -DPython3_FIND_VIRTUALENV=ONLY

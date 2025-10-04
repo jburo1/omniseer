@@ -27,22 +27,24 @@ RUN set -eux; \
 
 # Add sudo support for the non-root user
 RUN apt-get update && \
-    apt-get install -y sudo=1.9.15p5-3ubuntu5.24.04.1 locales=2.39-0ubuntu8.5 \
+  apt-get install -y sudo locales \
     && echo "$USERNAME ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/$USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME \
     && locale-gen en_US.UTF-8
 
 # Base deps, tools, GL
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3-venv=3.12.3-0ubuntu2 python3-rosdep=0.26.0-1 python3-lark=1.1.9-1 python3-pip=24.0+dfsg-1ubuntu1.2 python3-dev=3.12.3-0ubuntu2 build-essential=12.10ubuntu1 \
-    git=1:2.43.0-1ubuntu7.3 curl=8.5.0-2ubuntu10.6 wget=1.21.4-1ubuntu4.1 gnupg=2.4.4-2ubuntu17.3 lsb-release=12.0-2 ca-certificates=20240203 software-properties-common=0.99.49.3 \
-    htop=3.3.0-4build1 less=590-2ubuntu2.1 nano=7.2-2ubuntu0.1 rsync=3.2.7-1ubuntu1.2 tmux=3.4-1ubuntu0.1 tree=2.1.1-2ubuntu3 xclip=0.13-3 \
-    libglvnd0=1.7.0-1build1 libgl1=1.7.0-1build1 libglx0=1.7.0-1build1 libegl1=1.7.0-1build1 \
-    libx11-6=2:1.8.7-1build1 libxext6=2:1.3.4-1build2 libxrender1=1:0.9.10-1.1build1 libxrandr2=2:1.5.2-2build1 libxi6=2:1.8.1-1build1 mesa-utils=9.0.0-2 \
+  python3-venv python3-rosdep python3-lark python3-pip python3-dev python3-numpy build-essential \
+  git curl wget gnupg lsb-release ca-certificates software-properties-common \
+  htop less nano rsync tmux tree xclip \
+  libglvnd0 libgl1 libglx0 libegl1 \
+  libx11-6 libxext6 libxrender1 libxrandr2 libxi6 mesa-utils \
     && rm -rf /var/lib/apt/lists/*
+
 
 # Create hybrid venv
 RUN python3 -m venv /opt/venv --system-site-packages
+# RUN python3 -m venv /opt/venv
 ENV VIRTUAL_ENV=/opt/venv
 ENV PATH=/opt/venv/bin:$PATH
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1 PIP_NO_CACHE_DIR=1
@@ -66,19 +68,25 @@ RUN set -eux; \
 # Copy project metadata and lockfile early for layer caching
 COPY pyproject.toml /tmp/app/pyproject.toml
 COPY uv.lock /tmp/app/uv.lock
+# Ensure the non-root user can read/write here if tools emit aux files
+RUN chown -R ${USERNAME}:${USERNAME} /tmp/app
 
 USER ${USERNAME}
 # Install uv and verify
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh && ~/.local/bin/uv --version
 
-# Use the existing venv; sync base + dev deps from the lockfile
-RUN source /opt/venv/bin/activate \
-  && ~/.local/bin/uv sync --frozen --extra dev
+# Install deps defined in pyproject (dev + perception) *into /opt/venv*
+RUN bash -lc 'source /opt/venv/bin/activate && cd /tmp/app && \
+  ~/.local/bin/uv export --frozen --extra dev --extra perception -o /tmp/req.txt && \
+  ~/.local/bin/uv pip install -U pip && \
+  ~/.local/bin/uv pip install -r /tmp/req.txt'
 
-# Install PyTorch CUDA wheels from the official index
-RUN source /opt/venv/bin/activate \
-  && ~/.local/bin/uv pip install --index-url https://download.pytorch.org/whl/cu121 \
-     torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0
+# PyTorch CUDA wheels (CUDA 12.8 channel)
+RUN bash -lc 'source /opt/venv/bin/activate && \
+  ~/.local/bin/uv pip uninstall -y torch torchvision torchaudio || true && \
+  ~/.local/bin/uv pip install \
+  --index-url https://download.pytorch.org/whl/cu128 \
+  torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0'
 USER root
 
 # Rosdep
