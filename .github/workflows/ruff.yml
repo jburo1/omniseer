@@ -1,0 +1,44 @@
+name: pre-commit
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: precommit-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  run:
+    name: Run pre-commit hooks
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Cache hook environments (~/.cache/pre-commit) to speed up subsequent runs
+      - name: Cache pre-commit envs
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: precommit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+          restore-keys: precommit-${{ runner.os }}-
+
+      # Runs .pre-commit-config.yaml at repo root
+      - name: Run pre-commit on changed files
+        uses: pre-commit/action@v3.0.1
+        if: github.event_name == 'pull_request'
+
+      # On pushes to main/master, enforce whole-repo cleanliness
+      - name: Run pre-commit on all files
+        uses: pre-commit/action@v3.0.1
+        if: github.event_name == 'push'
+        with:
+          extra_args: --all-files
