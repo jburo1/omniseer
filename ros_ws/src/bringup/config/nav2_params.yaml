@@ -65,6 +65,10 @@ controller_server:
       vy_max: 1.0
       vy_min: -1.0
       wz_max: 3.0
+      # Use the same robot footprint as the costmaps for controller collision checking
+      # footprint_model:
+      #   type: polygon
+      #   footprint: [[0.18, 0.14], [0.18, -0.14], [-0.18, -0.14], [-0.18, 0.14]]
       critics: ["ConstraintCritic", "CostCritic", "GoalCritic", "GoalAngleCritic", "PathAlignCritic", "ObstaclesCritic",
         "PathFollowCritic", "PathAngleCritic", "PreferForwardCritic", "VelocityDeadbandCritic", "TwirlingCritic"]
       ConstraintCritic:
@@ -91,7 +95,7 @@ controller_server:
         cost_power: 1
         repulsion_weight: 1.5
         critical_weight: 20.0
-        consider_footprint: false
+        consider_footprint: true
         collision_cost: 10000.0
         collision_margin_distance: 0.1
         near_goal_distance: 0.5
@@ -179,7 +183,7 @@ local_costmap:
         topics: ["/range"]
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        inflation_radius: 0.5
+        inflation_radius: 0.75
         cost_scaling_factor: 2.5
 
 

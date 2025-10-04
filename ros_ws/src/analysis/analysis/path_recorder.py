@@ -29,11 +29,12 @@ class PathRecorder(Node):
         queue_size = self.get_parameter("queue_size").value
         max_path_length = self.get_parameter("max_path_length").value
 
-        self.get_logger().info(
-            "PathRecorder starting: odom_topic=%s, sim_topic=%s",
-            odom_topic,
-            sim_topic,
-        )
+        self.get_logger().info(f"PathRecorder starting: odom_topic={odom_topic}, sim_topic={sim_topic}")
+        # self.get_logger().info(
+        #     "PathRecorder starting: odom_topic=%s, sim_topic=%s",
+        #     odom_topic,
+        #     sim_topic,
+        # )
 
         qos = QoSProfile(
             reliability=QoSReliabilityPolicy.RELIABLE,

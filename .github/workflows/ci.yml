@@ -39,7 +39,7 @@ jobs:
         run: |
           set -eux
           python3 -m pip install -U pip setuptools wheel
-          pip install ruff pre-commit pytest pytest-cov colcon-common-extensions
+          pip install -r requirements-dev.txt
 
       - name: Build workspace
         shell: bash

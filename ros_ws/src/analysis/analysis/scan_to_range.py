@@ -28,7 +28,8 @@ class ScanToRange(Node):
             qos_profile_sensor_data,
         )
 
-        self.get_logger().info("ScanToRange: %s -> %s", scan_topic, range_topic)
+        self.get_logger().info(f"ScanToRange: {scan_topic} -> {range_topic}")
+        # self.get_logger().info("ScanToRange: %s -> %s", scan_topic, range_topic)
 
     def scan_callback(self, scan: LaserScan) -> None:
         best = None
