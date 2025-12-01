@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 import curses
-import serial
 import time
+
+import serial
 
 PORT = "/dev/ttyACM0"
 BAUD = 115200
 
-LINEAR_SPEED = 0.2   # m/s
+LINEAR_SPEED = 0.2  # m/s
 ANGULAR_SPEED = 0.8  # rad/s
-HZ = 20.0            # send frequency
-STOP_TIMEOUT = 0.5   # seconds with no key → auto-stop
+HZ = 20.0  # send frequency
+STOP_TIMEOUT = 0.5  # seconds with no key → auto-stop
+
 
 def teleop(stdscr):
     # --- serial setup ---
@@ -17,7 +19,7 @@ def teleop(stdscr):
 
     # --- curses setup ---
     curses.cbreak()
-    stdscr.nodelay(True)   # getch() is non-blocking
+    stdscr.nodelay(True)  # getch() is non-blocking
     stdscr.keypad(True)
     curses.noecho()
 
@@ -58,9 +60,9 @@ def teleop(stdscr):
                     vx = 0.0
                     vy = 0.0
                     wz = -ANGULAR_SPEED
-                elif last_key == ord(' '):  # space = stop
+                elif last_key == ord(" "):  # space = stop
                     vx = vy = wz = 0.0
-                elif last_key == ord('q'):
+                elif last_key == ord("q"):
                     vx = vy = wz = 0.0
                     # send one last stop command
                     cmd = f"V {vx:.3f} {vy:.3f} {wz:.3f}\n"
@@ -87,6 +89,7 @@ def teleop(stdscr):
 
     finally:
         ser.close()
+
 
 if __name__ == "__main__":
     curses.wrapper(teleop)
