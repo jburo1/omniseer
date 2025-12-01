@@ -35,8 +35,8 @@ RUN apt-get update && \
 # Base deps, tools, GL
 RUN apt-get update && apt-get install -y --no-install-recommends \
   python3-venv python3-rosdep python3-lark python3-pip python3-dev python3-numpy build-essential \
-  git curl wget gnupg lsb-release ca-certificates software-properties-common \
-  htop less nano rsync tmux tree xclip \
+  git curl wget gnupg gdb lsb-release ca-certificates software-properties-common \
+  htop less nano rsync tmux tree xclip ripgrep \
   libglvnd0 libgl1 libglx0 libegl1 \
   libx11-6 libxext6 libxrender1 libxrandr2 libxi6 mesa-utils \
     && rm -rf /var/lib/apt/lists/*
@@ -64,11 +64,10 @@ RUN set -eux; \
   chmod 0644 /etc/profile.d/10-ros.sh /etc/profile.d/20-venv.sh
 
 
-## Python dependencies via uv (lockfile)
+## Python dependencies via uv lockfile
 # Copy project metadata and lockfile early for layer caching
 COPY pyproject.toml /tmp/app/pyproject.toml
 COPY uv.lock /tmp/app/uv.lock
-# Ensure the non-root user can read/write here if tools emit aux files
 RUN chown -R ${USERNAME}:${USERNAME} /tmp/app
 
 USER ${USERNAME}

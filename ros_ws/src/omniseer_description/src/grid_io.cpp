@@ -46,8 +46,7 @@ namespace omniseer
    *
    * \note The buffer is row-major; index as \c bytes[y * W + x].
    */
-  static void read_pgm(const std::string& path, uint32_t& W, uint32_t& H,
-                       std::vector<uint8_t>& bytes)
+  static void read_pgm(const std::string& path, int& W, int& H, std::vector<uint8_t>& bytes)
   {
     std::ifstream f(path, std::ios::binary);
     if (!f)
@@ -81,10 +80,10 @@ namespace omniseer
 
     if (w <= 0 || h <= 0)
       throw std::runtime_error("PGM invalid dims");
-    W = static_cast<uint32_t>(w);
-    H = static_cast<uint32_t>(h);
+    W = w;
+    H = h;
 
-    bytes.resize(static_cast<size_t>(W) * H);
+    bytes.resize(static_cast<std::size_t>(W) * static_cast<std::size_t>(H));
     f.read(reinterpret_cast<char*>(bytes.data()), bytes.size());
     if (f.gcount() != static_cast<std::streamsize>(bytes.size()))
       throw std::runtime_error("PGM payload short read");
@@ -114,14 +113,14 @@ namespace omniseer
 
     json m;
     jf >> m;
-    g.width      = m.at("width").get<uint32_t>();
-    g.height     = m.at("height").get<uint32_t>();
+    g.width      = m.at("width").get<int>();
+    g.height     = m.at("height").get<int>();
     g.resolution = m.at("resolution").get<float>();
     g.origin_x   = m.at("origin")[0].get<float>();
     g.origin_y   = m.at("origin")[1].get<float>();
 
     // --- PGM ---
-    uint32_t             W = 0, H = 0;
+    int                  W = 0, H = 0;
     std::vector<uint8_t> bytes;
     read_pgm(pgm_path, W, H, bytes);
     if (W != g.width || H != g.height)

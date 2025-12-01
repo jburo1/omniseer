@@ -10,11 +10,11 @@
     <unit name="meter" meter="1"/>
     <up_axis>Z_UP</up_axis>
   </asset>
-  <library_images>
+  <!-- <library_images>
     <image id="rcs-soccerball_png" name="rcs-soccerball_png">
-      <init_from>rcs-soccerball.png</init_from>
+      <init_from>../materials/textures/rcs-soccerball.png</init_from>
     </image>
-  </library_images>
+  </library_images> -->
   <library_effects>
     <effect id="soccerball_rcs-soccerball_png-effect">
       <profile_COMMON>

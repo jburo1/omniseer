@@ -38,12 +38,24 @@
   "customizations": {
         "vscode": {
             "extensions":[
-                "ms-vscode.cpptools",
-                "ms-vscode.cpptools-themes",
-                "twxs.cmake",
+                "batisteo.vscode-django",
+                "charliermarsh.ruff",
+                "donjayamanne.python-environment-manager",
                 "donjayamanne.python-extension-pack",
                 "eamodio.gitlens",
-                "ms-iot.vscode-ros"
+                "kevinrose.vsc-python-indent",
+                "ms-python.debugpy",
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ms-python.vscode-python-envs",
+                "ms-vscode.cpptools",
+                "ms-vscode.cpptools-themes",
+                "njpwerner.autodocstring",
+                "openai.chatgpt",
+                "twxs.cmake",
+                "visualstudioexptteam.intellicode-api-usage-examples",
+                "visualstudioexptteam.vscodeintellicode",
+                "wholroyd.jinja"
             ],
             "settings": {
                 "terminal.integrated.shellArgs.linux": [ "-lc", "tmux new -ADs dev" ],

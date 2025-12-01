@@ -1,3 +1,0 @@
-ultralytics==8.3.168
-opencv-python==4.11.0.86
-lap==0.5.12

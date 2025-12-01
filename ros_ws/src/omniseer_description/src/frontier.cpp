@@ -1,19 +1,28 @@
 #include "omniseer/frontier.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <limits>
+#include <numeric>
 #include <random>
+#include <unordered_map>
+
+#include "omniseer/grid_utils.hpp"
 
 /**
  * \file
- * \brief Implementation of frontier detection and goal selection.
+ * \brief Implementation of core frontier detection and goal selection algorithms.
  *
  * Implements the pipeline declared in \c frontier.hpp:
  *  - \ref omniseer::compute_frontier_mask
  *  - \ref omniseer::label_components
  *  - \ref omniseer::select_component_goals
+ *  - \ref omniseer::compute_goal_information
+ *  - \ref omniseer::select_top_k_by_information
+ *  - \ref omniseer::score_goals_with_precomputed_cost
  *  - \ref omniseer::rank_goals
- *  - \ref omniseer::find_frontier_goals
+ *
+ *  - \ref [deprecated] omniseer::find_frontier_goals
  *
  * \ingroup omniseer_frontier
  */
@@ -22,63 +31,6 @@ namespace omniseer
 {
   namespace
   {
-    // --------- Helpers ----------
-
-    /**
-     * \internal
-     * \brief Return euclidean distance between a and b.
-     */
-    inline double euclid(const Pose2D& a, const Pose2D& b)
-    {
-      const double dx = a.x - b.x, dy = a.y - b.y;
-      return std::sqrt(dx * dx + dy * dy);
-    }
-
-    /**
-     * \internal
-     * \brief Check whether v is finite.
-     */
-    constexpr bool is_finite(double v) noexcept
-    {
-      return std::isfinite(v);
-    }
-    /**
-     * \internal
-     * \brief Check whether (x,y) lies within [0,w)×[0,h).
-     */
-    constexpr bool in_bounds(int x, int y, int w, int h) noexcept
-    {
-      return (unsigned) x < (unsigned) w && (unsigned) y < (unsigned) h;
-    }
-
-    /**
-     * \internal
-     * \brief Convert (x,y) coordinates to row-major linear index.
-     * \return y * w + x
-     */
-    constexpr inline int idx(int x, int y, int w) noexcept
-    {
-      return y * w + x;
-    }
-
-    /**
-     * \internal
-     * \brief Test whether a cell value equals \ref Params::unknown_cost.
-     */
-    constexpr inline bool is_unknown(uint8_t v, const Params& p) noexcept
-    {
-      return v == p.unknown_cost;
-    }
-
-    /**
-     * \internal
-     * \brief Test whether a cell value is considered traversable (<= \ref Params::free_cost_max).
-     */
-    constexpr inline bool is_freeish(uint8_t v, const Params& p) noexcept
-    {
-      return v <= p.free_cost_max;
-    }
-
     /**
      * \internal
      * \brief Return neighbor offset table for the chosen connectivity.
@@ -88,7 +40,7 @@ namespace omniseer
      * \param[out] count Number of neighbor pairs provided (4 or 8).
      * \return Pointer to static interleaved array: {dx0,dy0, dx1,dy1, ... }.
      */
-    inline const int* neighbor_table(Conn c, int& count) noexcept
+    const int* neighbor_table(Conn c, int& count) noexcept
     {
       static const int N4[8]  = {1, 0, -1, 0, 0, 1, 0, -1};
       static const int N8[16] = {1, 0, -1, 0, 0, 1, 0, -1, 1, 1, 1, -1, -1, 1, -1, -1};
@@ -100,78 +52,46 @@ namespace omniseer
       count = 8;
       return N8;
     }
-    /**
-     * \internal
-     * \brief Stateful/streaming Min–max - normalize values to [0,1].
-     * \details
-     * Maintains the smallest (\ref lo) and largest (\ref hi) values observed so far via
-     * \ref observe. The \ref map function linearly normalizes an input \p v to the
-     * closed unit interval.
-     *
-     * * \code
-     * MinMax mm;
-     * for (double x : {3.0, 7.0, 5.0}) mm.observe(x);
-     * double y = mm.map(5.0); // y == 0.5
-     * \endcode
-     */
-    struct MinMax
-    {
-      double lo{std::numeric_limits<double>::infinity()};
-      double hi{-std::numeric_limits<double>::infinity()};
 
-      void observe(double v)
-      {
-        lo = std::min(lo, v);
-        hi = std::max(hi, v);
-      }
-      double map(double v) const
-      {
-        if (!is_finite(v) || !is_finite(lo) || !is_finite(hi) || hi <= lo)
-          return 0.0;
-        return (v - lo) / (hi - lo);
-      }
-    };
   } // namespace
 
-  // --------- Public API ----------
+  using namespace omniseer::grid;
 
-  /**
-   * \copydoc omniseer::compute_frontier_mask
-   */
   void compute_frontier_mask(const GridU8& g, const Params& p, std::uint8_t* out_mask,
                              std::size_t n)
   {
     // Input validation
-    const int w = static_cast<int>(g.width);
-    const int h = static_cast<int>(g.height);
-    if (!out_mask || n != static_cast<std::size_t>(w) * static_cast<std::size_t>(h))
+    if (!out_mask || n != static_cast<std::size_t>(g.width) * static_cast<std::size_t>(g.height))
     {
       return;
     }
 
-    int        ncnt = 0;
-    const int* N    = neighbor_table(p.connectivity, ncnt);
+    const int  w              = g.width;
+    const int  h              = g.height;
+    int        neighbor_count = 0;
+    const int* neighbors      = neighbor_table(p.connectivity, neighbor_count);
 
     // Compute mask
     for (int y = 0; y < h; ++y)
     {
       for (int x = 0; x < w; ++x)
       {
-        const int     i = idx(x, y, w);
-        const uint8_t v = g.data[i];
+        const int     i     = idx(x, y, w);
+        const uint8_t value = g.data[i];
 
-        // Frontier = FREE-ish cell with >= min_unknown_neighbors UNKNOWN neighbors
-        if (!is_freeish(v, p))
+        // Frontier = traversable cell with >= min_unknown_neighbors UNKNOWN neighbors
+        if (!is_traversable(value, p))
         {
           out_mask[i] = 0;
           continue;
         }
 
+        // Count unknown neighbours
         int unknown = 0;
-        for (int k = 0; k < ncnt; ++k)
+        for (int k = 0; k < neighbor_count; ++k)
         {
-          const int nx = x + N[2 * k];
-          const int ny = y + N[2 * k + 1];
+          const int nx = x + neighbors[2 * k];
+          const int ny = y + neighbors[2 * k + 1];
           if (!in_bounds(nx, ny, w, h))
             continue;
           const uint8_t nv = g.data[idx(nx, ny, w)];
@@ -186,45 +106,40 @@ namespace omniseer
     }
   }
 
-  /**
-   * \copydoc omniseer::label_components
-   */
   std::vector<FrontierComponent> label_components(const GridU8& g, const Params& p,
-                                                  std::uint8_t* frontier_mask, std::size_t n)
+                                                  std::uint8_t* frontier_mask, std::size_t n,
+                                                  int* out_component_labels)
   {
     std::vector<FrontierComponent> comps;
 
     // Input validation
-    const int W = static_cast<int>(g.width);
-    const int H = static_cast<int>(g.height);
-    if (!frontier_mask || n != static_cast<std::size_t>(W) * static_cast<std::size_t>(H))
+    const int w = g.width;
+    const int h = g.height;
+    if (!frontier_mask || n != static_cast<std::size_t>(w) * static_cast<std::size_t>(h))
     {
       return comps;
     }
 
-    int        ncnt = 0;
-    const int* N    = neighbor_table(p.connectivity, ncnt);
+    if (out_component_labels)
+    {
+      std::fill_n(out_component_labels, n, -1);
+    }
+
+    int        neighbor_count = 0;
+    const int* neighbors      = neighbor_table(p.connectivity, neighbor_count);
 
     // Visited bitmap
     std::vector<std::uint8_t> visited(n, 0);
 
-    auto I   = [&](int x, int y) -> int { return y * W + x; };
-    auto inb = [&](int x, int y) -> bool
-    {
-      return (static_cast<unsigned>(x) < static_cast<unsigned>(W)) &&
-             (static_cast<unsigned>(y) < static_cast<unsigned>(H));
-    };
-
     // Scan all cells and start a DFS for each unvisited frontier pixel
-    for (int y = 0; y < H; ++y)
+    for (int y = 0; y < h; ++y)
     {
-      for (int x = 0; x < W; ++x)
+      for (int x = 0; x < w; ++x)
       {
-        const int seed = I(x, y);
+        const int seed = idx(x, y, w);
         if (visited[seed] || frontier_mask[seed] == 0)
           continue;
 
-        // DFS
         std::vector<int> q;
         q.reserve(256);
         q.push_back(seed);
@@ -236,40 +151,38 @@ namespace omniseer
         std::vector<int> rim; // subset of members that touch non-frontier (component boundary)
         rim.reserve(128);
 
-        double sum_xc = 0.0, sum_yc = 0.0; // accumulate cell-center coords (in cell units)
-
         while (!q.empty())
         {
           const int i = q.back();
           q.pop_back();
 
-          const int cx = i % W;
-          const int cy = i / W;
+          const int cx = i % w;
+          const int cy = i / w;
 
           members.push_back(i);
-          sum_xc += (cx + 0.5);
-          sum_yc += (cy + 0.5);
 
           bool is_rim = false;
 
           // Visit neighbors
-          for (int k = 0; k < ncnt; ++k)
+          for (int k = 0; k < neighbor_count; ++k)
           {
-            const int nx = cx + N[2 * k];
-            const int ny = cy + N[2 * k + 1];
+            const int nx = cx + neighbors[2 * k];
+            const int ny = cy + neighbors[2 * k + 1];
 
-            if (!inb(nx, ny))
+            if (!in_bounds(nx, ny, w, h))
             {
               // Out of bounds counts as non-frontier neighbor = boundary
               is_rim = true;
               continue;
             }
 
-            const int j = I(nx, ny);
+            const int j = idx(nx, ny, w);
             if (frontier_mask[j] == 0)
             {
               // Neighbor is not frontier = boundary
-              is_rim = true;
+              if (is_unknown(g.data[j], p))
+                is_rim = true;
+              // is_rim = true;
             }
             else if (!visited[j])
             {
@@ -282,21 +195,28 @@ namespace omniseer
             rim.push_back(i);
         }
 
-        // Do not take small components
+        // Ignore small components
         const int size = static_cast<int>(members.size());
         if (size < p.min_component_size)
         {
           continue;
         }
 
+        const int comp_id = static_cast<int>(comps.size());
+
+        if (out_component_labels)
+        {
+          for (int idx_lin : members)
+          {
+            out_component_labels[idx_lin] = comp_id;
+          }
+        }
+
         // Build component
         FrontierComponent c;
-        c.id         = static_cast<int>(comps.size());
+        c.id         = comp_id;
         c.size_cells = size;
-        c.cx_m       = g.origin_x + static_cast<double>((sum_xc / size) * g.resolution);
-        c.cy_m       = g.origin_y + static_cast<double>((sum_yc / size) * g.resolution);
 
-        // Prefer the boundary subset; guarantee non-empty
         if (!rim.empty())
         {
           c.rim_indices = std::move(rim);
@@ -313,148 +233,292 @@ namespace omniseer
     return comps;
   }
 
-  /**
-   * \copydoc omniseer::select_component_goals
-   */
   std::vector<FrontierGoal> select_component_goals(const GridU8& g, const Params& p,
-                                                   const Pose2D& robot, const Callbacks& cb,
                                                    const std::vector<FrontierComponent>& comps)
   {
-    (void) robot; // not used yet; reserved for future heuristics
-    (void) cb;    // not used yet; goal feasibility/cost can be plugged here
-
     std::vector<FrontierGoal> out;
 
-    // Check input
-    const int W = static_cast<int>(g.width);
-    const int H = static_cast<int>(g.height);
-    if (W <= 0 || H <= 0)
+    const int w = g.width, h = g.height;
+    if (w <= 0 || h <= 0 || comps.empty())
       return out;
 
-    for (const auto& comp : comps)
+    const int base_spacing    = std::max(1, p.min_goal_spacing_cells);
+    const int max_goals_per_c = std::max(1, p.max_goals_per_component);
+    const int max_total_goals = std::max(0, p.max_total_goals);
+
+    //  Determine goal share per component
+    std::vector<ComponentShare> component_shares;
+    component_shares.reserve(comps.size());
+
+    int total_rim_length = 0;
+    for (int i = 0; i < (int) comps.size(); ++i)
     {
-      if (comp.rim_indices.empty())
-        continue;
+      const auto& component  = comps[i];
+      const int   rim_length = (int) component.rim_indices.size();
+      const int   geom_max   = std::min((rim_length + base_spacing - 1) / base_spacing,
+                                        max_goals_per_c); // equivalent to ceil(rim_length / base)
+      component_shares.push_back(ComponentShare{
+          0.0,        // raw_share
+          0.0,        // frac
+          i,          // component_id
+          rim_length, // rim_length
+          0,          // goal_budget
+          geom_max    // geom_max
+      });
+      total_rim_length += rim_length;
+    }
 
-      const int R = static_cast<int>(comp.rim_indices.size());
+    // Allocate budgets
+    int used = 0;
+    for (auto& share : component_shares)
+    {
+      share.raw_share =
+          (double) max_total_goals * (double) share.rim_length / (double) total_rim_length;
+      const int base    = (int) std::floor(share.raw_share);
+      share.goal_budget = std::min(base, share.geom_max);
+      share.frac        = share.raw_share - double(base); // compute remainder
+      used += share.goal_budget;
+    }
+    int left = std::max(0, max_total_goals - used);
 
-      // Calculate how many samples per component based on sqrt(size) to bound work.
-      const int target_samples =
-          std::clamp<int>(static_cast<int>(std::sqrt(std::max(1, comp.size_cells))), 1, 16);
+    // Allocate leftovers if there are any (Hamilton method)
+    if (left > 0)
+    {
+      std::sort(component_shares.begin(), component_shares.end(),
+                [](const ComponentShare& a, const ComponentShare& b)
+                {
+                  if (a.frac != b.frac)
+                    return a.frac > b.frac; // largest remainder first
+                  if (a.geom_max - a.goal_budget != b.geom_max - b.goal_budget)
+                    return (a.geom_max - a.goal_budget) > (b.geom_max - b.goal_budget);
+                  return a.component_id < b.component_id;
+                });
 
+      for (auto& share : component_shares)
+      {
+        if (!left)
+          break;
+        if (share.goal_budget < share.geom_max)
+        {
+          ++share.goal_budget;
+          --left;
+        }
+      }
+    }
+
+    // Per-component selection with adaptive spacing
+    for (const auto& share : component_shares)
+    {
+
+      const auto& comp       = comps[share.component_id];
+      const int   rim_length = share.rim_length;
+
+      const int s_i    = base_spacing;
+      const int s_i_sq = s_i * s_i;
+
+      // Deterministic shuffle per component
       std::vector<int> rim = comp.rim_indices;
-      std::mt19937     rng(0x9e3779b9u ^ static_cast<uint32_t>(comp.id) ^ static_cast<uint32_t>(R));
+      std::mt19937     rng(0x9e3779b9u ^ uint32_t(comp.id) ^ uint32_t(rim_length));
       std::shuffle(rim.begin(), rim.end(), rng);
 
-      const int stride = std::max(1, (R + target_samples - 1) / target_samples);
+      BucketGrid buckets(s_i);
+      int        accepted = 0;
 
-      for (int s = 0; s < R; s += stride)
+      for (int idx_lin : rim)
       {
-        const int i  = rim[s];
-        const int cx = i % W;
-        const int cy = i / W;
+        if (accepted >= share.goal_budget)
+          break;
 
-        if (!in_bounds(cx, cy, W, H))
+        const int cx = idx_lin % w;
+        const int cy = idx_lin / w;
+        if (!in_bounds(cx, cy, w, h))
           continue;
-        if (!is_freeish(g.data[idx(cx, cy, W)], p))
+        if (!is_traversable(g.data[idx(cx, cy, w)], p))
+          continue;
+        if (buckets.near_conflict(cx, cy, s_i_sq))
           continue;
 
-        Pose2D goal_pose;
-        goal_pose.x = g.origin_x + (static_cast<double>(cx) + 0.5) * g.resolution;
-        goal_pose.y = g.origin_y + (static_cast<double>(cy) + 0.5) * g.resolution;
+        Pose2D pose = cell_center_to_world(cx, cy, g);
 
         FrontierGoal gk;
-        gk.pose         = goal_pose;
-        gk.score        = 0.0; // scored later in rank_goals
+        gk.pose         = pose;
         gk.component_id = comp.id;
-
         out.push_back(gk);
+
+        buckets.insert(cx, cy);
+        ++accepted;
       }
     }
 
     return out;
   }
 
-  /**
-   * \copydoc omniseer::rank_goals
-   *
-   * \note Stub: intended scoring is \f$ w_{info}\cdot IG - w_{dist}\cdot C \f$,
-   * where \c IG = \ref Callbacks::information_gain and \c C = \ref Callbacks::plan_cost.
-   */
+  void compute_goal_information(const Params& /*p*/, const Callbacks& cb,
+                                std::vector<FrontierGoal>& goals)
+  {
+    const bool have_info = static_cast<bool>(cb.information_gain);
+    for (auto& goal : goals)
+    {
+      double info = 0.0;
+      if (have_info)
+      {
+        info = cb.information_gain(goal.pose);
+        if (!std::isfinite(info) || info < 0.0)
+          info = 0.0;
+      }
+      goal.info_gain = info;
+    }
+  }
+
+  void select_top_k_by_information(std::vector<FrontierGoal>& goals, int top_k)
+  {
+    if (goals.empty())
+      return;
+
+    auto cmp_info = [](const FrontierGoal& A, const FrontierGoal& B)
+    {
+      if (A.info_gain != B.info_gain)
+        return A.info_gain > B.info_gain;
+      if (A.component_id != B.component_id)
+        return A.component_id < B.component_id;
+      if (A.pose.x != B.pose.x)
+        return A.pose.x < B.pose.x;
+      return A.pose.y < B.pose.y;
+    };
+
+    if (top_k > 0 && top_k < static_cast<int>(goals.size()))
+    {
+      std::nth_element(goals.begin(), goals.begin() + top_k, goals.end(), cmp_info);
+      goals.resize(static_cast<size_t>(top_k));
+    }
+
+    std::stable_sort(goals.begin(), goals.end(), cmp_info);
+  }
+
+  void score_goals_with_precomputed_cost(const Params& p, std::vector<FrontierGoal>& goals)
+  {
+    if (goals.empty())
+      return;
+
+    MinMax mm_info;
+    for (const auto& g : goals)
+      mm_info.observe(g.info_gain);
+
+    MinMax mm_cost;
+    for (const auto& g : goals)
+    {
+      if (std::isfinite(g.path_cost) && g.path_cost >= 0.0)
+        mm_cost.observe(g.path_cost);
+    }
+
+    std::vector<FrontierGoal> filtered;
+    filtered.reserve(goals.size());
+
+    for (auto& goal : goals)
+    {
+      if (!std::isfinite(goal.path_cost) || goal.path_cost < 0.0)
+        continue;
+
+      const double info_n = mm_info.map(goal.info_gain);
+      const double cost_n = mm_cost.map(goal.path_cost);
+
+      double score = (p.w_information * info_n) - (p.w_distance_cost * cost_n);
+      if (!std::isfinite(score))
+        score = -std::numeric_limits<double>::infinity();
+      goal.score = score;
+
+      filtered.push_back(goal);
+    }
+
+    auto cmp_goal = [](const FrontierGoal& A, const FrontierGoal& B)
+    {
+      if (A.score != B.score)
+        return A.score > B.score;
+      if (A.component_id != B.component_id)
+        return A.component_id < B.component_id;
+      if (A.pose.x != B.pose.x)
+        return A.pose.x < B.pose.x;
+      return A.pose.y < B.pose.y;
+    };
+
+    std::stable_sort(filtered.begin(), filtered.end(), cmp_goal);
+    goals = std::move(filtered);
+  }
+
   void rank_goals(const Params& p, const Pose2D& robot, const Callbacks& cb,
                   std::vector<FrontierGoal>& goals)
   {
     if (goals.empty())
       return;
 
-    std::vector<double> infos(goals.size(), 0.0);
-    std::vector<double> costs(goals.size(), 0.0);
+    compute_goal_information(p, cb, goals);
+    select_top_k_by_information(goals, p.top_k_goals);
+    if (goals.empty())
+      return;
 
-    // If callbacks are missing, degrade gracefully (distance-only, info=0)
-    const bool have_info = static_cast<bool>(cb.information_gain);
     const bool have_cost = static_cast<bool>(cb.plan_cost);
 
-    for (size_t i = 0; i < goals.size(); ++i)
-    {
-      const Pose2D& g    = goals[i].pose;
-      double        info = 0.0;
-      double        cost = euclid(robot, g);
+    std::vector<FrontierGoal> with_cost;
+    with_cost.reserve(goals.size());
 
-      if (have_info)
-      {
-        info = cb.information_gain(g);
-        if (!is_finite(info) || info < 0.0)
-          info = 0.0;
-      }
+    for (auto& goal : goals)
+    {
+      double cost;
       if (have_cost)
       {
-        cost = cb.plan_cost(robot, g);
-        if (!is_finite(cost) || cost < 0.0)
-          cost = std::numeric_limits<double>::infinity();
+        cost = cb.plan_cost(robot, goal.pose);
+        if (!std::isfinite(cost) || cost < 0.0)
+          continue;
       }
-      infos[i] = info;
-      costs[i] = cost;
+      else
+      {
+        cost = euclid(robot, goal.pose);
+      }
+      goal.path_cost = cost;
+      with_cost.push_back(goal);
     }
 
-    // Normalize to [0,1] to make weights meaningful across units
-    MinMax mm_info, mm_cost;
-    for (double v : infos)
-      mm_info.observe(v);
-    for (double v : costs)
-      mm_cost.observe(v);
-
-    for (size_t i = 0; i < goals.size(); ++i)
-    {
-      const double info_n = mm_info.map(infos[i]); // higher is better
-      const double cost_n = mm_cost.map(costs[i]); // higher is worse
-      const double score  = (p.w_information * info_n) - (p.w_distance_cost * cost_n);
-      goals[i].score      = std::isfinite(score) ? score : -std::numeric_limits<double>::infinity();
-    }
-
-    // Sort by score desc, stable for determinism on ties
-    std::stable_sort(goals.begin(), goals.end(), [](const FrontierGoal& A, const FrontierGoal& B)
-                     { return A.score > B.score; });
+    goals = std::move(with_cost);
+    score_goals_with_precomputed_cost(p, goals);
   }
 
-  /**
-   * \copydoc omniseer::find_frontier_goals
-   *
-   * \note Stub: currently initializes \ref Artifacts and returns an empty set.
-   */
   std::vector<FrontierGoal> find_frontier_goals(const GridU8& g, const Params& p,
                                                 const Pose2D& robot, const Callbacks& cb,
                                                 Artifacts* artifacts)
   {
-    (void) p;
-    (void) robot;
-    (void) cb;
+    std::vector<FrontierGoal> goals;
+
+    const int    w = static_cast<int>(g.width);
+    const int    h = static_cast<int>(g.height);
+    const size_t n = static_cast<size_t>(w) * static_cast<size_t>(h);
+
+    // Prepare frontier mask buffer
+    std::vector<std::uint8_t> local_mask;
+    std::uint8_t*             mask_ptr = nullptr;
+
     if (artifacts)
     {
-      artifacts->width  = static_cast<int>(g.width);
-      artifacts->height = static_cast<int>(g.height);
-      artifacts->frontier_mask.assign(static_cast<std::size_t>(g.width) * g.height, 0);
+      artifacts->width  = w;
+      artifacts->height = h;
+      artifacts->frontier_mask.assign(n, 0u);
+      mask_ptr = artifacts->frontier_mask.data();
     }
-    return {};
+    else
+    {
+      local_mask.assign(n, 0u);
+      mask_ptr = local_mask.data();
+    }
+
+    // Pipeline
+    compute_frontier_mask(g, p, mask_ptr, n);
+
+    const auto comps = label_components(g, p, mask_ptr, n);
+
+    goals = select_component_goals(g, p, comps);
+
+    rank_goals(p, robot, cb, goals);
+
+    return goals;
   }
 
 } // namespace omniseer

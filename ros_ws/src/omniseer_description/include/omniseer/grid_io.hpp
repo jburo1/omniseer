@@ -20,7 +20,7 @@ namespace omniseer
 {
 
   /** \defgroup omniseer_grid Grid I/O
-   *  Grid representation and loaders (ROS-agnostic).
+   *  Grid representation and loaders
    *  @{
    */
 
@@ -33,10 +33,10 @@ namespace omniseer
    */
   struct GridU8
   {
-    uint32_t             width{0}, height{0};          /**< Grid dimensions in cells. */
-    float                resolution{0.f};              /**< Cell resolution (meters per cell). */
-    float                origin_x{0.f}, origin_y{0.f}; /**< Map-frame origin (meters). */
-    std::vector<uint8_t> data; /**< Row-major cost data; size = width * height. */
+    int                       width{0}, height{0}; /**< Grid dimensions in cells. */
+    float                     resolution{0.f};     /**< Cell resolution (meters per cell). */
+    float                     origin_x{0.f}, origin_y{0.f}; /**< Map-frame origin (meters). */
+    std::vector<std::uint8_t> data; /**< Row-major cost data; size = width * height. */
   };
 
   /**

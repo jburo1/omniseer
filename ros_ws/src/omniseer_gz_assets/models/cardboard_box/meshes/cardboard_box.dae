@@ -138,11 +138,11 @@
       </technique_common>
     </light>
   </library_lights>
-  <library_images>
+  <!-- <library_images>
     <image id="CardboardBoxes_png">
-      <init_from>cardboard_box.png</init_from>
+      <init_from>../materials/textures/cardboard_box.png</init_from>
     </image>
-  </library_images>
+  </library_images> -->
   <library_visual_scenes>
     <visual_scene id="MaxScene">
       <node name="EnvironmentAmbientLight">

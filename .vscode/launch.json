@@ -1,0 +1,22 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug: test_goals_select",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/ros_ws/build/omniseer_description/test_goals_select",
+            "args": [
+                "--gtest_filter=SelectGoals.RealMap_Artifacts"
+            ],
+            "cwd": "${workspaceFolder}",
+            "MIMode": "gdb",
+            "stopAtEntry": false,
+            "setupCommands": [
+                {
+                    "text": "-enable-pretty-printing"
+                }
+            ]
+        }
+    ]
+}

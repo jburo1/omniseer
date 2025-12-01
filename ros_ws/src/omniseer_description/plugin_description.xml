@@ -1,6 +1,6 @@
 <library path="omniseer_bt_nodes">
   <class
-    name="SelectFrontierFromCostmap"
-    type="omniseer::SelectFrontierFromCostmap"
+    name="SelectExplorationGoal"
+    type="omniseer::SelectExplorationGoal"
     base_class_type="BT::ActionNodeBase"/>
 </library>

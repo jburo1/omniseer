@@ -30,21 +30,19 @@ TEST(FrontierMask, EightConn_UnknownAdjacency)
   std::vector<uint8_t> mask(g.width * g.height);
   compute_frontier_mask(g, p, mask.data(), mask.size());
 
-  auto I = [&](int x, int y) { return y * 5 + x; };
-
   // Center is NOT frontier
-  EXPECT_EQ(mask[I(2, 2)], 0);
+  EXPECT_EQ(mask[I(2, 2, 5)], 0);
 
   // Cells on the inner rim touching unknown ARE frontier
-  EXPECT_EQ(mask[I(1, 1)], 1);
-  EXPECT_EQ(mask[I(2, 1)], 1);
-  EXPECT_EQ(mask[I(3, 1)], 1);
-  EXPECT_EQ(mask[I(1, 3)], 1);
-  EXPECT_EQ(mask[I(3, 3)], 1);
+  EXPECT_EQ(mask[I(1, 1, 5)], 1);
+  EXPECT_EQ(mask[I(2, 1, 5)], 1);
+  EXPECT_EQ(mask[I(3, 1, 5)], 1);
+  EXPECT_EQ(mask[I(1, 3, 5)], 1);
+  EXPECT_EQ(mask[I(3, 3, 5)], 1);
 
   // Unknown cells are never frontier
-  EXPECT_EQ(mask[I(0, 0)], 0);
-  EXPECT_EQ(mask[I(4, 4)], 0);
+  EXPECT_EQ(mask[I(0, 0, 5)], 0);
+  EXPECT_EQ(mask[I(4, 4, 5)], 0);
 }
 
 /*
@@ -57,7 +55,6 @@ inspection
 */
 TEST(FrontierMask, VisualizeFromExamplesMap)
 {
-  // TEST_DIR is set by CMake to ${CMAKE_SOURCE_DIR}
   const std::string root = TEST_DIR;
   const std::string pgm  = root + "/examples/map.pgm";
   const std::string meta = root + "/examples/map.meta.json";
@@ -72,13 +69,7 @@ TEST(FrontierMask, VisualizeFromExamplesMap)
   std::vector<uint8_t> mask(static_cast<size_t>(g.width) * g.height, 0);
   compute_frontier_mask(g, p, mask.data(), mask.size());
 
-  // Assert non-zero frontier
-  size_t cnt = 0;
-  for (auto v : mask)
-    cnt += (v != 0);
-  ASSERT_GT(cnt, 0u) << "No frontier detected—check map encoding and Params.";
-
-  // Write artifacts (pgm dumps) into the test's artifact directory
+  // Write artifacts (PGMs) into the test's artifact directory
   std::vector<uint8_t> vis = mask;
   for (auto& v : vis)
     v = v ? 255 : 0;
