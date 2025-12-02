@@ -1,3 +1,4 @@
+firmware/.vscode/
 .ruff_cache/
 *.swp
 **/rviz

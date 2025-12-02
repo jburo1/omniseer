@@ -5,7 +5,6 @@ exclude: |
     log/|
     \.venv/|
     ros_ws/src/omniseer_gz_assets/|
-    firmware/|
     hardware/|
     docs/|
     notes/|
