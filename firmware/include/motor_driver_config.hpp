@@ -8,7 +8,7 @@ namespace motor_driver_config
   // I2C address of HiWonder motor driver
   constexpr uint8_t MOT_DRIV_I2C_ADDR = 0x34;
 
-  // Register addresses
+  // register addresses
   constexpr uint8_t ADC_BAT_ADDR                    = 0x00;
   constexpr uint8_t MOTOR_TYPE_ADDR                 = 0x14;
   constexpr uint8_t MOTOR_ENCODER_POLARITY_ADDR     = 0x15;
@@ -16,7 +16,7 @@ namespace motor_driver_config
   constexpr uint8_t MOTOR_ENCODER_ADDR              = 0x3C;
   constexpr uint8_t MOTOR_TYPE_JGB37_520_12V_110RPM = 3;
 
-  // Logical wheel indices
+  // logical wheel indices
   constexpr uint8_t WHEEL_FRONT_LEFT  = 0;
   constexpr uint8_t WHEEL_FRONT_RIGHT = 1;
   constexpr uint8_t WHEEL_BACK_LEFT   = 2;

@@ -11,6 +11,7 @@ void setup()
   while (!Serial)
   { /* wait */
   }
+  init_micro_ros();
   init_peripherals();
   register_robot_tasks(scheduler);
 }

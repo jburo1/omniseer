@@ -52,7 +52,9 @@
         "twxs.cmake",
         "donjayamanne.python-extension-pack",
         "eamodio.gitlens",
-        "ms-iot.vscode-ros"
+        "ms-iot.vscode-ros",
+        "openai.chatgpt",
+        "platformio.platformio-ide"
       ],
       "settings": {
         "terminal.integrated.shellArgs.linux": [

@@ -108,7 +108,6 @@ void HwMotorDriver::stop_wheels()
 
 bool HwMotorDriver::read_encoder_counts(WheelEncoderCounts& encoder_counts)
 {
-
   // 4 registers @ 32 bits = 16 bytes
   uint8_t buf[16];
 
@@ -116,6 +115,8 @@ bool HwMotorDriver::read_encoder_counts(WheelEncoderCounts& encoder_counts)
   {
     return false;
   }
+
+  encoder_counts.timestamp_us = micros();
 
   for (int i = 0; i < 4; ++i)
   {
@@ -149,7 +150,6 @@ float HwMotorDriver::read_battery_voltage()
 
 int16_t HwMotorDriver::_rad_s_to_driver_units(float w_rad_s) const
 {
-
   // rad/s -> rev/s
   float rev_s = w_rad_s * INV_2PI;
 
