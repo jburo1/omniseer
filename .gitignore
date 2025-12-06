@@ -7,7 +7,6 @@ firmware/.vscode/
 __pycache__/
 log/
 install/
-notes/
 devel/
 logs/
 build/

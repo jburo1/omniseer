@@ -1,0 +1,21 @@
+# print use_sim_time for all nodes 
+ros2 node list | while read node; do
+    echo -n "$node: "
+    ros2 param get "$node" use_sim_time
+done
+
+# set yoloworld detection classes 
+ros2 service call /yolo/set_classes yolo_msgs/srv/SetClasses '{classes: ["chair","banana","garbage can","cardboard box","mug", "hammer", "construction cone", "fire hydrant", "hammer", "backpack", "pallet", "orange", "shoe", "suitcase", "soccer ball", "lamp", "table", "toilet"]}'
+
+
+# colcon build with venv 
+source /opt/venv/bin/activate
+python -m colcon build --symlink-install --merge-install --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPython3_EXECUTABLE=/opt/venv/bin/python -DPython3_ROOT_DIR=/opt/venv -DPython3_FIND_VIRTUALENV=ONLY -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+# debug
+python -m colcon build --symlink-install --merge-install --packages-select omniseer_description --cmake-args -DCMAKE_BUILD_TYPE=Debug -DPython3_EXECUTABLE=/opt/venv/bin/python -DPython3_ROOT_DIR=/opt/venv -DPython3_FIND_VIRTUALENV=ONLY -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+
+# colcon test
+colcon test --merge-install  --packages-select omniseer_description --event-handlers console_direct+
+colcon test --merge-install  --event-handlers console_direct+
