@@ -1,0 +1,43 @@
+Below is a quick-reference list of “go-to” ROS 2 message building blocks—the types most developers reach for when they write custom .msg, .srv, or .action files. The goal is to reuse well-known field types whenever possible so your packages interoperate smoothly with RViz, rqt, and third-party nodes.
+Category	Preferred types	When & why you use them
+Timestamps & duration	builtin_interfaces/Time, builtin_interfaces/Duration	Every message that can be logged or replayed later should carry a time base that aligns with /clock or wall time.
+Headers & frame IDs	std_msgs/Header	Gives you stamp and frame_id in one field; RViz and TF rely on this. Put it first in the message.
+Booleans & simple flags	std_msgs/Bool, or a raw bool field inside your custom message	Use a full Bool message only when the topic itself is just the flag.
+Scalar numerics	• float32 for sensor values, actuator commands (saves bandwidth)
+• float64 for fused state estimates, planner outputs	Mixing 32-bit and 64-bit floats bites you in Python—keep entire pipelines consistent.
+Integer counters & IDs	uint32, int32	Rarely need 64 bits; 32 is plenty for sequence numbers and object IDs.
+Vectors & points	geometry_msgs/Point, geometry_msgs/Vector3	Avoid rolling your own {x,y,z} triples—these types come with RViz and TF helpers.
+Poses & transforms	• geometry_msgs/Pose (position + orientation)
+• geometry_msgs/PoseStamped (Pose + Header)
+• geometry_msgs/TransformStamped (for TF broadcasters)	Match the type to the consumer: TF expects TransformStamped, planners prefer PoseStamped.
+Twists (velocities)	geometry_msgs/Twist, geometry_msgs/TwistStamped	Standard for cmd_vel and odometry; most drivers already subscribe to it.
+Wrenches (force/torque)	geometry_msgs/Wrench, geometry_msgs/WrenchStamped	Common for manipulators & haptic devices.
+Images & depth data	• sensor_msgs/Image (2-D arrays)
+• sensor_msgs/CompressedImage (JPEG/PNG payload)
+• sensor_msgs/CameraInfo (intrinsics)	Use image_transport if you need compression plugins beyond raw/JPEG.
+Laser & 3-D range	• sensor_msgs/LaserScan
+• sensor_msgs/PointCloud2	Stick to these unless you have a novel sensor layout—every SLAM stack supports them out-of-the-box.
+Navigation staples	• nav_msgs/Odometry
+• nav_msgs/Path
+• nav_msgs/OccupancyGrid	Chosen so Nav2, RViz, map server, and bag tools can read your data.
+Diagnostics & status	• diagnostic_msgs/DiagnosticArray
+• std_msgs/String for human-readable status
+• bond/Status action for “node is alive” contracts	Diagnostics tools and rqt robot_monitor key off these types automatically.
+Parameterization & dynamic config	rcl_interfaces/ParameterValue, rcl_interfaces/ParameterDescriptor	Used indirectly via dynamic_parameters APIs; include them if you expose custom parameter services.
+Actions (long tasks)	• action_msgs/GoalStatus (included automatically)
+• Define your own <Task>.action with goal, result, feedback sections	Actions already wrap timing and status; no need for extra header fields inside them.
+Best-practice tips
+
+    Start with standard message families – only define a new .msg when no combination of std_msgs, sensor_msgs, geometry_msgs, or nav_msgs captures your data cleanly.
+
+    Always include std_msgs/Header unless the semantics make no sense (e.g., a pure configuration topic).
+
+    Keep units explicit in field names or comments (temperature_celsius, angle_rad), because .msg files can’t store metadata annotations.
+
+    Prefer arrays of fixed-size primitives (float32[4] quaternion) over multiple scalar fields—it packs and serializes faster.
+
+    Bound unbounded arrays when you can (float32[<=100] ranges) to help static-mem DDS vendors and avoid fragmentation on embedded targets.
+
+    Reuse your own interface packages – collect all custom message definitions in omniseer_msgs; every other package then just depends on that one.
+
+With these “usual suspects” at hand, you’ll find that most visualization, logging, and off-the-shelf ROS 2 components will just work with your data.

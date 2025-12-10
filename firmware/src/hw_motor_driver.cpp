@@ -88,22 +88,16 @@ void HwMotorDriver::set_wheel_speeds_rad_s(const WheelSpeeds& ws)
     driver_speed_units[wheel_map.channel] = static_cast<int8_t>(driver_units);
   }
 
-  if (!writeRegData(_wire, _i2c_addr, MOTOR_FIXED_SPEED_ADDR,
+  writeRegData(_wire, _i2c_addr, MOTOR_FIXED_SPEED_ADDR,
                     reinterpret_cast<const uint8_t*>(driver_speed_units),
-                    sizeof(driver_speed_units)))
-  {
-    Serial.println("ERROR: Failed to set wheel speeds.");
-  }
+                    sizeof(driver_speed_units));
 }
 
 void HwMotorDriver::stop_wheels()
 {
   const uint8_t zeros[4] = {0, 0, 0, 0};
 
-  if (!writeRegData(_wire, _i2c_addr, MOTOR_FIXED_SPEED_ADDR, zeros, sizeof(zeros)))
-  {
-    Serial.println("ERROR: Failed to stop wheels.");
-  }
+  writeRegData(_wire, _i2c_addr, MOTOR_FIXED_SPEED_ADDR, zeros, sizeof(zeros));
 }
 
 bool HwMotorDriver::read_encoder_counts(WheelEncoderCounts& encoder_counts)
@@ -139,7 +133,7 @@ float HwMotorDriver::read_battery_voltage()
 
   if (!readRegData(_wire, _i2c_addr, ADC_BAT_ADDR, raw, sizeof(raw)))
   {
-    Serial.println("ERROR: Failed to read battery voltage.");
+    // Serial.println("ERROR: Failed to read battery voltage.");
     return 0.0f;
   }
 

@@ -15,6 +15,12 @@
     "--ipc=host",
     "--uts=host",
     "--init",
+    // serial
+    "-v",
+    "/dev:/dev",
+    "-v",
+    "/run/udev:/run/udev:ro",
+    "--group-add=dialout",
     // GUI
     "-v",
     "/tmp/.X11-unix:/tmp/.X11-unix",
@@ -32,7 +38,8 @@
     "source=${localEnv:HOME}/.bash_history,target=/home/user/.bash_history,type=bind"
   ],
   "containerEnv": {
-    "ROS_AUTOMATIC_DISCOVERY_RANGE": "LOCALHOST",
+    // "ROS_AUTOMATIC_DISCOVERY_RANGE": "LOCALHOST",
+    "ROS_LOCALHOST_ONLY": "0",
     "ROS_DOMAIN_ID": "42"
   },
   "customizations": {
@@ -69,64 +76,3 @@
   "postCreateCommand": "bash -lc 'set -e; sed -i \"s/\\r$//\" .devcontainer/bootstrap.sh; chmod 755 .devcontainer/bootstrap.sh;'",
   "postStartCommand": "bash -lc '.devcontainer/bootstrap.sh'"
 }
-// {
-//   "name": "kilted desktop-full dev container",
-//   // non root
-//   "remoteUser": "user",
-//   // for permissions
-//   "updateRemoteUserUID": true,
-//   "build": {
-//     "dockerfile": "Dockerfile",
-//     "target": "dev",
-//     "context": ".."
-//   },
-//   "runArgs": [
-//     // host namespace
-//     "--privileged",
-//     "--network=host", "--pid=host", "--ipc=host", "--uts=host",
-//     "--init",
-//     // nvidia
-//     "--gpus=all",
-//     "-e", "NVIDIA_VISIBLE_DEVICES=all",
-//     "-e", "NVIDIA_DRIVER_CAPABILITIES=all",
-//     // GUI
-//     "-v", "/tmp/.X11-unix:/tmp/.X11-unix",
-//     "-e", "DISPLAY=${localEnv:DISPLAY}",
-//     "-e", "QT_X11_NO_MITSHM=1",
-//     // docker CLI in container
-//     "-v", "/var/run/docker.sock:/var/run/docker.sock"
-//   ],
-//   "workspaceMount": "source=${localWorkspaceFolder},target=/${localWorkspaceFolderBasename},type=bind",
-//   "workspaceFolder": "/${localWorkspaceFolderBasename}",
-//   "mounts": [
-//     "source=${localEnv:HOME}/.bash_history,target=/home/user/.bash_history,type=bind"
-//   ],
-//   "containerEnv": {
-//         "ROS_AUTOMATIC_DISCOVERY_RANGE": "LOCALHOST",
-//         "ROS_DOMAIN_ID": "42",
-//         "__GLX_VENDOR_LIBRARY_NAME": "nvidia"
-//   },
-//   "customizations": {
-//         "vscode": {
-//             "extensions":[
-//                 "ms-vscode.cpptools",
-//                 "ms-vscode.cpptools-themes",
-//                 "twxs.cmake",
-//                 "donjayamanne.python-extension-pack",
-//                 "eamodio.gitlens",
-//                 "ms-iot.vscode-ros"
-//             ],
-//             "settings": {
-//                 "terminal.integrated.shellArgs.linux": [ "-lc", "tmux new -ADs dev" ],
-//                 "terminal.integrated.profiles.linux": {
-//                     "tmux": {
-//                         "path": "tmux",
-//                         "args": ["new-session", "-A", "-s", "vscode:${workspaceFolder}"]
-//                     }
-//                 }
-//             }
-//         }
-//     },
-//     "postCreateCommand": "bash -lc 'set -e; sed -i \"s/\\r$//\" .devcontainer/bootstrap.sh; chmod 755 .devcontainer/bootstrap.sh;'",
-//     "postStartCommand": "bash -lc '.devcontainer/bootstrap.sh'"
-// }

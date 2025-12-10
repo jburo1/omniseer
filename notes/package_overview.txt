@@ -1,0 +1,64 @@
+omniseer_ws/
+└── src/
+    ├── omniseer_msgs/           # custom msg/srv/action definitions
+    ├── omniseer_description/    # URDF, meshes, xacro macros
+    ├── omniseer_bringup/        # top-level launch files, parameter sets
+    ├── omniseer_hardware/       # motor & sensor drivers, micro-ROS bridge
+    ├── omniseer_perception/     # camera/RPLiDAR nodes, vision models
+    ├── omniseer_localization/   # EKF, SLAM, map server
+    ├── omniseer_navigation/     # planners, costmaps, BT navigator
+    ├── omniseer_control/        # controllers, joystick mux, safety stop
+    ├── omniseer_utils/          # reusable C++/Python libs, helper scripts
+    └── third_party/             # vendor packages pulled by vcs import
+
+Package	Typical nodes/libraries (executables)
+omniseer_hardware
+(ament_cmake)	motor_driver_node, imu_publisher, battery_state_node, plus a hardware-interface library reused by tests.
+omniseer_perception
+(ament_python)	object_detector_node.py, pointcloud_filter_node.py, camera_sync_node.py.
+omniseer_navigation
+(ament_cmake)	Wraps Nav2 BT navigator, local & global planners, costmap plugins your team maintains.
+omniseer_bringup
+(ament_python)	Pure launch + YAML: no code, just starts the other packages in the right order and namespace.
+omniseer_msgs
+(ament_cmake)	Only .msg, .srv, .action; no runtime deps so that everybody can depend on it without cycles.
+
+
+Here’s a first-pass language/build-type map for the package layout we sketched. I’ve chosen C++ when the code must hit hard real-time or pump large data, and Python when rapid iteration or ML tooling (PyTorch / TensorFlow) dominates. Mixed cases are split so colcon can build each side with the right plugin.
+Package	Primary build-type	Why this choice	Typical executables / libs
+omniseer_msgs	C++ (ament_cmake)	Message generation needs rosidl_generator_cpp & friends; downstream C++ and Python both reuse the generated artefacts.	No runtime nodes (just the generated headers, Python stubs, and type-support).
+omniseer_description	C++ (ament_cmake) (code-free)	URDF / xacro / mesh assets installed via CMake; no executables, but keeping it CMake lets you bundle robot-state-publisher if you ever add it.	—
+omniseer_bringup	Python (ament_python)	Pure launch + parameter YAML; Python launch files remap topics and set namespaces.	bringup_sim.launch.py, bringup_real.launch.py
+omniseer_hardware	C++ (ament_cmake)	Motor & sensor drivers talk to CAN/UART/I²C at kHz rates; C++ keeps latency < 1 ms.	motor_driver_node, imu_publisher, battery_state_node
+omniseer_perception	Python (ament_python) (with C/CUDA extensions)	CV/DL workloads iterate fastest in Python; heavy lifting sits in C++/CUDA libs (Torch, TensorRT).	object_detector_node.py, pointcloud_filter_node.py
+omniseer_localization	C++ (ament_cmake)	EKF, SLAM, map-server need tight compute loops and link against Nav2/core SLAM libs.	ekf_localizer, slam_backend
+omniseer_navigation	C++ (ament_cmake)	Wraps Nav2 plugins & behavioural trees; leverages existing C++ NAV2 stack.	bt_navigator, global_planner, local_planner
+omniseer_control	Mixed → split into two sibling packages:
+• omniseer_control_cpp – C++ realtime diff-drive / safety controller
+• omniseer_drl_policy – Python DRL policy node	C++ side hits the actuators every 10 ms; the DRL policy (PyTorch) computes high-level velocity cmds at 10–20 Hz and talks to the C++ controller over ROS topics/services.	• diff_drive_controller (C++)
+• drl_policy_node.py (Python)
+omniseer_utils	Python (ament_python)	Helper scripts (bag tools, calibration GUIs, diagnostics); mostly glue & CLI tools.	tf_static_broadcaster.py, calibrate_camera.py
+third_party/	As provided	Pulled in via vcs import; leave each vendor package in its upstream language.	—
+How this plays with your DRL loop
+
+[drl_policy_node.py]  --cmd_vel→  [diff_drive_controller]  →  motors
+        ↑                                        ↓
+    /scan, /odom, /camera_info, reward signals, etc.
+
+    The policy node (Python, GPU-accelerated) consumes observations and publishes high-level velocity commands at 10–20 Hz.
+
+    The C++ controller enforces safety limits, does PID/current control at 100–500 Hz, and guarantees deterministic timing even if the GPU is busy.
+
+    If you later export the trained network to ONNX/TensorRT, you can either keep the Python wrapper or drop the engine directly into a small C++ node inside omniseer_control_cpp.
+
+Next steps you might want
+
+    Package skeletons – create the directories & boiler-plate package.xml, CMakeLists.txt, setup.py (I can spit those out if you like).
+
+    Interface definitions – list the custom .msg / .srv types for DRL rewards, safety events, etc.
+
+    Launch graph – draft the layered launch structure (sim vs real, namespacing, parameter overrides).
+
+    CI matrix – decide what gets built/tested in Docker vs. on the Rock 5B+ cross-compile runner.
+
+Let me know which piece you’d like to flesh out next!

@@ -17,6 +17,12 @@
     "--ipc=host",
     "--uts=host",
     "--init",
+    // serial
+    "-v",
+    "/dev:/dev",
+    "-v",
+    "/run/udev:/run/udev:ro",
+    "--group-add=dialout",
     // nvidia
     "--gpus=all",
     "-e",

@@ -1,0 +1,48 @@
+Below is the loop most ROS 2 robots follow from blank workspace → fully-driving hardware. Treat it as a checklist you cycle through—each pass adds realism, fidelity, and tighter timing constraints.
+Phase	What you produce	Gate to the next phase
+1 Package scaffolding	• package.xml, build files, README per package
+• One stub node per executable with logging only	colcon build & ros2 run succeed; ros2 pkg list shows every package
+2 Interface freeze	• Custom .msg, .srv, .action in omniseer_msgs
+• Documented topic / service names & QoS	ros2 interface show prints expected layouts; code compiles against generated headers / stubs
+3 Synthetic I/O (unit test)	• Pure-code drivers publish fake messages (NumPy arrays, canned bags)
+• Subscribers echo or assert contents	pytest / GTest pass; ros2 topic echo shows data moving
+4 Simulation loop (SIL)	• Gazebo / IsaacSim world launching all nodes
+• DRL policy talks to sim topics	Robot completes a nominal task in sim without manual intervention
+5 Continuous Integration	• Docker image that runs “build-test-lint-sim-exit 0”
+• GitHub / GitLab pipeline with cache + artifacts	MR/PR must pass CI; failures caught before they reach hardware
+6 Hardware-in-the-loop (HIL)	• Real sensors on bench, motors disabled / loop-back
+• Sim publishes missing topics so full graph runs	DRL policy receives actual sensor frames; controller commands are checked against limits
+7 Incremental hardware enablement	7a Low-risk: IMU, LEDs, fans → verify topics
+7b Read-only sensors (LiDAR, cameras)
+7c Actuators with soft-stop watchdogs	Each new device stays up for N minutes with no DDS errors or safety faults
+8 Closed-loop control on bench	• Robot wheels free (on blocks) or motors capped at low duty cycle	Velocity commands track set-points ± acceptable error
+9 Field testing	• Full power, real environment
+• Bag record + metrics log for every run	Repeatable navigation / task success for M consecutive trials
+10 Release & ops	• colcon bundle → .deb / OCI image
+• Versioned launch / param configs
+• OTA or SD-card updater	Deployed build reproduces the validated behaviour on fresh robot
+What you “feed in” at each step
+Data source	Purpose	Tools
+Hard-coded arrays / random noise	Smoke-test publisher/subscriber wiring	Tiny Python scripts
+Recorded rosbag2	Replay realistic timestamps at 1×, >1×, or frame-drop scenarios	ros2 bag play --loop
+Gazebo topics	Kinematic + sensor realism, deterministic resets	gz sim, ros_gz_bridge
+Hardware loop-back	Validate serial/CAN framing & timing without risk	Fake motor driver that echoes commands
+Live sensors, motors disabled	Check sync & timestamp drift	DDS discovery, ros2 topic hz
+Live sensors + actuators	Final latency, jitter, failure-mode tests	On-board logging, diagnostics updater
+Tips to cut feedback time
+
+    Put a throw-away “data spoofer” node in every driver package (foo_driver_fake) so you never hack production code for tests.
+
+    Automate phase transitions in VS Code tasks / Make targets: make sim, make hil, make hw.
+
+    Freeze message definitions early—changing .msg late forces cache wipes and retraining of the DRL policy.
+
+    Log latency & throughput metrics (ros2 trace or LTTng) in sim and hardware so performance regressions surface before wheels turn.
+
+    Keep CI green; anything that breaks in phase 3 or 4 is an order of magnitude cheaper than during phase 8.
+
+Development mantra
+
+    Write → run synthetic → pass CI → run sim → bench hardware → run free-wheel → drive
+
+    …then loop back with the new feature or fix. Follow that rhythm and surprises stay virtual, not physical.

@@ -3,7 +3,7 @@
 #include "omniseer_tasks.hpp"
 #include "scheduler.hpp"
 
-Scheduler<5> scheduler;
+Scheduler<task_count> scheduler;
 
 void setup()
 {
@@ -11,8 +11,8 @@ void setup()
   while (!Serial)
   { /* wait */
   }
-  init_micro_ros();
   init_peripherals();
+  init_micro_ros();
   register_robot_tasks(scheduler);
 }
 

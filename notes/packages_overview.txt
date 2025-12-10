@@ -1,0 +1,63 @@
+Below is a field-tested “starter stack” map for a mobile-manipulator or ground robot.
+I split it into two blocks:
+
+    Always-installed “core” packages – already in any ros-<distro>-desktop (or desktop-full) image.
+
+    Common add-ons you fetch with apt install … (or build from source) once the core is running.
+
+Use it as a checklist when you spin up a fresh SBC or CI container.
+1 Core packages you almost never work without
+
+(Desktop-full already ships these; if you started from ros-base make sure they’re present.)
+Capability	Key packages	Why you need them
+Client libraries	rclcpp, rclpy, rosidl_default_generators	Compile & run C++/Python nodes; generate code from .msg/.srv/.action.
+Middleware & utils	rmw_cyclonedds_cpp (or FastDDS), ros2cli, ros2launch, ros2bag	DDS transport, command-line introspection, launch system, bag record/play.
+Standard interfaces	std_msgs, sensor_msgs, geometry_msgs, nav_msgs, diagnostic_msgs, builtin_interfaces	Re-use message types understood by RViz, Nav2, slam_toolbox, etc.
+Transforms	tf2, tf2_ros, tf2_geometry_msgs	Coordinate-frame broadcasting and lookup.
+Visualization & GUI	rviz2, rqt_gui, rqt_plot, rqt_reconfigure	Visual debuggers for topics, TF trees and parameter tuning.
+Logging & tracing	rcutils, ros2_tracing (desktop-full), foxglove_bridge (optional)	Structured logs and LTTng tracepoints when latency matters.
+Launch testing	launch_testing, ament_lint_auto	Integration tests and static analysis in CI.
+
+    If something in this box is missing, you’ll notice immediately—ros2 topic list or rclpy simply won’t work.
+
+2 Add-on packages most real robots end up needing
+Domain	Install this	Typical apt pattern	Notes
+Hardware drivers	Realsense, Ouster, Velodyne, Hokuyo, etc.	ros-<distro>-velodyne-*, ros-<distro>-realsense2-camera	Pick drivers that match your sensors; often live under the vendor’s GitHub.
+Motor / I/O control	ros2_control, ros2_controllers	ros-<distro>-ros2-control	Abstraction layer for joints & hardware-interface plugins.
+Navigation stack	nav2_bringup, nav2_behavior_tree_nodes, slam_toolbox	ros-<distro>-nav2-*, ros-<distro>-slam-toolbox	Path planning, BT navigator, mapping; almost always added to mobile robots.
+Manipulation	moveit2, moveit_configs_utils	Built from source or ros-<distro>-moveit	Needed for arms, grippers, motion planning.
+Perception pipeline	image_pipeline, depth_image_proc, vision_msgs, image_transport_plugins	ros-<distro>-image-pipeline	Rectification, stereo depth, compression plugins.
+Point-cloud processing	pcl_ros, point_cloud_transport, depthimage_to_laserscan	ros-<distro>-pcl-ros	Converts camera depth or LiDAR to usable formats.
+Simulation	Gazebo / Ignition (Sim), ros_gz bridge	ros-<distro>-gz-ros2-control	Desktop-full includes Gazebo Classic; most switch to Ignition/ROS GZ now.
+Time sync & playback	ros2bag_vcd, rosbag2_compression	From source or extras PPA	Better compression, video-synced bag playback.
+Microcontrollers & real-time	micro_ros_agent, micro_ros_msgs	ros-<distro>-micro-ros-agent	Bridges MCU firmware (Teensy, STM32) to DDS graph.
+Diagnostics & introspection	diagnostic_updater, robot_state_publisher	ros-<distro>-diagnostic-updater	Health topics, TF from URDF.
+Testing frameworks	gazebo_plugins, nav2_system_tests, behaviortree_cpp_v3	Built from source for latest distro	Scenario-level regression tests; BT library is a Nav2 dependency.
+Security (optional)	ros2_dds_security, SROS 2	Crafted from source	DDS-level encryption/ACL, certificates.
+How to know you really need an extra package
+
+Ask three quick questions:
+
+    Does a node fail to start because a plugin is missing?
+    Example: Failed to load plugin depth_image_proc/ConvertMetricNode → install depth_image_proc.
+
+    Is there a community stack that solves 80 % of my problem already?
+    If yes, reuse it (nav2, moveit2) instead of writing from scratch.
+
+    Is the add-on required only for simulation or CI?
+    Keep those in a dev image (ros-<distro>-sim-dev) and leave the robot runtime image lean.
+
+Minimal → full progression cheat-sheet
+Stage	Base image	Extra apt install …
+Headless SBC runtime	ros-<distro>-ros-base	drivers + ros2_control + nav2
+Developer laptop	ros-<distro>-desktop	rviz2 is already there; add Ignition, slam_toolbox, image_pipeline
+CI container	ros-<distro>-ros-base	ament_lint_auto, launch_testing, fake drivers
+
+(Replace <distro> with kilted, jazzy, etc.)
+TL;DR
+
+    The desktop-full meta-package covers client libraries, CLI, TF, RViz, standard msgs, rosbag, tracing.
+
+    Real robots almost always add hardware drivers, ros2_control, Nav2 or MoveIt 2, image/point-cloud pipelines, and a sim stack.
+
+    Pick add-ons the moment you either (a) connect a new sensor/actuator, or (b) need higher-level autonomy features you’d otherwise re-implement.
