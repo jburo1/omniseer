@@ -1,11 +1,14 @@
 {
-  "name": "omniseer dev (CPU only)",
+  "name": "omniseer dev (CPU only, x86)",
   "remoteUser": "user",
   "updateRemoteUserUID": true,
   "build": {
     "dockerfile": "../Dockerfile",
     "target": "dev",
-    "context": "../.."
+    "context": "../..",
+    "args": {
+      "TORCH_MODE": "cpu"
+    }
   },
   "runArgs": [
     // host namespace

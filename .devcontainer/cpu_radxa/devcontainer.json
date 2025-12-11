@@ -1,0 +1,63 @@
+{
+    "name": "omniseer dev (Radxa)",
+    "remoteUser": "user",
+    "updateRemoteUserUID": true,
+    "build": {
+        "dockerfile": "../Dockerfile",
+        "target": "dev",
+        "context": "../..",
+        "args": {
+            "ROS_DISTRO": "kilted",
+            "TORCH_MODE": "cpu"
+        }
+    },
+    "runArgs": [
+        "--privileged",
+        "--network=host",
+        "--pid=host",
+        "--ipc=host",
+        "--uts=host",
+        "--init",
+        // pass through hardware
+        "-v",
+        "/dev:/dev",
+        "-v",
+        "/run/udev:/run/udev:ro",
+        "--group-add=dialout",
+        // docker CLI in container
+        "-v",
+        "/var/run/docker.sock:/var/run/docker.sock"
+    ],
+    // When using Remote-SSH, "localWorkspaceFolder" is on the Radxa.
+    "workspaceMount": "source=${localWorkspaceFolder},target=/${localWorkspaceFolderBasename},type=bind",
+    "workspaceFolder": "/${localWorkspaceFolderBasename}",
+    "mounts": [
+        "source=${localEnv:HOME}/.bash_history,target=/home/user/.bash_history,type=bind"
+    ],
+    "containerEnv": {
+        "ROS_LOCALHOST_ONLY": "0",
+        "ROS_DOMAIN_ID": "42"
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-vscode.cpptools",
+                "ms-vscode.cpptools-themes",
+                "twxs.cmake",
+                "donjayamanne.python-extension-pack",
+                "eamodio.gitlens",
+                "ms-iot.vscode-ros",
+                "openai.chatgpt",
+                "platformio.platformio-ide"
+            ],
+            "settings": {
+                "terminal.integrated.shellArgs.linux": [
+                    "-lc",
+                    "tmux new -ADs dev"
+                ]
+            }
+        }
+    },
+    "postCreateCommand": "bash -lc 'set -e; sed -i \"s/\\r$//\" .devcontainer/bootstrap.sh; chmod 755 .devcontainer/bootstrap.sh;'",
+    "postStartCommand": "bash -lc '.devcontainer/bootstrap.sh'"
+}

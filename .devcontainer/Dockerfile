@@ -79,12 +79,20 @@ RUN bash -lc 'source /opt/venv/bin/activate && cd /tmp/app && \
   ~/.local/bin/uv pip install -U pip && \
   ~/.local/bin/uv pip install -r /tmp/req.txt'
 
+ARG TORCH_MODE=cpu   # cpu | cuda
 # PyTorch CUDA wheels (CUDA 12.8 channel)
 RUN bash -lc 'source /opt/venv/bin/activate && \
   ~/.local/bin/uv pip uninstall -y torch torchvision torchaudio || true && \
-  ~/.local/bin/uv pip install \
-  --index-url https://download.pytorch.org/whl/cu128 \
-  torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0'
+  if [ "$TORCH_MODE" = "cuda" ]; then \
+    echo "Installing CUDA wheels"; \
+    ~/.local/bin/uv pip install \
+      --index-url https://download.pytorch.org/whl/cu128 \
+      torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0; \
+  else \
+    echo "Installing CPU wheels"; \
+    ~/.local/bin/uv pip install \
+      torch torchvision torchaudio; \
+  fi'
 USER root
 
 # Rosdep
