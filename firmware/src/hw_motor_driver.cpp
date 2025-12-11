@@ -21,7 +21,7 @@ void HwMotorDriver::init()
 
   delay(50);
 
-  // Presence check
+  // presence check
   _wire.beginTransmission(_i2c_addr);
   uint8_t err = _wire.endTransmission();
   if (err != 0)
@@ -38,7 +38,7 @@ void HwMotorDriver::init()
 
   Serial.println("Motor driver detected.");
 
-  // Configure motor type
+  // configure motor type
   if (!writeRegData(_wire, _i2c_addr, MOTOR_TYPE_ADDR, &MOTOR_TYPE_JGB37_520_12V_110RPM, 1))
   {
     Serial.println("ERROR: Failed to write motor type.");
@@ -48,7 +48,7 @@ void HwMotorDriver::init()
     Serial.println("Motor type configured.");
   }
 
-  // Encoder polarity
+  // encoder polarity
   constexpr uint8_t polarity = 0;
   if (!writeRegData(_wire, _i2c_addr, MOTOR_ENCODER_POLARITY_ADDR, &polarity, 1))
   {
@@ -59,7 +59,7 @@ void HwMotorDriver::init()
     Serial.println("Encoder polarity configured.");
   }
 
-  // Battery read
+  // battery read
   float vbatt = read_battery_voltage();
   Serial.printf("Battery: %.2f V\n", vbatt);
 

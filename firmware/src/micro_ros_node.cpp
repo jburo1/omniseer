@@ -205,7 +205,7 @@ bool MicroRosNode::_init_core()
     return false;
   }
 
-  // executor (capacity = number of subscriptions/timers/services you add)
+  // executor
   if (!rcl_check(rclc_executor_init(&_executor, &_support.context, 1, &_allocator),
                  "executor init"))
   {

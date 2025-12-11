@@ -12,12 +12,10 @@ HZ = 20.0            # send frequency
 STOP_TIMEOUT = 0.5   # seconds with no key → auto-stop
 
 def teleop(stdscr):
-    # --- serial setup ---
     ser = serial.Serial(PORT, BAUD, timeout=0.01)
 
-    # --- curses setup ---
     curses.cbreak()
-    stdscr.nodelay(True)   # getch() is non-blocking
+    stdscr.nodelay(True)
     stdscr.keypad(True)
     curses.noecho()
 
@@ -33,7 +31,6 @@ def teleop(stdscr):
 
     try:
         while True:
-            # --- handle keyboard, non-blocking ---
             last_key = None
             while True:
                 key = stdscr.getch()
@@ -75,11 +72,9 @@ def teleop(stdscr):
                 stdscr.addstr(1, 0, f"V vx={vx:.3f} vy={vy:.3f} wz={wz:.3f}")
                 stdscr.refresh()
 
-            # --- safety: auto-stop if idle ---
             if time.monotonic() - last_key_time > STOP_TIMEOUT:
                 vx = vy = wz = 0.0
 
-            # --- send current cmd_vel at fixed rate ---
             cmd = f"V {vx:.3f} {vy:.3f} {wz:.3f}\n"
             ser.write(cmd.encode("ascii"))
 

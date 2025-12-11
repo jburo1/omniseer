@@ -33,7 +33,7 @@ namespace hw_serial_cmd
         {
           out_cmd = cmd;
           return true;
-        } // Run control at fixed period
+        }
       }
       else if (idx < BUF_SIZE - 1)
       {
