@@ -7,14 +7,12 @@ done
 # set yoloworld detection classes
 ros2 service call /yolo/set_classes yolo_msgs/srv/SetClasses '{classes: ["chair","banana","garbage can","cardboard box","mug", "hammer", "construction cone", "fire hydrant", "hammer", "backpack", "pallet", "orange", "shoe", "suitcase", "soccer ball", "lamp", "table", "toilet"]}'
 
-
 # colcon build with venv
 source /opt/venv/bin/activate
 python -m colcon build --symlink-install --merge-install --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPython3_EXECUTABLE=/opt/venv/bin/python -DPython3_ROOT_DIR=/opt/venv -DPython3_FIND_VIRTUALENV=ONLY -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
 # debug
 python -m colcon build --symlink-install --merge-install --packages-select omniseer_description --cmake-args -DCMAKE_BUILD_TYPE=Debug -DPython3_EXECUTABLE=/opt/venv/bin/python -DPython3_ROOT_DIR=/opt/venv -DPython3_FIND_VIRTUALENV=ONLY -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-
 
 # colcon test
 colcon test --merge-install  --packages-select omniseer_description --event-handlers console_direct+
@@ -26,7 +24,7 @@ ls /dev/ttyACM* /dev/ttyUSB* 2>/dev/null
 # start micro ros agent
 ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM1 -v6
 
-# rpllidar
+# start headless rpllidar publisher
 ros2 launch rplidar_ros rplidar.launch.py serial_port:=/dev/ttyUSB0
 
 # teleoperation
