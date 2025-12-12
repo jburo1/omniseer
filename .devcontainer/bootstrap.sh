@@ -21,7 +21,7 @@
 
 # #
 #!/usr/bin/env bash
-WS="${REMOTE_CONTAINERS_WORKSPACE_FOLDER:-$PWD}"
+WS="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." >/dev/null 2>&1 && pwd)"
 
 # Common environment
 source "/opt/ros/${ROS_DISTRO}/setup.bash"

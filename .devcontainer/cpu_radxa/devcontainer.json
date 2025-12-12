@@ -8,7 +8,8 @@
         "context": "../..",
         "args": {
             "ROS_DISTRO": "kilted",
-            "TORCH_MODE": "cpu"
+            "TORCH_MODE": "cpu",
+            "ROS_BASE": "ros:kilted-ros-base-noble"
         }
     },
     "runArgs": [

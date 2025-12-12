@@ -2,7 +2,7 @@
 # Development (“dev”) stage
 #########################################
 ARG ROS_DISTRO=kilted
-ARG ROS_BASE="osrf/ros:${ROS_DISTRO}-desktop-full-noble"
+ARG ROS_BASE="osrf/ros:kilted-desktop-full-noble"
 FROM ${ROS_BASE} AS dev
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]

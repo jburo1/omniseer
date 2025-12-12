@@ -40,8 +40,6 @@
   <test_depend>ament_xmllint</test_depend>
   <test_depend>launch_testing</test_depend>
   <test_depend>pytest</test_depend>
-  <!-- Listed so CI and tooling know tests require ruff. In CI we install via pip and skip rosdep for this key. -->
-  <test_depend>ruff</test_depend>
 
   <export>
     <build_type>ament_python</build_type>
