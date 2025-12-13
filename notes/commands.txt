@@ -25,7 +25,7 @@ ls /dev/ttyACM* /dev/ttyUSB* 2>/dev/null
 # start micro ros agent
 ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM1 -v6
 
-# rpllidar
+# start headless rpllidar publisher
 ros2 launch rplidar_ros rplidar.launch.py serial_port:=/dev/ttyUSB0
 
 # teleoperation
