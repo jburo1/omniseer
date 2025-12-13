@@ -1,5 +1,3 @@
-!firmware/lib/
-!firmware/lib/**
 firmware/.vscode/
 .ruff_cache/
 *.swp
@@ -14,6 +12,8 @@ logs/
 build/
 bin/
 lib/
+!/firmware/lib/
+!/firmware/lib/**
 /build/
 /install/
 /log/
