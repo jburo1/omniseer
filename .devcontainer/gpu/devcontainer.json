@@ -85,5 +85,5 @@
     }
   },
   "postCreateCommand": "bash -lc 'set -e; sed -i \"s/\\r$//\" .devcontainer/bootstrap.sh; chmod 755 .devcontainer/bootstrap.sh;'",
-  "postStartCommand": "bash -lc '.devcontainer/bootstrap.sh'"
+  // "postStartCommand": "bash -lc '.devcontainer/bootstrap.sh'"
 }

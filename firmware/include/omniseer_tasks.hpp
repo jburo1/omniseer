@@ -6,7 +6,7 @@ constexpr uint32_t ENCODERS_US  = 1000000; // 50 Hz
 constexpr uint32_t BATTERY_US   = 1000000; // 1 Hz
 constexpr uint32_t IMU_US       = 1000000; // 100 Hz
 constexpr uint32_t SONAR_US     = 50000;   // 20 Hz
-constexpr uint32_t EXECUTOR_SPIN_US     = 50000;   // 20 Hz
+constexpr uint32_t EXECUTOR_SPIN_US     = 500000;   // 200 Hz
 
 struct TaskFrequency {
   void (*fn)();

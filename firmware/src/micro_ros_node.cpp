@@ -136,6 +136,7 @@ void MicroRosNode::publish_battery()
 
 void MicroRosNode::cmd_vel_callback(const void* msg_in)
 {
+  log_debugf("in cmd vel_callback");
   if (!g_micro_ros_node_instance) {
     return;
   }
@@ -255,6 +256,7 @@ void MicroRosNode::_sync_time(int timeout_ms)
 
 void MicroRosNode::_handle_cmd_vel(const geometry_msgs__msg__Twist& msg)
 {
+  log_debugf("in handle_ vel_callback");
   CmdVel cmd_vel{(float) msg.linear.x, (float) msg.linear.y, (float) msg.angular.z};
   _motion_controller.set_cmd_vel(cmd_vel, micros());
 }

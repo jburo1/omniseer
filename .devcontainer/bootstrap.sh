@@ -1,12 +1,4 @@
 #!/usr/bin/env bash
-WS="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." >/dev/null 2>&1 && pwd)"
-
-# Common environment
-source "/opt/ros/${ROS_DISTRO}/setup.bash"
-source "/opt/venv/bin/activate"
-
-sudo apt-get update
-rosdep update
 
 WS="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." >/dev/null 2>&1 && pwd)"
 
@@ -42,11 +34,13 @@ build_ws() {
 # ROS2 application workspace
 build_ws "${WS}/ros_ws"
 
-# micro-ROS agent workspace
+# micro-ROS setup workspace (provides micro_ros_setup)
 build_ws "${WS}/uros_ws"
 
-# build micro ros agent
-cd "${WS}/uros_ws"
-ros2 run micro_ros_setup create_agent_ws.sh
-ros2 run micro_ros_setup build_agent.sh
-source "${WS}/uros_ws/micro_ros_agent_ws/install/setup.bash"
+grep -q "Omniseer ROS overlays" ~/.bashrc || cat >> ~/.bashrc <<'EOF'
+
+# Omniseer ROS overlays
+source /opt/ros/${ROS_DISTRO}/setup.bash
+source /omniseer/uros_ws/install/setup.bash
+source /omniseer/ros_ws/install/setup.bash
+EOF
