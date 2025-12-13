@@ -1,3 +1,5 @@
+!firmware/lib/
+!firmware/lib/**
 firmware/.vscode/
 .ruff_cache/
 *.swp
