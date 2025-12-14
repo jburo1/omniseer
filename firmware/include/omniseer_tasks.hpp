@@ -1,12 +1,13 @@
 #pragma once
 #include "scheduler.hpp"
 
-constexpr uint32_t MOTOR_CMD_US = 20000;   // 50 Hz
-constexpr uint32_t ENCODERS_US  = 1000000; // 50 Hz
-constexpr uint32_t BATTERY_US   = 1000000; // 1 Hz
-constexpr uint32_t IMU_US       = 1000000; // 100 Hz
-constexpr uint32_t SONAR_US     = 50000;   // 20 Hz
-constexpr uint32_t EXECUTOR_SPIN_US     = 500000;   // 200 Hz
+constexpr uint32_t US_PER_S = 1'000'000;
+constexpr uint32_t MOTOR_CMD_US     = US_PER_S / 100; // 100 Hz
+constexpr uint32_t ENCODERS_US      = US_PER_S / 50;  // 50 Hz
+constexpr uint32_t IMU_US           = US_PER_S / 50;  // 50 Hz
+constexpr uint32_t SONAR_US         = US_PER_S / 20;  // 20 Hz
+constexpr uint32_t BATTERY_US       = US_PER_S / 1;   // 1 Hz
+constexpr uint32_t EXECUTOR_SPIN_US = US_PER_S / 200; // 200 Hz
 
 struct TaskFrequency {
   void (*fn)();

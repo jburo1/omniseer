@@ -136,7 +136,6 @@ void MicroRosNode::publish_battery()
 
 void MicroRosNode::cmd_vel_callback(const void* msg_in)
 {
-  log_debugf("in cmd vel_callback");
   if (!g_micro_ros_node_instance) {
     return;
   }
