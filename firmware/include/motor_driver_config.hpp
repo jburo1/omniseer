@@ -29,7 +29,7 @@ namespace motor_driver_config
 
   // control loop timing
   constexpr uint32_t control_period_us  = 10000;  // 100 Hz
-  constexpr uint32_t command_timeout_us = 200000; // 0.2 s
+  constexpr uint32_t command_timeout_us = 1000000; // 1s
 
   constexpr float INV_2PI = 0.159154943f;
 
