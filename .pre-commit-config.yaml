@@ -24,14 +24,14 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.6.9
+    rev: v0.14.10
     hooks:
       - id: ruff
         args: [--fix, --unsafe-fixes, --exit-non-zero-on-fix]
       - id: ruff-format
 
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v18.1.8
+    rev: v21.1.8
     hooks:
       - id: clang-format
         files: ^(include/|src/|ros_ws/src/(analysis|bringup|omniseer_description|omniseer_test|yolo_ros)/).*\.(c|cc|cpp|cxx|h|hh|hpp|hxx|cu|cuh)$
