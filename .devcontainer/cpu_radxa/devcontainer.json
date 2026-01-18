@@ -25,6 +25,8 @@
         "-v",
         "/run/udev:/run/udev:ro",
         "--group-add=dialout",
+        "--group-add=video",
+        "--group-add=render",
         // docker CLI in container
         "-v",
         "/var/run/docker.sock:/var/run/docker.sock"

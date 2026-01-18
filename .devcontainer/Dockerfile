@@ -39,6 +39,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   htop less nano rsync tmux tree xclip ripgrep fd-find fzf bat bash-completion less \
   libglvnd0 libgl1 libglx0 libegl1 \
   libx11-6 libxext6 libxrender1 libxrandr2 libxi6 mesa-utils \
+  v4l-utils ffmpeg gstreamer1.0-tools \
     && rm -rf /var/lib/apt/lists/*
 
 # Create hybrid venv

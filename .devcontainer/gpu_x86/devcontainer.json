@@ -26,6 +26,8 @@
     "-v",
     "/run/udev:/run/udev:ro",
     "--group-add=dialout",
+    "--group-add=video",
+    "--group-add=render",
     // nvidia
     "--gpus=all",
     "-e",
