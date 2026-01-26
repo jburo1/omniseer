@@ -1,0 +1,1414 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../ros_packages/">
+      
+      
+        <link rel="next" href="../../hardware/circuit/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Code documentation - omniseer</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#code-documentation-guide" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="omniseer" class="md-header__button md-logo" aria-label="omniseer" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            omniseer
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Code documentation
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/jburo1/omniseer" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="omniseer" class="md-nav__button md-logo" aria-label="omniseer" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    omniseer
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/jburo1/omniseer" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Software
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Software
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../build_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Build pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ros_packages/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ROS packages
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code documentation
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-documented-means-here" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What “documented” means here
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cc-documentation-doxygen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C/C++ documentation (Doxygen)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="C/C++ documentation (Doxygen)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#standard-doxygen-blocks-on-public-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Standard: Doxygen blocks on public API
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#use-groups-to-keep-apis-navigable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Use groups to keep APIs navigable
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#document-the-contract-not-the-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Document the “contract”, not the implementation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prefer-documenting-in-headers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prefer documenting in headers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#add-a-doxygen-config-doxyfile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Add a Doxygen config (Doxyfile)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#python-documentation-ros-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Python documentation (ROS 2)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Python documentation (ROS 2)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#standard-google-style-docstrings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Standard: Google-style docstrings
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ros-interfaces-and-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ROS interfaces and configuration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ROS interfaces and configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#msg-srv-action" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        .msg / .srv / .action
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#launchpy-yaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        *.launch.py, *.yaml
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#generating-api-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Generating API documentation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Generating API documentation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#option-a-recommended-doxygen-for-cc-api-docs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option A (recommended): Doxygen for C/C++ API docs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#local-mkdocs-preview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Local MkDocs preview
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-b-python-api-docs-in-mkdocs-optional" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option B: Python API docs in MkDocs (optional)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#publishing-docs-github-pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Publishing docs (GitHub Pages)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Publishing docs (GitHub Pages)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#publishing-mkdocs-doxygen-together-recipe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Publishing MkDocs + Doxygen together (recipe)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#package-readme-template-ros-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Package README template (ROS 2)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rollout-checklist-practical" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rollout checklist (practical)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hardware
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Hardware
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/circuit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Circuit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/wiring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Wiring guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-documented-means-here" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What “documented” means here
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cc-documentation-doxygen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C/C++ documentation (Doxygen)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="C/C++ documentation (Doxygen)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#standard-doxygen-blocks-on-public-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Standard: Doxygen blocks on public API
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#use-groups-to-keep-apis-navigable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Use groups to keep APIs navigable
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#document-the-contract-not-the-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Document the “contract”, not the implementation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prefer-documenting-in-headers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prefer documenting in headers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#add-a-doxygen-config-doxyfile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Add a Doxygen config (Doxyfile)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#python-documentation-ros-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Python documentation (ROS 2)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Python documentation (ROS 2)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#standard-google-style-docstrings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Standard: Google-style docstrings
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ros-interfaces-and-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ROS interfaces and configuration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ROS interfaces and configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#msg-srv-action" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        .msg / .srv / .action
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#launchpy-yaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        *.launch.py, *.yaml
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#generating-api-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Generating API documentation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Generating API documentation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#option-a-recommended-doxygen-for-cc-api-docs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option A (recommended): Doxygen for C/C++ API docs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#local-mkdocs-preview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Local MkDocs preview
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-b-python-api-docs-in-mkdocs-optional" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option B: Python API docs in MkDocs (optional)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#publishing-docs-github-pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Publishing docs (GitHub Pages)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Publishing docs (GitHub Pages)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#publishing-mkdocs-doxygen-together-recipe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Publishing MkDocs + Doxygen together (recipe)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#package-readme-template-ros-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Package README template (ROS 2)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rollout-checklist-practical" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rollout checklist (practical)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="code-documentation-guide">Code Documentation Guide<a class="headerlink" href="#code-documentation-guide" title="Permanent link">&para;</a></h1>
+<p>This repository already uses MkDocs (see <code>mkdocs.yml</code>) for narrative/project documentation. This guide standardizes <em>code-level</em> documentation across:</p>
+<ul>
+<li>C/C++ (<code>vision/</code>, C++ ROS packages under <code>ros_ws/src/**</code>, firmware C/C++ under <code>firmware/</code>)</li>
+<li>Python (ROS 2 nodes/launch under <code>ros_ws/src/**</code>)</li>
+<li>ROS interfaces (<code>.msg</code>, <code>.srv</code>, <code>.action</code>) and configuration (<code>*.yaml</code>, <code>*.launch.py</code>)</li>
+</ul>
+<p>The goal is that a new contributor can answer “what does this do?”, “how do I use it?”, and “what can go wrong?” directly from the source and generated API docs.</p>
+<hr />
+<h2 id="what-documented-means-here">What “documented” means here<a class="headerlink" href="#what-documented-means-here" title="Permanent link">&para;</a></h2>
+<p>Document at three levels:</p>
+<ol>
+<li><strong>Package / module docs</strong>: a short <code>README.md</code> in each ROS package directory and/or a MkDocs page under <code>docs/</code>.</li>
+<li><strong>Public API docs</strong>: Doxygen comments for C/C++ headers in <code>**/include/**</code>, and docstrings for public Python modules/classes/functions.</li>
+<li><strong>Operational docs</strong>: ROS nodes’ parameters/topics/services/actions, plus any non-obvious runtime assumptions (frames, units, QoS, timing, hardware).</li>
+</ol>
+<p>As a rule of thumb: if someone can call/use it without reading the <code>.cpp</code> body, it needs documentation.</p>
+<hr />
+<h2 id="cc-documentation-doxygen">C/C++ documentation (Doxygen)<a class="headerlink" href="#cc-documentation-doxygen" title="Permanent link">&para;</a></h2>
+<h3 id="standard-doxygen-blocks-on-public-api">Standard: Doxygen blocks on public API<a class="headerlink" href="#standard-doxygen-blocks-on-public-api" title="Permanent link">&para;</a></h3>
+<p>Use Doxygen-style comments for:</p>
+<ul>
+<li>Any header installed/exposed via <code>**/include/**</code></li>
+<li>Public classes/structs/enums and public methods</li>
+<li>“Hot path” or safety-critical code (DMA-BUF ownership, threading, ISR constraints, real-time loops)</li>
+</ul>
+<p>Recommended style (already used in <code>ros_ws/src/omniseer_description/include/omniseer/frontier.hpp</code>):</p>
+<ul>
+<li>File header: <code>\file</code> + short description</li>
+<li>Entities: <code>\brief</code> for the one-liner, <code>\details</code> for the long form</li>
+<li>Parameters/returns: <code>\param</code>, <code>\return</code></li>
+<li>Errors: <code>\throws</code> (or document error signaling if exceptions are not used)</li>
+<li>Invariants/ownership: <code>\note</code> / <code>\warning</code></li>
+</ul>
+<p>Example (adapt to your symbol names):</p>
+<div class="highlight"><pre><span></span><code><span class="cm">/**</span>
+<span class="cm"> * \brief Capture NV12 frames from a V4L2 device via a kernel buffer ring.</span>
+<span class="cm"> * \details</span>
+<span class="cm"> * - Ownership: frames are borrowed from the driver ring via `dequeue()` and must be returned with</span>
+<span class="cm"> *   `requeue(out.v4l2_index)` to avoid stalling capture.</span>
+<span class="cm"> * - Threading: not thread-safe; call all methods from the same thread.</span>
+<span class="cm"> */</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">V4l2Capture</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/* ... */</span><span class="w"> </span><span class="p">};</span>
+</code></pre></div>
+<h3 id="use-groups-to-keep-apis-navigable">Use groups to keep APIs navigable<a class="headerlink" href="#use-groups-to-keep-apis-navigable" title="Permanent link">&para;</a></h3>
+<p>For libraries that form a coherent module, define a group once and attach public types/functions:</p>
+<div class="highlight"><pre><span></span><code><span class="cm">/** \defgroup omniseer_vision Vision</span>
+<span class="cm"> *  \brief Vision capture + preprocessing pipeline.</span>
+<span class="cm"> */</span>
+</code></pre></div>
+<p>Then, in headers:</p>
+<div class="highlight"><pre><span></span><code><span class="cm">/** \ingroup omniseer_vision */</span>
+</code></pre></div>
+<h3 id="document-the-contract-not-the-implementation">Document the “contract”, not the implementation<a class="headerlink" href="#document-the-contract-not-the-implementation" title="Permanent link">&para;</a></h3>
+<p>For each public method, capture:</p>
+<ul>
+<li><strong>Preconditions</strong> (e.g., “must call <code>start()</code> before <code>dequeue()</code>”)</li>
+<li><strong>Postconditions</strong> (what state changes, what gets returned/filled)</li>
+<li><strong>Performance / real-time constraints</strong> (blocking, timeouts, allocations)</li>
+<li><strong>Ownership / lifetime</strong> (e.g., DMA-BUF fd validity, requeue requirements)</li>
+<li><strong>Units and frames</strong> (meters vs cells, nanoseconds, map vs odom frame, pixel format)</li>
+</ul>
+<p>This is especially important for the vision DMA-BUF pipeline (see <code>vision/include/omniseer/vision/types.hpp</code> and <code>vision/include/omniseer/vision/v4l2_capture.hpp</code>), where the most valuable documentation is the <em>buffer lifetime and requeue contract</em>.</p>
+<h3 id="prefer-documenting-in-headers">Prefer documenting in headers<a class="headerlink" href="#prefer-documenting-in-headers" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Put full API documentation in the header (<code>.hpp/.h</code>) where the API is declared.</li>
+<li>Use <code>.cpp</code> comments for tricky implementation details only.</li>
+</ul>
+<h3 id="add-a-doxygen-config-doxyfile">Add a Doxygen config (Doxyfile)<a class="headerlink" href="#add-a-doxygen-config-doxyfile" title="Permanent link">&para;</a></h3>
+<p>This repo includes a root <code>Doxyfile</code> for generating C/C++ API docs. There is also an example Doxygen configuration in <code>ros_ws/src/yolo_ros/.github/Doxyfile</code> (vendored upstream).</p>
+<p>Minimum recommended settings (illustrative, adjust paths as needed):</p>
+<div class="highlight"><pre><span></span><code><span class="na">PROJECT_NAME</span><span class="w">           </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;omniseer&quot;</span>
+<span class="na">OUTPUT_DIRECTORY</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="s">build/docs/doxygen</span>
+<span class="na">RECURSIVE</span><span class="w">              </span><span class="o">=</span><span class="w"> </span><span class="s">YES</span>
+<span class="na">INPUT</span><span class="w">                  </span><span class="o">=</span><span class="w"> </span><span class="s">vision/include vision/src ros_ws/src firmware</span>
+<span class="na">FILE_PATTERNS</span><span class="w">          </span><span class="o">=</span><span class="w"> </span><span class="s">*.h *.hpp *.c *.cpp *.md</span>
+<span class="na">EXCLUDE_PATTERNS</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="s">*/build/* */install/* */log/* */.venv/* */ros_ws/src/yolo_ros/*</span>
+<span class="na">WARN_IF_UNDOCUMENTED</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="s">YES</span>
+<span class="na">EXTRACT_ALL</span><span class="w">            </span><span class="o">=</span><span class="w"> </span><span class="s">NO</span>
+<span class="na">GENERATE_HTML</span><span class="w">          </span><span class="o">=</span><span class="w"> </span><span class="s">YES</span>
+</code></pre></div>
+<p>If you later want to integrate C++ API docs more tightly with other doc systems, enable <code>GENERATE_XML = YES</code> as well.</p>
+<hr />
+<h2 id="python-documentation-ros-2">Python documentation (ROS 2)<a class="headerlink" href="#python-documentation-ros-2" title="Permanent link">&para;</a></h2>
+<h3 id="standard-google-style-docstrings">Standard: Google-style docstrings<a class="headerlink" href="#standard-google-style-docstrings" title="Permanent link">&para;</a></h3>
+<p>Keep using module/class docstrings (already present in <code>ros_ws/src/analysis/analysis/path_recorder.py</code>). Add docstrings where the behavior isn’t obvious:</p>
+<ul>
+<li>Node classes: purpose + parameters + topics/services/actions + QoS expectations</li>
+<li>Entry points: <code>main()</code> behavior and exit conditions</li>
+<li>Non-trivial helpers: inputs/outputs/units</li>
+</ul>
+<p>Suggested pattern for a node class:</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">PathRecorder</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Cache and replay odom and simulation paths.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        odom_topic (str): Odometry topic (default: `/odometry/filtered`).</span>
+<span class="sd">        sim_topic (str): Simulation odom topic (default: `/gz_odom`).</span>
+<span class="sd">        max_path_length (int): Max poses kept per path.</span>
+
+<span class="sd">    Publishes:</span>
+<span class="sd">        /odom_path (nav_msgs/msg/Path): Recorded filtered odom path.</span>
+<span class="sd">        /sim_path (nav_msgs/msg/Path): Recorded simulation path.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+</code></pre></div>
+<p>If you want docstrings to be enforced automatically, enable Ruff’s <code>D</code> rules (pydocstyle) in <code>pyproject.toml</code>.</p>
+<hr />
+<h2 id="ros-interfaces-and-configuration">ROS interfaces and configuration<a class="headerlink" href="#ros-interfaces-and-configuration" title="Permanent link">&para;</a></h2>
+<h3 id="msg-srv-action"><code>.msg</code> / <code>.srv</code> / <code>.action</code><a class="headerlink" href="#msg-srv-action" title="Permanent link">&para;</a></h3>
+<p>Document:</p>
+<ul>
+<li>What the message represents</li>
+<li>Units, frame ids, coordinate conventions</li>
+<li>Any special values (sentinels, NaNs, “0 means unknown”, etc.)</li>
+</ul>
+<p>ROS IDL files support line comments; use them above fields and at the top of the file.</p>
+<h3 id="launchpy-yaml"><code>*.launch.py</code>, <code>*.yaml</code><a class="headerlink" href="#launchpy-yaml" title="Permanent link">&para;</a></h3>
+<p>Add a short header comment describing:</p>
+<ul>
+<li>What the launch/config is for (sim vs real, perception vs navigation)</li>
+<li>Required external resources (hardware, Gazebo world, topic remaps)</li>
+<li>The main parameters a user is expected to touch</li>
+</ul>
+<hr />
+<h2 id="generating-api-documentation">Generating API documentation<a class="headerlink" href="#generating-api-documentation" title="Permanent link">&para;</a></h2>
+<h3 id="option-a-recommended-doxygen-for-cc-api-docs">Option A (recommended): Doxygen for C/C++ API docs<a class="headerlink" href="#option-a-recommended-doxygen-for-cc-api-docs" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Add a root <code>Doxyfile</code> (or <code>docs/Doxyfile</code>) that scans:</li>
+<li><code>vision/include</code>, <code>vision/src</code></li>
+<li><code>ros_ws/src/**/include</code> and relevant <code>ros_ws/src/**/src</code></li>
+<li>firmware code under <code>firmware/</code> (if you want it included)</li>
+<li>Exclude generated/build trees:</li>
+<li><code>**/build/**</code>, <code>**/install/**</code>, <code>**/log/**</code>, and vendor directories</li>
+<li>Generate HTML locally into a build directory (recommended), e.g. <code>build/docs/doxygen/html</code>.</li>
+</ol>
+<p>Minimal commands:</p>
+<ul>
+<li>Generate docs: <code>doxygen Doxyfile</code></li>
+<li>View docs: open <code>build/docs/doxygen/html/index.html</code></li>
+</ul>
+<h3 id="local-mkdocs-preview">Local MkDocs preview<a class="headerlink" href="#local-mkdocs-preview" title="Permanent link">&para;</a></h3>
+<p>The docs site uses MkDocs Material (see <code>mkdocs.yml</code> and <code>.github/workflows/docs.yml</code>).</p>
+<ul>
+<li>Install: <code>pip install mkdocs-material mkdocs-git-revision-date-localized-plugin</code></li>
+<li>Serve locally: <code>mkdocs serve</code></li>
+</ul>
+<h3 id="option-b-python-api-docs-in-mkdocs-optional">Option B: Python API docs in MkDocs (optional)<a class="headerlink" href="#option-b-python-api-docs-in-mkdocs-optional" title="Permanent link">&para;</a></h3>
+<p>If you want rendered Python API docs from docstrings inside MkDocs, add <code>mkdocstrings</code> + <code>mkdocs-gen-files</code> (or a similar plugin) and generate pages for packages under <code>ros_ws/src/</code>.</p>
+<hr />
+<h2 id="publishing-docs-github-pages">Publishing docs (GitHub Pages)<a class="headerlink" href="#publishing-docs-github-pages" title="Permanent link">&para;</a></h2>
+<p>This repo’s <code>.github/workflows/docs.yml</code> deploys MkDocs when <code>docs/**</code> or <code>mkdocs.yml</code> change.</p>
+<p>If you want the API docs to be published together with the MkDocs site:</p>
+<ol>
+<li>Generate Doxygen HTML during the workflow (install <code>doxygen</code> + <code>graphviz</code>).</li>
+<li>Copy the generated HTML into the MkDocs build input (or into <code>site/</code> before deploy).</li>
+<li>Add a link from a MkDocs page (e.g., <code>docs/software/code_documentation.md</code>) to the generated <code>api/cpp/index.html</code>.</li>
+</ol>
+<p>Avoid committing generated HTML to <code>main</code>—generate it in CI instead.</p>
+<h3 id="publishing-mkdocs-doxygen-together-recipe">Publishing MkDocs + Doxygen together (recipe)<a class="headerlink" href="#publishing-mkdocs-doxygen-together-recipe" title="Permanent link">&para;</a></h3>
+<p>One pragmatic approach is:</p>
+<ol>
+<li>Run <code>doxygen Doxyfile</code> into <code>build/docs/doxygen/html</code>.</li>
+<li>Build MkDocs into <code>site/</code> via <code>mkdocs build</code>.</li>
+<li>Copy <code>build/docs/doxygen/html</code> into <code>site/api/cpp/</code>.</li>
+<li>Deploy with <code>mkdocs gh-deploy --no-build</code>.</li>
+</ol>
+<p>In GitHub Actions, that means:</p>
+<ul>
+<li>Add dependencies: <code>sudo apt-get update &amp;&amp; sudo apt-get install -y doxygen graphviz</code></li>
+<li>Replace the final step in <code>.github/workflows/docs.yml</code> with the sequence above</li>
+<li>Expand the workflow <code>paths:</code> so doc deploys run when code changes (e.g., <code>vision/**</code>, <code>ros_ws/src/**</code>, <code>firmware/**</code>, and <code>Doxyfile</code>)</li>
+</ul>
+<hr />
+<h2 id="package-readme-template-ros-2">Package README template (ROS 2)<a class="headerlink" href="#package-readme-template-ros-2" title="Permanent link">&para;</a></h2>
+<p>For each package under <code>ros_ws/src/&lt;pkg&gt;/</code>, add a <code>README.md</code> that includes:</p>
+<ul>
+<li>Purpose (1–2 paragraphs)</li>
+<li>Nodes (name, what it does)</li>
+<li>Parameters (name, type, default, meaning)</li>
+<li>Topics/services/actions (name, type, direction)</li>
+<li>Launch examples (exact <code>ros2 launch ...</code> commands)</li>
+<li>Known limitations / assumptions (frames, units, QoS, hardware)</li>
+</ul>
+<h2 id="rollout-checklist-practical">Rollout checklist (practical)<a class="headerlink" href="#rollout-checklist-practical" title="Permanent link">&para;</a></h2>
+<p>Use this sequence to “document the whole project” without boiling the ocean:</p>
+<ol>
+<li><strong>Add package READMEs</strong> for each ROS package in <code>ros_ws/src/*/README.md</code> (purpose + nodes + parameters + launch examples).</li>
+<li><strong>Document public headers</strong> first (<code>**/include/**</code>), starting with the highest-impact APIs:</li>
+<li>Vision types and capture/processing pipeline</li>
+<li>Navigation/frontier selection API</li>
+<li><strong>Document ROS nodes</strong> (Python/C++): parameters/topics/services/actions/QoS.</li>
+<li><strong>Document interfaces</strong> (<code>omniseer_msgs</code>, <code>yolo_msgs</code>): top-of-file + field/unit comments.</li>
+<li><strong>Add generation</strong> (Doxygen) and (optionally) <strong>publish</strong> in CI.</li>
+</ol>
+<p>Automation suggestions (optional but high-leverage):</p>
+<ul>
+<li><strong>Doxygen warnings as a gate</strong>: set <code>WARN_IF_UNDOCUMENTED = YES</code> (and optionally <code>WARN_AS_ERROR = YES</code>) so missing docs are visible early.</li>
+<li><strong>Docstrings as a gate</strong>: enable Ruff <code>D</code> rules if you want docstrings required on public Python APIs.</li>
+<li><strong>Keep formatting automatic</strong>: run <code>pre-commit run -a</code> before opening PRs (clang-format + ruff are already configured).</li>
+</ul>
+<p>“Definition of done” for a documented component:</p>
+<ul>
+<li>Public API is described (what/why/how, units, ownership, errors)</li>
+<li>Example usage exists (snippet or launch example)</li>
+<li>Any assumptions are explicit (threading, real-time, hardware, frame conventions)</li>
+</ul>
+
+
+
+
+
+
+
+  
+    
+  
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Last update">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="January 26, 2026 20:35:25 UTC">January 26, 2026</span>
+  </span>
+
+    
+    
+    
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.instant"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
