@@ -41,6 +41,29 @@ srv_gen/
 /**/install/
 /**/log/
 
+# --- C/C++ / CMake build artifacts ---
+**/build-*/
+**/cmake-build-*/
+**/CMakeFiles/
+**/CMakeCache.txt
+**/cmake_install.cmake
+**/compile_commands.json
+**/CTestTestfile.cmake
+**/Testing/
+*.o
+*.obj
+*.a
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.out
+*.d
+*.ninja
+.ninja_deps
+.ninja_log
+
 
 # --- RViz configs ---
 **/rviz

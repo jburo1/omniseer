@@ -24,13 +24,13 @@
     },
     // IntelliSense & compilation database
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
-    "C_Cpp.default.compileCommands": "${workspaceFolder}/build/omniseer_description/compile_commands.json",
-    "C_Cpp.default.includePath": [
-        "${workspaceFolder}/include",
-        "${workspaceFolder}/**"
-    ],
+    "C_Cpp.codeAnalysis.clangTidy.enabled": true,
+    "C_Cpp.codeAnalysis.clangTidy.path": "clang-tidy",
+    "C_Cpp.codeAnalysis.runAutomatically": true,
     // ===== CMake =====
     "cmake.ignoreCMakeListsMissing": true,
+    "cmake.sourceDirectory": "${workspaceFolder}/vision",
+    "cmake.buildDirectory": "${workspaceFolder}/vision/build",
     // "files.exclude": {
     //     "**/build": true,
     //     "**/install": true,
@@ -42,4 +42,11 @@
         "**/log": true
     },
     "ros.distro": "kilted",
+    "ROS2.distro": "kilted",
+    "python.autoComplete.extraPaths": [
+        "/opt/ros/kilted/lib/python3.12/site-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/opt/ros/kilted/lib/python3.12/site-packages"
+    ],
 }

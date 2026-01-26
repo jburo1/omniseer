@@ -1,0 +1,134 @@
+cmake_minimum_required(VERSION 3.16)
+project(vision_harness CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+find_package(Threads REQUIRED)
+
+option(VISION_BUILD_HARNESS "Build vision_harness app (requires librga + libdrm)" ON)
+option(VISION_BUILD_TESTS "Build vision tests" ON)
+
+if(VISION_BUILD_HARNESS)
+  find_package(PkgConfig REQUIRED)
+  pkg_check_modules(RGA librga)
+  pkg_check_modules(DRM libdrm)
+
+  if(NOT RGA_FOUND OR NOT DRM_FOUND)
+    message(WARNING "librga/libdrm not found; disabling vision_harness (set -DVISION_BUILD_HARNESS=OFF to silence)")
+    set(VISION_BUILD_HARNESS OFF)
+  endif()
+endif()
+
+set(VISION_HARNESS_SOURCES
+  apps/vision_harness.cpp
+  src/drm_dmabuf_alloc.cpp
+  src/image_buffer_pool.cpp
+  src/pipeline.cpp
+  src/profiler.cpp
+  src/rga_preprocess.cpp
+  src/rknn_runner.cpp
+  src/spsc_ring.cpp
+  src/v4l2_capture.cpp
+)
+
+if(VISION_BUILD_HARNESS)
+  add_executable(vision_harness ${VISION_HARNESS_SOURCES})
+  target_include_directories(vision_harness PRIVATE include ${RGA_INCLUDE_DIRS} ${DRM_INCLUDE_DIRS})
+  target_link_libraries(vision_harness PRIVATE ${RGA_LIBRARIES} ${DRM_LIBRARIES})
+  target_compile_options(vision_harness PRIVATE ${RGA_CFLAGS_OTHER} ${DRM_CFLAGS_OTHER})
+endif()
+
+if(VISION_BUILD_HARNESS)
+  set(VISION_LINT_SOURCES ${VISION_HARNESS_SOURCES})
+else()
+  set(VISION_LINT_SOURCES
+    src/image_buffer_pool.cpp
+    src/spsc_ring.cpp
+  )
+endif()
+
+if(VISION_BUILD_TESTS)
+  include(CTest)
+  enable_testing()
+
+  set(GTEST_SOURCE_DIR "" CACHE PATH "Path to a local googletest source tree (used if GTest isn't installed)")
+  option(VISION_FETCH_GOOGLETEST "Fetch googletest via FetchContent when not found (requires network)" OFF)
+
+  find_package(GTest QUIET)
+  if(NOT GTest_FOUND)
+    if(GTEST_SOURCE_DIR)
+      add_subdirectory(${GTEST_SOURCE_DIR} ${CMAKE_BINARY_DIR}/_deps/googletest-build EXCLUDE_FROM_ALL)
+    elseif(EXISTS "/usr/src/googletest/CMakeLists.txt")
+      add_subdirectory(/usr/src/googletest ${CMAKE_BINARY_DIR}/_deps/googletest-build EXCLUDE_FROM_ALL)
+    elseif(EXISTS "/usr/src/gtest/CMakeLists.txt")
+      add_subdirectory(/usr/src/gtest ${CMAKE_BINARY_DIR}/_deps/googletest-build EXCLUDE_FROM_ALL)
+    elseif(VISION_FETCH_GOOGLETEST)
+      include(FetchContent)
+      FetchContent_Declare(
+        googletest
+        URL https://github.com/google/googletest/archive/refs/tags/release-1.14.0.zip
+      )
+      FetchContent_MakeAvailable(googletest)
+    else()
+      message(FATAL_ERROR "GTest not found. Install googletest (or provide -DGTEST_SOURCE_DIR=...), or set -DVISION_FETCH_GOOGLETEST=ON.")
+    endif()
+
+    if(NOT TARGET GTest::gtest AND TARGET gtest)
+      add_library(GTest::gtest ALIAS gtest)
+    endif()
+    if(NOT TARGET GTest::gtest_main AND TARGET gtest_main)
+      add_library(GTest::gtest_main ALIAS gtest_main)
+    endif()
+  endif()
+
+  add_executable(image_buffer_pool_test
+    apps/image_buffer_pool_test.cpp
+    src/image_buffer_pool.cpp
+    src/spsc_ring.cpp
+  )
+  target_include_directories(image_buffer_pool_test PRIVATE include)
+  target_link_libraries(image_buffer_pool_test PRIVATE Threads::Threads GTest::gtest_main)
+
+  add_test(NAME image_buffer_pool_test COMMAND image_buffer_pool_test)
+
+  # Device-dependent V4L2 test (skips if device is unavailable).
+  add_executable(v4l2_capture_test
+    apps/v4l2_capture_test.cpp
+    src/v4l2_capture.cpp
+  )
+  target_include_directories(v4l2_capture_test PRIVATE include)
+  target_link_libraries(v4l2_capture_test PRIVATE Threads::Threads GTest::gtest_main)
+
+  add_test(NAME v4l2_capture_test COMMAND v4l2_capture_test)
+endif()
+
+find_program(CLANG_TIDY_EXE clang-tidy)
+if(CLANG_TIDY_EXE)
+  add_custom_target(lint-clang-tidy
+    COMMAND ${CLANG_TIDY_EXE} -p ${CMAKE_BINARY_DIR}
+      ${VISION_LINT_SOURCES}
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMENT "Running clang-tidy on vision sources"
+  )
+else()
+  message(STATUS "clang-tidy not found: lint-clang-tidy target will be unavailable")
+endif()
+
+find_program(CPPCHECK_EXE cppcheck)
+if(CPPCHECK_EXE)
+  add_custom_target(lint-cppcheck
+    COMMAND ${CPPCHECK_EXE}
+      --enable=warning,style,performance,portability
+      --std=c++17
+      --inline-suppr
+      --suppress=missingIncludeSystem
+      -I ${CMAKE_SOURCE_DIR}/include
+      ${VISION_LINT_SOURCES}
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMENT "Running cppcheck on vision sources"
+  )
+else()
+  message(STATUS "cppcheck not found: lint-cppcheck target will be unavailable")
+endif()

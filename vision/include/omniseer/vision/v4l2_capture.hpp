@@ -1,0 +1,83 @@
+#pragma once
+#include <cstddef>
+#include <cstdint>
+#include <string>
+#include <vector>
+
+#include "omniseer/vision/types.hpp"
+
+namespace omniseer::vision
+{
+
+  // Device lifecycle (open/configure/stream on/off)
+
+  // Kernel ring setup (REQBUFS/QUERYBUF/EXPBUF/QBUF)
+
+  // Hot path: dequeue() returns a borrow token containing a FrameDescriptor
+  // Hot path: requeue(index) (or token destructor / explicit .requeue())
+
+  //   This class opens /dev/videoXX, negotiates capture format (NV12 @ 1280×720), allocates a
+  //   driver-managed buffer queue, exports each slot as a DMA-BUF fd, queues all slots, and starts
+  //   streaming.
+
+  // On each dequeue(), it obtains the index of the slot containing a fresh frame, packages the
+  // corresponding DMA-BUF fd + layout metadata into a FrameDescriptor, and hands that to the next
+  // stage (RGA).
+
+  // Once the pipeline is done reading that buffer (i.e., RGA has consumed it), it calls
+  // requeue(index) to return the slot to the driver so it can be filled again.
+
+  class V4l2Capture
+  {
+  public:
+    struct Config
+    {
+      std::string device;
+      uint32_t    width, height;
+      uint32_t    fourcc;       // NV12
+      uint32_t    buffer_count; // capture ring size
+    };
+
+    explicit V4l2Capture(Config config);
+    ~V4l2Capture();
+
+    // Non-copyable/movable
+    V4l2Capture(const V4l2Capture&)            = delete;
+    V4l2Capture& operator=(const V4l2Capture&) = delete;
+    V4l2Capture(V4l2Capture&&)                 = delete;
+    V4l2Capture& operator=(V4l2Capture&&)      = delete;
+
+    // open + set fmt + reqbufs + export fds + qbuf all + streamon
+    void start();
+
+    // open + set fmt + reqbufs + export fds + qbuf all + streamon
+    void stop() noexcept;
+
+    // Hot path:
+    // borrow token style
+    // fills FrameDescriptor using cached per-slot info + per-frame metadata
+    // - returns false/empty on timeout
+    // sets out.v4l2_index so you can requeue
+    bool dequeue(FrameDescriptor& out);
+
+    // return slot to driver
+    void requeue(uint32_t index);
+
+  private:
+    struct Slot
+    {
+      int      dmabuf_fd{-1}; // from VIDIOC_EXPBUF, stable for lifetime
+      uint32_t alloc_size{0}; // from VIDIOC_QUERYBUF (per plane 0)
+    };
+
+    std::string       _device{};
+    uint32_t          _buffer_count{0};
+    int               _fd{-1}; // camera device fd
+    uint32_t          _width{0}, _height{0};
+    uint32_t          _fourcc{0};       // NV12
+    uint32_t          _bytesperline{0}; // stride from G_FMT readback
+    std::vector<Slot> _slots{};         // size = buffer_count
+    bool              _streaming{false};
+  };
+
+} // namespace omniseer::vision

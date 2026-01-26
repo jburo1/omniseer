@@ -40,7 +40,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   libglvnd0 libgl1 libglx0 libegl1 \
   libx11-6 libxext6 libxrender1 libxrandr2 libxi6 mesa-utils \
   v4l-utils ffmpeg gstreamer1.0-tools \
+  gstreamer1.0-plugins-base \
+  gstreamer1.0-plugins-good \
+  gstreamer1.0-plugins-ugly \
+  gstreamer1.0-plugins-bad \
+  gstreamer1.0-libav \
     && rm -rf /var/lib/apt/lists/*
+
+# RGA libs
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    software-properties-common libv4l-0 \
+ && add-apt-repository ppa:jjriek/rockchip-multimedia \
+ && apt-get update && apt-get install -y --no-install-recommends \
+    librga2 librga-dev libdrm-dev\
+ && rm -rf /var/lib/apt/lists/*
+
 
 # Create hybrid venv
 RUN python3 -m venv /opt/venv --system-site-packages

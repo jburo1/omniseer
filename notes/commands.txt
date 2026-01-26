@@ -7,7 +7,6 @@ done
 # set yoloworld detection classes
 ros2 service call /yolo/set_classes yolo_msgs/srv/SetClasses '{classes: ["chair","banana","garbage can","cardboard box","mug", "hammer", "construction cone", "fire hydrant", "hammer", "backpack", "pallet", "orange", "shoe", "suitcase", "soccer ball", "lamp", "table", "toilet"]}'
 
-
 # colcon build
 source /opt/venv/bin/activate
 python -m colcon build --symlink-install --merge-install --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPython3_EXECUTABLE=/opt/venv/bin/python -DPython3_ROOT_DIR=/opt/venv -DPython3_FIND_VIRTUALENV=ONLY -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
@@ -32,4 +31,71 @@ ros2 launch rplidar_ros rplidar.launch.py serial_port:=/dev/ttyUSB0
 ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -p stamped:=true
 -r cmd_vel:=/cmd_vel
 
-# run clang tidy
+
+--- CAMERA ---
+
+# identify devices
+ls -l /dev/video*
+v4l2-ctl --list-devices
+
+# confirm capabilities
+v4l2-ctl -d /dev/videoX --all
+v4l2-ctl -d /dev/videoX --list-formats-ext
+
+for d in /dev/video*; do
+  echo "=== $d ==="
+  v4l2-ctl -d "$d" --info 2>/dev/null | sed -n '1,12p'
+done
+
+for v in /dev/video1{1,2,3,4,5,6,7}; do
+  echo "=== $v ==="
+  v4l2-ctl -d $v --all 2>/dev/null | egrep -i 'Card type|Driver name|Bus info|Width/Height|Pixel Format|Format' | head -n 30
+  v4l2-ctl -d $v --list-formats-ext 2>/dev/null | head -n 40
+  echo
+done
+
+v4l2-ctl -d /dev/video12 --all
+
+# camera init / should be caled by ros script eventually todo
+# should maybe alias/link these, using selfpath
+SENSOR=/dev/v4l-subdev2
+DEV=/dev/video12
+
+# check which ioctls your driver supports (v4l-utils)
+v4l2-compliance -d $DEV
+
+# watch which ioctls your program is actually calling + return codes
+strace -f -e trace=ioctl -o /tmp/ioctl.log ./your_binary --your-args
+v4l2-ctl -d $SENSOR --set-ctrl=vertical_blanking=2308
+v4l2-ctl -d $DEV --set-fmt-video=width=1280,height=720,pixelformat=NV12
+v4l2-ctl -d $SENSOR --get-ctrl=vertical_blanking
+v4l2-ctl -d $DEV --get-fmt-video
+time v4l2-ctl -d $DEV --stream-mmap --stream-count=300 --stream-to=/dev/null
+
+# video streaming via gstream
+W=1280
+H=720
+FPS=30
+PORT=8888
+
+gst-launch-1.0 -e \
+  v4l2src device=$DEV ! video/x-raw,format=NV12,width=$W,height=$H,framerate=${FPS}/1 ! \
+  queue max-size-buffers=2 leaky=downstream ! \
+  videoconvert ! video/x-raw,format=I420 ! \
+  x264enc tune=zerolatency speed-preset=ultrafast key-int-max=$FPS bitrate=4000 ! \
+  h264parse config-interval=1 ! mpegtsmux ! \
+  tcpserversink host=127.0.0.1 port=$PORT sync=false
+
+# loop back on laptop
+ssh -N -L 8888:127.0.0.1:8888 radxa@10.0.0.88
+
+# watch
+ffplay -fflags nobuffer -flags low_delay -framedrop -analyzeduration 0 -probesize 32 tcp://127.0.0.1:8888
+
+# kernel log inspection
+dmesg | grep rga
+journalctl
+systemctl
+
+# check existence of packages
+pkg-config --exists libdrm && echo OK || echo MISSING

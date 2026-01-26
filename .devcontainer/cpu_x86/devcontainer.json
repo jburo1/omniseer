@@ -25,7 +25,6 @@
     "/run/udev:/run/udev:ro",
     "--group-add=dialout",
     "--group-add=video",
-    "--group-add=render",
     // GUI
     "-v",
     "/tmp/.X11-unix:/tmp/.X11-unix",

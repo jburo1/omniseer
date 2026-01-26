@@ -1,0 +1,38 @@
+# Doxygen configuration for omniseer
+#
+# Generate with: doxygen Doxyfile
+# Output: build/docs/doxygen/html/index.html
+
+PROJECT_NAME           = "omniseer"
+OUTPUT_DIRECTORY       = build/docs/doxygen
+
+# Inputs
+RECURSIVE              = YES
+INPUT                  = vision/include \
+                         vision/src \
+                         ros_ws/src \
+                         firmware
+FILE_PATTERNS          = *.h *.hpp *.c *.cpp *.md
+
+# Exclusions (generated trees, large assets, vendored code)
+EXCLUDE_PATTERNS       = */build/* \
+                         */install/* \
+                         */log/* \
+                         */.venv/* \
+                         */node_modules/* \
+                         */ros_ws/src/yolo_ros/* \
+                         */sim/* \
+                         */hardware/*
+
+# Output formats
+GENERATE_HTML          = YES
+GENERATE_XML           = NO
+
+# Quality
+WARNINGS               = YES
+WARN_IF_UNDOCUMENTED   = YES
+EXTRACT_ALL            = NO
+EXTRACT_PRIVATE        = NO
+
+# Markdown
+MARKDOWN_SUPPORT       = YES
