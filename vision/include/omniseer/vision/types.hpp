@@ -54,9 +54,8 @@ namespace omniseer::vision
     uint32_t                   num_planes = 0;
     std::array<DMABufPlane, 2> planes{};
 
-    // Timing
-    uint64_t capture_ts_mono_ns = 0; // when the driver says the frame timestamp occurred
-    uint64_t dequeue_ts_mono_ns = 0; // when userspace thread got the frame back from DQBUF
+    // Runtime timestamp for ROS2 header.stamp.
+    uint64_t capture_ts_real_ns = 0;
 
     // Identity of the V4L2 ring slot that currently contains this frame, used to re-queue it.
     uint32_t v4l2_index = std::numeric_limits<uint32_t>::max();
@@ -76,13 +75,16 @@ namespace omniseer::vision
   //   pool.release(dst);
   struct ImageBuffer
   {
-    Size        size{};                    // buffer dimensions (e.g., 640x384)
+    Size        size{};                    // buffer dimensions (e.g., 640x640)
     PixelFormat fmt = PixelFormat::RGB888; // model input
 
     uint32_t                   num_planes = 0;
     std::array<DMABufPlane, 2> planes{};
 
     size_t total_alloc_size = 0; // capacity across planes
+    // Per-frame runtime handoff fields for consumer/ROS2 integration.
+    uint32_t sequence           = 0; // V4L2 sequence number
+    uint64_t capture_ts_real_ns = 0; // capture timestamp mapped to realtime (ROS2 header.stamp)
   };
 
 } // namespace omniseer::vision

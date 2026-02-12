@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <queue>
 
+#include "omniseer/vision/dma_heap_alloc.hpp"
 #include "omniseer/vision/spsc_ring.hpp"
 #include "omniseer/vision/types.hpp"
 
@@ -21,6 +22,9 @@ namespace omniseer::vision
   private:
     // size of pool, N=5
     static const int size{5};
+
+    // Backing allocations for each pool slot (owns DMA-BUF fds).
+    std::array<DmabufAllocation, size> allocations{};
 
     // Preallocated ImageBuffer slots
     std::array<ImageBuffer, size> pool;
@@ -39,6 +43,10 @@ namespace omniseer::vision
 
   public:
     ImageBufferPool();
+
+    // Allocate DMA-BUF memory for all pool slots.
+    // This must be called before using the buffers with RGA/RKNN.
+    bool allocate_all(DmaHeapAllocator& allocator, int width, int height, PixelFormat fmt);
 
     // producer
     // RGA wants to write into the pool

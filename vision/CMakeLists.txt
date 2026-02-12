@@ -7,37 +7,37 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(Threads REQUIRED)
 
-option(VISION_BUILD_HARNESS "Build vision_harness app (requires librga + libdrm)" ON)
+option(VISION_BUILD_HARNESS "Build vision_harness app (requires librga)" ON)
 option(VISION_BUILD_TESTS "Build vision tests" ON)
 
 if(VISION_BUILD_HARNESS)
   find_package(PkgConfig REQUIRED)
   pkg_check_modules(RGA librga)
-  pkg_check_modules(DRM libdrm)
 
-  if(NOT RGA_FOUND OR NOT DRM_FOUND)
-    message(WARNING "librga/libdrm not found; disabling vision_harness (set -DVISION_BUILD_HARNESS=OFF to silence)")
+  if(NOT RGA_FOUND)
+    message(WARNING "librga not found; disabling vision_harness (set -DVISION_BUILD_HARNESS=OFF to silence)")
     set(VISION_BUILD_HARNESS OFF)
   endif()
 endif()
 
 set(VISION_HARNESS_SOURCES
   apps/vision_harness.cpp
-  src/drm_dmabuf_alloc.cpp
+  src/dma_heap_alloc.cpp
   src/image_buffer_pool.cpp
   src/pipeline.cpp
   src/profiler.cpp
   src/rga_preprocess.cpp
   src/rknn_runner.cpp
   src/spsc_ring.cpp
+  src/time_utils.cpp
   src/v4l2_capture.cpp
 )
 
 if(VISION_BUILD_HARNESS)
   add_executable(vision_harness ${VISION_HARNESS_SOURCES})
-  target_include_directories(vision_harness PRIVATE include ${RGA_INCLUDE_DIRS} ${DRM_INCLUDE_DIRS})
-  target_link_libraries(vision_harness PRIVATE ${RGA_LIBRARIES} ${DRM_LIBRARIES})
-  target_compile_options(vision_harness PRIVATE ${RGA_CFLAGS_OTHER} ${DRM_CFLAGS_OTHER})
+  target_include_directories(vision_harness PRIVATE include ${RGA_INCLUDE_DIRS})
+  target_link_libraries(vision_harness PRIVATE ${RGA_LIBRARIES})
+  target_compile_options(vision_harness PRIVATE ${RGA_CFLAGS_OTHER})
 endif()
 
 if(VISION_BUILD_HARNESS)
@@ -83,8 +83,14 @@ if(VISION_BUILD_TESTS)
     endif()
   endif()
 
+  find_package(PkgConfig QUIET)
+  if(PkgConfig_FOUND)
+    pkg_check_modules(RGA_TEST librga)
+  endif()
+
   add_executable(image_buffer_pool_test
     apps/image_buffer_pool_test.cpp
+    src/dma_heap_alloc.cpp
     src/image_buffer_pool.cpp
     src/spsc_ring.cpp
   )
@@ -96,12 +102,31 @@ if(VISION_BUILD_TESTS)
   # Device-dependent V4L2 test (skips if device is unavailable).
   add_executable(v4l2_capture_test
     apps/v4l2_capture_test.cpp
+    src/time_utils.cpp
     src/v4l2_capture.cpp
   )
   target_include_directories(v4l2_capture_test PRIVATE include)
   target_link_libraries(v4l2_capture_test PRIVATE Threads::Threads GTest::gtest_main)
 
   add_test(NAME v4l2_capture_test COMMAND v4l2_capture_test)
+
+  # Hardware integration test for RGA preprocess (skips at runtime if /dev/rga is unavailable).
+  if(RGA_TEST_FOUND)
+    add_executable(rga_preprocess_test
+      apps/rga_preprocess_test.cpp
+      src/dma_heap_alloc.cpp
+      src/rga_preprocess.cpp
+      src/time_utils.cpp
+      src/v4l2_capture.cpp
+    )
+    target_include_directories(rga_preprocess_test PRIVATE include ${RGA_TEST_INCLUDE_DIRS})
+    target_link_libraries(rga_preprocess_test PRIVATE Threads::Threads GTest::gtest_main ${RGA_TEST_LIBRARIES})
+    target_compile_options(rga_preprocess_test PRIVATE ${RGA_TEST_CFLAGS_OTHER})
+
+    add_test(NAME rga_preprocess_test COMMAND rga_preprocess_test)
+  else()
+    message(STATUS "librga not found; rga_preprocess_test will not be built")
+  endif()
 endif()
 
 find_program(CLANG_TIDY_EXE clang-tidy)

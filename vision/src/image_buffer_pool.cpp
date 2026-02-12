@@ -14,6 +14,31 @@ namespace omniseer::vision
     }
   }
 
+  bool ImageBufferPool::allocate_all(DmaHeapAllocator& allocator, int width, int height,
+                                     PixelFormat fmt)
+  {
+    if (width <= 0 || height <= 0)
+      return false;
+    if (fmt != PixelFormat::RGB888 && fmt != PixelFormat::BGR888)
+      return false;
+
+    // Allocate every slot. If a later allocation fails, already-allocated slots
+    // remain valid and owned by the pool.
+    for (int i = 0; i < size; ++i)
+    {
+      allocations[static_cast<std::size_t>(i)].reset();
+
+      AllocatedImageBuffer allocated = allocator.allocate(width, height, fmt);
+      if (!allocated.valid())
+        return false;
+
+      pool[static_cast<std::size_t>(i)]        = allocated.buf;
+      allocations[static_cast<std::size_t>(i)] = std::move(allocated.alloc);
+    }
+
+    return true;
+  }
+
   bool ImageBufferPool::acquire_write(int& idx)
   {
     // check producer stash
@@ -37,7 +62,8 @@ namespace omniseer::vision
 
     // ** latest-wins policy **
     // if we had a ready image that was waiting for consumption, drop it and
-    // reclaim pool slot into producer-local stash
+    // reclaim pool slot into producer-local stash,
+    // no latency build-up if consumer is slow
     if (old_idx >= 0)
     {
       assert(producer_free_n < size);

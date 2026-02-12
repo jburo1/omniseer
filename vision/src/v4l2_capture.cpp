@@ -10,6 +10,8 @@
 #include <unistd.h>
 #include <utility>
 
+#include "omniseer/vision/time_utils.hpp"
+
 namespace omniseer::vision
 {
 
@@ -93,7 +95,7 @@ namespace omniseer::vision
       fmt.fmt.pix_mp.height      = _height;
       fmt.fmt.pix_mp.pixelformat = _fourcc;
       fmt.fmt.pix_mp.field       = V4L2_FIELD_NONE;
-      fmt.fmt.pix_mp.num_planes  = 1; // rkisp_selfpath NV12 reports 1 plane
+      fmt.fmt.pix_mp.num_planes  = 1;
 
       if (xioctl(_fd, VIDIOC_TRY_FMT, &fmt) == -1)
         throw_errno("VIDIOC_TRY_FMT");
@@ -221,6 +223,7 @@ namespace omniseer::vision
     buf.length   = 1;
     buf.m.planes = &plane;
 
+    // dequeue a filled buffer from the driver
     if (xioctl(_fd, VIDIOC_DQBUF, &buf) == -1)
     {
       if (errno == EAGAIN)
@@ -234,6 +237,8 @@ namespace omniseer::vision
     }
 
     const Slot& slot = _slots[buf.index];
+    const uint64_t capture_ts_real_ns =
+        make_v4l2_capture_timestamp_real_ns(buf.timestamp, buf.flags);
 
     out                    = FrameDescriptor{};
     out.size.w             = static_cast<int>(_width);
@@ -242,8 +247,7 @@ namespace omniseer::vision
     out.num_planes         = 2;
     out.v4l2_index         = buf.index;
     out.sequence           = buf.sequence;
-    out.capture_ts_mono_ns = 0;
-    out.dequeue_ts_mono_ns = 0;
+    out.capture_ts_real_ns = capture_ts_real_ns;
 
     const size_t bytesused_total = static_cast<size_t>(plane.bytesused);
     const size_t total_alloc     = static_cast<size_t>(slot.alloc_size);

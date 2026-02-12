@@ -50,7 +50,6 @@ namespace omniseer::vision
     // open + set fmt + reqbufs + export fds + qbuf all + streamon
     void start();
 
-    // open + set fmt + reqbufs + export fds + qbuf all + streamon
     void stop() noexcept;
 
     // Hot path:

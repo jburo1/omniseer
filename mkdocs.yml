@@ -24,6 +24,7 @@ nav:
     - Build pipeline: software/build_pipeline.md
     - ROS packages: software/ros_packages.md
     - Code documentation: software/code_documentation.md
+    - Vision pipeline: software/vision_pipeline.md
   - Hardware:
     - Circuit: hardware/circuit.md
     - Wiring guide: hardware/wiring.md

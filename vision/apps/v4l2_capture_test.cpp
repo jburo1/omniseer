@@ -88,6 +88,7 @@ TEST(V4l2Capture, NegotiatesAndStreamsDmabufNv12_1280x720)
     EXPECT_EQ(f.num_planes, 2u);
     ASSERT_GE(f.planes[0].fd, 0);
     ASSERT_GE(f.planes[1].fd, 0);
+    EXPECT_GT(f.capture_ts_real_ns, 0u);
 
     auto it = slot_fd.find(f.v4l2_index);
     if (it == slot_fd.end())
