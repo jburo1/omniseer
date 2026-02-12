@@ -1,0 +1,1054 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../code_documentation/">
+      
+      
+        <link rel="next" href="../../hardware/circuit/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Vision pipeline - omniseer</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#vision-pipeline" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="omniseer" class="md-header__button md-logo" aria-label="omniseer" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            omniseer
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Vision pipeline
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/jburo1/omniseer" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="omniseer" class="md-nav__button md-logo" aria-label="omniseer" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    omniseer
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/jburo1/omniseer" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Software
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Software
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../build_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Build pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ros_packages/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ROS packages
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../code_documentation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hardware
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Hardware
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/circuit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Circuit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/wiring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Wiring guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<p>“Frames come from V4L2. We allocate a ring of DMA-capable buffers and run the capture device in streaming mode with enqueue/dequeue semantics. Each dequeued frame is handed off downstream without memcpy by sharing the same underlying allocation (DMA-BUF) into the hardware preprocessor (RGA) and then into the NPU runtime. A lock-free/SPSC queue carries buffer handles across threads, and backpressure is enforced by queue depth so we don’t drop frames or blow latency. We measure end-to-end latency per frame with timestamps at capture, post-preprocess, and post-inference.”</p>
+<h1 id="vision-pipeline">Vision Pipeline<a class="headerlink" href="#vision-pipeline" title="Permanent link">&para;</a></h1>
+<p>This document describes a multi-stage, low-latency, zero copy-ish, real-time computer vision pipeline for the Rockchip RK3588 SoC. The pipeline transforms raw pixel data acquired by a camera into a format that is compatible with downstream neural network inference.</p>
+<h1 id="todo-when-online-write-some-measurements-here-eg-inference-achieves-xfps-at-y-format-here-maybe-link-to-profiler-jsonl-dump-etcs">TODO when online, write some measurements here, e.g. inference achieves xfps at Y format here, maybe link to profiler JSONL dump etcs<a class="headerlink" href="#todo-when-online-write-some-measurements-here-eg-inference-achieves-xfps-at-y-format-here-maybe-link-to-profiler-jsonl-dump-etcs" title="Permanent link">&para;</a></h1>
+<h2 id="major-design-considerations">Major Design Considerations<a class="headerlink" href="#major-design-considerations" title="Permanent link">&para;</a></h2>
+<ul>
+<li>
+<p>Latency-first: pipeline is "latest-wins": consumer always takes freshest processed frame, older frames are dropped.</p>
+</li>
+<li>
+<p>Accelerator-first: all suitable ops are offloaded to ISP/RGA/NPU instead of clogging CPU: ISP/V4L2 delivers 1280x720 NV12 formatted images at 60 FPS, RGA does image resizing/letterboxing/colorspace manipulatoin to ready model input, NPU does inference.</p>
+</li>
+<li>
+<p>Zero-copy-ish: direct memory access buffers (DMA-BUF) connect pipeline stages to avoid CPU memcpys of full frames.</p>
+</li>
+<li>
+<p>Multithreaded: two threads operate the pipeline, a producer owns image capture and preprocess, and a consumer owns inference + postprocess.</p>
+</li>
+<li>
+<p>Observable: performance information emitted at every stage.</p>
+</li>
+</ul>
+<h2 id="stages">Stages<a class="headerlink" href="#stages" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Thread</th>
+<th>Input</th>
+<th>Output</th>
+<th>Primary Code</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Capture (V4L2)</td>
+<td>Producer</td>
+<td><code>/dev/video*</code></td>
+<td><code>FrameDescriptor</code> (borrowed V4L2 slot)</td>
+<td><code>v4l2_capture.hpp/cpp</code></td>
+</tr>
+<tr>
+<td>Preprocess (RGA)</td>
+<td>Producer</td>
+<td><code>FrameDescriptor</code> (NV12 DMA-BUF)</td>
+<td><code>ImageBuffer</code> (RGB DMA-BUF)</td>
+<td><code>rga_preprocess.hpp/cpp</code></td>
+</tr>
+<tr>
+<td>Buffering/Drop policy</td>
+<td>Cross-thread boundary</td>
+<td>Pool indices</td>
+<td>“latest wins” ready buffer index</td>
+<td><code>image_buffer_pool.hpp/cpp</code></td>
+</tr>
+<tr>
+<td>Inference (NPU)</td>
+<td>Consumer</td>
+<td><code>ImageBuffer</code> (RGB DMA-BUF)</td>
+<td>model outputs</td>
+<td><code>vision/include/omniseer/vision/rknn_runner.hpp</code> (TODO), <code>vision/src/rknn_runner.cpp</code> (TODO)</td>
+</tr>
+<tr>
+<td>Postprocess/Publish</td>
+<td>Consumer</td>
+<td>model outputs</td>
+<td>ROS msgs, telemetry</td>
+<td>TODO</td>
+</tr>
+</tbody>
+</table>
+<h2 id="diagram">Diagram<a class="headerlink" href="#diagram" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>                         photons
+                            |
+                            v
+                        +-------+
+                        |radxa 4k camera       |
+                        |       |
+                        +-------+
+                            |
+                            v
+
+  +----------------------------------------------+
+  | Camera / ISP -&gt; V4L2 N slot capture ring     |
+  |   exported as DMA-BUF fd per slot via EXPBUF |
+  +--------------------------+-------------------+
+                             |
+                             v  VIDIOC_DQBUF (nonblocking)
+                  +----------+-----------+
+                  | V4l2Capture          |
+                  | owns: slot DMA-BUF fds|
+                  +----------+-----------+
+                             |
+                             | FrameDescriptor (borrow slot i)
+                             v
+                  +----------+-------------------------+
+                  | RgaPreprocess (librga / im2d)      |
+                  | NV12 (DMA-BUF) -&gt; RGB888 (DMA-BUF) |
+                  | mode: Letterbox                   |
+                  +----------+-------------------------+
+                             |
+                             | publish_ready(pool_idx)
+                             v
+                  +----------+------------------+
+                  | ImageBufferPool (SPSC)      |
+                  | free_ring + ready_idx       |
+                  | policy: latest wins         |
+                  +----------+------------------+
+                             |
+                             v acquire_read(pool_idx)
+                  +----------+-----------+
+                  | RKNN Runner          |
+                  | reads RGB888 DMA-BUF |
+                  +----------+-----------+
+                             |
+                             v
+                    model outputs / detections
+                             |
+                             v
+                      ROS publish / logging
+
+  TODO: create a nicer visual than this simple ascii
+</code></pre></div>
+<h2 id="interfaces">Interfaces<a class="headerlink" href="#interfaces" title="Permanent link">&para;</a></h2>
+<h3 id="core-data-types">Core data types<a class="headerlink" href="#core-data-types" title="Permanent link">&para;</a></h3>
+<p>Defined in <code>types.hpp</code>:</p>
+<ul>
+<li><code>FrameDescriptor</code>: content description of a V4L2 ring buffer slot (owned by the kernel driver). Handle for ISP output/RGA input.</li>
+<li><code>ImageBuffer</code>: DMA-BUF fd-backed buffer (owned by the application). Handle for RGA output/RKNN(NPU) input.</li>
+</ul>
+<h3 id="capture-v4l2capture">Capture: <code>V4l2Capture</code><a class="headerlink" href="#capture-v4l2capture" title="Permanent link">&para;</a></h3>
+<p>Manages the V4L2 (Video for Linux 2) streaming lifecycle and defines a borrow-token style API for accessing ISP output from downstram devices in a zero-copy fashion.</p>
+<p>Defined/implemented in <code>v4l2_capture.hpp/cpp</code>.</p>
+<ul>
+<li><code>start()</code>:</li>
+<li>
+<p>Opens device path (e.g. <code>/dev/video12</code>), negotiates image format, allocates a driver-managed ring buffer,
+    exports each slot as a DMA-BUF fd, queues all slots, and starts streaming.</p>
+</li>
+<li>
+<p><code>dequeue(FrameDescriptor&amp; out)</code>:</p>
+</li>
+<li>
+<p>Dequeues the most recently filled V4L2 ring slot, populates <code>out</code> with a borrow-token (v4l2_index, DMA-BUF fd, layout, metadata). Thse caller must, after performing its work, <code>requeue(out.v4l2_index)</code> to return the slot to the driver so it can refill it with a fresh frame.</p>
+</li>
+<li>
+<p><code>requeue(uint32_t index)</code>:</p>
+</li>
+<li>Return the specified V4L2 ring buffer slot at <code>index</code> to the driver so it can be filled with a fresh frame.</li>
+</ul>
+<h3 id="preprocess-rgapreprocess">Preprocess: <code>RgaPreprocess</code><a class="headerlink" href="#preprocess-rgapreprocess" title="Permanent link">&para;</a></h3>
+<p>Manages the RGA (2D blitter) transformations from ISP output to correct model input.</p>
+<p>Defined/implemented in <code>rga_preprocess.hpp/cpp</code>.</p>
+<ul>
+<li><code>run(const FrameDescriptor&amp; src_nv12, ImageBuffer&amp; dst_rgb, ...)</code>:</li>
+<li>
+<p>Runs the RGA hardware pipeline to convert a captured NV12 DMA-BUF frame into a RGB888 destination buffer. Synchronous.</p>
+</li>
+<li>
+<p><code>prefill(ImageBuffer&amp; dst_rgb)</code>:</p>
+</li>
+<li>The RK3588's RGA device does not support colorfilling a RGB888 buffer, so callers must do it themselves. This must only be called once at buffer init time.</li>
+</ul>
+<h3 id="buffering-imagebufferpool">Buffering: <code>ImageBufferPool</code><a class="headerlink" href="#buffering-imagebufferpool" title="Permanent link">&para;</a></h3>
+<p>This is the boundary between the producer and consumer threads. It facilitates the data handoff between the RGA output and the NPU input in a lock-free fashion. It implements a "freshest-first" policy, where the consumer only has access to the latest processed image.</p>
+<p>Defined/implemented in <code>image_buffer_pool.hpp/cpp</code></p>
+<p>The usage is as follows:</p>
+<ul>
+<li>Producer: <code>acquire_write()</code> -&gt; RGA writes -&gt; <code>publish_ready()</code></li>
+<li>
+<p>Consumer: <code>acquire_read()</code>  -&gt; RKNN reads -&gt; <code>publish_release()</code></p>
+</li>
+<li>
+<p><code>acquire_write(int&amp; idx)</code></p>
+</li>
+<li>
+<p>Obtains a free buffer index into <code>idx</code> for the producer to write into.</p>
+</li>
+<li>
+<p><code>publish_ready(int idx)</code></p>
+</li>
+<li>Publishes <code>idx</code> as the newest ready buffer.</li>
+<li>
+<p>Should be called after performing the write.</p>
+</li>
+<li>
+<p><code>acquire_read(int&amp; idx)</code></p>
+</li>
+<li>
+<p>Atomically grabs the currently ready buffer index into <code>idx</code>.</p>
+</li>
+<li>
+<p><code>publish_release(int idx)</code></p>
+</li>
+<li>Returns the consumed buffer index <code>idx</code> back to the pool.</li>
+<li>
+<p>Should be called after performing the read + consumption.</p>
+</li>
+<li>
+<p><code>buffer_at(int idx)</code></p>
+</li>
+<li>Accessor function for buffer at <code>pool[idx]</code></li>
+<li>Required to access data once ownership established</li>
+<li>Comes in non-const/const flavours for producer/consumer</li>
+</ul>
+<h3 id="buffer-allocation-dmaheapallocator-dmaheapallocation">Buffer Allocation: <code>DmaHeapAllocator</code> + <code>DmaHeapAllocation</code><a class="headerlink" href="#buffer-allocation-dmaheapallocator-dmaheapallocation" title="Permanent link">&para;</a></h3>
+<p>"Video malloc" allocator + allocation classes that create shareable RGB image buffers for zero-copy-ish data movement between RGA and RKNN. Resource-safe bridge between kernel memory and accelerators.</p>
+<p>Defined and implemented in <code>dma_heap_alloc.hpp/cpp</code>.</p>
+<p><code>DmaHeapAllocator</code>:
+- <code>DmaHeapAllocator()</code>
+  - Create factory</p>
+<ul>
+<li><code>allocate(int width, int height, PixelFormat fmt)</code></li>
+<li>Allocate a DMA-BUF suitable for RGA write / RKNN read and return an ImageBuffer
+  and descriptor that points at it.</li>
+</ul>
+<h2 id="ownership-lifetime-rules-for-buffers">Ownership &amp; Lifetime Rules for Buffers<a class="headerlink" href="#ownership-lifetime-rules-for-buffers" title="Permanent link">&para;</a></h2>
+<h3 id="v4l2-ring-slots-framedescriptor">V4L2 ring slots (<code>FrameDescriptor</code>)<a class="headerlink" href="#v4l2-ring-slots-framedescriptor" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Owned by: kernel driver.</li>
+<li>Userspace handle lifetime:</li>
+<li>The exported DMA-BUF fds are owned by <code>V4l2Capture</code> for the duration of streaming.</li>
+<li>Each <code>dequeue()</code> borrows one ring slot at index <code>v4l2_index</code>.</li>
+<li>A <code>requeue(v4l2_index)</code> must occur for every successful <code>dequeue()</code> to allow slot to be refilled. This should happen after RGA is finished using the buffer.</li>
+</ul>
+<h3 id="model-input-buffers-imagebufferpool">Model input buffers (<code>ImageBufferPool</code>)<a class="headerlink" href="#model-input-buffers-imagebufferpool" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Owned by: <code>ImageBufferPool</code> (backing <code>DmabufAllocation</code>s are RAII).</li>
+<li>Cross-thread rule:</li>
+<li>Producer may only write to a buffer index after <code>acquire_write(idx)</code> returns true.</li>
+<li>Consumer may only read from a buffer index after <code>acquire_read(idx)</code> returns true.</li>
+<li>Consumer must call <code>publish_release(idx)</code> once it is done reading.</li>
+</ul>
+<h2 id="overview-of-producer-responsibilities">Overview of Producer Responsibilities<a class="headerlink" href="#overview-of-producer-responsibilities" title="Permanent link">&para;</a></h2>
+<p>Own the upstream clock: drive the loop cadence (dequeue frames) and decide when to drop work to maintain “latest-wins” latency.</p>
+<p>Dequeue from V4L2: call DQBUF, receive the newest captured slot, and package it into a FrameDescriptor (fd(s), strides, w/h, format, timestamp, slot index).</p>
+<p>Respect V4L2 slot lifetime: treat the dequeued slot as borrowed from the driver; do not hold it longer than necessary.</p>
+<p>Acquire an output buffer: get a writable ImageBuffer slot from ImageBufferPool::acquire_write(idx) (or decide to skip processing if none are available).</p>
+<p>Run preprocess on accelerators: invoke RGA to transform NV12 DMA-BUF → RGB/BGR DMA-BUF, including resize + letterbox/stretch policy, and produce LetterboxMeta if needed.</p>
+<p>Write output metadata: fill ImageBuffer fields (fd, stride, dims, pixel format, timestamp, letterbox params, sequence number).</p>
+<p>Publish the newest buffer: call publish_ready(idx) with release semantics so the consumer sees a fully-written frame.</p>
+<p>Recycle old ready frames: if publish_ready “steals” the previous ready buffer (because latest-wins), ensure it goes back into the producer/free path so buffers don’t leak.</p>
+<p>Return camera buffers promptly: QBUF the V4L2 slot back to the driver as soon as RGA is done with it (or immediately if you drop the frame).</p>
+<p>Maintain steady-state buffer hygiene: one-time prefill/padding initialization for destination buffers (your RGB888 imfill limitation means you may do a CPU prefill fallback).</p>
+<p>Instrumentation: emit per-stage timings (DQBUF wait, RGA submit/complete, publish cost), drop counters, and queue depths.</p>
+<p>Error containment: handle transient failures (EINTR/EAGAIN, occasional RGA errors) without wedging the pipeline; perform clean shutdown (stop streaming, close fds, free allocations).</p>
+<h2 id="consumer-responsibilities">Consumer Responsibilities<a class="headerlink" href="#consumer-responsibilities" title="Permanent link">&para;</a></h2>
+<ul>
+<li>
+<p>Acquire the newest frame (latest-wins)</p>
+</li>
+<li>
+<p>Run RKNN inference (NPU)</p>
+</li>
+</ul>
+<p>Initialize RKNN once at startup (load .rknn, init runtime).</p>
+<p>Per frame:</p>
+<p>Feed the input tensor (usually uint8 NHWC or NCHW depending on how you exported/configured).</p>
+<p>Call inference.</p>
+<p>Read output tensors.</p>
+<p>Why this structure matters: your inference FPS will be lower than camera FPS, so consumer naturally drops frames and always processes “most recent state,” which is exactly what you want for robotics.</p>
+<ul>
+<li>Postprocess (CPU, usually)</li>
+</ul>
+<p>Decode YOLO head outputs → candidate boxes + scores + class ids</p>
+<p>Apply thresholding + NMS (non-max suppression)</p>
+<p>Undo letterbox/resize to map boxes back to 1280×720 (or whatever your original frame is)</p>
+<ul>
+<li>Publish results downstream</li>
+</ul>
+<p>Provide a simple struct like:</p>
+<p>timestamp, list of {class_id, score, x1,y1,x2,y2} in original image coordinates</p>
+<p>Feed tracking / “seek-and-capture” logic.</p>
+<ul>
+<li>Release buffer</li>
+</ul>
+<p>pool.release(idx) so RGA can reuse it.</p>
+<p>A minimal consumer loop looks like:</p>
+<p>acquire → infer → decode → publish → release
+(no queue buildup, no waiting on stale frames)</p>
+<h2 id="threading-model-current-intended">Threading Model (Current Intended)<a class="headerlink" href="#threading-model-current-intended" title="Permanent link">&para;</a></h2>
+<p>Two threads:</p>
+<p>1) Capture/Preprocess thread (producer):
+   - <code>cap.dequeue(frame)</code> (nonblocking loop/poll)
+   - <code>pool.acquire_write(idx)</code>; if false, immediately <code>cap.requeue(frame.v4l2_index)</code> and continue
+   - <code>rga.run(frame, pool.buffer_at(idx), &amp;meta)</code>
+   - <code>pool.publish_ready(idx)</code>
+   - <code>cap.requeue(frame.v4l2_index)</code></p>
+<p>2) Inference thread (consumer):
+   - <code>pool.acquire_read(idx)</code> (nonblocking loop/condition variable)
+   - <code>rknn.infer(pool.buffer_at(idx), ...)</code> (TODO)
+   - <code>pool.publish_release(idx)</code></p>
+<p>Notes:
+- The pool policy intentionally drops frames if inference cannot keep up (“latest wins”).
+- <code>V4l2Capture::dequeue()</code> is currently nonblocking; production code should prefer <code>poll()</code>/<code>select()</code>
+  over spin-sleep loops.</p>
+<h2 id="failure-modes-handling">Failure Modes &amp; Handling<a class="headerlink" href="#failure-modes-handling" title="Permanent link">&para;</a></h2>
+<h3 id="capture">Capture<a class="headerlink" href="#capture" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>start()</code> throws:</li>
+<li>bad device path / permissions</li>
+<li>missing V4L2 streaming or MPLANE caps</li>
+<li>driver rejects requested size or format</li>
+<li>
+<p>ioctl failures (REQBUFS/QUERYBUF/EXPBUF/QBUF/STREAMON)</p>
+</li>
+<li>
+<p><code>dequeue()</code>:</p>
+</li>
+<li>returns <code>false</code> on <code>EAGAIN</code> (no frame ready)</li>
+<li>throws on other errors</li>
+</ul>
+<p>Recommended handling:
+- Treat <code>start()</code> failures as fatal at node startup (log and exit or retry with backoff).
+- Treat repeated dequeue <code>EAGAIN</code> as “no data”; use <code>poll()</code> for readiness.
+- Any early exit after a successful dequeue must still <code>requeue(v4l2_index)</code>.</p>
+<h3 id="preprocess-rga">Preprocess (RGA)<a class="headerlink" href="#preprocess-rga" title="Permanent link">&para;</a></h3>
+<p><code>run()</code> returns <code>false</code> if:
+- config is invalid (dst_w/dst_h &lt;= 0)
+- input descriptor is not NV12 or does not match the contiguous NV12 layout assumptions
+- destination buffer is invalid (fd/stride mismatch)
+- librga rejects parameters (<code>imcheck</code> failure) or processing fails (<code>improcess</code> &lt; 0)</p>
+<p>Recommended handling:
+- On preprocess failure, log once per N frames, drop the frame, and continue:
+  - <code>cap.requeue(v4l2_index)</code> must still happen.
+  - If the destination pool index was acquired, it should be returned to the pool (either via
+    a dedicated “abort” path or by publishing/releasing consistently).</p>
+<h3 id="buffer-pool">Buffer Pool<a class="headerlink" href="#buffer-pool" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Producer <code>acquire_write()</code> can fail if the consumer has not released any buffers and the
+  producer stash is empty.</li>
+<li>“Latest wins” means drops are expected under load; this is not an error.</li>
+</ul>
+<p>Recommended handling:
+- If <code>acquire_write()</code> fails, drop the current frame (requeue immediately) to protect latency.</p>
+<h3 id="inference-rknn-todo">Inference (RKNN) — TODO<a class="headerlink" href="#inference-rknn-todo" title="Permanent link">&para;</a></h3>
+<p>Expected failure classes:
+- model load failures (missing <code>.rknn</code>, incompatible runtime)
+- tensor layout mismatch (RGB vs BGR, NCHW vs NHWC, quantization)
+- device/runtime errors during inference</p>
+<p>Recommended handling:
+- Fail fast at init if the model cannot be loaded.
+- If inference fails mid-run, drop that frame and continue (don’t stall capture).</p>
+<h2 id="hardwareplatform-assumptions">Hardware/Platform Assumptions<a class="headerlink" href="#hardwareplatform-assumptions" title="Permanent link">&para;</a></h2>
+<ul>
+<li>V4L2 node exposes NV12 in a single exported DMA-BUF allocation with UV data located at
+  <code>stride_bytes * height</code>. This is validated in <code>RgaPreprocess</code> and in the V4L2/RGA tests.</li>
+<li>librga (im2d) is available and functional (<code>/dev/rga</code> present on target).</li>
+<li>libdrm is available and accessible for dumb-buffer DMA-BUF allocation.</li>
+</ul>
+<h2 id="current-repo-status-as-of-2026-01-27">Current Repo Status (as of 2026-01-27)<a class="headerlink" href="#current-repo-status-as-of-2026-01-27" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Implemented and tested (hardware-dependent tests may skip at runtime):</li>
+<li><code>V4l2Capture</code></li>
+<li><code>DrmDmabufAllocator</code></li>
+<li><code>ImageBufferPool</code> + <code>SpscRing</code></li>
+<li><code>RgaPreprocess</code> (NV12 -&gt; RGB888, letterbox)</li>
+<li>Not implemented yet:</li>
+<li>Pipeline orchestration (<code>vision/src/pipeline.cpp</code>)</li>
+<li>Profiling implementation (<code>vision/src/profiler.cpp</code>)</li>
+<li>RKNN runner (<code>vision/src/rknn_runner.cpp</code>)</li>
+<li>A real <code>vision_harness</code> executable (currently a stub placeholder)</li>
+</ul>
+
+
+
+
+
+
+
+  
+    
+  
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Last update">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="February 12, 2026 19:33:10 UTC">February 12, 2026</span>
+  </span>
+
+    
+    
+    
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.instant"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
