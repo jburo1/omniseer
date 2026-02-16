@@ -39,6 +39,30 @@ namespace omniseer::vision
       throw std::runtime_error(what + ": " + std::strerror(err));
     }
 
+    CaptureStatus classify_errno(int err)
+    {
+      switch (err)
+      {
+        case EAGAIN:
+        case EBUSY:
+        case EIO:
+        case ETIMEDOUT:
+          return CaptureStatus::RetryableError;
+        default:
+          return CaptureStatus::FatalError;
+      }
+    }
+
+    void init_capture_mplane_buffer(v4l2_buffer& buf, v4l2_plane& plane) noexcept
+    {
+      plane = v4l2_plane{};
+      buf   = v4l2_buffer{};
+      buf.type     = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
+      buf.memory   = V4L2_MEMORY_MMAP;
+      buf.length   = 1;
+      buf.m.planes = &plane;
+    }
+
   } // namespace
 
   // ctor
@@ -46,6 +70,64 @@ namespace omniseer::vision
       : _device(std::move(config.device)), _buffer_count(config.buffer_count), _width(config.width),
         _height(config.height), _fourcc(config.fourcc)
   {
+  }
+
+  V4l2Capture::FrameLease::FrameLease(V4l2Capture* capture, FrameDescriptor frame) noexcept
+      : _capture(capture), _frame(std::move(frame))
+  {
+  }
+
+  V4l2Capture::FrameLease::~FrameLease() noexcept
+  {
+    _reset();
+  }
+
+  V4l2Capture::FrameLease::FrameLease(FrameLease&& other) noexcept
+  {
+    *this = std::move(other);
+  }
+
+  V4l2Capture::FrameLease& V4l2Capture::FrameLease::operator=(FrameLease&& other) noexcept
+  {
+    if (this == &other)
+      return *this;
+    _reset();
+    _capture      = other._capture;
+    _frame        = std::move(other._frame);
+    other._capture = nullptr;
+    other._frame   = FrameDescriptor{};
+    return *this;
+  }
+
+  const FrameDescriptor& V4l2Capture::FrameLease::frame() const noexcept
+  {
+    return _frame;
+  }
+
+  FrameDescriptor& V4l2Capture::FrameLease::frame() noexcept
+  {
+    return _frame;
+  }
+
+  CaptureResult V4l2Capture::FrameLease::release() noexcept
+  {
+    if (_capture == nullptr)
+      return {CaptureStatus::Ok, 0};
+
+    const CaptureResult result = _capture->requeue(_frame.v4l2_index);
+    _capture                   = nullptr;
+    _frame                     = FrameDescriptor{};
+    return result;
+  }
+
+  V4l2Capture::FrameLease::operator bool() const noexcept
+  {
+    return _capture != nullptr;
+  }
+
+  void V4l2Capture::FrameLease::_reset() noexcept
+  {
+    (void) release();
   }
 
   // dtor
@@ -136,11 +218,8 @@ namespace omniseer::vision
       {
         v4l2_plane  plane{};
         v4l2_buffer buf{};
-        buf.type     = req.type;
-        buf.memory   = req.memory;
-        buf.index    = i;
-        buf.length   = 1;
-        buf.m.planes = &plane;
+        init_capture_mplane_buffer(buf, plane);
+        buf.index = i;
         if (xioctl(_fd, VIDIOC_QUERYBUF, &buf) == -1)
           throw_errno("VIDIOC_QUERYBUF");
 
@@ -157,11 +236,8 @@ namespace omniseer::vision
 
         v4l2_plane  qplane{};
         v4l2_buffer qbuf{};
-        qbuf.type     = req.type;
-        qbuf.memory   = req.memory;
-        qbuf.index    = i;
-        qbuf.length   = 1;
-        qbuf.m.planes = &qplane;
+        init_capture_mplane_buffer(qbuf, qplane);
+        qbuf.index = i;
         if (xioctl(_fd, VIDIOC_QBUF, &qbuf) == -1)
           throw_errno("VIDIOC_QBUF");
       }
@@ -211,36 +287,41 @@ namespace omniseer::vision
     _bytesperline = 0;
   }
 
-  bool V4l2Capture::dequeue(FrameDescriptor& out)
+  CaptureResult V4l2Capture::dequeue(FrameDescriptor& out) noexcept
   {
+    out = FrameDescriptor{};
+
     if (!_streaming)
-      throw std::runtime_error("V4l2Capture::dequeue: not streaming");
+      return {CaptureStatus::FatalError, ENODEV};
 
     v4l2_plane  plane{};
     v4l2_buffer buf{};
-    buf.type     = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
-    buf.memory   = V4L2_MEMORY_MMAP;
-    buf.length   = 1;
-    buf.m.planes = &plane;
+    init_capture_mplane_buffer(buf, plane);
 
     // dequeue a filled buffer from the driver
     if (xioctl(_fd, VIDIOC_DQBUF, &buf) == -1)
     {
-      if (errno == EAGAIN)
-        return false;
-      throw_errno("VIDIOC_DQBUF");
+      const int err = errno;
+      if (err == EAGAIN)
+        return {CaptureStatus::NoFrame, err};
+      return {classify_errno(err), err};
     }
 
     if (buf.index >= _slots.size())
     {
-      throw std::runtime_error("V4l2Capture::dequeue: out-of-range buffer index");
+      return {CaptureStatus::FatalError, ERANGE};
     }
 
     const Slot& slot = _slots[buf.index];
-    const uint64_t capture_ts_real_ns =
-        make_v4l2_capture_timestamp_real_ns(buf.timestamp, buf.flags);
+    uint64_t capture_ts_real_ns = 0;
+    if (!make_v4l2_capture_timestamp_real_ns(buf.timestamp, buf.flags, capture_ts_real_ns))
+    {
+      const CaptureResult rq = requeue(buf.index);
+      if (!rq.ok())
+        return rq;
+      return {CaptureStatus::RetryableError, EPROTO};
+    }
 
-    out                    = FrameDescriptor{};
     out.size.w             = static_cast<int>(_width);
     out.size.h             = static_cast<int>(_height);
     out.fmt                = PixelFormat::NV12;
@@ -266,25 +347,37 @@ namespace omniseer::vision
     out.planes[1].alloc_size = (uv_offset < total_alloc) ? (total_alloc - uv_offset) : 0;
     out.planes[1].bytesused  = (bytesused_total > uv_offset) ? (bytesused_total - uv_offset) : 0;
 
-    return true;
+    return {CaptureStatus::Ok, 0};
   }
 
-  void V4l2Capture::requeue(uint32_t index)
+  CaptureResult V4l2Capture::requeue(uint32_t index) noexcept
   {
     if (!_streaming)
-      throw std::runtime_error("V4l2Capture::requeue: not streaming");
+      return {CaptureStatus::FatalError, ENODEV};
     if (index >= _slots.size())
-      throw std::runtime_error("V4l2Capture::requeue: index out of range");
+      return {CaptureStatus::FatalError, ERANGE};
 
     v4l2_plane  plane{};
     v4l2_buffer buf{};
-    buf.type     = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
-    buf.memory   = V4L2_MEMORY_MMAP;
-    buf.index    = index;
-    buf.length   = 1;
-    buf.m.planes = &plane;
+    init_capture_mplane_buffer(buf, plane);
+    buf.index = index;
     if (xioctl(_fd, VIDIOC_QBUF, &buf) == -1)
-      throw_errno("VIDIOC_QBUF");
+    {
+      const int err = errno;
+      return {classify_errno(err), err};
+    }
+    return {CaptureStatus::Ok, 0};
+  }
+
+  V4l2Capture::DequeueLeaseResult V4l2Capture::dequeue_lease() noexcept
+  {
+    DequeueLeaseResult out{};
+    FrameDescriptor frame{};
+    out.capture = dequeue(frame);
+    if (!out.capture.ok())
+      return out;
+    out.lease = FrameLease(this, std::move(frame));
+    return out;
   }
 
 } // namespace omniseer::vision

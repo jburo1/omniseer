@@ -1,6 +1,7 @@
 #pragma once
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -9,14 +10,33 @@
 namespace omniseer::vision
 {
 
+  enum class CaptureStatus : uint8_t
+  {
+    Ok,
+    NoFrame,
+    RetryableError,
+    FatalError,
+  };
+
+  struct CaptureResult
+  {
+    CaptureStatus status{CaptureStatus::Ok};
+    int           sys_errno{0};
+
+    bool ok() const noexcept
+    {
+      return status == CaptureStatus::Ok;
+    }
+  };
+
   // Device lifecycle (open/configure/stream on/off)
 
   // Kernel ring setup (REQBUFS/QUERYBUF/EXPBUF/QBUF)
 
-  // Hot path: dequeue() returns a borrow token containing a FrameDescriptor
-  // Hot path: requeue(index) (or token destructor / explicit .requeue())
+  // Hot path: dequeue() returns a status + FrameDescriptor
+  // Hot path: requeue(index) returns a status
 
-  //   This class opens /dev/videoXX, negotiates capture format (NV12 @ 1280×720), allocates a
+  //   This class opens /dev/videoXX, negotiates capture format (NV12 @ 1280x720), allocates a
   //   driver-managed buffer queue, exports each slot as a DMA-BUF fd, queues all slots, and starts
   //   streaming.
 
@@ -30,12 +50,51 @@ namespace omniseer::vision
   class V4l2Capture
   {
   public:
+    class FrameLease
+    {
+    public:
+      FrameLease() = default;
+      ~FrameLease() noexcept;
+
+      FrameLease(const FrameLease&)            = delete;
+      FrameLease& operator=(const FrameLease&) = delete;
+
+      FrameLease(FrameLease&& other) noexcept;
+      FrameLease& operator=(FrameLease&& other) noexcept;
+
+      const FrameDescriptor& frame() const noexcept;
+      FrameDescriptor&       frame() noexcept;
+
+      CaptureResult release() noexcept;
+
+      explicit operator bool() const noexcept;
+
+    private:
+      friend class V4l2Capture;
+      FrameLease(V4l2Capture* capture, FrameDescriptor frame) noexcept;
+      void _reset() noexcept;
+
+      V4l2Capture*    _capture{nullptr};
+      FrameDescriptor _frame{};
+    };
+
     struct Config
     {
       std::string device;
       uint32_t    width, height;
       uint32_t    fourcc;       // NV12
       uint32_t    buffer_count; // capture ring size
+    };
+
+    struct DequeueLeaseResult
+    {
+      CaptureResult              capture{};
+      std::optional<FrameLease> lease{};
+
+      bool ok() const noexcept
+      {
+        return capture.ok() && lease.has_value();
+      }
     };
 
     explicit V4l2Capture(Config config);
@@ -55,12 +114,11 @@ namespace omniseer::vision
     // Hot path:
     // borrow token style
     // fills FrameDescriptor using cached per-slot info + per-frame metadata
-    // - returns false/empty on timeout
-    // sets out.v4l2_index so you can requeue
-    bool dequeue(FrameDescriptor& out);
-
-    // return slot to driver
-    void requeue(uint32_t index);
+    // - dequeue(): returns a status (NoFrame for non-blocking EAGAIN)
+    // - on Ok, out.v4l2_index identifies the slot to requeue
+    CaptureResult dequeue(FrameDescriptor& out) noexcept;
+    CaptureResult requeue(uint32_t index) noexcept;
+    DequeueLeaseResult dequeue_lease() noexcept;
 
   private:
     struct Slot

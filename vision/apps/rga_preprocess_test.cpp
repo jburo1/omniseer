@@ -18,6 +18,23 @@
 
 namespace
 {
+  const char* capture_status_name(omniseer::vision::CaptureStatus status)
+  {
+    using omniseer::vision::CaptureStatus;
+    switch (status)
+    {
+      case CaptureStatus::Ok:
+        return "ok";
+      case CaptureStatus::NoFrame:
+        return "no-frame";
+      case CaptureStatus::RetryableError:
+        return "retryable-error";
+      case CaptureStatus::FatalError:
+        return "fatal-error";
+    }
+    return "unknown";
+  }
+
   uint32_t env_u32(const char* key, uint32_t def)
   {
     const char* v = std::getenv(key);
@@ -130,16 +147,25 @@ TEST(RgaPreprocess, LetterboxPaddingIs114_RealV4l2Frame)
 
   omniseer::vision::FrameDescriptor src{};
   bool                              got = false;
+  omniseer::vision::CaptureResult   last{};
   for (int spins = 0; spins < 2000; ++spins)
   {
-    if (cap.dequeue(src))
+    last = cap.dequeue(src);
+    if (last.ok())
     {
       got = true;
       break;
     }
+    if (last.status != omniseer::vision::CaptureStatus::NoFrame &&
+        last.status != omniseer::vision::CaptureStatus::RetryableError)
+    {
+      FAIL() << "dequeue failed with status=" << capture_status_name(last.status)
+             << " errno=" << last.sys_errno << " (" << std::strerror(last.sys_errno) << ")";
+    }
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
-  ASSERT_TRUE(got) << "timeout waiting for frame (dequeue kept returning EAGAIN)";
+  ASSERT_TRUE(got) << "timeout waiting for frame (status=" << capture_status_name(last.status)
+                   << ", errno=" << last.sys_errno << ")";
 
   ASSERT_EQ(src.fmt, omniseer::vision::PixelFormat::NV12);
   ASSERT_EQ(src.num_planes, 2u);
@@ -159,8 +185,6 @@ TEST(RgaPreprocess, LetterboxPaddingIs114_RealV4l2Frame)
     omniseer::vision::DmaHeapAllocator alloc;
     omniseer::vision::AllocatedImageBuffer allocated =
         alloc.allocate(dst_w, dst_h, omniseer::vision::PixelFormat::RGB888);
-    if (!allocated.valid())
-      GTEST_SKIP() << "failed to allocate RGB DMA-BUF via dma-heap";
     dst      = allocated.buf;
     dst_alloc = std::move(allocated.alloc);
   }
@@ -177,10 +201,14 @@ TEST(RgaPreprocess, LetterboxPaddingIs114_RealV4l2Frame)
       .pad_value = 114,
   });
 
-  ASSERT_TRUE(stage.prefill(dst));
+  ASSERT_NO_THROW(stage.prefill(dst));
 
   omniseer::vision::LetterboxMeta meta{};
-  ASSERT_TRUE(stage.run(src, dst, &meta));
+  const auto preflight_result = stage.preflight(src, dst, &meta);
+  ASSERT_TRUE(preflight_result.ok());
+
+  const auto run_result = stage.run(src, dst);
+  ASSERT_TRUE(run_result.ok());
 
   EXPECT_EQ(meta.resized_w, 640);
   EXPECT_EQ(meta.resized_h, 360);
@@ -211,7 +239,10 @@ TEST(RgaPreprocess, LetterboxPaddingIs114_RealV4l2Frame)
 
   dmabuf_sync(dst.planes[0].fd, DMA_BUF_SYNC_END | DMA_BUF_SYNC_READ);
 
-  ASSERT_NO_THROW(cap.requeue(src.v4l2_index));
+  const omniseer::vision::CaptureResult rq = cap.requeue(src.v4l2_index);
+  ASSERT_TRUE(rq.ok()) << "requeue failed with status=" << capture_status_name(rq.status)
+                       << " errno=" << rq.sys_errno << " (" << std::strerror(rq.sys_errno)
+                       << ")";
   ASSERT_NO_THROW(cap.stop());
 }
 
@@ -238,7 +269,7 @@ TEST(RgaPreprocess, RejectsInvalidDescriptors)
     src.num_planes   = 2;
     src.planes[0].fd = 0;
     src.planes[1].fd = 0;
-    EXPECT_FALSE(stage.run(src, dst));
+    EXPECT_FALSE(stage.preflight(src, dst).ok());
   }
 
   {
@@ -248,7 +279,7 @@ TEST(RgaPreprocess, RejectsInvalidDescriptors)
     src.fmt          = omniseer::vision::PixelFormat::NV12;
     src.num_planes   = 1;
     src.planes[0].fd = 0;
-    EXPECT_FALSE(stage.run(src, dst));
+    EXPECT_FALSE(stage.preflight(src, dst).ok());
   }
 
   {
@@ -259,7 +290,7 @@ TEST(RgaPreprocess, RejectsInvalidDescriptors)
     src.num_planes   = 2;
     src.planes[0].fd = 0;
     src.planes[1].fd = 1;
-    EXPECT_FALSE(stage.run(src, dst));
+    EXPECT_FALSE(stage.preflight(src, dst).ok());
   }
 
   {
@@ -272,7 +303,7 @@ TEST(RgaPreprocess, RejectsInvalidDescriptors)
     src.planes[1].fd     = 0;
     src.planes[0].stride = 1280;
     src.planes[1].offset = static_cast<uint32_t>(1280u * 720u + 1u);
-    EXPECT_FALSE(stage.run(src, dst));
+    EXPECT_FALSE(stage.preflight(src, dst).ok());
   }
 
   {
@@ -288,7 +319,7 @@ TEST(RgaPreprocess, RejectsInvalidDescriptors)
 
     omniseer::vision::ImageBuffer bad_dst = dst;
     bad_dst.planes[0].stride              = 640 * 3 + 1;
-    EXPECT_FALSE(stage.run(src, bad_dst));
+    EXPECT_FALSE(stage.preflight(src, bad_dst).ok());
   }
 
   // No additional configuration error cases: RgaPreprocess is RGB888-only.

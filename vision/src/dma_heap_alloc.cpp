@@ -1,5 +1,7 @@
 #include "omniseer/vision/dma_heap_alloc.hpp"
 
+#include <cerrno>
+#include <cstring>
 #include <fcntl.h>
 #include <stdexcept>
 #include <string>
@@ -134,16 +136,17 @@ namespace omniseer::vision
     out.alloc.fmt    = fmt;
 
     if (width <= 0 || height <= 0)
-      return out;
+      throw std::invalid_argument("DmaHeapAllocator::allocate: width/height must be > 0");
     if (fmt != PixelFormat::RGB888 && fmt != PixelFormat::BGR888)
-      return out;
+      throw std::invalid_argument(
+          "DmaHeapAllocator::allocate: only RGB888/BGR888 are supported");
     if (fd_ < 0)
-      return out;
+      throw std::runtime_error("DmaHeapAllocator::allocate: allocator is not initialized");
 
     constexpr uint32_t kStrideAlignPixels = 16;
-    const uint32_t     bpp               = bytes_per_pixel(fmt);
+    const uint32_t     bpp                = bytes_per_pixel(fmt);
     if (bpp == 0)
-      return out;
+      throw std::runtime_error("DmaHeapAllocator::allocate: unsupported bytes-per-pixel");
 
     const uint32_t wstride_px   = align_up_u32(static_cast<uint32_t>(width), kStrideAlignPixels);
     const uint64_t stride_bytes = static_cast<uint64_t>(wstride_px) * static_cast<uint64_t>(bpp);
@@ -156,7 +159,11 @@ namespace omniseer::vision
     req.heap_flags = 0;
 
     if (::ioctl(fd_, DMA_HEAP_IOCTL_ALLOC, &req) != 0 || static_cast<int>(req.fd) < 0)
-      return out;
+    {
+      const int err = errno;
+      throw std::runtime_error("DmaHeapAllocator::allocate: DMA_HEAP_IOCTL_ALLOC failed: " +
+                               std::string(std::strerror(err)));
+    }
 
     out.alloc.dmabuf_fd    = static_cast<int>(req.fd);
     out.alloc.stride_bytes = static_cast<uint32_t>(stride_bytes);

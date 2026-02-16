@@ -14,6 +14,23 @@
 
 namespace
 {
+  const char* capture_status_name(omniseer::vision::CaptureStatus status)
+  {
+    using omniseer::vision::CaptureStatus;
+    switch (status)
+    {
+      case CaptureStatus::Ok:
+        return "ok";
+      case CaptureStatus::NoFrame:
+        return "no-frame";
+      case CaptureStatus::RetryableError:
+        return "retryable-error";
+      case CaptureStatus::FatalError:
+        return "fatal-error";
+    }
+    return "unknown";
+  }
+
   std::string readlink_fd(int fd)
   {
     std::string   path = "/proc/self/fd/" + std::to_string(fd);
@@ -71,16 +88,25 @@ TEST(V4l2Capture, NegotiatesAndStreamsDmabufNv12_1280x720)
   {
     omniseer::vision::FrameDescriptor f{};
     bool                              got = false;
+    omniseer::vision::CaptureResult   last{};
     for (int spins = 0; spins < 2000; ++spins)
     {
-      if (cap.dequeue(f))
+      last = cap.dequeue(f);
+      if (last.ok())
       {
         got = true;
         break;
       }
+      if (last.status != omniseer::vision::CaptureStatus::NoFrame &&
+          last.status != omniseer::vision::CaptureStatus::RetryableError)
+      {
+        FAIL() << "dequeue failed with status=" << capture_status_name(last.status)
+               << " errno=" << last.sys_errno << " (" << std::strerror(last.sys_errno) << ")";
+      }
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-    ASSERT_TRUE(got) << "timeout waiting for frame (dequeue kept returning EAGAIN)";
+    ASSERT_TRUE(got) << "timeout waiting for frame (status="
+                     << capture_status_name(last.status) << ", errno=" << last.sys_errno << ")";
 
     EXPECT_EQ(f.size.w, static_cast<int>(width));
     EXPECT_EQ(f.size.h, static_cast<int>(height));
@@ -113,7 +139,10 @@ TEST(V4l2Capture, NegotiatesAndStreamsDmabufNv12_1280x720)
     EXPECT_EQ(f.planes[0].fd, f.planes[1].fd);
     EXPECT_GT(f.planes[0].bytesused, 0u);
 
-    ASSERT_NO_THROW(cap.requeue(f.v4l2_index));
+    const omniseer::vision::CaptureResult rq = cap.requeue(f.v4l2_index);
+    ASSERT_TRUE(rq.ok()) << "requeue failed with status=" << capture_status_name(rq.status)
+                         << " errno=" << rq.sys_errno << " (" << std::strerror(rq.sys_errno)
+                         << ")";
   }
 
   ASSERT_NO_THROW(cap.stop());

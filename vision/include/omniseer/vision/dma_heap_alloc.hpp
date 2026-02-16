@@ -68,6 +68,7 @@ namespace omniseer::vision
     // Allocate a DMA-BUF suitable for RGA write / RKNN read and return an ImageBuffer
     // descriptor that points at it.
     // Supported formats: RGB888, BGR888.
+    // Throws on invalid arguments or allocation failures.
     AllocatedImageBuffer allocate(int width, int height, PixelFormat fmt);
 
   private:

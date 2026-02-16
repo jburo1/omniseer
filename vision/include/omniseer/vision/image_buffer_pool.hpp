@@ -3,6 +3,7 @@
 #include <atomic>
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <queue>
 
 #include "omniseer/vision/dma_heap_alloc.hpp"
@@ -18,6 +19,34 @@ namespace omniseer::vision
   // while an older one is still waiting, the older one is dropped back to free.
   class ImageBufferPool
   {
+  public:
+    class WriteLease
+    {
+    public:
+      WriteLease() = default;
+      ~WriteLease() noexcept;
+
+      WriteLease(const WriteLease&)            = delete;
+      WriteLease& operator=(const WriteLease&) = delete;
+
+      WriteLease(WriteLease&& other) noexcept;
+      WriteLease& operator=(WriteLease&& other) noexcept;
+
+      ImageBuffer& buffer() noexcept;
+      int          index() const noexcept;
+
+      void publish() noexcept;
+
+      explicit operator bool() const noexcept;
+
+    private:
+      friend class ImageBufferPool;
+      WriteLease(ImageBufferPool* pool, int idx) noexcept;
+      void _reset() noexcept;
+
+      ImageBufferPool* _pool{nullptr};
+      int              _idx{-1};
+    };
 
   private:
     // size of pool, N=5
@@ -42,20 +71,24 @@ namespace omniseer::vision
     std::atomic<int> ready_idx{-1};
 
   public:
+
     ImageBufferPool();
 
     // Allocate DMA-BUF memory for all pool slots.
     // This must be called before using the buffers with RGA/RKNN.
-    bool allocate_all(DmaHeapAllocator& allocator, int width, int height, PixelFormat fmt);
+    // Throws on invalid arguments or allocation failures.
+    void allocate_all(DmaHeapAllocator& allocator, int width, int height, PixelFormat fmt);
 
     // producer
     // RGA wants to write into the pool
     // returns false if no free buffers
     // OUTPUT idx: which buffer
     bool acquire_write(int& idx);
+    std::optional<WriteLease> acquire_write_lease() noexcept;
 
     // RGA has finishsed writing into the pool
     void publish_ready(int idx);
+    void cancel_write(int idx) noexcept;
 
     // consumer
     // RKNN acquires memory to read

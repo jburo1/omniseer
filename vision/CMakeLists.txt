@@ -124,6 +124,22 @@ if(VISION_BUILD_TESTS)
     target_compile_options(rga_preprocess_test PRIVATE ${RGA_TEST_CFLAGS_OTHER})
 
     add_test(NAME rga_preprocess_test COMMAND rga_preprocess_test)
+
+    add_executable(producer_pipeline_test
+      apps/producer_pipeline_test.cpp
+      src/dma_heap_alloc.cpp
+      src/image_buffer_pool.cpp
+      src/pipeline.cpp
+      src/rga_preprocess.cpp
+      src/spsc_ring.cpp
+      src/time_utils.cpp
+      src/v4l2_capture.cpp
+    )
+    target_include_directories(producer_pipeline_test PRIVATE include ${RGA_TEST_INCLUDE_DIRS})
+    target_link_libraries(producer_pipeline_test PRIVATE Threads::Threads GTest::gtest_main ${RGA_TEST_LIBRARIES})
+    target_compile_options(producer_pipeline_test PRIVATE ${RGA_TEST_CFLAGS_OTHER})
+
+    add_test(NAME producer_pipeline_test COMMAND producer_pipeline_test)
   else()
     message(STATUS "librga not found; rga_preprocess_test will not be built")
   endif()

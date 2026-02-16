@@ -7,6 +7,27 @@
 
 namespace omniseer::vision
 {
+  enum class PreprocessStatus : uint8_t
+  {
+    Ok,
+    InvalidConfig,
+    SourceSizeMismatch,
+    InvalidSourceDescriptor,
+    InvalidDestinationDescriptor,
+    ImcheckFailed,
+    ImprocessFailed,
+  };
+
+  struct PreprocessResult
+  {
+    PreprocessStatus status{PreprocessStatus::Ok};
+
+    bool ok() const noexcept
+    {
+      return status == PreprocessStatus::Ok;
+    }
+  };
+
   struct LetterboxMeta
   {
     float scale{1.0f};
@@ -32,17 +53,25 @@ namespace omniseer::vision
   class RgaPreprocess
   {
   public:
+    // Throws std::invalid_argument when src/dst geometry is invalid.
     explicit RgaPreprocess(RgaPreprocessConfig cfg = {});
 
     // Prefill the destination buffer once with the padding value so per-frame
     // work only overwrites the resized image rectangle.
-    bool prefill(ImageBuffer& dst_rgb) const;
+    // Throws on invalid destination descriptors or DMA-BUF CPU mapping failures.
+    void prefill(ImageBuffer& dst_rgb) const;
+
+    // One-time descriptor/config validation + RGA smoke pass.
+    // Expected usage: call once during startup before entering the frame loop.
+    PreprocessResult preflight(const FrameDescriptor& src_nv12, ImageBuffer& dst_rgb,
+                               LetterboxMeta* meta = nullptr) const noexcept;
 
     // Run the transformation
     // src_nv12: NV12 dmabuf frame from V4L2
     // dst_rgb : model input buffer
-    bool run(const FrameDescriptor& src_nv12, ImageBuffer& dst_rgb,
-             LetterboxMeta* meta = nullptr) const;
+    // Fast path: assumes preflight() has already validated descriptors.
+    PreprocessResult run(const FrameDescriptor& src_nv12, ImageBuffer& dst_rgb,
+                         LetterboxMeta* meta = nullptr) const noexcept;
 
   private:
     static LetterboxMeta _compute_letterbox(int src_w, int src_h, int dst_w, int dst_h);
