@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
     
     
       
@@ -611,29 +611,41 @@
   
 
 
-<p>“Frames come from V4L2. We allocate a ring of DMA-capable buffers and run the capture device in streaming mode with enqueue/dequeue semantics. Each dequeued frame is handed off downstream without memcpy by sharing the same underlying allocation (DMA-BUF) into the hardware preprocessor (RGA) and then into the NPU runtime. A lock-free/SPSC queue carries buffer handles across threads, and backpressure is enforced by queue depth so we don’t drop frames or blow latency. We measure end-to-end latency per frame with timestamps at capture, post-preprocess, and post-inference.”</p>
 <h1 id="vision-pipeline">Vision Pipeline<a class="headerlink" href="#vision-pipeline" title="Permanent link">&para;</a></h1>
-<p>This document describes a multi-stage, low-latency, zero copy-ish, real-time computer vision pipeline for the Rockchip RK3588 SoC. The pipeline transforms raw pixel data acquired by a camera into a format that is compatible with downstream neural network inference.</p>
+<p>This document describes the architecture and implementation details of my multi-stage, low-latency, zero copy-ish, real-time computer vision pipeline that transforms raw pixel data of a scene into object detections within it. These detections drive the robot's navigation and behavior policy.</p>
 <h1 id="todo-when-online-write-some-measurements-here-eg-inference-achieves-xfps-at-y-format-here-maybe-link-to-profiler-jsonl-dump-etcs">TODO when online, write some measurements here, e.g. inference achieves xfps at Y format here, maybe link to profiler JSONL dump etcs<a class="headerlink" href="#todo-when-online-write-some-measurements-here-eg-inference-achieves-xfps-at-y-format-here-maybe-link-to-profiler-jsonl-dump-etcs" title="Permanent link">&para;</a></h1>
 <h2 id="major-design-considerations">Major Design Considerations<a class="headerlink" href="#major-design-considerations" title="Permanent link">&para;</a></h2>
 <ul>
 <li>
-<p>Latency-first: pipeline is "latest-wins": consumer always takes freshest processed frame, older frames are dropped.</p>
+<p>Focus on latency, not throughput: pipeline is "latest-wins", only the freshest processed image frame is used, older frames are dropped.</p>
 </li>
 <li>
-<p>Accelerator-first: all suitable ops are offloaded to ISP/RGA/NPU instead of clogging CPU: ISP/V4L2 delivers 1280x720 NV12 formatted images at 60 FPS, RGA does image resizing/letterboxing/colorspace manipulatoin to ready model input, NPU does inference.</p>
+<p>Accelerator-first: all suitable ops are offloaded to accelerators on-board the SoC instead of clogging the CPU.</p>
 </li>
 <li>
-<p>Zero-copy-ish: direct memory access buffers (DMA-BUF) connect pipeline stages to avoid CPU memcpys of full frames.</p>
+<p>Zero-copy-ish: direct memory access buffers (DMA-BUF) connect pipeline stages to avoid CPU memcpys of full frames. Sharing these buffers between devices is done via a borrow token/ownership leasing strategy to avoid data races.</p>
 </li>
 <li>
-<p>Multithreaded: two threads operate the pipeline, a producer owns image capture and preprocess, and a consumer owns inference + postprocess.</p>
+<p>Observable: performance information emitted at every stage, including FPS, pipeline stage latency distributions.</p>
 </li>
 <li>
-<p>Observable: performance information emitted at every stage.</p>
+<p>Multithreaded: a producer thread performs image capture and preprocess, a consumer thread performs inference + postprocess, a telemetry thread performs intermediate data aggregation and export, and an orchestrator/application thread manages the lifecycle.</p>
 </li>
 </ul>
-<h2 id="stages">Stages<a class="headerlink" href="#stages" title="Permanent link">&para;</a></h2>
+<h2 id="glossary">Glossary<a class="headerlink" href="#glossary" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>ISP</strong>: Image Signal Processor in the camera path that produces sensor frames.</li>
+<li><strong>RGA</strong>: Raster Graphic Accelerator used for hardware image preprocess operations (resize, color conversion, letterbox) before inference.</li>
+<li><strong>NPU</strong>: Neural Processing Unit used to run neural network model inference.</li>
+<li><strong>RKNN</strong>: Rockchip Neural Network runtime/API that loads <code>.rknn</code> models and executes inference on the NPU.</li>
+<li><strong>V4L2</strong>: Video4Linux2, the Linux camera/video API for configuring image capture, streaming frames, and dequeue/requeue buffer slots.</li>
+<li><strong>V4L2 ring slot</strong>: One kernel-managed capture buffer in the camera queue; slots are dequeued, used, then requeued.</li>
+<li><strong>DMA-BUF</strong>: File-descriptor-backed shared memory buffer that lets V4L2, RGA, and NPU access the same image data without full CPU copies.</li>
+<li><strong>FrameDescriptor</strong>: Borrow-token style handle to a dequeued V4L2 slot (essentially a view consisting of fd + layout + metadata + slot index).</li>
+<li><strong>ImageBuffer</strong>: Application-owned DMA-BUF used as RGA output and RKNN input.</li>
+<li><strong>ImageBufferPool</strong>: Lock-free single-producer/single-consumer handoff structure for reusable <code>ImageBuffer</code> slots. Threshold between producer and consumer threads.</li>
+</ul>
+<h2 id="pipeline-stages">Pipeline Stages<a class="headerlink" href="#pipeline-stages" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
@@ -649,21 +661,21 @@
 <td>Capture (V4L2)</td>
 <td>Producer</td>
 <td><code>/dev/video*</code></td>
-<td><code>FrameDescriptor</code> (borrowed V4L2 slot)</td>
+<td><code>FrameDescriptor</code></td>
 <td><code>v4l2_capture.hpp/cpp</code></td>
 </tr>
 <tr>
 <td>Preprocess (RGA)</td>
 <td>Producer</td>
-<td><code>FrameDescriptor</code> (NV12 DMA-BUF)</td>
-<td><code>ImageBuffer</code> (RGB DMA-BUF)</td>
+<td><code>FrameDescriptor</code></td>
+<td><code>ImageBuffer</code></td>
 <td><code>rga_preprocess.hpp/cpp</code></td>
 </tr>
 <tr>
 <td>Buffering/Drop policy</td>
 <td>Cross-thread boundary</td>
-<td>Pool indices</td>
-<td>“latest wins” ready buffer index</td>
+<td><code>ImageBufferPool</code> indices</td>
+<td>“latest wins” <code>ImageBufferPool</code> index</td>
 <td><code>image_buffer_pool.hpp/cpp</code></td>
 </tr>
 <tr>
@@ -686,63 +698,69 @@
 <div class="highlight"><pre><span></span><code>                         photons
                             |
                             v
-                        +-------+
-                        |radxa 4k camera       |
-                        |       |
-                        +-------+
-                            |
-                            v
-
-  +----------------------------------------------+
-  | Camera / ISP -&gt; V4L2 N slot capture ring     |
-  |   exported as DMA-BUF fd per slot via EXPBUF |
-  +--------------------------+-------------------+
+                  +----------------------+
+                  | Camera Sensor + ISP  |
+                  | NV12 frames          |
+                  +----------+-----------+
                              |
-                             v  VIDIOC_DQBUF (nonblocking)
+                             v
+         +-------------------+--------------------+
+         | V4L2 ring (kernel-owned ring slots)    |
+         | N buffers, each exported as DMA-BUF fd |
+         +-------------------+--------------------+
+                             |
+                             | VIDIOC_DQBUF -&gt; FrameDescriptor (borrowed slot)
+                             v
+
+  ========================== Producer Thread ==========================
                   +----------+-----------+
                   | V4l2Capture          |
-                  | owns: slot DMA-BUF fds|
+                  | owns exported slot fds|
                   +----------+-----------+
                              |
-                             | FrameDescriptor (borrow slot i)
                              v
                   +----------+-------------------------+
-                  | RgaPreprocess (librga / im2d)      |
-                  | NV12 (DMA-BUF) -&gt; RGB888 (DMA-BUF) |
-                  | mode: Letterbox                   |
+                  | RgaPreprocess (RGA)               |
+                  | NV12 DMA-BUF -&gt; RGB DMA-BUF       |
+                  | resize + letterbox + color convert|
                   +----------+-------------------------+
                              |
                              | publish_ready(pool_idx)
                              v
-                  +----------+------------------+
-                  | ImageBufferPool (SPSC)      |
-                  | free_ring + ready_idx       |
-                  | policy: latest wins         |
-                  +----------+------------------+
-                             |
-                             v acquire_read(pool_idx)
-                  +----------+-----------+
-                  | RKNN Runner          |
-                  | reads RGB888 DMA-BUF |
-                  +----------+-----------+
-                             |
-                             v
-                    model outputs / detections
-                             |
-                             v
-                      ROS publish / logging
 
-  TODO: create a nicer visual than this simple ascii
+  ======================= Cross-thread Boundary =======================
+                  +----------+-------------------------------+
+                  | ImageBufferPool (SPSC)                   |
+                  | free_ring + ready_idx (latest-wins)      |
+                  | new publish can evict older ready buffer |
+                  +----------+-------------------------------+
+                             |
+                             | acquire_read(pool_idx)
+                             v
+
+  ========================== Consumer Thread ==========================
+                  +----------+-------------------------+
+                  | RKNN Runner (RKNN on NPU)         |
+                  | reads RGB ImageBuffer DMA-BUF     |
+                  +----------+-------------------------+
+                             |
+                             v
+            detections -&gt; postprocess -&gt; ROS publish / behavior
+
+Return paths:
+  - Producer: requeue(v4l2_index) -&gt; V4L2 ring (after RGA completes)
+  - Consumer: publish_release(pool_idx) -&gt; ImageBufferPool free_ring
+  - Producer + Consumer telemetry samples -&gt; Telemetry thread -&gt; JSONL/metrics sink
 </code></pre></div>
 <h2 id="interfaces">Interfaces<a class="headerlink" href="#interfaces" title="Permanent link">&para;</a></h2>
 <h3 id="core-data-types">Core data types<a class="headerlink" href="#core-data-types" title="Permanent link">&para;</a></h3>
 <p>Defined in <code>types.hpp</code>:</p>
 <ul>
-<li><code>FrameDescriptor</code>: content description of a V4L2 ring buffer slot (owned by the kernel driver). Handle for ISP output/RGA input.</li>
-<li><code>ImageBuffer</code>: DMA-BUF fd-backed buffer (owned by the application). Handle for RGA output/RKNN(NPU) input.</li>
+<li><code>FrameDescriptor</code>: content description of a V4L2 ring buffer slot (owned by the kernel driver). Handle for ISP output/RGA input. This is critically a view of the buffer, not the data itself.</li>
+<li><code>ImageBuffer</code>: DMA-BUF fd-backed buffer (owned by the application). Handle for RGA output/RKNN(NPU) input. This is also a view.</li>
 </ul>
 <h3 id="capture-v4l2capture">Capture: <code>V4l2Capture</code><a class="headerlink" href="#capture-v4l2capture" title="Permanent link">&para;</a></h3>
-<p>Manages the V4L2 (Video for Linux 2) streaming lifecycle and defines a borrow-token style API for accessing ISP output from downstram devices in a zero-copy fashion.</p>
+<p>Manages the V4L2 streaming lifecycle and defines a borrow-token style API for accessing ISP output from downstram devices in a zero-copy fashion.</p>
 <p>Defined/implemented in <code>v4l2_capture.hpp/cpp</code>.</p>
 <ul>
 <li><code>start()</code>:</li>
@@ -903,77 +921,7 @@
    - <code>pool.acquire_read(idx)</code> (nonblocking loop/condition variable)
    - <code>rknn.infer(pool.buffer_at(idx), ...)</code> (TODO)
    - <code>pool.publish_release(idx)</code></p>
-<p>Notes:
-- The pool policy intentionally drops frames if inference cannot keep up (“latest wins”).
-- <code>V4l2Capture::dequeue()</code> is currently nonblocking; production code should prefer <code>poll()</code>/<code>select()</code>
-  over spin-sleep loops.</p>
 <h2 id="failure-modes-handling">Failure Modes &amp; Handling<a class="headerlink" href="#failure-modes-handling" title="Permanent link">&para;</a></h2>
-<h3 id="capture">Capture<a class="headerlink" href="#capture" title="Permanent link">&para;</a></h3>
-<ul>
-<li><code>start()</code> throws:</li>
-<li>bad device path / permissions</li>
-<li>missing V4L2 streaming or MPLANE caps</li>
-<li>driver rejects requested size or format</li>
-<li>
-<p>ioctl failures (REQBUFS/QUERYBUF/EXPBUF/QBUF/STREAMON)</p>
-</li>
-<li>
-<p><code>dequeue()</code>:</p>
-</li>
-<li>returns <code>false</code> on <code>EAGAIN</code> (no frame ready)</li>
-<li>throws on other errors</li>
-</ul>
-<p>Recommended handling:
-- Treat <code>start()</code> failures as fatal at node startup (log and exit or retry with backoff).
-- Treat repeated dequeue <code>EAGAIN</code> as “no data”; use <code>poll()</code> for readiness.
-- Any early exit after a successful dequeue must still <code>requeue(v4l2_index)</code>.</p>
-<h3 id="preprocess-rga">Preprocess (RGA)<a class="headerlink" href="#preprocess-rga" title="Permanent link">&para;</a></h3>
-<p><code>run()</code> returns <code>false</code> if:
-- config is invalid (dst_w/dst_h &lt;= 0)
-- input descriptor is not NV12 or does not match the contiguous NV12 layout assumptions
-- destination buffer is invalid (fd/stride mismatch)
-- librga rejects parameters (<code>imcheck</code> failure) or processing fails (<code>improcess</code> &lt; 0)</p>
-<p>Recommended handling:
-- On preprocess failure, log once per N frames, drop the frame, and continue:
-  - <code>cap.requeue(v4l2_index)</code> must still happen.
-  - If the destination pool index was acquired, it should be returned to the pool (either via
-    a dedicated “abort” path or by publishing/releasing consistently).</p>
-<h3 id="buffer-pool">Buffer Pool<a class="headerlink" href="#buffer-pool" title="Permanent link">&para;</a></h3>
-<ul>
-<li>Producer <code>acquire_write()</code> can fail if the consumer has not released any buffers and the
-  producer stash is empty.</li>
-<li>“Latest wins” means drops are expected under load; this is not an error.</li>
-</ul>
-<p>Recommended handling:
-- If <code>acquire_write()</code> fails, drop the current frame (requeue immediately) to protect latency.</p>
-<h3 id="inference-rknn-todo">Inference (RKNN) — TODO<a class="headerlink" href="#inference-rknn-todo" title="Permanent link">&para;</a></h3>
-<p>Expected failure classes:
-- model load failures (missing <code>.rknn</code>, incompatible runtime)
-- tensor layout mismatch (RGB vs BGR, NCHW vs NHWC, quantization)
-- device/runtime errors during inference</p>
-<p>Recommended handling:
-- Fail fast at init if the model cannot be loaded.
-- If inference fails mid-run, drop that frame and continue (don’t stall capture).</p>
-<h2 id="hardwareplatform-assumptions">Hardware/Platform Assumptions<a class="headerlink" href="#hardwareplatform-assumptions" title="Permanent link">&para;</a></h2>
-<ul>
-<li>V4L2 node exposes NV12 in a single exported DMA-BUF allocation with UV data located at
-  <code>stride_bytes * height</code>. This is validated in <code>RgaPreprocess</code> and in the V4L2/RGA tests.</li>
-<li>librga (im2d) is available and functional (<code>/dev/rga</code> present on target).</li>
-<li>libdrm is available and accessible for dumb-buffer DMA-BUF allocation.</li>
-</ul>
-<h2 id="current-repo-status-as-of-2026-01-27">Current Repo Status (as of 2026-01-27)<a class="headerlink" href="#current-repo-status-as-of-2026-01-27" title="Permanent link">&para;</a></h2>
-<ul>
-<li>Implemented and tested (hardware-dependent tests may skip at runtime):</li>
-<li><code>V4l2Capture</code></li>
-<li><code>DrmDmabufAllocator</code></li>
-<li><code>ImageBufferPool</code> + <code>SpscRing</code></li>
-<li><code>RgaPreprocess</code> (NV12 -&gt; RGB888, letterbox)</li>
-<li>Not implemented yet:</li>
-<li>Pipeline orchestration (<code>vision/src/pipeline.cpp</code>)</li>
-<li>Profiling implementation (<code>vision/src/profiler.cpp</code>)</li>
-<li>RKNN runner (<code>vision/src/rknn_runner.cpp</code>)</li>
-<li>A real <code>vision_harness</code> executable (currently a stub placeholder)</li>
-</ul>
 
 
 
@@ -994,7 +942,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="February 12, 2026 19:33:10 UTC">February 12, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 1, 2026 19:22:04 UTC">March 1, 2026</span>
   </span>
 
     

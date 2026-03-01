@@ -1,0 +1,1008 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+    
+    
+      
+        <title>Producer pipeline: camera → RGA → output pool (thread boundary) - omniseer</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#producer-pipeline-camera-rga-output-pool-thread-boundary" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="omniseer" class="md-header__button md-logo" aria-label="omniseer" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            omniseer
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Producer pipeline: camera → RGA → output pool (thread boundary)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/jburo1/omniseer" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="omniseer" class="md-nav__button md-logo" aria-label="omniseer" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    omniseer
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/jburo1/omniseer" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Software
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Software
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../build_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Build pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ros_packages/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ROS packages
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../code_documentation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vision_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hardware
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Hardware
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/circuit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Circuit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/wiring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Wiring guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#glossary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Glossary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#0-one-time-setup-build-the-rings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0) One-time setup (build the rings)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="0) One-time setup (build the rings)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#camera-side-kernel-owned-ring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Camera side (kernel-owned ring)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#output-side-app-owned-pool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output side (app-owned pool)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-dequeue-a-camera-frame-borrow-a-kernel-ring-slot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1) Dequeue a camera frame (borrow a kernel ring slot)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-acquire-an-output-buffer-lease-exclusive-write-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2) Acquire an output buffer (lease exclusive write access)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-synchronization-coherency-dma-buf-physics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3) Synchronization / coherency (DMA-BUF “physics”)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-rga-preprocess-the-data-movement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4) RGA preprocess (the data movement)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-publish-commit-the-write-lease-cross-the-thread-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5) Publish (commit the write lease; cross the thread boundary)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-requeue-the-camera-slot-return-the-borrowed-ring-slot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6) Requeue the camera slot (return the borrowed ring slot)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-consumer-side-other-side-of-the-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7) Consumer side (other side of the boundary)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary-timeline-one-frame" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary timeline (one frame)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#compact-diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compact diagram
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="producer-pipeline-camera-rga-output-pool-thread-boundary">Producer pipeline: camera → RGA → output pool (thread boundary)<a class="headerlink" href="#producer-pipeline-camera-rga-output-pool-thread-boundary" title="Permanent link">&para;</a></h1>
+<p>This document describes the <strong>per-frame hot path</strong> through the producer side of the vision pipeline:</p>
+<p><strong>V4L2 camera capture (kernel ring)</strong> → <strong>DMA-BUF-backed source frame</strong> → <strong>RGA preprocess (src→dst blit/convert/resize/letterbox)</strong> → <strong>publish into output buffer pool</strong> (handoff to consumer).</p>
+<p>The core design pattern is <strong>scope-bound capability tokens</strong> (RAII) enforcing protocols:</p>
+<ul>
+<li><strong>Borrow (camera ring slot):</strong> <code>DQBUF</code> must pair with exactly one <code>QBUF</code>.</li>
+<li><strong>Lease (pool slot):</strong> <code>acquire_write</code> must end in either <code>publish()</code> (commit) or <code>cancel</code> (rollback).</li>
+<li><strong>Own (fd lifetime):</strong> <code>DmabufAllocation</code> owns/close()s the DMA-BUF fd.</li>
+</ul>
+<hr />
+<h2 id="glossary">Glossary<a class="headerlink" href="#glossary" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>DMA-BUF fd</strong>: a file descriptor that refers to a shareable memory allocation (potentially used by multiple devices).</li>
+<li><strong>FrameDescriptor</strong>: <em>non-owning metadata view</em> over the camera DMA-BUF (format, strides, offsets, dims, timestamp).</li>
+<li><strong>ImageBuffer</strong>: <em>non-owning metadata view</em> over an output DMA-BUF (format, strides, dims).</li>
+<li><strong>FrameLease</strong>: a move-only token representing “I currently hold a dequeued camera ring slot and must requeue it.”</li>
+<li><strong>WriteLease</strong>: a move-only token representing “I have exclusive write access to one output pool slot until I publish or cancel.”</li>
+</ul>
+<hr />
+<h2 id="0-one-time-setup-build-the-rings">0) One-time setup (build the rings)<a class="headerlink" href="#0-one-time-setup-build-the-rings" title="Permanent link">&para;</a></h2>
+<h3 id="camera-side-kernel-owned-ring">Camera side (kernel-owned ring)<a class="headerlink" href="#camera-side-kernel-owned-ring" title="Permanent link">&para;</a></h3>
+<p>Typical V4L2 streaming setup (conceptual):</p>
+<ol>
+<li><code>open()</code> device</li>
+<li><code>VIDIOC_S_FMT</code> (e.g., NV12)</li>
+<li><code>VIDIOC_REQBUFS</code> (N capture slots)</li>
+<li>For each slot:</li>
+<li><code>VIDIOC_QUERYBUF</code> (get size/index)</li>
+<li>optionally <code>VIDIOC_EXPBUF</code> (export a DMA-BUF fd for that slot)</li>
+<li><code>VIDIOC_QBUF</code> (enqueue for capture)</li>
+<li><code>VIDIOC_STREAMON</code></li>
+</ol>
+<p>Result: the kernel owns a ring of <strong>N capture slots</strong>. Your app temporarily borrows slots between <code>DQBUF</code> and <code>QBUF</code>.</p>
+<h3 id="output-side-app-owned-pool">Output side (app-owned pool)<a class="headerlink" href="#output-side-app-owned-pool" title="Permanent link">&para;</a></h3>
+<p>Allocate <strong>M output buffers</strong> up front (DMA-HEAP → DMA-BUF fds), store them in <code>ImageBufferPool</code>.</p>
+<p>Each pool slot is managed by a small state machine (conceptual):</p>
+<ul>
+<li><code>Free</code> → (producer acquire) → <code>Writing</code> → (publish) → <code>Published</code> → (consumer acquire) → <code>Reading</code> → (release) → <code>Free</code></li>
+</ul>
+<p>This pool is the <strong>thread boundary</strong> between producer and consumer.</p>
+<hr />
+<h2 id="1-dequeue-a-camera-frame-borrow-a-kernel-ring-slot">1) Dequeue a camera frame (borrow a kernel ring slot)<a class="headerlink" href="#1-dequeue-a-camera-frame-borrow-a-kernel-ring-slot" title="Permanent link">&para;</a></h2>
+<p>Producer calls <code>dequeue_lease()</code> which performs <code>VIDIOC_DQBUF</code> internally.</p>
+<p>Possible outcomes:</p>
+<ul>
+<li><strong>EAGAIN / no frame ready</strong> → <code>NoFrame</code> (idle tick)</li>
+<li><strong>Success</strong> → you receive a <code>v4l2_buffer</code> with:</li>
+<li><code>index</code> (which ring slot)</li>
+<li>timestamp/sequence metadata</li>
+<li>bytesused/per-plane info (driver-dependent)</li>
+</ul>
+<p>On success, you create:</p>
+<ul>
+<li><code>FrameDescriptor</code> (metadata view: fd + layout + dims + timestamp)</li>
+<li><code>FrameLease</code> (borrow token: must requeue this <code>index</code> exactly once)</li>
+</ul>
+<p><strong>Invariant:</strong> Every successful <code>DQBUF</code> must be paired with exactly one <code>QBUF</code> of the same <code>index</code>.</p>
+<hr />
+<h2 id="2-acquire-an-output-buffer-lease-exclusive-write-access">2) Acquire an output buffer (lease exclusive write access)<a class="headerlink" href="#2-acquire-an-output-buffer-lease-exclusive-write-access" title="Permanent link">&para;</a></h2>
+<p>Producer calls <code>acquire_write_lease()</code> on <code>ImageBufferPool</code>.</p>
+<p>On success you receive a <code>WriteLease</code> token with:</p>
+<ul>
+<li>destination <code>ImageBuffer</code> view (fd + layout + dims)</li>
+<li>exclusive right to write into that pool slot</li>
+</ul>
+<p>If the producer exits early (return/error/throw), <code>WriteLease</code> destructor must roll back:</p>
+<ul>
+<li>if <code>publish()</code> was not called → <code>cancel_write()</code> → slot returns to <code>Free</code></li>
+</ul>
+<p><strong>Invariant:</strong> Every successful write-acquire ends in exactly one of:
+- <code>publish()</code> (commit)
+- auto-cancel on destructor (rollback)</p>
+<hr />
+<h2 id="3-synchronization-coherency-dma-buf-physics">3) Synchronization / coherency (DMA-BUF “physics”)<a class="headerlink" href="#3-synchronization-coherency-dma-buf-physics" title="Permanent link">&para;</a></h2>
+<p>Even without CPU touching pixels, the devices must observe correct ordering:</p>
+<ul>
+<li>RGA must not read <strong>src</strong> before the camera finished writing it.</li>
+<li>Consumer must not read <strong>dst</strong> before RGA finished writing it.</li>
+</ul>
+<p>Two broad approaches:</p>
+<ul>
+<li><strong>Implicit sync</strong> (fences handled by drivers)</li>
+<li><strong>Explicit sync</strong> via <code>DMA_BUF_IOCTL_SYNC</code> (start/end for read/write)</li>
+</ul>
+<p>Whether explicit sync is required depends on the exact driver stack and memory path, but this stage is where you put those boundaries if needed.</p>
+<hr />
+<h2 id="4-rga-preprocess-the-data-movement">4) RGA preprocess (the data movement)<a class="headerlink" href="#4-rga-preprocess-the-data-movement" title="Permanent link">&para;</a></h2>
+<p>Inputs:</p>
+<ul>
+<li><strong>src</strong>: <code>FrameDescriptor</code> describing camera DMA-BUF (often NV12, multi-plane)</li>
+<li><strong>dst</strong>: <code>ImageBuffer</code> describing pool DMA-BUF (often RGB/BGR, model-ready)</li>
+</ul>
+<p>RGA performs a hardware blit with operations like:</p>
+<ul>
+<li>colorspace conversion (NV12 → RGB/BGR)</li>
+<li>resize / scale</li>
+<li>crop</li>
+<li>letterbox/padding (fit aspect ratio into model input size)</li>
+<li>rotation (if needed)</li>
+</ul>
+<p>Conceptually:</p>
+<div class="highlight"><pre><span></span><code>RGA:
+  src(dmabuf fd + offsets/strides + WxH + fmt)
+    --&gt; dst(dmabuf fd + offsets/strides + W&#39;H&#39; + fmt)
+</code></pre></div>
+<p>At the end of this stage, the transformed pixels physically reside in the <strong>destination pool slot</strong>.</p>
+<hr />
+<h2 id="5-publish-commit-the-write-lease-cross-the-thread-boundary">5) Publish (commit the write lease; cross the thread boundary)<a class="headerlink" href="#5-publish-commit-the-write-lease-cross-the-thread-boundary" title="Permanent link">&para;</a></h2>
+<p>If RGA succeeds, the producer calls <code>dst_lease.publish()</code>.</p>
+<p>A good <code>publish()</code> typically does:</p>
+<ol>
+<li>Attach/finalize per-frame metadata:</li>
+<li>timestamp/sequence</li>
+<li>original dims and model dims</li>
+<li>letterbox transform parameters (scale + pad offsets), if used</li>
+<li>Transition state: <code>Writing → Published</code></li>
+<li>Notify consumer (optional): condvar/eventfd or “latest index” atomic</li>
+</ol>
+<p><strong>This is the exact moment the buffer becomes visible to the consumer.</strong></p>
+<p>After publish:
+- producer must treat the slot as immutable
+- consumer is allowed to acquire it for reading</p>
+<p>If RGA fails:
+- do <strong>not</strong> publish
+- <code>WriteLease</code> destructor auto-cancels → slot returns to <code>Free</code></p>
+<hr />
+<h2 id="6-requeue-the-camera-slot-return-the-borrowed-ring-slot">6) Requeue the camera slot (return the borrowed ring slot)<a class="headerlink" href="#6-requeue-the-camera-slot-return-the-borrowed-ring-slot" title="Permanent link">&para;</a></h2>
+<p>After RGA is done reading the camera buffer, the producer must <code>VIDIOC_QBUF</code> the same ring <code>index</code>.</p>
+<p>With RAII:
+- <code>FrameLease</code> destructor calls <code>release()</code> which performs <code>QBUF</code></p>
+<p>This prevents ring starvation even on early returns.</p>
+<blockquote>
+<p>Note: if you want to <em>surface</em> <code>QBUF</code> failures into a return status, you must ensure cleanup runs <strong>before</strong> returning from the function (e.g., by using an inner scope). Destructors can’t reliably “return a status” after the caller has already received the function’s return value.</p>
+</blockquote>
+<hr />
+<h2 id="7-consumer-side-other-side-of-the-boundary">7) Consumer side (other side of the boundary)<a class="headerlink" href="#7-consumer-side-other-side-of-the-boundary" title="Permanent link">&para;</a></h2>
+<p>Consumer obtains a read capability (conceptually a <code>ReadLease</code>) from the pool:</p>
+<ul>
+<li><code>acquire_read()</code> / <code>acquire_latest()</code> → get <code>ImageBuffer</code> view over the published DMA-BUF</li>
+<li>run inference / postprocess</li>
+<li>release read lease → slot transitions back to <code>Free</code> (or your chosen recycling policy)</li>
+</ul>
+<p><strong>Consumer must treat published buffers as read-only.</strong></p>
+<hr />
+<h2 id="summary-timeline-one-frame">Summary timeline (one frame)<a class="headerlink" href="#summary-timeline-one-frame" title="Permanent link">&para;</a></h2>
+<ol>
+<li><code>DQBUF</code> → <code>FrameLease(src)</code></li>
+<li><code>acquire_write_lease()</code> → <code>WriteLease(dst)</code></li>
+<li>(optional) DMA-BUF sync start</li>
+<li>RGA preprocess: <code>src → dst</code></li>
+<li>(optional) DMA-BUF sync end</li>
+<li><code>dst.publish()</code> ✅ <strong>thread boundary crossed here</strong></li>
+<li><code>FrameLease</code> releases → <code>QBUF</code></li>
+</ol>
+<hr />
+<h2 id="compact-diagram">Compact diagram<a class="headerlink" href="#compact-diagram" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>Producer thread:
+
+  [V4L2 device] --DQBUF--&gt; FrameLease{FrameDescriptor -&gt; src dmabuf}
+        |
+        v
+  acquire_write_lease()
+        |
+        v
+  WriteLease{ImageBuffer -&gt; dst dmabuf} --RGA--&gt; (dst filled)
+        |
+        v
+     publish()  ✅ boundary
+        |
+        v
+  FrameLease dtor -&gt; QBUF  (return ring slot)
+
+Consumer thread:
+
+  acquire_read() -&gt; ReadLease{ImageBuffer -&gt; dst dmabuf} -&gt; infer -&gt; release
+</code></pre></div>
+
+
+
+
+
+
+
+  
+    
+  
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Last update">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 1, 2026 19:22:04 UTC">March 1, 2026</span>
+  </span>
+
+    
+    
+    
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.instant"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

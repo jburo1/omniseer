@@ -1,0 +1,1426 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+    
+    
+      
+        <title>Vision Telemetry and Profiling Spec (v1) - omniseer</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#vision-telemetry-and-profiling-spec-v1" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="omniseer" class="md-header__button md-logo" aria-label="omniseer" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            omniseer
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Vision Telemetry and Profiling Spec (v1)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/jburo1/omniseer" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="omniseer" class="md-nav__button md-logo" aria-label="omniseer" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    omniseer
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/jburo1/omniseer" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Software
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Software
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../build_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Build pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ros_packages/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ROS packages
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../code_documentation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vision_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hardware
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Hardware
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/circuit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Circuit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/wiring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Wiring guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Status
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-purpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1) Purpose
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-design-goals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2) Design Goals
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-non-goals-v1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3) Non-Goals (v1)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-threading-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4) Threading Model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5) Architecture
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5) Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-interface-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 Interface boundary
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-nullability-and-activation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 Nullability and activation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-counters-vs-samples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 Counters vs samples
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-hot-path-sample-representation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 Hot-path sample representation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#55-timing-instrumentation-style" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.5 Timing instrumentation style
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-queueing-and-backpressure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6) Queueing and Backpressure
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6) Queueing and Backpressure">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-queue-topology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 Queue topology
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-queue-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 Queue behavior
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-sink-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 Sink behavior
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#64-capacity-sizing-rule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.4 Capacity sizing rule
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-failure-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7) Failure Policy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-producer-emission-rules-v1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8) Producer Emission Rules (v1)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8) Producer Emission Rules (v1)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81-tick-inclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 Tick inclusion
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#82-identifiers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.2 Identifiers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#83-stage-partitioning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3 Stage partitioning
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#84-early-return-semantics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.4 Early-return semantics
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-clock-and-time-semantics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9) Clock and Time Semantics
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-data-contract-jsonl-v1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10) Data Contract (JSONL v1)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-interface-and-ownership" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11) Interface and Ownership
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="11) Interface and Ownership">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#111-ownership" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.1 Ownership
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#112-lifetime" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.2 Lifetime
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#113-no-runtime-toggling-v1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.3 No runtime toggling (v1)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-flush-and-shutdown-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12) Flush and Shutdown Policy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-performance-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13) Performance Requirements
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-minimal-test-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14) Minimal Test Requirements
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15-suggested-implementation-slices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15) Suggested Implementation Slices
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#16-open-questions-for-v2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16) Open Questions for v2+
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="vision-telemetry-and-profiling-spec-v1">Vision Telemetry and Profiling Spec (v1)<a class="headerlink" href="#vision-telemetry-and-profiling-spec-v1" title="Permanent link">&para;</a></h1>
+<h2 id="status">Status<a class="headerlink" href="#status" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Owner: vision pipeline implementation</li>
+<li>Version: <code>v1</code></li>
+<li>Scope: producer + consumer runtime telemetry, emitted asynchronously</li>
+<li>Last updated: 2026-02-17</li>
+</ul>
+<h2 id="1-purpose">1) Purpose<a class="headerlink" href="#1-purpose" title="Permanent link">&para;</a></h2>
+<p>Define a low-coupling, low-overhead telemetry architecture for the vision pipeline that:</p>
+<ul>
+<li>keeps producer and consumer hot paths non-blocking</li>
+<li>keeps profiling optional at runtime</li>
+<li>emits structured stage timing only when telemetry is active</li>
+<li>supports real-time and offline latency/jitter analysis</li>
+<li>preserves detector-stage latency/FPS under load</li>
+<li>avoids rework when consumer telemetry is added</li>
+</ul>
+<h2 id="2-design-goals">2) Design Goals<a class="headerlink" href="#2-design-goals" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>Optional profiling</strong>:</li>
+<li>if telemetry is disabled, no stage timing work is done</li>
+<li>
+<p>pipelines still keep cheap status counters</p>
+</li>
+<li>
+<p><strong>No data-plane stalls</strong>:</p>
+</li>
+<li>producer and consumer must never block on telemetry</li>
+<li>queue overflow drops telemetry samples, never frames
+b</li>
+<li><strong>Loose coupling</strong>:</li>
+<li>
+<p>pipelines depend on a small telemetry interface, not sink details</p>
+</li>
+<li>
+<p><strong>Cross-thread safety</strong>:</p>
+</li>
+<li>
+<p>producer and consumer each publish to telemetry thread through bounded queues</p>
+</li>
+<li>
+<p><strong>ROS2-friendly timestamps</strong>:</p>
+</li>
+<li>monotonic durations for measurement correctness</li>
+<li>
+<p>realtime timestamp for cross-system correlation</p>
+</li>
+<li>
+<p><strong>Low and predictable overhead</strong>:</p>
+</li>
+<li>fixed-shape samples on hot path (no <code>std::optional</code>, no formatting)</li>
+<li>one top-level timing gate per tick, then scoped stage timing inside that branch</li>
+</ol>
+<h2 id="3-non-goals-v1">3) Non-Goals (v1)<a class="headerlink" href="#3-non-goals-v1" title="Permanent link">&para;</a></h2>
+<ul>
+<li>perfect reliability of telemetry delivery</li>
+<li>dynamic attach/detach of telemetry while running</li>
+<li>profiling of preflight/startup path</li>
+<li>multi-process telemetry transport</li>
+<li>high-cost online analytics UI inside data-plane threads</li>
+</ul>
+<h2 id="4-threading-model">4) Threading Model<a class="headerlink" href="#4-threading-model" title="Permanent link">&para;</a></h2>
+<p>The system has up to four threads:</p>
+<ol>
+<li><strong>Orchestrator/App thread</strong></li>
+<li>
+<p>owns lifecycle of telemetry hub and pipeline threads</p>
+</li>
+<li>
+<p><strong>Producer thread</strong></p>
+</li>
+<li>runs producer pipeline tick loop</li>
+<li>
+<p>emits producer telemetry samples asynchronously</p>
+</li>
+<li>
+<p><strong>Consumer thread</strong></p>
+</li>
+<li>runs consumer pipeline tick loop</li>
+<li>
+<p>emits consumer telemetry samples asynchronously</p>
+</li>
+<li>
+<p><strong>Telemetry thread</strong></p>
+</li>
+<li>drains producer and consumer queues</li>
+<li>writes JSONL sink</li>
+<li>computes optional rolling stats snapshots</li>
+</ol>
+<h2 id="5-architecture">5) Architecture<a class="headerlink" href="#5-architecture" title="Permanent link">&para;</a></h2>
+<h3 id="51-interface-boundary">5.1 Interface boundary<a class="headerlink" href="#51-interface-boundary" title="Permanent link">&para;</a></h3>
+<p>Pipelines depend on one minimal interface (name can be adjusted):</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ITelemetry</span><span class="w"> </span><span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+<span class="w">  </span><span class="k">virtual</span><span class="w"> </span><span class="o">~</span><span class="n">ITelemetry</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">default</span><span class="p">;</span>
+
+<span class="w">  </span><span class="c1">// True only when stage timing + sample emission are active.</span>
+<span class="w">  </span><span class="k">virtual</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="nf">timing_enabled</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">noexcept</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="w">  </span><span class="c1">// Always non-blocking, never throws, best-effort.</span>
+<span class="w">  </span><span class="k">virtual</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">emit_producer</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">ProducerSample</span><span class="o">&amp;</span><span class="w"> </span><span class="n">sample</span><span class="p">)</span><span class="w"> </span><span class="k">noexcept</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">  </span><span class="k">virtual</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">emit_consumer</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">ConsumerSample</span><span class="o">&amp;</span><span class="w"> </span><span class="n">sample</span><span class="p">)</span><span class="w"> </span><span class="k">noexcept</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">};</span>
+</code></pre></div>
+<h3 id="52-nullability-and-activation">5.2 Nullability and activation<a class="headerlink" href="#52-nullability-and-activation" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>ITelemetry* telemetry == nullptr</code> means telemetry integration is absent.</li>
+<li><code>telemetry != nullptr &amp;&amp; telemetry-&gt;timing_enabled() == true</code> means stage timing + sample emission are active.</li>
+<li>Counters do not require active timing.</li>
+</ul>
+<h3 id="53-counters-vs-samples">5.3 Counters vs samples<a class="headerlink" href="#53-counters-vs-samples" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Always-on cheap counters</strong>:</li>
+<li>per-pipeline status counters (e.g., produced, no-frame, preprocess-error)</li>
+<li>
+<p>no formatting, no allocations, no file writes</p>
+</li>
+<li>
+<p><strong>Conditional timing + samples</strong>:</p>
+</li>
+<li>only when <code>timing_enabled() == true</code></li>
+<li>stage duration measurement + sample object creation + queue push</li>
+</ol>
+<h3 id="54-hot-path-sample-representation">5.4 Hot-path sample representation<a class="headerlink" href="#54-hot-path-sample-representation" title="Permanent link">&para;</a></h3>
+<p>For producer/consumer in-memory sample structs:</p>
+<ul>
+<li>use fixed-width fields (<code>uint64_t</code> durations default to <code>0</code>)</li>
+<li>include <code>stage_mask</code> bitset indicating which stages executed</li>
+<li>avoid <code>std::optional</code> and avoid formatting work in data-plane threads</li>
+<li>JSON conversion (<code>stage_mask</code> -&gt; <code>null</code> for missing stage) happens only in telemetry thread</li>
+</ul>
+<h3 id="55-timing-instrumentation-style">5.5 Timing instrumentation style<a class="headerlink" href="#55-timing-instrumentation-style" title="Permanent link">&para;</a></h3>
+<p>Implementation pattern for each pipeline tick:</p>
+<ol>
+<li>Evaluate <code>timing_on = (telemetry != nullptr &amp;&amp; telemetry-&gt;timing_enabled())</code> once at tick start.</li>
+<li>If <code>timing_on == false</code>, run pipeline logic with counters only.</li>
+<li>If <code>timing_on == true</code>, use scoped RAII stage timers that write directly into sample fields.</li>
+</ol>
+<p>This keeps instrumentation readable while preserving near-zero disabled-path overhead.</p>
+<h2 id="6-queueing-and-backpressure">6) Queueing and Backpressure<a class="headerlink" href="#6-queueing-and-backpressure" title="Permanent link">&para;</a></h2>
+<h3 id="61-queue-topology">6.1 Queue topology<a class="headerlink" href="#61-queue-topology" title="Permanent link">&para;</a></h3>
+<ul>
+<li>producer -&gt; telemetry thread: one bounded SPSC queue</li>
+<li>consumer -&gt; telemetry thread: one bounded SPSC queue</li>
+</ul>
+<p>This avoids MPSC complexity and aligns with current lock-free SPSC primitives.</p>
+<h3 id="62-queue-behavior">6.2 Queue behavior<a class="headerlink" href="#62-queue-behavior" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>try_push</code> only; never block producer/consumer</li>
+<li>on full queue: drop sample and increment a drop counter</li>
+<li>no retries on hot path</li>
+</ul>
+<h3 id="63-sink-behavior">6.3 Sink behavior<a class="headerlink" href="#63-sink-behavior" title="Permanent link">&para;</a></h3>
+<ul>
+<li>telemetry thread batches writes to sink (JSONL)</li>
+<li>flush by size and/or time interval</li>
+<li>sink I/O must not run on producer/consumer threads</li>
+</ul>
+<h3 id="64-capacity-sizing-rule">6.4 Capacity sizing rule<a class="headerlink" href="#64-capacity-sizing-rule" title="Permanent link">&para;</a></h3>
+<ul>
+<li>size each SPSC queue from worst burst and sink pause budget:</li>
+<li><code>capacity &gt;= worst_burst_rate_hz * max_sink_pause_s</code></li>
+<li>default v1 starting point: <code>512</code> per queue unless measured data suggests otherwise</li>
+</ul>
+<h2 id="7-failure-policy">7) Failure Policy<a class="headerlink" href="#7-failure-policy" title="Permanent link">&para;</a></h2>
+<p>v1 uses <strong>fail-open</strong> policy:</p>
+<ul>
+<li>telemetry/sink errors must not stop producer/consumer pipeline execution</li>
+<li>on sink fault, telemetry hub marks itself faulted, increments sink-error counter, and disables timing emission</li>
+<li>pipeline keeps running with cheap counters</li>
+</ul>
+<p>Rationale: pipeline availability is prioritized over telemetry completeness.</p>
+<h2 id="8-producer-emission-rules-v1">8) Producer Emission Rules (v1)<a class="headerlink" href="#8-producer-emission-rules-v1" title="Permanent link">&para;</a></h2>
+<h3 id="81-tick-inclusion">8.1 Tick inclusion<a class="headerlink" href="#81-tick-inclusion" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Emit samples for:</li>
+<li><code>Produced</code></li>
+<li><code>NoWritableBuffer</code></li>
+<li><code>CaptureRetryableError</code></li>
+<li><code>CaptureFatalError</code></li>
+<li><code>PreprocessError</code></li>
+<li>Do <strong>not</strong> emit per-tick <code>NoFrame</code> sample by default (counter-only), to avoid high-rate log noise.</li>
+</ul>
+<h3 id="82-identifiers">8.2 Identifiers<a class="headerlink" href="#82-identifiers" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>frame_id</code>: producer-assigned monotonic ID at <code>publish_ready</code>, stored in buffer metadata, and propagated into consumer telemetry</li>
+<li><code>tick_id</code>: always present (monotonic counter in producer thread)</li>
+<li><code>sequence</code>: present when available from captured frame</li>
+</ul>
+<p><code>frame_id</code> is the cross-thread correlation key for end-to-end latency analysis.</p>
+<h3 id="83-stage-partitioning">8.3 Stage partitioning<a class="headerlink" href="#83-stage-partitioning" title="Permanent link">&para;</a></h3>
+<p>Producer stage durations are partitioned as:</p>
+<ol>
+<li><code>dequeue_ns</code></li>
+<li><code>acquire_write_ns</code></li>
+<li><code>preprocess_ns</code></li>
+<li><code>publish_ready_ns</code></li>
+<li><code>requeue_ns</code></li>
+<li><code>total_ns</code></li>
+</ol>
+<p>If a stage did not execute due to early return, stage duration is <code>null</code> in JSON.</p>
+<h3 id="84-early-return-semantics">8.4 Early-return semantics<a class="headerlink" href="#84-early-return-semantics" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Early returns are normal outcomes, not process-fatal.</li>
+<li>Sample contains status fields that explain path taken.</li>
+</ul>
+<h2 id="9-clock-and-time-semantics">9) Clock and Time Semantics<a class="headerlink" href="#9-clock-and-time-semantics" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Stage durations:</li>
+<li>measured from monotonic clock</li>
+<li>
+<p>stored as nanoseconds</p>
+</li>
+<li>
+<p>Event timestamp:</p>
+</li>
+<li>
+<p>realtime nanoseconds for cross-correlation with ROS2 stamps/logs</p>
+</li>
+<li>
+<p>Duration math:</p>
+</li>
+<li>always uses monotonic domain</li>
+<li>never compute duration from realtime values</li>
+</ol>
+<h2 id="10-data-contract-jsonl-v1">10) Data Contract (JSONL v1)<a class="headerlink" href="#10-data-contract-jsonl-v1" title="Permanent link">&para;</a></h2>
+<p>Each line is one JSON object. Required top-level fields:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;schema_version&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;source&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;producer&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;frame_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">4421</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;tick_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">12345</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;sequence&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">9988</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;event_ts_real_ns&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1739700000000000000</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;producer_status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;produced&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;capture_status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ok&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;preprocess_status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ok&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;capture_errno&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;dur_ns&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;dequeue&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">12000</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;acquire_write&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">900</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;preprocess&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1450000</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;publish_ready&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">700</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;requeue&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">11000</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;total&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1490000</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Notes:</p>
+<ul>
+<li><code>frame_id</code> may be <code>null</code> for paths that never reached <code>publish_ready</code>.</li>
+<li><code>sequence</code> may be <code>null</code> for paths without a valid dequeued frame.</li>
+<li>any non-executed stage in <code>dur_ns</code> is <code>null</code>.</li>
+<li>consumer events use <code>source: "consumer"</code> and consumer-specific status/stage fields.</li>
+</ul>
+<h2 id="11-interface-and-ownership">11) Interface and Ownership<a class="headerlink" href="#11-interface-and-ownership" title="Permanent link">&para;</a></h2>
+<h3 id="111-ownership">11.1 Ownership<a class="headerlink" href="#111-ownership" title="Permanent link">&para;</a></h3>
+<ul>
+<li>app/orchestrator owns telemetry hub and sink objects</li>
+<li>producer/consumer receive non-owning pointer/reference to interface</li>
+</ul>
+<h3 id="112-lifetime">11.2 Lifetime<a class="headerlink" href="#112-lifetime" title="Permanent link">&para;</a></h3>
+<ul>
+<li>telemetry hub is created before starting producer/consumer loops</li>
+<li>telemetry hub is stopped and joined after producer/consumer loops exit</li>
+</ul>
+<h3 id="113-no-runtime-toggling-v1">11.3 No runtime toggling (v1)<a class="headerlink" href="#113-no-runtime-toggling-v1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>telemetry configuration is fixed for process lifetime</li>
+<li>no hot attach/detach requirement</li>
+</ul>
+<h2 id="12-flush-and-shutdown-policy">12) Flush and Shutdown Policy<a class="headerlink" href="#12-flush-and-shutdown-policy" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Flush trigger:</li>
+<li>batch size threshold (e.g., <code>N</code> samples), or</li>
+<li>
+<p>periodic timer threshold (e.g., <code>T</code> milliseconds)</p>
+</li>
+<li>
+<p>Shutdown:</p>
+</li>
+<li>stop producer and consumer loops</li>
+<li>drain remaining telemetry queues</li>
+<li>flush sink</li>
+<li>stop telemetry thread and join</li>
+</ol>
+<h2 id="13-performance-requirements">13) Performance Requirements<a class="headerlink" href="#13-performance-requirements" title="Permanent link">&para;</a></h2>
+<p>When telemetry inactive:</p>
+<ul>
+<li>no stage clock calls</li>
+<li>no event allocations</li>
+<li>no queue operations</li>
+<li>only cheap status counters</li>
+</ul>
+<p>When telemetry active:</p>
+<ul>
+<li>one fixed-shape sample build per emitted tick (stack/local object; no heap required)</li>
+<li>one non-blocking queue push attempt per sample</li>
+<li>stage timing guarded by a single top-level <code>timing_on</code> branch</li>
+<li>no blocking I/O on data-plane threads</li>
+</ul>
+<h2 id="14-minimal-test-requirements">14) Minimal Test Requirements<a class="headerlink" href="#14-minimal-test-requirements" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Interface disabled path:</li>
+<li>
+<p>no timing samples emitted when telemetry is null or inactive</p>
+</li>
+<li>
+<p>Producer stage coverage:</p>
+</li>
+<li>produced path populates expected durations and statuses</li>
+<li>
+<p>early-return paths correctly set missing stages to null</p>
+</li>
+<li>
+<p><code>frame_id</code> propagation:</p>
+</li>
+<li>producer assigns <code>frame_id</code> at publish</li>
+<li>
+<p>consumer sample for same image carries the same <code>frame_id</code></p>
+</li>
+<li>
+<p>Queue overflow:</p>
+</li>
+<li>
+<p>full queue causes sample drop counter increment, no blocking</p>
+</li>
+<li>
+<p>Sink failure:</p>
+</li>
+<li>sink error transitions telemetry to faulted/disabled mode</li>
+<li>
+<p>producer/consumer loops continue</p>
+</li>
+<li>
+<p>Schema stability:</p>
+</li>
+<li>JSON keys/types match spec and remain backward compatible within v1</li>
+</ol>
+<h2 id="15-suggested-implementation-slices">15) Suggested Implementation Slices<a class="headerlink" href="#15-suggested-implementation-slices" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Introduce telemetry interface + no-op/null behavior + cheap counters.</li>
+<li>Add <code>frame_id</code> to image metadata and propagate it producer -&gt; consumer.</li>
+<li>Implement telemetry hub thread with dual SPSC ingest queues.</li>
+<li>Implement JSONL sink with batched flush.</li>
+<li>Wire producer/consumer stage timing with top-level <code>timing_on</code> gate + RAII scoped timers.</li>
+<li>Add tests for inactive/active/overflow/fault/<code>frame_id</code>/schema.</li>
+</ol>
+<h2 id="16-open-questions-for-v2">16) Open Questions for v2+<a class="headerlink" href="#16-open-questions-for-v2" title="Permanent link">&para;</a></h2>
+<ul>
+<li>strict mode option (fail-closed) for CI/debug builds</li>
+<li>online p50/p95/p99 export endpoint</li>
+<li>compression/rotation strategy for long-running JSONL logs</li>
+<li>additional queue/buffer pressure fields if needed for debugging</li>
+</ul>
+
+
+
+
+
+
+
+  
+    
+  
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Last update">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 1, 2026 19:22:04 UTC">March 1, 2026</span>
+  </span>
+
+    
+    
+    
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.instant"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
