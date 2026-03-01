@@ -7,26 +7,6 @@
 
 namespace omniseer::vision
 {
-  enum class PreprocessStatus : uint8_t
-  {
-    Ok,
-    InvalidConfig,
-    SourceSizeMismatch,
-    InvalidSourceDescriptor,
-    InvalidDestinationDescriptor,
-    ImcheckFailed,
-    ImprocessFailed,
-  };
-
-  struct PreprocessResult
-  {
-    PreprocessStatus status{PreprocessStatus::Ok};
-
-    bool ok() const noexcept
-    {
-      return status == PreprocessStatus::Ok;
-    }
-  };
 
   struct LetterboxMeta
   {
@@ -40,7 +20,6 @@ namespace omniseer::vision
   struct RgaPreprocessConfig
   {
     // Fixed source stream size (NV12).
-    // If your V4L2 capture size differs, pass it explicitly.
     int src_w{1280};
     int src_h{720};
 
