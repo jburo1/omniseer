@@ -1,8 +1,3 @@
-// Minimal DMA-BUF allocator for shareable image buffers.
-//
-// It allocates DMA-BUF fds directly via dma-heap (/dev/dma_heap/*) to keep the allocation
-// path as small as possible for the RGA/RKNN pipeline.
-
 #pragma once
 
 #include <cstdint>
@@ -12,15 +7,23 @@
 
 namespace omniseer::vision
 {
-  // Owns a DMA-BUF fd (move-only RAII).
+  /**
+   * @brief Move-only RAII owner for one DMA-BUF allocation.
+   */
   struct DmabufAllocation
   {
-    int      dmabuf_fd    = -1;
+    /// @brief DMA-BUF file descriptor, or -1 when invalid.
+    int dmabuf_fd = -1;
+    /// @brief Row stride in bytes.
     uint32_t stride_bytes = 0;
-    uint64_t size_bytes   = 0;
+    /// @brief Total allocation size in bytes.
+    uint64_t size_bytes = 0;
 
-    int         width  = 0;
+    /// @brief Allocated width in pixels.
+    int width = 0;
+    /// @brief Allocated height in pixels.
     int         height = 0;
+    /// @brief Pixel format of this allocation.
     PixelFormat fmt    = PixelFormat::RGB888;
 
     DmabufAllocation() = default;
@@ -31,32 +34,48 @@ namespace omniseer::vision
     DmabufAllocation(DmabufAllocation&& other) noexcept;
     DmabufAllocation& operator=(DmabufAllocation&& other) noexcept;
 
+    /// @brief True when this object owns a valid DMA-BUF fd.
     bool valid() const
     {
       return dmabuf_fd >= 0;
     }
+    /// @brief Close/release the allocation and reset to invalid state.
     void reset() noexcept;
   };
 
-  // A ready-to-use ImageBuffer plus the owning allocation that backs it.
-  // Keep this object (or at least `alloc`) alive while consumers use `buf`.
+  /**
+   * @brief ImageBuffer descriptor paired with its owning DMA-BUF allocation.
+   *
+   * Keep this object (or at least `alloc`) alive while consumers use `buf`.
+   */
   struct AllocatedImageBuffer
   {
+    /// @brief Owning DMA-BUF allocation.
     DmabufAllocation alloc{};
+    /// @brief ImageBuffer descriptor backed by `alloc`.
     ImageBuffer      buf{};
 
+    /// @brief True when the backing allocation is valid.
     bool valid() const
     {
       return alloc.valid();
     }
   };
 
-  // Allocate shareable video buffers via dma-heap (/dev/dma_heap/*).
-  // Returns DMA-BUF fds suitable for RGA write / RKNN read.
+  /**
+   * @brief Minimal DMA-BUF allocator for shareable video/image buffers.
+   *
+   * Allocates DMA-BUF fds via dma-heap (`/dev/dma_heap/*`) for RGA write and RKNN read paths.
+   */
   class DmaHeapAllocator
   {
   public:
-    // If `device_path` is empty, picks a default heap (typically /dev/dma_heap/cma or system).
+    /**
+     * @brief Open a dma-heap device for subsequent allocations.
+     *
+     * If `device_path` is empty, an implementation default heap is selected
+     * (typically `/dev/dma_heap/cma` or `system`).
+     */
     explicit DmaHeapAllocator(std::string device_path = "");
     ~DmaHeapAllocator();
 
@@ -65,13 +84,17 @@ namespace omniseer::vision
     DmaHeapAllocator(DmaHeapAllocator&&)                 = delete;
     DmaHeapAllocator& operator=(DmaHeapAllocator&&)      = delete;
 
-    // Allocate a DMA-BUF suitable for RGA write / RKNN read and return an ImageBuffer
-    // descriptor that points at it.
-    // Supported formats: RGB888, BGR888.
-    // Throws on invalid arguments or allocation failures.
+    /**
+     * @brief Allocate one DMA-BUF and return owner + ImageBuffer descriptor.
+     *
+     * Supported formats: RGB888, BGR888.
+     *
+     * @throws On invalid arguments or allocation failures.
+     */
     AllocatedImageBuffer allocate(int width, int height, PixelFormat fmt);
 
   private:
+    /// @brief Open dma-heap device fd used for allocation ioctls.
     int fd_ = -1;
   };
 

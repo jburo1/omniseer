@@ -12,14 +12,26 @@
 
 namespace omniseer::vision
 {
-  // Lock-free SPSC pool between RGA (producer) and RKNN (consumer).
-  // - Producer thread: acquire_write() -> RGA writes -> publish_ready()
-  // - Consumer thread: acquire_read()  -> RKNN reads -> publish_release()
-  // Policy: "latest wins" (ready capacity = 1). If producer publishes a new ready buffer
-  // while an older one is still waiting, the older one is dropped back to free.
+  /**
+   * @brief Lock-free SPSC image buffer pool between RGA and RKNN.
+   *
+   * Flow:
+   * - Producer: acquire_write() -> RGA writes -> publish_ready().
+   * - Consumer: acquire_read() -> RKNN reads -> publish_release().
+   *
+   * Policy:
+   * - Latest-wins (single ready slot).
+   * - If producer publishes a newer ready buffer while an older ready buffer is pending,
+   *   the older one is dropped back to free.
+   */
   class ImageBufferPool
   {
   public:
+    /**
+     * @brief RAII lease for a producer-owned writable pool slot.
+     *
+     * A valid lease may be published exactly once
+     */
     class WriteLease
     {
     public:
@@ -32,16 +44,22 @@ namespace omniseer::vision
       WriteLease(WriteLease&& other) noexcept;
       WriteLease& operator=(WriteLease&& other) noexcept;
 
+      /// @brief Mutable access to the leased image buffer.
       ImageBuffer& buffer() noexcept;
+      /// @brief Pool slot index for the leased buffer.
       int          index() const noexcept;
 
+      /// @brief Publish this written slot as the latest ready buffer.
       void publish() noexcept;
 
+      /// @brief True when this lease currently owns a writable slot.
       explicit operator bool() const noexcept;
 
     private:
       friend class ImageBufferPool;
+      /// @brief Construct a valid lease for one pool slot.
       WriteLease(ImageBufferPool* pool, int idx) noexcept;
+      /// @brief Invalidate without publishing (used after move/cancel).
       void _reset() noexcept;
 
       ImageBufferPool* _pool{nullptr};
@@ -49,58 +67,66 @@ namespace omniseer::vision
     };
 
   private:
-    // size of pool, N=5
+    /// @brief Fixed pool size.
     static const int size{5};
 
-    // Backing allocations for each pool slot (owns DMA-BUF fds).
+    /// @brief Backing allocations for each pool slot (owns DMA-BUF fds).
     std::array<DmabufAllocation, size> allocations{};
 
-    // Preallocated ImageBuffer slots
+    /// @brief Preallocated image buffer metadata for each slot.
     std::array<ImageBuffer, size> pool;
 
-    // SPSC free index ring buffer: pool indices which are currently free
-    // shared datastructure between consumer and producer threads
-    // thread-safe
+    /// @brief SPSC free-index ring shared between producer and consumer.
     SpscRing free_ring{size};
 
-    // Producer-only stash for "dropped ready" indices (latest-wins)
+    /// @brief Producer-only stash for indices dropped by latest-wins overwrite.
     std::array<int, size> producer_free{};
     int                   producer_free_n{0};
 
-    // index of freshest ImageBuffer
+    /// @brief Index of the freshest ready image buffer, or -1 when none.
     std::atomic<int> ready_idx{-1};
 
   public:
-
+    /// @brief Construct an empty pool; call allocate_all() before use.
     ImageBufferPool();
 
-    // Allocate DMA-BUF memory for all pool slots.
-    // This must be called before using the buffers with RGA/RKNN.
-    // Throws on invalid arguments or allocation failures.
+    /**
+     * @brief Allocate DMA-BUF memory for all pool slots.
+     *
+     * @throws On invalid arguments or allocation failures.
+     * @pre Must be called before using buffers with RGA/RKNN.
+     */
     void allocate_all(DmaHeapAllocator& allocator, int width, int height, PixelFormat fmt);
 
-    // producer
-    // RGA wants to write into the pool
-    // returns false if no free buffers
-    // OUTPUT idx: which buffer
+    /**
+     * @brief Producer path: acquire a free writable slot index.
+     *
+     * @param idx Output pool slot index.
+     * @return True on success; false when no free slots are available.
+     */
     bool acquire_write(int& idx);
+    /// @brief Producer path convenience: acquire a writable RAII lease.
     std::optional<WriteLease> acquire_write_lease() noexcept;
 
-    // RGA has finishsed writing into the pool
+    /// @brief Producer path: publish a written slot as ready.
     void publish_ready(int idx);
+    /// @brief Producer path: cancel a write and return slot to free.
     void cancel_write(int idx) noexcept;
 
-    // consumer
-    // RKNN acquires memory to read
-    // returns false if nothing ready
-    // OUTPUT idx: which buffer
+    /**
+     * @brief Consumer path: acquire the latest ready slot index for reading.
+     *
+     * @param idx Output pool slot index.
+     * @return True on success; false when no slot is ready.
+     */
     bool acquire_read(int& idx);
 
-    // RKNN has consumed image and releases slot back into free list
+    /// @brief Consumer path: release a consumed slot back to the free list.
     void publish_release(int idx);
 
-    // Access preallocated buffer by pool index
+    /// @brief Access preallocated buffer metadata by pool index.
     ImageBuffer&       buffer_at(int idx);
+    /// @brief Read-only access to preallocated buffer metadata by pool index.
     const ImageBuffer& buffer_at(int idx) const;
   };
 

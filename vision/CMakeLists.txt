@@ -25,7 +25,6 @@ set(VISION_HARNESS_SOURCES
   src/dma_heap_alloc.cpp
   src/image_buffer_pool.cpp
   src/pipeline.cpp
-  src/profiler.cpp
   src/rga_preprocess.cpp
   src/rknn_runner.cpp
   src/spsc_ring.cpp

@@ -17,7 +17,7 @@ namespace omniseer::vision
    * - Ok: operation succeeded.
    * - NoFrame: dequeue found no frame available.
    * - RetryableError: transient failure (retry possible).
-   * - FatalError: unrecoverable failure (restart required).
+   * - FatalError: unrecoverable failure.
    */
   enum class CaptureStatus : uint8_t
   {
@@ -62,7 +62,7 @@ namespace omniseer::vision
    * - FrameDescriptor is a view for the next stage.
    *
    * Error policy:
-   * - start() may throw on fatal configuration/IO failures (setup is not the hot path).
+   * - start() may throw on fatal configuration/IO failures.
    * - Hot-path APIs are noexcept and return CaptureResult.
    *
    * Performance:
@@ -84,8 +84,6 @@ namespace omniseer::vision
      *
      * Destruction:
      * - ~FrameLease() is noexcept; if the lease is still valid, it will attempt to requeue.
-     *   (Errors cannot be surfaced from a destructor; prefer calling release() explicitly
-     *    if you want to observe failures / emit telemetry.)
      */
     class FrameLease
     {
@@ -133,7 +131,7 @@ namespace omniseer::vision
      *
      * Fields:
      * - device: device tree path like "/dev/video0"
-     * - width/height: negotiated capture resolution
+     * - width/height: negotiated capture resolution, (e.g. 1280 x 720)
      * - fourcc: negotiated pixel format (e.g., NV12)
      * - buffer_count: number of driver ring slots to allocate (REQBUFS)
      */
@@ -178,7 +176,7 @@ namespace omniseer::vision
      * @brief Start streaming: open/configure device, allocate ring, export DMA-BUF fds, queue all,
      * STREAMON.
      *
-     * @throws (by policy) on fatal setup errors (bad device, invalid format, ioctl failures, etc.)
+     * @throws on fatal setup errors (bad device, invalid format, ioctl failures, etc.)
      * @post On success, streaming is active and hot-path dequeue/requeue calls are valid.
      */
     void start();

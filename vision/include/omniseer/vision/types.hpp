@@ -6,22 +6,33 @@
 
 namespace omniseer::vision
 {
-  // Pixel formats used throughout the pipeline
+  /**
+   * @brief Pixel formats used throughout the vision pipeline.
+   *
+   * Semantics:
+   * - NV12: 2 planes (plane 0 = Y, plane 1 = interleaved UV, 4:2:0).
+   * - RGB888: 1 plane, 3 bytes per pixel (RGB order).
+   * - BGR888: 1 plane, 3 bytes per pixel (BGR order).
+   */
   enum class PixelFormat : uint32_t
   {
-    NV12,   // 2 planes: plane0=Y, plane1=interleaved UV (4:2:0)
-    RGB888, // 1 plane: 3-bytes-per-pixel
-    BGR888, // 1 plane: 3-bytes-per-pixel
+    NV12,
+    RGB888,
+    BGR888,
   };
 
-  // Width/height container used for frame and buffer dimensions
+  /**
+   * @brief Width/height container used for frame and buffer dimensions.
+   */
   struct Size
   {
     int w = 0;
     int h = 0;
   };
 
-  // Container used for letterboxing and cropping
+  /**
+   * @brief Rectangle container used for letterboxing and cropping.
+   */
   struct Rect
   {
     int x = 0;
@@ -30,61 +41,81 @@ namespace omniseer::vision
     int h = 0;
   };
 
-  // Describes a plane of an image that is backed by a DMA-BUF file descriptor
+  /**
+   * @brief Metadata for one image plane backed by a DMA-BUF file descriptor.
+   */
   struct DMABufPlane
   {
-    int      fd     = -1; // DMA-BUF file descriptor
-    uint32_t stride = 0;  // bytes per line
-    uint32_t offset = 0;  // byte offset within fd where this plane begins
+    /// @brief DMA-BUF file descriptor.
+    int fd = -1;
+    /// @brief Bytes per line for this plane.
+    uint32_t stride = 0;
+    /// @brief Byte offset within `fd` where this plane starts.
+    uint32_t offset = 0;
 
-    size_t alloc_size = 0; // allocated capacity for this plane (bytes)
-    size_t bytesused  = 0; // how many bytes are valid for this frame (from V4L2 DQBUF);
+    /// @brief Allocated capacity for this plane in bytes.
+    size_t alloc_size = 0;
+    /// @brief Valid bytes for this frame (from V4L2 DQBUF).
+    size_t bytesused = 0;
   };
 
-  // Frame descriptor from the V4L2 capture ring owned by the kernel driver
-  // Typical lifetime:
-  //   FrameDescriptor f = capture.dequeue();   // DQBUF: borrow slot i
-  //   rga.process(f, dst);                     // RGA reads from f's DMABUF planes
-  //   capture.requeue(f.v4l2_index);           // QBUF: give slot i back to driver
+  /**
+   * @brief Descriptor for one frame borrowed from the V4L2 capture ring.
+   *
+   * Typical lifetime:
+   * - dequeue(...) borrows slot `i` from the driver (DQBUF) and fills this descriptor.
+   * - Processing stages read from `planes`.
+   * - requeue(v4l2_index) returns slot `i` to the driver (QBUF).
+   */
   struct FrameDescriptor
   {
-    Size        size{}; // frame dimensions from v4l2
+    /// @brief Frame dimensions negotiated by V4L2.
+    Size size{};
+    /// @brief Frame pixel format.
     PixelFormat fmt = PixelFormat::NV12;
 
-    uint32_t                   num_planes = 0;
+    /// @brief Number of valid entries in `planes`.
+    uint32_t num_planes = 0;
+    /// @brief Plane metadata view for this frame.
     std::array<DMABufPlane, 2> planes{};
 
-    // Runtime timestamp for ROS2 header.stamp.
+    /// @brief Capture timestamp mapped to realtime nanoseconds (for ROS2 `header.stamp`).
     uint64_t capture_ts_real_ns = 0;
 
-    // Identity of the V4L2 ring slot that currently contains this frame, used to re-queue it.
+    /// @brief V4L2 ring slot index currently backing this frame (required for requeue).
     uint32_t v4l2_index = std::numeric_limits<uint32_t>::max();
 
-    // Increasing frame counter provided by V4L2 (useful for detecting drops / reordering).
+    /// @brief Monotonic frame sequence from V4L2 (useful for drop/reorder detection).
     uint32_t sequence = 0;
   };
 
-  // Buffer slot allocated by app into a buffer pool
-  // RGA reads into, RKNN reads from as model input tensor
-  //
-  // Memory allocated in pool/via allocator, reused across frames
-  // Typical lifetime:
-  //   ImageBuffer dst = pool.acquire();
-  //   rga.process(src_frame, dst);
-  //   rknn.infer(dst);
-  //   pool.release(dst);
+  /**
+   * @brief Reusable application-owned buffer slot from a pool.
+   *
+   * Typical lifetime:
+   * - acquire() obtains a free slot from the pool.
+   * - RGA writes transformed pixels into this buffer.
+   * - RKNN reads this buffer as model input.
+   * - release() returns the slot to the pool for reuse.
+   */
   struct ImageBuffer
   {
-    Size        size{};                    // buffer dimensions (e.g., 640x640)
-    PixelFormat fmt = PixelFormat::RGB888; // model input
+    /// @brief Buffer dimensions (for example, 640x640).
+    Size size{};
+    /// @brief Buffer pixel format (typically model input format).
+    PixelFormat fmt = PixelFormat::RGB888;
 
-    uint32_t                   num_planes = 0;
+    /// @brief Number of valid entries in `planes`.
+    uint32_t num_planes = 0;
+    /// @brief Plane metadata for this buffer slot.
     std::array<DMABufPlane, 2> planes{};
 
-    size_t total_alloc_size = 0; // capacity across planes
-    // Per-frame runtime handoff fields for consumer/ROS2 integration.
-    uint32_t sequence           = 0; // V4L2 sequence number
-    uint64_t capture_ts_real_ns = 0; // capture timestamp mapped to realtime (ROS2 header.stamp)
+    /// @brief Aggregate allocated capacity across planes.
+    size_t total_alloc_size = 0;
+    /// @brief Per-frame V4L2 sequence number copied at handoff.
+    uint32_t sequence = 0;
+    /// @brief Per-frame capture timestamp mapped to realtime nanoseconds (ROS2 `header.stamp`).
+    uint64_t capture_ts_real_ns = 0;
   };
 
 } // namespace omniseer::vision
