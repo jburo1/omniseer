@@ -1,8 +1,4 @@
 #pragma once
 
-namespace omniseer::vision
-{
-  class ProducerPipeline
-  {
-  };
-} // namespace omniseer::vision
+#include "omniseer/vision/consumer_pipeline.hpp"
+#include "omniseer/vision/producer_pipeline.hpp"

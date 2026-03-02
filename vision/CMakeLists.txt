@@ -22,9 +22,11 @@ endif()
 
 set(VISION_HARNESS_SOURCES
   apps/vision_harness.cpp
+  src/consumer_pipeline.cpp
   src/dma_heap_alloc.cpp
   src/image_buffer_pool.cpp
   src/pipeline.cpp
+  src/producer_pipeline.cpp
   src/rga_preprocess.cpp
   src/rknn_runner.cpp
   src/spsc_ring.cpp
@@ -126,9 +128,11 @@ if(VISION_BUILD_TESTS)
 
     add_executable(producer_pipeline_test
       apps/producer_pipeline_test.cpp
+      src/consumer_pipeline.cpp
       src/dma_heap_alloc.cpp
       src/image_buffer_pool.cpp
       src/pipeline.cpp
+      src/producer_pipeline.cpp
       src/rga_preprocess.cpp
       src/spsc_ring.cpp
       src/time_utils.cpp
