@@ -16,8 +16,12 @@ namespace omniseer::vision
    * @brief Lock-free SPSC image buffer pool between RGA and RKNN.
    *
    * Flow:
-   * - Producer: acquire_write() -> RGA writes -> publish_ready().
-   * - Consumer: acquire_read() -> RKNN reads -> publish_release().
+   * - Producer (manual): acquire_write() -> RGA writes -> publish_ready().
+   * - Consumer (manual): acquire_read() -> RKNN reads -> publish_release().
+   * - Producer (RAII preferred): acquire_write_lease() -> write -> WriteLease::publish().
+   *   If not published, WriteLease destructor cancels and returns slot to free list.
+   * - Consumer (RAII preferred): acquire_read_lease() -> read -> optional ReadLease::release().
+   *   If not explicitly released, ReadLease destructor releases slot to free list.
    *
    * Policy:
    * - Latest-wins (single ready slot).
@@ -60,6 +64,45 @@ namespace omniseer::vision
       /// @brief Construct a valid lease for one pool slot.
       WriteLease(ImageBufferPool* pool, int idx) noexcept;
       /// @brief Invalidate without publishing (used after move/cancel).
+      void _reset() noexcept;
+
+      ImageBufferPool* _pool{nullptr};
+      int              _idx{-1};
+    };
+
+    /**
+     * @brief RAII lease for a consumer-owned readable pool slot.
+     *
+     * A valid lease may be explicitly released once, otherwise destructor releases it.
+     */
+    class ReadLease
+    {
+    public:
+      ReadLease() = default;
+      ~ReadLease() noexcept;
+
+      ReadLease(const ReadLease&)            = delete;
+      ReadLease& operator=(const ReadLease&) = delete;
+
+      ReadLease(ReadLease&& other) noexcept;
+      ReadLease& operator=(ReadLease&& other) noexcept;
+
+      /// @brief Read-only access to the leased image buffer.
+      const ImageBuffer& buffer() const noexcept;
+      /// @brief Pool slot index for the leased buffer.
+      int index() const noexcept;
+
+      /// @brief Release this consumed slot back to the free list.
+      void release() noexcept;
+
+      /// @brief True when this lease currently owns a readable slot.
+      explicit operator bool() const noexcept;
+
+    private:
+      friend class ImageBufferPool;
+      /// @brief Construct a valid lease for one pool slot.
+      ReadLease(ImageBufferPool* pool, int idx) noexcept;
+      /// @brief Invalidate and release when owned.
       void _reset() noexcept;
 
       ImageBufferPool* _pool{nullptr};
@@ -120,6 +163,8 @@ namespace omniseer::vision
      * @return True on success; false when no slot is ready.
      */
     bool acquire_read(int& idx);
+    /// @brief Consumer path convenience: acquire a readable RAII lease.
+    std::optional<ReadLease> acquire_read_lease() noexcept;
 
     /// @brief Consumer path: release a consumed slot back to the free list.
     void publish_release(int idx);

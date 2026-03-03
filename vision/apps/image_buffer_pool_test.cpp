@@ -1,6 +1,7 @@
 #include <atomic>
 #include <chrono>
 #include <thread>
+#include <vector>
 
 #include <gtest/gtest.h>
 
@@ -130,4 +131,46 @@ TEST(ImageBufferPool, ProducerConsumerLatestWins)
   EXPECT_FALSE(failed.load(std::memory_order_relaxed));
   EXPECT_GT(consumed.load(std::memory_order_relaxed), 0);
   EXPECT_EQ(last_seen.load(std::memory_order_relaxed), iterations - 1);
+}
+
+TEST(ImageBufferPool, ReadLeaseAutoReleasesSlot)
+{
+  omniseer::vision::ImageBufferPool pool;
+
+  int ready_idx = -1;
+  ASSERT_TRUE(pool.acquire_write(ready_idx));
+  pool.publish_ready(ready_idx);
+
+  auto read_lease = pool.acquire_read_lease();
+  ASSERT_TRUE(read_lease.has_value());
+  EXPECT_EQ(read_lease->index(), ready_idx);
+
+  std::vector<int> drained{};
+  drained.reserve(4);
+  for (int i = 0; i < 4; ++i)
+  {
+    int idx = -1;
+    ASSERT_TRUE(pool.acquire_write(idx));
+    drained.push_back(idx);
+  }
+
+  int should_fail = -1;
+  EXPECT_FALSE(pool.acquire_write(should_fail))
+      << "leased read slot should not be available before release";
+
+  read_lease.reset(); // destructor path -> publish_release()
+
+  int after_release_idx = -1;
+  EXPECT_TRUE(pool.acquire_write(after_release_idx))
+      << "read lease release should return slot to producer free list";
+
+  // Cleanup: explicitly cancel all temporary write acquisitions.
+  for (int idx : drained)
+  {
+    pool.cancel_write(idx);
+  }
+  if (after_release_idx >= 0)
+  {
+    pool.cancel_write(after_release_idx);
+  }
 }

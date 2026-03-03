@@ -68,6 +68,63 @@ namespace omniseer::vision
     _idx  = -1;
   }
 
+  ImageBufferPool::ReadLease::ReadLease(ImageBufferPool* pool, int idx) noexcept
+      : _pool(pool), _idx(idx)
+  {
+  }
+
+  ImageBufferPool::ReadLease::~ReadLease() noexcept
+  {
+    _reset();
+  }
+
+  ImageBufferPool::ReadLease::ReadLease(ReadLease&& other) noexcept
+  {
+    *this = std::move(other);
+  }
+
+  ImageBufferPool::ReadLease& ImageBufferPool::ReadLease::operator=(ReadLease&& other) noexcept
+  {
+    if (this == &other)
+      return *this;
+    _reset();
+    _pool       = other._pool;
+    _idx        = other._idx;
+    other._pool = nullptr;
+    other._idx  = -1;
+    return *this;
+  }
+
+  const ImageBuffer& ImageBufferPool::ReadLease::buffer() const noexcept
+  {
+    assert(_pool != nullptr);
+    return _pool->buffer_at(_idx);
+  }
+
+  int ImageBufferPool::ReadLease::index() const noexcept
+  {
+    return _idx;
+  }
+
+  void ImageBufferPool::ReadLease::release() noexcept
+  {
+    if (_pool == nullptr)
+      return;
+    _pool->publish_release(_idx);
+    _pool = nullptr;
+    _idx  = -1;
+  }
+
+  ImageBufferPool::ReadLease::operator bool() const noexcept
+  {
+    return _pool != nullptr;
+  }
+
+  void ImageBufferPool::ReadLease::_reset() noexcept
+  {
+    release();
+  }
+
   ImageBufferPool::ImageBufferPool()
   {
     for (int i{0}; i < size; ++i)
@@ -170,6 +227,14 @@ namespace omniseer::vision
 
     idx = current;
     return true;
+  }
+
+  std::optional<ImageBufferPool::ReadLease> ImageBufferPool::acquire_read_lease() noexcept
+  {
+    int idx = -1;
+    if (!acquire_read(idx))
+      return std::nullopt;
+    return ReadLease(this, idx);
   }
 
   void ImageBufferPool::publish_release(int idx)

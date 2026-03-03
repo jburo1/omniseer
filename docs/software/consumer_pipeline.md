@@ -4,12 +4,11 @@ This document describes the **per-frame hot path** through the consumer side of 
 
 **ImageBufferPool latest-ready slot** -> **RKNN inference (NPU)** -> **deterministic postprocess (decode + NMS + inverse letterbox)** -> **publish canonical detections** -> **release pool slot**.
 
-The v1 design goal is strict simplicity:
-
-- **Latest-wins latency policy** (never build consumer queues).
-- **One in-flight frame** per consumer thread.
-- **No per-frame allocations** in steady state.
-- **Minimal status surface** (`status + stage + errno`) instead of error taxonomy sprawl.
+Goals:
+- **Latest-wins latency policy**.
+- **One in-flight frame**.
+- **No per-frame allocations**.
+- **Minimal status surface**.
 
 ---
 
@@ -17,8 +16,9 @@ The v1 design goal is strict simplicity:
 
 - **Latest-wins**: consumer always processes the freshest ready slot and ignores stale work.
 - **ImageBufferPool**: SPSC handoff between producer and consumer with one atomic ready index.
+- **ReadLease**: move-only RAII token for a consumer-owned read slot; destructor releases the slot if still held.
 - **RKNN input binding**: FD-backed tensor binding via `rknn_create_mem_from_fd` + `rknn_set_io_mem`.
-- **Remap config**: immutable letterbox geometry (`scale`, `pad_x`, `pad_y`, source/model sizes) from producer preflight.
+- **Remap config**: immutable process-global letterbox geometry (`scale`, `pad_x`, `pad_y`, source/model sizes) from producer preflight.
 - **Detections packet**: compact output for downstream consumers (`class_id`, `score`, `bbox_px` + timing ids).
 
 ---
@@ -39,32 +39,27 @@ The v1 design goal is strict simplicity:
    - output tensor storage (or preallocated output structs)
    - postprocess scratch arrays (`top_k`, `max_det` bounded)
 5. Warm-up a small number of inferences.
-6. Cache immutable remap geometry in one location (shared pipeline config, not duplicated per frame).
-
-### Runtime observation from local probe
-
-On this RKNN 2.3.0 stack, FD-backed binding worked only when `rknn_create_mem_from_fd` received a **valid mapped `virt_addr`** for the DMA-BUF. Passing `virt_addr = nullptr` failed in probe runs.
-
----
+6. Read immutable remap geometry from one process-global pipeline config location (not duplicated per frame).
+7. Initialize/validate consumer read-side RAII API (`ReadLease`) for slot lifetime correctness.
 
 ## 1) Acquire latest ready slot (latest-wins)
 
 Consumer tick starts with:
 
-- `pool.acquire_read(idx)`
+- `pool.acquire_read_lease() -> ReadLease`
 
 Outcomes:
 
 - **No slot ready** -> return `ConsumerTickStatus::NoReadyBuffer`, stage `AcquireRead`.
-- **Success** -> read `pool.buffer_at(idx)` and capture per-frame metadata (`sequence`, `capture_ts_real_ns`, `pool_index`), then continue.
+- **Success** -> read leased buffer view and capture per-frame metadata (`sequence`, `capture_ts_real_ns`, `pool_index`), then continue.
 
-**Invariant:** every successful acquire must end in exactly one `publish_release(idx)`.
+**Invariant:** every successful acquire must end in exactly one release, enforced by `ReadLease` RAII.
 
 ---
 
 ## 2) Infer stage (NPU)
 
-Input is producer-written model-ready RGB/BGR data in DMA-BUF-backed `ImageBuffer`.
+Input is producer-written model-ready RGB data in DMA-BUF-backed `ImageBuffer`.
 
 ### FD-backed binding (required in v1)
 
@@ -120,7 +115,7 @@ This keeps consumer timing isolated from sink backpressure.
 
 After publish (or on any early-return path after successful acquire):
 
-- `pool.publish_release(idx)`
+- `ReadLease` destructor (automatic) or explicit `release()`
 
 This transitions the slot back to free for producer reuse.
 
@@ -175,10 +170,11 @@ Detailed diagnosis comes from:
 - [ ] No per-frame allocations in steady state.
 - [ ] RKNN preflight includes IO query + warm-up.
 - [ ] RKNN input path uses FD-backed `rknn_create_mem_from_fd` + `rknn_set_io_mem`.
+- [ ] Consumer slot ownership uses `ReadLease` RAII (mirror of producer-side lease discipline).
 - [ ] Deterministic postprocess bounds (`top_k_per_class`, `max_det`).
 - [ ] Inverse letterbox mapping implemented and unit-tested.
 - [ ] Single canonical publish boundary in consumer.
-- [ ] Proper release of acquired pool slots on all exit paths.
+- [ ] Remap geometry is sourced from one immutable process-global config location.
 - [ ] Telemetry emitted with consumer stage timings and status mask.
 - [ ] Clean shutdown (stop loop, release resources, stop publishers).
 
@@ -189,7 +185,7 @@ Detailed diagnosis comes from:
 ```
 Consumer thread:
 
-  acquire_read(idx) --> ImageBuffer view (latest ready)
+  acquire_read_lease() --> ReadLease{ImageBuffer view}
          |
          v
    RKNN infer (fd-backed set_io_mem path)
@@ -201,5 +197,5 @@ Consumer thread:
    publish canonical detections
          |
          v
-   publish_release(idx)
+   ReadLease dtor -> publish_release(idx)
 ```
