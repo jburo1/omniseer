@@ -603,23 +603,6 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="0) One-time setup (preflight / arm)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#runtime-observation-from-local-probe" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Runtime observation from local probe
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
         <li class="md-nav__item">
@@ -761,20 +744,19 @@
 <h1 id="consumer-pipeline-ready-pool-rknn-detections-release-thread-boundary">Consumer pipeline: ready pool -&gt; RKNN -&gt; detections -&gt; release (thread boundary)<a class="headerlink" href="#consumer-pipeline-ready-pool-rknn-detections-release-thread-boundary" title="Permanent link">&para;</a></h1>
 <p>This document describes the <strong>per-frame hot path</strong> through the consumer side of the vision pipeline:</p>
 <p><strong>ImageBufferPool latest-ready slot</strong> -&gt; <strong>RKNN inference (NPU)</strong> -&gt; <strong>deterministic postprocess (decode + NMS + inverse letterbox)</strong> -&gt; <strong>publish canonical detections</strong> -&gt; <strong>release pool slot</strong>.</p>
-<p>The v1 design goal is strict simplicity:</p>
-<ul>
-<li><strong>Latest-wins latency policy</strong> (never build consumer queues).</li>
-<li><strong>One in-flight frame</strong> per consumer thread.</li>
-<li><strong>No per-frame allocations</strong> in steady state.</li>
-<li><strong>Minimal status surface</strong> (<code>status + stage + errno</code>) instead of error taxonomy sprawl.</li>
-</ul>
+<p>Goals:
+- <strong>Latest-wins latency policy</strong>.
+- <strong>One in-flight frame</strong>.
+- <strong>No per-frame allocations</strong>.
+- <strong>Minimal status surface</strong>.</p>
 <hr />
 <h2 id="glossary">Glossary<a class="headerlink" href="#glossary" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>Latest-wins</strong>: consumer always processes the freshest ready slot and ignores stale work.</li>
 <li><strong>ImageBufferPool</strong>: SPSC handoff between producer and consumer with one atomic ready index.</li>
+<li><strong>ReadLease</strong>: move-only RAII token for a consumer-owned read slot; destructor releases the slot if still held.</li>
 <li><strong>RKNN input binding</strong>: FD-backed tensor binding via <code>rknn_create_mem_from_fd</code> + <code>rknn_set_io_mem</code>.</li>
-<li><strong>Remap config</strong>: immutable letterbox geometry (<code>scale</code>, <code>pad_x</code>, <code>pad_y</code>, source/model sizes) from producer preflight.</li>
+<li><strong>Remap config</strong>: immutable process-global letterbox geometry (<code>scale</code>, <code>pad_x</code>, <code>pad_y</code>, source/model sizes) from producer preflight.</li>
 <li><strong>Detections packet</strong>: compact output for downstream consumers (<code>class_id</code>, <code>score</code>, <code>bbox_px</code> + timing ids).</li>
 </ul>
 <hr />
@@ -793,25 +775,23 @@
 <li>output tensor storage (or preallocated output structs)</li>
 <li>postprocess scratch arrays (<code>top_k</code>, <code>max_det</code> bounded)</li>
 <li>Warm-up a small number of inferences.</li>
-<li>Cache immutable remap geometry in one location (shared pipeline config, not duplicated per frame).</li>
+<li>Read immutable remap geometry from one process-global pipeline config location (not duplicated per frame).</li>
+<li>Initialize/validate consumer read-side RAII API (<code>ReadLease</code>) for slot lifetime correctness.</li>
 </ol>
-<h3 id="runtime-observation-from-local-probe">Runtime observation from local probe<a class="headerlink" href="#runtime-observation-from-local-probe" title="Permanent link">&para;</a></h3>
-<p>On this RKNN 2.3.0 stack, FD-backed binding worked only when <code>rknn_create_mem_from_fd</code> received a <strong>valid mapped <code>virt_addr</code></strong> for the DMA-BUF. Passing <code>virt_addr = nullptr</code> failed in probe runs.</p>
-<hr />
 <h2 id="1-acquire-latest-ready-slot-latest-wins">1) Acquire latest ready slot (latest-wins)<a class="headerlink" href="#1-acquire-latest-ready-slot-latest-wins" title="Permanent link">&para;</a></h2>
 <p>Consumer tick starts with:</p>
 <ul>
-<li><code>pool.acquire_read(idx)</code></li>
+<li><code>pool.acquire_read_lease() -&gt; ReadLease</code></li>
 </ul>
 <p>Outcomes:</p>
 <ul>
 <li><strong>No slot ready</strong> -&gt; return <code>ConsumerTickStatus::NoReadyBuffer</code>, stage <code>AcquireRead</code>.</li>
-<li><strong>Success</strong> -&gt; read <code>pool.buffer_at(idx)</code> and capture per-frame metadata (<code>sequence</code>, <code>capture_ts_real_ns</code>, <code>pool_index</code>), then continue.</li>
+<li><strong>Success</strong> -&gt; read leased buffer view and capture per-frame metadata (<code>sequence</code>, <code>capture_ts_real_ns</code>, <code>pool_index</code>), then continue.</li>
 </ul>
-<p><strong>Invariant:</strong> every successful acquire must end in exactly one <code>publish_release(idx)</code>.</p>
+<p><strong>Invariant:</strong> every successful acquire must end in exactly one release, enforced by <code>ReadLease</code> RAII.</p>
 <hr />
 <h2 id="2-infer-stage-npu">2) Infer stage (NPU)<a class="headerlink" href="#2-infer-stage-npu" title="Permanent link">&para;</a></h2>
-<p>Input is producer-written model-ready RGB/BGR data in DMA-BUF-backed <code>ImageBuffer</code>.</p>
+<p>Input is producer-written model-ready RGB data in DMA-BUF-backed <code>ImageBuffer</code>.</p>
 <h3 id="fd-backed-binding-required-in-v1">FD-backed binding (required in v1)<a class="headerlink" href="#fd-backed-binding-required-in-v1" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Bind DMA-BUF-backed tensor memory to RKNN input.</li>
@@ -856,7 +836,7 @@
 <h2 id="5-release-stage-return-slot-to-pool">5) Release stage (return slot to pool)<a class="headerlink" href="#5-release-stage-return-slot-to-pool" title="Permanent link">&para;</a></h2>
 <p>After publish (or on any early-return path after successful acquire):</p>
 <ul>
-<li><code>pool.publish_release(idx)</code></li>
+<li><code>ReadLease</code> destructor (automatic) or explicit <code>release()</code></li>
 </ul>
 <p>This transitions the slot back to free for producer reuse.</p>
 <p><strong>Invariant:</strong> release must happen exactly once for each successful acquire.</p>
@@ -905,10 +885,11 @@
 <li>[ ] No per-frame allocations in steady state.</li>
 <li>[ ] RKNN preflight includes IO query + warm-up.</li>
 <li>[ ] RKNN input path uses FD-backed <code>rknn_create_mem_from_fd</code> + <code>rknn_set_io_mem</code>.</li>
+<li>[ ] Consumer slot ownership uses <code>ReadLease</code> RAII (mirror of producer-side lease discipline).</li>
 <li>[ ] Deterministic postprocess bounds (<code>top_k_per_class</code>, <code>max_det</code>).</li>
 <li>[ ] Inverse letterbox mapping implemented and unit-tested.</li>
 <li>[ ] Single canonical publish boundary in consumer.</li>
-<li>[ ] Proper release of acquired pool slots on all exit paths.</li>
+<li>[ ] Remap geometry is sourced from one immutable process-global config location.</li>
 <li>[ ] Telemetry emitted with consumer stage timings and status mask.</li>
 <li>[ ] Clean shutdown (stop loop, release resources, stop publishers).</li>
 </ul>
@@ -916,7 +897,7 @@
 <h2 id="compact-diagram">Compact diagram<a class="headerlink" href="#compact-diagram" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code>Consumer thread:
 
-  acquire_read(idx) --&gt; ImageBuffer view (latest ready)
+  acquire_read_lease() --&gt; ReadLease{ImageBuffer view}
          |
          v
    RKNN infer (fd-backed set_io_mem path)
@@ -928,7 +909,7 @@
    publish canonical detections
          |
          v
-   publish_release(idx)
+   ReadLease dtor -&gt; publish_release(idx)
 </code></pre></div>
 
 
@@ -950,7 +931,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 3, 2026 01:24:59 UTC">March 3, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 3, 2026 02:43:32 UTC">March 3, 2026</span>
   </span>
 
     
