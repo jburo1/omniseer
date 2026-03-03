@@ -10,7 +10,9 @@
 #include <vector>
 
 #include "omniseer/vision/dma_heap_alloc.hpp"
+#include "omniseer/vision/image_buffer_pool.hpp"
 #include "omniseer/vision/pipeline.hpp"
+#include "omniseer/vision/rga_preprocess.hpp"
 #include "omniseer/vision/telemetry.hpp"
 
 namespace
@@ -57,8 +59,6 @@ namespace
     {
     case ProducerStage::None:
       return "none";
-    case ProducerStage::Preconditions:
-      return "preconditions";
     case ProducerStage::Dequeue:
       return "dequeue";
     case ProducerStage::AcquireWrite:
@@ -99,36 +99,6 @@ namespace
     std::vector<omniseer::vision::ProducerSample> producer_samples{};
   };
 } // namespace
-
-TEST(ProducerPipeline, NotArmedReportsPreconditionsAndTelemetry)
-{
-  omniseer::vision::V4l2Capture capture({
-      .device       = "/dev/video12",
-      .width        = 1280,
-      .height       = 720,
-      .fourcc       = V4L2_PIX_FMT_NV12,
-      .buffer_count = 4,
-  });
-  omniseer::vision::ImageBufferPool pool;
-  omniseer::vision::RgaPreprocess preprocess;
-  TestTelemetry                   telemetry;
-
-  omniseer::vision::ProducerPipeline producer(capture, preprocess, pool, &telemetry);
-
-  const auto tick = producer.run();
-  EXPECT_EQ(tick.status, omniseer::vision::ProducerTickStatus::CaptureFatalError);
-  EXPECT_EQ(tick.stage, omniseer::vision::ProducerStage::Preconditions);
-  EXPECT_EQ(tick.stage_errno, EPERM);
-  EXPECT_EQ(tick.stage_mask, 0u);
-
-  ASSERT_EQ(telemetry.producer_samples.size(), 1u);
-  EXPECT_EQ(telemetry.producer_samples[0].producer_status,
-            static_cast<uint8_t>(omniseer::vision::ProducerTickStatus::CaptureFatalError));
-
-  telemetry.enabled = false;
-  (void) producer.run();
-  EXPECT_EQ(telemetry.producer_samples.size(), 1u);
-}
 
 TEST(ProducerPipeline, PreflightThenProducesFrames)
 {
@@ -191,19 +161,22 @@ TEST(ProducerPipeline, PreflightThenProducesFrames)
   TestTelemetry telemetry;
   omniseer::vision::ProducerPipeline producer(capture, preprocess, pool, &telemetry);
 
-  const auto pre_preflight = producer.run();
-  EXPECT_EQ(pre_preflight.status, omniseer::vision::ProducerTickStatus::CaptureFatalError);
-  EXPECT_EQ(pre_preflight.stage, omniseer::vision::ProducerStage::Preconditions);
-  EXPECT_EQ(pre_preflight.stage_errno, EPERM);
-  EXPECT_EQ(pre_preflight.stage_mask, 0u);
-  EXPECT_EQ(pre_preflight.capture.status, omniseer::vision::CaptureStatus::FatalError);
-  EXPECT_EQ(pre_preflight.capture.sys_errno, EPERM);
-  ASSERT_EQ(telemetry.producer_samples.size(), 1u);
-
   ASSERT_NO_THROW(producer.preflight());
+  EXPECT_TRUE(producer.is_armed());
 
-  int           produced  = 0;
-  int           nonfatal  = 0;
+  const auto& remap = producer.remap();
+  EXPECT_EQ(remap.source_size.w, static_cast<int>(src_w));
+  EXPECT_EQ(remap.source_size.h, static_cast<int>(src_h));
+  EXPECT_EQ(remap.model_input_size.w, dst_w);
+  EXPECT_EQ(remap.model_input_size.h, dst_h);
+  EXPECT_GT(remap.scale, 0.0f);
+  EXPECT_GE(remap.pad_x, 0);
+  EXPECT_GE(remap.pad_y, 0);
+  EXPECT_GT(remap.resized_w, 0);
+  EXPECT_GT(remap.resized_h, 0);
+
+  int           produced      = 0;
+  uint64_t      last_frame_id = 0;
   constexpr int max_ticks = 400;
   for (int i = 0; i < max_ticks && produced < 3; ++i)
   {
@@ -218,14 +191,20 @@ TEST(ProducerPipeline, PreflightThenProducesFrames)
     else
     {
       EXPECT_EQ(telemetry.producer_samples.size(), emitted_before + 1);
+      ASSERT_LT(emitted_before, telemetry.producer_samples.size());
+      EXPECT_EQ(telemetry.producer_samples[emitted_before].producer_status,
+                static_cast<uint8_t>(tick.status));
     }
 
     if (tick.status == omniseer::vision::ProducerTickStatus::Produced)
     {
       ++produced;
-      EXPECT_TRUE(tick.preprocess.ok());
-      EXPECT_EQ(tick.capture.status, omniseer::vision::CaptureStatus::Ok);
       EXPECT_EQ(tick.stage, omniseer::vision::ProducerStage::Requeue);
+      EXPECT_EQ(tick.stage_errno, 0);
+      EXPECT_GT(tick.capture_ts_real_ns, 0u);
+      EXPECT_GE(tick.pool_index, 0);
+      EXPECT_GT(tick.frame_id, last_frame_id);
+      last_frame_id = tick.frame_id;
 
       const uint32_t expected_mask =
           stage_mask_bit(omniseer::vision::ProducerStageMask::Dequeue) |
@@ -239,8 +218,7 @@ TEST(ProducerPipeline, PreflightThenProducesFrames)
 
     if (tick.status == omniseer::vision::ProducerTickStatus::NoWritableBuffer)
     {
-      EXPECT_TRUE(tick.stage == omniseer::vision::ProducerStage::AcquireWrite ||
-                  tick.stage == omniseer::vision::ProducerStage::Requeue)
+      EXPECT_EQ(tick.stage, omniseer::vision::ProducerStage::AcquireWrite)
           << "unexpected stage for NoWritableBuffer: " << stage_name(tick.stage);
     }
 
@@ -248,15 +226,13 @@ TEST(ProducerPipeline, PreflightThenProducesFrames)
         tick.status == omniseer::vision::ProducerTickStatus::PreprocessError)
     {
       FAIL() << "unexpected fatal-ish status: " << tick_status_name(tick.status)
-             << ", capture_errno=" << tick.capture.sys_errno;
+             << ", stage_errno=" << tick.stage_errno;
     }
 
-    ++nonfatal;
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
 
   EXPECT_GT(produced, 0) << "producer did not produce any frames in " << max_ticks << " ticks";
-  EXPECT_GE(nonfatal, 0);
 
   ASSERT_NO_THROW(capture.stop());
 }

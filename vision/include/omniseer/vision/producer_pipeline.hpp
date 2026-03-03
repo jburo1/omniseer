@@ -17,7 +17,6 @@ namespace omniseer::vision
   enum class ProducerStage : uint8_t
   {
     None,
-    Preconditions,
     Dequeue,
     AcquireWrite,
     Preprocess,
@@ -39,36 +38,6 @@ namespace omniseer::vision
   };
 
   /**
-   * @brief Lightweight preprocess status mirrored into producer tick results.
-   *
-   */
-  enum class ProducerPreprocessStatus : uint8_t
-  {
-    NotRun,
-    Ok,
-    InvalidConfig,
-    SourceSizeMismatch,
-    InvalidSourceDescriptor,
-    InvalidDestinationDescriptor,
-    ImcheckFailed,
-    ImprocessFailed,
-    UnknownError,
-  };
-
-  /**
-   * @brief Producer-facing preprocess result payload for one tick.
-   */
-  struct ProducerPreprocessResult
-  {
-    ProducerPreprocessStatus status{ProducerPreprocessStatus::NotRun};
-
-    bool ok() const noexcept
-    {
-      return status == ProducerPreprocessStatus::Ok;
-    }
-  };
-
-  /**
    * @brief One non-throwing producer loop iteration result.
    */
   struct ProducerTick
@@ -81,11 +50,6 @@ namespace omniseer::vision
     int stage_errno{0};
     /// @brief OR-ed ProducerStageMask bits for completed stages.
     uint32_t stage_mask{0};
-
-    /// @brief Capture-layer outcome for this tick.
-    CaptureResult capture{};
-    /// @brief Preprocess-layer outcome for this tick.
-    ProducerPreprocessResult preprocess{};
 
     /// @brief Source capture sequence copied from dequeued frame, when available.
     uint64_t sequence{0};
@@ -106,6 +70,16 @@ namespace omniseer::vision
    * Error policy:
    * - preflight() may throw on startup validation failures.
    * - run() is noexcept and returns ProducerTick with stage/status details.
+   *
+   * Contract:
+   * - Caller is expected to call preflight() before entering the run loop.
+   * - run() executes one producer pass in the following stage order:
+   *   1) dequeue frame from capture
+   *   2) acquire writable destination buffer
+   *   3) run preprocess src->dst
+   *   4) publish destination as ready
+   *   5) requeue capture frame
+   * - run() returns early on first non-success stage outcome.
    */
   class ProducerPipeline
   {
@@ -128,6 +102,9 @@ namespace omniseer::vision
     /**
      * @brief Run one producer tick on the hot path.
      *
+     * Performs one capture->preprocess->publish->requeue pass and returns the first
+     * stage outcome reached.
+     *
      * @return ProducerTick carrying stage, status, and diagnostics.
      */
     ProducerTick run() noexcept;
@@ -145,6 +122,7 @@ namespace omniseer::vision
     ITelemetry*      _telemetry{nullptr};
 
     bool                _armed{false};
+    uint64_t            _next_tick_id{1};
     uint64_t            _next_frame_id{1};
     PipelineRemapConfig _remap{};
   };
