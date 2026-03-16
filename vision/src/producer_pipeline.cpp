@@ -35,8 +35,10 @@ namespace omniseer::vision
   } // namespace
 
   ProducerPipeline::ProducerPipeline(V4l2Capture& capture, RgaPreprocess& preprocess,
-                                     ImageBufferPool& pool, ITelemetry* telemetry) noexcept
-      : _capture(capture), _preprocess(preprocess), _pool(pool), _telemetry(telemetry)
+                                     ImageBufferPool& pool, ITelemetry* telemetry,
+                                     ProducerPipelineConfig cfg) noexcept
+      : _capture(capture), _preprocess(preprocess), _pool(pool), _telemetry(telemetry),
+        _cfg(cfg)
   {
   }
 
@@ -46,8 +48,9 @@ namespace omniseer::vision
     if (!write_lease.has_value())
       throw std::runtime_error("ProducerPipeline::preflight: no writable buffer");
 
-    using clock                      = std::chrono::steady_clock;
-    const clock::time_point deadline = clock::now() + std::chrono::milliseconds(200);
+    using clock = std::chrono::steady_clock;
+    const clock::time_point deadline =
+        clock::now() + std::chrono::milliseconds(_cfg.preflight_capture_wait_ms);
 
     V4l2Capture::DequeueLeaseResult dq{};
     for (;;)
@@ -160,6 +163,7 @@ namespace omniseer::vision
     write_lease->buffer().sequence           = static_cast<uint32_t>(tick.sequence);
     write_lease->buffer().capture_ts_real_ns = tick.capture_ts_real_ns;
     tick.frame_id                            = _next_frame_id++;
+    write_lease->buffer().frame_id           = tick.frame_id;
     write_lease->publish();
     tick.stage_mask |= stage_mask_bit(ProducerStageMask::PublishReady);
 

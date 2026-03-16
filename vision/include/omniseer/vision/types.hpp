@@ -144,6 +144,8 @@ namespace omniseer::vision
     uint32_t sequence = 0;
     /// @brief Per-frame capture timestamp mapped to realtime nanoseconds (ROS2 `header.stamp`).
     uint64_t capture_ts_real_ns = 0;
+    /// @brief Producer-assigned monotonic frame identifier copied at publish.
+    uint64_t frame_id = 0;
   };
 
 } // namespace omniseer::vision

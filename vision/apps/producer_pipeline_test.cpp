@@ -213,6 +213,13 @@ TEST(ProducerPipeline, PreflightThenProducesFrames)
           stage_mask_bit(omniseer::vision::ProducerStageMask::PublishReady) |
           stage_mask_bit(omniseer::vision::ProducerStageMask::Requeue);
       EXPECT_EQ((tick.stage_mask & expected_mask), expected_mask);
+
+      auto read_lease = pool.acquire_read_lease();
+      ASSERT_TRUE(read_lease.has_value());
+      EXPECT_EQ(read_lease->index(), tick.pool_index);
+      EXPECT_EQ(read_lease->buffer().sequence, static_cast<uint32_t>(tick.sequence));
+      EXPECT_EQ(read_lease->buffer().capture_ts_real_ns, tick.capture_ts_real_ns);
+      EXPECT_EQ(read_lease->buffer().frame_id, tick.frame_id);
       continue;
     }
 

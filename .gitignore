@@ -91,6 +91,8 @@ msg/_*.py
 *.wikidoc
 # MkDocs build output
 site/
+# Local-only retrospective notes (not published/tracked)
+docs/software/project_journey.md
 
 # --- Backups ---
 *.bak

@@ -173,6 +173,12 @@ namespace omniseer::vision
     ImageBuffer&       buffer_at(int idx);
     /// @brief Read-only access to preallocated buffer metadata by pool index.
     const ImageBuffer& buffer_at(int idx) const;
+
+    /// @brief Fixed number of pool slots.
+    static constexpr int capacity() noexcept
+    {
+      return size;
+    }
   };
 
 } // namespace omniseer::vision

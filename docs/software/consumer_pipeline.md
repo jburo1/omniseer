@@ -34,6 +34,8 @@ Goals:
 2. Query RKNN model I/O attributes (`n_input`, `n_output`, tensor attrs).
 3. Configure required input binding:
    - FD-backed input via `rknn_create_mem_from_fd` + `rknn_set_io_mem`
+   - v1 implementation pre-binds all `ImageBufferPool` slots during `RknnRunner::preflight()`
+     so `infer()` does not perform `mmap()`/`rknn_create_mem_from_fd` work on the hot path
 4. Preallocate all long-lived buffers:
    - RKNN IO memory wrappers
    - output tensor storage (or preallocated output structs)

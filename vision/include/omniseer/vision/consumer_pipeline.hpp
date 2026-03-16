@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+#include "omniseer/vision/config.hpp"
+
 namespace omniseer::vision
 {
   class ImageBufferPool;
@@ -59,7 +61,7 @@ namespace omniseer::vision
    * @brief Consumer pipeline: acquire-ready -> infer -> postprocess/publish -> release.
    *
    * Ownership:
-   * - Non-owning references to pool and optional RKNN runner/telemetry collaborators.
+   * - Non-owning references to pool/RKNN runner and optional telemetry.
    *
    * Error policy:
    * - preflight() may throw on startup validation failures.
@@ -77,8 +79,8 @@ namespace omniseer::vision
   class ConsumerPipeline
   {
   public:
-    ConsumerPipeline(ImageBufferPool& pool, RknnRunner* runner = nullptr,
-                     ITelemetry* telemetry = nullptr) noexcept;
+    ConsumerPipeline(ImageBufferPool& pool, RknnRunner& runner, ITelemetry* telemetry = nullptr,
+                     ConsumerPipelineConfig cfg = {}) noexcept;
     ~ConsumerPipeline() = default;
 
     ConsumerPipeline(const ConsumerPipeline&)            = delete;
@@ -89,7 +91,7 @@ namespace omniseer::vision
     /**
      * @brief Validate startup assumptions and arm the hot path.
      */
-    void preflight();
+    void preflight(const ConsumerPipelineStartup& startup);
 
     /**
      * @brief Run one consumer tick on the hot path.
@@ -106,10 +108,12 @@ namespace omniseer::vision
 
   private:
     ImageBufferPool& _pool;
-    RknnRunner*      _runner{nullptr};
-    ITelemetry*      _telemetry{nullptr};
+    RknnRunner& _runner;
+    ITelemetry* _telemetry{nullptr};
+    ConsumerPipelineConfig _cfg{};
 
-    bool     _armed{false};
-    uint64_t _next_tick_id{1};
+    bool                _armed{false};
+    uint64_t            _next_tick_id{1};
+    PipelineRemapConfig _remap{};
   };
 } // namespace omniseer::vision

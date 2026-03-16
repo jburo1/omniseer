@@ -85,7 +85,8 @@ namespace omniseer::vision
   {
   public:
     ProducerPipeline(V4l2Capture& capture, RgaPreprocess& preprocess, ImageBufferPool& pool,
-                     ITelemetry* telemetry = nullptr) noexcept;
+                     ITelemetry* telemetry = nullptr,
+                     ProducerPipelineConfig cfg = {}) noexcept;
     ~ProducerPipeline() = default;
 
     ProducerPipeline(const ProducerPipeline&)            = delete;
@@ -120,6 +121,7 @@ namespace omniseer::vision
     RgaPreprocess&   _preprocess;
     ImageBufferPool& _pool;
     ITelemetry*      _telemetry{nullptr};
+    ProducerPipelineConfig _cfg{};
 
     bool                _armed{false};
     uint64_t            _next_tick_id{1};

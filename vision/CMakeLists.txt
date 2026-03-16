@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(Threads REQUIRED)
+find_path(RKNN_INCLUDE_DIR NAMES rknn_api.h)
+find_library(RKNNRT_LIBRARY NAMES rknnrt)
 
 option(VISION_BUILD_HARNESS "Build vision_harness app (requires librga)" ON)
 option(VISION_BUILD_TESTS "Build vision tests" ON)
@@ -16,6 +18,9 @@ if(VISION_BUILD_HARNESS)
 
   if(NOT RGA_FOUND)
     message(WARNING "librga not found; disabling vision_harness (set -DVISION_BUILD_HARNESS=OFF to silence)")
+    set(VISION_BUILD_HARNESS OFF)
+  elseif(NOT RKNN_INCLUDE_DIR OR NOT RKNNRT_LIBRARY)
+    message(WARNING "RKNN runtime not found; disabling vision_harness (set -DVISION_BUILD_HARNESS=OFF to silence)")
     set(VISION_BUILD_HARNESS OFF)
   endif()
 endif()
@@ -36,8 +41,8 @@ set(VISION_HARNESS_SOURCES
 
 if(VISION_BUILD_HARNESS)
   add_executable(vision_harness ${VISION_HARNESS_SOURCES})
-  target_include_directories(vision_harness PRIVATE include ${RGA_INCLUDE_DIRS})
-  target_link_libraries(vision_harness PRIVATE ${RGA_LIBRARIES})
+  target_include_directories(vision_harness PRIVATE include ${RGA_INCLUDE_DIRS} ${RKNN_INCLUDE_DIR})
+  target_link_libraries(vision_harness PRIVATE ${RGA_LIBRARIES} ${RKNNRT_LIBRARY})
   target_compile_options(vision_harness PRIVATE ${RGA_CFLAGS_OTHER})
 endif()
 
@@ -100,6 +105,23 @@ if(VISION_BUILD_TESTS)
 
   add_test(NAME image_buffer_pool_test COMMAND image_buffer_pool_test)
 
+  if(RKNN_INCLUDE_DIR AND RKNNRT_LIBRARY)
+    add_executable(rknn_runner_test
+      apps/rknn_runner_test.cpp
+      src/dma_heap_alloc.cpp
+      src/image_buffer_pool.cpp
+      src/rknn_runner.cpp
+      src/spsc_ring.cpp
+    )
+    target_include_directories(rknn_runner_test PRIVATE include ${RKNN_INCLUDE_DIR})
+    target_link_libraries(rknn_runner_test PRIVATE Threads::Threads GTest::gtest_main ${RKNNRT_LIBRARY})
+    target_compile_definitions(rknn_runner_test PRIVATE VISION_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+
+    add_test(NAME rknn_runner_test COMMAND rknn_runner_test)
+  else()
+    message(STATUS "RKNN runtime not found; rknn_runner_test will not be built")
+  endif()
+
   # Device-dependent V4L2 test (skips if device is unavailable).
   add_executable(v4l2_capture_test
     apps/v4l2_capture_test.cpp
@@ -128,7 +150,6 @@ if(VISION_BUILD_TESTS)
 
     add_executable(producer_pipeline_test
       apps/producer_pipeline_test.cpp
-      src/consumer_pipeline.cpp
       src/dma_heap_alloc.cpp
       src/image_buffer_pool.cpp
       src/pipeline.cpp
