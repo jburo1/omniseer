@@ -16,6 +16,8 @@ namespace omniseer::vision
     const int8_t* data{nullptr};
     /// @brief Byte count available at @ref data.
     size_t bytes{0};
+    /// @brief Number of active classes encoded into the prepared text tensor.
+    uint32_t active_class_count{0};
   };
 
   /**
@@ -51,11 +53,15 @@ namespace omniseer::vision
 
   /**
    * @brief Consumer-stage policy configuration.
-   *
-   * v1 intentionally keeps this empty until consumer-owned policy knobs exist.
    */
   struct ConsumerPipelineConfig
   {
+    /// @brief Minimum class confidence required before NMS.
+    float score_threshold{0.25F};
+    /// @brief Per-class NMS IoU threshold.
+    float nms_iou_threshold{0.45F};
+    /// @brief Maximum number of detections published per frame.
+    uint32_t max_detections{100};
   };
 
   /**

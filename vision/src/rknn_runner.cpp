@@ -80,6 +80,11 @@ namespace omniseer::vision
     return _output_views;
   }
 
+  const std::vector<RknnOutputDesc>& RknnRunner::output_descs() const noexcept
+  {
+    return _output_descs;
+  }
+
   void RknnRunner::preflight(const ImageBufferPool& pool, const int8_t* text_i8, size_t text_bytes)
   {
     _shutdown();
@@ -258,9 +263,11 @@ namespace omniseer::vision
   {
     _output_bindings.clear();
     _output_io.clear();
+    _output_descs.clear();
     _output_views.clear();
     _output_bindings.resize(_io_num.n_output);
     _output_io.resize(_io_num.n_output);
+    _output_descs.resize(_io_num.n_output);
     _output_views.resize(_io_num.n_output);
 
     for (uint32_t i = 0; i < _io_num.n_output; ++i)
@@ -276,6 +283,18 @@ namespace omniseer::vision
       const uint32_t out_bytes = tensor_bytes_for_attr(out.attr);
       if (out_bytes == 0)
         throw std::runtime_error("RknnRunner::preflight: output tensor has zero size");
+
+      RknnOutputDesc& desc = _output_descs[static_cast<size_t>(i)];
+      desc.index  = i;
+      desc.name   = out.attr.name;
+      desc.n_dims = (out.attr.n_dims <= RKNN_MAX_DIMS) ? out.attr.n_dims : RKNN_MAX_DIMS;
+      for (uint32_t dim = 0; dim < desc.n_dims; ++dim)
+      {
+        desc.dims[static_cast<size_t>(dim)] = out.attr.dims[dim];
+      }
+      desc.type       = out.attr.type;
+      desc.zero_point = out.attr.zp;
+      desc.scale      = out.attr.scale;
 
       out.storage.assign(static_cast<size_t>(out_bytes), 0u);
 
@@ -439,6 +458,7 @@ namespace omniseer::vision
   void RknnRunner::_release_outputs() noexcept
   {
     _output_views.clear();
+    _output_descs.clear();
     _output_io.clear();
     _output_bindings.clear();
   }

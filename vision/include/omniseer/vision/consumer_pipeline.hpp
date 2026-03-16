@@ -1,11 +1,15 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 
 #include "omniseer/vision/config.hpp"
+#include "omniseer/vision/yolo_world_postprocess.hpp"
 
 namespace omniseer::vision
 {
+  class IDetectionsSink;
+  class IFramePreviewSink;
   class ImageBufferPool;
   class ITelemetry;
   class RknnRunner;
@@ -61,7 +65,7 @@ namespace omniseer::vision
    * @brief Consumer pipeline: acquire-ready -> infer -> postprocess/publish -> release.
    *
    * Ownership:
-   * - Non-owning references to pool/RKNN runner and optional telemetry.
+   * - Non-owning references to pool/RKNN runner and optional sink/telemetry.
    *
    * Error policy:
    * - preflight() may throw on startup validation failures.
@@ -80,7 +84,7 @@ namespace omniseer::vision
   {
   public:
     ConsumerPipeline(ImageBufferPool& pool, RknnRunner& runner, ITelemetry* telemetry = nullptr,
-                     ConsumerPipelineConfig cfg = {}) noexcept;
+                     IDetectionsSink* sink = nullptr, ConsumerPipelineConfig cfg = {}) noexcept;
     ~ConsumerPipeline() = default;
 
     ConsumerPipeline(const ConsumerPipeline&)            = delete;
@@ -106,14 +110,21 @@ namespace omniseer::vision
     /// @brief True after successful preflight.
     bool is_armed() const noexcept;
 
+    /// @brief Set or clear the optional synchronous preview sink.
+    void set_preview_sink(IFramePreviewSink* sink) noexcept;
+
   private:
     ImageBufferPool& _pool;
-    RknnRunner& _runner;
-    ITelemetry* _telemetry{nullptr};
+    RknnRunner&       _runner;
+    ITelemetry*       _telemetry{nullptr};
+    IDetectionsSink*  _sink{nullptr};
+    IFramePreviewSink* _preview_sink{nullptr};
     ConsumerPipelineConfig _cfg{};
 
     bool                _armed{false};
     uint64_t            _next_tick_id{1};
+    uint32_t            _active_class_count{0};
+    YoloWorldOutputLayout _output_layout{};
     PipelineRemapConfig _remap{};
   };
 } // namespace omniseer::vision

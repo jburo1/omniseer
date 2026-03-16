@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <rknn_api.h>
@@ -66,13 +67,34 @@ namespace omniseer::vision
   };
 
   /**
+   * @brief Immutable metadata for one RKNN output tensor captured during preflight.
+   */
+  struct RknnOutputDesc
+  {
+    /// @brief Output tensor index.
+    uint32_t index{0};
+    /// @brief Stable tensor name reported by RKNN, when available.
+    std::string name{};
+    /// @brief Number of valid dimensions in @ref dims.
+    uint32_t n_dims{0};
+    /// @brief Tensor dimensions in RKNN-reported order.
+    std::array<uint32_t, RKNN_MAX_DIMS> dims{};
+    /// @brief RKNN tensor element type.
+    rknn_tensor_type type{RKNN_TENSOR_FLOAT32};
+    /// @brief Quantization zero point for asymmetric int tensors.
+    int32_t zero_point{0};
+    /// @brief Quantization scale for asymmetric int tensors.
+    float scale{1.0F};
+  };
+
+  /**
    * @brief RKNN consumer-stage runtime with FD-backed input binding.
    *
    * Typical flow:
    * - Construct with RknnRunnerConfig.
    * - preflight(pool, text_i8, text_bytes) once at startup.
    * - infer(pool_index) per frame on the hot path.
-   * - Read outputs() after successful infer().
+   * - Read outputs() and output_descs() after successful preflight.
    *
    * Implementation contract:
    * - Model contract is two inputs: image + text embeddings.
@@ -145,6 +167,8 @@ namespace omniseer::vision
 
     /// @brief Immutable output views for the latest successful inference.
     const std::vector<RknnOutputView>& outputs() const noexcept;
+    /// @brief Immutable output metadata captured during preflight.
+    const std::vector<RknnOutputDesc>& output_descs() const noexcept;
 
   private:
     struct ImageInputBinding
@@ -207,6 +231,7 @@ namespace omniseer::vision
     rknn_tensor_mem*               _text_mem{nullptr};
     std::vector<OutputBinding>     _output_bindings{};
     std::vector<rknn_output>       _output_io{};
+    std::vector<RknnOutputDesc>    _output_descs{};
     std::vector<RknnOutputView>    _output_views{};
   };
 } // namespace omniseer::vision
