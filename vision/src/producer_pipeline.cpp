@@ -7,11 +7,15 @@
 #include "omniseer/vision/image_buffer_pool.hpp"
 #include "omniseer/vision/rga_preprocess.hpp"
 #include "omniseer/vision/telemetry.hpp"
+#include "telemetry_timing.hpp"
 
 namespace omniseer::vision
 {
   namespace
   {
+    using telemetry_timing::ScopedStageTimer;
+    using telemetry_timing::clock;
+
     uint32_t stage_mask_bit(ProducerStageMask bit) noexcept
     {
       return static_cast<uint32_t>(bit);
@@ -100,8 +104,14 @@ namespace omniseer::vision
     ProducerTick tick{};
 
     const bool       telemetry_on = (_telemetry != nullptr && _telemetry->timing_enabled());
+    const clock::time_point total_start = telemetry_on ? clock::now() : clock::time_point{};
     CaptureStatus    sample_capture_status    = CaptureStatus::Ok;
     PreprocessStatus sample_preprocess_status = PreprocessStatus::Ok;
+    uint64_t         sample_dequeue_ns        = 0;
+    uint64_t         sample_acquire_write_ns  = 0;
+    uint64_t         sample_preprocess_ns     = 0;
+    uint64_t         sample_publish_ready_ns  = 0;
+    uint64_t         sample_requeue_ns        = 0;
 
     auto emit_sample = [&]() noexcept
     {
@@ -115,6 +125,12 @@ namespace omniseer::vision
       sample.sequence          = tick.sequence;
       sample.has_sequence      = (tick.sequence != 0) ? 1u : 0u;
       sample.event_ts_real_ns  = tick.capture_ts_real_ns;
+      sample.dequeue_ns        = sample_dequeue_ns;
+      sample.acquire_write_ns  = sample_acquire_write_ns;
+      sample.preprocess_ns     = sample_preprocess_ns;
+      sample.publish_ready_ns  = sample_publish_ready_ns;
+      sample.requeue_ns        = sample_requeue_ns;
+      sample.total_ns          = telemetry_timing::elapsed_ns(total_start, clock::now());
       sample.stage_mask        = tick.stage_mask;
       sample.capture_errno     = tick.stage_errno;
       sample.producer_status   = static_cast<uint8_t>(tick.status);
@@ -133,7 +149,11 @@ namespace omniseer::vision
     };
 
     // Stage 1: Dequeue one capture frame.
-    auto dq = _capture.dequeue_lease();
+    auto dq = [&]() noexcept
+    {
+      ScopedStageTimer timer(telemetry_on, sample_dequeue_ns);
+      return _capture.dequeue_lease();
+    }();
     if (!dq.ok())
     {
       sample_capture_status = dq.capture.status;
@@ -145,30 +165,44 @@ namespace omniseer::vision
     tick.stage_mask |= stage_mask_bit(ProducerStageMask::Dequeue);
 
     // Stage 2: Acquire writable destination slot.
-    auto write_lease = _pool.acquire_write_lease();
+    auto write_lease = [&]() noexcept
+    {
+      ScopedStageTimer timer(telemetry_on, sample_acquire_write_ns);
+      return _pool.acquire_write_lease();
+    }();
     if (!write_lease.has_value())
       return finish(ProducerTickStatus::NoWritableBuffer, ProducerStage::AcquireWrite);
     tick.pool_index = write_lease->index();
     tick.stage_mask |= stage_mask_bit(ProducerStageMask::AcquireWrite);
 
     // Stage 3: Preprocess src -> dst.
-    const PreprocessResult preprocess =
-        _preprocess.run(dq.lease->frame(), write_lease->buffer(), nullptr);
+    const PreprocessResult preprocess = [&]() noexcept
+    {
+      ScopedStageTimer timer(telemetry_on, sample_preprocess_ns);
+      return _preprocess.run(dq.lease->frame(), write_lease->buffer(), nullptr);
+    }();
     sample_preprocess_status = preprocess.status;
     if (!preprocess.ok())
       return finish(ProducerTickStatus::PreprocessError, ProducerStage::Preprocess);
     tick.stage_mask |= stage_mask_bit(ProducerStageMask::Preprocess);
 
     // Stage 4: Publish destination slot as ready.
-    write_lease->buffer().sequence           = static_cast<uint32_t>(tick.sequence);
-    write_lease->buffer().capture_ts_real_ns = tick.capture_ts_real_ns;
-    tick.frame_id                            = _next_frame_id++;
-    write_lease->buffer().frame_id           = tick.frame_id;
-    write_lease->publish();
+    {
+      ScopedStageTimer timer(telemetry_on, sample_publish_ready_ns);
+      write_lease->buffer().sequence           = static_cast<uint32_t>(tick.sequence);
+      write_lease->buffer().capture_ts_real_ns = tick.capture_ts_real_ns;
+      tick.frame_id                            = _next_frame_id++;
+      write_lease->buffer().frame_id           = tick.frame_id;
+      write_lease->publish();
+    }
     tick.stage_mask |= stage_mask_bit(ProducerStageMask::PublishReady);
 
     // Stage 5: Requeue capture frame back to V4L2.
-    const CaptureResult requeue = dq.lease->release();
+    const CaptureResult requeue = [&]() noexcept
+    {
+      ScopedStageTimer timer(telemetry_on, sample_requeue_ns);
+      return dq.lease->release();
+    }();
     sample_capture_status       = requeue.status;
     if (!requeue.ok())
       return finish(map_capture_tick_status(requeue.status), ProducerStage::Requeue,

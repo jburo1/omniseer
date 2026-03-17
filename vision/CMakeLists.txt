@@ -35,6 +35,7 @@ set(VISION_HARNESS_SOURCES
   src/consumer_pipeline.cpp
   src/dma_heap_alloc.cpp
   src/image_buffer_pool.cpp
+  src/jsonl_telemetry.cpp
   src/pipeline.cpp
   src/producer_pipeline.cpp
   src/rga_preprocess.cpp
@@ -160,6 +161,24 @@ if(VISION_BUILD_TESTS)
     target_compile_definitions(yolo_world_text_embeddings_test PRIVATE VISION_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
 
     add_test(NAME yolo_world_text_embeddings_test COMMAND yolo_world_text_embeddings_test)
+
+    add_executable(jsonl_telemetry_test
+      apps/jsonl_telemetry_test.cpp
+      src/jsonl_telemetry.cpp
+      src/spsc_ring.cpp
+    )
+    target_include_directories(jsonl_telemetry_test PRIVATE include ${RKNN_INCLUDE_DIR})
+    target_link_libraries(jsonl_telemetry_test PRIVATE Threads::Threads GTest::gtest_main)
+
+    add_test(NAME jsonl_telemetry_test COMMAND jsonl_telemetry_test)
+
+    add_executable(rolling_telemetry_test
+      apps/rolling_telemetry_test.cpp
+    )
+    target_include_directories(rolling_telemetry_test PRIVATE include ${RKNN_INCLUDE_DIR})
+    target_link_libraries(rolling_telemetry_test PRIVATE Threads::Threads GTest::gtest_main)
+
+    add_test(NAME rolling_telemetry_test COMMAND rolling_telemetry_test)
   else()
     message(STATUS "RKNN runtime not found; RKNN-dependent tests will not be built")
   endif()

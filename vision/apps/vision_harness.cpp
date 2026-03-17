@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <csignal>
 #include <cerrno>
@@ -19,14 +20,17 @@
 #include <opencv2/imgproc.hpp>
 
 #include "omniseer/vision/class_list.hpp"
+#include "omniseer/vision/composite_telemetry.hpp"
 #include "omniseer/vision/consumer_pipeline.hpp"
 #include "omniseer/vision/detections_sink.hpp"
 #include "omniseer/vision/dma_heap_alloc.hpp"
 #include "omniseer/vision/frame_preview_sink.hpp"
 #include "omniseer/vision/image_buffer_pool.hpp"
+#include "omniseer/vision/jsonl_telemetry.hpp"
 #include "omniseer/vision/producer_pipeline.hpp"
 #include "omniseer/vision/rga_preprocess.hpp"
 #include "omniseer/vision/rknn_runner.hpp"
+#include "omniseer/vision/rolling_telemetry.hpp"
 #include "omniseer/vision/v4l2_capture.hpp"
 #include "omniseer/vision/yolo_world_text_embeddings.hpp"
 
@@ -59,6 +63,10 @@ namespace
     std::string detector_model_path{source_path("/testdata/rknn_runner/yolo_world_v2s_i8.rknn")};
     std::string class_list_path{};
     std::string pad_token{"nothing"};
+    std::string telemetry_jsonl_path{};
+    float       score_threshold{0.25F};
+    float       nms_iou_threshold{0.45F};
+    uint32_t    max_detections{100};
     bool        preview{true};
   };
 
@@ -78,6 +86,10 @@ namespace
                  "  --clip-vocab <path>      CLIP BPE merges/vocab path\n"
                  "  --detector-model <path>  YOLO-World RKNN path\n"
                  "  --pad-token <text>       Internal pad phrase for unused class slots\n"
+                 "  --telemetry-jsonl <path> Write producer/consumer telemetry as JSONL\n"
+                 "  --score-threshold <f>    Minimum detection confidence (default: 0.25)\n"
+                 "  --nms-iou-threshold <f>  Per-class NMS IoU threshold (default: 0.45)\n"
+                 "  --max-detections <u32>   Maximum detections per frame (default: 100)\n"
                  "  --no-preview             Disable the OpenCV preview window\n"
                  "  --help                   Show this help\n",
                  argv0);
@@ -92,6 +104,18 @@ namespace
     if (end == nullptr || *end != '\0' || n > 0xffffffffUL)
       return false;
     out = static_cast<uint32_t>(n);
+    return true;
+  }
+
+  bool parse_float(const char* text, float& out)
+  {
+    if (text == nullptr || *text == '\0')
+      return false;
+    char* end = nullptr;
+    const float value = std::strtof(text, &end);
+    if (end == nullptr || *end != '\0')
+      return false;
+    out = value;
     return true;
   }
 
@@ -137,9 +161,28 @@ namespace
         cfg.detector_model_path = require_value("--detector-model");
         continue;
       }
+      if (arg == "--telemetry-jsonl")
+      {
+        cfg.telemetry_jsonl_path = require_value("--telemetry-jsonl");
+        continue;
+      }
       if (arg == "--pad-token")
       {
         cfg.pad_token = require_value("--pad-token");
+        continue;
+      }
+      if (arg == "--score-threshold")
+      {
+        const char* value = require_value("--score-threshold");
+        if (!parse_float(value, cfg.score_threshold))
+          throw std::runtime_error("invalid float for --score-threshold: " + std::string(value));
+        continue;
+      }
+      if (arg == "--nms-iou-threshold")
+      {
+        const char* value = require_value("--nms-iou-threshold");
+        if (!parse_float(value, cfg.nms_iou_threshold))
+          throw std::runtime_error("invalid float for --nms-iou-threshold: " + std::string(value));
         continue;
       }
       if (arg == "--no-preview")
@@ -161,6 +204,8 @@ namespace
         target = &cfg.dst_height;
       else if (arg == "--warmup")
         target = &cfg.warmup_runs;
+      else if (arg == "--max-detections")
+        target = &cfg.max_detections;
 
       if (target != nullptr)
       {
@@ -175,6 +220,12 @@ namespace
 
     if (cfg.class_list_path.empty())
       throw std::runtime_error("--classes is required");
+    if (cfg.score_threshold < 0.0F || cfg.score_threshold > 1.0F)
+      throw std::runtime_error("--score-threshold must be in [0, 1]");
+    if (cfg.nms_iou_threshold < 0.0F || cfg.nms_iou_threshold > 1.0F)
+      throw std::runtime_error("--nms-iou-threshold must be in [0, 1]");
+    if (cfg.max_detections == 0)
+      throw std::runtime_error("--max-detections must be > 0");
 
     return true;
   }
@@ -231,8 +282,9 @@ namespace
   {
   public:
     explicit OpenCvPreviewSink(std::vector<std::string> class_names,
+                               const omniseer::vision::RollingTelemetryStats* stats = nullptr,
                                std::string              window_name = "Omniseer Vision")
-        : _class_names(std::move(class_names)), _window_name(std::move(window_name))
+        : _class_names(std::move(class_names)), _stats(stats), _window_name(std::move(window_name))
     {
       cv::namedWindow(_window_name, cv::WINDOW_NORMAL);
     }
@@ -312,10 +364,12 @@ namespace
                       const omniseer::vision::DetectionsFrame&  frame,
                       const omniseer::vision::PipelineRemapConfig& remap) noexcept
     {
-      cv::putText(image,
-                  "frame=" + std::to_string(frame.frame_id) + " det=" + std::to_string(frame.count),
-                  cv::Point(12, 24), cv::FONT_HERSHEY_SIMPLEX, 0.6, cv::Scalar(240, 240, 240), 2,
-                  cv::LINE_AA);
+      const auto stats_line = make_stats_lines(frame);
+      for (std::size_t i = 0; i < stats_line.size(); ++i)
+      {
+        cv::putText(image, stats_line[i], cv::Point(12, 24 + static_cast<int>(i) * 22),
+                    cv::FONT_HERSHEY_SIMPLEX, 0.58, cv::Scalar(240, 240, 240), 2, cv::LINE_AA);
+      }
 
       for (uint32_t i = 0; i < frame.count; ++i)
       {
@@ -353,10 +407,64 @@ namespace
       }
     }
 
+    std::array<std::string, 4>
+    make_stats_lines(const omniseer::vision::DetectionsFrame& frame) noexcept
+    {
+      std::array<std::string, 4> lines{};
+      lines[0] =
+          "frame=" + std::to_string(frame.frame_id) + " det=" + std::to_string(frame.count);
+      if (_stats == nullptr)
+        return lines;
+
+      const auto now      = std::chrono::steady_clock::now();
+      const auto snapshot = _stats->snapshot();
+      if (_last_rate_time.time_since_epoch().count() == 0)
+      {
+        _last_rate_time     = now;
+        _last_rate_snapshot = snapshot;
+      }
+      else
+      {
+        const double dt = std::chrono::duration<double>(now - _last_rate_time).count();
+        if (dt >= 0.25)
+        {
+          _producer_fps = static_cast<double>(snapshot.produced_count -
+                                              _last_rate_snapshot.produced_count) /
+                          dt;
+          _consumer_fps = static_cast<double>(snapshot.consumed_count -
+                                              _last_rate_snapshot.consumed_count) /
+                          dt;
+          _last_rate_time     = now;
+          _last_rate_snapshot = snapshot;
+        }
+      }
+
+      lines[1] = cv::format("prod %.1f fps | cons %.1f fps", _producer_fps, _consumer_fps);
+      lines[2] = cv::format("pre %.2f ms | infer %.2f ms | post %.2f ms",
+                            ns_to_ms(snapshot.last_preprocess_ns), ns_to_ms(snapshot.last_infer_ns),
+                            ns_to_ms(snapshot.last_postprocess_ns));
+      lines[3] = cv::format("prod %.2f ms | cons %.2f ms | nwbuf %llu | infererr %llu",
+                            ns_to_ms(snapshot.last_producer_total_ns),
+                            ns_to_ms(snapshot.last_consumer_total_ns),
+                            static_cast<unsigned long long>(snapshot.no_writable_buffer_count),
+                            static_cast<unsigned long long>(snapshot.infer_error_count));
+      return lines;
+    }
+
+    static double ns_to_ms(uint64_t ns) noexcept
+    {
+      return static_cast<double>(ns) / 1.0e6;
+    }
+
     std::vector<std::string>        _class_names{};
+    const omniseer::vision::RollingTelemetryStats* _stats{nullptr};
     std::string                     _window_name{};
     std::unordered_map<int, Mapping> _mappings{};
     bool                            _logged_map_failure{false};
+    std::chrono::steady_clock::time_point _last_rate_time{};
+    omniseer::vision::RollingTelemetrySnapshot _last_rate_snapshot{};
+    double _producer_fps{0.0};
+    double _consumer_fps{0.0};
   };
 } // namespace
 
@@ -376,6 +484,11 @@ int main(int argc, char** argv)
                  "Unused detector text slots will be padded internally with \"%s\" and ignored by postprocess.\n",
                  cfg.pad_token.c_str());
     std::fprintf(stdout, "Preview: %s\n", cfg.preview ? "enabled" : "disabled");
+    std::fprintf(stdout, "Postprocess: score>=%.2f nms_iou<=%.2f max_det=%u\n",
+                 static_cast<double>(cfg.score_threshold),
+                 static_cast<double>(cfg.nms_iou_threshold), cfg.max_detections);
+    if (!cfg.telemetry_jsonl_path.empty())
+      std::fprintf(stdout, "Telemetry JSONL: %s\n", cfg.telemetry_jsonl_path.c_str());
 
     std::signal(SIGINT, handle_signal);
     std::signal(SIGTERM, handle_signal);
@@ -403,8 +516,34 @@ int main(int argc, char** argv)
     });
     prefill_pool(pool, preprocess);
 
+    std::unique_ptr<omniseer::vision::JsonlTelemetry> jsonl_telemetry{};
+    std::unique_ptr<omniseer::vision::CompositeTelemetry> telemetry{};
+    omniseer::vision::RollingTelemetryStats               rolling_stats{};
+    if (!cfg.telemetry_jsonl_path.empty())
+    {
+      jsonl_telemetry = std::make_unique<omniseer::vision::JsonlTelemetry>(
+          omniseer::vision::JsonlTelemetryConfig{
+              .path = cfg.telemetry_jsonl_path,
+          });
+    }
+    omniseer::vision::ITelemetry* telemetry_sink = nullptr;
+    if (cfg.preview && jsonl_telemetry)
+    {
+      telemetry = std::make_unique<omniseer::vision::CompositeTelemetry>(
+          std::vector<omniseer::vision::ITelemetry*>{&rolling_stats, jsonl_telemetry.get()});
+      telemetry_sink = telemetry.get();
+    }
+    else if (cfg.preview)
+    {
+      telemetry_sink = &rolling_stats;
+    }
+    else if (jsonl_telemetry)
+    {
+      telemetry_sink = jsonl_telemetry.get();
+    }
+
     omniseer::vision::ProducerPipeline producer(
-        capture, preprocess, pool, nullptr,
+        capture, preprocess, pool, telemetry_sink,
         {.preflight_capture_wait_ms = cfg.preflight_capture_wait_ms});
     producer.preflight();
 
@@ -421,11 +560,17 @@ int main(int argc, char** argv)
         .model_path  = cfg.detector_model_path,
         .warmup_runs = cfg.warmup_runs,
     });
-    omniseer::vision::ConsumerPipeline consumer(pool, runner, nullptr, &sink);
+    omniseer::vision::ConsumerPipeline consumer(
+        pool, runner, telemetry_sink, &sink,
+        {
+            .score_threshold   = cfg.score_threshold,
+            .nms_iou_threshold = cfg.nms_iou_threshold,
+            .max_detections    = cfg.max_detections,
+        });
     std::unique_ptr<OpenCvPreviewSink> preview_sink{};
     if (cfg.preview)
     {
-      preview_sink = std::make_unique<OpenCvPreviewSink>(prepared.class_names);
+      preview_sink = std::make_unique<OpenCvPreviewSink>(prepared.class_names, &rolling_stats);
       consumer.set_preview_sink(preview_sink.get());
     }
     consumer.preflight({

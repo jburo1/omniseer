@@ -213,6 +213,13 @@ TEST(ProducerPipeline, PreflightThenProducesFrames)
           stage_mask_bit(omniseer::vision::ProducerStageMask::PublishReady) |
           stage_mask_bit(omniseer::vision::ProducerStageMask::Requeue);
       EXPECT_EQ((tick.stage_mask & expected_mask), expected_mask);
+      const auto& sample = telemetry.producer_samples[emitted_before];
+      EXPECT_GT(sample.dequeue_ns, 0u);
+      EXPECT_GE(sample.acquire_write_ns, 0u);
+      EXPECT_GT(sample.preprocess_ns, 0u);
+      EXPECT_GE(sample.publish_ready_ns, 0u);
+      EXPECT_GE(sample.requeue_ns, 0u);
+      EXPECT_GT(sample.total_ns, 0u);
 
       auto read_lease = pool.acquire_read_lease();
       ASSERT_TRUE(read_lease.has_value());
@@ -242,4 +249,110 @@ TEST(ProducerPipeline, PreflightThenProducesFrames)
   EXPECT_GT(produced, 0) << "producer did not produce any frames in " << max_ticks << " ticks";
 
   ASSERT_NO_THROW(capture.stop());
+}
+
+TEST(ProducerPipeline, TelemetryTracksReachedStagesOnNoWritableBuffer)
+{
+  const char*       dev_env = std::getenv("VISION_V4L2_DEV");
+  const std::string dev     = (dev_env && *dev_env) ? dev_env : "/dev/video12";
+
+  if (::access(dev.c_str(), R_OK | W_OK) != 0)
+    GTEST_SKIP() << "no access to " << dev << " (" << std::strerror(errno) << ")";
+
+  if (::access("/dev/rga", R_OK | W_OK) != 0 && ::access("/dev/rga0", R_OK | W_OK) != 0)
+    GTEST_SKIP() << "no access to /dev/rga(/dev/rga0) (" << std::strerror(errno) << ")";
+
+  const uint32_t src_w   = env_u32("VISION_V4L2_W", 1280);
+  const uint32_t src_h   = env_u32("VISION_V4L2_H", 720);
+  const uint32_t buffers = env_u32("VISION_V4L2_BUFFERS", 4);
+  const int      dst_w   = static_cast<int>(env_u32("VISION_DST_W", 640));
+  const int      dst_h   = static_cast<int>(env_u32("VISION_DST_H", 640));
+
+  omniseer::vision::V4l2Capture capture({
+      .device       = dev,
+      .width        = src_w,
+      .height       = src_h,
+      .fourcc       = V4L2_PIX_FMT_NV12,
+      .buffer_count = buffers,
+  });
+  ASSERT_NO_THROW(capture.start());
+
+  omniseer::vision::ImageBufferPool pool;
+  try
+  {
+    omniseer::vision::DmaHeapAllocator allocator;
+    pool.allocate_all(allocator, dst_w, dst_h, omniseer::vision::PixelFormat::RGB888);
+  }
+  catch (const std::exception& e)
+  {
+    GTEST_SKIP() << e.what();
+  }
+
+  omniseer::vision::RgaPreprocess preprocess({
+      .src_w     = static_cast<int>(src_w),
+      .src_h     = static_cast<int>(src_h),
+      .dst_w     = dst_w,
+      .dst_h     = dst_h,
+      .pad_value = 114,
+  });
+
+  {
+    std::vector<omniseer::vision::ImageBufferPool::WriteLease> init_leases{};
+    for (;;)
+    {
+      auto lease = pool.acquire_write_lease();
+      if (!lease)
+        break;
+      ASSERT_NO_THROW(preprocess.prefill(lease->buffer()));
+      init_leases.emplace_back(std::move(*lease));
+    }
+    ASSERT_GT(init_leases.size(), 0u);
+  }
+
+  TestTelemetry telemetry;
+  omniseer::vision::ProducerPipeline producer(capture, preprocess, pool, &telemetry);
+  ASSERT_NO_THROW(producer.preflight());
+
+  std::vector<omniseer::vision::ImageBufferPool::WriteLease> occupied{};
+  for (;;)
+  {
+    auto lease = pool.acquire_write_lease();
+    if (!lease)
+      break;
+    occupied.emplace_back(std::move(*lease));
+  }
+  ASSERT_EQ(static_cast<int>(occupied.size()), omniseer::vision::ImageBufferPool::capacity());
+
+  constexpr int max_ticks = 200;
+  for (int i = 0; i < max_ticks; ++i)
+  {
+    const std::size_t emitted_before = telemetry.producer_samples.size();
+    const auto        tick           = producer.run();
+
+    if (tick.status == omniseer::vision::ProducerTickStatus::NoFrame)
+    {
+      EXPECT_EQ(telemetry.producer_samples.size(), emitted_before);
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      continue;
+    }
+
+    ASSERT_EQ(tick.status, omniseer::vision::ProducerTickStatus::NoWritableBuffer);
+    ASSERT_EQ(tick.stage, omniseer::vision::ProducerStage::AcquireWrite);
+    ASSERT_EQ(telemetry.producer_samples.size(), emitted_before + 1);
+    const auto& sample = telemetry.producer_samples.back();
+    EXPECT_EQ(sample.producer_status,
+              static_cast<uint8_t>(omniseer::vision::ProducerTickStatus::NoWritableBuffer));
+    EXPECT_GT(sample.dequeue_ns, 0u);
+    EXPECT_GE(sample.acquire_write_ns, 0u);
+    EXPECT_EQ(sample.preprocess_ns, 0u);
+    EXPECT_EQ(sample.publish_ready_ns, 0u);
+    EXPECT_EQ(sample.requeue_ns, 0u);
+    EXPECT_GT(sample.total_ns, 0u);
+
+    ASSERT_NO_THROW(capture.stop());
+    return;
+  }
+
+  ASSERT_NO_THROW(capture.stop());
+  FAIL() << "producer did not reach NoWritableBuffer in " << max_ticks << " ticks";
 }

@@ -1,0 +1,14 @@
+coffee mug
+mug
+cup
+person
+headphones
+bunny
+rabbit
+phone
+wall
+door
+chair
+mouse
+finger
+hand

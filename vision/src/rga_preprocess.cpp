@@ -22,7 +22,7 @@ namespace omniseer::vision
       switch (fmt)
       {
       case PixelFormat::NV12:
-        return RK_FORMAT_YCrCb_420_SP;
+        return RK_FORMAT_YCbCr_420_SP;
       case PixelFormat::RGB888:
         return RK_FORMAT_RGB_888;
       }

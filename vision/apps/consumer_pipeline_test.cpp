@@ -17,6 +17,7 @@
 #include "omniseer/vision/dma_heap_alloc.hpp"
 #include "omniseer/vision/image_buffer_pool.hpp"
 #include "omniseer/vision/rknn_runner.hpp"
+#include "omniseer/vision/telemetry.hpp"
 
 namespace
 {
@@ -108,6 +109,27 @@ namespace
     uint32_t                          publish_count{0};
   };
 
+  class TestTelemetry final : public omniseer::vision::ITelemetry
+  {
+  public:
+    bool timing_enabled() const noexcept override
+    {
+      return enabled;
+    }
+
+    void emit_producer(const omniseer::vision::ProducerSample&) noexcept override
+    {
+    }
+
+    void emit_consumer(const omniseer::vision::ConsumerSample& sample) noexcept override
+    {
+      consumer_samples.push_back(sample);
+    }
+
+    bool                                       enabled{true};
+    std::vector<omniseer::vision::ConsumerSample> consumer_samples{};
+  };
+
   class ConsumerPipelineSmokeTest : public ::testing::Test
   {
   protected:
@@ -133,7 +155,7 @@ namespace
       runner_cfg.model_path  = model_path_;
       runner_cfg.warmup_runs = 0;
       runner_.emplace(runner_cfg);
-      consumer_.emplace(pool_, *runner_, nullptr, &sink_);
+      consumer_.emplace(pool_, *runner_, &telemetry_, &sink_);
 
       omniseer::vision::ConsumerPipelineStartup startup{};
       startup.text_embeddings = {
@@ -148,6 +170,7 @@ namespace
     omniseer::vision::ImageBufferPool              pool_{};
     std::vector<int8_t>                            text_i8_{};
     std::optional<omniseer::vision::RknnRunner>    runner_{};
+    TestTelemetry                                  telemetry_{};
     TestSink                                       sink_{};
     std::optional<omniseer::vision::ConsumerPipeline> consumer_{};
   };
@@ -173,6 +196,21 @@ TEST_F(ConsumerPipelineSmokeTest, RunConsumesReadyBuffer)
   EXPECT_EQ(tick.frame_id, 7u);
   EXPECT_EQ(tick.pool_index, published_index);
   EXPECT_EQ(sink_.publish_count, 1u);
+  ASSERT_EQ(telemetry_.consumer_samples.size(), 1u);
+  const auto& sample = telemetry_.consumer_samples.back();
+  EXPECT_EQ(sample.consumer_status,
+            static_cast<uint8_t>(omniseer::vision::ConsumerTickStatus::Consumed));
+  EXPECT_EQ(sample.frame_id, tick.frame_id);
+  EXPECT_EQ(sample.sequence, tick.sequence);
+  EXPECT_EQ(sample.has_frame_id, 1u);
+  EXPECT_EQ(sample.has_sequence, 1u);
+  EXPECT_EQ(sample.stage_mask, tick.stage_mask);
+  EXPECT_GE(sample.acquire_read_ns, 0u);
+  EXPECT_GT(sample.infer_ns, 0u);
+  EXPECT_GT(sample.postprocess_ns, 0u);
+  EXPECT_GE(sample.publish_ns, 0u);
+  EXPECT_GE(sample.release_ns, 0u);
+  EXPECT_GT(sample.total_ns, 0u);
   EXPECT_EQ(sink_.last_frame.frame_id, tick.frame_id);
   EXPECT_EQ(sink_.last_frame.sequence, tick.sequence);
   EXPECT_EQ(sink_.last_frame.capture_ts_real_ns, tick.capture_ts_real_ns);
@@ -217,6 +255,7 @@ TEST_F(ConsumerPipelineSmokeTest, RunReturnsNoReadyBufferWhenPoolEmpty)
   EXPECT_EQ(tick.stage_mask, 0u);
   EXPECT_EQ(tick.pool_index, -1);
   EXPECT_EQ(sink_.publish_count, 0u);
+  EXPECT_TRUE(telemetry_.consumer_samples.empty());
 }
 
 TEST_F(ConsumerPipelineSmokeTest, PreflightRejectsActiveClassCountAboveModelCapacity)
