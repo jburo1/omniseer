@@ -16,6 +16,9 @@ TEST(RollingTelemetryStats, TracksCountsAndDurations)
   consumer.consumer_status = static_cast<uint8_t>(omniseer::vision::ConsumerTickStatus::Consumed);
   consumer.infer_ns        = 22;
   consumer.postprocess_ns  = 7;
+  consumer.publish_ns      = 5;
+  consumer.source_age_start_ns = 100;
+  consumer.source_age_end_ns   = 144;
   consumer.total_ns        = 44;
 
   stats.emit_producer(producer);
@@ -28,6 +31,9 @@ TEST(RollingTelemetryStats, TracksCountsAndDurations)
   EXPECT_EQ(snapshot.last_producer_total_ns, 33u);
   EXPECT_EQ(snapshot.last_infer_ns, 22u);
   EXPECT_EQ(snapshot.last_postprocess_ns, 7u);
+  EXPECT_EQ(snapshot.last_publish_ns, 5u);
+  EXPECT_EQ(snapshot.last_source_age_start_ns, 100u);
+  EXPECT_EQ(snapshot.last_source_age_end_ns, 144u);
   EXPECT_EQ(snapshot.last_consumer_total_ns, 44u);
 }
 

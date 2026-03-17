@@ -205,6 +205,14 @@ TEST_F(ConsumerPipelineSmokeTest, RunConsumesReadyBuffer)
   EXPECT_EQ(sample.has_frame_id, 1u);
   EXPECT_EQ(sample.has_sequence, 1u);
   EXPECT_EQ(sample.stage_mask, tick.stage_mask);
+  EXPECT_EQ(sample.postprocess_status,
+            static_cast<uint8_t>(omniseer::vision::PostprocessStatus::Ok));
+  EXPECT_GT(sample.consumer_start_ts_real_ns, 0u);
+  EXPECT_GT(sample.consumer_end_ts_real_ns, 0u);
+  EXPECT_LE(sample.consumer_start_ts_real_ns, sample.consumer_end_ts_real_ns);
+  EXPECT_GT(sample.source_age_start_ns, 0u);
+  EXPECT_GT(sample.source_age_end_ns, 0u);
+  EXPECT_LE(sample.source_age_start_ns, sample.source_age_end_ns);
   EXPECT_GE(sample.acquire_read_ns, 0u);
   EXPECT_GT(sample.infer_ns, 0u);
   EXPECT_GT(sample.postprocess_ns, 0u);

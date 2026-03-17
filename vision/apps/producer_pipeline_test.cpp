@@ -214,6 +214,9 @@ TEST(ProducerPipeline, PreflightThenProducesFrames)
           stage_mask_bit(omniseer::vision::ProducerStageMask::Requeue);
       EXPECT_EQ((tick.stage_mask & expected_mask), expected_mask);
       const auto& sample = telemetry.producer_samples[emitted_before];
+      EXPECT_GT(sample.source_age_dequeue_ns, 0u);
+      EXPECT_GT(sample.source_age_publish_ready_ns, 0u);
+      EXPECT_GE(sample.source_age_publish_ready_ns, sample.source_age_dequeue_ns);
       EXPECT_GT(sample.dequeue_ns, 0u);
       EXPECT_GE(sample.acquire_write_ns, 0u);
       EXPECT_GT(sample.preprocess_ns, 0u);
@@ -342,6 +345,8 @@ TEST(ProducerPipeline, TelemetryTracksReachedStagesOnNoWritableBuffer)
     const auto& sample = telemetry.producer_samples.back();
     EXPECT_EQ(sample.producer_status,
               static_cast<uint8_t>(omniseer::vision::ProducerTickStatus::NoWritableBuffer));
+    EXPECT_GT(sample.source_age_dequeue_ns, 0u);
+    EXPECT_EQ(sample.source_age_publish_ready_ns, 0u);
     EXPECT_GT(sample.dequeue_ns, 0u);
     EXPECT_GE(sample.acquire_write_ns, 0u);
     EXPECT_EQ(sample.preprocess_ns, 0u);

@@ -20,6 +20,8 @@ namespace omniseer::vision
 {
   namespace
   {
+    constexpr unsigned kJsonlSchemaVersion = 3;
+
     const char* producer_status_name(uint8_t status) noexcept
     {
       switch (static_cast<ProducerTickStatus>(status))
@@ -110,9 +112,29 @@ namespace omniseer::vision
       return "unknown";
     }
 
+    const char* postprocess_status_name(uint8_t status) noexcept
+    {
+      switch (static_cast<PostprocessStatus>(status))
+      {
+      case PostprocessStatus::NotRun:
+        return "not_run";
+      case PostprocessStatus::Ok:
+        return "ok";
+      }
+      return "unknown";
+    }
+
     void write_optional_u64(std::ofstream& os, uint64_t value, uint8_t has_value)
     {
       if (has_value != 0)
+        os << value;
+      else
+        os << "null";
+    }
+
+    void write_optional_u64(std::ofstream& os, uint64_t value, bool has_value)
+    {
+      if (has_value)
         os << value;
       else
         os << "null";
@@ -128,11 +150,16 @@ namespace omniseer::vision
 
     void write_producer_json(std::ofstream& os, const ProducerSample& sample)
     {
-      os << "{\"schema_version\":1,\"source\":\"producer\",\"frame_id\":";
+      os << "{\"schema_version\":" << kJsonlSchemaVersion
+         << ",\"source\":\"producer\",\"frame_id\":";
       write_optional_u64(os, sample.frame_id, sample.has_frame_id);
       os << ",\"tick_id\":" << sample.tick_id << ",\"sequence\":";
       write_optional_u64(os, sample.sequence, sample.has_sequence);
       os << ",\"event_ts_real_ns\":" << sample.event_ts_real_ns;
+      os << ",\"source_age_dequeue_ns\":";
+      write_optional_u64(os, sample.source_age_dequeue_ns, sample.event_ts_real_ns != 0);
+      os << ",\"source_age_publish_ready_ns\":";
+      write_optional_u64(os, sample.source_age_publish_ready_ns, sample.event_ts_real_ns != 0);
       os << ",\"producer_status\":\"" << producer_status_name(sample.producer_status) << "\"";
       os << ",\"capture_status\":\"" << capture_status_name(sample.capture_status) << "\"";
       os << ",\"preprocess_status\":\"" << preprocess_status_name(sample.preprocess_status) << "\"";
@@ -159,14 +186,26 @@ namespace omniseer::vision
 
     void write_consumer_json(std::ofstream& os, const ConsumerSample& sample)
     {
-      os << "{\"schema_version\":1,\"source\":\"consumer\",\"frame_id\":";
+      os << "{\"schema_version\":" << kJsonlSchemaVersion
+         << ",\"source\":\"consumer\",\"frame_id\":";
       write_optional_u64(os, sample.frame_id, sample.has_frame_id);
       os << ",\"tick_id\":" << sample.tick_id << ",\"sequence\":";
       write_optional_u64(os, sample.sequence, sample.has_sequence);
       os << ",\"event_ts_real_ns\":" << sample.event_ts_real_ns;
+      os << ",\"consumer_start_ts_real_ns\":";
+      write_optional_u64(os, sample.consumer_start_ts_real_ns,
+                         sample.consumer_start_ts_real_ns != 0);
+      os << ",\"consumer_end_ts_real_ns\":";
+      write_optional_u64(os, sample.consumer_end_ts_real_ns,
+                         sample.consumer_end_ts_real_ns != 0);
+      os << ",\"source_age_start_ns\":";
+      write_optional_u64(os, sample.source_age_start_ns, sample.event_ts_real_ns != 0);
+      os << ",\"source_age_end_ns\":";
+      write_optional_u64(os, sample.source_age_end_ns, sample.event_ts_real_ns != 0);
       os << ",\"consumer_status\":\"" << consumer_status_name(sample.consumer_status) << "\"";
       os << ",\"infer_status\":\"" << infer_status_name(sample.infer_status) << "\"";
-      os << ",\"postprocess_status\":" << static_cast<unsigned>(sample.postprocess_status);
+      os << ",\"postprocess_status\":\"" << postprocess_status_name(sample.postprocess_status)
+         << "\"";
       os << ",\"infer_errno\":" << sample.infer_errno;
       os << ",\"stage_mask\":" << sample.stage_mask;
       os << ",\"dur_ns\":{\"acquire_read\":";

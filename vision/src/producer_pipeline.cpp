@@ -16,6 +16,13 @@ namespace omniseer::vision
     using telemetry_timing::ScopedStageTimer;
     using telemetry_timing::clock;
 
+    uint64_t source_age_ns(uint64_t source_ts_real_ns, uint64_t sample_ts_real_ns) noexcept
+    {
+      if (source_ts_real_ns == 0 || sample_ts_real_ns < source_ts_real_ns)
+        return 0;
+      return sample_ts_real_ns - source_ts_real_ns;
+    }
+
     uint32_t stage_mask_bit(ProducerStageMask bit) noexcept
     {
       return static_cast<uint32_t>(bit);
@@ -107,6 +114,8 @@ namespace omniseer::vision
     const clock::time_point total_start = telemetry_on ? clock::now() : clock::time_point{};
     CaptureStatus    sample_capture_status    = CaptureStatus::Ok;
     PreprocessStatus sample_preprocess_status = PreprocessStatus::Ok;
+    uint64_t         sample_source_age_dequeue_ns       = 0;
+    uint64_t         sample_source_age_publish_ready_ns = 0;
     uint64_t         sample_dequeue_ns        = 0;
     uint64_t         sample_acquire_write_ns  = 0;
     uint64_t         sample_preprocess_ns     = 0;
@@ -125,6 +134,8 @@ namespace omniseer::vision
       sample.sequence          = tick.sequence;
       sample.has_sequence      = (tick.sequence != 0) ? 1u : 0u;
       sample.event_ts_real_ns  = tick.capture_ts_real_ns;
+      sample.source_age_dequeue_ns = sample_source_age_dequeue_ns;
+      sample.source_age_publish_ready_ns = sample_source_age_publish_ready_ns;
       sample.dequeue_ns        = sample_dequeue_ns;
       sample.acquire_write_ns  = sample_acquire_write_ns;
       sample.preprocess_ns     = sample_preprocess_ns;
@@ -162,6 +173,9 @@ namespace omniseer::vision
     }
     tick.sequence           = dq.lease->frame().sequence;
     tick.capture_ts_real_ns = dq.lease->frame().capture_ts_real_ns;
+    if (telemetry_on)
+      sample_source_age_dequeue_ns =
+          source_age_ns(tick.capture_ts_real_ns, telemetry_timing::now_real_ns());
     tick.stage_mask |= stage_mask_bit(ProducerStageMask::Dequeue);
 
     // Stage 2: Acquire writable destination slot.
@@ -194,6 +208,9 @@ namespace omniseer::vision
       tick.frame_id                            = _next_frame_id++;
       write_lease->buffer().frame_id           = tick.frame_id;
       write_lease->publish();
+      if (telemetry_on)
+        sample_source_age_publish_ready_ns =
+            source_age_ns(tick.capture_ts_real_ns, telemetry_timing::now_real_ns());
     }
     tick.stage_mask |= stage_mask_bit(ProducerStageMask::PublishReady);
 

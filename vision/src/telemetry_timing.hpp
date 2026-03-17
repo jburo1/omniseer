@@ -6,10 +6,19 @@
 namespace omniseer::vision::telemetry_timing
 {
   using clock = std::chrono::steady_clock;
+  using real_clock = std::chrono::system_clock;
 
   inline uint64_t elapsed_ns(clock::time_point start, clock::time_point end) noexcept
   {
     const auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+    return (ns > 0) ? static_cast<uint64_t>(ns) : 0u;
+  }
+
+  inline uint64_t now_real_ns() noexcept
+  {
+    const auto ns =
+        std::chrono::duration_cast<std::chrono::nanoseconds>(real_clock::now().time_since_epoch())
+            .count();
     return (ns > 0) ? static_cast<uint64_t>(ns) : 0u;
   }
 

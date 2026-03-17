@@ -41,6 +41,8 @@ TEST(JsonlTelemetry, WritesProducerAndConsumerJsonl)
     producer.sequence          = 9;
     producer.has_sequence      = 1;
     producer.event_ts_real_ns  = 1000;
+    producer.source_age_dequeue_ns = 25;
+    producer.source_age_publish_ready_ns = 37;
     producer.dequeue_ns        = 10;
     producer.acquire_write_ns  = 11;
     producer.preprocess_ns     = 12;
@@ -65,6 +67,10 @@ TEST(JsonlTelemetry, WritesProducerAndConsumerJsonl)
     consumer.sequence         = 9;
     consumer.has_sequence     = 1;
     consumer.event_ts_real_ns = 1001;
+    consumer.consumer_start_ts_real_ns = 1100;
+    consumer.consumer_end_ts_real_ns   = 1200;
+    consumer.source_age_start_ns       = 99;
+    consumer.source_age_end_ns         = 199;
     consumer.acquire_read_ns  = 20;
     consumer.infer_ns         = 21;
     consumer.postprocess_ns   = 22;
@@ -80,7 +86,8 @@ TEST(JsonlTelemetry, WritesProducerAndConsumerJsonl)
     consumer.consumer_status =
         static_cast<uint8_t>(omniseer::vision::ConsumerTickStatus::Consumed);
     consumer.infer_status = static_cast<uint8_t>(omniseer::vision::InferStatus::Ok);
-    consumer.postprocess_status = 0;
+    consumer.postprocess_status =
+        static_cast<uint8_t>(omniseer::vision::PostprocessStatus::Ok);
 
     telemetry.emit_producer(producer);
     telemetry.emit_consumer(consumer);
@@ -91,8 +98,15 @@ TEST(JsonlTelemetry, WritesProducerAndConsumerJsonl)
   const std::string content((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
   EXPECT_NE(content.find("\"source\":\"producer\""), std::string::npos);
   EXPECT_NE(content.find("\"source\":\"consumer\""), std::string::npos);
+  EXPECT_NE(content.find("\"schema_version\":3"), std::string::npos);
   EXPECT_NE(content.find("\"producer_status\":\"produced\""), std::string::npos);
   EXPECT_NE(content.find("\"consumer_status\":\"consumed\""), std::string::npos);
+  EXPECT_NE(content.find("\"source_age_dequeue_ns\":25"), std::string::npos);
+  EXPECT_NE(content.find("\"source_age_publish_ready_ns\":37"), std::string::npos);
+  EXPECT_NE(content.find("\"postprocess_status\":\"ok\""), std::string::npos);
+  EXPECT_NE(content.find("\"consumer_start_ts_real_ns\":1100"), std::string::npos);
+  EXPECT_NE(content.find("\"consumer_end_ts_real_ns\":1200"), std::string::npos);
+  EXPECT_NE(content.find("\"source_age_end_ns\":199"), std::string::npos);
   EXPECT_NE(content.find("\"frame_id\":42"), std::string::npos);
   EXPECT_NE(content.find("\"sequence\":9"), std::string::npos);
 

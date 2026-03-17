@@ -36,6 +36,12 @@
 
 namespace
 {
+  enum class HarnessMode
+  {
+    Single,
+    Threaded,
+  };
+
   volatile std::sig_atomic_t g_stop_requested = 0;
 
   void handle_signal(int) noexcept
@@ -46,6 +52,18 @@ namespace
   std::string source_path(const char* relpath)
   {
     return std::string(VISION_SOURCE_DIR) + relpath;
+  }
+
+  const char* harness_mode_name(HarnessMode mode) noexcept
+  {
+    switch (mode)
+    {
+      case HarnessMode::Single:
+        return "single";
+      case HarnessMode::Threaded:
+        return "threaded";
+    }
+    return "unknown";
   }
 
   struct HarnessConfig
@@ -67,6 +85,7 @@ namespace
     float       score_threshold{0.25F};
     float       nms_iou_threshold{0.45F};
     uint32_t    max_detections{100};
+    HarnessMode mode{HarnessMode::Single};
     bool        preview{true};
   };
 
@@ -90,6 +109,7 @@ namespace
                  "  --score-threshold <f>    Minimum detection confidence (default: 0.25)\n"
                  "  --nms-iou-threshold <f>  Per-class NMS IoU threshold (default: 0.45)\n"
                  "  --max-detections <u32>   Maximum detections per frame (default: 100)\n"
+                 "  --mode <single|threaded> Harness execution mode (default: single)\n"
                  "  --no-preview             Disable the OpenCV preview window\n"
                  "  --help                   Show this help\n",
                  argv0);
@@ -117,6 +137,24 @@ namespace
       return false;
     out = value;
     return true;
+  }
+
+  bool parse_mode(const char* text, HarnessMode& out)
+  {
+    if (text == nullptr || *text == '\0')
+      return false;
+    const std::string value(text);
+    if (value == "single")
+    {
+      out = HarnessMode::Single;
+      return true;
+    }
+    if (value == "threaded")
+    {
+      out = HarnessMode::Threaded;
+      return true;
+    }
+    return false;
   }
 
   bool parse_args(int argc, char** argv, HarnessConfig& cfg)
@@ -183,6 +221,13 @@ namespace
         const char* value = require_value("--nms-iou-threshold");
         if (!parse_float(value, cfg.nms_iou_threshold))
           throw std::runtime_error("invalid float for --nms-iou-threshold: " + std::string(value));
+        continue;
+      }
+      if (arg == "--mode")
+      {
+        const char* value = require_value("--mode");
+        if (!parse_mode(value, cfg.mode))
+          throw std::runtime_error("invalid value for --mode: " + std::string(value));
         continue;
       }
       if (arg == "--no-preview")
@@ -407,12 +452,12 @@ namespace
       }
     }
 
-    std::array<std::string, 4>
-    make_stats_lines(const omniseer::vision::DetectionsFrame& frame) noexcept
+    std::array<std::string, 5> make_stats_lines(
+        const omniseer::vision::DetectionsFrame& frame) noexcept
     {
-      std::array<std::string, 4> lines{};
-      lines[0] =
-          "frame=" + std::to_string(frame.frame_id) + " det=" + std::to_string(frame.count);
+      std::array<std::string, 5> lines{};
+      lines[0] = "frame=" + std::to_string(frame.frame_id) +
+                 " seq=" + std::to_string(frame.sequence) + " det=" + std::to_string(frame.count);
       if (_stats == nullptr)
         return lines;
 
@@ -440,10 +485,15 @@ namespace
       }
 
       lines[1] = cv::format("prod %.1f fps | cons %.1f fps", _producer_fps, _consumer_fps);
-      lines[2] = cv::format("pre %.2f ms | infer %.2f ms | post %.2f ms",
-                            ns_to_ms(snapshot.last_preprocess_ns), ns_to_ms(snapshot.last_infer_ns),
-                            ns_to_ms(snapshot.last_postprocess_ns));
-      lines[3] = cv::format("prod %.2f ms | cons %.2f ms | nwbuf %llu | infererr %llu",
+      lines[2] =
+          cv::format("ageS %.2f ms | ageE %.2f ms | infer %.2f ms",
+                     ns_to_ms(snapshot.last_source_age_start_ns),
+                     ns_to_ms(snapshot.last_source_age_end_ns), ns_to_ms(snapshot.last_infer_ns));
+      lines[3] =
+          cv::format("pre %.2f ms | post %.2f ms | pub %.2f ms",
+                     ns_to_ms(snapshot.last_preprocess_ns), ns_to_ms(snapshot.last_postprocess_ns),
+                     ns_to_ms(snapshot.last_publish_ns));
+      lines[4] = cv::format("prod %.2f ms | cons %.2f ms | nwbuf %llu | infererr %llu",
                             ns_to_ms(snapshot.last_producer_total_ns),
                             ns_to_ms(snapshot.last_consumer_total_ns),
                             static_cast<unsigned long long>(snapshot.no_writable_buffer_count),
@@ -466,6 +516,111 @@ namespace
     double _producer_fps{0.0};
     double _consumer_fps{0.0};
   };
+
+  bool run_producer_loop(omniseer::vision::ProducerPipeline& producer) noexcept
+  {
+    while (g_stop_requested == 0)
+    {
+      const auto tick = producer.run();
+      switch (tick.status)
+      {
+      case omniseer::vision::ProducerTickStatus::Produced:
+        break;
+      case omniseer::vision::ProducerTickStatus::NoFrame:
+      case omniseer::vision::ProducerTickStatus::CaptureRetryableError:
+      case omniseer::vision::ProducerTickStatus::NoWritableBuffer:
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        break;
+      case omniseer::vision::ProducerTickStatus::CaptureFatalError:
+      case omniseer::vision::ProducerTickStatus::PreprocessError:
+        std::fprintf(stderr, "producer stopped: status=%u stage=%u errno=%d\n",
+                     static_cast<unsigned>(tick.status), static_cast<unsigned>(tick.stage),
+                     tick.stage_errno);
+        g_stop_requested = 1;
+        return false;
+      }
+    }
+    return true;
+  }
+
+  bool run_consumer_loop(omniseer::vision::ConsumerPipeline& consumer) noexcept
+  {
+    while (g_stop_requested == 0)
+    {
+      const auto tick = consumer.run();
+      switch (tick.status)
+      {
+      case omniseer::vision::ConsumerTickStatus::Consumed:
+        break;
+      case omniseer::vision::ConsumerTickStatus::NoReadyBuffer:
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        break;
+      case omniseer::vision::ConsumerTickStatus::InferError:
+        std::fprintf(stderr, "consumer stopped: stage=%u errno=%d\n",
+                     static_cast<unsigned>(tick.stage), tick.stage_errno);
+        g_stop_requested = 1;
+        return false;
+      }
+    }
+    return true;
+  }
+
+  int run_single_mode(omniseer::vision::ProducerPipeline& producer,
+                      omniseer::vision::ConsumerPipeline& consumer) noexcept
+  {
+    while (g_stop_requested == 0)
+    {
+      const auto producer_tick = producer.run();
+      switch (producer_tick.status)
+      {
+      case omniseer::vision::ProducerTickStatus::Produced:
+        break;
+      case omniseer::vision::ProducerTickStatus::NoFrame:
+      case omniseer::vision::ProducerTickStatus::CaptureRetryableError:
+      case omniseer::vision::ProducerTickStatus::NoWritableBuffer:
+        break;
+      case omniseer::vision::ProducerTickStatus::CaptureFatalError:
+      case omniseer::vision::ProducerTickStatus::PreprocessError:
+        std::fprintf(stderr, "producer stopped: status=%u stage=%u errno=%d\n",
+                     static_cast<unsigned>(producer_tick.status),
+                     static_cast<unsigned>(producer_tick.stage), producer_tick.stage_errno);
+        g_stop_requested = 1;
+        continue;
+      }
+
+      const auto consumer_tick = consumer.run();
+      switch (consumer_tick.status)
+      {
+      case omniseer::vision::ConsumerTickStatus::Consumed:
+        break;
+      case omniseer::vision::ConsumerTickStatus::NoReadyBuffer:
+        break;
+      case omniseer::vision::ConsumerTickStatus::InferError:
+        std::fprintf(stderr, "consumer stopped: stage=%u errno=%d\n",
+                     static_cast<unsigned>(consumer_tick.stage), consumer_tick.stage_errno);
+        g_stop_requested = 1;
+        continue;
+      }
+
+      if (producer_tick.status != omniseer::vision::ProducerTickStatus::Produced &&
+          consumer_tick.status != omniseer::vision::ConsumerTickStatus::Consumed)
+      {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      }
+    }
+    return 0;
+  }
+
+  int run_threaded_mode(omniseer::vision::ProducerPipeline& producer,
+                        omniseer::vision::ConsumerPipeline& consumer)
+  {
+    std::thread producer_thread([&]() noexcept { (void) run_producer_loop(producer); });
+    std::thread consumer_thread([&]() noexcept { (void) run_consumer_loop(consumer); });
+
+    producer_thread.join();
+    consumer_thread.join();
+    return 0;
+  }
 } // namespace
 
 int main(int argc, char** argv)
@@ -484,6 +639,7 @@ int main(int argc, char** argv)
                  "Unused detector text slots will be padded internally with \"%s\" and ignored by postprocess.\n",
                  cfg.pad_token.c_str());
     std::fprintf(stdout, "Preview: %s\n", cfg.preview ? "enabled" : "disabled");
+    std::fprintf(stdout, "Mode: %s\n", harness_mode_name(cfg.mode));
     std::fprintf(stdout, "Postprocess: score>=%.2f nms_iou<=%.2f max_det=%u\n",
                  static_cast<double>(cfg.score_threshold),
                  static_cast<double>(cfg.nms_iou_threshold), cfg.max_detections);
@@ -581,51 +737,14 @@ int main(int argc, char** argv)
     std::fprintf(stdout, "Pipeline armed. Press Ctrl-C to stop.\n");
     if (cfg.preview)
       std::fprintf(stdout, "Press 'q' or Esc in the preview window to stop.\n");
+    if (cfg.mode == HarnessMode::Threaded && cfg.preview)
+      std::fprintf(stdout, "Preview is running from the consumer thread in threaded mode.\n");
     std::fflush(stdout);
 
-    while (g_stop_requested == 0)
-    {
-      const auto producer_tick = producer.run();
-      switch (producer_tick.status)
-      {
-      case omniseer::vision::ProducerTickStatus::Produced:
-        break;
-      case omniseer::vision::ProducerTickStatus::NoFrame:
-      case omniseer::vision::ProducerTickStatus::CaptureRetryableError:
-      case omniseer::vision::ProducerTickStatus::NoWritableBuffer:
-        break;
-      case omniseer::vision::ProducerTickStatus::CaptureFatalError:
-      case omniseer::vision::ProducerTickStatus::PreprocessError:
-        std::fprintf(stderr, "producer stopped: status=%u stage=%u errno=%d\n",
-                     static_cast<unsigned>(producer_tick.status),
-                     static_cast<unsigned>(producer_tick.stage), producer_tick.stage_errno);
-        g_stop_requested = 1;
-        continue;
-      }
-
-      const auto consumer_tick = consumer.run();
-      switch (consumer_tick.status)
-      {
-      case omniseer::vision::ConsumerTickStatus::Consumed:
-        break;
-      case omniseer::vision::ConsumerTickStatus::NoReadyBuffer:
-        break;
-      case omniseer::vision::ConsumerTickStatus::InferError:
-        std::fprintf(stderr, "consumer stopped: stage=%u errno=%d\n",
-                     static_cast<unsigned>(consumer_tick.stage), consumer_tick.stage_errno);
-        g_stop_requested = 1;
-        continue;
-      }
-
-      if (producer_tick.status != omniseer::vision::ProducerTickStatus::Produced &&
-          consumer_tick.status != omniseer::vision::ConsumerTickStatus::Consumed)
-      {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-      }
-    }
-
+    const int rc = (cfg.mode == HarnessMode::Threaded) ? run_threaded_mode(producer, consumer)
+                                                       : run_single_mode(producer, consumer);
     capture.stop();
-    return 0;
+    return rc;
   }
   catch (const std::exception& e)
   {

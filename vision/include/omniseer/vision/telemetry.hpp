@@ -4,6 +4,12 @@
 
 namespace omniseer::vision
 {
+  enum class PostprocessStatus : uint8_t
+  {
+    NotRun = 0,
+    Ok     = 1,
+  };
+
   /**
    * @brief Bitmask of completed producer-stage milestones for one sample.
    */
@@ -41,6 +47,10 @@ namespace omniseer::vision
     uint64_t sequence{0};
     /// @brief Event timestamp on realtime clock (nanoseconds).
     uint64_t event_ts_real_ns{0};
+    /// @brief Source-frame age at producer dequeue (nanoseconds), when available.
+    uint64_t source_age_dequeue_ns{0};
+    /// @brief Source-frame age at producer publish-ready (nanoseconds), when available.
+    uint64_t source_age_publish_ready_ns{0};
     /// @brief Duration spent in dequeue stage (nanoseconds).
     uint64_t dequeue_ns{0};
     /// @brief Duration spent in acquire-write stage (nanoseconds).
@@ -84,6 +94,14 @@ namespace omniseer::vision
     uint64_t sequence{0};
     /// @brief Event timestamp on realtime clock (nanoseconds).
     uint64_t event_ts_real_ns{0};
+    /// @brief Consumer tick start timestamp on realtime clock (nanoseconds).
+    uint64_t consumer_start_ts_real_ns{0};
+    /// @brief Consumer tick end timestamp on realtime clock (nanoseconds).
+    uint64_t consumer_end_ts_real_ns{0};
+    /// @brief Source-frame age at consumer tick start (nanoseconds), when available.
+    uint64_t source_age_start_ns{0};
+    /// @brief Source-frame age at consumer tick end (nanoseconds), when available.
+    uint64_t source_age_end_ns{0};
     /// @brief Duration spent in acquire-read stage (nanoseconds).
     uint64_t acquire_read_ns{0};
     /// @brief Duration spent in infer stage (nanoseconds).

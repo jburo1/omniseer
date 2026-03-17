@@ -25,6 +25,9 @@ namespace omniseer::vision
     uint64_t last_consumer_total_ns{0};
     uint64_t last_infer_ns{0};
     uint64_t last_postprocess_ns{0};
+    uint64_t last_publish_ns{0};
+    uint64_t last_source_age_start_ns{0};
+    uint64_t last_source_age_end_ns{0};
   };
 
   class RollingTelemetryStats final : public ITelemetry
@@ -79,6 +82,9 @@ namespace omniseer::vision
       _last_consumer_total_ns.store(sample.total_ns, std::memory_order_relaxed);
       _last_infer_ns.store(sample.infer_ns, std::memory_order_relaxed);
       _last_postprocess_ns.store(sample.postprocess_ns, std::memory_order_relaxed);
+      _last_publish_ns.store(sample.publish_ns, std::memory_order_relaxed);
+      _last_source_age_start_ns.store(sample.source_age_start_ns, std::memory_order_relaxed);
+      _last_source_age_end_ns.store(sample.source_age_end_ns, std::memory_order_relaxed);
     }
 
     RollingTelemetrySnapshot snapshot() const noexcept
@@ -98,6 +104,10 @@ namespace omniseer::vision
       out.last_consumer_total_ns = _last_consumer_total_ns.load(std::memory_order_relaxed);
       out.last_infer_ns          = _last_infer_ns.load(std::memory_order_relaxed);
       out.last_postprocess_ns    = _last_postprocess_ns.load(std::memory_order_relaxed);
+      out.last_publish_ns        = _last_publish_ns.load(std::memory_order_relaxed);
+      out.last_source_age_start_ns =
+          _last_source_age_start_ns.load(std::memory_order_relaxed);
+      out.last_source_age_end_ns = _last_source_age_end_ns.load(std::memory_order_relaxed);
       return out;
     }
 
@@ -114,5 +124,8 @@ namespace omniseer::vision
     std::atomic<uint64_t> _last_consumer_total_ns{0};
     std::atomic<uint64_t> _last_infer_ns{0};
     std::atomic<uint64_t> _last_postprocess_ns{0};
+    std::atomic<uint64_t> _last_publish_ns{0};
+    std::atomic<uint64_t> _last_source_age_start_ns{0};
+    std::atomic<uint64_t> _last_source_age_end_ns{0};
   };
 } // namespace omniseer::vision
