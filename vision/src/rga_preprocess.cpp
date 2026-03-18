@@ -5,9 +5,7 @@
 #include <cerrno>
 #include <cmath>
 #include <cstring>
-#include <im2d.h>
 #include <linux/dma-buf.h>
-#include <rga.h>
 #include <stdexcept>
 #include <string>
 #include <sys/ioctl.h>
@@ -218,7 +216,7 @@ namespace omniseer::vision
     if (meta)
       *meta = _lb;
 
-    if (imcheck(src_buf, dst_buf, srect, drect) <= 0)
+    if (imcheck(src_buf, dst_buf, srect, drect, 0) <= 0)
       return {PreprocessStatus::ImcheckFailed};
 
     if (improcess(src_buf, dst_buf, {}, srect, drect, {}, IM_SYNC) <= 0)

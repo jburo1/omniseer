@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cstdint>
-#include <im2d_type.h>
 
+#include "omniseer/vision/rga_headers.hpp"
 #include "omniseer/vision/types.hpp"
 
 namespace omniseer::vision

@@ -1,0 +1,21 @@
+std_msgs/Header header
+
+float32 producer_fps
+float32 consumer_fps
+
+float32 last_preprocess_ms
+float32 last_infer_ms
+float32 last_postprocess_ms
+float32 last_publish_ms
+float32 last_producer_total_ms
+float32 last_consumer_total_ms
+float32 last_source_age_start_ms
+float32 last_source_age_end_ms
+
+uint64 produced_count
+uint64 consumed_count
+uint64 no_writable_buffer_count
+uint64 capture_retryable_error_count
+uint64 capture_fatal_error_count
+uint64 preprocess_error_count
+uint64 infer_error_count

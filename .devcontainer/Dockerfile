@@ -39,6 +39,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   htop less nano rsync tmux tree xclip ripgrep fd-find fzf bat bash-completion less \
   libglvnd0 libgl1 libglx0 libegl1 \
   libx11-6 libxext6 libxrender1 libxrandr2 libxi6 mesa-utils \
+  libopencv-dev python3-opencv \
   v4l-utils ffmpeg gstreamer1.0-tools \
   gstreamer1.0-plugins-base \
   gstreamer1.0-plugins-good \
@@ -52,7 +53,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     software-properties-common libv4l-0 \
  && add-apt-repository ppa:jjriek/rockchip-multimedia \
  && apt-get update && apt-get install -y --no-install-recommends \
-    librga2 librga-dev libdrm-dev\
+    librga2 librga-dev libdrm-dev \
+    ros-${ROS_DISTRO}-cv-bridge \
+    ros-${ROS_DISTRO}-image-transport \
+    ros-${ROS_DISTRO}-robot-state-publisher \
+    ros-${ROS_DISTRO}-rviz2 \
+    ros-${ROS_DISTRO}-xacro \
  && rm -rf /var/lib/apt/lists/*
 
 

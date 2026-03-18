@@ -26,6 +26,16 @@
         "/run/udev:/run/udev:ro",
         "--group-add=dialout",
         "--group-add=video",
+        // GUI / RViz access
+        "-v",
+        "/tmp/.X11-unix:/tmp/.X11-unix:rw",
+        "-v",
+        "/run/user:/run/user:rw",
+        // expose host RKNN runtime into the container
+        "-v",
+        "/usr/include/rknn_api.h:/usr/include/rknn_api.h:ro",
+        "-v",
+        "/usr/lib/aarch64-linux-gnu/librknnrt.so.2.3.0:/usr/lib/librknnrt.so:ro",
         // "--group-add=render",
         // docker CLI in container
         "-v",
