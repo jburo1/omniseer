@@ -18,7 +18,7 @@ The key constraint is that the SBC should spend nearly all steady-state compute 
 
 1. Keep autonomy and perception functional even when diagnostics are disabled, disconnected, or broken.
 2. Make preview streaming opt-in and remotely controllable from the laptop.
-3. Keep ROS 2 for control and telemetry, not bulk video transport.
+3. Keep ROS 2 internal to the robot runtime and use explicit external protocols for operator connectivity.
 4. Run RViz2, overlays, plots, bagging, and higher-cost analysis on the host.
 5. Preserve a path to a more isolated split deployment later without reworking the whole system.
 
@@ -111,9 +111,9 @@ Run **native applications** first, not containers.
 
 Recommended host components:
 
-- `monitor-agent` as a native ROS-aware app or ROS package in this repo
+- native operator application or helper process
 - RViz2 native
-- optional native UI app on top of `monitor-agent`
+- optional local host-side decode/analysis helpers
 
 Reason:
 
@@ -236,16 +236,15 @@ Recommended default behavior:
 
 ## 9) Host-Side Components
 
-### 9.1 `monitor-agent`
+### 9.1 Operator App / Host Helper
 
-Native host application or ROS package.
+Native host application or helper process.
 
 Responsibilities:
 
-- join the ROS 2 network
-- subscribe to detections, perf, and diagnostic status
-- call preview enable/disable services
+- talk to the robot over gRPC
 - open/close the preview stream
+- subscribe to state/events from the robot gateway
 - optionally decode the stream into local ROS topics for RViz2 or host-side overlay nodes
 
 ### 9.2 UI / Monitoring App
@@ -260,7 +259,8 @@ Responsibilities:
 - event/fault display
 - record/export controls
 
-The UI can talk to `monitor-agent` over an internal API rather than speaking ROS 2 directly.
+The UI can talk directly to the robot gateway over gRPC or sit on top of a thin
+local helper process.
 
 ### 9.3 RViz2 / Analysis Tools
 
@@ -278,7 +278,8 @@ Examples:
 
 ### 10.1 ROS 2 Is Used For
 
-- control
+Inside the robot, ROS 2 is used for:
+
 - status
 - metrics
 - detections
@@ -296,17 +297,90 @@ Use a dedicated video transport for preview.
 
 Recommended first transport:
 
-- RTSP over local LAN
+- SRT over local Wi-Fi / LAN
 
 Later options:
 
-- SRT for better resilience on weaker links
+- RTSP if a camera-like operator UX becomes more important later
 - WebRTC only if browser/native remote ops requirements justify the added complexity
 
 Reason:
 
 - DDS is a poor default place for always-on compressed operator video
 - dedicated video transport gives tighter control over bitrate, latency, and startup behavior
+
+### 10.3 Preview Transport Options
+
+The preview path should keep the robot-side data plane simple:
+
+- `/dev/video11` mainpath captures `NV12`
+- encoder consumes `NV12` directly where possible
+- robot sends compressed H.265 over the network
+- host decodes and performs any color conversion, scaling, or overlay work locally
+
+This avoids paying for a robot-side `NV12 -> BGR` conversion in the default preview path.
+
+Recommended interpretation of the main transport options:
+
+- `RTSP`: session/control protocol commonly used to expose a camera-like stream
+- `SRT`: secure reliable transport designed for lossy or variable networks
+- `WebRTC`: interactive media stack with NAT traversal and adaptive control, but much higher implementation complexity
+
+For this project:
+
+- use SRT first for the initial operator preview path
+- consider RTSP later if a camera-like session model or off-the-shelf tooling becomes more important than transport resilience
+- defer WebRTC unless a browser-facing or internet-routable operator UI becomes a real requirement
+
+### 10.4 Transport Tradeoff Matrix
+
+#### RTSP
+
+Strengths:
+
+- easy mental model and broad tooling support
+- simple to open from VLC, ffplay, GStreamer, and many desktop apps
+- good default fit for a local operator preview stream
+
+Weaknesses:
+
+- RTSP itself is only the control layer; media is typically carried separately over RTP
+- behavior over weak Wi-Fi depends heavily on whether media is carried over UDP or TCP
+
+Typical modes:
+
+- `RTSP/RTP/UDP`: lower latency, but packet loss shows up as artifacts or drops
+- `RTSP interleaved over TCP`: simpler and more firewall-friendly, but retransmissions can increase jitter and stall behavior on bad Wi-Fi
+
+#### SRT
+
+Strengths:
+
+- designed for unreliable links
+- supports packet recovery, encryption, and configurable latency budget
+- often behaves better than plain RTP/UDP on noisy Wi-Fi
+
+Weaknesses:
+
+- fewer "camera app" style clients than RTSP
+- slightly more specialized tooling and operational knowledge
+- usually trades a bit more latency for better resilience
+
+Typical use:
+
+- best when "keep the stream usable" matters more than shaving every millisecond
+
+#### WebRTC
+
+Strengths:
+
+- very good for browser delivery and interactive remote control surfaces
+- adaptive and NAT-friendly
+
+Weaknesses:
+
+- much more signaling and integration complexity
+- overkill for the first monitoring slices
 
 ## 11) Preview Modes
 
@@ -379,6 +453,67 @@ At boot:
 3. Robot publishes preview disabled state.
 4. Host tears down local decode/overlay path.
 
+### 13.4 On-Demand Subprocess Model
+
+The preview streamer should initially be a managed child process of `robot-diag-control`.
+
+Responsibilities of `robot-diag-control`:
+
+- maintain a single preview state machine
+- translate preview profiles into a fixed command line or config blob
+- start the child process
+- monitor child liveness
+- expose status and faults over ROS 2
+- stop the child cleanly on operator request or node shutdown
+
+Suggested state machine:
+
+- `disabled`
+- `starting`
+- `running`
+- `stopping`
+- `faulted`
+
+Suggested start behavior:
+
+1. Validate no preview child is already active.
+2. Resolve the requested profile into width, height, fps, bitrate, and transport.
+3. Spawn the preview child process with stdout/stderr captured to logs.
+4. Wait for a bounded startup window.
+5. Publish `running` with the resolved stream URI if startup succeeds.
+6. Publish `faulted` if the child exits early or fails health checks.
+
+Suggested stop behavior:
+
+1. Mark state as `stopping`.
+2. Send `SIGTERM` to the child process.
+3. Wait a short timeout for clean shutdown.
+4. Escalate to `SIGKILL` only if needed.
+5. Publish `disabled` after cleanup completes.
+
+Failure containment requirements:
+
+- preview child exit must not restart or block mission-critical ROS nodes
+- repeated preview faults should increment a restart/error counter
+- the system must tolerate the operator rapidly toggling preview on/off
+
+### 13.5 Preview Subprocess Inputs and Outputs
+
+Initial subprocess inputs:
+
+- capture device path
+- selected preview profile
+- transport kind
+- bind address / port
+
+Initial subprocess outputs:
+
+- process exit code
+- stream URI
+- negotiated resolution and fps
+- encoder/transport error text
+- optional periodic bitrate/frame counters
+
 ## 14) Recommended Initial Interfaces
 
 ### 14.1 ROS 2 Service: `SetPreviewMode`
@@ -447,8 +582,8 @@ Use native applications first. Keep RViz2, decode, and monitoring native on the 
 
 Recommended answer:
 
-- ROS 2 for control/metrics/detections
-- RTSP for preview video
+- gRPC for control/state
+- SRT for preview video
 
 ### Q6. Where should tracking/overlays run?
 
@@ -458,16 +593,40 @@ Recommended answer:
 
 That keeps the SBC focused on mission-critical work.
 
+### Q7. Should the robot convert preview frames to BGR before sending them?
+
+Recommended answer:
+
+- no, not in the default preview path
+
+Keep the preview path in `NV12` into the encoder and send compressed H.265. Perform decode, colorspace conversion, scaling, and overlay work on the host.
+
+### Q8. Should the host be expected to have Rockchip RGA?
+
+Recommended answer:
+
+- no
+
+The host laptop will usually not have Rockchip RGA. What it usually has is sufficient CPU/GPU and often hardware video decode support. The architecture should assume only that the host can decode H.265 and render overlays locally.
+
+### Q9. What does "on-demand subprocess" mean concretely?
+
+Recommended answer:
+
+- `robot-diag-control` launches and supervises the preview pipeline only while preview is enabled
+
+This means preview has a strict lifecycle and no steady-state cost when disabled.
+
 ## 16) Recommended First Implementation Slices
 
-1. Add `robot-diag-control` inside `robot-core` with preview state reporting and a stubbed preview enable/disable service.
-2. Add a managed preview streamer subprocess controlled by `robot-diag-control`, using `/dev/video11`.
-3. Add a native `monitor-agent` on the host that calls the service and opens the returned stream URI.
+1. Add `robot-diag-control` inside `robot-core` with preview state reporting and a stubbed preview state machine.
+2. Add a narrow gRPC surface for preview status/control that can later grow into the robot gateway.
+3. Add a managed preview streamer subprocess controlled by `robot-diag-control`, using `/dev/video11`.
 4. Add host-side RViz2 / analysis integration.
 5. Only after that, decide whether a separate `robot-video` container or an exact-sync debug mode is worth the added complexity.
 
 ## 17) Open Questions
 
-1. Whether the first preview transport should be RTSP/TCP only, or RTSP/UDP if LAN conditions are good.
-2. Whether host UI should be built as a thin custom GUI over `monitor-agent`, or whether RViz2 + CLI should remain the first operator surface.
+1. What hardware H.265 userspace path should be installed or enabled on the SBC image.
+2. Whether the first preview slice should use software `x264` as a bring-up path or wait for hardware H.265 integration.
 3. Whether the first host-side overlay path should decode preview into ROS `Image` locally, or keep video display separate from ROS overlays until later.
