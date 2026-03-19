@@ -128,6 +128,7 @@ namespace omniseer::vision
                                  uint32_t model_input_size, uint32_t active_class_count,
                                  float score_threshold, std::vector<Candidate>& candidates) noexcept
     {
+      (void) class_desc;
       if (box_tensor == nullptr || class_tensor == nullptr)
         return;
 

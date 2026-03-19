@@ -61,14 +61,14 @@ target_include_directories(vision_bridge_node PRIVATE
   include
   ${VISION_ROOT}/include
 )
-ament_target_dependencies(vision_bridge_node
-  rclcpp
-  builtin_interfaces
-  std_msgs
-  omniseer_msgs
-  yolo_msgs
+target_link_libraries(vision_bridge_node PRIVATE
+  ${builtin_interfaces_TARGETS}
+  ${std_msgs_TARGETS}
+  ${omniseer_msgs_TARGETS}
+  ${yolo_msgs_TARGETS}
+  rclcpp::rclcpp
+  omniseer_bridge_runtime
 )
-target_link_libraries(vision_bridge_node omniseer_bridge_runtime)
 
 install(TARGETS vision_bridge_node
   DESTINATION lib/${PROJECT_NAME}

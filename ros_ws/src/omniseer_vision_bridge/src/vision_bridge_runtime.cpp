@@ -104,14 +104,13 @@ struct VisionBridgeRuntime::Impl
     try {
       class_names = omniseer::vision::load_class_list_file(config.class_list_path);
 
-      capture =
-        std::make_unique<omniseer::vision::V4l2Capture>(omniseer::vision::V4l2Capture::Config{
-          .device = config.camera_device,
-          .width = checked_u32(config.camera_width, "camera.width"),
-          .height = checked_u32(config.camera_height, "camera.height"),
-          .fourcc = V4L2_PIX_FMT_NV12,
-          .buffer_count = checked_u32(config.camera_buffer_count, "camera.buffer_count"),
-        });
+      omniseer::vision::V4l2Capture::Config capture_config{};
+      capture_config.device = config.camera_device;
+      capture_config.width = checked_u32(config.camera_width, "camera.width");
+      capture_config.height = checked_u32(config.camera_height, "camera.height");
+      capture_config.fourcc = V4L2_PIX_FMT_NV12;
+      capture_config.buffer_count = checked_u32(config.camera_buffer_count, "camera.buffer_count");
+      capture = std::make_unique<omniseer::vision::V4l2Capture>(capture_config);
       capture->start();
 
       allocator = std::make_unique<omniseer::vision::DmaHeapAllocator>();
@@ -122,54 +121,51 @@ struct VisionBridgeRuntime::Impl
           "pipeline.dst_height")),
                            omniseer::vision::PixelFormat::RGB888);
 
-      preprocess = std::make_unique<omniseer::vision::RgaPreprocess>(
-            omniseer::vision::RgaPreprocessConfig{
-          .src_w = static_cast<int>(checked_u32(config.camera_width, "camera.width")),
-          .src_h = static_cast<int>(checked_u32(config.camera_height, "camera.height")),
-          .dst_w = static_cast<int>(checked_u32(config.pipeline_dst_width, "pipeline.dst_width")),
-          .dst_h = static_cast<int>(checked_u32(config.pipeline_dst_height, "pipeline.dst_height")),
-          .pad_value = 114,
-            });
+      omniseer::vision::RgaPreprocessConfig preprocess_config{};
+      preprocess_config.src_w = static_cast<int>(checked_u32(config.camera_width, "camera.width"));
+      preprocess_config.src_h = static_cast<int>(checked_u32(config.camera_height, "camera.height"));
+      preprocess_config.dst_w = static_cast<int>(checked_u32(config.pipeline_dst_width, "pipeline.dst_width"));
+      preprocess_config.dst_h = static_cast<int>(checked_u32(config.pipeline_dst_height, "pipeline.dst_height"));
+      preprocess_config.pad_value = 114;
+      preprocess = std::make_unique<omniseer::vision::RgaPreprocess>(preprocess_config);
       prefill_pool(*pool, *preprocess);
 
+      omniseer::vision::ProducerPipelineConfig producer_config{};
+      producer_config.preflight_capture_wait_ms = checked_u32(
+        config.producer_preflight_capture_wait_ms, "producer.preflight_capture_wait_ms");
       producer = std::make_unique<omniseer::vision::ProducerPipeline>(
-            *capture, *preprocess, *pool, &rolling_stats,
-            omniseer::vision::ProducerPipelineConfig{
-          .preflight_capture_wait_ms =
-          checked_u32(config.producer_preflight_capture_wait_ms,
-                                "producer.preflight_capture_wait_ms"),
-            });
+        *capture, *preprocess, *pool, &rolling_stats, producer_config);
       producer->preflight();
 
+      omniseer::vision::YoloWorldTextEmbeddingsBuilderConfig embeddings_config{};
+      embeddings_config.text_encoder_model_path = config.clip_model_path;
+      embeddings_config.detector_model_path = config.detector_model_path;
+      embeddings_config.clip_vocab_path = config.clip_vocab_path;
+      embeddings_config.pad_token = config.pad_token;
       text_builder = std::make_unique<omniseer::vision::YoloWorldTextEmbeddingsBuilder>(
-            omniseer::vision::YoloWorldTextEmbeddingsBuilderConfig{
-          .text_encoder_model_path = config.clip_model_path,
-          .detector_model_path = config.detector_model_path,
-          .clip_vocab_path = config.clip_vocab_path,
-          .pad_token = config.pad_token,
-            });
+        embeddings_config);
       prepared_embeddings = std::make_unique<omniseer::vision::PreparedTextEmbeddings>(
-            text_builder->build(class_names));
+        text_builder->build(class_names));
 
-      runner = std::make_unique<omniseer::vision::RknnRunner>(omniseer::vision::RknnRunnerConfig{
-          .model_path = config.detector_model_path,
-          .warmup_runs = checked_non_negative_u32(config.runner_warmup_runs,
-                                                    "runner.warmup_runs"),
-        });
+      omniseer::vision::RknnRunnerConfig runner_config{};
+      runner_config.model_path = config.detector_model_path;
+      runner_config.warmup_runs = checked_non_negative_u32(
+        config.runner_warmup_runs, "runner.warmup_runs");
+      runner = std::make_unique<omniseer::vision::RknnRunner>(runner_config);
 
+      omniseer::vision::ConsumerPipelineConfig consumer_config{};
+      consumer_config.score_threshold = checked_unit_float(
+        config.score_threshold, "postprocess.score_threshold");
+      consumer_config.nms_iou_threshold = checked_unit_float(
+        config.nms_iou_threshold, "postprocess.nms_iou_threshold");
+      consumer_config.max_detections = checked_u32(
+        config.max_detections, "postprocess.max_detections");
       consumer = std::make_unique<omniseer::vision::ConsumerPipeline>(
-            *pool, *runner, &rolling_stats, config.detections_sink,
-            omniseer::vision::ConsumerPipelineConfig{
-          .score_threshold = checked_unit_float(config.score_threshold,
-            "postprocess.score_threshold"),
-          .nms_iou_threshold = checked_unit_float(config.nms_iou_threshold,
-            "postprocess.nms_iou_threshold"),
-          .max_detections = checked_u32(config.max_detections, "postprocess.max_detections"),
-            });
-      consumer->preflight(omniseer::vision::ConsumerPipelineStartup{
-          .remap = producer->remap(),
-          .text_embeddings = prepared_embeddings->view(),
-        });
+        *pool, *runner, &rolling_stats, config.detections_sink, consumer_config);
+      omniseer::vision::ConsumerPipelineStartup consumer_startup{};
+      consumer_startup.remap = producer->remap();
+      consumer_startup.text_embeddings = prepared_embeddings->view();
+      consumer->preflight(consumer_startup);
 
       producer_thread = std::thread([this]() noexcept {producer_loop();});
       consumer_thread = std::thread([this]() noexcept {consumer_loop();});

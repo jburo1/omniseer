@@ -1,4 +1,3 @@
-# bringup/setup.py
 from glob import glob
 
 from setuptools import find_packages, setup
@@ -26,7 +25,6 @@ setup(
     maintainer_email="jonas.buro1@gmail.com",
     description="Entry point to sim/real",
     license="Apache-2.0",
-    tests_require=["pytest"],
     entry_points={
         "console_scripts": [
             # eg. 'teleop=bringup.scripts.teleop:main',

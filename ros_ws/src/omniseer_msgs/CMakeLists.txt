@@ -11,9 +11,20 @@ find_package(builtin_interfaces REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
+# Kilted pulls in the deprecated Rust generator by default via
+# rosidl_default_generators. This workspace doesn't consume Rust interfaces,
+# and the generator currently breaks on this environment's Python toolchain.
+if(DEFINED AMENT_EXTENSIONS_rosidl_generate_idl_interfaces)
+  set(_omniseer_rosidl_extensions "")
+  foreach(_extension ${AMENT_EXTENSIONS_rosidl_generate_idl_interfaces})
+    if(NOT _extension MATCHES "^rosidl_generator_rs:")
+      list(APPEND _omniseer_rosidl_extensions "${_extension}")
+    endif()
+  endforeach()
+  set(AMENT_EXTENSIONS_rosidl_generate_idl_interfaces "${_omniseer_rosidl_extensions}")
+endif()
+
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/VisionDetection2D.msg"
-  "msg/VisionDetections.msg"
   "msg/VisionPerfSummary.msg"
   "msg/WheelEncoderCounts.msg"
   DEPENDENCIES builtin_interfaces std_msgs

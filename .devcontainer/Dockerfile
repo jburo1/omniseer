@@ -54,6 +54,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
  && add-apt-repository ppa:jjriek/rockchip-multimedia \
  && apt-get update && apt-get install -y --no-install-recommends \
     librga2 librga-dev libdrm-dev \
+    ros-${ROS_DISTRO}-behaviortree-cpp \
     ros-${ROS_DISTRO}-cv-bridge \
     ros-${ROS_DISTRO}-image-transport \
     ros-${ROS_DISTRO}-robot-state-publisher \

@@ -12,14 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
+import unittest
+from pathlib import Path
+
 from ament_copyright.main import main
 
 
-# Remove the `skip` decorator once the source file(s) have a copyright header
-@pytest.mark.skip(reason="No copyright header has been placed in the generated source file.")
-@pytest.mark.copyright
-@pytest.mark.linter
-def test_copyright():
-    rc = main(argv=[".", "test"])
-    assert rc == 0, "Found errors"
+class TestCopyright(unittest.TestCase):
+    @unittest.skip("No copyright header has been placed in the generated source file.")
+    def test_copyright(self) -> None:
+        pkg = Path(__file__).resolve().parents[1]
+        rc = main(argv=[str(pkg), str(pkg / "test")])
+        self.assertEqual(rc, 0, "Found errors")

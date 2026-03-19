@@ -1,0 +1,96 @@
+name: ci
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch: {}
+
+jobs:
+  ros-and-vision:
+    runs-on: ubuntu-24.04
+    container:
+      image: osrf/ros:kilted-desktop-full-noble
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system deps
+        shell: bash
+        run: |
+          set -eux
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            git \
+            python3-colcon-common-extensions \
+            python3-pip \
+            python3-pytest \
+            python3-ruff \
+            ros-kilted-ament-copyright \
+            ros-kilted-ament-cmake-gtest \
+            ros-kilted-ament-xmllint \
+            ros-kilted-behaviortree-cpp \
+            ros-kilted-nav2-msgs
+
+      - name: Source ROS
+        shell: bash
+        run: |
+          set -eux
+          source /opt/ros/kilted/setup.bash
+          env | grep '^ROS_'
+
+      - name: Ruff
+        shell: bash
+        run: |
+          set -eux
+          ruff check ros_ws/src/analysis ros_ws/src/bringup
+
+      - name: Build ROS packages
+        shell: bash
+        run: |
+          set -eux
+          source /opt/ros/kilted/setup.bash
+          cd ros_ws
+          colcon build --merge-install \
+            --packages-select omniseer_msgs yolo_msgs omniseer_description analysis bringup
+
+      - name: Build vision bridge when SDKs are present
+        shell: bash
+        run: |
+          set -eux
+          if command -v pkg-config >/dev/null \
+            && pkg-config --exists librga \
+            && [ -f /usr/include/rknn_api.h ] \
+            && find /usr/lib /usr/local/lib -name 'librknnrt.so' -print -quit | grep -q .; then
+            source /opt/ros/kilted/setup.bash
+            cd ros_ws
+            colcon build --merge-install --packages-select omniseer_vision_bridge
+          else
+            echo "Skipping omniseer_vision_bridge: librga/RKNN SDK not available in CI image"
+          fi
+
+      - name: Test ROS packages
+        shell: bash
+        run: |
+          set -eux
+          source /opt/ros/kilted/setup.bash
+          cd ros_ws
+          colcon test --merge-install \
+            --packages-select omniseer_description analysis bringup
+          colcon test-result --all --verbose
+
+      - name: Build host vision tests
+        shell: bash
+        run: |
+          set -eux
+          cmake -S vision -B vision/build-ci -DVISION_BUILD_HARNESS=OFF
+          cmake --build vision/build-ci \
+            --target image_buffer_pool_test jsonl_telemetry_test rolling_telemetry_test
+
+      - name: Run host vision tests
+        shell: bash
+        run: |
+          set -eux
+          ctest --test-dir vision/build-ci \
+            -R 'image_buffer_pool_test|jsonl_telemetry_test|rolling_telemetry_test' \
+            --output-on-failure

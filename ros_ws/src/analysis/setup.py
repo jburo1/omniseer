@@ -16,7 +16,6 @@ setup(
     maintainer_email="jonas.buro1@gmail.com",
     description="Analysis + misc. tooling",
     license="Apache-2.0",
-    tests_require=["pytest"],
     entry_points={
         "console_scripts": [
             "path_recorder = analysis.path_recorder:main",

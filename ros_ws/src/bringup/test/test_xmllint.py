@@ -12,12 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
+import unittest
+from pathlib import Path
+
 from ament_xmllint.main import main
 
 
-@pytest.mark.linter
-@pytest.mark.xmllint
-def test_xmllint() -> None:
-    rc = main(argv=[])
-    assert rc == 0, "Found code style errors / warnings"
+class TestXmllint(unittest.TestCase):
+    def test_xmllint(self) -> None:
+        pkg = Path(__file__).resolve().parents[1]
+        rc = main(argv=[str(pkg)])
+        self.assertEqual(rc, 0, "Found code style errors / warnings")

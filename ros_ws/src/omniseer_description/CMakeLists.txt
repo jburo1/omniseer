@@ -72,12 +72,13 @@ add_executable(select_goal_server
 
 target_compile_features(select_goal_server PUBLIC cxx_std_17)
 
-ament_target_dependencies(select_goal_server
-  rclcpp
-  behaviortree_cpp
-  ament_index_cpp
-  geometry_msgs
-  std_srvs
+target_link_libraries(select_goal_server
+  PUBLIC
+    ${geometry_msgs_TARGETS}
+    ${std_srvs_TARGETS}
+    ament_index_cpp::ament_index_cpp
+    behaviortree_cpp::behaviortree_cpp
+    rclcpp::rclcpp
 )
 
 pluginlib_export_plugin_description_file(behaviortree_cpp plugin_description.xml)

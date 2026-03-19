@@ -65,7 +65,8 @@ namespace omniseer::vision
   /**
    * @brief Minimal DMA-BUF allocator for shareable video/image buffers.
    *
-   * Allocates DMA-BUF fds via dma-heap (`/dev/dma_heap/*`) for RGA write and RKNN read paths.
+   * Allocates DMA-BUF fds via dma-heap (for example `/dev/dma_heap/system`) for
+   * RGA write and RKNN read paths.
    */
   class DmaHeapAllocator
   {

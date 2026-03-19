@@ -23,6 +23,8 @@ namespace omniseer::vision
         return RK_FORMAT_YCbCr_420_SP;
       case PixelFormat::RGB888:
         return RK_FORMAT_RGB_888;
+      case PixelFormat::BGR888:
+        return RK_FORMAT_BGR_888;
       }
       return -1;
     }

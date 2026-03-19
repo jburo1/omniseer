@@ -7,6 +7,18 @@ find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 
+# Skip the deprecated Rust generator. yolo_msgs is consumed from C++ and Python
+# only, and the Rust template expansion is currently unstable in this setup.
+if(DEFINED AMENT_EXTENSIONS_rosidl_generate_idl_interfaces)
+  set(_omniseer_rosidl_extensions "")
+  foreach(_extension ${AMENT_EXTENSIONS_rosidl_generate_idl_interfaces})
+    if(NOT _extension MATCHES "^rosidl_generator_rs:")
+      list(APPEND _omniseer_rosidl_extensions "${_extension}")
+    endif()
+  endforeach()
+  set(AMENT_EXTENSIONS_rosidl_generate_idl_interfaces "${_omniseer_rosidl_extensions}")
+endif()
+
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Point2D.msg"
   "msg/Vector2.msg"

@@ -17,11 +17,11 @@ namespace omniseer::vision
 
     PreparedTextEmbeddingsView view() const noexcept
     {
-      return {
-          .data               = text_i8.data(),
-          .bytes              = text_i8.size(),
-          .active_class_count = static_cast<uint32_t>(class_names.size()),
-      };
+      PreparedTextEmbeddingsView out{};
+      out.data = text_i8.data();
+      out.bytes = text_i8.size();
+      out.active_class_count = static_cast<uint32_t>(class_names.size());
+      return out;
     }
   };
 
