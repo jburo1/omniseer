@@ -9,6 +9,10 @@
       
       
       
+        <link rel="prev" href="../robot_gateway/">
+      
+      
+        <link rel="next" href="../gateway_api/">
       
       
         
@@ -19,7 +23,7 @@
     
     
       
-        <title>Producer pipeline: camera → RGA → output pool (thread boundary) - omniseer</title>
+        <title>Preview streaming - omniseer</title>
       
     
     
@@ -68,7 +72,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#producer-pipeline-camera-rga-output-pool-thread-boundary" class="md-skip">
+        <a href="#preview-streaming" class="md-skip">
           Skip to content
         </a>
       
@@ -104,7 +108,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Producer pipeline: camera → RGA → output pool (thread boundary)
+              Preview streaming
             
           </span>
         </div>
@@ -275,8 +279,10 @@
       
   
   
+    
   
   
+  
     
     
     
@@ -287,11 +293,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
           <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
@@ -312,7 +318,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -523,10 +529,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../preview_streaming/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preview streaming
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -542,6 +575,236 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#purpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Purpose
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current State
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#major-design-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Major Design Considerations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#proposed-default-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Proposed Default Pipeline
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-mainpath-for-preview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why mainpath for Preview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#transport-choice-srt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Transport Choice: SRT
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#preview-profiles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preview Profiles
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sync-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sync Model
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Sync Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#default-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Default mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exact-sync-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exact-sync mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#worker-lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Worker Lifecycle
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-encoder-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Encoder Options
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Current Encoder Options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#desired-production-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Desired production path
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#currently-validated-bring-up-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Currently validated bring-up path
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#currently-unattractive-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Currently unattractive path
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#host-side-expectations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Host-Side Expectations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#open-integration-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Open Integration Questions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-docs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Docs
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -724,10 +987,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#glossary" class="md-nav__link">
+  <a href="#purpose" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Glossary
+        Purpose
       
     </span>
   </a>
@@ -735,22 +998,88 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#0-one-time-setup-build-the-rings" class="md-nav__link">
+  <a href="#current-state" class="md-nav__link">
     <span class="md-ellipsis">
       
-        0) One-time setup (build the rings)
+        Current State
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="0) One-time setup (build the rings)">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#major-design-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Major Design Considerations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#proposed-default-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Proposed Default Pipeline
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-mainpath-for-preview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why mainpath for Preview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#transport-choice-srt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Transport Choice: SRT
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#preview-profiles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preview Profiles
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sync-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sync Model
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Sync Model">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#camera-side-kernel-owned-ring" class="md-nav__link">
+  <a href="#default-mode" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Camera side (kernel-owned ring)
+        Default mode
       
     </span>
   </a>
@@ -758,10 +1087,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#output-side-app-owned-pool" class="md-nav__link">
+  <a href="#exact-sync-mode" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Output side (app-owned pool)
+        Exact-sync mode
       
     </span>
   </a>
@@ -774,10 +1103,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#1-dequeue-a-camera-frame-borrow-a-kernel-ring-slot" class="md-nav__link">
+  <a href="#worker-lifecycle" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1) Dequeue a camera frame (borrow a kernel ring slot)
+        Worker Lifecycle
       
     </span>
   </a>
@@ -785,10 +1114,60 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-acquire-an-output-buffer-lease-exclusive-write-access" class="md-nav__link">
+  <a href="#current-encoder-options" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2) Acquire an output buffer (lease exclusive write access)
+        Current Encoder Options
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Current Encoder Options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#desired-production-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Desired production path
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#currently-validated-bring-up-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Currently validated bring-up path
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#currently-unattractive-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Currently unattractive path
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#host-side-expectations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Host-Side Expectations
       
     </span>
   </a>
@@ -796,10 +1175,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-synchronization-coherency-dma-buf-physics" class="md-nav__link">
+  <a href="#open-integration-questions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3) Synchronization / coherency (DMA-BUF “physics”)
+        Open Integration Questions
       
     </span>
   </a>
@@ -807,65 +1186,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-rga-preprocess-the-data-movement" class="md-nav__link">
+  <a href="#related-docs" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4) RGA preprocess (the data movement)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#5-publish-commit-the-write-lease-cross-the-thread-boundary" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5) Publish (commit the write lease; cross the thread boundary)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#6-requeue-the-camera-slot-return-the-borrowed-ring-slot" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        6) Requeue the camera slot (return the borrowed ring slot)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#7-consumer-side-other-side-of-the-boundary" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        7) Consumer side (other side of the boundary)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#summary-timeline-one-frame" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Summary timeline (one frame)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#compact-diagram" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Compact diagram
+        Related Docs
       
     </span>
   </a>
@@ -892,182 +1216,204 @@
   
 
 
-<h1 id="producer-pipeline-camera-rga-output-pool-thread-boundary">Producer pipeline: camera → RGA → output pool (thread boundary)<a class="headerlink" href="#producer-pipeline-camera-rga-output-pool-thread-boundary" title="Permanent link">&para;</a></h1>
-<p>This document describes the <strong>per-frame hot path</strong> through the producer side of the vision pipeline:</p>
-<p><strong>V4L2 camera capture (kernel ring)</strong> → <strong>DMA-BUF-backed source frame</strong> → <strong>RGA preprocess (src→dst blit/convert/resize/letterbox)</strong> → <strong>publish into output buffer pool</strong> (handoff to consumer).</p>
-<p>The core design pattern is <strong>scope-bound capability tokens</strong> (RAII) enforcing protocols:</p>
+<h1 id="preview-streaming">Preview Streaming<a class="headerlink" href="#preview-streaming" title="Permanent link">&para;</a></h1>
+<p>This page describes the operator preview export path from the robot SBC to the
+operator laptop.</p>
+<p>The key design goal is to keep the preview path optional and low-impact while
+still being useful for diagnosis, evaluation, and visual verification of the
+vision stack.</p>
+<h2 id="purpose">Purpose<a class="headerlink" href="#purpose" title="Permanent link">&para;</a></h2>
+<p>Provide an on-demand, remotely controlled preview stream that:</p>
 <ul>
-<li><strong>Borrow (camera ring slot):</strong> <code>DQBUF</code> must pair with exactly one <code>QBUF</code>.</li>
-<li><strong>Lease (pool slot):</strong> <code>acquire_write</code> must end in either <code>publish()</code> (commit) or <code>cancel</code> (rollback).</li>
-<li><strong>Own (fd lifetime):</strong> <code>DmabufAllocation</code> owns/close()s the DMA-BUF fd.</li>
+<li>does not burden the mission-critical inference path when disabled</li>
+<li>uses a separate camera path where possible</li>
+<li>exports video to the laptop over Wi-Fi</li>
+<li>keeps higher-cost decode/visualization work offboard</li>
 </ul>
-<hr />
-<h2 id="glossary">Glossary<a class="headerlink" href="#glossary" title="Permanent link">&para;</a></h2>
+<h2 id="current-state">Current State<a class="headerlink" href="#current-state" title="Permanent link">&para;</a></h2>
+<p>What is already known from the current ROCK 5B Plus target:</p>
 <ul>
-<li><strong>DMA-BUF fd</strong>: a file descriptor that refers to a shareable memory allocation (potentially used by multiple devices).</li>
-<li><strong>FrameDescriptor</strong>: <em>non-owning metadata view</em> over the camera DMA-BUF (format, strides, offsets, dims, timestamp).</li>
-<li><strong>ImageBuffer</strong>: <em>non-owning metadata view</em> over an output DMA-BUF (format, strides, dims).</li>
-<li><strong>FrameLease</strong>: a move-only token representing “I currently hold a dequeued camera ring slot and must requeue it.”</li>
-<li><strong>WriteLease</strong>: a move-only token representing “I have exclusive write access to one output pool slot until I publish or cancel.”</li>
+<li><code>/dev/video11</code> is <code>rkisp_mainpath</code></li>
+<li><code>/dev/video12</code> is <code>rkisp_selfpath</code></li>
+<li>both can stream concurrently at <code>1280x720 NV12 60 fps</code></li>
+<li>neither path currently advertises direct <code>BGR24</code>/<code>RGB24</code></li>
+<li><code>mainpath</code> and <code>selfpath</code> are the right split for preview vs inference</li>
 </ul>
-<hr />
-<h2 id="0-one-time-setup-build-the-rings">0) One-time setup (build the rings)<a class="headerlink" href="#0-one-time-setup-build-the-rings" title="Permanent link">&para;</a></h2>
-<h3 id="camera-side-kernel-owned-ring">Camera side (kernel-owned ring)<a class="headerlink" href="#camera-side-kernel-owned-ring" title="Permanent link">&para;</a></h3>
-<p>Typical V4L2 streaming setup (conceptual):</p>
-<ol>
-<li><code>open()</code> device</li>
-<li><code>VIDIOC_S_FMT</code> (e.g., NV12)</li>
-<li><code>VIDIOC_REQBUFS</code> (N capture slots)</li>
-<li>For each slot:</li>
-<li><code>VIDIOC_QUERYBUF</code> (get size/index)</li>
-<li>optionally <code>VIDIOC_EXPBUF</code> (export a DMA-BUF fd for that slot)</li>
-<li><code>VIDIOC_QBUF</code> (enqueue for capture)</li>
-<li><code>VIDIOC_STREAMON</code></li>
-</ol>
-<p>Result: the kernel owns a ring of <strong>N capture slots</strong>. Your app temporarily borrows slots between <code>DQBUF</code> and <code>QBUF</code>.</p>
-<h3 id="output-side-app-owned-pool">Output side (app-owned pool)<a class="headerlink" href="#output-side-app-owned-pool" title="Permanent link">&para;</a></h3>
-<p>Allocate <strong>M output buffers</strong> up front (DMA-HEAP → DMA-BUF fds), store them in <code>ImageBufferPool</code>.</p>
-<p>Each pool slot is managed by a small state machine (conceptual):</p>
+<p>Transport/runtime checks already completed on this SBC:</p>
 <ul>
-<li><code>Free</code> → (producer acquire) → <code>Writing</code> → (publish) → <code>Published</code> → (consumer acquire) → <code>Reading</code> → (release) → <code>Free</code></li>
+<li>GStreamer <code>v4l2src</code> can capture from <code>rkisp_mainpath</code></li>
+<li>GStreamer SRT plugins are installed</li>
+<li>local <code>mainpath -&gt; x264 -&gt; MPEG-TS -&gt; SRT -&gt; decode</code> loopback has been
+  validated</li>
 </ul>
-<p>This pool is the <strong>thread boundary</strong> between producer and consumer.</p>
-<hr />
-<h2 id="1-dequeue-a-camera-frame-borrow-a-kernel-ring-slot">1) Dequeue a camera frame (borrow a kernel ring slot)<a class="headerlink" href="#1-dequeue-a-camera-frame-borrow-a-kernel-ring-slot" title="Permanent link">&para;</a></h2>
-<p>Producer calls <code>dequeue_lease()</code> which performs <code>VIDIOC_DQBUF</code> internally.</p>
-<p>Possible outcomes:</p>
+<p>Current blocker for the intended production path:</p>
 <ul>
-<li><strong>EAGAIN / no frame ready</strong> → <code>NoFrame</code> (idle tick)</li>
-<li><strong>Success</strong> → you receive a <code>v4l2_buffer</code> with:</li>
-<li><code>index</code> (which ring slot)</li>
-<li>timestamp/sequence metadata</li>
-<li>bytesused/per-plane info (driver-dependent)</li>
+<li>hardware H.265 encode is not currently exposed through the installed
+  userspace stack on this image</li>
+<li>FFmpeg exposes <code>hevc_v4l2m2m</code>, but encode failed with <code>Could not find a valid
+  device</code></li>
+<li>no Rockchip-specific GStreamer H.265 encoder plugin appears to be installed</li>
 </ul>
-<p>On success, you create:</p>
+<p>Implication:</p>
 <ul>
-<li><code>FrameDescriptor</code> (metadata view: fd + layout + dims + timestamp)</li>
-<li><code>FrameLease</code> (borrow token: must requeue this <code>index</code> exactly once)</li>
+<li>SRT transport is feasible now</li>
+<li>preview export is feasible now</li>
+<li>low-overhead production H.265 still needs encoder integration work</li>
 </ul>
-<p><strong>Invariant:</strong> Every successful <code>DQBUF</code> must be paired with exactly one <code>QBUF</code> of the same <code>index</code>.</p>
-<hr />
-<h2 id="2-acquire-an-output-buffer-lease-exclusive-write-access">2) Acquire an output buffer (lease exclusive write access)<a class="headerlink" href="#2-acquire-an-output-buffer-lease-exclusive-write-access" title="Permanent link">&para;</a></h2>
-<p>Producer calls <code>acquire_write_lease()</code> on <code>ImageBufferPool</code>.</p>
-<p>On success you receive a <code>WriteLease</code> token with:</p>
+<h2 id="major-design-considerations">Major Design Considerations<a class="headerlink" href="#major-design-considerations" title="Permanent link">&para;</a></h2>
 <ul>
-<li>destination <code>ImageBuffer</code> view (fd + layout + dims)</li>
-<li>exclusive right to write into that pool slot</li>
+<li>
+<p>Keep preview off by default.</p>
+</li>
+<li>
+<p>Use <code>rkisp_mainpath</code> for preview and <code>rkisp_selfpath</code> for inference by
+  default.</p>
+</li>
+<li>
+<p>Keep preview in <code>NV12</code> into the encoder when possible; do not convert to BGR
+  on the robot in the default path.</p>
+</li>
+<li>
+<p>Use SRT as the first preview transport over Wi-Fi.</p>
+</li>
+<li>
+<p>Decode and render on the host laptop.</p>
+</li>
+<li>
+<p>Reserve exact-frame debug paths for later targeted debugging, not the default
+  operator preview flow.</p>
+</li>
 </ul>
-<p>If the producer exits early (return/error/throw), <code>WriteLease</code> destructor must roll back:</p>
-<ul>
-<li>if <code>publish()</code> was not called → <code>cancel_write()</code> → slot returns to <code>Free</code></li>
-</ul>
-<p><strong>Invariant:</strong> Every successful write-acquire ends in exactly one of:
-- <code>publish()</code> (commit)
-- auto-cancel on destructor (rollback)</p>
-<hr />
-<h2 id="3-synchronization-coherency-dma-buf-physics">3) Synchronization / coherency (DMA-BUF “physics”)<a class="headerlink" href="#3-synchronization-coherency-dma-buf-physics" title="Permanent link">&para;</a></h2>
-<p>Even without CPU touching pixels, the devices must observe correct ordering:</p>
-<ul>
-<li>RGA must not read <strong>src</strong> before the camera finished writing it.</li>
-<li>Consumer must not read <strong>dst</strong> before RGA finished writing it.</li>
-</ul>
-<p>Two broad approaches:</p>
-<ul>
-<li><strong>Implicit sync</strong> (fences handled by drivers)</li>
-<li><strong>Explicit sync</strong> via <code>DMA_BUF_IOCTL_SYNC</code> (start/end for read/write)</li>
-</ul>
-<p>Whether explicit sync is required depends on the exact driver stack and memory path, but this stage is where you put those boundaries if needed.</p>
-<hr />
-<h2 id="4-rga-preprocess-the-data-movement">4) RGA preprocess (the data movement)<a class="headerlink" href="#4-rga-preprocess-the-data-movement" title="Permanent link">&para;</a></h2>
-<p>Inputs:</p>
-<ul>
-<li><strong>src</strong>: <code>FrameDescriptor</code> describing camera DMA-BUF (often NV12, multi-plane)</li>
-<li><strong>dst</strong>: <code>ImageBuffer</code> describing pool DMA-BUF (often RGB/BGR, model-ready)</li>
-</ul>
-<p>RGA performs a hardware blit with operations like:</p>
-<ul>
-<li>colorspace conversion (NV12 → RGB/BGR)</li>
-<li>resize / scale</li>
-<li>crop</li>
-<li>letterbox/padding (fit aspect ratio into model input size)</li>
-<li>rotation (if needed)</li>
-</ul>
-<p>Conceptually:</p>
-<div class="highlight"><pre><span></span><code>RGA:
-  src(dmabuf fd + offsets/strides + WxH + fmt)
-    --&gt; dst(dmabuf fd + offsets/strides + W&#39;H&#39; + fmt)
+<h2 id="proposed-default-pipeline">Proposed Default Pipeline<a class="headerlink" href="#proposed-default-pipeline" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>rkisp_mainpath (/dev/video11, NV12)
+            |
+            v
+     preview worker
+            |
+            +--&gt; encode (target: H.265, current fallback: x264 for bring-up)
+            |
+            v
+        MPEG-TS / SRT
+            |
+            v
+     operator laptop decode
+            |
+            +--&gt; monitor app video panel
+            +--&gt; optional local ROS Image bridge
+            +--&gt; optional host-side overlays / RViz2
 </code></pre></div>
-<p>At the end of this stage, the transformed pixels physically reside in the <strong>destination pool slot</strong>.</p>
-<hr />
-<h2 id="5-publish-commit-the-write-lease-cross-the-thread-boundary">5) Publish (commit the write lease; cross the thread boundary)<a class="headerlink" href="#5-publish-commit-the-write-lease-cross-the-thread-boundary" title="Permanent link">&para;</a></h2>
-<p>If RGA succeeds, the producer calls <code>dst_lease.publish()</code>.</p>
-<p>A good <code>publish()</code> typically does:</p>
-<ol>
-<li>Attach/finalize per-frame metadata:</li>
-<li>timestamp/sequence</li>
-<li>original dims and model dims</li>
-<li>letterbox transform parameters (scale + pad offsets), if used</li>
-<li>Transition state: <code>Writing → Published</code></li>
-<li>Notify consumer (optional): condvar/eventfd or “latest index” atomic</li>
-</ol>
-<p><strong>This is the exact moment the buffer becomes visible to the consumer.</strong></p>
-<p>After publish:
-- producer must treat the slot as immutable
-- consumer is allowed to acquire it for reading</p>
-<p>If RGA fails:
-- do <strong>not</strong> publish
-- <code>WriteLease</code> destructor auto-cancels → slot returns to <code>Free</code></p>
-<hr />
-<h2 id="6-requeue-the-camera-slot-return-the-borrowed-ring-slot">6) Requeue the camera slot (return the borrowed ring slot)<a class="headerlink" href="#6-requeue-the-camera-slot-return-the-borrowed-ring-slot" title="Permanent link">&para;</a></h2>
-<p>After RGA is done reading the camera buffer, the producer must <code>VIDIOC_QBUF</code> the same ring <code>index</code>.</p>
-<p>With RAII:
-- <code>FrameLease</code> destructor calls <code>release()</code> which performs <code>QBUF</code></p>
-<p>This prevents ring starvation even on early returns.</p>
-<blockquote>
-<p>Note: if you want to <em>surface</em> <code>QBUF</code> failures into a return status, you must ensure cleanup runs <strong>before</strong> returning from the function (e.g., by using an inner scope). Destructors can’t reliably “return a status” after the caller has already received the function’s return value.</p>
-</blockquote>
-<hr />
-<h2 id="7-consumer-side-other-side-of-the-boundary">7) Consumer side (other side of the boundary)<a class="headerlink" href="#7-consumer-side-other-side-of-the-boundary" title="Permanent link">&para;</a></h2>
-<p>Consumer obtains a read capability (conceptually a <code>ReadLease</code>) from the pool:</p>
+<h2 id="why-mainpath-for-preview">Why <code>mainpath</code> for Preview<a class="headerlink" href="#why-mainpath-for-preview" title="Permanent link">&para;</a></h2>
+<p>The mission-critical vision pipeline already uses a producer/consumer hot path
+on the SBC and is optimized around low-latency inference. The preview path
+should not add avoidable work to that path.</p>
+<p>Using <code>mainpath</code> for preview gives:</p>
 <ul>
-<li><code>acquire_read()</code> / <code>acquire_latest()</code> → get <code>ImageBuffer</code> view over the published DMA-BUF</li>
-<li>run inference / postprocess</li>
-<li>release read lease → slot transitions back to <code>Free</code> (or your chosen recycling policy)</li>
+<li>better isolation from inference</li>
+<li>no need to add a same-frame conversion branch in the default case</li>
+<li>a natural on/off switch for operator diagnostics</li>
 </ul>
-<p><strong>Consumer must treat published buffers as read-only.</strong></p>
-<hr />
-<h2 id="summary-timeline-one-frame">Summary timeline (one frame)<a class="headerlink" href="#summary-timeline-one-frame" title="Permanent link">&para;</a></h2>
+<p>The tradeoff is that preview frames and detection frames are close in time but
+not guaranteed to be the exact same frame. That is acceptable for normal
+operator monitoring.</p>
+<h2 id="transport-choice-srt">Transport Choice: SRT<a class="headerlink" href="#transport-choice-srt" title="Permanent link">&para;</a></h2>
+<p>The selected transport for the first implementation is SRT.</p>
+<p>Why:</p>
+<ul>
+<li>better fit for variable Wi-Fi than plain RTP/UDP</li>
+<li>built-in recovery/latency tuning</li>
+<li>good support in the installed GStreamer stack</li>
+<li>simpler than WebRTC for the current scope</li>
+</ul>
+<p>This is a diagnostics-oriented link, not a browser-delivery problem.</p>
+<h2 id="preview-profiles">Preview Profiles<a class="headerlink" href="#preview-profiles" title="Permanent link">&para;</a></h2>
+<p>The preview path should expose bounded named profiles, not raw encoder knobs.</p>
+<p>Suggested initial profiles:</p>
+<ul>
+<li><code>off</code></li>
+<li><code>low_bw</code></li>
+<li><code>balanced</code></li>
+<li><code>high_quality</code></li>
+</ul>
+<p>Candidate meanings:</p>
+<ul>
+<li><code>off</code>: no preview worker running</li>
+<li><code>low_bw</code>: e.g. 720p, reduced fps, modest bitrate</li>
+<li><code>balanced</code>: 720p, moderate fps/bitrate</li>
+<li><code>high_quality</code>: higher bitrate and possibly higher resolution if budget
+  allows</li>
+</ul>
+<p>The exact numbers can be tuned later after integration and Wi-Fi testing.</p>
+<h2 id="sync-model">Sync Model<a class="headerlink" href="#sync-model" title="Permanent link">&para;</a></h2>
+<h3 id="default-mode">Default mode<a class="headerlink" href="#default-mode" title="Permanent link">&para;</a></h3>
+<ul>
+<li>inference on <code>selfpath</code></li>
+<li>preview on <code>mainpath</code></li>
+<li>approximate temporal alignment</li>
+</ul>
+<p>This is the recommended operator mode.</p>
+<h3 id="exact-sync-mode">Exact-sync mode<a class="headerlink" href="#exact-sync-mode" title="Permanent link">&para;</a></h3>
+<p>Later optional mode:</p>
+<ul>
+<li>preview derived from the same frame path as inference</li>
+<li>more expensive on the SBC</li>
+<li>only used when exact overlay verification matters</li>
+</ul>
+<p>This should not be the default always-on path.</p>
+<h2 id="worker-lifecycle">Worker Lifecycle<a class="headerlink" href="#worker-lifecycle" title="Permanent link">&para;</a></h2>
+<p>The preview worker should be managed by the robot gateway or initial
+<code>robot-diag-control</code> process.</p>
+<p>Basic lifecycle:</p>
 <ol>
-<li><code>DQBUF</code> → <code>FrameLease(src)</code></li>
-<li><code>acquire_write_lease()</code> → <code>WriteLease(dst)</code></li>
-<li>(optional) DMA-BUF sync start</li>
-<li>RGA preprocess: <code>src → dst</code></li>
-<li>(optional) DMA-BUF sync end</li>
-<li><code>dst.publish()</code> ✅ <strong>thread boundary crossed here</strong></li>
-<li><code>FrameLease</code> releases → <code>QBUF</code></li>
+<li>preview disabled</li>
+<li>operator requests preview</li>
+<li>gateway spawns preview worker</li>
+<li>worker binds SRT endpoint and begins export</li>
+<li>operator disables preview</li>
+<li>gateway terminates preview worker</li>
 </ol>
-<hr />
-<h2 id="compact-diagram">Compact diagram<a class="headerlink" href="#compact-diagram" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code>Producer thread:
-
-  [V4L2 device] --DQBUF--&gt; FrameLease{FrameDescriptor -&gt; src dmabuf}
-        |
-        v
-  acquire_write_lease()
-        |
-        v
-  WriteLease{ImageBuffer -&gt; dst dmabuf} --RGA--&gt; (dst filled)
-        |
-        v
-     publish()  ✅ boundary
-        |
-        v
-  FrameLease dtor -&gt; QBUF  (return ring slot)
-
-Consumer thread:
-
-  acquire_read() -&gt; ReadLease{ImageBuffer -&gt; dst dmabuf} -&gt; infer -&gt; release
-</code></pre></div>
+<p>The worker should be disposable. If it dies, the mission-critical runtime keeps
+running.</p>
+<h2 id="current-encoder-options">Current Encoder Options<a class="headerlink" href="#current-encoder-options" title="Permanent link">&para;</a></h2>
+<h3 id="desired-production-path">Desired production path<a class="headerlink" href="#desired-production-path" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>NV12 mainpath -&gt; hardware H.265 encode -&gt; SRT</code></li>
+</ul>
+<p>This is the desired low-overhead end state.</p>
+<h3 id="currently-validated-bring-up-path">Currently validated bring-up path<a class="headerlink" href="#currently-validated-bring-up-path" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>NV12 mainpath -&gt; software x264 -&gt; SRT</code></li>
+</ul>
+<p>This path is useful for early integration and proof-of-life, but it is not the
+desired long-term robot-side budget.</p>
+<h3 id="currently-unattractive-path">Currently unattractive path<a class="headerlink" href="#currently-unattractive-path" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>NV12 mainpath -&gt; software x265 -&gt; SRT</code></li>
+</ul>
+<p>This is too CPU-expensive for the intended mission-critical budget on the SBC.</p>
+<h2 id="host-side-expectations">Host-Side Expectations<a class="headerlink" href="#host-side-expectations" title="Permanent link">&para;</a></h2>
+<p>The operator laptop is expected to:</p>
+<ul>
+<li>receive SRT</li>
+<li>decode the stream</li>
+<li>render it in the operator app</li>
+<li>optionally feed decoded frames into local analysis/overlay pipelines</li>
+</ul>
+<p>The architecture should <strong>not</strong> assume the laptop has Rockchip RGA. It should
+only assume general-purpose CPU/GPU resources and likely hardware video decode.</p>
+<h2 id="open-integration-questions">Open Integration Questions<a class="headerlink" href="#open-integration-questions" title="Permanent link">&para;</a></h2>
+<ul>
+<li>what exact hardware H.265 userspace path should be installed on the SBC image</li>
+<li>whether the first build slice should use software <code>x264</code> as a bring-up step</li>
+<li>what preview profile defaults should be used over the current Wi-Fi setup</li>
+<li>whether decoded preview should be bridged into ROS on the host in the first
+  UI slices or kept as a plain video panel initially</li>
+</ul>
+<h2 id="related-docs">Related Docs<a class="headerlink" href="#related-docs" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../remote_monitoring_architecture/">Remote monitoring architecture</a></li>
+<li><a href="../robot_gateway/">Robot gateway</a></li>
+<li><a href="../gateway_api/">Gateway API</a></li>
+</ul>
 
 
 
@@ -1088,7 +1434,7 @@ Consumer thread:
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 1, 2026 19:22:04 UTC">March 1, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 19, 2026 22:18:15 UTC">March 19, 2026</span>
   </span>
 
     

@@ -9,6 +9,10 @@
       
       
       
+        <link rel="prev" href="../vision_pipeline/">
+      
+      
+        <link rel="next" href="../robot_gateway/">
       
       
         
@@ -19,7 +23,7 @@
     
     
       
-        <title>Remote Monitoring Architecture Spec - omniseer</title>
+        <title>Remote monitoring architecture - omniseer</title>
       
     
     
@@ -104,7 +108,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Remote Monitoring Architecture Spec
+              Remote monitoring architecture
             
           </span>
         </div>
@@ -275,8 +279,10 @@
       
   
   
+    
   
   
+  
     
     
     
@@ -287,11 +293,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
           <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
@@ -312,7 +318,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -338,6 +344,34 @@
     
   
     Build pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ci_cd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI/CD overview
   
 
     
@@ -422,6 +456,836 @@
     
   
     Vision pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Remote monitoring architecture
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Remote monitoring architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-purpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1) Purpose
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-goals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2) Goals
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-non-goals-v0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3) Non-Goals (v0)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-current-hardware-runtime-facts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4) Current Hardware / Runtime Facts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-top-level-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5) Top-Level Architecture
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5) Top-Level Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-mission-critical-plane" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 Mission-Critical Plane
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-diagnostic-plane" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 Diagnostic Plane
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-recommended-initial-deployment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6) Recommended Initial Deployment
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6) Recommended Initial Deployment">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-robot-side" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 Robot Side
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-host-side" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 Host Side
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-robot-container-vs-two-container-split" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7) Robot Container vs Two-Container Split
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7) Robot Container vs Two-Container Split">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-initial-recommendation-one-container-two-process-groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.1 Initial Recommendation: One Container, Two Process Groups
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-later-option-two-robot-containers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2 Later Option: Two Robot Containers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73-overhead-assessment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.3 Overhead Assessment
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-robot-side-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8) Robot-Side Components
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8) Robot-Side Components">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81-robot-core" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 robot-core
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#82-robot-diag-control" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.2 robot-diag-control
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#83-preview-streamer-subprocess" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3 Preview Streamer Subprocess
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-host-side-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9) Host-Side Components
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9) Host-Side Components">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#91-operator-app-host-helper" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.1 Operator App / Host Helper
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#92-ui-monitoring-app" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.2 UI / Monitoring App
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#93-rviz2-analysis-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.3 RViz2 / Analysis Tools
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-control-and-data-boundaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10) Control and Data Boundaries
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10) Control and Data Boundaries">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#101-ros-2-is-used-for" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.1 ROS 2 Is Used For
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#102-video-transport-is-separate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.2 Video Transport Is Separate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#103-preview-transport-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.3 Preview Transport Options
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#104-transport-tradeoff-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.4 Transport Tradeoff Matrix
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10.4 Transport Tradeoff Matrix">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rtsp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RTSP
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#srt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SRT
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#webrtc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WebRTC
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-preview-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11) Preview Modes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-sync-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12) Sync Model
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="12) Sync Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#121-default-diagnostic-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12.1 Default Diagnostic Mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#122-exact-sync-debug-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12.2 Exact-Sync Debug Mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-boot-lifecycle-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13) Boot / Lifecycle Model
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="13) Boot / Lifecycle Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#131-robot-boot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.1 Robot Boot
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#132-preview-enable-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.2 Preview Enable Flow
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#133-preview-disable-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.3 Preview Disable Flow
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#134-on-demand-subprocess-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.4 On-Demand Subprocess Model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#135-preview-subprocess-inputs-and-outputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.5 Preview Subprocess Inputs and Outputs
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-recommended-initial-interfaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14) Recommended Initial Interfaces
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="14) Recommended Initial Interfaces">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#141-ros-2-service-setpreviewmode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.1 ROS 2 Service: SetPreviewMode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#142-ros-2-topic-previewstatus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.2 ROS 2 Topic: PreviewStatus
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15-important-decisions-answered" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15) Important Decisions Answered
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="15) Important Decisions Answered">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#q1-should-the-robot-run-two-containers-from-the-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q1. Should the robot run two containers from the start?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q2-does-splitting-into-two-robot-containers-materially-reduce-compute-load" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q2. Does splitting into two robot containers materially reduce compute load?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q3-why-still-keep-the-two-container-option" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q3. Why still keep the two-container option?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q4-should-the-host-side-use-containers-initially" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q4. Should the host side use containers initially?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q5-how-should-the-host-app-connect-to-the-robot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q5. How should the host app connect to the robot?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q6-where-should-trackingoverlays-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q6. Where should tracking/overlays run?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q7-should-the-robot-convert-preview-frames-to-bgr-before-sending-them" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q7. Should the robot convert preview frames to BGR before sending them?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q8-should-the-host-be-expected-to-have-rockchip-rga" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q8. Should the host be expected to have Rockchip RGA?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q9-what-does-on-demand-subprocess-mean-concretely" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q9. What does "on-demand subprocess" mean concretely?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#16-recommended-first-implementation-slices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16) Recommended First Implementation Slices
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#17-open-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17) Open Questions
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../robot_gateway/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Robot gateway
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../preview_streaming/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preview streaming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gateway_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gateway API
   
 
     
@@ -818,10 +1682,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#91-monitor-agent" class="md-nav__link">
+  <a href="#91-operator-app-host-helper" class="md-nav__link">
     <span class="md-ellipsis">
       
-        9.1 monitor-agent
+        9.1 Operator App / Host Helper
       
     </span>
   </a>
@@ -886,6 +1750,67 @@
       
     </span>
   </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#103-preview-transport-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.3 Preview Transport Options
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#104-transport-tradeoff-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.4 Transport Tradeoff Matrix
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10.4 Transport Tradeoff Matrix">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rtsp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RTSP
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#srt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SRT
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#webrtc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WebRTC
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -983,6 +1908,28 @@
     <span class="md-ellipsis">
       
         13.3 Preview Disable Flow
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#134-on-demand-subprocess-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.4 On-Demand Subprocess Model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#135-preview-subprocess-inputs-and-outputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.5 Preview Subprocess Inputs and Outputs
       
     </span>
   </a>
@@ -1111,6 +2058,39 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#q7-should-the-robot-convert-preview-frames-to-bgr-before-sending-them" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q7. Should the robot convert preview frames to BGR before sending them?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q8-should-the-host-be-expected-to-have-rockchip-rga" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q8. Should the host be expected to have Rockchip RGA?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q9-what-does-on-demand-subprocess-mean-concretely" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q9. What does "on-demand subprocess" mean concretely?
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1173,7 +2153,7 @@
 <ol>
 <li>Keep autonomy and perception functional even when diagnostics are disabled, disconnected, or broken.</li>
 <li>Make preview streaming opt-in and remotely controllable from the laptop.</li>
-<li>Keep ROS 2 for control and telemetry, not bulk video transport.</li>
+<li>Keep ROS 2 internal to the robot runtime and use explicit external protocols for operator connectivity.</li>
 <li>Run RViz2, overlays, plots, bagging, and higher-cost analysis on the host.</li>
 <li>Preserve a path to a more isolated split deployment later without reworking the whole system.</li>
 </ol>
@@ -1253,9 +2233,9 @@
 <p>Run <strong>native applications</strong> first, not containers.</p>
 <p>Recommended host components:</p>
 <ul>
-<li><code>monitor-agent</code> as a native ROS-aware app or ROS package in this repo</li>
+<li>native operator application or helper process</li>
 <li>RViz2 native</li>
-<li>optional native UI app on top of <code>monitor-agent</code></li>
+<li>optional local host-side decode/analysis helpers</li>
 </ul>
 <p>Reason:</p>
 <ul>
@@ -1367,14 +2347,13 @@
 <li>bounded profiles only, not arbitrary encoder flags from the UI</li>
 </ul>
 <h2 id="9-host-side-components">9) Host-Side Components<a class="headerlink" href="#9-host-side-components" title="Permanent link">&para;</a></h2>
-<h3 id="91-monitor-agent">9.1 <code>monitor-agent</code><a class="headerlink" href="#91-monitor-agent" title="Permanent link">&para;</a></h3>
-<p>Native host application or ROS package.</p>
+<h3 id="91-operator-app-host-helper">9.1 Operator App / Host Helper<a class="headerlink" href="#91-operator-app-host-helper" title="Permanent link">&para;</a></h3>
+<p>Native host application or helper process.</p>
 <p>Responsibilities:</p>
 <ul>
-<li>join the ROS 2 network</li>
-<li>subscribe to detections, perf, and diagnostic status</li>
-<li>call preview enable/disable services</li>
+<li>talk to the robot over gRPC</li>
 <li>open/close the preview stream</li>
+<li>subscribe to state/events from the robot gateway</li>
 <li>optionally decode the stream into local ROS topics for RViz2 or host-side overlay nodes</li>
 </ul>
 <h3 id="92-ui-monitoring-app">9.2 UI / Monitoring App<a class="headerlink" href="#92-ui-monitoring-app" title="Permanent link">&para;</a></h3>
@@ -1387,7 +2366,8 @@
 <li>event/fault display</li>
 <li>record/export controls</li>
 </ul>
-<p>The UI can talk to <code>monitor-agent</code> over an internal API rather than speaking ROS 2 directly.</p>
+<p>The UI can talk directly to the robot gateway over gRPC or sit on top of a thin
+local helper process.</p>
 <h3 id="93-rviz2-analysis-tools">9.3 RViz2 / Analysis Tools<a class="headerlink" href="#93-rviz2-analysis-tools" title="Permanent link">&para;</a></h3>
 <p>Run natively on the host.</p>
 <p>Examples:</p>
@@ -1400,8 +2380,8 @@
 </ul>
 <h2 id="10-control-and-data-boundaries">10) Control and Data Boundaries<a class="headerlink" href="#10-control-and-data-boundaries" title="Permanent link">&para;</a></h2>
 <h3 id="101-ros-2-is-used-for">10.1 ROS 2 Is Used For<a class="headerlink" href="#101-ros-2-is-used-for" title="Permanent link">&para;</a></h3>
+<p>Inside the robot, ROS 2 is used for:</p>
 <ul>
-<li>control</li>
 <li>status</li>
 <li>metrics</li>
 <li>detections</li>
@@ -1417,17 +2397,84 @@
 <p>Use a dedicated video transport for preview.</p>
 <p>Recommended first transport:</p>
 <ul>
-<li>RTSP over local LAN</li>
+<li>SRT over local Wi-Fi / LAN</li>
 </ul>
 <p>Later options:</p>
 <ul>
-<li>SRT for better resilience on weaker links</li>
+<li>RTSP if a camera-like operator UX becomes more important later</li>
 <li>WebRTC only if browser/native remote ops requirements justify the added complexity</li>
 </ul>
 <p>Reason:</p>
 <ul>
 <li>DDS is a poor default place for always-on compressed operator video</li>
 <li>dedicated video transport gives tighter control over bitrate, latency, and startup behavior</li>
+</ul>
+<h3 id="103-preview-transport-options">10.3 Preview Transport Options<a class="headerlink" href="#103-preview-transport-options" title="Permanent link">&para;</a></h3>
+<p>The preview path should keep the robot-side data plane simple:</p>
+<ul>
+<li><code>/dev/video11</code> mainpath captures <code>NV12</code></li>
+<li>encoder consumes <code>NV12</code> directly where possible</li>
+<li>robot sends compressed H.265 over the network</li>
+<li>host decodes and performs any color conversion, scaling, or overlay work locally</li>
+</ul>
+<p>This avoids paying for a robot-side <code>NV12 -&gt; BGR</code> conversion in the default preview path.</p>
+<p>Recommended interpretation of the main transport options:</p>
+<ul>
+<li><code>RTSP</code>: session/control protocol commonly used to expose a camera-like stream</li>
+<li><code>SRT</code>: secure reliable transport designed for lossy or variable networks</li>
+<li><code>WebRTC</code>: interactive media stack with NAT traversal and adaptive control, but much higher implementation complexity</li>
+</ul>
+<p>For this project:</p>
+<ul>
+<li>use SRT first for the initial operator preview path</li>
+<li>consider RTSP later if a camera-like session model or off-the-shelf tooling becomes more important than transport resilience</li>
+<li>defer WebRTC unless a browser-facing or internet-routable operator UI becomes a real requirement</li>
+</ul>
+<h3 id="104-transport-tradeoff-matrix">10.4 Transport Tradeoff Matrix<a class="headerlink" href="#104-transport-tradeoff-matrix" title="Permanent link">&para;</a></h3>
+<h4 id="rtsp">RTSP<a class="headerlink" href="#rtsp" title="Permanent link">&para;</a></h4>
+<p>Strengths:</p>
+<ul>
+<li>easy mental model and broad tooling support</li>
+<li>simple to open from VLC, ffplay, GStreamer, and many desktop apps</li>
+<li>good default fit for a local operator preview stream</li>
+</ul>
+<p>Weaknesses:</p>
+<ul>
+<li>RTSP itself is only the control layer; media is typically carried separately over RTP</li>
+<li>behavior over weak Wi-Fi depends heavily on whether media is carried over UDP or TCP</li>
+</ul>
+<p>Typical modes:</p>
+<ul>
+<li><code>RTSP/RTP/UDP</code>: lower latency, but packet loss shows up as artifacts or drops</li>
+<li><code>RTSP interleaved over TCP</code>: simpler and more firewall-friendly, but retransmissions can increase jitter and stall behavior on bad Wi-Fi</li>
+</ul>
+<h4 id="srt">SRT<a class="headerlink" href="#srt" title="Permanent link">&para;</a></h4>
+<p>Strengths:</p>
+<ul>
+<li>designed for unreliable links</li>
+<li>supports packet recovery, encryption, and configurable latency budget</li>
+<li>often behaves better than plain RTP/UDP on noisy Wi-Fi</li>
+</ul>
+<p>Weaknesses:</p>
+<ul>
+<li>fewer "camera app" style clients than RTSP</li>
+<li>slightly more specialized tooling and operational knowledge</li>
+<li>usually trades a bit more latency for better resilience</li>
+</ul>
+<p>Typical use:</p>
+<ul>
+<li>best when "keep the stream usable" matters more than shaving every millisecond</li>
+</ul>
+<h4 id="webrtc">WebRTC<a class="headerlink" href="#webrtc" title="Permanent link">&para;</a></h4>
+<p>Strengths:</p>
+<ul>
+<li>very good for browser delivery and interactive remote control surfaces</li>
+<li>adaptive and NAT-friendly</li>
+</ul>
+<p>Weaknesses:</p>
+<ul>
+<li>much more signaling and integration complexity</li>
+<li>overkill for the first monitoring slices</li>
 </ul>
 <h2 id="11-preview-modes">11) Preview Modes<a class="headerlink" href="#11-preview-modes" title="Permanent link">&para;</a></h2>
 <p>Define a small set of stable profiles instead of exposing raw encoder knobs:</p>
@@ -1495,6 +2542,64 @@
 <li>Robot publishes preview disabled state.</li>
 <li>Host tears down local decode/overlay path.</li>
 </ol>
+<h3 id="134-on-demand-subprocess-model">13.4 On-Demand Subprocess Model<a class="headerlink" href="#134-on-demand-subprocess-model" title="Permanent link">&para;</a></h3>
+<p>The preview streamer should initially be a managed child process of <code>robot-diag-control</code>.</p>
+<p>Responsibilities of <code>robot-diag-control</code>:</p>
+<ul>
+<li>maintain a single preview state machine</li>
+<li>translate preview profiles into a fixed command line or config blob</li>
+<li>start the child process</li>
+<li>monitor child liveness</li>
+<li>expose status and faults over ROS 2</li>
+<li>stop the child cleanly on operator request or node shutdown</li>
+</ul>
+<p>Suggested state machine:</p>
+<ul>
+<li><code>disabled</code></li>
+<li><code>starting</code></li>
+<li><code>running</code></li>
+<li><code>stopping</code></li>
+<li><code>faulted</code></li>
+</ul>
+<p>Suggested start behavior:</p>
+<ol>
+<li>Validate no preview child is already active.</li>
+<li>Resolve the requested profile into width, height, fps, bitrate, and transport.</li>
+<li>Spawn the preview child process with stdout/stderr captured to logs.</li>
+<li>Wait for a bounded startup window.</li>
+<li>Publish <code>running</code> with the resolved stream URI if startup succeeds.</li>
+<li>Publish <code>faulted</code> if the child exits early or fails health checks.</li>
+</ol>
+<p>Suggested stop behavior:</p>
+<ol>
+<li>Mark state as <code>stopping</code>.</li>
+<li>Send <code>SIGTERM</code> to the child process.</li>
+<li>Wait a short timeout for clean shutdown.</li>
+<li>Escalate to <code>SIGKILL</code> only if needed.</li>
+<li>Publish <code>disabled</code> after cleanup completes.</li>
+</ol>
+<p>Failure containment requirements:</p>
+<ul>
+<li>preview child exit must not restart or block mission-critical ROS nodes</li>
+<li>repeated preview faults should increment a restart/error counter</li>
+<li>the system must tolerate the operator rapidly toggling preview on/off</li>
+</ul>
+<h3 id="135-preview-subprocess-inputs-and-outputs">13.5 Preview Subprocess Inputs and Outputs<a class="headerlink" href="#135-preview-subprocess-inputs-and-outputs" title="Permanent link">&para;</a></h3>
+<p>Initial subprocess inputs:</p>
+<ul>
+<li>capture device path</li>
+<li>selected preview profile</li>
+<li>transport kind</li>
+<li>bind address / port</li>
+</ul>
+<p>Initial subprocess outputs:</p>
+<ul>
+<li>process exit code</li>
+<li>stream URI</li>
+<li>negotiated resolution and fps</li>
+<li>encoder/transport error text</li>
+<li>optional periodic bitrate/frame counters</li>
+</ul>
 <h2 id="14-recommended-initial-interfaces">14) Recommended Initial Interfaces<a class="headerlink" href="#14-recommended-initial-interfaces" title="Permanent link">&para;</a></h2>
 <h3 id="141-ros-2-service-setpreviewmode">14.1 ROS 2 Service: <code>SetPreviewMode</code><a class="headerlink" href="#141-ros-2-service-setpreviewmode" title="Permanent link">&para;</a></h3>
 <p>Initial request fields:</p>
@@ -1550,8 +2655,8 @@
 <h3 id="q5-how-should-the-host-app-connect-to-the-robot">Q5. How should the host app connect to the robot?<a class="headerlink" href="#q5-how-should-the-host-app-connect-to-the-robot" title="Permanent link">&para;</a></h3>
 <p>Recommended answer:</p>
 <ul>
-<li>ROS 2 for control/metrics/detections</li>
-<li>RTSP for preview video</li>
+<li>gRPC for control/state</li>
+<li>SRT for preview video</li>
 </ul>
 <h3 id="q6-where-should-trackingoverlays-run">Q6. Where should tracking/overlays run?<a class="headerlink" href="#q6-where-should-trackingoverlays-run" title="Permanent link">&para;</a></h3>
 <p>Recommended answer:</p>
@@ -1559,18 +2664,36 @@
 <li>on the host by default</li>
 </ul>
 <p>That keeps the SBC focused on mission-critical work.</p>
+<h3 id="q7-should-the-robot-convert-preview-frames-to-bgr-before-sending-them">Q7. Should the robot convert preview frames to BGR before sending them?<a class="headerlink" href="#q7-should-the-robot-convert-preview-frames-to-bgr-before-sending-them" title="Permanent link">&para;</a></h3>
+<p>Recommended answer:</p>
+<ul>
+<li>no, not in the default preview path</li>
+</ul>
+<p>Keep the preview path in <code>NV12</code> into the encoder and send compressed H.265. Perform decode, colorspace conversion, scaling, and overlay work on the host.</p>
+<h3 id="q8-should-the-host-be-expected-to-have-rockchip-rga">Q8. Should the host be expected to have Rockchip RGA?<a class="headerlink" href="#q8-should-the-host-be-expected-to-have-rockchip-rga" title="Permanent link">&para;</a></h3>
+<p>Recommended answer:</p>
+<ul>
+<li>no</li>
+</ul>
+<p>The host laptop will usually not have Rockchip RGA. What it usually has is sufficient CPU/GPU and often hardware video decode support. The architecture should assume only that the host can decode H.265 and render overlays locally.</p>
+<h3 id="q9-what-does-on-demand-subprocess-mean-concretely">Q9. What does "on-demand subprocess" mean concretely?<a class="headerlink" href="#q9-what-does-on-demand-subprocess-mean-concretely" title="Permanent link">&para;</a></h3>
+<p>Recommended answer:</p>
+<ul>
+<li><code>robot-diag-control</code> launches and supervises the preview pipeline only while preview is enabled</li>
+</ul>
+<p>This means preview has a strict lifecycle and no steady-state cost when disabled.</p>
 <h2 id="16-recommended-first-implementation-slices">16) Recommended First Implementation Slices<a class="headerlink" href="#16-recommended-first-implementation-slices" title="Permanent link">&para;</a></h2>
 <ol>
-<li>Add <code>robot-diag-control</code> inside <code>robot-core</code> with preview state reporting and a stubbed preview enable/disable service.</li>
+<li>Add <code>robot-diag-control</code> inside <code>robot-core</code> with preview state reporting and a stubbed preview state machine.</li>
+<li>Add a narrow gRPC surface for preview status/control that can later grow into the robot gateway.</li>
 <li>Add a managed preview streamer subprocess controlled by <code>robot-diag-control</code>, using <code>/dev/video11</code>.</li>
-<li>Add a native <code>monitor-agent</code> on the host that calls the service and opens the returned stream URI.</li>
 <li>Add host-side RViz2 / analysis integration.</li>
 <li>Only after that, decide whether a separate <code>robot-video</code> container or an exact-sync debug mode is worth the added complexity.</li>
 </ol>
 <h2 id="17-open-questions">17) Open Questions<a class="headerlink" href="#17-open-questions" title="Permanent link">&para;</a></h2>
 <ol>
-<li>Whether the first preview transport should be RTSP/TCP only, or RTSP/UDP if LAN conditions are good.</li>
-<li>Whether host UI should be built as a thin custom GUI over <code>monitor-agent</code>, or whether RViz2 + CLI should remain the first operator surface.</li>
+<li>What hardware H.265 userspace path should be installed or enabled on the SBC image.</li>
+<li>Whether the first preview slice should use software <code>x264</code> as a bring-up path or wait for hardware H.265 integration.</li>
 <li>Whether the first host-side overlay path should decode preview into ROS <code>Image</code> locally, or keep video display separate from ROS overlays until later.</li>
 </ol>
 
@@ -1593,7 +2716,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 19, 2026 19:06:02 UTC">March 19, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 19, 2026 22:18:15 UTC">March 19, 2026</span>
   </span>
 
     

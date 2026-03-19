@@ -9,10 +9,10 @@
       
       
       
-        <link rel="prev" href="../../architecture/">
+        <link rel="prev" href="../build_pipeline/">
       
       
-        <link rel="next" href="../ci_cd/">
+        <link rel="next" href="../ros_packages/">
       
       
         
@@ -23,7 +23,7 @@
     
     
       
-        <title>Build pipeline - omniseer</title>
+        <title>CI/CD overview - omniseer</title>
       
     
     
@@ -72,7 +72,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#build-pipeline" class="md-skip">
+        <a href="#cicd-overview" class="md-skip">
           Skip to content
         </a>
       
@@ -108,7 +108,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Build pipeline
+              CI/CD overview
             
           </span>
         </div>
@@ -333,6 +333,34 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../build_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Build pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -352,7 +380,7 @@
   <span class="md-ellipsis">
     
   
-    Build pipeline
+    CI/CD overview
   
 
     
@@ -370,7 +398,7 @@
   <span class="md-ellipsis">
     
   
-    Build pipeline
+    CI/CD overview
   
 
     
@@ -396,10 +424,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#current-pipeline-layers" class="md-nav__link">
+  <a href="#what-cicd-means-in-this-repo" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current Pipeline Layers
+        What "CI/CD" means in this repo
       
     </span>
   </a>
@@ -407,10 +435,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#local-development-flow" class="md-nav__link">
+  <a href="#workflow-summary" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Local Development Flow
+        Workflow Summary
       
     </span>
   </a>
@@ -418,10 +446,110 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#shared-validation-flow" class="md-nav__link">
+  <a href="#ci-workflow" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Shared Validation Flow
+        CI Workflow
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="CI Workflow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#when-it-runs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When it runs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-it-does" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What it does
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-this-helps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why this helps
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#current-ci-boundaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current CI boundaries
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#docs-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Docs Workflow
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Docs Workflow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#when-it-runs_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When it runs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-it-does_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What it does
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#developer-experience" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Developer Experience
       
     </span>
   </a>
@@ -429,10 +557,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#future-direction" class="md-nav__link">
+  <a href="#recommended-future-extensions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Future Direction
+        Recommended Future Extensions
       
     </span>
   </a>
@@ -443,34 +571,6 @@
   
 </nav>
       
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../ci_cd/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    CI/CD overview
-  
-
-    
-  </span>
-  
-  
-
-      </a>
     </li>
   
 
@@ -821,10 +921,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#current-pipeline-layers" class="md-nav__link">
+  <a href="#what-cicd-means-in-this-repo" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current Pipeline Layers
+        What "CI/CD" means in this repo
       
     </span>
   </a>
@@ -832,10 +932,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#local-development-flow" class="md-nav__link">
+  <a href="#workflow-summary" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Local Development Flow
+        Workflow Summary
       
     </span>
   </a>
@@ -843,10 +943,110 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#shared-validation-flow" class="md-nav__link">
+  <a href="#ci-workflow" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Shared Validation Flow
+        CI Workflow
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="CI Workflow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#when-it-runs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When it runs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-it-does" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What it does
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-this-helps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why this helps
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#current-ci-boundaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current CI boundaries
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#docs-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Docs Workflow
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Docs Workflow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#when-it-runs_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When it runs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-it-does_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What it does
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#developer-experience" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Developer Experience
       
     </span>
   </a>
@@ -854,10 +1054,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#future-direction" class="md-nav__link">
+  <a href="#recommended-future-extensions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Future Direction
+        Recommended Future Extensions
       
     </span>
   </a>
@@ -884,46 +1084,164 @@
   
 
 
-<h1 id="build-pipeline">Build Pipeline<a class="headerlink" href="#build-pipeline" title="Permanent link">&para;</a></h1>
-<p>This page gives the high-level view of how software changes move through the
-repository.</p>
-<h2 id="current-pipeline-layers">Current Pipeline Layers<a class="headerlink" href="#current-pipeline-layers" title="Permanent link">&para;</a></h2>
-<p>Omniseer currently has two main build/validation layers:</p>
+<h1 id="cicd-overview">CI/CD Overview<a class="headerlink" href="#cicd-overview" title="Permanent link">&para;</a></h1>
+<p>This page explains the automation that currently exists in the Omniseer
+repository and how it affects day-to-day development.</p>
+<h2 id="what-cicd-means-in-this-repo">What "CI/CD" means in this repo<a class="headerlink" href="#what-cicd-means-in-this-repo" title="Permanent link">&para;</a></h2>
+<p>There are currently two GitHub Actions workflows:</p>
 <ul>
-<li>local developer workflows used during active development</li>
-<li>GitHub Actions workflows used for shared validation and docs publishing</li>
+<li><code>ci</code>: continuous integration for build, lint, and test validation</li>
+<li><code>docs</code>: continuous deployment for the MkDocs documentation site</li>
 </ul>
-<h2 id="local-development-flow">Local Development Flow<a class="headerlink" href="#local-development-flow" title="Permanent link">&para;</a></h2>
-<p>Most code changes are still validated locally first.</p>
-<p>Typical examples:</p>
+<p>At the moment, Omniseer does <strong>not</strong> have a release pipeline for firmware,
+containers, robot images, or production deployments. The only deployment flow
+in the repository today is documentation publishing to GitHub Pages.</p>
+<h2 id="workflow-summary">Workflow Summary<a class="headerlink" href="#workflow-summary" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Workflow</th>
+<th>File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CI</td>
+<td><code>.github/workflows/ci.yml</code></td>
+<td>Validate the main software path on GitHub Actions</td>
+</tr>
+<tr>
+<td>Docs</td>
+<td><code>.github/workflows/docs.yml</code></td>
+<td>Build and publish the documentation site</td>
+</tr>
+</tbody>
+</table>
+<h2 id="ci-workflow">CI Workflow<a class="headerlink" href="#ci-workflow" title="Permanent link">&para;</a></h2>
+<p>The CI workflow is defined in <code>.github/workflows/ci.yml</code>.</p>
+<h3 id="when-it-runs">When it runs<a class="headerlink" href="#when-it-runs" title="Permanent link">&para;</a></h3>
+<p>The workflow runs when:</p>
 <ul>
-<li><code>colcon build</code> and <code>colcon test</code> for the ROS workspace</li>
-<li>targeted CMake builds for native vision components</li>
-<li>local linting such as Ruff</li>
+<li>code is pushed to <code>master</code></li>
+<li>a pull request is opened or updated</li>
+<li>the workflow is triggered manually from the GitHub Actions UI</li>
 </ul>
-<p>This keeps iteration fast and makes it easier to debug issues close to the
-change.</p>
-<h2 id="shared-validation-flow">Shared Validation Flow<a class="headerlink" href="#shared-validation-flow" title="Permanent link">&para;</a></h2>
-<p>After code is pushed or opened in a pull request, GitHub Actions runs the
-repository's CI workflow to validate the main supported package set.</p>
-<p>See <a href="../ci_cd/">CI/CD Overview</a> for:</p>
+<p>This means CI acts as a gate for the default branch and for incoming PRs.</p>
+<h3 id="what-it-does">What it does<a class="headerlink" href="#what-it-does" title="Permanent link">&para;</a></h3>
+<p>The CI job currently performs the following checks:</p>
+<ol>
+<li>Installs the ROS 2 <code>kilted</code> build and test dependencies needed by the
+   selected package set</li>
+<li>Runs Ruff against the Python packages in <code>ros_ws/src/analysis</code> and
+   <code>ros_ws/src/bringup</code></li>
+<li>Builds the main validated ROS package subset:</li>
+<li><code>omniseer_msgs</code></li>
+<li><code>yolo_msgs</code></li>
+<li><code>omniseer_description</code></li>
+<li><code>analysis</code></li>
+<li><code>bringup</code></li>
+<li>Builds <code>omniseer_vision_bridge</code> only when the RKNN and RGA SDKs are
+   available in the runner environment</li>
+<li>Runs the current ROS test subset:</li>
+<li><code>omniseer_description</code></li>
+<li><code>analysis</code></li>
+<li><code>bringup</code></li>
+<li>Builds and runs the portable native vision tests:</li>
+<li><code>image_buffer_pool_test</code></li>
+<li><code>jsonl_telemetry_test</code></li>
+<li><code>rolling_telemetry_test</code></li>
+</ol>
+<h3 id="why-this-helps">Why this helps<a class="headerlink" href="#why-this-helps" title="Permanent link">&para;</a></h3>
+<p>This workflow gives quick feedback when a change breaks:</p>
 <ul>
-<li>workflow triggers</li>
-<li>exact checks that run in CI</li>
-<li>what is currently deployed automatically</li>
-<li>current gaps and future expansion points</li>
+<li>ROS package metadata or dependency declarations</li>
+<li>message generation for the selected interface packages</li>
+<li>Python linting in the helper packages</li>
+<li>the frontier-selection and <code>omniseer_description</code> C++ tests</li>
+<li>the package-level XML and test wiring in <code>analysis</code> and <code>bringup</code></li>
+<li>the portable part of the native vision runtime</li>
 </ul>
-<h2 id="future-direction">Future Direction<a class="headerlink" href="#future-direction" title="Permanent link">&para;</a></h2>
-<p>As the project grows, this page can become the umbrella view for:</p>
+<p>In practice, this reduces the chance that a broken branch reaches <code>master</code>
+without anyone noticing.</p>
+<h3 id="current-ci-boundaries">Current CI boundaries<a class="headerlink" href="#current-ci-boundaries" title="Permanent link">&para;</a></h3>
+<p>The CI workflow is intentionally narrower than the full repository.</p>
+<p>It does <strong>not</strong> currently guarantee:</p>
 <ul>
-<li>local build workflows</li>
-<li>CI validation stages</li>
-<li>release packaging</li>
-<li>artifact publishing</li>
-<li>hardware-in-the-loop execution</li>
+<li>real hardware validation</li>
+<li>camera or sensor availability</li>
+<li>RKNN/RGA-backed execution inside the default GitHub runner image</li>
+<li>firmware flashing or micro-ROS deployment</li>
+<li>Gazebo or robot end-to-end runtime validation</li>
+<li>release packaging or artifact publishing</li>
 </ul>
-<p>For now, the detailed operational reference lives in
-<a href="../ci_cd/">CI/CD Overview</a>.</p>
+<p>Those would require additional jobs, richer runners, or hardware-aware test
+infrastructure.</p>
+<h2 id="docs-workflow">Docs Workflow<a class="headerlink" href="#docs-workflow" title="Permanent link">&para;</a></h2>
+<p>The docs workflow is defined in <code>.github/workflows/docs.yml</code>.</p>
+<h3 id="when-it-runs_1">When it runs<a class="headerlink" href="#when-it-runs_1" title="Permanent link">&para;</a></h3>
+<p>The workflow runs when:</p>
+<ul>
+<li>files under <code>docs/</code> change on <code>master</code></li>
+<li><code>mkdocs.yml</code> changes on <code>master</code></li>
+<li>the workflow is triggered manually</li>
+</ul>
+<h3 id="what-it-does_1">What it does<a class="headerlink" href="#what-it-does_1" title="Permanent link">&para;</a></h3>
+<p>The job:</p>
+<ol>
+<li>Checks out the repository with full history</li>
+<li>Installs MkDocs and the Material theme</li>
+<li>Builds the site</li>
+<li>Deploys the generated documentation to the <code>gh-pages</code> branch</li>
+</ol>
+<p>This is the current "CD" piece of the repository.</p>
+<h2 id="developer-experience">Developer Experience<a class="headerlink" href="#developer-experience" title="Permanent link">&para;</a></h2>
+<p>From a contributor's perspective, the automation provides a few immediate
+benefits:</p>
+<ul>
+<li>PRs get an automatic build/test signal without requiring every reviewer to
+  reproduce the same checks locally</li>
+<li>dependency drift in ROS packages is more likely to fail early</li>
+<li>lightweight regressions in Python helpers and portable vision utilities are
+  caught before merge</li>
+<li>docs changes can be published without a manual deployment step</li>
+</ul>
+<p>The local equivalents of the current CI checks are:</p>
+<div class="highlight"><pre><span></span><code>ruff<span class="w"> </span>check<span class="w"> </span>ros_ws/src/analysis<span class="w"> </span>ros_ws/src/bringup
+
+<span class="nb">source</span><span class="w"> </span>/opt/ros/kilted/setup.bash
+<span class="nb">cd</span><span class="w"> </span>ros_ws
+colcon<span class="w"> </span>build<span class="w"> </span>--merge-install<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--packages-select<span class="w"> </span>omniseer_msgs<span class="w"> </span>yolo_msgs<span class="w"> </span>omniseer_description<span class="w"> </span>analysis<span class="w"> </span>bringup
+colcon<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--merge-install<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--packages-select<span class="w"> </span>omniseer_description<span class="w"> </span>analysis<span class="w"> </span>bringup
+colcon<span class="w"> </span>test-result<span class="w"> </span>--all<span class="w"> </span>--verbose
+
+<span class="nb">cd</span><span class="w"> </span>/path/to/omniseer
+cmake<span class="w"> </span>-S<span class="w"> </span>vision<span class="w"> </span>-B<span class="w"> </span>vision/build-verify<span class="w"> </span>-DVISION_BUILD_HARNESS<span class="o">=</span>OFF
+cmake<span class="w"> </span>--build<span class="w"> </span>vision/build-verify<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--target<span class="w"> </span>image_buffer_pool_test<span class="w"> </span>jsonl_telemetry_test<span class="w"> </span>rolling_telemetry_test
+ctest<span class="w"> </span>--test-dir<span class="w"> </span>vision/build-verify<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-R<span class="w"> </span><span class="s1">&#39;image_buffer_pool_test|jsonl_telemetry_test|rolling_telemetry_test&#39;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--output-on-failure
+</code></pre></div>
+<p>If the RKNN and RGA SDKs are installed locally, you can also build:</p>
+<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>/opt/ros/kilted/setup.bash
+<span class="nb">cd</span><span class="w"> </span>ros_ws
+colcon<span class="w"> </span>build<span class="w"> </span>--merge-install<span class="w"> </span>--packages-select<span class="w"> </span>omniseer_vision_bridge
+</code></pre></div>
+<h2 id="recommended-future-extensions">Recommended Future Extensions<a class="headerlink" href="#recommended-future-extensions" title="Permanent link">&para;</a></h2>
+<p>As subsystem documentation grows, this page should stay focused on repository
+automation and point outward to the subsystem docs.</p>
+<p>Likely future additions:</p>
+<ul>
+<li>a release workflow for tagged versions</li>
+<li>hardware-in-the-loop jobs on a self-hosted runner</li>
+<li>integration tests for launch flows and ROS graphs</li>
+<li>container image builds</li>
+<li>firmware build and test automation</li>
+<li>artifact retention for logs, test reports, and generated packages</li>
+</ul>
 
 
 
