@@ -1,0 +1,1653 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Remote Monitoring Architecture Spec - omniseer</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#remote-monitoring-architecture-spec" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="omniseer" class="md-header__button md-logo" aria-label="omniseer" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            omniseer
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Remote Monitoring Architecture Spec
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/jburo1/omniseer" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="omniseer" class="md-nav__button md-logo" aria-label="omniseer" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    omniseer
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/jburo1/omniseer" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Software
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Software
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../build_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Build pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ros_packages/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ROS packages
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../code_documentation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code documentation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vision_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hardware
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Hardware
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/circuit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Circuit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/wiring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Wiring guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-purpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1) Purpose
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-goals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2) Goals
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-non-goals-v0" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3) Non-Goals (v0)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-current-hardware-runtime-facts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4) Current Hardware / Runtime Facts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-top-level-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5) Top-Level Architecture
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5) Top-Level Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-mission-critical-plane" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 Mission-Critical Plane
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-diagnostic-plane" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 Diagnostic Plane
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-recommended-initial-deployment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6) Recommended Initial Deployment
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6) Recommended Initial Deployment">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-robot-side" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 Robot Side
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-host-side" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 Host Side
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-robot-container-vs-two-container-split" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7) Robot Container vs Two-Container Split
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7) Robot Container vs Two-Container Split">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-initial-recommendation-one-container-two-process-groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.1 Initial Recommendation: One Container, Two Process Groups
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-later-option-two-robot-containers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2 Later Option: Two Robot Containers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73-overhead-assessment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.3 Overhead Assessment
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-robot-side-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8) Robot-Side Components
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8) Robot-Side Components">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81-robot-core" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 robot-core
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#82-robot-diag-control" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.2 robot-diag-control
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#83-preview-streamer-subprocess" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3 Preview Streamer Subprocess
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-host-side-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9) Host-Side Components
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9) Host-Side Components">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#91-monitor-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.1 monitor-agent
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#92-ui-monitoring-app" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.2 UI / Monitoring App
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#93-rviz2-analysis-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.3 RViz2 / Analysis Tools
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-control-and-data-boundaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10) Control and Data Boundaries
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="10) Control and Data Boundaries">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#101-ros-2-is-used-for" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.1 ROS 2 Is Used For
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#102-video-transport-is-separate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10.2 Video Transport Is Separate
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-preview-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11) Preview Modes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-sync-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12) Sync Model
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="12) Sync Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#121-default-diagnostic-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12.1 Default Diagnostic Mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#122-exact-sync-debug-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12.2 Exact-Sync Debug Mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-boot-lifecycle-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13) Boot / Lifecycle Model
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="13) Boot / Lifecycle Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#131-robot-boot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.1 Robot Boot
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#132-preview-enable-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.2 Preview Enable Flow
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#133-preview-disable-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.3 Preview Disable Flow
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-recommended-initial-interfaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14) Recommended Initial Interfaces
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="14) Recommended Initial Interfaces">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#141-ros-2-service-setpreviewmode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.1 ROS 2 Service: SetPreviewMode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#142-ros-2-topic-previewstatus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14.2 ROS 2 Topic: PreviewStatus
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15-important-decisions-answered" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15) Important Decisions Answered
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="15) Important Decisions Answered">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#q1-should-the-robot-run-two-containers-from-the-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q1. Should the robot run two containers from the start?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q2-does-splitting-into-two-robot-containers-materially-reduce-compute-load" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q2. Does splitting into two robot containers materially reduce compute load?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q3-why-still-keep-the-two-container-option" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q3. Why still keep the two-container option?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q4-should-the-host-side-use-containers-initially" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q4. Should the host side use containers initially?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q5-how-should-the-host-app-connect-to-the-robot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q5. How should the host app connect to the robot?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q6-where-should-trackingoverlays-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q6. Where should tracking/overlays run?
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#16-recommended-first-implementation-slices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16) Recommended First Implementation Slices
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#17-open-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17) Open Questions
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="remote-monitoring-architecture-spec">Remote Monitoring Architecture Spec<a class="headerlink" href="#remote-monitoring-architecture-spec" title="Permanent link">&para;</a></h1>
+<p><em>Status: draft v0</em></p>
+<p><em>Last updated: 2026-03-19</em></p>
+<h2 id="1-purpose">1) Purpose<a class="headerlink" href="#1-purpose" title="Permanent link">&para;</a></h2>
+<p>Define a concrete architecture for:</p>
+<ul>
+<li>mission-critical runtime on the robot SBC</li>
+<li>optional operator-controlled preview streaming to a laptop</li>
+<li>off-robot monitoring, visualization, recording, and analysis</li>
+</ul>
+<p>The key constraint is that the SBC should spend nearly all steady-state compute on robot-critical work. Preview and diagnostics should be optional, explicitly budgeted, and easy to disable.</p>
+<h2 id="2-goals">2) Goals<a class="headerlink" href="#2-goals" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Keep autonomy and perception functional even when diagnostics are disabled, disconnected, or broken.</li>
+<li>Make preview streaming opt-in and remotely controllable from the laptop.</li>
+<li>Keep ROS 2 for control and telemetry, not bulk video transport.</li>
+<li>Run RViz2, overlays, plots, bagging, and higher-cost analysis on the host.</li>
+<li>Preserve a path to a more isolated split deployment later without reworking the whole system.</li>
+</ol>
+<h2 id="3-non-goals-v0">3) Non-Goals (v0)<a class="headerlink" href="#3-non-goals-v0" title="Permanent link">&para;</a></h2>
+<ul>
+<li>full cloud telemetry platform</li>
+<li>browser-first remote operations stack</li>
+<li>exact pixel-perfect overlay sync in the always-on path</li>
+<li>replacing the mission-critical local consumers of detections</li>
+</ul>
+<h2 id="4-current-hardware-runtime-facts">4) Current Hardware / Runtime Facts<a class="headerlink" href="#4-current-hardware-runtime-facts" title="Permanent link">&para;</a></h2>
+<p>Observed on the current ROCK 5B Plus target:</p>
+<ul>
+<li><code>/dev/video11</code> is <code>rkisp_mainpath</code></li>
+<li><code>/dev/video12</code> is <code>rkisp_selfpath</code></li>
+<li>both paths can stream concurrently at <code>1280x720 NV12 60 fps</code></li>
+<li>neither path currently advertises <code>BGR24</code>/<code>RGB24</code></li>
+<li><code>selfpath</code> exposes YUV-family formats plus <code>GREY</code> and <code>RGB565</code></li>
+</ul>
+<p>Implications:</p>
+<ul>
+<li>onboard inference should continue using <code>selfpath</code></li>
+<li>preview should preferentially use <code>mainpath</code></li>
+<li>color conversion should happen in the preview stack only when preview is enabled</li>
+<li>raw <code>bgr8</code> should not be the default transport off the robot</li>
+</ul>
+<p>Also measured locally on this board:</p>
+<ul>
+<li>current inference preprocess <code>NV12 1280x720 -&gt; RGB888 640x640</code> costs about <code>0.96 ms/frame</code></li>
+<li>an additional full-resolution <code>NV12 1280x720 -&gt; BGR888 1280x720</code> RGA conversion costs about <code>0.64 ms/frame</code></li>
+</ul>
+<p>This means a same-frame in-pipeline preview branch is viable for targeted debug, but should not be the default always-on remote viewing path.</p>
+<h2 id="5-top-level-architecture">5) Top-Level Architecture<a class="headerlink" href="#5-top-level-architecture" title="Permanent link">&para;</a></h2>
+<p>The system is split into two planes:</p>
+<h3 id="51-mission-critical-plane">5.1 Mission-Critical Plane<a class="headerlink" href="#51-mission-critical-plane" title="Permanent link">&para;</a></h3>
+<p>Runs on the SBC and stays up regardless of diagnostics state.</p>
+<p>Responsibilities:</p>
+<ul>
+<li>camera capture for inference</li>
+<li>preprocess</li>
+<li>inference</li>
+<li>detection publication</li>
+<li>local behavior/autonomy consumers</li>
+<li>local health and perf reporting</li>
+</ul>
+<h3 id="52-diagnostic-plane">5.2 Diagnostic Plane<a class="headerlink" href="#52-diagnostic-plane" title="Permanent link">&para;</a></h3>
+<p>Spans robot and host, and is explicitly optional.</p>
+<p>Responsibilities:</p>
+<ul>
+<li>preview stream enable/disable</li>
+<li>off-robot visualization</li>
+<li>recording and evaluation</li>
+<li>operator metrics panels</li>
+<li>optional host-side tracking / overlays / RViz2</li>
+</ul>
+<h2 id="6-recommended-initial-deployment">6) Recommended Initial Deployment<a class="headerlink" href="#6-recommended-initial-deployment" title="Permanent link">&para;</a></h2>
+<h3 id="61-robot-side">6.1 Robot Side<a class="headerlink" href="#61-robot-side" title="Permanent link">&para;</a></h3>
+<p>Run <strong>one container</strong> initially:</p>
+<ul>
+<li><code>robot-core</code></li>
+</ul>
+<p>Inside <code>robot-core</code>:</p>
+<ul>
+<li>mission-critical ROS 2 nodes</li>
+<li><code>robot-diag-control</code></li>
+<li>an on-demand preview streamer subprocess</li>
+</ul>
+<p>Do <strong>not</strong> start with two robot containers by default.</p>
+<p>Reason:</p>
+<ul>
+<li>the compute overhead of a second container is usually small</li>
+<li>the operational complexity is not small</li>
+<li>device passthrough, lifecycle, logs, startup ordering, and debugging all get harder</li>
+<li>the preview stack is still evolving, so start with one deployment boundary and split later only if it pays for itself</li>
+</ul>
+<h3 id="62-host-side">6.2 Host Side<a class="headerlink" href="#62-host-side" title="Permanent link">&para;</a></h3>
+<p>Run <strong>native applications</strong> first, not containers.</p>
+<p>Recommended host components:</p>
+<ul>
+<li><code>monitor-agent</code> as a native ROS-aware app or ROS package in this repo</li>
+<li>RViz2 native</li>
+<li>optional native UI app on top of <code>monitor-agent</code></li>
+</ul>
+<p>Reason:</p>
+<ul>
+<li>RViz2 and desktop video decode are simplest natively</li>
+<li>host GUI/container audio/video/display plumbing is usually friction-heavy</li>
+<li>the laptop is not compute-constrained the way the SBC is</li>
+</ul>
+<h2 id="7-robot-container-vs-two-container-split">7) Robot Container vs Two-Container Split<a class="headerlink" href="#7-robot-container-vs-two-container-split" title="Permanent link">&para;</a></h2>
+<h3 id="71-initial-recommendation-one-container-two-process-groups">7.1 Initial Recommendation: One Container, Two Process Groups<a class="headerlink" href="#71-initial-recommendation-one-container-two-process-groups" title="Permanent link">&para;</a></h3>
+<p>Use:</p>
+<ul>
+<li><code>robot-core</code> container</li>
+<li><code>robot-diag-control</code> node inside it</li>
+<li>preview streamer launched on demand as a child process or supervised sibling process</li>
+</ul>
+<p>Advantages:</p>
+<ul>
+<li>simplest boot and deployment story</li>
+<li>one ROS environment</li>
+<li>one filesystem namespace</li>
+<li>easy access to <code>/dev/video11</code> and <code>/dev/video12</code></li>
+<li>no extra container orchestration needed</li>
+<li>lowest integration risk for early slices</li>
+</ul>
+<p>Disadvantages:</p>
+<ul>
+<li>preview faults are less isolated than with a fully separate container</li>
+<li>logs and lifecycle management need discipline</li>
+</ul>
+<h3 id="72-later-option-two-robot-containers">7.2 Later Option: Two Robot Containers<a class="headerlink" href="#72-later-option-two-robot-containers" title="Permanent link">&para;</a></h3>
+<p>Possible later split:</p>
+<ul>
+<li><code>robot-core</code></li>
+<li><code>robot-video</code></li>
+</ul>
+<p>Use this only after the preview stack is stable and useful enough to justify stronger isolation.</p>
+<p>Advantages:</p>
+<ul>
+<li>independent restart policy for the streamer</li>
+<li>tighter resource accounting and policy</li>
+<li>easier security/network hardening if preview becomes externally reachable</li>
+</ul>
+<p>Disadvantages:</p>
+<ul>
+<li>more startup and lifecycle complexity</li>
+<li>device passthrough needs explicit management</li>
+<li>more networking/configuration surface</li>
+<li>more operational overhead for development and debugging</li>
+</ul>
+<h3 id="73-overhead-assessment">7.3 Overhead Assessment<a class="headerlink" href="#73-overhead-assessment" title="Permanent link">&para;</a></h3>
+<p>For containers themselves:</p>
+<ul>
+<li>CPU overhead of an extra container is usually negligible</li>
+<li>memory overhead is mostly one more process tree plus duplicated runtime libs and buffers</li>
+<li>the bigger cost is operational complexity, not raw compute</li>
+</ul>
+<p>For the preview stack:</p>
+<ul>
+<li>the meaningful budget item is the preview pipeline itself: capture, optional conversion, encode, socket I/O</li>
+<li>that cost exists whether the streamer runs as a process in <code>robot-core</code> or in a separate <code>robot-video</code> container</li>
+</ul>
+<p>Conclusion:</p>
+<ul>
+<li>start as one container with a managed preview subprocess</li>
+<li>split later only for fault isolation or deployment hygiene, not because containers themselves are too expensive</li>
+</ul>
+<h2 id="8-robot-side-components">8) Robot-Side Components<a class="headerlink" href="#8-robot-side-components" title="Permanent link">&para;</a></h2>
+<h3 id="81-robot-core">8.1 <code>robot-core</code><a class="headerlink" href="#81-robot-core" title="Permanent link">&para;</a></h3>
+<p>Responsibilities:</p>
+<ul>
+<li>inference path on <code>/dev/video12</code></li>
+<li><code>/yolo/detections</code></li>
+<li><code>/vision/perf</code></li>
+<li>local consumers of detections</li>
+<li><code>robot-diag-control</code></li>
+</ul>
+<h3 id="82-robot-diag-control">8.2 <code>robot-diag-control</code><a class="headerlink" href="#82-robot-diag-control" title="Permanent link">&para;</a></h3>
+<p>Lives inside <code>robot-core</code> initially.</p>
+<p>Responsibilities:</p>
+<ul>
+<li>expose preview control over ROS 2</li>
+<li>own preview state machine</li>
+<li>start/stop preview streamer subprocess</li>
+<li>publish diagnostic status to the rest of the graph</li>
+<li>keep preview failure isolated from mission-critical nodes</li>
+</ul>
+<p>Recommended outputs:</p>
+<ul>
+<li><code>/diag/status</code></li>
+<li><code>/diag/preview_status</code></li>
+</ul>
+<p>Recommended services/actions:</p>
+<ul>
+<li><code>/diag/set_preview_mode</code></li>
+<li><code>/diag/get_diag_status</code></li>
+</ul>
+<h3 id="83-preview-streamer-subprocess">8.3 Preview Streamer Subprocess<a class="headerlink" href="#83-preview-streamer-subprocess" title="Permanent link">&para;</a></h3>
+<p>Responsibilities:</p>
+<ul>
+<li>own <code>/dev/video11</code></li>
+<li>capture <code>NV12</code></li>
+<li>hardware-encode H.265</li>
+<li>serve stream to the laptop</li>
+</ul>
+<p>Recommended default behavior:</p>
+<ul>
+<li>off by default</li>
+<li>started only on operator request</li>
+<li>bounded profiles only, not arbitrary encoder flags from the UI</li>
+</ul>
+<h2 id="9-host-side-components">9) Host-Side Components<a class="headerlink" href="#9-host-side-components" title="Permanent link">&para;</a></h2>
+<h3 id="91-monitor-agent">9.1 <code>monitor-agent</code><a class="headerlink" href="#91-monitor-agent" title="Permanent link">&para;</a></h3>
+<p>Native host application or ROS package.</p>
+<p>Responsibilities:</p>
+<ul>
+<li>join the ROS 2 network</li>
+<li>subscribe to detections, perf, and diagnostic status</li>
+<li>call preview enable/disable services</li>
+<li>open/close the preview stream</li>
+<li>optionally decode the stream into local ROS topics for RViz2 or host-side overlay nodes</li>
+</ul>
+<h3 id="92-ui-monitoring-app">9.2 UI / Monitoring App<a class="headerlink" href="#92-ui-monitoring-app" title="Permanent link">&para;</a></h3>
+<p>Keep the UI separate from ROS internals where possible.</p>
+<p>Responsibilities:</p>
+<ul>
+<li>preview toggle</li>
+<li>preview state display</li>
+<li>metrics dashboards</li>
+<li>event/fault display</li>
+<li>record/export controls</li>
+</ul>
+<p>The UI can talk to <code>monitor-agent</code> over an internal API rather than speaking ROS 2 directly.</p>
+<h3 id="93-rviz2-analysis-tools">9.3 RViz2 / Analysis Tools<a class="headerlink" href="#93-rviz2-analysis-tools" title="Permanent link">&para;</a></h3>
+<p>Run natively on the host.</p>
+<p>Examples:</p>
+<ul>
+<li>RViz2</li>
+<li><code>rqt_plot</code></li>
+<li><code>rosbag2</code></li>
+<li>host-side <code>tracking_node</code></li>
+<li>host-side <code>debug_node</code></li>
+</ul>
+<h2 id="10-control-and-data-boundaries">10) Control and Data Boundaries<a class="headerlink" href="#10-control-and-data-boundaries" title="Permanent link">&para;</a></h2>
+<h3 id="101-ros-2-is-used-for">10.1 ROS 2 Is Used For<a class="headerlink" href="#101-ros-2-is-used-for" title="Permanent link">&para;</a></h3>
+<ul>
+<li>control</li>
+<li>status</li>
+<li>metrics</li>
+<li>detections</li>
+<li>event/state publication</li>
+</ul>
+<p>Examples:</p>
+<ul>
+<li><code>/yolo/detections</code></li>
+<li><code>/vision/perf</code></li>
+<li><code>/diag/*</code></li>
+</ul>
+<h3 id="102-video-transport-is-separate">10.2 Video Transport Is Separate<a class="headerlink" href="#102-video-transport-is-separate" title="Permanent link">&para;</a></h3>
+<p>Use a dedicated video transport for preview.</p>
+<p>Recommended first transport:</p>
+<ul>
+<li>RTSP over local LAN</li>
+</ul>
+<p>Later options:</p>
+<ul>
+<li>SRT for better resilience on weaker links</li>
+<li>WebRTC only if browser/native remote ops requirements justify the added complexity</li>
+</ul>
+<p>Reason:</p>
+<ul>
+<li>DDS is a poor default place for always-on compressed operator video</li>
+<li>dedicated video transport gives tighter control over bitrate, latency, and startup behavior</li>
+</ul>
+<h2 id="11-preview-modes">11) Preview Modes<a class="headerlink" href="#11-preview-modes" title="Permanent link">&para;</a></h2>
+<p>Define a small set of stable profiles instead of exposing raw encoder knobs:</p>
+<ul>
+<li><code>off</code></li>
+<li><code>low_bw</code></li>
+<li><code>balanced</code></li>
+<li><code>high_quality</code></li>
+<li><code>exact_sync_debug</code> (later, optional, not default)</li>
+</ul>
+<p>Suggested semantics:</p>
+<ul>
+<li><code>off</code>: no preview capture or encode running</li>
+<li><code>low_bw</code>: 720p, low fps, low bitrate</li>
+<li><code>balanced</code>: 720p, moderate fps/bitrate</li>
+<li><code>high_quality</code>: higher bitrate and possibly higher resolution if budget allows</li>
+<li><code>exact_sync_debug</code>: special mode that may use a same-frame preview path instead of the normal secondary ISP path</li>
+</ul>
+<h2 id="12-sync-model">12) Sync Model<a class="headerlink" href="#12-sync-model" title="Permanent link">&para;</a></h2>
+<p>Two useful operating modes exist:</p>
+<h3 id="121-default-diagnostic-mode">12.1 Default Diagnostic Mode<a class="headerlink" href="#121-default-diagnostic-mode" title="Permanent link">&para;</a></h3>
+<ul>
+<li>inference on <code>selfpath</code></li>
+<li>preview on <code>mainpath</code></li>
+<li>detections and video are close in time but not guaranteed to be the same exact frame</li>
+</ul>
+<p>Use for:</p>
+<ul>
+<li>operator monitoring</li>
+<li>general evaluation</li>
+<li>performance-safe remote diagnosis</li>
+</ul>
+<h3 id="122-exact-sync-debug-mode">12.2 Exact-Sync Debug Mode<a class="headerlink" href="#122-exact-sync-debug-mode" title="Permanent link">&para;</a></h3>
+<ul>
+<li>preview derived from the same frame path used for inference</li>
+<li>more expensive</li>
+<li>used only for targeted debugging when exact overlay alignment matters</li>
+</ul>
+<p>Use for:</p>
+<ul>
+<li>validating tracking edge cases</li>
+<li>detailed regression capture</li>
+</ul>
+<h2 id="13-boot-lifecycle-model">13) Boot / Lifecycle Model<a class="headerlink" href="#13-boot-lifecycle-model" title="Permanent link">&para;</a></h2>
+<h3 id="131-robot-boot">13.1 Robot Boot<a class="headerlink" href="#131-robot-boot" title="Permanent link">&para;</a></h3>
+<p>At boot:</p>
+<ul>
+<li>launch <code>robot-core</code></li>
+<li>do not launch preview streamer</li>
+<li><code>robot-diag-control</code> reports preview as disabled</li>
+</ul>
+<h3 id="132-preview-enable-flow">13.2 Preview Enable Flow<a class="headerlink" href="#132-preview-enable-flow" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Host discovers robot over ROS 2.</li>
+<li>Operator requests preview.</li>
+<li>Host calls <code>/diag/set_preview_mode</code>.</li>
+<li><code>robot-diag-control</code> validates request and starts preview streamer.</li>
+<li>Robot publishes preview status and endpoint metadata.</li>
+<li>Host opens stream.</li>
+</ol>
+<h3 id="133-preview-disable-flow">13.3 Preview Disable Flow<a class="headerlink" href="#133-preview-disable-flow" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Host requests preview off.</li>
+<li><code>robot-diag-control</code> stops the preview streamer.</li>
+<li>Robot publishes preview disabled state.</li>
+<li>Host tears down local decode/overlay path.</li>
+</ol>
+<h2 id="14-recommended-initial-interfaces">14) Recommended Initial Interfaces<a class="headerlink" href="#14-recommended-initial-interfaces" title="Permanent link">&para;</a></h2>
+<h3 id="141-ros-2-service-setpreviewmode">14.1 ROS 2 Service: <code>SetPreviewMode</code><a class="headerlink" href="#141-ros-2-service-setpreviewmode" title="Permanent link">&para;</a></h3>
+<p>Initial request fields:</p>
+<ul>
+<li><code>bool enabled</code></li>
+<li><code>string profile</code></li>
+</ul>
+<p>Initial response fields:</p>
+<ul>
+<li><code>bool accepted</code></li>
+<li><code>string state</code></li>
+<li><code>string message</code></li>
+<li><code>string stream_uri</code></li>
+</ul>
+<h3 id="142-ros-2-topic-previewstatus">14.2 ROS 2 Topic: <code>PreviewStatus</code><a class="headerlink" href="#142-ros-2-topic-previewstatus" title="Permanent link">&para;</a></h3>
+<p>Suggested fields:</p>
+<ul>
+<li>current state</li>
+<li>current profile</li>
+<li>stream URI</li>
+<li>width</li>
+<li>height</li>
+<li>fps</li>
+<li>bitrate</li>
+<li>error text</li>
+<li>restart count</li>
+</ul>
+<h2 id="15-important-decisions-answered">15) Important Decisions Answered<a class="headerlink" href="#15-important-decisions-answered" title="Permanent link">&para;</a></h2>
+<h3 id="q1-should-the-robot-run-two-containers-from-the-start">Q1. Should the robot run two containers from the start?<a class="headerlink" href="#q1-should-the-robot-run-two-containers-from-the-start" title="Permanent link">&para;</a></h3>
+<p>Recommended answer:</p>
+<ul>
+<li>no</li>
+</ul>
+<p>Start with one <code>robot-core</code> container and launch the preview streamer as a managed subprocess from <code>robot-diag-control</code>.</p>
+<h3 id="q2-does-splitting-into-two-robot-containers-materially-reduce-compute-load">Q2. Does splitting into two robot containers materially reduce compute load?<a class="headerlink" href="#q2-does-splitting-into-two-robot-containers-materially-reduce-compute-load" title="Permanent link">&para;</a></h3>
+<p>Recommended answer:</p>
+<ul>
+<li>not in any meaningful way</li>
+</ul>
+<p>The preview pipeline cost is in capture/encode/network I/O. The container boundary itself is not the expensive part.</p>
+<h3 id="q3-why-still-keep-the-two-container-option">Q3. Why still keep the two-container option?<a class="headerlink" href="#q3-why-still-keep-the-two-container-option" title="Permanent link">&para;</a></h3>
+<p>Recommended answer:</p>
+<ul>
+<li>for later fault isolation and operational hygiene</li>
+</ul>
+<p>Use it only if the preview stack becomes stable enough that independent restart, policy, or packaging actually matters.</p>
+<h3 id="q4-should-the-host-side-use-containers-initially">Q4. Should the host side use containers initially?<a class="headerlink" href="#q4-should-the-host-side-use-containers-initially" title="Permanent link">&para;</a></h3>
+<p>Recommended answer:</p>
+<ul>
+<li>no</li>
+</ul>
+<p>Use native applications first. Keep RViz2, decode, and monitoring native on the laptop.</p>
+<h3 id="q5-how-should-the-host-app-connect-to-the-robot">Q5. How should the host app connect to the robot?<a class="headerlink" href="#q5-how-should-the-host-app-connect-to-the-robot" title="Permanent link">&para;</a></h3>
+<p>Recommended answer:</p>
+<ul>
+<li>ROS 2 for control/metrics/detections</li>
+<li>RTSP for preview video</li>
+</ul>
+<h3 id="q6-where-should-trackingoverlays-run">Q6. Where should tracking/overlays run?<a class="headerlink" href="#q6-where-should-trackingoverlays-run" title="Permanent link">&para;</a></h3>
+<p>Recommended answer:</p>
+<ul>
+<li>on the host by default</li>
+</ul>
+<p>That keeps the SBC focused on mission-critical work.</p>
+<h2 id="16-recommended-first-implementation-slices">16) Recommended First Implementation Slices<a class="headerlink" href="#16-recommended-first-implementation-slices" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Add <code>robot-diag-control</code> inside <code>robot-core</code> with preview state reporting and a stubbed preview enable/disable service.</li>
+<li>Add a managed preview streamer subprocess controlled by <code>robot-diag-control</code>, using <code>/dev/video11</code>.</li>
+<li>Add a native <code>monitor-agent</code> on the host that calls the service and opens the returned stream URI.</li>
+<li>Add host-side RViz2 / analysis integration.</li>
+<li>Only after that, decide whether a separate <code>robot-video</code> container or an exact-sync debug mode is worth the added complexity.</li>
+</ol>
+<h2 id="17-open-questions">17) Open Questions<a class="headerlink" href="#17-open-questions" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Whether the first preview transport should be RTSP/TCP only, or RTSP/UDP if LAN conditions are good.</li>
+<li>Whether host UI should be built as a thin custom GUI over <code>monitor-agent</code>, or whether RViz2 + CLI should remain the first operator surface.</li>
+<li>Whether the first host-side overlay path should decode preview into ROS <code>Image</code> locally, or keep video display separate from ROS overlays until later.</li>
+</ol>
+
+
+
+
+
+
+
+  
+    
+  
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Last update">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 19, 2026 19:06:02 UTC">March 19, 2026</span>
+  </span>
+
+    
+    
+    
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.instant"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
