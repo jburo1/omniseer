@@ -742,10 +742,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#currently-validated-bring-up-path" class="md-nav__link">
+  <a href="#current-implemented-bring-up-path" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Currently validated bring-up path
+        Current implemented bring-up path
       
     </span>
   </a>
@@ -1137,10 +1137,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#currently-validated-bring-up-path" class="md-nav__link">
+  <a href="#current-implemented-bring-up-path" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Currently validated bring-up path
+        Current implemented bring-up path
       
     </span>
   </a>
@@ -1245,6 +1245,10 @@ vision stack.</p>
 <li>GStreamer SRT plugins are installed</li>
 <li>local <code>mainpath -&gt; x264 -&gt; MPEG-TS -&gt; SRT -&gt; decode</code> loopback has been
   validated</li>
+<li>the current C++ gateway can now launch that <code>x264 -&gt; MPEG-TS -&gt; SRT</code> path as
+  its built-in preview worker</li>
+<li>the packaged Python host tools can now request preview over gRPC and consume
+  that SRT stream using <code>gst-launch-1.0</code></li>
 </ul>
 <p>Current blocker for the intended production path:</p>
 <ul>
@@ -1379,12 +1383,13 @@ running.</p>
 <li><code>NV12 mainpath -&gt; hardware H.265 encode -&gt; SRT</code></li>
 </ul>
 <p>This is the desired low-overhead end state.</p>
-<h3 id="currently-validated-bring-up-path">Currently validated bring-up path<a class="headerlink" href="#currently-validated-bring-up-path" title="Permanent link">&para;</a></h3>
+<h3 id="current-implemented-bring-up-path">Current implemented bring-up path<a class="headerlink" href="#current-implemented-bring-up-path" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>NV12 mainpath -&gt; software x264 -&gt; SRT</code></li>
 </ul>
-<p>This path is useful for early integration and proof-of-life, but it is not the
-desired long-term robot-side budget.</p>
+<p>This path is now the implemented robot-side preview export path for early
+integration and proof-of-life, but it is not the desired long-term robot-side
+budget.</p>
 <h3 id="currently-unattractive-path">Currently unattractive path<a class="headerlink" href="#currently-unattractive-path" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>NV12 mainpath -&gt; software x265 -&gt; SRT</code></li>
@@ -1398,12 +1403,25 @@ desired long-term robot-side budget.</p>
 <li>render it in the operator app</li>
 <li>optionally feed decoded frames into local analysis/overlay pipelines</li>
 </ul>
+<p>Current implemented host slice:</p>
+<ul>
+<li><code>robot_preview_viewer</code> can enable preview over gRPC and consume the fixed or
+  configured SRT endpoint</li>
+<li><code>robot_monitor_shell</code> can poll gateway status, run short watch loops, and
+  launch <code>robot_preview_viewer</code> from one integrated tool</li>
+<li><code>robot_monitor_gui</code> can refresh status, toggle preview, and launch
+  <code>robot_preview_viewer</code> from a desktop GUI</li>
+<li>it currently shells out to <code>gst-launch-1.0</code>, so host-side GStreamer tooling
+  is required</li>
+<li>the GUI currently launches preview in a separate helper process; it does not
+  yet embed decoded video in its own window</li>
+<li>these are minimal bring-up tools, not the final operator UI</li>
+</ul>
 <p>The architecture should <strong>not</strong> assume the laptop has Rockchip RGA. It should
 only assume general-purpose CPU/GPU resources and likely hardware video decode.</p>
 <h2 id="open-integration-questions">Open Integration Questions<a class="headerlink" href="#open-integration-questions" title="Permanent link">&para;</a></h2>
 <ul>
 <li>what exact hardware H.265 userspace path should be installed on the SBC image</li>
-<li>whether the first build slice should use software <code>x264</code> as a bring-up step</li>
 <li>what preview profile defaults should be used over the current Wi-Fi setup</li>
 <li>whether decoded preview should be bridged into ROS on the host in the first
   UI slices or kept as a plain video panel initially</li>
@@ -1434,7 +1452,7 @@ only assume general-purpose CPU/GPU resources and likely hardware video decode.<
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 19, 2026 22:18:15 UTC">March 19, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 21, 2026 18:06:51 UTC">March 21, 2026</span>
   </span>
 
     

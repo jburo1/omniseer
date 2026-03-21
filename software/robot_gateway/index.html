@@ -586,6 +586,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#near-term-implementation-shape" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Near-Term Implementation Shape
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#major-design-considerations" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1070,6 +1081,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#near-term-implementation-shape" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Near-Term Implementation Shape
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#major-design-considerations" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1365,13 +1387,23 @@ and services.</p>
 <li><code>omniseer_vision_bridge</code> publishing detections into ROS 2</li>
 <li>RViz and debug tooling on the ROS side</li>
 <li>a draft remote monitoring architecture spec</li>
+<li>a <code>robot_diag_control_cpp</code> package with:</li>
+<li>a shared generated C++ gRPC/protobuf library from the locked <code>.proto</code></li>
+<li>an in-memory gateway state store</li>
+<li>a synchronous unary gRPC service/server layer</li>
+<li>a ROS-backed node that aggregates <code>/vision/perf</code>, filtered odometry, and serves the locked API</li>
+<li>a gateway-owned preview subprocess manager backing <code>SetPreviewMode</code></li>
+<li>a built-in GStreamer preview worker path using <code>/dev/video11 -&gt; x264 -&gt; MPEG-TS -&gt; SRT</code></li>
+<li>packaged Python client tools for gateway status/control and host-side preview consumption</li>
+<li>a packaged Python monitor shell that integrates status polling and preview launch</li>
+<li>a first packaged Tk monitor GUI for desktop status/control bring-up</li>
+<li>local verification against those packaged Python tools</li>
 </ul>
 <p>What does <strong>not</strong> exist yet:</p>
 <ul>
-<li>a gRPC server on the robot</li>
-<li>an explicit external operator API</li>
-<li>a managed preview subprocess owned by a gateway component</li>
-<li>a host-side operator app bound to that API</li>
+<li>stream endpoint metadata in the API</li>
+<li>the intended low-overhead hardware H.265 preview path</li>
+<li>an embedded preview panel inside the host-side GUI</li>
 </ul>
 <p>Near-term direction:</p>
 <ul>
@@ -1379,6 +1411,26 @@ and services.</p>
 <li>let that component evolve into the first version of the robot gateway</li>
 <li>keep the first scope narrow: diagnostics and preview control</li>
 </ul>
+<h2 id="near-term-implementation-shape">Near-Term Implementation Shape<a class="headerlink" href="#near-term-implementation-shape" title="Permanent link">&para;</a></h2>
+<p>The current C++ implementation stays deliberately simple:</p>
+<ul>
+<li>one process</li>
+<li>one synchronous unary gRPC server</li>
+<li>one shared in-memory state store</li>
+<li>one ROS subscription path feeding that store</li>
+<li>one expected operator client</li>
+</ul>
+<p>Completed slices:</p>
+<ol>
+<li>add a standalone C++ gRPC service/server layer with tests</li>
+<li>wire that layer into the existing ROS-backed node</li>
+<li>replace the stubbed preview toggle with a gateway-owned subprocess lifecycle</li>
+<li>wire the first real preview export command into that lifecycle</li>
+</ol>
+<p>This keeps the control/status boundary small while avoiding premature async
+gRPC complexity.</p>
+<p>The next slice should be either an embedded preview panel or a targeted API
+expansion, not more transport abstraction.</p>
 <h2 id="major-design-considerations">Major Design Considerations<a class="headerlink" href="#major-design-considerations" title="Permanent link">&para;</a></h2>
 <ul>
 <li>
@@ -1591,7 +1643,7 @@ be structured so that basic telemetry is easy to add.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 19, 2026 22:18:15 UTC">March 19, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 21, 2026 18:06:51 UTC">March 21, 2026</span>
   </span>
 
     

@@ -675,10 +675,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#suggested-v1-service-sketch" class="md-nav__link">
+  <a href="#locked-v1-service-shape" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Suggested v1 Service Sketch
+        Locked v1 Service Shape
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-c-server-shape" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current C++ Server Shape
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-rollout-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Rollout Status
       
     </span>
   </a>
@@ -735,17 +757,6 @@
     <span class="md-ellipsis">
       
         SetPreviewModeResponse
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#gatewayevent" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        GatewayEvent
       
     </span>
   </a>
@@ -1047,10 +1058,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#suggested-v1-service-sketch" class="md-nav__link">
+  <a href="#locked-v1-service-shape" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Suggested v1 Service Sketch
+        Locked v1 Service Shape
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-c-server-shape" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current C++ Server Shape
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-rollout-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Rollout Status
       
     </span>
   </a>
@@ -1107,17 +1140,6 @@
     <span class="md-ellipsis">
       
         SetPreviewModeResponse
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#gatewayevent" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        GatewayEvent
       
     </span>
   </a>
@@ -1248,10 +1270,25 @@ laptop application and the robot gateway.</p>
 <ul>
 <li>ROS 2 internal topics and services</li>
 <li>a monitoring architecture draft</li>
-<li>no protobuf definitions yet</li>
-<li>no gRPC server yet</li>
+<li>a minimal protobuf definition in
+  <code>ros_ws/src/robot_diag_control/robot_diag_control/api/robot_gateway.proto</code></li>
+<li>Python client tools for exercising the gateway contract</li>
+<li>a C++ unary gRPC service/server layer in <code>robot_diag_control_cpp</code></li>
+<li>a ROS-backed C++ node that serves the locked API and aggregates <code>/vision/perf</code></li>
+<li>a parameter-driven preview subprocess manager that backs <code>SetPreviewMode</code></li>
+<li>a built-in robot-side GStreamer preview command for <code>x264 -&gt; MPEG-TS -&gt; SRT</code></li>
+<li>a minimal host-side preview helper that consumes that SRT stream via
+  <code>gst-launch-1.0</code></li>
+<li>a minimal host-side monitor shell that polls status and launches the preview
+  helper</li>
+<li>a first Tk-based monitor GUI that refreshes status, toggles preview, and
+  launches the preview helper as a separate process</li>
 </ul>
-<p>So this page is still a design/spec document, not an implementation reference.</p>
+<p>This page now serves two roles:</p>
+<ul>
+<li>describe the intended long-term direction</li>
+<li>document the currently locked minimal v1 control/status contract</li>
+</ul>
 <h2 id="major-design-considerations">Major Design Considerations<a class="headerlink" href="#major-design-considerations" title="Permanent link">&para;</a></h2>
 <ul>
 <li>
@@ -1263,15 +1300,12 @@ laptop application and the robot gateway.</p>
   strings and free-form encoder options.</p>
 </li>
 <li>
-<p>Versionability: protobuf/</p>
-</li>
-</ul>
-<p>gRPC should allow additive evolution without
+<p>Versionability: protobuf/gRPC should allow additive evolution without
   reworking the operator app.</p>
-<ul>
+</li>
 <li>
 <p>Separation of concerns: control/state rides over gRPC; preview video rides
-  over SRT and is only referenced by endpoint metadata in the API.</p>
+  over SRT and should not force extra transport detail into the first API slice.</p>
 </li>
 <li>
 <p>Operator safety: teleop-related operations later need stricter semantics than
@@ -1283,14 +1317,12 @@ laptop application and the robot gateway.</p>
 <p>Recommended initial RPCs:</p>
 <ul>
 <li><code>GetSystemStatus</code></li>
-<li><code>GetPreviewStatus</code></li>
 <li><code>SetPreviewMode</code></li>
-<li><code>SubscribeEvents</code></li>
 </ul>
 <p>Optional early additions if they prove useful:</p>
 <ul>
+<li><code>SubscribeEvents</code></li>
 <li><code>Ping</code></li>
-<li><code>GetBuildInfo</code></li>
 </ul>
 <p>Teleop and cloud-facing operations should wait until the diagnostics/control
 plane is stable.</p>
@@ -1299,59 +1331,100 @@ plane is stable.</p>
                                      |
                                      +--&gt; preview manager / subprocess
 </code></pre></div>
-<h2 id="suggested-v1-service-sketch">Suggested v1 Service Sketch<a class="headerlink" href="#suggested-v1-service-sketch" title="Permanent link">&para;</a></h2>
-<p>This is not final protobuf syntax, but it captures the intended shape.</p>
+<h2 id="locked-v1-service-shape">Locked v1 Service Shape<a class="headerlink" href="#locked-v1-service-shape" title="Permanent link">&para;</a></h2>
+<p>The current <code>.proto</code> is now the contract we should carry into the C++ rewrite.
+Keep it small and evolve additively.</p>
 <div class="highlight"><pre><span></span><code><span class="kd">service</span><span class="w"> </span><span class="n">RobotGateway</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">rpc</span><span class="w"> </span><span class="n">GetSystemStatus</span><span class="p">(</span><span class="n">GetSystemStatusRequest</span><span class="p">)</span><span class="w"> </span><span class="k">returns</span><span class="w"> </span><span class="p">(</span><span class="n">SystemStatus</span><span class="p">);</span>
-<span class="w">  </span><span class="k">rpc</span><span class="w"> </span><span class="n">GetPreviewStatus</span><span class="p">(</span><span class="n">GetPreviewStatusRequest</span><span class="p">)</span><span class="w"> </span><span class="k">returns</span><span class="w"> </span><span class="p">(</span><span class="n">PreviewStatus</span><span class="p">);</span>
 <span class="w">  </span><span class="k">rpc</span><span class="w"> </span><span class="n">SetPreviewMode</span><span class="p">(</span><span class="n">SetPreviewModeRequest</span><span class="p">)</span><span class="w"> </span><span class="k">returns</span><span class="w"> </span><span class="p">(</span><span class="n">SetPreviewModeResponse</span><span class="p">);</span>
-<span class="w">  </span><span class="k">rpc</span><span class="w"> </span><span class="n">SubscribeEvents</span><span class="p">(</span><span class="n">SubscribeEventsRequest</span><span class="p">)</span><span class="w"> </span><span class="k">returns</span><span class="w"> </span><span class="p">(</span><span class="n">stream</span><span class="w"> </span><span class="n">GatewayEvent</span><span class="p">);</span>
 <span class="p">}</span>
 </code></pre></div>
+<h2 id="current-c-server-shape">Current C++ Server Shape<a class="headerlink" href="#current-c-server-shape" title="Permanent link">&para;</a></h2>
+<p>The current implementation is intentionally narrow:</p>
+<ul>
+<li>one synchronous unary gRPC server in C++</li>
+<li>one in-memory <code>GatewayStateStore</code></li>
+<li>one Python CLI for status/control</li>
+<li>one Python preview helper for host-side stream consumption</li>
+<li>one Python monitor shell for an integrated bring-up workflow</li>
+<li>one Python/Tk monitor GUI for the first desktop app slice</li>
+<li>one expected operator client at a time</li>
+</ul>
+<p>The server intentionally avoids extra asynchronous machinery:</p>
+<ul>
+<li>no completion queues</li>
+<li>no streaming RPCs</li>
+<li>no separate gateway subprocess</li>
+<li>no ROS round-trip per request</li>
+</ul>
+<p>Instead, status should be cache-backed:</p>
+<ul>
+<li>internal ROS subscriptions update the in-memory store</li>
+<li><code>GetSystemStatus</code> returns the latest cached snapshot</li>
+<li>freshness is represented by the <code>VisionStatus.stale</code> flag</li>
+</ul>
+<p>This is now implemented and locally verified against the packaged Python tools.</p>
+<h2 id="current-rollout-status">Current Rollout Status<a class="headerlink" href="#current-rollout-status" title="Permanent link">&para;</a></h2>
+<p>Completed:</p>
+<ul>
+<li>standalone protobuf-to-store service adapter</li>
+<li>standalone synchronous gRPC server wrapper</li>
+<li>ROS-backed C++ node wiring</li>
+<li>local end-to-end smoke path with the packaged Python CLI</li>
+<li>local host-side preview consumption with the packaged Python preview helper</li>
+<li>local shell-driven status/watch/preview flow with the packaged monitor shell</li>
+<li>local headless smoke of the packaged Tk GUI against the live C++ gateway</li>
+</ul>
+<p>Still deferred:</p>
+<ul>
+<li>stream endpoint metadata in the API</li>
+<li>a hardware H.265 preview path</li>
+<li>broader status sources beyond the current vision/perf aggregation</li>
+<li>any streaming or multi-client behavior</li>
+<li>an embedded video panel inside the GUI</li>
+</ul>
 <h2 id="suggested-core-messages">Suggested Core Messages<a class="headerlink" href="#suggested-core-messages" title="Permanent link">&para;</a></h2>
 <h3 id="systemstatus"><code>SystemStatus</code><a class="headerlink" href="#systemstatus" title="Permanent link">&para;</a></h3>
-<p>Intended contents:</p>
+<p>Current contents:</p>
 <ul>
-<li>robot mode or high-level runtime state</li>
-<li>health summary</li>
+<li>gateway name/version</li>
+<li>current robot health summary</li>
 <li>current preview state</li>
-<li>selected software/build identifiers</li>
-<li>key diagnostics summaries</li>
+<li>current normalized vision status summary</li>
+</ul>
+<p>Deferred until later if needed:</p>
+<ul>
+<li>robot mode or mission state</li>
+<li>broader health summary</li>
+<li>build/runtime details beyond gateway version</li>
 </ul>
 <h3 id="previewstatus"><code>PreviewStatus</code><a class="headerlink" href="#previewstatus" title="Permanent link">&para;</a></h3>
-<p>Intended contents:</p>
+<p>Current contents:</p>
 <ul>
 <li>current preview state</li>
 <li>active preview profile</li>
+<li>last error text if the gateway has one to report</li>
+</ul>
+<p>Deferred until later if needed:</p>
+<ul>
 <li>transport kind</li>
 <li>stream URI or endpoint metadata</li>
+<li>restart count</li>
 <li>width / height / fps</li>
 <li>bitrate target or resolved bitrate</li>
-<li>last error text if faulted</li>
-<li>restart count</li>
 </ul>
 <h3 id="setpreviewmoderequest"><code>SetPreviewModeRequest</code><a class="headerlink" href="#setpreviewmoderequest" title="Permanent link">&para;</a></h3>
-<p>Suggested fields:</p>
+<p>Current fields:</p>
 <ul>
 <li><code>bool enabled</code></li>
 <li><code>PreviewProfile profile</code></li>
 </ul>
 <h3 id="setpreviewmoderesponse"><code>SetPreviewModeResponse</code><a class="headerlink" href="#setpreviewmoderesponse" title="Permanent link">&para;</a></h3>
-<p>Suggested fields:</p>
+<p>Current fields:</p>
 <ul>
 <li><code>bool accepted</code></li>
-<li><code>PreviewState state</code></li>
 <li><code>string message</code></li>
-<li><code>string stream_uri</code></li>
-</ul>
-<h3 id="gatewayevent"><code>GatewayEvent</code><a class="headerlink" href="#gatewayevent" title="Permanent link">&para;</a></h3>
-<p>Intended for push-style updates without polling.</p>
-<p>Candidate categories:</p>
-<ul>
-<li>preview state change</li>
-<li>fault raised/cleared</li>
-<li>vision health update</li>
-<li>build/runtime info update</li>
+<li><code>PreviewStatus preview</code></li>
 </ul>
 <h2 id="suggested-enums">Suggested Enums<a class="headerlink" href="#suggested-enums" title="Permanent link">&para;</a></h2>
 <p>The first version should use explicit enums rather than free-form strings where
@@ -1361,11 +1434,8 @@ possible.</p>
 <li><code>PreviewState</code></li>
 <li><code>PREVIEW_STATE_UNSPECIFIED</code></li>
 <li><code>PREVIEW_DISABLED</code></li>
-<li><code>PREVIEW_STARTING</code></li>
-<li><code>PREVIEW_RUNNING</code></li>
-<li><code>PREVIEW_STOPPING</code></li>
 <li>
-<p><code>PREVIEW_FAULTED</code></p>
+<p><code>PREVIEW_RUNNING</code></p>
 </li>
 <li>
 <p><code>PreviewProfile</code></p>
@@ -1373,14 +1443,7 @@ possible.</p>
 <li><code>PREVIEW_PROFILE_UNSPECIFIED</code></li>
 <li><code>PREVIEW_PROFILE_LOW_BW</code></li>
 <li><code>PREVIEW_PROFILE_BALANCED</code></li>
-<li>
-<p><code>PREVIEW_PROFILE_HIGH_QUALITY</code></p>
-</li>
-<li>
-<p><code>TransportKind</code></p>
-</li>
-<li><code>TRANSPORT_KIND_UNSPECIFIED</code></li>
-<li><code>TRANSPORT_KIND_SRT</code></li>
+<li><code>PREVIEW_PROFILE_HIGH_QUALITY</code></li>
 </ul>
 <h2 id="mapping-to-internal-systems">Mapping to Internal Systems<a class="headerlink" href="#mapping-to-internal-systems" title="Permanent link">&para;</a></h2>
 <p>The API should stay independent of internal ROS resource names, but the current
@@ -1392,21 +1455,9 @@ this:</p>
 <p>aggregates internal health and diagnostics topics</p>
 </li>
 <li>
-<p><code>GetPreviewStatus</code></p>
-</li>
-<li>
-<p>reads gateway-owned preview state</p>
-</li>
-<li>
 <p><code>SetPreviewMode</code></p>
 </li>
-<li>
-<p>drives the preview worker lifecycle</p>
-</li>
-<li>
-<p><code>SubscribeEvents</code></p>
-</li>
-<li>streams gateway-owned normalized state changes</li>
+<li>drives a gateway-owned preview child process lifecycle</li>
 </ul>
 <p>The gateway may use ROS topics and services internally, but that should not
 leak into the protobuf contract.</p>
@@ -1420,7 +1471,7 @@ leak into the protobuf contract.</p>
 <p>Examples:</p>
 <ul>
 <li>invalid preview profile -&gt; request rejected</li>
-<li>preview worker failed to start -&gt; request accepted, state returns <code>FAULTED</code></li>
+<li>preview worker failed to start -&gt; request accepted, response includes an operator-facing message</li>
 <li>stream already running with same profile -&gt; idempotent success</li>
 </ul>
 <h2 id="versioning-strategy">Versioning Strategy<a class="headerlink" href="#versioning-strategy" title="Permanent link">&para;</a></h2>
@@ -1443,14 +1494,17 @@ leak into the protobuf contract.</p>
 <h2 id="first-slice-candidates">First Slice Candidates<a class="headerlink" href="#first-slice-candidates" title="Permanent link">&para;</a></h2>
 <ol>
 <li>Create the protobuf package and generate code for the chosen languages.</li>
-<li>Implement a stub gRPC server with:</li>
+<li>Implement a standalone C++ gRPC service/server layer with:</li>
 <li><code>GetSystemStatus</code></li>
-<li><code>GetPreviewStatus</code></li>
 <li><code>SetPreviewMode</code></li>
-<li>Back <code>SetPreviewMode</code> with an in-memory state machine before wiring the real
-   preview subprocess.</li>
+<li>Wire that server into the ROS-backed C++ node.</li>
+<li>Back <code>SetPreviewMode</code> with a real preview subprocess command.</li>
 <li>Add streaming events after the basic request/response path is stable.</li>
 </ol>
+<p>Items 1-4 are now complete for the current bring-up path, and the repo now has
+a minimal host-side preview helper that consumes the stream using a configured
+SRT endpoint. The gateway still does not publish endpoint metadata through the
+protobuf API.</p>
 <h2 id="related-docs">Related Docs<a class="headerlink" href="#related-docs" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../robot_gateway/">Robot gateway</a></li>
@@ -1477,7 +1531,7 @@ leak into the protobuf contract.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 19, 2026 22:18:15 UTC">March 19, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 21, 2026 18:06:51 UTC">March 21, 2026</span>
   </span>
 
     
