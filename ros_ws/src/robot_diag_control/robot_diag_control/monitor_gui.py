@@ -13,7 +13,6 @@ from robot_diag_control.gateway_client import (
     create_stub,
     format_preview_response,
     format_system_status,
-    format_system_status_summary,
     get_system_status,
     set_preview_mode,
     target_for,
@@ -120,7 +119,6 @@ class RobotMonitorGui:
         self._gst_launch_path_var = tk.StringVar(value=parsed.gst_launch_path)
         self._poll_interval_var = tk.StringVar(value=str(parsed.poll_interval_seconds))
         self._profile_var = tk.StringVar(value="balanced")
-        self._summary_var = tk.StringVar(value="Disconnected")
         self._action_var = tk.StringVar(value="Ready")
 
         self._root.title("Robot Monitor")
@@ -141,7 +139,6 @@ class RobotMonitorGui:
         except tk.TclError:
             pass
         style.configure("Title.TLabel", font=("TkDefaultFont", 16, "bold"))
-        style.configure("Summary.TLabel", font=("TkDefaultFont", 11, "bold"))
 
     def _build_layout(self) -> None:
         container = ttk.Frame(self._root, padding=14)
@@ -150,9 +147,6 @@ class RobotMonitorGui:
         header = ttk.Frame(container)
         header.pack(fill=tk.X)
         ttk.Label(header, text="Robot Monitor", style="Title.TLabel").pack(side=tk.LEFT)
-        ttk.Label(header, textvariable=self._summary_var, style="Summary.TLabel").pack(
-            side=tk.RIGHT
-        )
 
         connection_frame = ttk.LabelFrame(container, text="Connection", padding=10)
         connection_frame.pack(fill=tk.X, pady=(12, 10))
@@ -280,12 +274,10 @@ class RobotMonitorGui:
             ) as channel:
                 status = get_system_status(create_stub(channel))
         except (grpc.RpcError, ValueError) as error:
-            self._summary_var.set("Disconnected")
             self._append_log(f"status refresh failed: {error}")
             return
 
         self._last_status = status
-        self._summary_var.set(format_system_status_summary(status))
         self._set_status_text(format_system_status(status))
         self._append_log("status refreshed")
 

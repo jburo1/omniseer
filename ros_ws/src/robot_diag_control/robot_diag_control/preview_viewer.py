@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -15,6 +16,14 @@ from robot_diag_control.gateway_client import (
     get_system_status,
     set_preview_mode,
     target_for,
+)
+
+_H264_DECODER_CANDIDATES = (
+    "avdec_h264",
+    "openh264dec",
+    "vah264dec",
+    "v4l2slh264dec",
+    "decodebin",
 )
 
 
@@ -71,7 +80,60 @@ def parse_args(args: list[str] | None = None) -> argparse.Namespace:
     return _build_parser().parse_args(sys.argv[1:] if args is None else args)
 
 
-def _build_player_command(parsed: argparse.Namespace) -> list[str]:
+def _resolve_gst_inspect_path(gst_launch_path: str) -> str:
+    launch_path = shutil.which(gst_launch_path) or gst_launch_path
+    launch_binary = Path(launch_path)
+    sibling_inspect = launch_binary.with_name("gst-inspect-1.0")
+    if sibling_inspect.exists():
+        return str(sibling_inspect)
+
+    inspect_path = shutil.which("gst-inspect-1.0")
+    if inspect_path:
+        return inspect_path
+
+    raise RuntimeError("gst-inspect-1.0 not found; install GStreamer tools on the laptop")
+
+
+def _gst_element_available(gst_inspect_path: str, element_name: str) -> bool:
+    result = subprocess.run(
+        [gst_inspect_path, element_name],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+    return result.returncode == 0
+
+
+def _select_h264_decoder_element(gst_inspect_path: str) -> str | None:
+    for decoder_name in _H264_DECODER_CANDIDATES:
+        if _gst_element_available(gst_inspect_path, decoder_name):
+            return decoder_name
+    return None
+
+
+def _validate_gstreamer_support(parsed: argparse.Namespace) -> str:
+    gst_inspect_path = _resolve_gst_inspect_path(parsed.gst_launch_path)
+    if not _gst_element_available(gst_inspect_path, "srtsrc"):
+        raise RuntimeError(
+            "GStreamer element 'srtsrc' is unavailable; install the SRT plugin "
+            "(for Ubuntu: gstreamer1.0-plugins-bad)"
+        )
+
+    decoder_element = _select_h264_decoder_element(gst_inspect_path)
+    if decoder_element is None:
+        raise RuntimeError(
+            "No supported H.264 decoder is available; install either GStreamer libav "
+            "(for Ubuntu: gstreamer1.0-libav) or a plugin set that provides an H.264 decoder"
+        )
+
+    return decoder_element
+
+
+def _build_player_command(
+    parsed: argparse.Namespace,
+    *,
+    decoder_element: str = "avdec_h264",
+) -> list[str]:
     preview_host = parsed.preview_host or parsed.host
     command = [
         parsed.gst_launch_path,
@@ -102,7 +164,7 @@ def _build_player_command(parsed: argparse.Namespace) -> list[str]:
             "!",
             "h264parse",
             "!",
-            "avdec_h264",
+            decoder_element,
             "!",
             "videoconvert",
             "!",
@@ -142,7 +204,8 @@ def _run_player(command: list[str], duration_seconds: float | None) -> int:
 
 
 def run(parsed: argparse.Namespace) -> int:
-    player_command = _build_player_command(parsed)
+    decoder_element = _validate_gstreamer_support(parsed)
+    player_command = _build_player_command(parsed, decoder_element=decoder_element)
     preview_was_enabled = False
 
     with grpc.insecure_channel(target_for(parsed.host, parsed.port)) as channel:
