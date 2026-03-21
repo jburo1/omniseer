@@ -31,19 +31,52 @@ What exists today:
 - `omniseer_vision_bridge` publishing detections into ROS 2
 - RViz and debug tooling on the ROS side
 - a draft remote monitoring architecture spec
+- a `robot_diag_control_cpp` package with:
+  - a shared generated C++ gRPC/protobuf library from the locked `.proto`
+  - an in-memory gateway state store
+  - a synchronous unary gRPC service/server layer
+  - a ROS-backed node that aggregates `/vision/perf`, filtered odometry, and serves the locked API
+  - a gateway-owned preview subprocess manager backing `SetPreviewMode`
+  - a built-in GStreamer preview worker path using `/dev/video11 -> x264 -> MPEG-TS -> SRT`
+  - packaged Python client tools for gateway status/control and host-side preview consumption
+  - a packaged Python monitor shell that integrates status polling and preview launch
+  - a first packaged Tk monitor GUI for desktop status/control bring-up
+  - local verification against those packaged Python tools
 
 What does **not** exist yet:
 
-- a gRPC server on the robot
-- an explicit external operator API
-- a managed preview subprocess owned by a gateway component
-- a host-side operator app bound to that API
+- stream endpoint metadata in the API
+- the intended low-overhead hardware H.265 preview path
+- an embedded preview panel inside the host-side GUI
 
 Near-term direction:
 
 - start with `robot-diag-control` inside `robot-core`
 - let that component evolve into the first version of the robot gateway
 - keep the first scope narrow: diagnostics and preview control
+
+## Near-Term Implementation Shape
+
+The current C++ implementation stays deliberately simple:
+
+- one process
+- one synchronous unary gRPC server
+- one shared in-memory state store
+- one ROS subscription path feeding that store
+- one expected operator client
+
+Completed slices:
+
+1. add a standalone C++ gRPC service/server layer with tests
+2. wire that layer into the existing ROS-backed node
+3. replace the stubbed preview toggle with a gateway-owned subprocess lifecycle
+4. wire the first real preview export command into that lifecycle
+
+This keeps the control/status boundary small while avoiding premature async
+gRPC complexity.
+
+The next slice should be either an embedded preview panel or a targeted API
+expansion, not more transport abstraction.
 
 ## Major Design Considerations
 

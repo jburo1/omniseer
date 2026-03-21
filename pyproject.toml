@@ -24,7 +24,15 @@ ml  = ["torch==2.8.0","torchvision==0.23.0","torchaudio==2.8.0"]
 [tool.ruff]
 target-version = "py39"        # ROS Python
 line-length = 120
-extend-exclude = ["build", "install", "log", ".venv", "ros_ws/src/omniseer_gz_assets", "sim/models"]
+extend-exclude = [
+  "build",
+  "install",
+  "log",
+  ".venv",
+  "ros_ws/src/omniseer_gz_assets",
+  "ros_ws/src/robot_diag_control/robot_diag_control/api",
+  "sim/models",
+]
 src = ["ros_ws/src"]
 
 [tool.ruff.lint]

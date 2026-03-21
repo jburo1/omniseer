@@ -9,6 +9,12 @@ source "/opt/venv/bin/activate"
 sudo apt-get update
 rosdep update
 
+# The checked-in Python gRPC/protobuf stubs target newer runtimes than Ubuntu noble
+# ships, so install matching wheels into the workspace venv before ROS package use.
+python -m pip install --upgrade \
+  "grpcio>=1.71.2,<2" \
+  "protobuf>=5.29.0,<6"
+
 build_ws() {
   local ws_path="$1"
 

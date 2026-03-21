@@ -32,6 +32,10 @@ Transport/runtime checks already completed on this SBC:
 - GStreamer SRT plugins are installed
 - local `mainpath -> x264 -> MPEG-TS -> SRT -> decode` loopback has been
   validated
+- the current C++ gateway can now launch that `x264 -> MPEG-TS -> SRT` path as
+  its built-in preview worker
+- the packaged Python host tools can now request preview over gRPC and consume
+  that SRT stream using `gst-launch-1.0`
 
 Current blocker for the intended production path:
 
@@ -180,12 +184,13 @@ running.
 
 This is the desired low-overhead end state.
 
-### Currently validated bring-up path
+### Current implemented bring-up path
 
 - `NV12 mainpath -> software x264 -> SRT`
 
-This path is useful for early integration and proof-of-life, but it is not the
-desired long-term robot-side budget.
+This path is now the implemented robot-side preview export path for early
+integration and proof-of-life, but it is not the desired long-term robot-side
+budget.
 
 ### Currently unattractive path
 
@@ -202,13 +207,26 @@ The operator laptop is expected to:
 - render it in the operator app
 - optionally feed decoded frames into local analysis/overlay pipelines
 
+Current implemented host slice:
+
+- `robot_preview_viewer` can enable preview over gRPC and consume the fixed or
+  configured SRT endpoint
+- `robot_monitor_shell` can poll gateway status, run short watch loops, and
+  launch `robot_preview_viewer` from one integrated tool
+- `robot_monitor_gui` can refresh status, toggle preview, and launch
+  `robot_preview_viewer` from a desktop GUI
+- it currently shells out to `gst-launch-1.0`, so host-side GStreamer tooling
+  is required
+- the GUI currently launches preview in a separate helper process; it does not
+  yet embed decoded video in its own window
+- these are minimal bring-up tools, not the final operator UI
+
 The architecture should **not** assume the laptop has Rockchip RGA. It should
 only assume general-purpose CPU/GPU resources and likely hardware video decode.
 
 ## Open Integration Questions
 
 - what exact hardware H.265 userspace path should be installed on the SBC image
-- whether the first build slice should use software `x264` as a bring-up step
 - what preview profile defaults should be used over the current Wi-Fi setup
 - whether decoded preview should be bridged into ROS on the host in the first
   UI slices or kept as a plain video panel initially

@@ -13,7 +13,7 @@
   <depend>yolo_msgs</depend>
 
   <!-- Test dependencies -->
-  <test_depend>pytest</test_depend>
+  <test_depend>python3-pytest</test_depend>
 
   <export>
     <build_type>ament_python</build_type>

@@ -1,0 +1,92 @@
+syntax = "proto3";
+
+package omniseer.gateway.v1;
+
+// Minimal operator-facing control/status contract for the first gateway slices.
+//
+// Versioning rule:
+// - evolve additively
+// - do not repurpose field numbers
+// - keep ROS resource names out of this contract
+service RobotGateway {
+  // Returns the latest normalized gateway status snapshot.
+  rpc GetSystemStatus(GetSystemStatusRequest) returns (SystemStatus);
+
+  // Enables or disables preview mode.
+  // When enabled=false, the profile field is ignored.
+  rpc SetPreviewMode(SetPreviewModeRequest) returns (SetPreviewModeResponse);
+}
+
+message GetSystemStatusRequest {}
+
+enum PreviewState {
+  PREVIEW_STATE_UNSPECIFIED = 0;
+  PREVIEW_DISABLED = 1;
+  PREVIEW_RUNNING = 2;
+}
+
+enum PreviewProfile {
+  PREVIEW_PROFILE_UNSPECIFIED = 0;
+  PREVIEW_PROFILE_LOW_BW = 1;
+  PREVIEW_PROFILE_BALANCED = 2;
+  PREVIEW_PROFILE_HIGH_QUALITY = 3;
+}
+
+enum RobotHealthState {
+  ROBOT_HEALTH_STATE_UNSPECIFIED = 0;
+  ROBOT_HEALTH_OK = 1;
+  ROBOT_HEALTH_DEGRADED = 2;
+}
+
+message VisionStatus {
+  // False until at least one internal vision status sample has been observed.
+  bool available = 1;
+
+  // True when the last observed sample is older than the gateway's freshness window.
+  bool stale = 2;
+  float producer_fps = 3;
+  float consumer_fps = 4;
+  float last_infer_ms = 5;
+  uint64 infer_error_count = 6;
+  uint64 capture_fatal_error_count = 7;
+}
+
+message PreviewStatus {
+  PreviewState state = 1;
+  PreviewProfile profile = 2;
+  string last_error = 3;
+}
+
+message RobotHealth {
+  RobotHealthState state = 1;
+  bool ready = 2;
+  string summary = 3;
+  bool odom_available = 4;
+  bool odom_stale = 5;
+  float linear_speed_mps = 6;
+  float angular_speed_rad_s = 7;
+}
+
+message SystemStatus {
+  string gateway_name = 1;
+  string gateway_version = 2;
+  PreviewStatus preview = 3;
+  VisionStatus vision = 4;
+  RobotHealth health = 5;
+}
+
+message SetPreviewModeRequest {
+  bool enabled = 1;
+
+  // Optional when disabling preview.
+  PreviewProfile profile = 2;
+}
+
+message SetPreviewModeResponse {
+  // Accepted means the request was syntactically valid and processed by the gateway.
+  bool accepted = 1;
+  string message = 2;
+
+  // The post-request preview status snapshot.
+  PreviewStatus preview = 3;
+}
