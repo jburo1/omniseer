@@ -140,8 +140,8 @@ void MicroRosNode::cmd_vel_callback(const void* msg_in)
     return;
   }
 
-  const geometry_msgs__msg__Twist* msg =
-      static_cast<const geometry_msgs__msg__Twist*>(msg_in);
+  const geometry_msgs__msg__TwistStamped* msg =
+      static_cast<const geometry_msgs__msg__TwistStamped*>(msg_in);
 
   g_micro_ros_node_instance->_handle_cmd_vel(*msg);
 }
@@ -166,7 +166,7 @@ void MicroRosNode::log_debugf(const char* fmt, ...)
 
   rosidl_runtime_c__String__assign(&_debug_msg.data, _debug_buf);
 
-  (void) rcl_publish(&_debug_pub, &_debug_msg, nullptr);
+  rcl_soft_check(rcl_publish(&_debug_pub, &_debug_msg, nullptr), "debug publish");
 }
 
 void MicroRosNode::_init_transport()
@@ -197,7 +197,7 @@ bool MicroRosNode::_init_core()
     return false;
   }
 
-  rcl_init_options_fini(&init_options);
+  rcl_soft_check(rcl_init_options_fini(&init_options), "init options fini");
 
   // node
   if (!rcl_check(rclc_node_init_default(&_node, NODE_NAME, NODE_NAMESPACE, &_support), "node init"))
@@ -218,6 +218,7 @@ bool MicroRosNode::_init_core()
 void MicroRosNode::_init_messaging()
 {
   sensor_msgs__msg__Imu__init(&_imu_msg);
+  geometry_msgs__msg__TwistStamped__init(&_cmd_vel_msg);
   sensor_msgs__msg__Range__init(&_sonar_msg);
   sensor_msgs__msg__BatteryState__init(&_battery_msg);
 
@@ -253,10 +254,14 @@ void MicroRosNode::_sync_time(int timeout_ms)
   }
 }
 
-void MicroRosNode::_handle_cmd_vel(const geometry_msgs__msg__Twist& msg)
+void MicroRosNode::_handle_cmd_vel(const geometry_msgs__msg__TwistStamped& msg)
 {
   log_debugf("in handle_ vel_callback");
-  CmdVel cmd_vel{(float) msg.linear.x, (float) msg.linear.y, (float) msg.angular.z};
+  CmdVel cmd_vel{
+      static_cast<float>(msg.twist.linear.x),
+      static_cast<float>(msg.twist.linear.y),
+      static_cast<float>(msg.twist.angular.z),
+  };
   _motion_controller.set_cmd_vel(cmd_vel, micros());
 }
 
@@ -300,7 +305,7 @@ void MicroRosNode::_create_entities()
   // cmd_vel subscriber
   rcl_soft_check(rclc_subscription_init_default(&_cmd_vel_sub, &_node,
                                                 ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg,
-                                                                            Twist),
+                                                                            TwistStamped),
                                                 CMD_VEL_TOPIC),
                  "cmd vel subscriber create");
 

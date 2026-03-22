@@ -11,7 +11,7 @@
 
 #include <micro_ros_platformio.h>
 
-#include <geometry_msgs/msg/twist.h>
+#include <geometry_msgs/msg/twist_stamped.h>
 #include <sensor_msgs/msg/imu.h>
 #include <sensor_msgs/msg/range.h>
 #include <sensor_msgs/msg/battery_state.h>
@@ -66,7 +66,7 @@ private:
 
     void _create_entities();
 
-    void _handle_cmd_vel(const geometry_msgs__msg__Twist& msg);
+    void _handle_cmd_vel(const geometry_msgs__msg__TwistStamped& msg);
 
     void _set_stamp_from_local_us(builtin_interfaces__msg__Time& t, uint64_t local_us);
 
@@ -87,7 +87,7 @@ private:
     // pooled memory for messages
     omniseer_msgs__msg__WheelEncoderCounts _encoder_msg{};
     sensor_msgs__msg__Imu   _imu_msg{};
-    geometry_msgs__msg__Twist _cmd_vel_msg{};
+    geometry_msgs__msg__TwistStamped _cmd_vel_msg{};
     sensor_msgs__msg__Range _sonar_msg{};
     sensor_msgs__msg__BatteryState _battery_msg{};
     std_msgs__msg__String _debug_msg{};
