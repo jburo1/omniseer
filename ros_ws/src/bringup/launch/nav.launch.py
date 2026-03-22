@@ -2,6 +2,7 @@
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, GroupAction, SetEnvironmentVariable
+from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import ComposableNodeContainer, LoadComposableNodes, Node, SetParameter
 from launch_ros.descriptions import ComposableNode
@@ -21,9 +22,11 @@ def generate_launch_description():
         DeclareLaunchArgument("use_sim_time", default_value="true"),
         DeclareLaunchArgument("log_level", default_value="info"),
         DeclareLaunchArgument("nav2_params_file", default_value="nav2_params.yaml"),
+        DeclareLaunchArgument("start_twist_mux", default_value="true"),
     ]
 
     nav2_params_path = PathJoinSubstitution([pkg_bringup, "config", nav2_params_file])
+    start_twist_mux = LaunchConfiguration("start_twist_mux")
 
     stdout_linebuf_envvar = SetEnvironmentVariable("RCUTILS_LOGGING_BUFFERED_STREAM", "1")
 
@@ -156,6 +159,7 @@ def generate_launch_description():
             {"use_sim_time": use_sim_time},
         ],
         remappings=[("/cmd_vel_out", "/mecanum_drive_controller/reference")],
+        condition=IfCondition(start_twist_mux),
     )
 
     return LaunchDescription(

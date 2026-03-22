@@ -1,26 +1,5 @@
 #!/usr/bin/env python3
-"""
-%% DEPRECATED
-
-bringup for complete Gazebo - ROS2 simulation
-alternative headless mode
-
-Components:
---------------
-
-GZ server + optional client via ros_gz wrapper launcher
-robot spawn via XACRO->URDF
-controller_manager via gazebo plugin init in URDF
-input mux for teleoperation/nav/emergency stop
-ros gz bridge
-
-Example usage:
---------------
-
-ros2 launch bringup sim.launch.py                              - Full sim
-ros2 launch bringup sim.launch.py 'headless:=true'             - CI
-ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -p stamped:=true -r cmd_vel:=/mecanum_drive_controller/reference
-"""
+"""Top-level simulation bringup with shared common and sim IO layers."""
 
 from launch import LaunchDescription
 from launch.actions import (
@@ -29,34 +8,84 @@ from launch.actions import (
     GroupAction,
     IncludeLaunchDescription,
     RegisterEventHandler,
-    SetEnvironmentVariable,
 )
-from launch.conditions import IfCondition, UnlessCondition
+from launch.conditions import IfCondition
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import Command, LaunchConfiguration, PathJoinSubstitution
-from launch_ros.actions import Node
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
+    pkg_bringup = FindPackageShare("bringup")
+
     declared_arguments = [
         DeclareLaunchArgument("world", default_value="simple_world.world"),
         DeclareLaunchArgument("use_sim_time", default_value="true"),
         DeclareLaunchArgument("headless", default_value="false"),
+        DeclareLaunchArgument("log_level", default_value="info"),
+        DeclareLaunchArgument("use_ci_geometry", default_value="false"),
+        DeclareLaunchArgument("ekf_params_file", default_value="ekf_fusion.yaml"),
+        DeclareLaunchArgument("slam_tb_config_file", default_value="slam_toolbox_async_online.yaml"),
+        DeclareLaunchArgument("nav2_params_file", default_value="nav2_params.yaml"),
+        DeclareLaunchArgument("start_slam", default_value="true"),
+        DeclareLaunchArgument("start_rf2o", default_value="true"),
+        DeclareLaunchArgument("start_nav", default_value="true"),
+        DeclareLaunchArgument("start_rviz", default_value="true"),
+        DeclareLaunchArgument("start_gateway", default_value="false"),
     ]
 
-    use_sim_time = LaunchConfiguration("use_sim_time", default="true")
-    headless = LaunchConfiguration("headless", default="false")
+    world = LaunchConfiguration("world")
+    use_sim_time = LaunchConfiguration("use_sim_time")
+    headless = LaunchConfiguration("headless")
+    log_level = LaunchConfiguration("log_level")
+    use_ci_geometry = LaunchConfiguration("use_ci_geometry")
+    ekf_params_file = LaunchConfiguration("ekf_params_file")
+    slam_tb_config_file = LaunchConfiguration("slam_tb_config_file")
+    nav2_params_file = LaunchConfiguration("nav2_params_file")
+    start_slam = LaunchConfiguration("start_slam")
+    start_rf2o = LaunchConfiguration("start_rf2o")
+    start_nav = LaunchConfiguration("start_nav")
+    start_rviz = LaunchConfiguration("start_rviz")
+    start_gateway = LaunchConfiguration("start_gateway")
 
-    pkg_bringup = FindPackageShare("bringup")
-    pkg_omniseer = FindPackageShare("omniseer_description")
+    sim_io_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([PathJoinSubstitution([pkg_bringup, "launch", "sim_io.launch.py"])]),
+        launch_arguments={
+            "world": world,
+            "use_sim_time": use_sim_time,
+            "headless": headless,
+            "log_level": log_level,
+            "use_ci_geometry": use_ci_geometry,
+        }.items(),
+    )
 
-    # ------------- CLEANUP ------------- #
+    common_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([PathJoinSubstitution([pkg_bringup, "launch", "common.launch.py"])]),
+        launch_arguments={
+            "use_sim_time": use_sim_time,
+            "log_level": log_level,
+            "use_ci_geometry": use_ci_geometry,
+            "ekf_params_file": ekf_params_file,
+            "slam_tb_config_file": slam_tb_config_file,
+            "nav2_params_file": nav2_params_file,
+            "start_slam": start_slam,
+            "start_rf2o": start_rf2o,
+            "start_nav": start_nav,
+            "start_gateway": start_gateway,
+            "gateway_preview_source_kind": "videotest",
+            "gateway_preview_device": "/dev/video11",
+        }.items(),
+    )
+
+    rviz_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([PathJoinSubstitution([pkg_bringup, "launch", "rviz.launch.py"])]),
+        launch_arguments={"use_sim_time": use_sim_time}.items(),
+        condition=IfCondition(start_rviz),
+    )
 
     cleanup = ExecuteProcess(
         name="pre_flight_cleanup",
-        shell=True,
         cmd=[
             "bash",
             "-c",
@@ -71,233 +100,9 @@ def generate_launch_description():
         output="screen",
     )
 
-    # ------------- ROS_GZ ------------- #
-
-    set_sim_system_path = SetEnvironmentVariable(
-        "GZ_SIM_SYSTEM_PLUGIN_PATH",
-        [
-            ":/opt/ros/kilted/lib",
-            "/opt/ros/kilted/opt/gz_sim_vendor/lib/gz-sim-9/plugins",
-            ":/opt/ros/kilted/opt/gz_sim_vendor/lib",
-        ],
+    launch_group = GroupAction(actions=[sim_io_launch, common_launch, rviz_launch])
+    after_cleanup = RegisterEventHandler(
+        OnProcessExit(target_action=cleanup, on_exit=[launch_group])
     )
-
-    set_resource_path = SetEnvironmentVariable(
-        "GZ_SIM_RESOURCE_PATH",
-        PathJoinSubstitution([FindPackageShare("omniseer_description"), ".."]),
-    )
-
-    world_path = PathJoinSubstitution([pkg_bringup, "worlds", LaunchConfiguration("world")])
-
-    gz_config_path = PathJoinSubstitution([pkg_bringup, "config", "gz_config.config"])
-
-    gz_ros_gui_ld = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            [PathJoinSubstitution([FindPackageShare("ros_gz_sim"), "launch", "gz_sim.launch.py"])]
-        ),
-        launch_arguments={
-            "gz_args": [
-                " -r -v 1 ",
-                world_path,
-                " --gui-config ",
-                gz_config_path,
-            ]
-        }.items(),
-        condition=UnlessCondition(headless),
-    )
-
-    gz_ros_headless_ld = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([FindPackageShare("ros_gz_sim"), "/launch/gz_sim.launch.py"]),
-        launch_arguments={"gz_args": ["-s -r -v 4 ", world_path, " --verbose"]}.items(),
-        condition=IfCondition(headless),
-    )
-
-    # ------------- BRIDGES ------------- #
-
-    bridge_config_path = PathJoinSubstitution([pkg_bringup, "config", "bridge_config.yaml"])
-
-    bridge_node = Node(
-        package="ros_gz_bridge",
-        executable="parameter_bridge",
-        parameters=[{"use_sim_time": use_sim_time}, {"config_file": bridge_config_path}],
-        output="screen",
-    )
-
-    image_bridge_node = Node(
-        package="ros_gz_image",
-        executable="image_bridge",
-        arguments=["/front_camera/image"],
-        parameters=[
-            {
-                "front_camera.image.compressed.jpeg_quality": 75,
-            },
-            {"use_sim_time": use_sim_time},
-        ],
-        output="screen",
-    )
-
-    # ------------- DATA TRANSFORMATION ------------- #
-
-    scan_to_range_node = Node(
-        package="analysis",
-        executable="scan_to_range",
-        name="scan_to_range",
-        parameters=[{"use_sim_time": use_sim_time}],
-        output="screen",
-    )
-
-    # ------------- RVIZ ------------- #
-
-    rviz_config_path = PathJoinSubstitution([pkg_bringup, "config", "rviz_config.rviz"])
-
-    rviz_node = Node(
-        package="rviz2",
-        executable="rviz2",
-        name="rviz2",
-        output="log",
-        arguments=["-d", rviz_config_path],
-        parameters=[{"use_sim_time": use_sim_time}],
-    )
-
-    # ------------- ANALYSIS ------------- #
-
-    Node(
-        package="analysis",
-        executable="path_recorder",
-        name="path_recorder",
-        output="screen",
-        parameters=[
-            {"use_sim_time": use_sim_time},
-        ],
-    )
-
-    # ------------- SPAWN ROBOT ------------- #
-
-    xacro_file = PathJoinSubstitution([pkg_omniseer, "urdf", "xacro", "omniseer.urdf.xacro"])
-    robot_description_urdf = Command(["xacro ", xacro_file])
-
-    rsp_node = Node(
-        package="robot_state_publisher",
-        executable="robot_state_publisher",
-        parameters=[{"robot_description": robot_description_urdf, "use_sim_time": use_sim_time}],
-        output="both",
-    )
-
-    robot_spawn_node = Node(
-        package="ros_gz_sim",
-        executable="create",
-        arguments=[
-            "-name",
-            "omniseer",
-            "-topic",
-            "robot_description",
-            "-x",
-            "0",
-            "-y",
-            "0",
-            "-z",
-            "0.5",
-        ],
-        output="screen",
-        parameters=[{"use_sim_time": use_sim_time}],
-    )
-
-    # ------------- TWIST MUX ------------- #
-
-    twist_mux_node = Node(
-        package="twist_mux",
-        executable="twist_mux",
-        name="twist_mux",
-        output="screen",
-        parameters=[
-            PathJoinSubstitution([pkg_bringup, "config", "twist_mux.yaml"]),
-            {"use_sim_time": use_sim_time},
-        ],
-        remappings=[("/cmd_vel_out", "/mecanum_drive_controller/reference")],
-    )
-
-    # ------------- SENSOR FUSION ------------- #
-
-    robot_localization_config = PathJoinSubstitution([pkg_bringup, "config", "ekf_fusion.yaml"])
-
-    robot_localization_node = Node(
-        package="robot_localization",
-        executable="ekf_node",
-        name="ekf_filter",
-        output="screen",
-        parameters=[robot_localization_config, {"use_sim_time": use_sim_time}],
-    )
-
-    # ------------- CONTROLLERS/BROADCASTERS ------------- #
-
-    jsb_node = Node(
-        package="controller_manager",
-        executable="spawner",
-        name="jsb",
-        arguments=["joint_state_broadcaster", "--controller-manager-timeout", "15.0"],
-        output="screen",
-        parameters=[{"use_sim_time": use_sim_time}],
-    )
-
-    controller_file = PathJoinSubstitution([pkg_bringup, "config", "controllers.yaml"])
-
-    mecanum_drive_node = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=[
-            "mecanum_drive_controller",
-            "--param-file",
-            controller_file,
-            "--controller-manager-timeout",
-            "15.0",
-        ],
-        output="screen",
-        parameters=[{"use_sim_time": use_sim_time}],
-    )
-
-    # ------------- EVENT HANDLERS ------------- #
-
-    mecanum_drive_eh = RegisterEventHandler(
-        event_handler=OnProcessExit(target_action=jsb_node, on_exit=[mecanum_drive_node])
-    )
-
-    jsb_eh = RegisterEventHandler(event_handler=OnProcessExit(target_action=robot_spawn_node, on_exit=[jsb_node]))
-
-    ekf_eh = RegisterEventHandler(
-        event_handler=OnProcessExit(target_action=mecanum_drive_node, on_exit=[robot_localization_node])
-    )
-
-    image_bridge_eh = RegisterEventHandler(
-        event_handler=OnProcessExit(target_action=robot_spawn_node, on_exit=[image_bridge_node])
-    )
-
-    # ------------- GROUPACTION POST CLEANUP ------------- #
-
-    post_cleanup_actions = GroupAction(
-        actions=[
-            # env vars
-            set_sim_system_path,
-            set_resource_path,
-            # gazebo
-            gz_ros_gui_ld,
-            gz_ros_headless_ld,
-            # robot core
-            rsp_node,
-            robot_spawn_node,
-            jsb_eh,
-            mecanum_drive_eh,
-            ekf_eh,
-            # support nodes, can start async
-            bridge_node,
-            twist_mux_node,
-            rviz_node,
-            # path_recorder_node,
-            scan_to_range_node,
-            # topic-timing bridges
-            image_bridge_eh,
-        ]
-    )
-
-    after_cleanup = RegisterEventHandler(OnProcessExit(target_action=cleanup, on_exit=[post_cleanup_actions]))
 
     return LaunchDescription([*declared_arguments, cleanup, after_cleanup])

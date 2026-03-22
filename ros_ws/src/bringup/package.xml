@@ -53,7 +53,10 @@
   <exec_depend>rqt_graph</exec_depend>
   <exec_depend>rqt_tf_tree</exec_depend>
   <exec_depend>nav2_bringup</exec_depend>
+  <exec_depend>micro_ros_agent</exec_depend>
   <exec_depend>yolo_bringup</exec_depend>
+  <exec_depend>robot_io_adapters</exec_depend>
+  <exec_depend>robot_diag_control_cpp</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_xmllint</test_depend>

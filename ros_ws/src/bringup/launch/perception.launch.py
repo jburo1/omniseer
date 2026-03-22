@@ -9,6 +9,7 @@ from launch.actions import (
     RegisterEventHandler,
     TimerAction,
 )
+from launch.conditions import IfCondition
 from launch.event_handlers import OnProcessStart
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
@@ -24,11 +25,19 @@ def generate_launch_description():
         DeclareLaunchArgument("use_sim_time", default_value="true"),
         DeclareLaunchArgument("log_level", default_value="info"),
         DeclareLaunchArgument("slam_tb_config_file", default_value="slam_toolbox_async_online.yaml"),
+        DeclareLaunchArgument("start_yolo", default_value="true"),
+        DeclareLaunchArgument("start_slam", default_value="true"),
+        DeclareLaunchArgument("start_rf2o", default_value="true"),
+        DeclareLaunchArgument("start_scan_to_range", default_value="true"),
     ]
 
     log_level = LaunchConfiguration("log_level")
     use_sim_time = LaunchConfiguration("use_sim_time")
     slam_tb_config_file = LaunchConfiguration("slam_tb_config_file")
+    start_yolo = LaunchConfiguration("start_yolo")
+    start_slam = LaunchConfiguration("start_slam")
+    start_rf2o = LaunchConfiguration("start_rf2o")
+    start_scan_to_range = LaunchConfiguration("start_scan_to_range")
 
     slam_toolbox_node = Node(
         package="slam_toolbox",
@@ -43,6 +52,7 @@ def generate_launch_description():
             ),
             {"use_sim_time": use_sim_time},
         ],
+        condition=IfCondition(start_slam),
     )
 
     lifecycle_manager_slam = Node(
@@ -53,7 +63,7 @@ def generate_launch_description():
         arguments=["--ros-args", "--log-level", log_level],
         parameters=[
             {
-                "use_sim_time": False,
+                "use_sim_time": use_sim_time,
                 "autostart": True,
                 "node_names": ["slam_toolbox"],
                 "bond_timeout": 0.0,
@@ -61,13 +71,17 @@ def generate_launch_description():
                 "attempt_respawn_reconnection": True,
             }
         ],
+        condition=IfCondition(start_slam),
     )
 
     yolo_include = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([PathJoinSubstitution([pkg_bringup, "launch", "yolo-world.launch.py"])]),
     )
 
-    yolo_group = GroupAction([SetParameter(name="use_sim_time", value=use_sim_time), yolo_include])
+    yolo_group = GroupAction(
+        [SetParameter(name="use_sim_time", value=use_sim_time), yolo_include],
+        condition=IfCondition(start_yolo),
+    )
 
     rf2o_laser_odom_node = Node(
         package="rf2o_laser_odometry",
@@ -86,15 +100,17 @@ def generate_launch_description():
                 "freq": 8.0,
             }
         ],
+        condition=IfCondition(start_rf2o),
     )
 
     sonar_to_range_node = Node(
-        package="analysis",
+        package="robot_io_adapters",
         executable="scan_to_range",
         name="scan_to_range",
         arguments=["--ros-args", "--log-level", "error"],
         parameters=[{"use_sim_time": use_sim_time}],
         output="screen",
+        condition=IfCondition(start_scan_to_range),
     )
 
     return LaunchDescription(
@@ -105,7 +121,8 @@ def generate_launch_description():
                 OnProcessStart(
                     target_action=slam_toolbox_node,
                     on_start=[TimerAction(period=2.0, actions=[lifecycle_manager_slam])],
-                )
+                ),
+                condition=IfCondition(start_slam),
             ),
             yolo_group,
             rf2o_laser_odom_node,

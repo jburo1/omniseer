@@ -32,15 +32,6 @@ def generate_launch_description():
         parameters=[{"use_sim_time": use_sim_time}, robot_localization_config],
     )
 
-    Node(
-        package="analysis",
-        executable="scan_to_range",
-        name="scan_to_range",
-        arguments=["--ros-args", "--log-level", log_level],
-        parameters=[{"use_sim_time": use_sim_time}],
-        output="screen",
-    )
-
     return LaunchDescription(
         declared_arguments
         + [

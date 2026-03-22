@@ -1,0 +1,10 @@
+encoder_counts_to_odometry:
+  ros__parameters:
+    encoder_topic: /encoder_counts
+    odom_topic: /mecanum_drive_controller/odometry
+    odom_frame_id: odom
+    base_frame_id: base_link
+    wheel_radius_m: 0.0485
+    half_length_m: 0.09735
+    half_width_m: 0.10886705
+    encoder_ticks_per_rev: 5764.0

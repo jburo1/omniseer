@@ -18,9 +18,9 @@ mecanum_drive_controller:
     rear_left_wheel_command_joint_name: "chassis_bl_wheel_joint"
     kinematics:
       base_frame_offset: {x: 0.0, y: 0.0, theta: 0.0}
+      # Keep in sync with firmware/include/omniseer_config.hpp and encoder_odometry.yaml.
       wheels_radius: 0.0485
-      # sum_of_robot_center_projection_on_X_Y_axis: 0.184
-      sum_of_robot_center_projection_on_X_Y_axis: 0.20622
+      sum_of_robot_center_projection_on_X_Y_axis: 0.20621705
 
 
     base_frame_id: "base_link"
