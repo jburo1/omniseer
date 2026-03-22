@@ -19,7 +19,6 @@ setup(
     entry_points={
         "console_scripts": [
             "path_recorder = analysis.path_recorder:main",
-            "scan_to_range = analysis.scan_to_range:main",
         ],
     },
 )
