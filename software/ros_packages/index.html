@@ -71,6 +71,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#ros-packages-and-simreal-boundary" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -393,6 +398,26 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ROS packages
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
         
@@ -410,6 +435,518 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#purpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Purpose
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#core-decision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Decision
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current State
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Current State">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#simulation-side" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Simulation Side
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#real-hardware-side" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real Hardware Side
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#main-mismatches" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Main Mismatches
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recommended-boundary-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recommended Boundary Contract
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Recommended Boundary Contract">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#raw-image-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Raw Image Contract
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-not-use-ros2_control-as-the-boundary-yet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why Not Use ros2_control as the Boundary Yet
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Why Not Use ros2_control as the Boundary Yet">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#later-option" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Later Option
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-not-first" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why Not First
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#target-package-and-launch-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Target Package and Launch Layout
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Target Package and Launch Layout">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#omniseer_description" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        omniseer_description
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bringup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        bringup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#descriptionlaunchpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        description.launch.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commonlaunchpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        common.launch.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sim_iolaunchpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sim_io.launch.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#real_iolaunchpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        real_io.launch.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#simlaunchpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sim.launch.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reallaunchpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        real.launch.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#new-adapter-package" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        New Adapter Package
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="New Adapter Package">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#encoder_counts_to_odometry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        encoder_counts_to_odometry
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optional-vision_perf_stubpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optional vision_perf_stub.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#concrete-refactor-of-existing-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concrete Refactor of Existing Files
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Concrete Refactor of Existing Files">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#navlaunchpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        nav.launch.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ekf_fusionyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ekf_fusion.yaml
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#firmwareincludemicro_ros_confighpp-and-firmwaresrcmicro_ros_nodecpp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        firmware/include/micro_ros_config.hpp and firmware/src/micro_ros_node.cpp
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#perceptionlaunchpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        perception.launch.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#controllerslaunchpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        controllers.launch.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#robot_io_adaptersscan_to_rangecpp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        robot_io_adapters/scan_to_range.cpp
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-common-graph-after-refactor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Common Graph After Refactor
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recommended-phase-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recommended Phase Order
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Recommended Phase Order">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#phase-0-lock-contracts-and-constants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 0: Lock Contracts and Constants
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-1-normalize-the-command-and-odometry-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1: Normalize the Command and Odometry Boundary
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-2-normalize-imu-and-range" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2: Normalize IMU and Range
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-3-split-the-description-and-launch-topology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 3: Split the Description and Launch Topology
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-4-move-detection-providers-below-the-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 4: Move Detection Providers Below the Boundary
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-5-verification-infrastructure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 5: Verification Infrastructure
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification-standard-for-the-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verification Standard for the Boundary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-this-refactor-will-and-will-not-prove" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What This Refactor Will and Will Not Prove
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recommended-immediate-next-slice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recommended Immediate Next Slice
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -723,6 +1260,509 @@
   
   
   
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#purpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Purpose
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#core-decision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Decision
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current State
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Current State">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#simulation-side" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Simulation Side
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#real-hardware-side" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real Hardware Side
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#main-mismatches" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Main Mismatches
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recommended-boundary-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recommended Boundary Contract
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Recommended Boundary Contract">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#raw-image-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Raw Image Contract
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-not-use-ros2_control-as-the-boundary-yet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why Not Use ros2_control as the Boundary Yet
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Why Not Use ros2_control as the Boundary Yet">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#later-option" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Later Option
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-not-first" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why Not First
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#target-package-and-launch-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Target Package and Launch Layout
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Target Package and Launch Layout">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#omniseer_description" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        omniseer_description
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bringup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        bringup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#descriptionlaunchpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        description.launch.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commonlaunchpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        common.launch.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sim_iolaunchpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sim_io.launch.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#real_iolaunchpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        real_io.launch.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#simlaunchpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sim.launch.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reallaunchpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        real.launch.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#new-adapter-package" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        New Adapter Package
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="New Adapter Package">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#encoder_counts_to_odometry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        encoder_counts_to_odometry
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optional-vision_perf_stubpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optional vision_perf_stub.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#concrete-refactor-of-existing-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concrete Refactor of Existing Files
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Concrete Refactor of Existing Files">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#navlaunchpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        nav.launch.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ekf_fusionyaml" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ekf_fusion.yaml
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#firmwareincludemicro_ros_confighpp-and-firmwaresrcmicro_ros_nodecpp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        firmware/include/micro_ros_config.hpp and firmware/src/micro_ros_node.cpp
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#perceptionlaunchpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        perception.launch.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#controllerslaunchpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        controllers.launch.py
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#robot_io_adaptersscan_to_rangecpp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        robot_io_adapters/scan_to_range.cpp
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-common-graph-after-refactor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Common Graph After Refactor
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recommended-phase-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recommended Phase Order
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Recommended Phase Order">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#phase-0-lock-contracts-and-constants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 0: Lock Contracts and Constants
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-1-normalize-the-command-and-odometry-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1: Normalize the Command and Odometry Boundary
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-2-normalize-imu-and-range" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2: Normalize IMU and Range
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-3-split-the-description-and-launch-topology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 3: Split the Description and Launch Topology
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-4-move-detection-providers-below-the-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 4: Move Detection Providers Below the Boundary
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-5-verification-infrastructure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 5: Verification Infrastructure
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification-standard-for-the-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verification Standard for the Boundary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-this-refactor-will-and-will-not-prove" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What This Refactor Will and Will Not Prove
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recommended-immediate-next-slice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recommended Immediate Next Slice
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -742,9 +1782,639 @@
   
 
 
-  <h1>ROS packages</h1>
-
-
+<h1 id="ros-packages-and-simreal-boundary">ROS Packages and Sim/Real Boundary<a class="headerlink" href="#ros-packages-and-simreal-boundary" title="Permanent link">&para;</a></h1>
+<p><em>Status: draft v0</em></p>
+<p><em>Last updated: 2026-03-22</em></p>
+<h2 id="purpose">Purpose<a class="headerlink" href="#purpose" title="Permanent link">&para;</a></h2>
+<p>Define a concrete package and launch structure so that:</p>
+<ul>
+<li>simulation and real hardware share the same ROS graph above a thin boundary</li>
+<li>the boundary is explicit, testable, and small</li>
+<li>simulation becomes a strong indicator of software architecture and contract correctness</li>
+<li>hardware-specific code stays below the boundary</li>
+</ul>
+<p>This page is intentionally practical. It is the working plan for the next
+bringup refactor, not just a general architecture description.</p>
+<h2 id="core-decision">Core Decision<a class="headerlink" href="#core-decision" title="Permanent link">&para;</a></h2>
+<p>The recommended near-term boundary is:</p>
+<ul>
+<li><code>common</code> owns the mission ROS graph that consumes normalized robot IO</li>
+<li><code>sim</code> owns Gazebo, sim-only plugins, bridges, and sim-only compute adapters</li>
+<li><code>real</code> owns the MCU bridge, sensor drivers, SBC camera runtime, and real-only compute adapters</li>
+</ul>
+<p>The boundary should be a canonical ROS contract, not Gazebo internals and not
+<code>ros2_control</code> internals.</p>
+<p>For this refactor, prefer source-side standardization over pure rename relays:</p>
+<ul>
+<li>if a mismatch is only topic naming, fix the producer or subscriber</li>
+<li>if a mismatch is only stamped-vs-unstamped command shape, update the real
+  consumer to match the sim/common contract</li>
+<li>only keep adapter nodes when they derive or transform data semantically, such
+  as encoder counts to odometry</li>
+</ul>
+<p>Why this is the right first move:</p>
+<ul>
+<li>it matches the current firmware shape</li>
+<li>it minimizes churn while still making sim and real converge</li>
+<li>it lets us keep the current MCU motion-control path while still normalizing
+  the ROS graph above it</li>
+<li>it preserves a later path to a true <code>ros2_control</code> hardware interface if that
+  later pays for itself</li>
+</ul>
+<h2 id="current-state">Current State<a class="headerlink" href="#current-state" title="Permanent link">&para;</a></h2>
+<p>Today the boundary is not aligned.</p>
+<h3 id="simulation-side">Simulation Side<a class="headerlink" href="#simulation-side" title="Permanent link">&para;</a></h3>
+<p>Simulation currently provides:</p>
+<ul>
+<li>controller path via <code>mecanum_drive_controller</code></li>
+<li>odometry via <code>/mecanum_drive_controller/odometry</code></li>
+<li>IMU via <code>/imu</code></li>
+<li>LiDAR via <code>/scan</code></li>
+<li>sonar as <code>LaserScan</code> on <code>/sonar</code>, then converted to <code>/range</code></li>
+<li>camera image via <code>/front_camera/image</code></li>
+<li>simulated YOLO provider inside <code>perception.launch.py</code></li>
+</ul>
+<p>Relevant files:</p>
+<ul>
+<li><code>ros_ws/src/bringup/launch/orchestrate_sim.launch.py</code></li>
+<li><code>ros_ws/src/bringup/launch/controllers.launch.py</code></li>
+<li><code>ros_ws/src/bringup/config/bridge_config.yaml</code></li>
+<li><code>ros_ws/src/bringup/config/ekf_fusion.yaml</code></li>
+<li><code>ros_ws/src/robot_io_adapters/src/scan_to_range.cpp</code></li>
+<li><code>ros_ws/src/omniseer_description/urdf/xacro/omniseer.urdf.xacro</code></li>
+</ul>
+<h3 id="real-hardware-side">Real Hardware Side<a class="headerlink" href="#real-hardware-side" title="Permanent link">&para;</a></h3>
+<p>The MCU currently provides:</p>
+<ul>
+<li>input command on <code>/mecanum_drive_controller/reference</code> as <code>geometry_msgs/msg/TwistStamped</code></li>
+<li>encoder counts on <code>/encoder_counts</code></li>
+<li>IMU on <code>/imu</code></li>
+<li>sonar range on <code>/range</code></li>
+<li>battery on <code>/battery</code></li>
+</ul>
+<p>The SBC currently provides:</p>
+<ul>
+<li>real camera inference runtime publishing <code>/yolo/detections</code></li>
+<li>vision perf on <code>/vision/perf</code></li>
+<li>operator gateway consuming <code>/vision/perf</code> and filtered odometry</li>
+</ul>
+<p>Relevant files:</p>
+<ul>
+<li><code>firmware/include/micro_ros_config.hpp</code></li>
+<li><code>firmware/src/micro_ros_node.cpp</code></li>
+<li><code>firmware/src/omniseer_tasks.cpp</code></li>
+<li><code>firmware/include/omniseer_config.hpp</code></li>
+<li><code>ros_ws/src/omniseer_vision_bridge/src/vision_bridge_node.cpp</code></li>
+<li><code>ros_ws/src/robot_diag_control_cpp/src/robot_diag_control_cpp_node.cpp</code></li>
+</ul>
+<h3 id="main-mismatches">Main Mismatches<a class="headerlink" href="#main-mismatches" title="Permanent link">&para;</a></h3>
+<p>The key remaining mismatches are:</p>
+<ul>
+<li>wheel odom derivation mismatch:</li>
+<li>sim publishes <code>/mecanum_drive_controller/odometry</code> directly</li>
+<li>real still derives that contract from raw <code>/encoder_counts</code></li>
+<li>sonar implementation mismatch:</li>
+<li>sim produces <code>/sonar</code> as <code>LaserScan</code> and adapts it to <code>/range</code></li>
+<li>real publishes <code>/range</code> directly</li>
+<li>description mismatch:</li>
+<li>the shared xacro currently embeds Gazebo-only sensors and Gazebo-only
+    control plugins</li>
+<li>launch-topology mismatch:</li>
+<li>sim has a staged orchestration path</li>
+<li>real bringup currently covers only the phase-1 MCU/encoder-odometry slice</li>
+</ul>
+<p>The earlier topic-only naming mismatches and the firmware/sim kinematics drift
+have been addressed in the phase-1 slice:</p>
+<ul>
+<li>the MCU now uses the sim/common command, IMU, and range topic names directly</li>
+<li>the firmware kinematics constants now match the current sim/controller values</li>
+</ul>
+<p>Wheel odometry still remains a compute boundary, because the MCU publishes raw
+encoder counts rather than odometry.</p>
+<h2 id="recommended-boundary-contract">Recommended Boundary Contract<a class="headerlink" href="#recommended-boundary-contract" title="Permanent link">&para;</a></h2>
+<p>The boundary should be a small set of canonical topics.</p>
+<p>These are the topics that <code>common</code> is allowed to know about. Everything below
+them belongs to <code>sim</code> or <code>real</code>.</p>
+<p>Near-term, we intentionally keep the existing sim-facing names for command and
+wheel odometry. That leaks some controller naming upward, but it avoids a layer
+of no-op relays and gets us to sim/real parity faster.</p>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Type</th>
+<th>Canonical frame / semantics</th>
+<th>Producer / standardization path</th>
+<th>Consumers above boundary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/mecanum_drive_controller/reference</code></td>
+<td><code>geometry_msgs/msg/TwistStamped</code></td>
+<td>base command in base frame</td>
+<td><code>twist_mux</code> in common, real MCU updated to subscribe directly</td>
+<td>sim controller, real MCU</td>
+</tr>
+<tr>
+<td><code>/mecanum_drive_controller/odometry</code></td>
+<td><code>nav_msgs/msg/Odometry</code></td>
+<td>wheel/base odom, <code>odom -&gt; base_link</code>, no global correction</td>
+<td>sim controller direct or real encoder odom adapter</td>
+<td>EKF, diagnostics</td>
+</tr>
+<tr>
+<td><code>/imu</code></td>
+<td><code>sensor_msgs/msg/Imu</code></td>
+<td>IMU at <code>imu_link</code></td>
+<td>Gazebo bridge or MCU renamed to publish directly</td>
+<td>EKF</td>
+</tr>
+<tr>
+<td><code>/scan</code></td>
+<td><code>sensor_msgs/msg/LaserScan</code></td>
+<td>planar LiDAR at <code>lidar_frame</code></td>
+<td>Gazebo bridge or real LiDAR driver</td>
+<td>RF2O, SLAM, costmaps</td>
+</tr>
+<tr>
+<td><code>/range</code></td>
+<td><code>sensor_msgs/msg/Range</code></td>
+<td>forward range at <code>sonar_link</code></td>
+<td>sim sonar adapter or MCU renamed to publish directly</td>
+<td>costmaps</td>
+</tr>
+<tr>
+<td><code>/yolo/detections</code></td>
+<td><code>yolo_msgs/msg/DetectionArray</code></td>
+<td>source-space detections</td>
+<td>sim YOLO provider or real vision bridge</td>
+<td>shared policy/consumers</td>
+</tr>
+<tr>
+<td><code>/vision/perf</code></td>
+<td><code>omniseer_msgs/msg/VisionPerfSummary</code></td>
+<td>normalized vision health/perf</td>
+<td>real vision bridge, optional sim stub</td>
+<td>gateway/diagnostics</td>
+</tr>
+<tr>
+<td><code>/battery</code></td>
+<td><code>sensor_msgs/msg/BatteryState</code></td>
+<td>robot battery state</td>
+<td>MCU direct</td>
+<td>optional UI/diagnostics</td>
+</tr>
+</tbody>
+</table>
+<h3 id="raw-image-contract">Raw Image Contract<a class="headerlink" href="#raw-image-contract" title="Permanent link">&para;</a></h3>
+<p>The raw camera image does <strong>not</strong> need to be part of the common mission graph
+to get the sim-to-real benefit we want today.</p>
+<p>For current navigation and contract work, the more important shared boundary is:</p>
+<ul>
+<li>command</li>
+<li>wheel odometry</li>
+<li>IMU</li>
+<li>scan</li>
+<li>range</li>
+<li>detections</li>
+<li>perf/diagnostics</li>
+</ul>
+<p>Raw camera image can remain provider-local for now:</p>
+<ul>
+<li>sim YOLO consumes <code>/front_camera/image</code> below the boundary</li>
+<li>real vision runtime consumes <code>/dev/video12</code> below the boundary</li>
+</ul>
+<p>Both then converge on <code>/yolo/detections</code>.</p>
+<p>That is the right boundary for the current navigation-policy and graph-contract
+goal.</p>
+<h2 id="why-not-use-ros2_control-as-the-boundary-yet">Why Not Use <code>ros2_control</code> as the Boundary Yet<a class="headerlink" href="#why-not-use-ros2_control-as-the-boundary-yet" title="Permanent link">&para;</a></h2>
+<p>That remains a valid later direction, but it is not the smallest effective move
+right now.</p>
+<h3 id="later-option">Later Option<a class="headerlink" href="#later-option" title="Permanent link">&para;</a></h3>
+<p>Later, the real robot could expose a true <code>ros2_control</code> hardware interface so
+both sim and real use:</p>
+<ul>
+<li><code>controller_manager</code></li>
+<li><code>joint_state_broadcaster</code></li>
+<li><code>mecanum_drive_controller</code></li>
+</ul>
+<p>with only the hardware plugin changing.</p>
+<h3 id="why-not-first">Why Not First<a class="headerlink" href="#why-not-first" title="Permanent link">&para;</a></h3>
+<p>The current firmware already owns:</p>
+<ul>
+<li>command timeout</li>
+<li>mecanum kinematics</li>
+<li>wheel command writeout</li>
+<li>encoder readout</li>
+</ul>
+<p>Moving that boundary immediately would require:</p>
+<ul>
+<li>a real hardware interface implementation</li>
+<li>transport design between SBC and MCU</li>
+<li>lifecycle/error handling around that transport</li>
+<li>a migration of control semantics that is larger than the current need</li>
+</ul>
+<p>That can pay off later. It is not the smallest next step.</p>
+<h2 id="target-package-and-launch-layout">Target Package and Launch Layout<a class="headerlink" href="#target-package-and-launch-layout" title="Permanent link">&para;</a></h2>
+<h3 id="omniseer_description"><code>omniseer_description</code><a class="headerlink" href="#omniseer_description" title="Permanent link">&para;</a></h3>
+<p>Split the description into pure robot model vs sim-only attachments.</p>
+<p>Recommended files:</p>
+<ul>
+<li><code>ros_ws/src/omniseer_description/urdf/xacro/omniseer.base.urdf.xacro</code></li>
+<li><code>ros_ws/src/omniseer_description/urdf/xacro/omniseer.sim_sensors.xacro</code></li>
+<li><code>ros_ws/src/omniseer_description/urdf/xacro/omniseer.sim_control.xacro</code></li>
+<li><code>ros_ws/src/omniseer_description/urdf/xacro/omniseer.sim.urdf.xacro</code></li>
+<li><code>ros_ws/src/omniseer_description/urdf/xacro/omniseer.real.urdf.xacro</code></li>
+</ul>
+<p>Responsibilities:</p>
+<ul>
+<li><code>omniseer.base.urdf.xacro</code></li>
+<li>links, joints, frames, inertias, geometry</li>
+<li>no Gazebo plugins</li>
+<li>no Gazebo sensors</li>
+<li>no Gazebo <code>ros2_control</code></li>
+<li><code>omniseer.sim_sensors.xacro</code></li>
+<li>Gazebo camera, lidar, sonar, IMU blocks</li>
+<li><code>omniseer.sim_control.xacro</code></li>
+<li>Gazebo <code>ros2_control</code> block and Gazebo wheel/friction tuning</li>
+<li><code>omniseer.sim.urdf.xacro</code></li>
+<li>includes base + sim sensor/control overlays</li>
+<li><code>omniseer.real.urdf.xacro</code></li>
+<li>includes base only for now</li>
+</ul>
+<p>This lets <code>robot_state_publisher</code> be shared without dragging Gazebo-only
+behavior into the real path.</p>
+<h3 id="bringup"><code>bringup</code><a class="headerlink" href="#bringup" title="Permanent link">&para;</a></h3>
+<p>Recommended launch layout:</p>
+<ul>
+<li><code>ros_ws/src/bringup/launch/description.launch.py</code></li>
+<li><code>ros_ws/src/bringup/launch/common.launch.py</code></li>
+<li><code>ros_ws/src/bringup/launch/sim_io.launch.py</code></li>
+<li><code>ros_ws/src/bringup/launch/real_io.launch.py</code></li>
+<li><code>ros_ws/src/bringup/launch/sim.launch.py</code></li>
+<li><code>ros_ws/src/bringup/launch/real.launch.py</code></li>
+</ul>
+<p>Status:</p>
+<ul>
+<li><code>description.launch.py</code>, <code>common.launch.py</code>, <code>sim_io.launch.py</code>, and
+  <code>real_io.launch.py</code> are now the shared baseline launch layers</li>
+<li><code>sim.launch.py</code> and <code>real.launch.py</code> both include the shared common layer</li>
+<li>the gateway is hosted in <code>common.launch.py</code> behind a flag instead of a
+  separate mandatory top-level launch</li>
+<li>RF2O, SLAM, and Nav2 are currently being hosted from <code>common.launch.py</code>
+  ahead of final <code>/scan</code> parity validation</li>
+</ul>
+<p>Recommended responsibilities:</p>
+<h3 id="descriptionlaunchpy"><code>description.launch.py</code><a class="headerlink" href="#descriptionlaunchpy" title="Permanent link">&para;</a></h3>
+<p>Shared robot description launch.</p>
+<p>Inputs:</p>
+<ul>
+<li>xacro path</li>
+<li><code>use_sim_time</code></li>
+</ul>
+<p>Starts:</p>
+<ul>
+<li><code>robot_state_publisher</code></li>
+</ul>
+<h3 id="commonlaunchpy"><code>common.launch.py</code><a class="headerlink" href="#commonlaunchpy" title="Permanent link">&para;</a></h3>
+<p>Shared mission/runtime graph above the boundary.</p>
+<p>Starts:</p>
+<ul>
+<li><code>description.launch.py</code></li>
+<li>EKF</li>
+<li>RF2O</li>
+<li>SLAM</li>
+<li>Nav2</li>
+<li><code>twist_mux</code></li>
+<li>optional gateway / diag control</li>
+</ul>
+<p>Must <strong>not</strong> start:</p>
+<ul>
+<li>Gazebo</li>
+<li>Gazebo bridges</li>
+<li><code>mecanum_drive_controller</code></li>
+<li>micro-ROS agent</li>
+<li>real LiDAR driver</li>
+<li>SBC-specific camera provider</li>
+<li>sim-only YOLO provider</li>
+</ul>
+<h3 id="sim_iolaunchpy"><code>sim_io.launch.py</code><a class="headerlink" href="#sim_iolaunchpy" title="Permanent link">&para;</a></h3>
+<p>Simulation-only producers and compute adapters below the boundary.</p>
+<p>Starts:</p>
+<ul>
+<li>Gazebo</li>
+<li>robot spawn into Gazebo</li>
+<li>Gazebo ROS bridges</li>
+<li>Gazebo-side control path</li>
+<li>sim-only compute adapters such as <code>scan_to_range</code></li>
+</ul>
+<h3 id="real_iolaunchpy"><code>real_io.launch.py</code><a class="headerlink" href="#real_iolaunchpy" title="Permanent link">&para;</a></h3>
+<p>Real-hardware-only producers and compute adapters below the boundary.</p>
+<p>Starts:</p>
+<ul>
+<li><code>micro_ros_agent</code></li>
+<li>real LiDAR driver publishing <code>/scan</code></li>
+<li>MCU publishers/subscribers using sim-aligned topic names</li>
+<li>real encoder-to-odom adapter</li>
+</ul>
+<h3 id="simlaunchpy"><code>sim.launch.py</code><a class="headerlink" href="#simlaunchpy" title="Permanent link">&para;</a></h3>
+<p>Top-level sim bringup:</p>
+<ul>
+<li>start <code>sim_io.launch.py</code></li>
+<li>start <code>common.launch.py</code></li>
+<li>optionally start RViz</li>
+</ul>
+<h3 id="reallaunchpy"><code>real.launch.py</code><a class="headerlink" href="#reallaunchpy" title="Permanent link">&para;</a></h3>
+<p>Top-level real bringup:</p>
+<ul>
+<li>start <code>real_io.launch.py</code></li>
+<li>wait for <code>/imu</code>, <code>/scan</code>, and <code>/mecanum_drive_controller/odometry</code></li>
+<li>start <code>common.launch.py</code></li>
+</ul>
+<h2 id="new-adapter-package">New Adapter Package<a class="headerlink" href="#new-adapter-package" title="Permanent link">&para;</a></h2>
+<p>Create a focused package only for boundary transformations that do real work.</p>
+<p>Recommended package:</p>
+<ul>
+<li><code>ros_ws/src/robot_io_adapters</code></li>
+</ul>
+<p>Use <code>ament_cmake</code> and keep the adapter core in testable C++ code. This is part
+of the real hardware boundary and should feel native to the rest of robot-core.</p>
+<p>Pure rename or pass-through relay nodes should not live here. If a node only
+changes names or copies fields without changing semantics, fix the source or
+consumer instead.</p>
+<p>Recommended nodes:</p>
+<h3 id="encoder_counts_to_odometry"><code>encoder_counts_to_odometry</code><a class="headerlink" href="#encoder_counts_to_odometry" title="Permanent link">&para;</a></h3>
+<p>Purpose:</p>
+<ul>
+<li>subscribe to <code>encoder_counts</code></li>
+<li>compute wheel/base odometry using the same mecanum geometry used elsewhere</li>
+<li>publish <code>/mecanum_drive_controller/odometry</code></li>
+</ul>
+<p>Why:</p>
+<ul>
+<li>this is the most important missing real adapter</li>
+<li>it makes real hardware publish the same odometry contract that sim already
+  provides</li>
+</ul>
+<p>This node should be deterministic and boring:</p>
+<ul>
+<li>no hidden filtering beyond what is necessary for finite differencing</li>
+<li>explicit wheel order mapping</li>
+<li>explicit timestamp handling</li>
+<li>explicit frame ids</li>
+</ul>
+<h3 id="optional-vision_perf_stubpy">Optional <code>vision_perf_stub.py</code><a class="headerlink" href="#optional-vision_perf_stubpy" title="Permanent link">&para;</a></h3>
+<p>Purpose:</p>
+<ul>
+<li>publish a minimal <code>/vision/perf</code> heartbeat in sim when no native perf source exists</li>
+</ul>
+<p>Why:</p>
+<ul>
+<li>lets gateway/diagnostic flows behave more similarly in sim and real</li>
+</ul>
+<p>This is optional for the first slice.</p>
+<h2 id="concrete-refactor-of-existing-files">Concrete Refactor of Existing Files<a class="headerlink" href="#concrete-refactor-of-existing-files" title="Permanent link">&para;</a></h2>
+<p>The following changes should happen early because they define the boundary.</p>
+<h3 id="navlaunchpy"><code>nav.launch.py</code><a class="headerlink" href="#navlaunchpy" title="Permanent link">&para;</a></h3>
+<p>Current issue:</p>
+<ul>
+<li><code>twist_mux</code> output is remapped directly to
+  <code>/mecanum_drive_controller/reference</code></li>
+</ul>
+<p>Target:</p>
+<ul>
+<li>keep <code>twist_mux</code> output on <code>/mecanum_drive_controller/reference</code></li>
+<li>update the MCU subscriber to match that contract directly</li>
+</ul>
+<p>Reason:</p>
+<ul>
+<li>avoids a no-op command shim</li>
+<li>preserves the current working sim/common command contract</li>
+</ul>
+<h3 id="ekf_fusionyaml"><code>ekf_fusion.yaml</code><a class="headerlink" href="#ekf_fusionyaml" title="Permanent link">&para;</a></h3>
+<p>Current issue:</p>
+<ul>
+<li><code>odom0</code> uses <code>/mecanum_drive_controller/odometry</code></li>
+<li><code>imu0</code> uses <code>/imu</code></li>
+</ul>
+<p>Target:</p>
+<ul>
+<li>keep <code>odom0: /mecanum_drive_controller/odometry</code></li>
+<li>keep <code>imu0: /imu</code></li>
+<li>make real hardware conform to those names</li>
+</ul>
+<p>Reason:</p>
+<ul>
+<li>avoids no-op relays for odom naming and IMU naming</li>
+<li>keeps the current sim/common EKF contract intact</li>
+</ul>
+<p>For the real-only baseline, use a dedicated <code>ekf_fusion_real.yaml</code> that drops
+the simulated RF2O input and fuses only wheel odometry plus IMU.</p>
+<h3 id="firmwareincludemicro_ros_confighpp-and-firmwaresrcmicro_ros_nodecpp"><code>firmware/include/micro_ros_config.hpp</code> and <code>firmware/src/micro_ros_node.cpp</code><a class="headerlink" href="#firmwareincludemicro_ros_confighpp-and-firmwaresrcmicro_ros_nodecpp" title="Permanent link">&para;</a></h3>
+<p>Phase-1 implementation:</p>
+<ul>
+<li>MCU topic constants use <code>/mecanum_drive_controller/reference</code>, <code>/imu</code>, and <code>/range</code></li>
+<li>MCU command subscriber expects <code>geometry_msgs/msg/TwistStamped</code></li>
+</ul>
+<p>Behavior preserved:</p>
+<ul>
+<li>keep the downstream motion-controller semantics unchanged after the ROS
+  message is unpacked</li>
+</ul>
+<p>Why this shape is still correct:</p>
+<ul>
+<li>removes no-op rename/shim nodes from the real path</li>
+<li>makes the real ROS surface match the current sim/common contract directly</li>
+<li>keeps the firmware control loop architecture intact while normalizing the ROS
+  boundary</li>
+</ul>
+<h3 id="perceptionlaunchpy"><code>perception.launch.py</code><a class="headerlink" href="#perceptionlaunchpy" title="Permanent link">&para;</a></h3>
+<p>Current issue:</p>
+<ul>
+<li>it mixes shared perception consumers with sim-only detection provider</li>
+<li>it also starts sim sonar conversion</li>
+</ul>
+<p>Target:</p>
+<ul>
+<li>keep only shared consumers above the boundary:</li>
+<li>RF2O</li>
+<li>SLAM</li>
+<li>any detection consumers that consume <code>/yolo/detections</code></li>
+<li>move sim-only YOLO provider to <code>sim_io.launch.py</code></li>
+<li>move sim-only sonar conversion below the boundary</li>
+</ul>
+<h3 id="controllerslaunchpy"><code>controllers.launch.py</code><a class="headerlink" href="#controllerslaunchpy" title="Permanent link">&para;</a></h3>
+<p>Current issue:</p>
+<ul>
+<li>controller manager remains coupled to the shared graph shape</li>
+</ul>
+<p>Target:</p>
+<ul>
+<li>treat it as sim-only below the boundary for now</li>
+<li>only <code>sim_io.launch.py</code> should include it</li>
+</ul>
+<h3 id="robot_io_adaptersscan_to_rangecpp"><code>robot_io_adapters/scan_to_range.cpp</code><a class="headerlink" href="#robot_io_adaptersscan_to_rangecpp" title="Permanent link">&para;</a></h3>
+<p>Current issue:</p>
+<ul>
+<li>it is a sim-only adapter but is launched from shared runtime paths</li>
+</ul>
+<p>Target:</p>
+<ul>
+<li>keep the node, but launch it only from <code>sim_io.launch.py</code></li>
+</ul>
+<h2 id="current-common-graph-after-refactor">Current Common Graph After Refactor<a class="headerlink" href="#current-common-graph-after-refactor" title="Permanent link">&para;</a></h2>
+<p>The target common graph is:</p>
+<div class="highlight"><pre><span></span><code>             /mecanum_drive_controller/reference
+                            |
+                            v
+                       [ common graph ]
+          +----------------+----------------+----------------+
+          |                |                |                |
+       localization      mapping          nav            diagnostics
+          |                |                |                |
+          +----------------+----------------+----------------+
+                            |
+             consumes canonical robot-IO boundary only
+                            |
+ /mecanum_drive_controller/odometry  /imu  /scan  /range  /yolo/detections
+</code></pre></div>
+<p>Below that line:</p>
+<ul>
+<li>sim provides those topics through Gazebo + bridges + compute adapters</li>
+<li>real provides those topics through MCU/driver/runtime + direct naming
+  standardization plus compute adapters</li>
+</ul>
+<h2 id="recommended-phase-order">Recommended Phase Order<a class="headerlink" href="#recommended-phase-order" title="Permanent link">&para;</a></h2>
+<h3 id="phase-0-lock-contracts-and-constants">Phase 0: Lock Contracts and Constants<a class="headerlink" href="#phase-0-lock-contracts-and-constants" title="Permanent link">&para;</a></h3>
+<p>Do first:</p>
+<ul>
+<li>agree on canonical topic names</li>
+<li>agree on message types</li>
+<li>agree on frame ids</li>
+<li>unify mecanum geometry constants between firmware and ROS</li>
+</ul>
+<p>Suggested output:</p>
+<ul>
+<li>one shared constants source or one generated config source</li>
+</ul>
+<p>This phase is required before any odometry adapter work.</p>
+<h3 id="phase-1-normalize-the-command-and-odometry-boundary">Phase 1: Normalize the Command and Odometry Boundary<a class="headerlink" href="#phase-1-normalize-the-command-and-odometry-boundary" title="Permanent link">&para;</a></h3>
+<p>Implement:</p>
+<ul>
+<li>MCU subscription rename and message update to
+  <code>/mecanum_drive_controller/reference</code></li>
+<li><code>encoder_counts_to_odometry</code></li>
+</ul>
+<p>Then update:</p>
+<ul>
+<li>MCU micro-ROS topic definitions</li>
+<li>real bringup to launch the encoder odom adapter</li>
+</ul>
+<p>This is the highest-value slice because it makes localization and navigation
+consume the same semantic inputs in sim and real.</p>
+<h3 id="phase-2-normalize-imu-and-range">Phase 2: Normalize IMU and Range<a class="headerlink" href="#phase-2-normalize-imu-and-range" title="Permanent link">&para;</a></h3>
+<p>Implement:</p>
+<ul>
+<li>MCU IMU topic rename to <code>/imu</code></li>
+<li>MCU sonar topic rename to <code>/range</code></li>
+</ul>
+<p>Then update:</p>
+<ul>
+<li>firmware topic/config constants</li>
+<li>real bringup docs and contract checks</li>
+</ul>
+<p>This removes the last obvious sensor-topic mismatch in the navigation path.</p>
+<h3 id="phase-3-split-the-description-and-launch-topology">Phase 3: Split the Description and Launch Topology<a class="headerlink" href="#phase-3-split-the-description-and-launch-topology" title="Permanent link">&para;</a></h3>
+<p>Implement:</p>
+<ul>
+<li>base/sim/real xacro split</li>
+<li><code>description.launch.py</code></li>
+<li><code>common.launch.py</code></li>
+<li><code>sim_io.launch.py</code></li>
+<li><code>real_io.launch.py</code></li>
+<li>real top-level launch</li>
+</ul>
+<p>This is the point where the codebase layout starts reflecting the architecture
+we actually want.</p>
+<h3 id="phase-4-move-detection-providers-below-the-boundary">Phase 4: Move Detection Providers Below the Boundary<a class="headerlink" href="#phase-4-move-detection-providers-below-the-boundary" title="Permanent link">&para;</a></h3>
+<p>Implement:</p>
+<ul>
+<li>move sim YOLO provider into <code>sim_io.launch.py</code></li>
+<li>keep real vision bridge in <code>real_io.launch.py</code></li>
+<li>treat <code>/yolo/detections</code> as the shared detection contract</li>
+</ul>
+<p>Optional:</p>
+<ul>
+<li>add sim <code>/vision/perf</code> stub for diagnostic parity</li>
+</ul>
+<h3 id="phase-5-verification-infrastructure">Phase 5: Verification Infrastructure<a class="headerlink" href="#phase-5-verification-infrastructure" title="Permanent link">&para;</a></h3>
+<p>Add targeted verification for both sim and real:</p>
+<ul>
+<li>contract test: required boundary topics exist</li>
+<li>contract test: expected message types</li>
+<li>contract test: expected <code>frame_id</code>s</li>
+<li>contract test: expected rates are within bounds</li>
+<li>launch smoke: <code>sim.launch.py</code></li>
+<li>launch smoke: <code>real.launch.py</code> with drivers mocked or selectively disabled</li>
+<li>rosbag replay support for the canonical boundary topics</li>
+</ul>
+<p>This phase is what turns the architecture into evidence rather than intent.</p>
+<h2 id="verification-standard-for-the-boundary">Verification Standard for the Boundary<a class="headerlink" href="#verification-standard-for-the-boundary" title="Permanent link">&para;</a></h2>
+<p>Simulation becomes a strong indicator only if the contract is verified.</p>
+<p>Minimum checks per boundary topic:</p>
+<ul>
+<li>topic exists</li>
+<li>type matches</li>
+<li>frame id matches</li>
+<li>timestamp moves forward correctly</li>
+<li>publish rate is within expected bounds</li>
+<li>stale detection is visible and explicit</li>
+</ul>
+<p>For command and odometry specifically:</p>
+<ul>
+<li>command timeout behavior must be explicit</li>
+<li>sign conventions must be explicit</li>
+<li>wheel ordering must be explicit</li>
+<li>geometry constants must be shared</li>
+</ul>
+<h2 id="what-this-refactor-will-and-will-not-prove">What This Refactor Will and Will Not Prove<a class="headerlink" href="#what-this-refactor-will-and-will-not-prove" title="Permanent link">&para;</a></h2>
+<p>After this refactor, simulation will be a strong indicator for:</p>
+<ul>
+<li>launch composition</li>
+<li>topic and frame contracts</li>
+<li>TF topology</li>
+<li>navigation wiring</li>
+<li>SLAM and localization graph behavior</li>
+<li>policy consumers of <code>/yolo/detections</code></li>
+<li>gateway status wiring and optional operator flow wiring</li>
+</ul>
+<p>It will still not fully prove:</p>
+<ul>
+<li>SBC compute headroom</li>
+<li>RKNN/RGA/V4L2 behavior</li>
+<li>Wi-Fi link behavior</li>
+<li>hardware timing jitter</li>
+<li>calibration correctness</li>
+<li>micro-ROS transport reliability</li>
+</ul>
+<p>That is expected. The goal is not to make sim prove everything. The goal is to
+make sim prove the software architecture and contracts above a thin,
+well-defined hardware boundary.</p>
+<h2 id="recommended-immediate-next-slice">Recommended Immediate Next Slice<a class="headerlink" href="#recommended-immediate-next-slice" title="Permanent link">&para;</a></h2>
+<p>The smallest high-value next slice is:</p>
+<ol>
+<li>unify mecanum constants across firmware and ROS</li>
+<li>update the MCU command subscriber to use
+   <code>/mecanum_drive_controller/reference</code></li>
+<li>add <code>robot_io_adapters/encoder_counts_to_odometry</code></li>
+<li>update the MCU IMU topic to <code>/imu</code></li>
+<li>update the MCU sonar topic to <code>/range</code></li>
+<li>keep EKF on <code>/mecanum_drive_controller/odometry</code> and <code>/imu</code></li>
+<li>move <code>controllers.launch.py</code> and <code>scan_to_range</code> below the sim boundary</li>
+</ol>
+<p>That slice gives the biggest sim-to-real payoff without first rewriting the
+firmware control architecture.</p>
 
 
 
@@ -765,7 +2435,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="May 30, 2025 04:53:18 UTC">May 30, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 23, 2026 03:11:39 UTC">March 23, 2026</span>
   </span>
 
     

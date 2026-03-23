@@ -480,6 +480,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#workflow-hygiene" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Workflow hygiene
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#why-this-helps" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -977,6 +988,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#workflow-hygiene" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Workflow hygiene
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#why-this-helps" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1090,7 +1112,8 @@ repository and how it affects day-to-day development.</p>
 <h2 id="what-cicd-means-in-this-repo">What "CI/CD" means in this repo<a class="headerlink" href="#what-cicd-means-in-this-repo" title="Permanent link">&para;</a></h2>
 <p>There are currently two GitHub Actions workflows:</p>
 <ul>
-<li><code>ci</code>: continuous integration for build, lint, and test validation</li>
+<li><code>ci</code>: continuous integration for lint, build, unit/package tests, launch
+  smoke, firmware compile, and docs validation</li>
 <li><code>docs</code>: continuous deployment for the MkDocs documentation site</li>
 </ul>
 <p>At the moment, Omniseer does <strong>not</strong> have a release pipeline for firmware,
@@ -1129,38 +1152,99 @@ in the repository today is documentation publishing to GitHub Pages.</p>
 </ul>
 <p>This means CI acts as a gate for the default branch and for incoming PRs.</p>
 <h3 id="what-it-does">What it does<a class="headerlink" href="#what-it-does" title="Permanent link">&para;</a></h3>
-<p>The CI job currently performs the following checks:</p>
-<ol>
-<li>Installs the ROS 2 <code>kilted</code> build and test dependencies needed by the
-   selected package set</li>
-<li>Runs Ruff against the Python packages in <code>ros_ws/src/analysis</code> and
-   <code>ros_ws/src/bringup</code></li>
-<li>Builds the main validated ROS package subset:</li>
+<p>The workflow is split into focused jobs:</p>
+<table>
+<thead>
+<tr>
+<th>Job</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>lint</code></td>
+<td>Run Ruff against the Python helper/operator packages</td>
+</tr>
+<tr>
+<td><code>ros-core</code></td>
+<td>Install ROS workspace deps, build the validated package set, run unit/package tests, and conditionally build <code>omniseer_vision_bridge</code> when the RKNN/RGA SDKs are available</td>
+</tr>
+<tr>
+<td><code>bringup-smoke</code></td>
+<td>Launch headless simulation and verify the core sim/hardware boundary topics and type contracts</td>
+</tr>
+<tr>
+<td><code>vision-host</code></td>
+<td>Build and run the portable native vision tests</td>
+</tr>
+<tr>
+<td><code>firmware-build</code></td>
+<td>Run a compile-only PlatformIO build for the Teensy firmware target</td>
+</tr>
+<tr>
+<td><code>docs-build</code></td>
+<td>Build the MkDocs site in strict mode on every PR/push</td>
+</tr>
+</tbody>
+</table>
+<p>The validated ROS package set in <code>ros-core</code> now includes:</p>
+<ul>
+<li><code>omniseer_gz_assets</code></li>
 <li><code>omniseer_msgs</code></li>
 <li><code>yolo_msgs</code></li>
 <li><code>omniseer_description</code></li>
 <li><code>analysis</code></li>
 <li><code>bringup</code></li>
-<li>Builds <code>omniseer_vision_bridge</code> only when the RKNN and RGA SDKs are
-   available in the runner environment</li>
-<li>Runs the current ROS test subset:</li>
+<li><code>robot_io_adapters</code></li>
+<li><code>robot_diag_control</code></li>
+<li><code>robot_diag_control_cpp</code></li>
+</ul>
+<p>The ROS test subset now includes:</p>
+<ul>
 <li><code>omniseer_description</code></li>
 <li><code>analysis</code></li>
 <li><code>bringup</code></li>
-<li>Builds and runs the portable native vision tests:</li>
-<li><code>image_buffer_pool_test</code></li>
-<li><code>jsonl_telemetry_test</code></li>
-<li><code>rolling_telemetry_test</code></li>
-</ol>
+<li><code>robot_io_adapters</code></li>
+<li><code>robot_diag_control</code></li>
+<li><code>robot_diag_control_cpp</code></li>
+</ul>
+<p>The <code>bringup-smoke</code> job intentionally checks a narrow, stable contract instead
+of trying to prove the full robot stack. It uses a dedicated minimal world and
+CI-safe geometry path so the check does not depend on optional Gazebo models or
+STL-heavy collision geometry. Today it verifies that headless sim bringup
+publishes:</p>
+<ul>
+<li><code>/clock</code></li>
+<li><code>/imu</code></li>
+<li><code>/scan</code></li>
+<li><code>/range</code></li>
+<li><code>/mecanum_drive_controller/odometry</code></li>
+</ul>
+<p>It also checks the expected message types on that boundary and fails if the
+headless sim graph exits before those topics come up.</p>
+<h3 id="workflow-hygiene">Workflow hygiene<a class="headerlink" href="#workflow-hygiene" title="Permanent link">&para;</a></h3>
+<p>The CI workflow now includes a few guardrails that matter once hardware work
+starts:</p>
+<ul>
+<li><code>concurrency</code> cancels superseded runs on the same branch or PR</li>
+<li>each job has an explicit timeout</li>
+<li>ROS, vision, firmware, and smoke-test logs are uploaded as artifacts</li>
+<li>ROS dependency installation is driven from package manifests through
+  <code>scripts/ci/install_ros_workspace_deps.sh</code></li>
+</ul>
 <h3 id="why-this-helps">Why this helps<a class="headerlink" href="#why-this-helps" title="Permanent link">&para;</a></h3>
 <p>This workflow gives quick feedback when a change breaks:</p>
 <ul>
 <li>ROS package metadata or dependency declarations</li>
 <li>message generation for the selected interface packages</li>
-<li>Python linting in the helper packages</li>
-<li>the frontier-selection and <code>omniseer_description</code> C++ tests</li>
-<li>the package-level XML and test wiring in <code>analysis</code> and <code>bringup</code></li>
+<li>Python linting in the helper and operator packages</li>
+<li>the C++ adapter and gateway test suites</li>
+<li>the package-level XML and test wiring in <code>analysis</code>, <code>bringup</code>, and the
+  operator tooling</li>
+<li>the core sim/hardware boundary wiring before real hardware is in the loop</li>
+<li>compile-time firmware regressions on the main MCU target</li>
 <li>the portable part of the native vision runtime</li>
+<li>docs regressions that would otherwise only show up at deploy time</li>
 </ul>
 <p>In practice, this reduces the chance that a broken branch reaches <code>master</code>
 without anyone noticing.</p>
@@ -1172,7 +1256,7 @@ without anyone noticing.</p>
 <li>camera or sensor availability</li>
 <li>RKNN/RGA-backed execution inside the default GitHub runner image</li>
 <li>firmware flashing or micro-ROS deployment</li>
-<li>Gazebo or robot end-to-end runtime validation</li>
+<li>long-duration Gazebo or robot end-to-end runtime validation</li>
 <li>release packaging or artifact publishing</li>
 </ul>
 <p>Those would require additional jobs, richer runners, or hardware-aware test
@@ -1191,7 +1275,7 @@ infrastructure.</p>
 <ol>
 <li>Checks out the repository with full history</li>
 <li>Installs MkDocs and the Material theme</li>
-<li>Builds the site</li>
+<li>Builds the site in strict mode</li>
 <li>Deploys the generated documentation to the <code>gh-pages</code> branch</li>
 </ol>
 <p>This is the current "CD" piece of the repository.</p>
@@ -1202,28 +1286,60 @@ benefits:</p>
 <li>PRs get an automatic build/test signal without requiring every reviewer to
   reproduce the same checks locally</li>
 <li>dependency drift in ROS packages is more likely to fail early</li>
-<li>lightweight regressions in Python helpers and portable vision utilities are
-  caught before merge</li>
+<li>lightweight regressions in Python helpers, operator tools, and portable
+  vision utilities are caught before merge</li>
+<li>the sim/hardware boundary gets a fast smoke signal before hardware
+  integration starts absorbing debugging time</li>
+<li>firmware compile breaks show up before anyone plugs in a board</li>
 <li>docs changes can be published without a manual deployment step</li>
 </ul>
 <p>The local equivalents of the current CI checks are:</p>
-<div class="highlight"><pre><span></span><code>ruff<span class="w"> </span>check<span class="w"> </span>ros_ws/src/analysis<span class="w"> </span>ros_ws/src/bringup
+<div class="highlight"><pre><span></span><code>ruff<span class="w"> </span>check<span class="w"> </span>ros_ws/src/analysis<span class="w"> </span>ros_ws/src/bringup<span class="w"> </span>ros_ws/src/robot_diag_control
 
 <span class="nb">source</span><span class="w"> </span>/opt/ros/kilted/setup.bash
 <span class="nb">cd</span><span class="w"> </span>ros_ws
 colcon<span class="w"> </span>build<span class="w"> </span>--merge-install<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--packages-select<span class="w"> </span>omniseer_msgs<span class="w"> </span>yolo_msgs<span class="w"> </span>omniseer_description<span class="w"> </span>analysis<span class="w"> </span>bringup
+<span class="w">  </span>--packages-select<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>omniseer_gz_assets<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>omniseer_msgs<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>yolo_msgs<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>omniseer_description<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>analysis<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>bringup<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>robot_io_adapters<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>robot_diag_control<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>robot_diag_control_cpp
 colcon<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--merge-install<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--packages-select<span class="w"> </span>omniseer_description<span class="w"> </span>analysis<span class="w"> </span>bringup
+<span class="w">  </span>--packages-select<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>omniseer_description<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>analysis<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>bringup<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>robot_io_adapters<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>robot_diag_control<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>robot_diag_control_cpp
 colcon<span class="w"> </span>test-result<span class="w"> </span>--all<span class="w"> </span>--verbose
-
-<span class="nb">cd</span><span class="w"> </span>/path/to/omniseer
-cmake<span class="w"> </span>-S<span class="w"> </span>vision<span class="w"> </span>-B<span class="w"> </span>vision/build-verify<span class="w"> </span>-DVISION_BUILD_HARNESS<span class="o">=</span>OFF
+</code></pre></div>
+<p>For the headless bringup smoke check:</p>
+<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>/opt/ros/kilted/setup.bash
+<span class="nb">cd</span><span class="w"> </span>ros_ws
+colcon<span class="w"> </span>build<span class="w"> </span>--merge-install<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--packages-select<span class="w"> </span>omniseer_gz_assets<span class="w"> </span>omniseer_msgs<span class="w"> </span>omniseer_description<span class="w"> </span>bringup<span class="w"> </span>robot_io_adapters
+<span class="nb">source</span><span class="w"> </span>install/setup.bash
+<span class="nv">OMNISEER_RUN_SIM_SMOKE</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>python3<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>-vv<span class="w"> </span>-s<span class="w"> </span>src/bringup/test/test_sim_launch_smoke.py
+</code></pre></div>
+<p>For the portable host vision tests:</p>
+<div class="highlight"><pre><span></span><code>cmake<span class="w"> </span>-S<span class="w"> </span>vision<span class="w"> </span>-B<span class="w"> </span>vision/build-verify<span class="w"> </span>-DVISION_BUILD_HARNESS<span class="o">=</span>OFF
 cmake<span class="w"> </span>--build<span class="w"> </span>vision/build-verify<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--target<span class="w"> </span>image_buffer_pool_test<span class="w"> </span>jsonl_telemetry_test<span class="w"> </span>rolling_telemetry_test
 ctest<span class="w"> </span>--test-dir<span class="w"> </span>vision/build-verify<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-R<span class="w"> </span><span class="s1">&#39;image_buffer_pool_test|jsonl_telemetry_test|rolling_telemetry_test&#39;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--output-on-failure
+</code></pre></div>
+<p>For the compile-only firmware check:</p>
+<div class="highlight"><pre><span></span><code>platformio<span class="w"> </span>run<span class="w"> </span>-d<span class="w"> </span>firmware<span class="w"> </span>-e<span class="w"> </span>teensy41
+</code></pre></div>
+<p>For docs validation:</p>
+<div class="highlight"><pre><span></span><code>mkdocs<span class="w"> </span>build<span class="w"> </span>--strict
 </code></pre></div>
 <p>If the RKNN and RGA SDKs are installed locally, you can also build:</p>
 <div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>/opt/ros/kilted/setup.bash
@@ -1237,9 +1353,9 @@ automation and point outward to the subsystem docs.</p>
 <ul>
 <li>a release workflow for tagged versions</li>
 <li>hardware-in-the-loop jobs on a self-hosted runner</li>
-<li>integration tests for launch flows and ROS graphs</li>
+<li>longer-running integration tests for launch flows and ROS graphs</li>
 <li>container image builds</li>
-<li>firmware build and test automation</li>
+<li>firmware flash/test automation</li>
 <li>artifact retention for logs, test reports, and generated packages</li>
 </ul>
 
@@ -1262,7 +1378,7 @@ automation and point outward to the subsystem docs.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 19, 2026 22:18:15 UTC">March 19, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 23, 2026 03:11:39 UTC">March 23, 2026</span>
   </span>
 
     
