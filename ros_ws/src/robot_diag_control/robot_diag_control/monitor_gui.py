@@ -30,9 +30,7 @@ except ModuleNotFoundError as error:  # pragma: no cover - exercised in runtime 
 
 
 def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        description="Minimal Tk monitor GUI for the robot gateway"
-    )
+    parser = argparse.ArgumentParser(description="Minimal Tk monitor GUI for the robot gateway")
     parser.add_argument("--host", default="127.0.0.1", help="gRPC gateway host")
     parser.add_argument("--port", type=int, default=50051, help="gRPC gateway port")
     parser.add_argument(
@@ -153,18 +151,10 @@ class RobotMonitorGui:
         self._add_labeled_entry(connection_frame, "Host", self._host_var, 0, 0)
         self._add_labeled_entry(connection_frame, "Port", self._port_var, 0, 2, width=10)
         self._add_labeled_entry(connection_frame, "Preview Host", self._preview_host_var, 1, 0)
-        self._add_labeled_entry(
-            connection_frame, "Preview Port", self._preview_port_var, 1, 2, width=10
-        )
-        self._add_labeled_entry(
-            connection_frame, "Latency ms", self._preview_latency_var, 2, 0, width=10
-        )
-        self._add_labeled_entry(
-            connection_frame, "gst-launch", self._gst_launch_path_var, 2, 2
-        )
-        self._add_labeled_entry(
-            connection_frame, "Poll Interval (s)", self._poll_interval_var, 3, 0, width=10
-        )
+        self._add_labeled_entry(connection_frame, "Preview Port", self._preview_port_var, 1, 2, width=10)
+        self._add_labeled_entry(connection_frame, "Latency ms", self._preview_latency_var, 2, 0, width=10)
+        self._add_labeled_entry(connection_frame, "gst-launch", self._gst_launch_path_var, 2, 2)
+        self._add_labeled_entry(connection_frame, "Poll Interval (s)", self._poll_interval_var, 3, 0, width=10)
         ttk.Label(connection_frame, text="Profile").grid(row=3, column=2, sticky=tk.W, pady=(8, 0))
         profile_box = ttk.Combobox(
             connection_frame,
@@ -181,21 +171,11 @@ class RobotMonitorGui:
         controls = ttk.Frame(container)
         controls.pack(fill=tk.X, pady=(0, 10))
         ttk.Button(controls, text="Refresh", command=self.refresh_status).pack(side=tk.LEFT)
-        ttk.Button(controls, text="Start Watch", command=self.start_watch).pack(
-            side=tk.LEFT, padx=(8, 0)
-        )
-        ttk.Button(controls, text="Stop Watch", command=self.stop_watch).pack(
-            side=tk.LEFT, padx=(8, 0)
-        )
-        ttk.Button(controls, text="Preview On", command=self.preview_on).pack(
-            side=tk.LEFT, padx=(24, 0)
-        )
-        ttk.Button(controls, text="Preview Off", command=self.preview_off).pack(
-            side=tk.LEFT, padx=(8, 0)
-        )
-        ttk.Button(controls, text="Open Viewer", command=self.open_viewer).pack(
-            side=tk.LEFT, padx=(24, 0)
-        )
+        ttk.Button(controls, text="Start Watch", command=self.start_watch).pack(side=tk.LEFT, padx=(8, 0))
+        ttk.Button(controls, text="Stop Watch", command=self.stop_watch).pack(side=tk.LEFT, padx=(8, 0))
+        ttk.Button(controls, text="Preview On", command=self.preview_on).pack(side=tk.LEFT, padx=(24, 0))
+        ttk.Button(controls, text="Preview Off", command=self.preview_off).pack(side=tk.LEFT, padx=(8, 0))
+        ttk.Button(controls, text="Open Viewer", command=self.open_viewer).pack(side=tk.LEFT, padx=(24, 0))
 
         body = ttk.Panedwindow(container, orient=tk.VERTICAL)
         body.pack(fill=tk.BOTH, expand=True)

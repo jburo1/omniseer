@@ -43,9 +43,7 @@ def generate_launch_description():
     gateway_preview_device = LaunchConfiguration("gateway_preview_device")
 
     description_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            [PathJoinSubstitution([pkg_bringup, "launch", "description.launch.py"])]
-        ),
+        PythonLaunchDescriptionSource([PathJoinSubstitution([pkg_bringup, "launch", "description.launch.py"])]),
         launch_arguments={
             "use_sim_time": use_sim_time,
             "log_level": log_level,
@@ -54,9 +52,7 @@ def generate_launch_description():
     )
 
     perception_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            [PathJoinSubstitution([pkg_bringup, "launch", "perception.launch.py"])]
-        ),
+        PythonLaunchDescriptionSource([PathJoinSubstitution([pkg_bringup, "launch", "perception.launch.py"])]),
         launch_arguments={
             "use_sim_time": use_sim_time,
             "log_level": log_level,
