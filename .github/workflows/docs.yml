@@ -7,9 +7,14 @@ on:
       - "mkdocs.yml"
   workflow_dispatch: {}
 
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   deploy:
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     permissions:
       contents: write
       pages: write
@@ -24,9 +29,12 @@ jobs:
         with:
           python-version: "3.12"
       - run: |
-          pip install \
+          python3 -m pip install --upgrade pip
+          python3 -m pip install \
             mkdocs-material \
             mkdocs-git-revision-date-localized-plugin
+
+      - run: mkdocs build --strict
 
       # 3. Configure git user (required for gh-deploy in CI)
       - run: |

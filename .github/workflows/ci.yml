@@ -6,53 +6,77 @@ on:
   pull_request:
   workflow_dispatch: {}
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  ROS_DISTRO: kilted
+
 jobs:
-  ros-and-vision:
+  lint:
     runs-on: ubuntu-24.04
     container:
       image: osrf/ros:kilted-desktop-full-noble
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install system deps
+      - name: Install lint deps
         shell: bash
         run: |
           set -eux
           apt-get update
-          apt-get install -y --no-install-recommends \
-            git \
-            python3-colcon-common-extensions \
-            python3-pip \
-            python3-pytest \
-            python3-ruff \
-            ros-kilted-ament-copyright \
-            ros-kilted-ament-cmake-gtest \
-            ros-kilted-ament-xmllint \
-            ros-kilted-behaviortree-cpp \
-            ros-kilted-nav2-msgs
-
-      - name: Source ROS
-        shell: bash
-        run: |
-          set -eux
-          source /opt/ros/kilted/setup.bash
-          env | grep '^ROS_'
+          apt-get install -y --no-install-recommends python3-ruff
 
       - name: Ruff
         shell: bash
         run: |
           set -eux
-          ruff check ros_ws/src/analysis ros_ws/src/bringup
+          ruff check ros_ws/src/analysis ros_ws/src/bringup ros_ws/src/robot_diag_control
+
+  ros-core:
+    runs-on: ubuntu-24.04
+    container:
+      image: osrf/ros:kilted-desktop-full-noble
+    timeout-minutes: 50
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ROS workspace deps
+        shell: bash
+        run: |
+          set -eux
+          bash scripts/ci/install_ros_workspace_deps.sh \
+            ros_ws/src/omniseer_gz_assets \
+            ros_ws/src/omniseer_msgs \
+            ros_ws/src/yolo_ros/yolo_msgs \
+            ros_ws/src/omniseer_description \
+            ros_ws/src/analysis \
+            ros_ws/src/bringup \
+            ros_ws/src/robot_io_adapters \
+            ros_ws/src/robot_diag_control \
+            ros_ws/src/robot_diag_control_cpp
 
       - name: Build ROS packages
         shell: bash
         run: |
           set -eux
-          source /opt/ros/kilted/setup.bash
+          source /opt/ros/${ROS_DISTRO}/setup.bash
           cd ros_ws
           colcon build --merge-install \
-            --packages-select omniseer_msgs yolo_msgs omniseer_description analysis bringup
+            --packages-select \
+              omniseer_gz_assets \
+              omniseer_msgs \
+              yolo_msgs \
+              omniseer_description \
+              analysis \
+              bringup \
+              robot_io_adapters \
+              robot_diag_control \
+              robot_diag_control_cpp
 
       - name: Build vision bridge when SDKs are present
         shell: bash
@@ -62,8 +86,9 @@ jobs:
             && pkg-config --exists librga \
             && [ -f /usr/include/rknn_api.h ] \
             && find /usr/lib /usr/local/lib -name 'librknnrt.so' -print -quit | grep -q .; then
-            source /opt/ros/kilted/setup.bash
+            source /opt/ros/${ROS_DISTRO}/setup.bash
             cd ros_ws
+            source install/setup.bash
             colcon build --merge-install --packages-select omniseer_vision_bridge
           else
             echo "Skipping omniseer_vision_bridge: librga/RKNN SDK not available in CI image"
@@ -73,11 +98,94 @@ jobs:
         shell: bash
         run: |
           set -eux
-          source /opt/ros/kilted/setup.bash
+          source /opt/ros/${ROS_DISTRO}/setup.bash
           cd ros_ws
+          source install/setup.bash
           colcon test --merge-install \
-            --packages-select omniseer_description analysis bringup
+            --packages-select \
+              omniseer_description \
+              analysis \
+              bringup \
+              robot_io_adapters \
+              robot_diag_control \
+              robot_diag_control_cpp
           colcon test-result --all --verbose
+
+      - name: Upload ROS logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ros-core-logs
+          if-no-files-found: ignore
+          path: |
+            ros_ws/log
+            ros_ws/build/*/test_results
+            ros_ws/build/*/Testing/Temporary
+
+  bringup-smoke:
+    runs-on: ubuntu-24.04
+    container:
+      image: osrf/ros:kilted-desktop-full-noble
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ROS workspace deps
+        shell: bash
+        run: |
+          set -eux
+          bash scripts/ci/install_ros_workspace_deps.sh \
+            ros_ws/src/omniseer_gz_assets \
+            ros_ws/src/omniseer_msgs \
+            ros_ws/src/omniseer_description \
+            ros_ws/src/bringup \
+            ros_ws/src/robot_io_adapters
+
+      - name: Build bringup smoke package set
+        shell: bash
+        run: |
+          set -eux
+          source /opt/ros/${ROS_DISTRO}/setup.bash
+          cd ros_ws
+          colcon build --merge-install \
+            --packages-select \
+              omniseer_gz_assets \
+              omniseer_msgs \
+              omniseer_description \
+              bringup \
+              robot_io_adapters
+
+      - name: Run headless bringup smoke test
+        shell: bash
+        env:
+          OMNISEER_RUN_SIM_SMOKE: "1"
+          OMNISEER_SMOKE_LOG_PATH: ${{ github.workspace }}/ros_ws/log/bringup_smoke/sim.launch.log
+        run: |
+          set -eux
+          mkdir -p "$(dirname "${OMNISEER_SMOKE_LOG_PATH}")"
+          source /opt/ros/${ROS_DISTRO}/setup.bash
+          cd ros_ws
+          source install/setup.bash
+          python3 -m pytest -vv -s src/bringup/test/test_sim_launch_smoke.py
+
+      - name: Upload bringup smoke logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bringup-smoke-logs
+          if-no-files-found: ignore
+          path: |
+            ros_ws/log
+            ros_ws/build/*/test_results
+            ros_ws/build/*/Testing/Temporary
+
+  vision-host:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Build host vision tests
         shell: bash
@@ -94,3 +202,68 @@ jobs:
           ctest --test-dir vision/build-ci \
             -R 'image_buffer_pool_test|jsonl_telemetry_test|rolling_telemetry_test' \
             --output-on-failure
+
+      - name: Upload vision logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vision-host-logs
+          if-no-files-found: ignore
+          path: |
+            vision/build-ci/Testing/Temporary
+            vision/build-ci/CMakeFiles/CMakeOutput.log
+            vision/build-ci/CMakeFiles/CMakeError.log
+
+  firmware-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install PlatformIO
+        shell: bash
+        run: |
+          set -eux
+          python3 -m pip install --upgrade pip
+          python3 -m pip install platformio
+
+      - name: Build firmware
+        shell: bash
+        run: |
+          set -eux
+          platformio run -d firmware -e teensy41
+
+      - name: Upload firmware build outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-build-artifacts
+          if-no-files-found: ignore
+          path: |
+            firmware/.pio/build/teensy41
+
+  docs-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build docs
+        shell: bash
+        run: |
+          set -eux
+          python3 -m pip install --upgrade pip
+          python3 -m pip install \
+            mkdocs-material \
+            mkdocs-git-revision-date-localized-plugin
+          mkdocs build --strict
