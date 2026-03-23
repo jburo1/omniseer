@@ -26,7 +26,17 @@ change.
 ## Shared Validation Flow
 
 After code is pushed or opened in a pull request, GitHub Actions runs the
-repository's CI workflow to validate the main supported package set.
+repository's CI workflow in several focused lanes:
+
+- `lint`
+- `ros-core`
+- `bringup-smoke`
+- `vision-host`
+- `firmware-build`
+- `docs-build`
+
+This keeps the default PR gate broad enough to catch interface drift while
+keeping the slower checks isolated instead of hiding inside one large job.
 
 See [CI/CD Overview](ci_cd.md) for:
 
