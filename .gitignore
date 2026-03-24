@@ -64,6 +64,10 @@ srv_gen/
 .ninja_deps
 .ninja_log
 
+# --- Crash dumps ---
+core
+core.*
+vgcore.*
 
 # --- RViz configs ---
 **/rviz

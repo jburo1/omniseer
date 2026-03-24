@@ -431,6 +431,8 @@ Phase-1 implementation:
 
 - MCU topic constants use `/mecanum_drive_controller/reference`, `/imu`, and `/range`
 - MCU command subscriber expects `geometry_msgs/msg/TwistStamped`
+- MCU boot no longer blocks indefinitely on USB serial readiness, and micro-ROS
+  init now retries instead of assuming a one-shot successful startup
 
 Behavior preserved:
 

@@ -13,6 +13,7 @@ from launch.conditions import IfCondition, UnlessCondition
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
 
@@ -84,6 +85,22 @@ def generate_launch_description():
         }.items(),
     )
 
+    # Keep the teleop command path available even if lidar/nav boundary topics
+    # are still missing.
+    baseline_twist_mux_node = Node(
+        package="twist_mux",
+        executable="twist_mux",
+        name="twist_mux",
+        output="screen",
+        arguments=["--ros-args", "--log-level", log_level],
+        parameters=[
+            PathJoinSubstitution([pkg_bringup, "config", "twist_mux.yaml"]),
+            {"use_sim_time": use_sim_time},
+        ],
+        remappings=[("/cmd_vel_out", "/mecanum_drive_controller/reference")],
+        condition=IfCondition(wait_for_boundary_topics),
+    )
+
     common_launch_after_wait = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([PathJoinSubstitution([pkg_bringup, "launch", "common.launch.py"])]),
         launch_arguments={
@@ -92,6 +109,10 @@ def generate_launch_description():
             "ekf_params_file": ekf_params_file,
             "slam_tb_config_file": slam_tb_config_file,
             "nav2_params_file": nav2_params_file,
+            "start_description": "true",
+            "start_perception": "true",
+            "start_ekf": "true",
+            "start_twist_mux": "false",
             "start_slam": start_slam,
             "start_rf2o": start_rf2o,
             "start_nav": start_nav,
@@ -110,6 +131,10 @@ def generate_launch_description():
             "ekf_params_file": ekf_params_file,
             "slam_tb_config_file": slam_tb_config_file,
             "nav2_params_file": nav2_params_file,
+            "start_description": "true",
+            "start_perception": "true",
+            "start_ekf": "true",
+            "start_twist_mux": "true",
             "start_slam": start_slam,
             "start_rf2o": start_rf2o,
             "start_nav": start_nav,
@@ -146,6 +171,7 @@ def generate_launch_description():
         [
             *declared_arguments,
             real_io_launch,
+            baseline_twist_mux_node,
             wait_boundary_topics,
             launch_common_after_wait,
             common_launch_immediate,

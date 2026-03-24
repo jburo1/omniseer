@@ -42,6 +42,7 @@ public:
 
     // initializes the micro-ROS support library,sets up publishers and subscribers
     bool init();
+    bool is_ready() const;
 
     // runs the micro-ROS executor for a timeslice so callbacks execute
     void spin_executor(uint32_t budget_us);
@@ -64,7 +65,15 @@ private:
 
     void _sync_time(int timeout_ms);
 
-    void _create_entities();
+    bool _create_entities();
+    bool _ping_agent(int timeout_ms, uint8_t attempts);
+    void _handle_disconnect(const char* where, int rc);
+    void _fini_entities();
+    void _fini_messaging();
+    void _fini_core();
+    void _reset_runtime_state();
+    void _serial_logf(const char* fmt, ...);
+    void _stop_motion();
 
     void _handle_cmd_vel(const geometry_msgs__msg__TwistStamped& msg);
 
@@ -103,7 +112,23 @@ private:
     volatile bool     _time_synced{false};
     volatile int64_t  _agent_offset_ns{0};
     uint32_t          _last_resync_ms{0};
+    uint32_t          _last_agent_ping_ms{0};
 
     // debug state
     bool _debug_ready{false};
+    bool _serial_logging_allowed{true};
+    bool _transport_initialized{false};
+
+    // init state
+    bool _support_ready{false};
+    bool _node_ready{false};
+    bool _executor_ready{false};
+    bool _messaging_ready{false};
+    bool _debug_pub_ready{false};
+    bool _encoder_pub_ready{false};
+    bool _imu_pub_ready{false};
+    bool _sonar_pub_ready{false};
+    bool _battery_pub_ready{false};
+    bool _cmd_vel_sub_ready{false};
+    bool _ready{false};
 };
