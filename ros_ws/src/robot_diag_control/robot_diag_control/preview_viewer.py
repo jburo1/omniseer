@@ -28,9 +28,7 @@ _H264_DECODER_CANDIDATES = (
 
 
 def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        description="Minimal host-side preview helper for the robot gateway"
-    )
+    parser = argparse.ArgumentParser(description="Minimal host-side preview helper for the robot gateway")
     parser.add_argument("--host", default="127.0.0.1", help="gRPC gateway host")
     parser.add_argument("--port", type=int, default=50051, help="gRPC gateway port")
     parser.add_argument(
@@ -115,8 +113,7 @@ def _validate_gstreamer_support(parsed: argparse.Namespace) -> str:
     gst_inspect_path = _resolve_gst_inspect_path(parsed.gst_launch_path)
     if not _gst_element_available(gst_inspect_path, "srtsrc"):
         raise RuntimeError(
-            "GStreamer element 'srtsrc' is unavailable; install the SRT plugin "
-            "(for Ubuntu: gstreamer1.0-plugins-bad)"
+            "GStreamer element 'srtsrc' is unavailable; install the SRT plugin (for Ubuntu: gstreamer1.0-plugins-bad)"
         )
 
     decoder_element = _select_h264_decoder_element(gst_inspect_path)
