@@ -101,8 +101,6 @@ def generate_launch_description():
     )
 
     launch_group = GroupAction(actions=[sim_io_launch, common_launch, rviz_launch])
-    after_cleanup = RegisterEventHandler(
-        OnProcessExit(target_action=cleanup, on_exit=[launch_group])
-    )
+    after_cleanup = RegisterEventHandler(OnProcessExit(target_action=cleanup, on_exit=[launch_group]))
 
     return LaunchDescription([*declared_arguments, cleanup, after_cleanup])

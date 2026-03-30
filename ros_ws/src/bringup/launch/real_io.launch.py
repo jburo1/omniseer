@@ -39,9 +39,7 @@ def generate_launch_description():
     lidar_angle_compensate = LaunchConfiguration("lidar_angle_compensate")
     encoder_odometry_params_file = LaunchConfiguration("encoder_odometry_params_file")
 
-    encoder_odometry_params_path = PathJoinSubstitution(
-        [pkg_bringup, "config", encoder_odometry_params_file]
-    )
+    encoder_odometry_params_path = PathJoinSubstitution([pkg_bringup, "config", encoder_odometry_params_file])
 
     micro_ros_agent_node = Node(
         package="micro_ros_agent",
