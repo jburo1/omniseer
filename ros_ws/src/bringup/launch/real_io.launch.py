@@ -19,7 +19,10 @@ def generate_launch_description():
         DeclareLaunchArgument("micro_ros_serial_device", default_value="/dev/ttyACM0"),
         DeclareLaunchArgument("micro_ros_baud", default_value="115200"),
         DeclareLaunchArgument("start_lidar", default_value="true"),
-        DeclareLaunchArgument("lidar_serial_device", default_value="/dev/ttyUSB0"),
+        DeclareLaunchArgument(
+            "lidar_serial_device",
+            default_value="/dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0",
+        ),
         DeclareLaunchArgument("lidar_baudrate", default_value="115200"),
         DeclareLaunchArgument("lidar_frame_id", default_value="lidar_frame"),
         DeclareLaunchArgument("lidar_inverted", default_value="false"),

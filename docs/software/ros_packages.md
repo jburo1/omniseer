@@ -314,6 +314,8 @@ Starts:
 
 - `micro_ros_agent`
 - real LiDAR driver publishing `/scan`
+  - prefer a stable `/dev/serial/by-id/...` path over `/dev/ttyUSB*` so real
+    bringup is not coupled to USB enumeration order
 - MCU publishers/subscribers using sim-aligned topic names
 - real encoder-to-odom adapter
 
