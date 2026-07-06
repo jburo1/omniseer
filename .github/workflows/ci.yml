@@ -28,13 +28,18 @@ jobs:
         run: |
           set -eux
           apt-get update
-          apt-get install -y --no-install-recommends python3-ruff
+          apt-get install -y --no-install-recommends python3-venv
+          python3 -m venv /opt/ruff-venv
+          /opt/ruff-venv/bin/python -m pip install --no-cache-dir ruff==0.13.3
 
       - name: Ruff
         shell: bash
         run: |
           set -eux
-          ruff check ros_ws/src/analysis ros_ws/src/bringup ros_ws/src/robot_diag_control
+          /opt/ruff-venv/bin/ruff check \
+            ros_ws/src/analysis \
+            ros_ws/src/bringup \
+            ros_ws/src/robot_diag_control
 
   ros-core:
     runs-on: ubuntu-24.04
@@ -186,6 +191,17 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install host vision test deps
+        shell: bash
+        run: |
+          set -eux
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            cmake \
+            g++ \
+            libgtest-dev \
+            make
 
       - name: Build host vision tests
         shell: bash

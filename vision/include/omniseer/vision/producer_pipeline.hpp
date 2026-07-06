@@ -3,6 +3,7 @@
 #include <cstdint>
 
 #include "omniseer/vision/config.hpp"
+#include "omniseer/vision/status.hpp"
 #include "omniseer/vision/v4l2_capture.hpp"
 
 namespace omniseer::vision
@@ -22,19 +23,6 @@ namespace omniseer::vision
     Preprocess,
     PublishReady,
     Requeue,
-  };
-
-  /**
-   * @brief High-level outcome of one producer tick.
-   */
-  enum class ProducerTickStatus : uint8_t
-  {
-    Produced,
-    NoFrame,
-    CaptureRetryableError,
-    CaptureFatalError,
-    NoWritableBuffer,
-    PreprocessError,
   };
 
   /**

@@ -21,7 +21,6 @@ apt-get install -y --no-install-recommends \
   python3-protobuf \
   python3-pytest \
   python3-rosdep \
-  python3-ruff \
   python3-tk
 
 source "/opt/ros/${ROS_DISTRO}/setup.bash"

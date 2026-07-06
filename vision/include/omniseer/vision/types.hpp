@@ -4,23 +4,10 @@
 #include <cstdint>
 #include <limits>
 
+#include "omniseer/vision/status.hpp"
+
 namespace omniseer::vision
 {
-  /**
-   * @brief Result category for one preprocess operation.
-   */
-  enum class PreprocessStatus : uint8_t
-  {
-    Ok,
-    InvalidConfig,
-    SourceSizeMismatch,
-    InvalidSourceDescriptor,
-    InvalidDestinationDescriptor,
-    ImcheckFailed,
-    ImprocessFailed,
-    UnknownError,
-  };
-
   /**
    * @brief Status payload for preprocess operations.
    */

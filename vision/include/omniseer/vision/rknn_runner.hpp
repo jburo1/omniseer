@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include "omniseer/vision/status.hpp"
 #include "omniseer/vision/types.hpp"
 
 namespace omniseer::vision
@@ -22,17 +23,6 @@ namespace omniseer::vision
     std::string model_path{};
     /// @brief Number of warmup inferences to run during preflight.
     uint32_t warmup_runs{2};
-  };
-
-  /**
-   * @brief Result category for one RKNN inference operation.
-   */
-  enum class InferStatus : uint8_t
-  {
-    Ok,
-    NotArmed,
-    InvalidInputDescriptor,
-    RknnError,
   };
 
   /**

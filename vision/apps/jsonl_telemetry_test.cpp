@@ -4,11 +4,8 @@
 #include <string>
 #include <unistd.h>
 
-#include "omniseer/vision/consumer_pipeline.hpp"
 #include "omniseer/vision/jsonl_telemetry.hpp"
-#include "omniseer/vision/producer_pipeline.hpp"
-#include "omniseer/vision/types.hpp"
-#include "omniseer/vision/v4l2_capture.hpp"
+#include "omniseer/vision/status.hpp"
 
 namespace
 {

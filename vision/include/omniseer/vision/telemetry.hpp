@@ -2,14 +2,10 @@
 
 #include <cstdint>
 
+#include "omniseer/vision/status.hpp"
+
 namespace omniseer::vision
 {
-  enum class PostprocessStatus : uint8_t
-  {
-    NotRun = 0,
-    Ok     = 1,
-  };
-
   /**
    * @brief Bitmask of completed producer-stage milestones for one sample.
    */

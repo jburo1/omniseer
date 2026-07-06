@@ -4,6 +4,7 @@
 #include <cstdint>
 
 #include "omniseer/vision/config.hpp"
+#include "omniseer/vision/status.hpp"
 #include "omniseer/vision/yolo_world_postprocess.hpp"
 
 namespace omniseer::vision
@@ -25,16 +26,6 @@ namespace omniseer::vision
     Postprocess,
     Publish,
     Release,
-  };
-
-  /**
-   * @brief High-level outcome of one consumer tick.
-   */
-  enum class ConsumerTickStatus : uint8_t
-  {
-    Consumed,
-    NoReadyBuffer,
-    InferError,
   };
 
   /**

@@ -9,12 +9,8 @@
 #include <utility>
 #include <vector>
 
-#include "omniseer/vision/consumer_pipeline.hpp"
-#include "omniseer/vision/producer_pipeline.hpp"
-#include "omniseer/vision/rknn_runner.hpp"
 #include "omniseer/vision/spsc_ring.hpp"
-#include "omniseer/vision/types.hpp"
-#include "omniseer/vision/v4l2_capture.hpp"
+#include "omniseer/vision/status.hpp"
 
 namespace omniseer::vision
 {

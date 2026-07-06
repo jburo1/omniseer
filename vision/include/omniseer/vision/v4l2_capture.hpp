@@ -11,23 +11,6 @@ namespace omniseer::vision
 {
 
   /**
-   * @brief Result category for V4L2 capture operations.
-   *
-   * Semantics:
-   * - Ok: operation succeeded.
-   * - NoFrame: dequeue found no frame available.
-   * - RetryableError: transient failure (retry possible).
-   * - FatalError: unrecoverable failure.
-   */
-  enum class CaptureStatus : uint8_t
-  {
-    Ok,
-    NoFrame,
-    RetryableError,
-    FatalError,
-  };
-
-  /**
    * @brief Status + errno payload for capture operations.
    *
    * `sys_errno == 0` means “no OS errno captured”.
