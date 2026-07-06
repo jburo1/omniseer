@@ -2,7 +2,9 @@ name: ci
 
 on:
   push:
-    branches: [master]
+    branches:
+      - master
+      - "portfolio/**"
   pull_request:
   workflow_dispatch: {}
 
@@ -69,9 +71,12 @@ jobs:
         shell: bash
         run: |
           set -eux
+          set +u
           source /opt/ros/${ROS_DISTRO}/setup.bash
+          set -u
           cd ros_ws
           colcon build --merge-install \
+            --packages-ignore rf2o_laser_odometry yolo_bringup yolo_ros \
             --packages-select \
               omniseer_gz_assets \
               omniseer_msgs \
@@ -91,9 +96,13 @@ jobs:
             && pkg-config --exists librga \
             && [ -f /usr/include/rknn_api.h ] \
             && find /usr/lib /usr/local/lib -name 'librknnrt.so' -print -quit | grep -q .; then
+            set +u
             source /opt/ros/${ROS_DISTRO}/setup.bash
+            set -u
             cd ros_ws
+            set +u
             source install/setup.bash
+            set -u
             colcon build --merge-install --packages-select omniseer_vision_bridge
           else
             echo "Skipping omniseer_vision_bridge: librga/RKNN SDK not available in CI image"
@@ -103,10 +112,15 @@ jobs:
         shell: bash
         run: |
           set -eux
+          set +u
           source /opt/ros/${ROS_DISTRO}/setup.bash
+          set -u
           cd ros_ws
+          set +u
           source install/setup.bash
+          set -u
           colcon test --merge-install \
+            --packages-ignore rf2o_laser_odometry yolo_bringup yolo_ros \
             --packages-select \
               omniseer_description \
               analysis \
@@ -151,9 +165,12 @@ jobs:
         shell: bash
         run: |
           set -eux
+          set +u
           source /opt/ros/${ROS_DISTRO}/setup.bash
+          set -u
           cd ros_ws
           colcon build --merge-install \
+            --packages-ignore rf2o_laser_odometry yolo_bringup yolo_ros \
             --packages-select \
               omniseer_gz_assets \
               omniseer_msgs \
@@ -169,9 +186,13 @@ jobs:
         run: |
           set -eux
           mkdir -p "$(dirname "${OMNISEER_SMOKE_LOG_PATH}")"
+          set +u
           source /opt/ros/${ROS_DISTRO}/setup.bash
+          set -u
           cd ros_ws
+          set +u
           source install/setup.bash
+          set -u
           python3 -m pytest -vv -s src/bringup/test/test_sim_launch_smoke.py
 
       - name: Upload bringup smoke logs
@@ -245,8 +266,16 @@ jobs:
         shell: bash
         run: |
           set -eux
-          python3 -m pip install --upgrade pip
-          python3 -m pip install platformio
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            cmake \
+            g++ \
+            git \
+            make
+          python3 -m venv "${HOME}/.platformio/penv"
+          "${HOME}/.platformio/penv/bin/python" -m pip install --upgrade pip
+          "${HOME}/.platformio/penv/bin/python" -m pip install platformio==6.1.19
+          echo "${HOME}/.platformio/penv/bin" >> "${GITHUB_PATH}"
 
       - name: Build firmware
         shell: bash

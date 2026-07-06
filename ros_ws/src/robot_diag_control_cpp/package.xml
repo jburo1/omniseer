@@ -19,6 +19,9 @@
   <test_depend>ament_cmake_gtest</test_depend>
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
+  <test_depend>gstreamer1.0-plugins-bad</test_depend>
+  <test_depend>gstreamer1.0-plugins-ugly</test_depend>
+  <test_depend>gstreamer1.0-tools</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
