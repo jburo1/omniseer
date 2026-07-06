@@ -14,7 +14,7 @@ def generate_launch_description():
                 PythonLaunchDescriptionSource([PathJoinSubstitution([pkg_yolo_bringup, "launch", "yolo.launch.py"])]),
                 launch_arguments={
                     "model_type": "World",
-                    "model": LaunchConfiguration("model", default="yolov8l-worldv2.pt"),
+                    "model": LaunchConfiguration("model", default="yolov8s-worldv2.pt"),
                     "tracker": LaunchConfiguration("tracker", default="bytetrack.yaml"),
                     "device": LaunchConfiguration("device", default="cuda:0"),
                     "enable": LaunchConfiguration("enable", default="True"),
