@@ -172,7 +172,12 @@ jobs:
           set -u
           cd ros_ws
           colcon build --merge-install \
-            --packages-ignore rf2o_laser_odometry yolo_bringup yolo_ros \
+            --packages-ignore \
+              analysis \
+              rf2o_laser_odometry \
+              robot_diag_control_cpp \
+              yolo_bringup \
+              yolo_ros \
             --packages-select \
               omniseer_gz_assets \
               omniseer_msgs \
