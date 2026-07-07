@@ -46,6 +46,25 @@ def generate_launch_description():
         DeclareLaunchArgument("start_gateway", default_value="false"),
         DeclareLaunchArgument("gateway_preview_source_kind", default_value="camera"),
         DeclareLaunchArgument("gateway_preview_device", default_value="/dev/video11"),
+        DeclareLaunchArgument("start_vision", default_value="true"),
+        DeclareLaunchArgument("vision_params_file", default_value="vision_bridge.real.yaml"),
+        DeclareLaunchArgument("camera_device", default_value="__from_config__"),
+        DeclareLaunchArgument("camera_width", default_value="__from_config__"),
+        DeclareLaunchArgument("camera_height", default_value="__from_config__"),
+        DeclareLaunchArgument("camera_buffer_count", default_value="__from_config__"),
+        DeclareLaunchArgument("pipeline_dst_width", default_value="__from_config__"),
+        DeclareLaunchArgument("pipeline_dst_height", default_value="__from_config__"),
+        DeclareLaunchArgument("detector_model_path", default_value="__from_config__"),
+        DeclareLaunchArgument("clip_model_path", default_value="__from_config__"),
+        DeclareLaunchArgument("clip_vocab_path", default_value="__from_config__"),
+        DeclareLaunchArgument("classes_path", default_value="__from_config__"),
+        DeclareLaunchArgument("classes_pad_token", default_value="__from_config__"),
+        DeclareLaunchArgument("producer_preflight_capture_wait_ms", default_value="__from_config__"),
+        DeclareLaunchArgument("runner_warmup_runs", default_value="__from_config__"),
+        DeclareLaunchArgument("postprocess_score_threshold", default_value="__from_config__"),
+        DeclareLaunchArgument("postprocess_nms_iou_threshold", default_value="__from_config__"),
+        DeclareLaunchArgument("postprocess_max_detections", default_value="__from_config__"),
+        DeclareLaunchArgument("camera_frame_id", default_value="__from_config__"),
     ]
 
     use_sim_time = LaunchConfiguration("use_sim_time")
@@ -70,6 +89,25 @@ def generate_launch_description():
     start_gateway = LaunchConfiguration("start_gateway")
     gateway_preview_source_kind = LaunchConfiguration("gateway_preview_source_kind")
     gateway_preview_device = LaunchConfiguration("gateway_preview_device")
+    start_vision = LaunchConfiguration("start_vision")
+    vision_params_file = LaunchConfiguration("vision_params_file")
+    camera_device = LaunchConfiguration("camera_device")
+    camera_width = LaunchConfiguration("camera_width")
+    camera_height = LaunchConfiguration("camera_height")
+    camera_buffer_count = LaunchConfiguration("camera_buffer_count")
+    pipeline_dst_width = LaunchConfiguration("pipeline_dst_width")
+    pipeline_dst_height = LaunchConfiguration("pipeline_dst_height")
+    detector_model_path = LaunchConfiguration("detector_model_path")
+    clip_model_path = LaunchConfiguration("clip_model_path")
+    clip_vocab_path = LaunchConfiguration("clip_vocab_path")
+    classes_path = LaunchConfiguration("classes_path")
+    classes_pad_token = LaunchConfiguration("classes_pad_token")
+    producer_preflight_capture_wait_ms = LaunchConfiguration("producer_preflight_capture_wait_ms")
+    runner_warmup_runs = LaunchConfiguration("runner_warmup_runs")
+    postprocess_score_threshold = LaunchConfiguration("postprocess_score_threshold")
+    postprocess_nms_iou_threshold = LaunchConfiguration("postprocess_nms_iou_threshold")
+    postprocess_max_detections = LaunchConfiguration("postprocess_max_detections")
+    camera_frame_id = LaunchConfiguration("camera_frame_id")
 
     real_io_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([PathJoinSubstitution([pkg_bringup, "launch", "real_io.launch.py"])]),
@@ -86,6 +124,32 @@ def generate_launch_description():
             "lidar_angle_compensate": lidar_angle_compensate,
             "encoder_odometry_params_file": encoder_odometry_params_file,
         }.items(),
+    )
+
+    real_vision_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([PathJoinSubstitution([pkg_bringup, "launch", "real_vision.launch.py"])]),
+        launch_arguments={
+            "log_level": log_level,
+            "vision_params_file": vision_params_file,
+            "camera_device": camera_device,
+            "camera_width": camera_width,
+            "camera_height": camera_height,
+            "camera_buffer_count": camera_buffer_count,
+            "pipeline_dst_width": pipeline_dst_width,
+            "pipeline_dst_height": pipeline_dst_height,
+            "detector_model_path": detector_model_path,
+            "clip_model_path": clip_model_path,
+            "clip_vocab_path": clip_vocab_path,
+            "classes_path": classes_path,
+            "classes_pad_token": classes_pad_token,
+            "producer_preflight_capture_wait_ms": producer_preflight_capture_wait_ms,
+            "runner_warmup_runs": runner_warmup_runs,
+            "postprocess_score_threshold": postprocess_score_threshold,
+            "postprocess_nms_iou_threshold": postprocess_nms_iou_threshold,
+            "postprocess_max_detections": postprocess_max_detections,
+            "camera_frame_id": camera_frame_id,
+        }.items(),
+        condition=IfCondition(start_vision),
     )
 
     # Keep the teleop command path available even if lidar/nav boundary topics
@@ -174,6 +238,7 @@ def generate_launch_description():
         [
             *declared_arguments,
             real_io_launch,
+            real_vision_launch,
             baseline_twist_mux_node,
             wait_boundary_topics,
             launch_common_after_wait,

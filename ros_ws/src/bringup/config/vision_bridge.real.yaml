@@ -1,0 +1,25 @@
+vision_bridge:
+  ros__parameters:
+    camera.device: /dev/video12
+    camera.width: 1280
+    camera.height: 720
+    camera.buffer_count: 4
+
+    pipeline.dst_width: 640
+    pipeline.dst_height: 640
+
+    models.detector_model_path: ""
+    models.clip_model_path: ""
+    models.clip_vocab_path: ""
+
+    classes.path: ""
+    classes.pad_token: "nothing"
+
+    producer.preflight_capture_wait_ms: 200
+    runner.warmup_runs: 0
+
+    postprocess.score_threshold: 0.25
+    postprocess.nms_iou_threshold: 0.45
+    postprocess.max_detections: 100
+
+    frames.camera_frame_id: camera_optical_frame
