@@ -1,5 +1,7 @@
 # Preview Streaming
 
+_Status: software x264/SRT bringup path implemented; hardware H.265 planned_
+
 This page describes the operator preview export path from the robot SBC to the
 operator laptop.
 
@@ -68,13 +70,13 @@ Implication:
 - Reserve exact-frame debug paths for later targeted debugging, not the default
   operator preview flow.
 
-## Proposed Default Pipeline
+## Current and Target Pipeline
 
 ```text
 rkisp_mainpath (/dev/video11, NV12)
             |
             v
-     preview worker
+     managed preview worker
             |
             +--> encode (target: H.265, current fallback: x264 for bring-up)
             |
@@ -84,7 +86,8 @@ rkisp_mainpath (/dev/video11, NV12)
             v
      operator laptop decode
             |
-            +--> monitor app video panel
+     +--> current external viewer process
+     +--> planned monitor app video panel
             +--> optional local ROS Image bridge
             +--> optional host-side overlays / RViz2
 ```
@@ -120,22 +123,21 @@ This is a diagnostics-oriented link, not a browser-delivery problem.
 
 ## Preview Profiles
 
-The preview path should expose bounded named profiles, not raw encoder knobs.
+The preview path exposes bounded named profiles, not raw encoder knobs.
 
-Suggested initial profiles:
+Implemented profiles:
 
 - `off`
 - `low_bw`
 - `balanced`
 - `high_quality`
 
-Candidate meanings:
+Current x264 meanings:
 
 - `off`: no preview worker running
-- `low_bw`: e.g. 720p, reduced fps, modest bitrate
-- `balanced`: 720p, moderate fps/bitrate
-- `high_quality`: higher bitrate and possibly higher resolution if budget
-  allows
+- `low_bw`: 720p, 15 fps, 1000 kbit/s
+- `balanced`: 720p, 30 fps, 2500 kbit/s
+- `high_quality`: 720p, 60 fps, 4500 kbit/s
 
 The exact numbers can be tuned later after integration and Wi-Fi testing.
 
@@ -161,8 +163,7 @@ This should not be the default always-on path.
 
 ## Worker Lifecycle
 
-The preview worker should be managed by the robot gateway or initial
-`robot-diag-control` process.
+The preview worker is managed by the `robot_diag_control_cpp` gateway process.
 
 Basic lifecycle:
 
@@ -173,8 +174,8 @@ Basic lifecycle:
 5. operator disables preview
 6. gateway terminates preview worker
 
-The worker should be disposable. If it dies, the mission-critical runtime keeps
-running.
+The worker is disposable. Its process state is polled by the gateway, and worker
+failure does not terminate the mission-critical runtime.
 
 ## Current Encoder Options
 
@@ -230,6 +231,7 @@ only assume general-purpose CPU/GPU resources and likely hardware video decode.
 - what preview profile defaults should be used over the current Wi-Fi setup
 - whether decoded preview should be bridged into ROS on the host in the first
   UI slices or kept as a plain video panel initially
+- how recorded preview evidence should correlate with the planned perception run bundle
 
 ## Related Docs
 

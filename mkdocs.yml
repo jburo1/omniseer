@@ -21,11 +21,15 @@ nav:
   - Home: index.md
   - Architecture: architecture.md
   - Software:
+    - Edge-to-cloud perception: software/edge_to_cloud_perception.md
     - Build pipeline: software/build_pipeline.md
     - CI/CD overview: software/ci_cd.md
     - ROS packages: software/ros_packages.md
     - Code documentation: software/code_documentation.md
     - Vision pipeline: software/vision_pipeline.md
+    - Producer pipeline: software/producer_pipeline.md
+    - Consumer pipeline: software/consumer_pipeline.md
+    - Vision telemetry: software/vision_telemetry_spec.md
     - Remote monitoring architecture: software/remote_monitoring_architecture.md
     - Robot gateway: software/robot_gateway.md
     - Preview streaming: software/preview_streaming.md

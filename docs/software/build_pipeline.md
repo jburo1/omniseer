@@ -57,3 +57,11 @@ As the project grows, this page can become the umbrella view for:
 
 For now, the detailed operational reference lives in
 [CI/CD Overview](ci_cd.md).
+
+The active product direction adds two planned layers after shared validation:
+
+- creation of a reproducible perception experiment bundle
+- provider-neutral synchronization and hosted review of completed runs
+
+Neither layer is implemented today. The current pipeline stops at validated source,
+build/test artifacts, and GitHub Pages documentation deployment.

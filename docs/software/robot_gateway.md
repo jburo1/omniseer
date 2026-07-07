@@ -1,12 +1,11 @@
 # Robot Gateway
 
-This document describes the planned operator-facing gateway that will sit
-between the robot's internal ROS 2 graph and the external operator laptop
-application.
+_Status: implemented v1 diagnostics and preview-control slice_
 
-The gateway does **not** exist yet as a standalone implemented subsystem.
-However, the architecture direction is now clear enough to document the shape
-and build toward it deliberately.
+This document describes the operator-facing gateway between the robot's internal
+ROS 2 graph and the external operator laptop application. The first C++ gateway,
+typed gRPC API, preview lifecycle manager, and Python operator tools are implemented.
+Teleop, experiment export control, and cloud integration remain planned.
 
 ## Purpose
 
@@ -30,7 +29,7 @@ What exists today:
 - native vision runtime
 - `omniseer_vision_bridge` publishing detections into ROS 2
 - RViz and debug tooling on the ROS side
-- a draft remote monitoring architecture spec
+- a remote monitoring architecture spec
 - a `robot_diag_control_cpp` package with:
   - a shared generated C++ gRPC/protobuf library from the locked `.proto`
   - an in-memory gateway state store
@@ -48,14 +47,15 @@ What does **not** exist yet:
 - stream endpoint metadata in the API
 - the intended low-overhead hardware H.265 preview path
 - an embedded preview panel inside the host-side GUI
+- experiment recording or cloud synchronization RPCs
 
 Near-term direction:
 
-- start with `robot-diag-control` inside `robot-core`
-- let that component evolve into the first version of the robot gateway
-- keep the first scope narrow: diagnostics and preview control
+- keep `robot_diag_control_cpp` inside `robot-core`
+- use the gateway for optional status and preview control
+- add experiment export control only after the local recorder contract is stable
 
-## Near-Term Implementation Shape
+## Implementation Shape
 
 The current C++ implementation stays deliberately simple:
 
@@ -69,14 +69,14 @@ Completed slices:
 
 1. add a standalone C++ gRPC service/server layer with tests
 2. wire that layer into the existing ROS-backed node
-3. replace the stubbed preview toggle with a gateway-owned subprocess lifecycle
+3. replace the original stubbed preview toggle with a gateway-owned subprocess lifecycle
 4. wire the first real preview export command into that lifecycle
 
 This keeps the control/status boundary small while avoiding premature async
 gRPC complexity.
 
-The next slice should be either an embedded preview panel or a targeted API
-expansion, not more transport abstraction.
+The next portfolio-facing slice is experiment observability and review integration,
+not more gateway transport abstraction.
 
 ## Major Design Considerations
 
@@ -97,7 +97,7 @@ expansion, not more transport abstraction.
   triggers, and possibly a cloud bridge without needing to expose the full ROS
   graph.
 
-## Proposed High-Level Shape
+## High-Level Shape
 
 ```text
                     [ Operator Laptop App ]
@@ -178,7 +178,7 @@ Likely responsibilities:
 - generic ROS graph proxying
 - replacing local mission-critical ROS consumers
 
-## Suggested Internal Modules
+## Internal Modules
 
 ### gRPC server
 
@@ -240,7 +240,7 @@ At boot:
 2. Gateway validates the request.
 3. Gateway resolves a bounded preview profile.
 4. Gateway spawns the preview worker.
-5. Gateway reports preview state and stream endpoint.
+5. Gateway reports preview state; the current client uses configured endpoint data.
 
 ### Preview disable flow
 
@@ -272,15 +272,21 @@ The gateway should eventually emit:
 This does not need a full metrics system on day one, but the component should
 be structured so that basic telemetry is easy to add.
 
-## First Slice Candidates
+## Rollout Status
 
-1. Define the gRPC service and protobuf contract.
-2. Implement a minimal gateway process with:
-   - `GetSystemStatus`
-   - `SetPreviewMode`
-   - in-memory preview state only
-3. Add subprocess management for the preview worker.
-4. Add ROS adapter wiring once the API surface is stable enough.
+**Implemented:**
+
+- locked unary gRPC service and generated C++/Python code
+- cache-backed system status from ROS vision and odometry inputs
+- bounded preview profiles and subprocess lifecycle management
+- CLI, monitor shell, Tk monitor, and SRT preview helper
+
+**Planned:**
+
+- experiment recording/export control after the recorder contract is proven
+- stream endpoint metadata and an embedded preview panel
+- hardware H.265 encode
+- any cloud-facing gateway behavior
 
 ## Related Docs
 

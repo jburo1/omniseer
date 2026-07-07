@@ -1,5 +1,7 @@
 # Consumer pipeline: ready pool -> RKNN -> detections -> release (thread boundary)
 
+_Status: implemented and hardware-verified_
+
 This document describes the **per-frame hot path** through the consumer side of the vision pipeline:
 
 **ImageBufferPool latest-ready slot** -> **RKNN inference (NPU)** -> **deterministic postprocess (decode + NMS + inverse letterbox)** -> **publish canonical detections** -> **release pool slot**.
@@ -9,6 +11,12 @@ Goals:
 - **One in-flight frame**.
 - **No per-frame allocations**.
 - **Minimal status surface**.
+
+The consumer is integrated into `omniseer_vision_bridge`. The bridge loads a class
+list at startup, prepares YOLO-World text embeddings, publishes typed detections on
+`/yolo/detections`, and publishes rolling performance summaries on `/vision/perf`.
+Native runtime class replacement is planned; the existing Python `yolo_ros`
+`SetClasses` service does not currently reconfigure this native consumer.
 
 ---
 
@@ -167,18 +175,21 @@ Detailed diagnosis comes from:
 
 ## Definition of Done (v1)
 
-- [ ] Single-thread consumer loop with latest-wins semantics.
-- [ ] One in-flight frame max, no consumer backlog queue.
-- [ ] No per-frame allocations in steady state.
-- [ ] RKNN preflight includes IO query + warm-up.
-- [ ] RKNN input path uses FD-backed `rknn_create_mem_from_fd` + `rknn_set_io_mem`.
-- [ ] Consumer slot ownership uses `ReadLease` RAII (mirror of producer-side lease discipline).
-- [ ] Deterministic postprocess bounds (`top_k_per_class`, `max_det`).
-- [ ] Inverse letterbox mapping implemented and unit-tested.
-- [ ] Single canonical publish boundary in consumer.
-- [ ] Remap geometry is sourced from one immutable process-global config location.
-- [ ] Telemetry emitted with consumer stage timings and status mask.
-- [ ] Clean shutdown (stop loop, release resources, stop publishers).
+- [x] Single-thread consumer loop with latest-wins semantics.
+- [x] One in-flight frame max, no consumer backlog queue.
+- [x] No per-frame allocations in steady state.
+- [x] RKNN preflight includes IO query + warm-up.
+- [x] RKNN input path uses FD-backed `rknn_create_mem_from_fd` + `rknn_set_io_mem`.
+- [x] Consumer slot ownership uses `ReadLease` RAII.
+- [x] Deterministic postprocess bounds and fixed-capacity detection output.
+- [x] Inverse letterbox mapping implemented and unit-tested.
+- [x] Single canonical publish boundary in consumer.
+- [x] Remap geometry is provided from producer preflight.
+- [x] Telemetry emitted with consumer stage timings and status mask.
+- [x] Runtime shutdown joins threads and releases camera, runner, and pool resources.
+
+Remaining product work sits outside the v1 hot path: native runtime class updates,
+structured experiment recording, resource telemetry, and cloud review.
 
 ---
 

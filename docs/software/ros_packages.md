@@ -1,8 +1,11 @@
 # ROS Packages and Sim/Real Boundary
 
-_Status: draft v0_
+_Status: phase-1 sim/real boundary implemented; remaining parity work planned_
 
-_Last updated: 2026-03-22_
+_Last updated: 2026-07-06_
+
+_Active portfolio scope: the sim/real boundary supports teleoperated perception data
+collection and evaluation. Autonomous semantic search and capture are deferred._
 
 ## Purpose
 
@@ -12,6 +15,10 @@ Define a concrete package and launch structure so that:
 - the boundary is explicit, testable, and small
 - simulation becomes a strong indicator of software architecture and contract correctness
 - hardware-specific code stays below the boundary
+
+The shared detection and performance contracts now support the edge-to-cloud
+perception direction. Structured run recording, native runtime class updates, and
+cloud review remain planned and must stay outside mission-critical robot behavior.
 
 This page is intentionally practical. It is the working plan for the next
 bringup refactor, not just a general architecture description.
@@ -511,92 +518,25 @@ Below that line:
 - real provides those topics through MCU/driver/runtime + direct naming
   standardization plus compute adapters
 
-## Recommended Phase Order
+## Boundary Rollout Status
 
-### Phase 0: Lock Contracts and Constants
+### Implemented Baseline
 
-Do first:
+- firmware and simulation use aligned command, IMU, range, and kinematic semantics
+- `encoder_counts_to_odometry` supplies the real wheel-odometry contract
+- `description.launch.py`, `common.launch.py`, `sim_io.launch.py`, and
+  `real_io.launch.py` define the shared and provider-specific layers
+- top-level sim and real launch files compose those layers
+- `/yolo/detections` and `/vision/perf` are the real perception contracts
+- CI verifies five sim boundary topics and message types in headless Gazebo
 
-- agree on canonical topic names
-- agree on message types
-- agree on frame ids
-- unify mecanum geometry constants between firmware and ROS
+### Remaining Parity Work
 
-Suggested output:
-
-- one shared constants source or one generated config source
-
-This phase is required before any odometry adapter work.
-
-### Phase 1: Normalize the Command and Odometry Boundary
-
-Implement:
-
-- MCU subscription rename and message update to
-  `/mecanum_drive_controller/reference`
-- `encoder_counts_to_odometry`
-
-Then update:
-
-- MCU micro-ROS topic definitions
-- real bringup to launch the encoder odom adapter
-
-This is the highest-value slice because it makes localization and navigation
-consume the same semantic inputs in sim and real.
-
-### Phase 2: Normalize IMU and Range
-
-Implement:
-
-- MCU IMU topic rename to `/imu`
-- MCU sonar topic rename to `/range`
-
-Then update:
-
-- firmware topic/config constants
-- real bringup docs and contract checks
-
-This removes the last obvious sensor-topic mismatch in the navigation path.
-
-### Phase 3: Split the Description and Launch Topology
-
-Implement:
-
-- base/sim/real xacro split
-- `description.launch.py`
-- `common.launch.py`
-- `sim_io.launch.py`
-- `real_io.launch.py`
-- real top-level launch
-
-This is the point where the codebase layout starts reflecting the architecture
-we actually want.
-
-### Phase 4: Move Detection Providers Below the Boundary
-
-Implement:
-
-- move sim YOLO provider into `sim_io.launch.py`
-- keep real vision bridge in `real_io.launch.py`
-- treat `/yolo/detections` as the shared detection contract
-
-Optional:
-
-- add sim `/vision/perf` stub for diagnostic parity
-
-### Phase 5: Verification Infrastructure
-
-Add targeted verification for both sim and real:
-
-- contract test: required boundary topics exist
-- contract test: expected message types
-- contract test: expected `frame_id`s
-- contract test: expected rates are within bounds
-- launch smoke: `sim.launch.py`
-- launch smoke: `real.launch.py` with drivers mocked or selectively disabled
-- rosbag replay support for the canonical boundary topics
-
-This phase is what turns the architecture into evidence rather than intent.
+- move provider-specific perception launch ownership fully below the sim/real boundary
+- decide whether simulation needs a `/vision/perf` stub
+- expand contract checks to frame identifiers, timestamps, rates, and stale behavior
+- add a mocked real-launch smoke path
+- add replay support for the normalized boundary and planned experiment workflow
 
 ## Verification Standard for the Boundary
 
@@ -645,16 +585,13 @@ well-defined hardware boundary.
 
 ## Recommended Immediate Next Slice
 
-The smallest high-value next slice is:
+The active portfolio slice is now perception evaluation rather than additional
+autonomy integration:
 
-1. unify mecanum constants across firmware and ROS
-2. update the MCU command subscriber to use
-   `/mecanum_drive_controller/reference`
-3. add `robot_io_adapters/encoder_counts_to_odometry`
-4. update the MCU IMU topic to `/imu`
-5. update the MCU sonar topic to `/range`
-6. keep EKF on `/mecanum_drive_controller/odometry` and `/imu`
-7. move `controllers.launch.py` and `scan_to_range` below the sim boundary
+1. add safe native runtime class updates
+2. record detections and performance summaries into a reproducible run bundle
+3. capture selected evidence and failure cases
+4. build laptop-side review before selecting a cloud provider
 
-That slice gives the biggest sim-to-real payoff without first rewriting the
-firmware control architecture.
+Boundary refactors should proceed only when they directly improve that workflow or
+correct a verified sim/real contract problem.

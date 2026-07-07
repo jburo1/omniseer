@@ -1,24 +1,28 @@
-# Omniseer Docs
+# Omniseer
 
-This site is the long-form technical reference for the project.
+Omniseer is an edge-to-cloud embodied AI project centered on open-vocabulary
+perception on a ROCK 5B+ mobile robot.
 
-The current documentation is organized around major subsystems:
+The implemented robot-side path captures camera frames, preprocesses them with RGA,
+runs YOLO-World on the Rockchip NPU, and publishes typed detections and performance
+telemetry through ROS 2. Simulation, firmware, real-hardware bringup, a gRPC gateway,
+and on-demand SRT preview provide the supporting platform.
 
-- Architecture and high-level system design
-- Software packages and runtime pipelines
-- Hardware wiring and circuit notes
-- Repository automation such as CI/CD
-- Emerging operator connectivity and preview export design
+The active portfolio deliverable is narrower than autonomous object search:
 
-If you are looking for the project automation first, start with
-[CI/CD Overview](software/ci_cd.md). That page explains what GitHub Actions
-currently does for this repository, when the workflows run, what they verify,
-and what is not automated yet.
+- select semantic target classes
+- run and measure onboard inference
+- record detections, telemetry, and useful evidence
+- review an experiment on a laptop and, later, through a cloud-hosted workflow
 
-If you are looking for the new operator-side work, start with:
+Native runtime class updates, structured run bundles, cloud synchronization, and a
+hosted review dashboard are **planned**. They are not described as implemented.
+Autonomous seek and capture are explicitly deferred.
 
-- [System Architecture](architecture.md)
-- [Remote Monitoring Architecture](software/remote_monitoring_architecture.md)
-- [Robot Gateway](software/robot_gateway.md)
-- [Preview Streaming](software/preview_streaming.md)
-- [Gateway API](software/gateway_api.md)
+Start with:
+
+- [Edge-to-Cloud Perception](software/edge_to_cloud_perception.md) for the active deliverable
+- [System Architecture](architecture.md) for runtime boundaries and implementation status
+- [Vision Pipeline](software/vision_pipeline.md) for the native hot path
+- [CI/CD Overview](software/ci_cd.md) for automated verification and its limits
+- [Robot Gateway](software/robot_gateway.md) and [Preview Streaming](software/preview_streaming.md) for operator diagnostics

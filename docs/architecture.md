@@ -1,218 +1,145 @@
 # System Architecture
 
-This page is the top-level technical map of the repository. It describes the
-major runtime boundaries, what currently exists, and which subsystem pages hold
-the deeper design notes.
+This page is the top-level technical map of Omniseer. It distinguishes the
+implemented robot and operator paths from the planned experiment and cloud-review
+work.
 
-Omniseer currently spans:
+## Active Direction
 
-- an SBC-hosted ROS 2 robot runtime
-- a hardware-accelerated vision stack on Rockchip hardware
-- robot description, bringup, and analysis packages
-- firmware for lower-level hardware integration
-- simulation assets and launch support
-- an emerging operator connectivity stack for remote monitoring and control
+The active deliverable is an open-vocabulary edge perception and evaluation loop:
 
-The repository is still in an active architecture-building phase. Some
-subsystems, especially the native vision runtime, are already implemented in
-detail. Others, such as the robot gateway and preview export path, are now at
-the spec and first-integration stage.
+```text
+                       [ Laptop / Planned Cloud Review ]
+                                     ^
+                                     |
+                         experiment results and evidence
+                                     |
+ [ Camera ] -> [ Native Vision Runtime ] -> [ ROS 2 Contracts ]
+                    |       |                    |
+                    |       +-> /vision/perf     +-> /yolo/detections
+                    |
+              V4L2 -> RGA -> RKNN
+```
 
-## Major Runtime Boundaries
+The robot performs inference locally. ROS 2 carries normalized detections and
+performance summaries. The next product slice will record those outputs into a
+reproducible experiment bundle and support offboard review. Cloud synchronization
+and hosted reporting are planned, provider-neutral work.
+
+Navigation, SLAM, simulation, firmware, and operator connectivity remain valuable
+platform capabilities. They support data collection and robot operation but are not
+the primary portfolio deliverable. Autonomous object search and capture are deferred.
+
+## Runtime Boundaries
 
 ### Robot SBC
 
-The robot SBC is the primary runtime host.
+The ROCK 5B+ hosts the mission-critical runtime:
 
-Current and planned responsibilities:
+- V4L2 camera capture from the Rockchip ISP
+- RGA preprocessing into fixed model input buffers
+- RKNN YOLO-World text encoding and detector inference
+- bounded post-processing and typed detection publication
+- ROS 2 bringup, normalized robot IO, and local diagnostics
+- optional gateway and preview subprocesses
 
-- ROS 2 graph for perception, navigation, control, and local diagnostics
-- hardware-accelerated vision pipeline using V4L2, RGA, and RKNN
-- mission-critical consumers of detections and other sensor state
-- local bringup and launch orchestration
-- optional operator-facing preview export path
+Optional diagnostics must not become dependencies of the vision or control path.
 
-The current preferred deployment model is one `robot-core` container on the SBC
-with mission-critical ROS nodes always on. Optional operator diagnostics, such
-as preview streaming, should be isolated enough that failure does not interfere
-with the mission path.
+### Firmware and Robot IO
+
+The Teensy firmware owns low-level motor and sensor integration through micro-ROS.
+Real and simulated producers converge on the normalized boundary topics documented in
+[ROS Packages and Sim/Real Boundary](software/ros_packages.md).
 
 ### Operator Laptop
 
-The operator laptop is the preferred location for higher-cost human-facing work.
+The laptop currently supports:
 
-Planned responsibilities:
+- gRPC status and preview control
+- SRT preview receive and decode
+- CLI, monitor shell, and initial Tk monitoring workflows
+- RViz, telemetry analysis, and other development tools
 
-- native operator application
-- RViz2
-- host-side overlay and analysis tools
-- bagging, replay, plotting, and inspection workflows
-- gRPC client for robot control/state access
-- SRT video receive and decode
+The laptop is also the first review target for recorded perception experiments. It
+keeps dashboard, plotting, and evidence inspection work off the robot.
 
-This keeps the robot focused on low-latency onboard work while moving
-diagnostic-heavy workloads offboard.
+### Cloud Review Layer
 
-### Optional Cloud / Remote Bridge
+**Planned:** upload a provider-neutral experiment bundle and render a hosted review of
+latency, detections, confidence, evidence, and failure cases. The repository does not
+currently implement cloud transport, storage, or a hosted dashboard.
 
-The current repo does not implement a cloud bridge yet, but the architecture is
-being shaped so that one could be added later without exposing the internal ROS
-graph directly.
+## Implemented Data Paths
 
-Potential later roles:
-
-- fleet telemetry
-- offsite health/status access
-- web-facing dashboards
-- remote ops support through a narrower external API
-
-## Current High-Level Shape
+### Perception
 
 ```text
-                        [ Operator Laptop ]
-                               |
-                 +-------------+-------------+
-                 |                           |
-              gRPC state/control         SRT preview
-                 |                           |
-                 +-------------+-------------+
-                               |
-                        [ Robot Gateway ]
-                               |
-          +--------------------+--------------------+
-          |                    |                    |
-       diagnostics          teleop              mission
-          |                    |                    |
-          +--------------------+--------------------+
-                               |
-                         [ ROS 2 graph ]
-                  perception / nav / control / logging
-                               |
-                     +---------+---------+
-                     |                   |
-                  vision runtime      firmware / IO
+/dev/video12 NV12
+       |
+       v
+ V4L2 capture -> RGA letterbox -> latest-wins DMA buffer pool
+                                      |
+                                      v
+                        RKNN inference -> YOLO-World postprocess
+                                      |
+                         +------------+------------+
+                         |                         |
+                 /yolo/detections             /vision/perf
 ```
 
-This is the target direction. The current repo is partway there:
+The native runtime loads its class list during startup, prepares CLIP text embeddings,
+and then runs producer and consumer threads. Runtime class replacement is implemented
+in the Python `yolo_ros` integration but not yet in the native RKNN bridge.
 
-- the native vision runtime exists
-- the ROS bridge for detections exists
-- the operator gateway does not yet exist as a first-class component
-- the preview export path is specified but not yet integrated
+### Operator Diagnostics
 
-## Major Software Subsystems
+```text
+ROS status -> C++ gateway -> gRPC -> laptop tools
+                   |
+                   +-> managed GStreamer worker -> MPEG-TS/SRT preview
+```
 
-### Vision Runtime
+The gateway aggregates vision and odometry health, implements the locked unary gRPC
+API, and manages preview as an optional child process. The current preview path is a
+software x264 bringup path; hardware H.265 remains planned.
 
-The most detailed and mature subsystem in the repo today.
+### Simulation and Hardware
 
-Responsibilities:
+Simulation and real bringup share a common graph above explicit command, odometry,
+IMU, LiDAR, range, detection, performance, and battery contracts. GitHub CI launches
+headless Gazebo and verifies five core boundary topics. Real device behavior remains a
+hardware validation responsibility.
 
-- capture from the ISP via V4L2
-- preprocess using RGA
-- run model inference via RKNN
-- produce canonical detections and telemetry
+## Capability Status
 
-Primary docs:
+| Capability | Status | Evidence boundary |
+| --- | --- | --- |
+| Native producer and consumer vision pipeline | **Hardware-verified** | V4L2, RGA, RKNN target tests and harness |
+| YOLO-World post-processing and text embeddings | **Hardware-verified** | RKNN tests and integrated native runtime |
+| ROS detection and performance publication | **Implemented** | `omniseer_vision_bridge` |
+| Portable ROS, vision, firmware, simulation, and docs checks | **CI-verified** | GitHub Actions six-job workflow |
+| gRPC gateway and managed SRT preview | **Implemented** | C++ and Python tests plus local integration |
+| Native runtime class updates | **Planned** | Python integration exists; native bridge support does not |
+| Structured experiment recorder and run bundle | **Planned** | No integrated recorder exists |
+| CPU, memory, and temperature telemetry | **Planned** | `/vision/perf` currently reports pipeline metrics only |
+| Cloud synchronization and hosted dashboard | **Planned** | No provider or transport selected |
+| Autonomous semantic search and capture | **Deferred** | Outside the active deliverable |
 
-- [Vision pipeline](software/vision_pipeline.md)
-- [Producer pipeline](software/producer_pipeline.md)
-- [Consumer pipeline](software/consumer_pipeline.md)
-- [Vision telemetry spec](software/vision_telemetry_spec.md)
+## Repository Ownership
 
-### ROS Runtime
+- `vision/` owns the native camera-to-detection runtime and detailed telemetry.
+- `ros_ws/src/omniseer_vision_bridge/` owns the native-to-ROS adapter.
+- `ros_ws/src/bringup/` owns sim and real launch composition.
+- `robot_diag_control_cpp` owns the robot-side external gateway boundary.
+- `robot_diag_control` owns host-side operator tools.
+- `firmware/` owns MCU behavior and micro-ROS IO.
+- `docs/` owns current-state specifications and operational guidance.
 
-The ROS layer ties together bringup, robot description, analysis helpers, and
-the vision bridge into a graph that can run on the SBC.
+## Related Documentation
 
-Responsibilities:
-
-- package and launch composition
-- topic/service boundaries
-- bridge between the native vision runtime and ROS-native consumers
-- robot description and visualization configuration
-
-Primary docs today:
-
-- [ROS packages](software/ros_packages.md)
-- bringup and launch files in `ros_ws/src/bringup`
-
-### Operator Connectivity Stack
-
-This is the next major subsystem being designed.
-
-Responsibilities:
-
-- gRPC control/state API for the operator app
-- on-demand preview management
-- SRT preview export
-- status aggregation for monitoring
-- later teleop and operator workflow coordination
-
-Primary docs:
-
-- [Remote monitoring architecture](software/remote_monitoring_architecture.md)
-- [Robot gateway](software/robot_gateway.md)
-- [Gateway API](software/gateway_api.md)
-- [Preview streaming](software/preview_streaming.md)
-
-### Firmware and Hardware Integration
-
-The repository also includes firmware and hardware artifacts which sit below the
-SBC runtime boundary.
-
-Responsibilities:
-
-- direct hardware control
-- low-level IO
-- board/actuator/sensor interfacing
-- electrical and mechanical integration
-
-Primary docs today:
-
-- [Circuit](hardware/circuit.md)
-- [Wiring guide](hardware/wiring.md)
-
-## Repository Layout
-
-Important top-level directories:
-
-- `vision/`: native vision runtime and tests
-- `ros_ws/src/`: ROS 2 packages
-- `firmware/`: embedded firmware project
-- `sim/`: simulation assets and launch support
-- `docs/`: long-form project documentation
-- `notes/`: scratch notes and local operational references
-
-## What Exists vs What Is Planned
-
-### Implemented or substantially implemented
-
-- native producer/consumer vision pipeline
-- detections bridge into ROS 2
-- build and CI basics
-- robot description and core bringup scaffolding
-
-### In active specification / integration
-
-- robot gateway for operator-facing control/state
-- preview streaming path from `rkisp_mainpath`
-- host-side monitoring application shape
-- separation between mission-critical and operator-facing runtime concerns
-
-### Explicitly later
-
-- cloud bridge
-- browser-first remote ops stack
-- hardened fleet/deployment automation
-
-## Documentation Strategy
-
-This repo is gradually moving toward a consistent documentation style:
-
-- one umbrella architecture page per major subsystem
-- narrower spec pages for hot paths, contracts, or lifecycle-critical behavior
-- implementation notes that reflect current state, not just end-state intent
-
-The vision docs are the current best example of this style, and newer subsystem
-docs should trend in that direction as the project is refined.
+- [Edge-to-Cloud Perception](software/edge_to_cloud_perception.md)
+- [Vision Pipeline](software/vision_pipeline.md)
+- [Vision Telemetry](software/vision_telemetry_spec.md)
+- [Robot Gateway](software/robot_gateway.md)
+- [Preview Streaming](software/preview_streaming.md)
+- [CI/CD Overview](software/ci_cd.md)

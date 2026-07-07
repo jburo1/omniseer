@@ -5,7 +5,8 @@
 - Owner: vision pipeline implementation
 - Version: `v1`
 - Scope: producer + consumer runtime telemetry, emitted asynchronously
-- Last updated: 2026-02-17
+- Implementation: rolling summaries, JSONL sink, fan-out, and offline analysis implemented
+- Last updated: 2026-07-06
 
 ## 1) Purpose
 
@@ -16,7 +17,7 @@ Define a low-coupling, low-overhead telemetry architecture for the vision pipeli
 - emits structured stage timing only when telemetry is active
 - supports real-time and offline latency/jitter analysis
 - preserves detector-stage latency/FPS under load
-- avoids rework when consumer telemetry is added
+- keeps producer and consumer instrumentation on one stable contract
 
 ## 2) Design Goals
 
@@ -27,7 +28,7 @@ Define a low-coupling, low-overhead telemetry architecture for the vision pipeli
 2. **No data-plane stalls**:
 - producer and consumer must never block on telemetry
 - queue overflow drops telemetry samples, never frames
-b
+
 3. **Loose coupling**:
 - pipelines depend on a small telemetry interface, not sink details
 
@@ -315,14 +316,22 @@ When telemetry active:
 6. Schema stability:
 - JSON keys/types match spec and remain backward compatible within v1
 
-## 15) Suggested Implementation Slices
+## 15) Implementation Status
 
-1. Introduce telemetry interface + no-op/null behavior + cheap counters.
-2. Add `frame_id` to image metadata and propagate it producer -> consumer.
-3. Implement telemetry hub thread with dual SPSC ingest queues.
-4. Implement JSONL sink with batched flush.
-5. Wire producer/consumer stage timing with top-level `timing_on` gate + RAII scoped timers.
-6. Add tests for inactive/active/overflow/fault/`frame_id`/schema.
+Implemented:
+
+1. Telemetry interface, optional timing gate, and cheap status counters.
+2. Producer/consumer frame identifiers and timestamp correlation.
+3. Bounded asynchronous JSONL sink with drop/fault accounting.
+4. Rolling in-process performance summaries published by the ROS bridge.
+5. Producer and consumer stage timing with scoped timers.
+6. Portable JSONL and rolling-summary tests plus target pipeline tests.
+
+Planned product integration:
+
+- correlate telemetry with typed detections in a structured experiment bundle
+- add resource samples such as CPU, memory, and temperature outside the hot path
+- publish measured portfolio results and failure analysis
 
 ## 16) Open Questions for v2+
 

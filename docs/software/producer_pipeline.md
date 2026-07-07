@@ -1,5 +1,7 @@
 # Producer pipeline: camera → RGA → output pool (thread boundary)
 
+_Status: implemented and hardware-verified_
+
 This document describes the **per-frame hot path** through the producer side of the vision pipeline:
 
 **V4L2 camera capture (kernel ring)** → **DMA-BUF-backed source frame** → **RGA preprocess (src→dst blit/convert/resize/letterbox)** → **publish into output buffer pool** (handoff to consumer).

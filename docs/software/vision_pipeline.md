@@ -1,8 +1,17 @@
 # Vision Pipeline
 
-This document describes the architecture and implementation details of my multi-stage, low-latency, zero copy-ish, real-time computer vision pipeline that transforms raw pixel data of a scene into object detections within it. These detections drive the robot's navigation and behavior policy.
+_Status: implemented; target-hardware performance results still need publication_
 
-#TODO when online, write some measurements here, e.g. inference achieves xfps at Y format here, maybe link to profiler JSONL dump etcs
+This document describes the multi-stage, low-latency, zero-copy-oriented vision
+pipeline that transforms camera frames into open-vocabulary object detections. The
+current portfolio direction uses those detections for measured perception experiments,
+not autonomous seek-and-capture behavior.
+
+The producer, consumer, YOLO-World post-processing, text-embedding preparation,
+rolling telemetry, JSONL telemetry, native harness, and ROS bridge are implemented.
+Portable components are CI-verified. V4L2, RGA, and RKNN behavior requires the ROCK
+5B+ and is hardware-verified separately. A published performance table and repeatable
+experiment report remain planned.
 
 
 ## Major Design Considerations
@@ -37,8 +46,9 @@ This document describes the architecture and implementation details of my multi-
 | Capture (V4L2) | Producer | `/dev/video*` | `FrameDescriptor` | `v4l2_capture.hpp/cpp` |
 | Preprocess (RGA) | Producer | `FrameDescriptor` | `ImageBuffer` | `rga_preprocess.hpp/cpp` |
 | Buffering/Drop policy | Cross-thread boundary | `ImageBufferPool` indices | “latest wins” `ImageBufferPool` index | `image_buffer_pool.hpp/cpp` |
-| Inference (NPU) | Consumer | `ImageBuffer` (RGB DMA-BUF) | model outputs | `vision/include/omniseer/vision/rknn_runner.hpp` (TODO), `vision/src/rknn_runner.cpp` (TODO) |
-| Postprocess/Publish | Consumer | model outputs | ROS msgs, telemetry | TODO |
+| Inference (NPU) | Consumer | `ImageBuffer` (RGB DMA-BUF) | model outputs | `rknn_runner.hpp/cpp` |
+| Postprocess | Consumer | model outputs | bounded source-space detections | `yolo_world_postprocess.hpp/cpp` |
+| Publish | Consumer/adapter | canonical detections | ROS messages, preview, telemetry | `consumer_pipeline.cpp`, `vision_bridge_node.cpp` |
 
 ## Diagram
 
@@ -261,7 +271,7 @@ Provide a simple struct like:
 
 timestamp, list of {class_id, score, x1,y1,x2,y2} in original image coordinates
 
-Feed tracking / “seek-and-capture” logic.
+Feed typed ROS consumers, experiment recording, or optional operator tools.
 
 - Release buffer
 
@@ -272,7 +282,7 @@ A minimal consumer loop looks like:
 acquire → infer → decode → publish → release
 (no queue buildup, no waiting on stale frames)
 
-## Threading Model (Current Intended)
+## Threading Model
 
 Two threads:
 
@@ -284,9 +294,10 @@ Two threads:
    - `cap.requeue(frame.v4l2_index)`
 
 2) Inference thread (consumer):
-   - `pool.acquire_read(idx)` (nonblocking loop/condition variable)
-   - `rknn.infer(pool.buffer_at(idx), ...)` (TODO)
-   - `pool.publish_release(idx)`
+   - acquire a move-only `ReadLease` from the latest-ready slot
+   - run pre-bound RKNN inference for that pool index
+   - decode, threshold, apply NMS, and inverse-map detections
+   - publish through narrow detection and optional preview sinks
+   - release the lease exactly once
 
 ## Failure Modes & Handling
-

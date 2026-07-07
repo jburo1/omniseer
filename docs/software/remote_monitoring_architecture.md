@@ -1,8 +1,8 @@
 # Remote Monitoring Architecture Spec
 
-_Status: draft v0_
+_Status: v1 diagnostics baseline implemented; experiment/cloud review integration planned_
 
-_Last updated: 2026-03-19_
+_Last updated: 2026-07-06_
 
 ## 1) Purpose
 
@@ -12,11 +12,17 @@ Define a concrete architecture for:
 - optional operator-controlled preview streaming to a laptop
 - off-robot monitoring, visualization, recording, and analysis
 
+The gRPC status/control boundary, managed x264/SRT preview worker, and laptop tools
+described by the initial slices are now implemented. This specification remains the
+design reference for isolation and future evolution. The active portfolio direction
+uses these capabilities to support open-vocabulary perception experiments; structured
+recording, cloud synchronization, and hosted review are planned.
+
 The key constraint is that the SBC should spend nearly all steady-state compute on robot-critical work. Preview and diagnostics should be optional, explicitly budgeted, and easy to disable.
 
 ## 2) Goals
 
-1. Keep autonomy and perception functional even when diagnostics are disabled, disconnected, or broken.
+1. Keep robot behavior and perception functional even when diagnostics are disabled, disconnected, or broken.
 2. Make preview streaming opt-in and remotely controllable from the laptop.
 3. Keep ROS 2 internal to the robot runtime and use explicit external protocols for operator connectivity.
 4. Run RViz2, overlays, plots, bagging, and higher-cost analysis on the host.
@@ -67,7 +73,7 @@ Responsibilities:
 - preprocess
 - inference
 - detection publication
-- local behavior/autonomy consumers
+- local robot-behavior consumers
 - local health and perf reporting
 
 ### 5.2 Diagnostic Plane
@@ -619,14 +625,25 @@ This means preview has a strict lifecycle and no steady-state cost when disabled
 
 ## 16) Recommended First Implementation Slices
 
-1. Add `robot-diag-control` inside `robot-core` with preview state reporting and a stubbed preview state machine.
-2. Add a narrow gRPC surface for preview status/control that can later grow into the robot gateway.
-3. Add a managed preview streamer subprocess controlled by `robot-diag-control`, using `/dev/video11`.
-4. Add host-side RViz2 / analysis integration.
-5. Only after that, decide whether a separate `robot-video` container or an exact-sync debug mode is worth the added complexity.
+Completed:
+
+1. Added `robot_diag_control_cpp` with cache-backed status and preview state.
+2. Added the narrow `GetSystemStatus` and `SetPreviewMode` gRPC surface.
+3. Added a managed x264/MPEG-TS/SRT preview subprocess using `/dev/video11`.
+4. Added packaged host CLI, shell, Tk monitor, and preview-viewer tools.
+
+Planned:
+
+1. Integrate experiment recording and offboard review without placing them on the
+   mission-critical hot path.
+2. Add hardware H.265 when the SBC userspace path is available.
+3. Revisit exact-sync preview or a separate video container only if measured needs
+   justify the complexity.
 
 ## 17) Open Questions
 
 1. What hardware H.265 userspace path should be installed or enabled on the SBC image.
-2. Whether the first preview slice should use software `x264` as a bring-up path or wait for hardware H.265 integration.
-3. Whether the first host-side overlay path should decode preview into ROS `Image` locally, or keep video display separate from ROS overlays until later.
+2. How the offboard review workflow should correlate preview evidence with detections
+   and performance samples.
+3. Whether the first hosted review should consume uploaded static run bundles or a
+   later gateway-mediated transport.

@@ -1,5 +1,7 @@
 # Gateway API
 
+_Status: locked unary v1 API implemented_
+
 This document describes the intended external API contract between the operator
 laptop application and the robot gateway.
 
@@ -75,8 +77,8 @@ Optional early additions if they prove useful:
 - `SubscribeEvents`
 - `Ping`
 
-Teleop and cloud-facing operations should wait until the diagnostics/control
-plane is stable.
+Teleop and cloud-facing operations remain outside v1. Experiment export control should
+be considered only after the local recorder contract is stable.
 
 ## High-Level API Shape
 
@@ -145,7 +147,7 @@ Still deferred:
 - any streaming or multi-client behavior
 - an embedded video panel inside the GUI
 
-## Suggested Core Messages
+## Core Messages
 
 ### `SystemStatus`
 
@@ -193,12 +195,11 @@ Current fields:
 - `string message`
 - `PreviewStatus preview`
 
-## Suggested Enums
+## Enums
 
-The first version should use explicit enums rather than free-form strings where
-possible.
+The first version uses explicit enums rather than free-form strings.
 
-Candidate enums:
+Current enums:
 
 - `PreviewState`
   - `PREVIEW_STATE_UNSPECIFIED`
@@ -259,7 +260,7 @@ Recommended rules:
 - full teleop command set
 - browser-specific signaling flows
 
-## First Slice Candidates
+## Rollout History
 
 1. Create the protobuf package and generate code for the chosen languages.
 2. Implement a standalone C++ gRPC service/server layer with:
@@ -273,6 +274,9 @@ Items 1-4 are now complete for the current bring-up path, and the repo now has
 a minimal host-side preview helper that consumes the stream using a configured
 SRT endpoint. The gateway still does not publish endpoint metadata through the
 protobuf API.
+
+Cloud synchronization, hosted review, and experiment recording are planned product
+work and are not part of the current API.
 
 ## Related Docs
 
