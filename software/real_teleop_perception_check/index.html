@@ -9,10 +9,6 @@
       
       
       
-        <link rel="prev" href="../edge_to_cloud_perception/">
-      
-      
-        <link rel="next" href="../ci_cd/">
       
       
         
@@ -23,7 +19,7 @@
     
     
       
-        <title>Build pipeline - omniseer</title>
+        <title>Real Teleop + Native Perception Check - omniseer</title>
       
     
     
@@ -72,7 +68,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#build-pipeline" class="md-skip">
+        <a href="#real-teleop-native-perception-check" class="md-skip">
           Skip to content
         </a>
       
@@ -108,7 +104,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Build pipeline
+              Real Teleop + Native Perception Check
             
           </span>
         </div>
@@ -306,8 +302,6 @@
       
   
   
-    
-  
   
   
     
@@ -320,11 +314,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
         
           
           <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
@@ -345,7 +339,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
@@ -388,37 +382,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Build pipeline
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../build_pipeline/" class="md-nav__link">
         
   
   
@@ -434,70 +401,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#current-pipeline-layers" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Current Pipeline Layers
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#local-development-flow" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Local Development Flow
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#shared-validation-flow" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Shared Validation Flow
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#future-direction" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Future Direction
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -960,10 +863,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#current-pipeline-layers" class="md-nav__link">
+  <a href="#preconditions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current Pipeline Layers
+        Preconditions
       
     </span>
   </a>
@@ -971,10 +874,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#local-development-flow" class="md-nav__link">
+  <a href="#example-native-vision-asset-overrides" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Local Development Flow
+        Example Native Vision Asset Overrides
       
     </span>
   </a>
@@ -982,10 +885,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#shared-validation-flow" class="md-nav__link">
+  <a href="#bringup-command" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Shared Validation Flow
+        Bringup Command
       
     </span>
   </a>
@@ -993,10 +896,54 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#future-direction" class="md-nav__link">
+  <a href="#teleop-command" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Future Direction
+        Teleop Command
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verification Commands
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#optional-passive-smoke-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optional Passive Smoke Check
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification-record" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verification Record
       
     </span>
   </a>
@@ -1023,63 +970,160 @@
   
 
 
-<h1 id="build-pipeline">Build Pipeline<a class="headerlink" href="#build-pipeline" title="Permanent link">&para;</a></h1>
-<p>This page gives the high-level view of how software changes move through the
-repository.</p>
-<h2 id="current-pipeline-layers">Current Pipeline Layers<a class="headerlink" href="#current-pipeline-layers" title="Permanent link">&para;</a></h2>
-<p>Omniseer currently has two main build/validation layers:</p>
+<h1 id="real-teleop-native-perception-check">Real Teleop + Native Perception Check<a class="headerlink" href="#real-teleop-native-perception-check" title="Permanent link">&para;</a></h1>
+<p><em>Status: planned; target-hardware verification record pending</em></p>
+<p>This checklist verifies the minimum integrated real-robot slice required by
+Phase 0.5:</p>
 <ul>
-<li>local developer workflows used during active development</li>
-<li>GitHub Actions workflows used for shared validation and docs publishing</li>
+<li>keyboard teleop reaches <code>/mecanum_drive_controller/reference</code></li>
+<li>the native vision bridge publishes <code>/yolo/detections</code></li>
+<li>the native vision bridge publishes <code>/vision/perf</code></li>
+<li>teleop and perception run at the same time</li>
 </ul>
-<h2 id="local-development-flow">Local Development Flow<a class="headerlink" href="#local-development-flow" title="Permanent link">&para;</a></h2>
-<p>Most code changes are still validated locally first.</p>
-<p>Typical examples:</p>
+<p>Do not mark Phase 0.5 complete until one target-hardware run has been recorded
+in the verification record at the end of this document.</p>
+<h2 id="preconditions">Preconditions<a class="headerlink" href="#preconditions" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>colcon build</code> and <code>colcon test</code> for the ROS workspace</li>
-<li>targeted CMake builds for native vision components</li>
-<li>local linting such as Ruff</li>
+<li>ROS 2 workspace built and sourced.</li>
+<li>Real robot connected with MCU and LiDAR available as expected by
+  <code>real.launch.py</code>.</li>
+<li>Camera available at the configured <code>camera.device</code>.</li>
+<li>RKNN, RGA, and V4L2 runtime dependencies installed on the target robot.</li>
 </ul>
-<p>This keeps iteration fast and makes it easier to debug issues close to the
-change.</p>
-<h2 id="shared-validation-flow">Shared Validation Flow<a class="headerlink" href="#shared-validation-flow" title="Permanent link">&para;</a></h2>
-<p>After code is pushed or opened in a pull request, GitHub Actions runs the
-repository's CI workflow in several focused lanes:</p>
+<h2 id="example-native-vision-asset-overrides">Example Native Vision Asset Overrides<a class="headerlink" href="#example-native-vision-asset-overrides" title="Permanent link">&para;</a></h2>
+<p>The committed <code>vision_bridge.real.yaml</code> intentionally leaves required native
+vision asset paths empty. The bridge will fail fast until valid paths are
+supplied.</p>
+<p>Example using repo-shipped test assets:</p>
+<div class="highlight"><pre><span></span><code><span class="nv">REPO_ROOT</span><span class="o">=</span>/home/radxa/apps/omniseer
+
+<span class="nv">DETECTOR_MODEL_PATH</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">REPO_ROOT</span><span class="si">}</span><span class="s2">/vision/testdata/rknn_runner/yolo_world_v2s_i8.rknn&quot;</span>
+<span class="nv">CLIP_MODEL_PATH</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">REPO_ROOT</span><span class="si">}</span><span class="s2">/vision/testdata/text_embeddings/clip_text_fp16.rknn&quot;</span>
+<span class="nv">CLIP_VOCAB_PATH</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">REPO_ROOT</span><span class="si">}</span><span class="s2">/vision/testdata/text_embeddings/clip_vocab.bpe&quot;</span>
+<span class="nv">CLASSES_PATH</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">REPO_ROOT</span><span class="si">}</span><span class="s2">/vision/testdata/text_embeddings/classes_person_bus.txt&quot;</span>
+</code></pre></div>
+<p>If the target robot uses different assets or a different checkout path, replace
+those values with the real local paths before launch.</p>
+<h2 id="bringup-command">Bringup Command<a class="headerlink" href="#bringup-command" title="Permanent link">&para;</a></h2>
+<p>Launch the minimum real stack with navigation, SLAM, RF2O, and gateway disabled:</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>bringup<span class="w"> </span>real.launch.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>start_nav:<span class="o">=</span><span class="nb">false</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>start_slam:<span class="o">=</span><span class="nb">false</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>start_rf2o:<span class="o">=</span><span class="nb">false</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>start_gateway:<span class="o">=</span><span class="nb">false</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>start_vision:<span class="o">=</span><span class="nb">true</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>wait_for_boundary_topics:<span class="o">=</span><span class="nb">false</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>detector_model_path:<span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">DETECTOR_MODEL_PATH</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>clip_model_path:<span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">CLIP_MODEL_PATH</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>clip_vocab_path:<span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">CLIP_VOCAB_PATH</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>classes_path:<span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">CLASSES_PATH</span><span class="si">}</span><span class="s2">&quot;</span>
+</code></pre></div>
+<p>Expected launch behavior:</p>
 <ul>
-<li><code>lint</code></li>
-<li><code>ros-core</code></li>
-<li><code>bringup-smoke</code></li>
-<li><code>vision-host</code></li>
-<li><code>firmware-build</code></li>
-<li><code>docs-build</code></li>
+<li><code>vision_bridge</code> starts or fails immediately with a clear parameter/runtime
+  error.</li>
+<li><code>twist_mux</code> remains available even with nav disabled.</li>
+<li>No navigation stack processes are required for this check.</li>
 </ul>
-<p>This keeps the default PR gate broad enough to catch interface drift while
-keeping the slower checks isolated instead of hiding inside one large job.</p>
-<p>See <a href="../ci_cd/">CI/CD Overview</a> for:</p>
+<h2 id="teleop-command">Teleop Command<a class="headerlink" href="#teleop-command" title="Permanent link">&para;</a></h2>
+<p>In another terminal:</p>
+<div class="highlight"><pre><span></span><code>bash<span class="w"> </span>ros_ws/src/scripts/teleop.sh
+</code></pre></div>
+<p>This script publishes <code>geometry_msgs/msg/TwistStamped</code> to
+<code>/cmd_vel_keyboard</code>.</p>
+<h2 id="verification-commands">Verification Commands<a class="headerlink" href="#verification-commands" title="Permanent link">&para;</a></h2>
+<p>Run these while the real stack and teleop are active:</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>topic<span class="w"> </span>list
+
+ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">type</span><span class="w"> </span>/cmd_vel_keyboard
+ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">type</span><span class="w"> </span>/mecanum_drive_controller/reference
+ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>--once<span class="w"> </span>/mecanum_drive_controller/reference
+
+ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">type</span><span class="w"> </span>/yolo/detections
+ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>--once<span class="w"> </span>/yolo/detections
+ros2<span class="w"> </span>topic<span class="w"> </span>hz<span class="w"> </span>/yolo/detections
+
+ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">type</span><span class="w"> </span>/vision/perf
+ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>--once<span class="w"> </span>/vision/perf
+ros2<span class="w"> </span>topic<span class="w"> </span>hz<span class="w"> </span>/vision/perf
+</code></pre></div>
+<p>Expected observations:</p>
 <ul>
-<li>workflow triggers</li>
-<li>exact checks that run in CI</li>
-<li>what is currently deployed automatically</li>
-<li>current gaps and future expansion points</li>
+<li><code>/cmd_vel_keyboard</code> reports <code>geometry_msgs/msg/TwistStamped</code></li>
+<li><code>/mecanum_drive_controller/reference</code> reports
+  <code>geometry_msgs/msg/TwistStamped</code></li>
+<li><code>/mecanum_drive_controller/reference</code> receives teleop commands while keys are
+  pressed</li>
+<li><code>/vision/perf</code> publishes repeatedly</li>
+<li><code>/yolo/detections</code> publishes while the camera sees configured classes</li>
 </ul>
-<h2 id="future-direction">Future Direction<a class="headerlink" href="#future-direction" title="Permanent link">&para;</a></h2>
-<p>As the project grows, this page can become the umbrella view for:</p>
+<h2 id="optional-passive-smoke-check">Optional Passive Smoke Check<a class="headerlink" href="#optional-passive-smoke-check" title="Permanent link">&para;</a></h2>
+<p>This helper does not publish motion commands:</p>
+<div class="highlight"><pre><span></span><code>scripts/check_real_teleop_perception.sh
+</code></pre></div>
+<p>To require at least one detection message as well:</p>
+<div class="highlight"><pre><span></span><code><span class="nv">OMNISEER_REQUIRE_DETECTIONS</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>scripts/check_real_teleop_perception.sh
+</code></pre></div>
+<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Likely cause</th>
+<th>Check</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vision_bridge</code> exits immediately with <code>camera.device</code> errors</td>
+<td>Wrong V4L2 device path or camera unavailable</td>
+<td>Check <code>/dev/video*</code>, confirm <code>camera.device</code>, test device permissions</td>
+</tr>
+<tr>
+<td><code>vision_bridge</code> exits with RKNN or RGA loader/runtime errors</td>
+<td>Missing target-hardware acceleration libraries</td>
+<td>Verify RKNN/RGA runtime install on the robot</td>
+</tr>
+<tr>
+<td><code>vision_bridge</code> exits with <code>models.* must not be empty</code> or <code>classes.path must not be empty</code></td>
+<td>Required asset overrides missing</td>
+<td>Re-run launch with concrete asset paths</td>
+</tr>
+<tr>
+<td><code>/vision/perf</code> publishes but <code>/yolo/detections</code> stays empty</td>
+<td>Scene does not contain configured classes, model/classes mismatch, or postprocess threshold too strict</td>
+<td>Verify class list matches expected scene objects; temporarily lower score threshold if needed</td>
+</tr>
+<tr>
+<td><code>/cmd_vel_keyboard</code> type is <code>geometry_msgs/msg/Twist</code></td>
+<td>Teleop script not using stamped mode</td>
+<td>Re-run <code>bash ros_ws/src/scripts/teleop.sh</code> and inspect script contents</td>
+</tr>
+<tr>
+<td><code>/mecanum_drive_controller/reference</code> type does not match teleop input</td>
+<td>Twist mux/controller path mismatch</td>
+<td>Check <code>twist_mux.yaml</code>, confirm teleop topic type, inspect launch remap to <code>/mecanum_drive_controller/reference</code></td>
+</tr>
+<tr>
+<td><code>vision_bridge</code> logs a fatal runtime stop after startup</td>
+<td>Capture, preprocess, or inference pipeline failure</td>
+<td>Read the <code>vision_bridge</code> error line for <code>producer</code> or <code>consumer</code> failure stage and errno</td>
+</tr>
+</tbody>
+</table>
+<h2 id="verification-record">Verification Record<a class="headerlink" href="#verification-record" title="Permanent link">&para;</a></h2>
 <ul>
-<li>local build workflows</li>
-<li>CI validation stages</li>
-<li>release packaging</li>
-<li>artifact publishing</li>
-<li>hardware-in-the-loop execution</li>
+<li>Date:</li>
+<li>Operator:</li>
+<li>Robot / SBC:</li>
+<li>Launch command used:</li>
+<li>Asset paths used:</li>
+<li><code>/cmd_vel_keyboard</code> type:</li>
+<li><code>/mecanum_drive_controller/reference</code> type:</li>
+<li><code>/vision/perf</code> observed:</li>
+<li><code>/yolo/detections</code> observed:</li>
+<li>Notes:</li>
 </ul>
-<p>For now, the detailed operational reference lives in
-<a href="../ci_cd/">CI/CD Overview</a>.</p>
-<p>The active product direction adds two planned layers after shared validation:</p>
-<ul>
-<li>creation of a reproducible perception experiment bundle</li>
-<li>provider-neutral synchronization and hosted review of completed runs</li>
-</ul>
-<p>Neither layer is implemented today. The current pipeline stops at validated source,
-build/test artifacts, and GitHub Pages documentation deployment.</p>
 
 
 
@@ -1100,7 +1144,7 @@ build/test artifacts, and GitHub Pages documentation deployment.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 7, 2026 00:33:52 UTC">July 7, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 7, 2026 22:17:47 UTC">July 7, 2026</span>
   </span>
 
     

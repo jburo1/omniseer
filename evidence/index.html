@@ -9,28 +9,28 @@
       
       
       
-        <link rel="prev" href="../edge_to_cloud_perception/">
+        <link rel="prev" href="../architecture/">
       
       
-        <link rel="next" href="../ci_cd/">
+        <link rel="next" href="../software/edge_to_cloud_perception/">
       
       
         
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>Build pipeline - omniseer</title>
+        <title>Evidence - omniseer</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -49,7 +49,7 @@
       
     
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -72,7 +72,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#build-pipeline" class="md-skip">
+        <a href="#ci-verified" class="md-skip">
           Skip to content
         </a>
       
@@ -88,7 +88,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="omniseer" class="md-header__button md-logo" aria-label="omniseer" data-md-component="logo">
+    <a href=".." title="omniseer" class="md-header__button md-logo" aria-label="omniseer" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -108,7 +108,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Build pipeline
+              Evidence
             
           </span>
         </div>
@@ -198,7 +198,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="omniseer" class="md-nav__button md-logo" aria-label="omniseer" data-md-component="logo">
+    <a href=".." title="omniseer" class="md-nav__button md-logo" aria-label="omniseer" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -228,7 +228,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../.." class="md-nav__link">
+      <a href=".." class="md-nav__link">
         
   
   
@@ -255,7 +255,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../architecture/" class="md-nav__link">
+      <a href="../architecture/" class="md-nav__link">
         
   
   
@@ -279,10 +279,35 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../evidence/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -298,6 +323,57 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#ci-verified" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CI verified
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hardware-verified" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        hardware verified
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#planned" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        planned
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -306,8 +382,6 @@
       
   
   
-    
-  
   
   
     
@@ -320,11 +394,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
         
           
           <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
@@ -345,7 +419,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
@@ -363,7 +437,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../edge_to_cloud_perception/" class="md-nav__link">
+      <a href="../software/edge_to_cloud_perception/" class="md-nav__link">
         
   
   
@@ -388,37 +462,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Build pipeline
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../software/build_pipeline/" class="md-nav__link">
         
   
   
@@ -434,70 +481,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#current-pipeline-layers" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Current Pipeline Layers
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#local-development-flow" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Local Development Flow
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#shared-validation-flow" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Shared Validation Flow
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#future-direction" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Future Direction
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -510,7 +493,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ci_cd/" class="md-nav__link">
+      <a href="../software/ci_cd/" class="md-nav__link">
         
   
   
@@ -538,7 +521,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ros_packages/" class="md-nav__link">
+      <a href="../software/ros_packages/" class="md-nav__link">
         
   
   
@@ -566,7 +549,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../code_documentation/" class="md-nav__link">
+      <a href="../software/code_documentation/" class="md-nav__link">
         
   
   
@@ -594,7 +577,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../vision_pipeline/" class="md-nav__link">
+      <a href="../software/vision_pipeline/" class="md-nav__link">
         
   
   
@@ -622,7 +605,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../producer_pipeline/" class="md-nav__link">
+      <a href="../software/producer_pipeline/" class="md-nav__link">
         
   
   
@@ -650,7 +633,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../consumer_pipeline/" class="md-nav__link">
+      <a href="../software/consumer_pipeline/" class="md-nav__link">
         
   
   
@@ -678,7 +661,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../vision_telemetry_spec/" class="md-nav__link">
+      <a href="../software/vision_telemetry_spec/" class="md-nav__link">
         
   
   
@@ -706,7 +689,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../remote_monitoring_architecture/" class="md-nav__link">
+      <a href="../software/remote_monitoring_architecture/" class="md-nav__link">
         
   
   
@@ -734,7 +717,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../robot_gateway/" class="md-nav__link">
+      <a href="../software/robot_gateway/" class="md-nav__link">
         
   
   
@@ -762,7 +745,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../preview_streaming/" class="md-nav__link">
+      <a href="../software/preview_streaming/" class="md-nav__link">
         
   
   
@@ -790,7 +773,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../gateway_api/" class="md-nav__link">
+      <a href="../software/gateway_api/" class="md-nav__link">
         
   
   
@@ -877,7 +860,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../hardware/circuit/" class="md-nav__link">
+      <a href="../hardware/circuit/" class="md-nav__link">
         
   
   
@@ -905,7 +888,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../hardware/wiring/" class="md-nav__link">
+      <a href="../hardware/wiring/" class="md-nav__link">
         
   
   
@@ -950,8 +933,6 @@
   
   
   
-    
-  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -960,10 +941,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#current-pipeline-layers" class="md-nav__link">
+  <a href="#ci-verified" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current Pipeline Layers
+        CI verified
       
     </span>
   </a>
@@ -971,10 +952,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#local-development-flow" class="md-nav__link">
+  <a href="#hardware-verified" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Local Development Flow
+        hardware verified
       
     </span>
   </a>
@@ -982,21 +963,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#shared-validation-flow" class="md-nav__link">
+  <a href="#planned" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Shared Validation Flow
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#future-direction" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Future Direction
+        planned
       
     </span>
   </a>
@@ -1023,63 +993,20 @@
   
 
 
-<h1 id="build-pipeline">Build Pipeline<a class="headerlink" href="#build-pipeline" title="Permanent link">&para;</a></h1>
-<p>This page gives the high-level view of how software changes move through the
-repository.</p>
-<h2 id="current-pipeline-layers">Current Pipeline Layers<a class="headerlink" href="#current-pipeline-layers" title="Permanent link">&para;</a></h2>
-<p>Omniseer currently has two main build/validation layers:</p>
+  <h1>Evidence</h1>
+
+<h2 id="ci-verified">CI verified<a class="headerlink" href="#ci-verified" title="Permanent link">&para;</a></h2>
 <ul>
-<li>local developer workflows used during active development</li>
-<li>GitHub Actions workflows used for shared validation and docs publishing</li>
+<li>Ruff is pinned to <code>0.13.3</code> in <code>pyproject.toml</code>, <code>.pre-commit-config.yaml</code>, and <code>.github/workflows/ci.yml</code>.</li>
 </ul>
-<h2 id="local-development-flow">Local Development Flow<a class="headerlink" href="#local-development-flow" title="Permanent link">&para;</a></h2>
-<p>Most code changes are still validated locally first.</p>
-<p>Typical examples:</p>
+<h2 id="hardware-verified">hardware verified<a class="headerlink" href="#hardware-verified" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>colcon build</code> and <code>colcon test</code> for the ROS workspace</li>
-<li>targeted CMake builds for native vision components</li>
-<li>local linting such as Ruff</li>
+<li>Not verified for this change; it only updates lint/tooling metadata and docs.</li>
 </ul>
-<p>This keeps iteration fast and makes it easier to debug issues close to the
-change.</p>
-<h2 id="shared-validation-flow">Shared Validation Flow<a class="headerlink" href="#shared-validation-flow" title="Permanent link">&para;</a></h2>
-<p>After code is pushed or opened in a pull request, GitHub Actions runs the
-repository's CI workflow in several focused lanes:</p>
+<h2 id="planned">planned<a class="headerlink" href="#planned" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>lint</code></li>
-<li><code>ros-core</code></li>
-<li><code>bringup-smoke</code></li>
-<li><code>vision-host</code></li>
-<li><code>firmware-build</code></li>
-<li><code>docs-build</code></li>
+<li>Reviewers can run <code>pre-commit run -a</code>, the local Ruff command from <code>docs/software/ci_cd.md</code>, and the existing docs build.</li>
 </ul>
-<p>This keeps the default PR gate broad enough to catch interface drift while
-keeping the slower checks isolated instead of hiding inside one large job.</p>
-<p>See <a href="../ci_cd/">CI/CD Overview</a> for:</p>
-<ul>
-<li>workflow triggers</li>
-<li>exact checks that run in CI</li>
-<li>what is currently deployed automatically</li>
-<li>current gaps and future expansion points</li>
-</ul>
-<h2 id="future-direction">Future Direction<a class="headerlink" href="#future-direction" title="Permanent link">&para;</a></h2>
-<p>As the project grows, this page can become the umbrella view for:</p>
-<ul>
-<li>local build workflows</li>
-<li>CI validation stages</li>
-<li>release packaging</li>
-<li>artifact publishing</li>
-<li>hardware-in-the-loop execution</li>
-</ul>
-<p>For now, the detailed operational reference lives in
-<a href="../ci_cd/">CI/CD Overview</a>.</p>
-<p>The active product direction adds two planned layers after shared validation:</p>
-<ul>
-<li>creation of a reproducible perception experiment bundle</li>
-<li>provider-neutral synchronization and hosted review of completed runs</li>
-</ul>
-<p>Neither layer is implemented today. The current pipeline stops at validated source,
-build/test artifacts, and GitHub Pages documentation deployment.</p>
 
 
 
@@ -1100,7 +1027,7 @@ build/test artifacts, and GitHub Pages documentation deployment.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 7, 2026 00:33:52 UTC">July 7, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 7, 2026 03:12:58 UTC">July 7, 2026</span>
   </span>
 
     
@@ -1150,10 +1077,10 @@ build/test artifacts, and GitHub Pages documentation deployment.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.instant"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.instant"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>
