@@ -12,7 +12,7 @@
         <link rel="prev" href="..">
       
       
-        <link rel="next" href="../software/build_pipeline/">
+        <link rel="next" href="../software/edge_to_cloud_perception/">
       
       
         
@@ -315,15 +315,26 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#major-runtime-boundaries" class="md-nav__link">
+  <a href="#active-direction" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Major Runtime Boundaries
+        Active Direction
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Major Runtime Boundaries">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#runtime-boundaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Runtime Boundaries
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Runtime Boundaries">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -331,6 +342,17 @@
     <span class="md-ellipsis">
       
         Robot SBC
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#firmware-and-robot-io" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Firmware and Robot IO
       
     </span>
   </a>
@@ -349,10 +371,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#optional-cloud-remote-bridge" class="md-nav__link">
+  <a href="#cloud-review-layer" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Optional Cloud / Remote Bridge
+        Cloud Review Layer
       
     </span>
   </a>
@@ -365,33 +387,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#current-high-level-shape" class="md-nav__link">
+  <a href="#implemented-data-paths" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current High-Level Shape
+        Implemented Data Paths
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#major-software-subsystems" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Major Software Subsystems
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Major Software Subsystems">
+    <nav class="md-nav" aria-label="Implemented Data Paths">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#vision-runtime" class="md-nav__link">
+  <a href="#perception" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Vision Runtime
+        Perception
       
     </span>
   </a>
@@ -399,10 +410,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#ros-runtime" class="md-nav__link">
+  <a href="#operator-diagnostics" class="md-nav__link">
     <span class="md-ellipsis">
       
-        ROS Runtime
+        Operator Diagnostics
       
     </span>
   </a>
@@ -410,21 +421,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#operator-connectivity-stack" class="md-nav__link">
+  <a href="#simulation-and-hardware" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Operator Connectivity Stack
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#firmware-and-hardware-integration" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Firmware and Hardware Integration
+        Simulation and Hardware
       
     </span>
   </a>
@@ -437,10 +437,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#repository-layout" class="md-nav__link">
+  <a href="#capability-status" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Repository Layout
+        Capability Status
       
     </span>
   </a>
@@ -448,60 +448,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-exists-vs-what-is-planned" class="md-nav__link">
+  <a href="#repository-ownership" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What Exists vs What Is Planned
+        Repository Ownership
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="What Exists vs What Is Planned">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#implemented-or-substantially-implemented" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Implemented or substantially implemented
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#in-active-specification-integration" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        In active specification / integration
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#explicitly-later" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Explicitly later
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#documentation-strategy" class="md-nav__link">
+  <a href="#related-documentation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Documentation Strategy
+        Related Documentation
       
     </span>
   </a>
@@ -567,6 +528,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../software/edge_to_cloud_perception/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Edge-to-cloud perception
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -695,6 +684,90 @@
     
   
     Vision pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../software/producer_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Producer pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../software/consumer_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Consumer pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../software/vision_telemetry_spec/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision telemetry
   
 
     
@@ -969,15 +1042,26 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#major-runtime-boundaries" class="md-nav__link">
+  <a href="#active-direction" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Major Runtime Boundaries
+        Active Direction
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Major Runtime Boundaries">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#runtime-boundaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Runtime Boundaries
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Runtime Boundaries">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -985,6 +1069,17 @@
     <span class="md-ellipsis">
       
         Robot SBC
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#firmware-and-robot-io" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Firmware and Robot IO
       
     </span>
   </a>
@@ -1003,10 +1098,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#optional-cloud-remote-bridge" class="md-nav__link">
+  <a href="#cloud-review-layer" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Optional Cloud / Remote Bridge
+        Cloud Review Layer
       
     </span>
   </a>
@@ -1019,33 +1114,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#current-high-level-shape" class="md-nav__link">
+  <a href="#implemented-data-paths" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current High-Level Shape
+        Implemented Data Paths
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#major-software-subsystems" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Major Software Subsystems
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Major Software Subsystems">
+    <nav class="md-nav" aria-label="Implemented Data Paths">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#vision-runtime" class="md-nav__link">
+  <a href="#perception" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Vision Runtime
+        Perception
       
     </span>
   </a>
@@ -1053,10 +1137,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#ros-runtime" class="md-nav__link">
+  <a href="#operator-diagnostics" class="md-nav__link">
     <span class="md-ellipsis">
       
-        ROS Runtime
+        Operator Diagnostics
       
     </span>
   </a>
@@ -1064,21 +1148,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#operator-connectivity-stack" class="md-nav__link">
+  <a href="#simulation-and-hardware" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Operator Connectivity Stack
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#firmware-and-hardware-integration" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Firmware and Hardware Integration
+        Simulation and Hardware
       
     </span>
   </a>
@@ -1091,10 +1164,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#repository-layout" class="md-nav__link">
+  <a href="#capability-status" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Repository Layout
+        Capability Status
       
     </span>
   </a>
@@ -1102,60 +1175,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-exists-vs-what-is-planned" class="md-nav__link">
+  <a href="#repository-ownership" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What Exists vs What Is Planned
+        Repository Ownership
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="What Exists vs What Is Planned">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#implemented-or-substantially-implemented" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Implemented or substantially implemented
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#in-active-specification-integration" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        In active specification / integration
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#explicitly-later" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Explicitly later
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#documentation-strategy" class="md-nav__link">
+  <a href="#related-documentation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Documentation Strategy
+        Related Documentation
       
     </span>
   </a>
@@ -1183,196 +1217,170 @@
 
 
 <h1 id="system-architecture">System Architecture<a class="headerlink" href="#system-architecture" title="Permanent link">&para;</a></h1>
-<p>This page is the top-level technical map of the repository. It describes the
-major runtime boundaries, what currently exists, and which subsystem pages hold
-the deeper design notes.</p>
-<p>Omniseer currently spans:</p>
-<ul>
-<li>an SBC-hosted ROS 2 robot runtime</li>
-<li>a hardware-accelerated vision stack on Rockchip hardware</li>
-<li>robot description, bringup, and analysis packages</li>
-<li>firmware for lower-level hardware integration</li>
-<li>simulation assets and launch support</li>
-<li>an emerging operator connectivity stack for remote monitoring and control</li>
-</ul>
-<p>The repository is still in an active architecture-building phase. Some
-subsystems, especially the native vision runtime, are already implemented in
-detail. Others, such as the robot gateway and preview export path, are now at
-the spec and first-integration stage.</p>
-<h2 id="major-runtime-boundaries">Major Runtime Boundaries<a class="headerlink" href="#major-runtime-boundaries" title="Permanent link">&para;</a></h2>
-<h3 id="robot-sbc">Robot SBC<a class="headerlink" href="#robot-sbc" title="Permanent link">&para;</a></h3>
-<p>The robot SBC is the primary runtime host.</p>
-<p>Current and planned responsibilities:</p>
-<ul>
-<li>ROS 2 graph for perception, navigation, control, and local diagnostics</li>
-<li>hardware-accelerated vision pipeline using V4L2, RGA, and RKNN</li>
-<li>mission-critical consumers of detections and other sensor state</li>
-<li>local bringup and launch orchestration</li>
-<li>optional operator-facing preview export path</li>
-</ul>
-<p>The current preferred deployment model is one <code>robot-core</code> container on the SBC
-with mission-critical ROS nodes always on. Optional operator diagnostics, such
-as preview streaming, should be isolated enough that failure does not interfere
-with the mission path.</p>
-<h3 id="operator-laptop">Operator Laptop<a class="headerlink" href="#operator-laptop" title="Permanent link">&para;</a></h3>
-<p>The operator laptop is the preferred location for higher-cost human-facing work.</p>
-<p>Planned responsibilities:</p>
-<ul>
-<li>native operator application</li>
-<li>RViz2</li>
-<li>host-side overlay and analysis tools</li>
-<li>bagging, replay, plotting, and inspection workflows</li>
-<li>gRPC client for robot control/state access</li>
-<li>SRT video receive and decode</li>
-</ul>
-<p>This keeps the robot focused on low-latency onboard work while moving
-diagnostic-heavy workloads offboard.</p>
-<h3 id="optional-cloud-remote-bridge">Optional Cloud / Remote Bridge<a class="headerlink" href="#optional-cloud-remote-bridge" title="Permanent link">&para;</a></h3>
-<p>The current repo does not implement a cloud bridge yet, but the architecture is
-being shaped so that one could be added later without exposing the internal ROS
-graph directly.</p>
-<p>Potential later roles:</p>
-<ul>
-<li>fleet telemetry</li>
-<li>offsite health/status access</li>
-<li>web-facing dashboards</li>
-<li>remote ops support through a narrower external API</li>
-</ul>
-<h2 id="current-high-level-shape">Current High-Level Shape<a class="headerlink" href="#current-high-level-shape" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code>                        [ Operator Laptop ]
-                               |
-                 +-------------+-------------+
-                 |                           |
-              gRPC state/control         SRT preview
-                 |                           |
-                 +-------------+-------------+
-                               |
-                        [ Robot Gateway ]
-                               |
-          +--------------------+--------------------+
-          |                    |                    |
-       diagnostics          teleop              mission
-          |                    |                    |
-          +--------------------+--------------------+
-                               |
-                         [ ROS 2 graph ]
-                  perception / nav / control / logging
-                               |
-                     +---------+---------+
-                     |                   |
-                  vision runtime      firmware / IO
+<p>This page is the top-level technical map of Omniseer. It distinguishes the
+implemented robot and operator paths from the planned experiment and cloud-review
+work.</p>
+<h2 id="active-direction">Active Direction<a class="headerlink" href="#active-direction" title="Permanent link">&para;</a></h2>
+<p>The active deliverable is an open-vocabulary edge perception and evaluation loop:</p>
+<div class="highlight"><pre><span></span><code>                       [ Laptop / Planned Cloud Review ]
+                                     ^
+                                     |
+                         experiment results and evidence
+                                     |
+ [ Camera ] -&gt; [ Native Vision Runtime ] -&gt; [ ROS 2 Contracts ]
+                    |       |                    |
+                    |       +-&gt; /vision/perf     +-&gt; /yolo/detections
+                    |
+              V4L2 -&gt; RGA -&gt; RKNN
 </code></pre></div>
-<p>This is the target direction. The current repo is partway there:</p>
+<p>The robot performs inference locally. ROS 2 carries normalized detections and
+performance summaries. The next product slice will record those outputs into a
+reproducible experiment bundle and support offboard review. Cloud synchronization
+and hosted reporting are planned, provider-neutral work.</p>
+<p>Navigation, SLAM, simulation, firmware, and operator connectivity remain valuable
+platform capabilities. They support data collection and robot operation but are not
+the primary portfolio deliverable. Autonomous object search and capture are deferred.</p>
+<h2 id="runtime-boundaries">Runtime Boundaries<a class="headerlink" href="#runtime-boundaries" title="Permanent link">&para;</a></h2>
+<h3 id="robot-sbc">Robot SBC<a class="headerlink" href="#robot-sbc" title="Permanent link">&para;</a></h3>
+<p>The ROCK 5B+ hosts the mission-critical runtime:</p>
 <ul>
-<li>the native vision runtime exists</li>
-<li>the ROS bridge for detections exists</li>
-<li>the operator gateway does not yet exist as a first-class component</li>
-<li>the preview export path is specified but not yet integrated</li>
+<li>V4L2 camera capture from the Rockchip ISP</li>
+<li>RGA preprocessing into fixed model input buffers</li>
+<li>RKNN YOLO-World text encoding and detector inference</li>
+<li>bounded post-processing and typed detection publication</li>
+<li>ROS 2 bringup, normalized robot IO, and local diagnostics</li>
+<li>optional gateway and preview subprocesses</li>
 </ul>
-<h2 id="major-software-subsystems">Major Software Subsystems<a class="headerlink" href="#major-software-subsystems" title="Permanent link">&para;</a></h2>
-<h3 id="vision-runtime">Vision Runtime<a class="headerlink" href="#vision-runtime" title="Permanent link">&para;</a></h3>
-<p>The most detailed and mature subsystem in the repo today.</p>
-<p>Responsibilities:</p>
+<p>Optional diagnostics must not become dependencies of the vision or control path.</p>
+<h3 id="firmware-and-robot-io">Firmware and Robot IO<a class="headerlink" href="#firmware-and-robot-io" title="Permanent link">&para;</a></h3>
+<p>The Teensy firmware owns low-level motor and sensor integration through micro-ROS.
+Real and simulated producers converge on the normalized boundary topics documented in
+<a href="../software/ros_packages/">ROS Packages and Sim/Real Boundary</a>.</p>
+<h3 id="operator-laptop">Operator Laptop<a class="headerlink" href="#operator-laptop" title="Permanent link">&para;</a></h3>
+<p>The laptop currently supports:</p>
 <ul>
-<li>capture from the ISP via V4L2</li>
-<li>preprocess using RGA</li>
-<li>run model inference via RKNN</li>
-<li>produce canonical detections and telemetry</li>
+<li>gRPC status and preview control</li>
+<li>SRT preview receive and decode</li>
+<li>CLI, monitor shell, and initial Tk monitoring workflows</li>
+<li>RViz, telemetry analysis, and other development tools</li>
 </ul>
-<p>Primary docs:</p>
+<p>The laptop is also the first review target for recorded perception experiments. It
+keeps dashboard, plotting, and evidence inspection work off the robot.</p>
+<h3 id="cloud-review-layer">Cloud Review Layer<a class="headerlink" href="#cloud-review-layer" title="Permanent link">&para;</a></h3>
+<p><strong>Planned:</strong> upload a provider-neutral experiment bundle and render a hosted review of
+latency, detections, confidence, evidence, and failure cases. The repository does not
+currently implement cloud transport, storage, or a hosted dashboard.</p>
+<h2 id="implemented-data-paths">Implemented Data Paths<a class="headerlink" href="#implemented-data-paths" title="Permanent link">&para;</a></h2>
+<h3 id="perception">Perception<a class="headerlink" href="#perception" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>/dev/video12 NV12
+       |
+       v
+ V4L2 capture -&gt; RGA letterbox -&gt; latest-wins DMA buffer pool
+                                      |
+                                      v
+                        RKNN inference -&gt; YOLO-World postprocess
+                                      |
+                         +------------+------------+
+                         |                         |
+                 /yolo/detections             /vision/perf
+</code></pre></div>
+<p>The native runtime loads its class list during startup, prepares CLIP text embeddings,
+and then runs producer and consumer threads. Runtime class replacement is implemented
+in the Python <code>yolo_ros</code> integration but not yet in the native RKNN bridge.</p>
+<h3 id="operator-diagnostics">Operator Diagnostics<a class="headerlink" href="#operator-diagnostics" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>ROS status -&gt; C++ gateway -&gt; gRPC -&gt; laptop tools
+                   |
+                   +-&gt; managed GStreamer worker -&gt; MPEG-TS/SRT preview
+</code></pre></div>
+<p>The gateway aggregates vision and odometry health, implements the locked unary gRPC
+API, and manages preview as an optional child process. The current preview path is a
+software x264 bringup path; hardware H.265 remains planned.</p>
+<h3 id="simulation-and-hardware">Simulation and Hardware<a class="headerlink" href="#simulation-and-hardware" title="Permanent link">&para;</a></h3>
+<p>Simulation and real bringup share a common graph above explicit command, odometry,
+IMU, LiDAR, range, detection, performance, and battery contracts. GitHub CI launches
+headless Gazebo and verifies five core boundary topics. Real device behavior remains a
+hardware validation responsibility.</p>
+<h2 id="capability-status">Capability Status<a class="headerlink" href="#capability-status" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Status</th>
+<th>Evidence boundary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Native producer and consumer vision pipeline</td>
+<td><strong>Hardware-verified</strong></td>
+<td>V4L2, RGA, RKNN target tests and harness</td>
+</tr>
+<tr>
+<td>YOLO-World post-processing and text embeddings</td>
+<td><strong>Hardware-verified</strong></td>
+<td>RKNN tests and integrated native runtime</td>
+</tr>
+<tr>
+<td>ROS detection and performance publication</td>
+<td><strong>Implemented</strong></td>
+<td><code>omniseer_vision_bridge</code></td>
+</tr>
+<tr>
+<td>Portable ROS, vision, firmware, simulation, and docs checks</td>
+<td><strong>CI-verified</strong></td>
+<td>GitHub Actions six-job workflow</td>
+</tr>
+<tr>
+<td>gRPC gateway and managed SRT preview</td>
+<td><strong>Implemented</strong></td>
+<td>C++ and Python tests plus local integration</td>
+</tr>
+<tr>
+<td>Native runtime class updates</td>
+<td><strong>Planned</strong></td>
+<td>Python integration exists; native bridge support does not</td>
+</tr>
+<tr>
+<td>Structured experiment recorder and run bundle</td>
+<td><strong>Planned</strong></td>
+<td>No integrated recorder exists</td>
+</tr>
+<tr>
+<td>CPU, memory, and temperature telemetry</td>
+<td><strong>Planned</strong></td>
+<td><code>/vision/perf</code> currently reports pipeline metrics only</td>
+</tr>
+<tr>
+<td>Cloud synchronization and hosted dashboard</td>
+<td><strong>Planned</strong></td>
+<td>No provider or transport selected</td>
+</tr>
+<tr>
+<td>Autonomous semantic search and capture</td>
+<td><strong>Deferred</strong></td>
+<td>Outside the active deliverable</td>
+</tr>
+</tbody>
+</table>
+<h2 id="repository-ownership">Repository Ownership<a class="headerlink" href="#repository-ownership" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../software/vision_pipeline/">Vision pipeline</a></li>
-<li><a href="../software/producer_pipeline/">Producer pipeline</a></li>
-<li><a href="../software/consumer_pipeline/">Consumer pipeline</a></li>
-<li><a href="../software/vision_telemetry_spec/">Vision telemetry spec</a></li>
+<li><code>vision/</code> owns the native camera-to-detection runtime and detailed telemetry.</li>
+<li><code>ros_ws/src/omniseer_vision_bridge/</code> owns the native-to-ROS adapter.</li>
+<li><code>ros_ws/src/bringup/</code> owns sim and real launch composition.</li>
+<li><code>robot_diag_control_cpp</code> owns the robot-side external gateway boundary.</li>
+<li><code>robot_diag_control</code> owns host-side operator tools.</li>
+<li><code>firmware/</code> owns MCU behavior and micro-ROS IO.</li>
+<li><code>docs/</code> owns current-state specifications and operational guidance.</li>
 </ul>
-<h3 id="ros-runtime">ROS Runtime<a class="headerlink" href="#ros-runtime" title="Permanent link">&para;</a></h3>
-<p>The ROS layer ties together bringup, robot description, analysis helpers, and
-the vision bridge into a graph that can run on the SBC.</p>
-<p>Responsibilities:</p>
+<h2 id="related-documentation">Related Documentation<a class="headerlink" href="#related-documentation" title="Permanent link">&para;</a></h2>
 <ul>
-<li>package and launch composition</li>
-<li>topic/service boundaries</li>
-<li>bridge between the native vision runtime and ROS-native consumers</li>
-<li>robot description and visualization configuration</li>
+<li><a href="../software/edge_to_cloud_perception/">Edge-to-Cloud Perception</a></li>
+<li><a href="../software/vision_pipeline/">Vision Pipeline</a></li>
+<li><a href="../software/vision_telemetry_spec/">Vision Telemetry</a></li>
+<li><a href="../software/robot_gateway/">Robot Gateway</a></li>
+<li><a href="../software/preview_streaming/">Preview Streaming</a></li>
+<li><a href="../software/ci_cd/">CI/CD Overview</a></li>
 </ul>
-<p>Primary docs today:</p>
-<ul>
-<li><a href="../software/ros_packages/">ROS packages</a></li>
-<li>bringup and launch files in <code>ros_ws/src/bringup</code></li>
-</ul>
-<h3 id="operator-connectivity-stack">Operator Connectivity Stack<a class="headerlink" href="#operator-connectivity-stack" title="Permanent link">&para;</a></h3>
-<p>This is the next major subsystem being designed.</p>
-<p>Responsibilities:</p>
-<ul>
-<li>gRPC control/state API for the operator app</li>
-<li>on-demand preview management</li>
-<li>SRT preview export</li>
-<li>status aggregation for monitoring</li>
-<li>later teleop and operator workflow coordination</li>
-</ul>
-<p>Primary docs:</p>
-<ul>
-<li><a href="../software/remote_monitoring_architecture/">Remote monitoring architecture</a></li>
-<li><a href="../software/robot_gateway/">Robot gateway</a></li>
-<li><a href="../software/gateway_api/">Gateway API</a></li>
-<li><a href="../software/preview_streaming/">Preview streaming</a></li>
-</ul>
-<h3 id="firmware-and-hardware-integration">Firmware and Hardware Integration<a class="headerlink" href="#firmware-and-hardware-integration" title="Permanent link">&para;</a></h3>
-<p>The repository also includes firmware and hardware artifacts which sit below the
-SBC runtime boundary.</p>
-<p>Responsibilities:</p>
-<ul>
-<li>direct hardware control</li>
-<li>low-level IO</li>
-<li>board/actuator/sensor interfacing</li>
-<li>electrical and mechanical integration</li>
-</ul>
-<p>Primary docs today:</p>
-<ul>
-<li><a href="../hardware/circuit/">Circuit</a></li>
-<li><a href="../hardware/wiring/">Wiring guide</a></li>
-</ul>
-<h2 id="repository-layout">Repository Layout<a class="headerlink" href="#repository-layout" title="Permanent link">&para;</a></h2>
-<p>Important top-level directories:</p>
-<ul>
-<li><code>vision/</code>: native vision runtime and tests</li>
-<li><code>ros_ws/src/</code>: ROS 2 packages</li>
-<li><code>firmware/</code>: embedded firmware project</li>
-<li><code>sim/</code>: simulation assets and launch support</li>
-<li><code>docs/</code>: long-form project documentation</li>
-<li><code>notes/</code>: scratch notes and local operational references</li>
-</ul>
-<h2 id="what-exists-vs-what-is-planned">What Exists vs What Is Planned<a class="headerlink" href="#what-exists-vs-what-is-planned" title="Permanent link">&para;</a></h2>
-<h3 id="implemented-or-substantially-implemented">Implemented or substantially implemented<a class="headerlink" href="#implemented-or-substantially-implemented" title="Permanent link">&para;</a></h3>
-<ul>
-<li>native producer/consumer vision pipeline</li>
-<li>detections bridge into ROS 2</li>
-<li>build and CI basics</li>
-<li>robot description and core bringup scaffolding</li>
-</ul>
-<h3 id="in-active-specification-integration">In active specification / integration<a class="headerlink" href="#in-active-specification-integration" title="Permanent link">&para;</a></h3>
-<ul>
-<li>robot gateway for operator-facing control/state</li>
-<li>preview streaming path from <code>rkisp_mainpath</code></li>
-<li>host-side monitoring application shape</li>
-<li>separation between mission-critical and operator-facing runtime concerns</li>
-</ul>
-<h3 id="explicitly-later">Explicitly later<a class="headerlink" href="#explicitly-later" title="Permanent link">&para;</a></h3>
-<ul>
-<li>cloud bridge</li>
-<li>browser-first remote ops stack</li>
-<li>hardened fleet/deployment automation</li>
-</ul>
-<h2 id="documentation-strategy">Documentation Strategy<a class="headerlink" href="#documentation-strategy" title="Permanent link">&para;</a></h2>
-<p>This repo is gradually moving toward a consistent documentation style:</p>
-<ul>
-<li>one umbrella architecture page per major subsystem</li>
-<li>narrower spec pages for hot paths, contracts, or lifecycle-critical behavior</li>
-<li>implementation notes that reflect current state, not just end-state intent</li>
-</ul>
-<p>The vision docs are the current best example of this style, and newer subsystem
-docs should trend in that direction as the project is refined.</p>
 
 
 
@@ -1393,7 +1401,7 @@ docs should trend in that direction as the project is refined.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 19, 2026 22:18:15 UTC">March 19, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 7, 2026 00:33:52 UTC">July 7, 2026</span>
   </span>
 
     

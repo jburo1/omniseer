@@ -9,6 +9,10 @@
       
       
       
+        <link rel="prev" href="../vision_pipeline/">
+      
+      
+        <link rel="next" href="../consumer_pipeline/">
       
       
         
@@ -19,7 +23,7 @@
     
     
       
-        <title>Producer pipeline: camera → RGA → output pool (thread boundary) - omniseer</title>
+        <title>Producer pipeline - omniseer</title>
       
     
     
@@ -104,7 +108,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Producer pipeline: camera → RGA → output pool (thread boundary)
+              Producer pipeline
             
           </span>
         </div>
@@ -275,8 +279,10 @@
       
   
   
+    
   
   
+  
     
     
     
@@ -287,11 +293,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
           <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
@@ -312,7 +318,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -322,6 +328,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../edge_to_cloud_perception/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Edge-to-cloud perception
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -450,6 +484,286 @@
     
   
     Vision pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Producer pipeline
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Producer pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#glossary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Glossary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#0-one-time-setup-build-the-rings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0) One-time setup (build the rings)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="0) One-time setup (build the rings)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#camera-side-kernel-owned-ring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Camera side (kernel-owned ring)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#output-side-app-owned-pool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output side (app-owned pool)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-dequeue-a-camera-frame-borrow-a-kernel-ring-slot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1) Dequeue a camera frame (borrow a kernel ring slot)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-acquire-an-output-buffer-lease-exclusive-write-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2) Acquire an output buffer (lease exclusive write access)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-synchronization-coherency-dma-buf-physics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3) Synchronization / coherency (DMA-BUF “physics”)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-rga-preprocess-the-data-movement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4) RGA preprocess (the data movement)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-publish-commit-the-write-lease-cross-the-thread-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5) Publish (commit the write lease; cross the thread boundary)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-requeue-the-camera-slot-return-the-borrowed-ring-slot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6) Requeue the camera slot (return the borrowed ring slot)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-consumer-side-other-side-of-the-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7) Consumer side (other side of the boundary)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary-timeline-one-frame" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary timeline (one frame)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#compact-diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compact diagram
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../consumer_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Consumer pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vision_telemetry_spec/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision telemetry
   
 
     
@@ -893,6 +1207,7 @@
 
 
 <h1 id="producer-pipeline-camera-rga-output-pool-thread-boundary">Producer pipeline: camera → RGA → output pool (thread boundary)<a class="headerlink" href="#producer-pipeline-camera-rga-output-pool-thread-boundary" title="Permanent link">&para;</a></h1>
+<p><em>Status: implemented and hardware-verified</em></p>
 <p>This document describes the <strong>per-frame hot path</strong> through the producer side of the vision pipeline:</p>
 <p><strong>V4L2 camera capture (kernel ring)</strong> → <strong>DMA-BUF-backed source frame</strong> → <strong>RGA preprocess (src→dst blit/convert/resize/letterbox)</strong> → <strong>publish into output buffer pool</strong> (handoff to consumer).</p>
 <p>The core design pattern is <strong>scope-bound capability tokens</strong> (RAII) enforcing protocols:</p>
@@ -1088,7 +1403,7 @@ Consumer thread:
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 1, 2026 19:22:04 UTC">March 1, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 7, 2026 00:33:52 UTC">July 7, 2026</span>
   </span>
 
     

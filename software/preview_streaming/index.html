@@ -336,6 +336,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../edge_to_cloud_perception/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Edge-to-cloud perception
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../build_pipeline/" class="md-nav__link">
         
   
@@ -456,6 +484,90 @@
     
   
     Vision pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../producer_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Producer pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../consumer_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Consumer pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vision_telemetry_spec/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision telemetry
   
 
     
@@ -625,10 +737,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#proposed-default-pipeline" class="md-nav__link">
+  <a href="#current-and-target-pipeline" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Proposed Default Pipeline
+        Current and Target Pipeline
       
     </span>
   </a>
@@ -1020,10 +1132,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#proposed-default-pipeline" class="md-nav__link">
+  <a href="#current-and-target-pipeline" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Proposed Default Pipeline
+        Current and Target Pipeline
       
     </span>
   </a>
@@ -1217,6 +1329,7 @@
 
 
 <h1 id="preview-streaming">Preview Streaming<a class="headerlink" href="#preview-streaming" title="Permanent link">&para;</a></h1>
+<p><em>Status: software x264/SRT bringup path implemented; hardware H.265 planned</em></p>
 <p>This page describes the operator preview export path from the robot SBC to the
 operator laptop.</p>
 <p>The key design goal is to keep the preview path optional and low-impact while
@@ -1288,11 +1401,11 @@ vision stack.</p>
   operator preview flow.</p>
 </li>
 </ul>
-<h2 id="proposed-default-pipeline">Proposed Default Pipeline<a class="headerlink" href="#proposed-default-pipeline" title="Permanent link">&para;</a></h2>
+<h2 id="current-and-target-pipeline">Current and Target Pipeline<a class="headerlink" href="#current-and-target-pipeline" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code>rkisp_mainpath (/dev/video11, NV12)
             |
             v
-     preview worker
+     managed preview worker
             |
             +--&gt; encode (target: H.265, current fallback: x264 for bring-up)
             |
@@ -1302,7 +1415,8 @@ vision stack.</p>
             v
      operator laptop decode
             |
-            +--&gt; monitor app video panel
+     +--&gt; current external viewer process
+     +--&gt; planned monitor app video panel
             +--&gt; optional local ROS Image bridge
             +--&gt; optional host-side overlays / RViz2
 </code></pre></div>
@@ -1330,21 +1444,20 @@ operator monitoring.</p>
 </ul>
 <p>This is a diagnostics-oriented link, not a browser-delivery problem.</p>
 <h2 id="preview-profiles">Preview Profiles<a class="headerlink" href="#preview-profiles" title="Permanent link">&para;</a></h2>
-<p>The preview path should expose bounded named profiles, not raw encoder knobs.</p>
-<p>Suggested initial profiles:</p>
+<p>The preview path exposes bounded named profiles, not raw encoder knobs.</p>
+<p>Implemented profiles:</p>
 <ul>
 <li><code>off</code></li>
 <li><code>low_bw</code></li>
 <li><code>balanced</code></li>
 <li><code>high_quality</code></li>
 </ul>
-<p>Candidate meanings:</p>
+<p>Current x264 meanings:</p>
 <ul>
 <li><code>off</code>: no preview worker running</li>
-<li><code>low_bw</code>: e.g. 720p, reduced fps, modest bitrate</li>
-<li><code>balanced</code>: 720p, moderate fps/bitrate</li>
-<li><code>high_quality</code>: higher bitrate and possibly higher resolution if budget
-  allows</li>
+<li><code>low_bw</code>: 720p, 15 fps, 1000 kbit/s</li>
+<li><code>balanced</code>: 720p, 30 fps, 2500 kbit/s</li>
+<li><code>high_quality</code>: 720p, 60 fps, 4500 kbit/s</li>
 </ul>
 <p>The exact numbers can be tuned later after integration and Wi-Fi testing.</p>
 <h2 id="sync-model">Sync Model<a class="headerlink" href="#sync-model" title="Permanent link">&para;</a></h2>
@@ -1364,8 +1477,7 @@ operator monitoring.</p>
 </ul>
 <p>This should not be the default always-on path.</p>
 <h2 id="worker-lifecycle">Worker Lifecycle<a class="headerlink" href="#worker-lifecycle" title="Permanent link">&para;</a></h2>
-<p>The preview worker should be managed by the robot gateway or initial
-<code>robot-diag-control</code> process.</p>
+<p>The preview worker is managed by the <code>robot_diag_control_cpp</code> gateway process.</p>
 <p>Basic lifecycle:</p>
 <ol>
 <li>preview disabled</li>
@@ -1375,8 +1487,8 @@ operator monitoring.</p>
 <li>operator disables preview</li>
 <li>gateway terminates preview worker</li>
 </ol>
-<p>The worker should be disposable. If it dies, the mission-critical runtime keeps
-running.</p>
+<p>The worker is disposable. Its process state is polled by the gateway, and worker
+failure does not terminate the mission-critical runtime.</p>
 <h2 id="current-encoder-options">Current Encoder Options<a class="headerlink" href="#current-encoder-options" title="Permanent link">&para;</a></h2>
 <h3 id="desired-production-path">Desired production path<a class="headerlink" href="#desired-production-path" title="Permanent link">&para;</a></h3>
 <ul>
@@ -1425,6 +1537,7 @@ only assume general-purpose CPU/GPU resources and likely hardware video decode.<
 <li>what preview profile defaults should be used over the current Wi-Fi setup</li>
 <li>whether decoded preview should be bridged into ROS on the host in the first
   UI slices or kept as a plain video panel initially</li>
+<li>how recorded preview evidence should correlate with the planned perception run bundle</li>
 </ul>
 <h2 id="related-docs">Related Docs<a class="headerlink" href="#related-docs" title="Permanent link">&para;</a></h2>
 <ul>
@@ -1452,7 +1565,7 @@ only assume general-purpose CPU/GPU resources and likely hardware video decode.<
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 21, 2026 18:06:51 UTC">March 21, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 7, 2026 00:33:52 UTC">July 7, 2026</span>
   </span>
 
     

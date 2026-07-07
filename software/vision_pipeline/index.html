@@ -12,7 +12,7 @@
         <link rel="prev" href="../code_documentation/">
       
       
-        <link rel="next" href="../remote_monitoring_architecture/">
+        <link rel="next" href="../producer_pipeline/">
       
       
         
@@ -336,6 +336,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../edge_to_cloud_perception/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Edge-to-cloud perception
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../build_pipeline/" class="md-nav__link">
         
   
@@ -457,6 +485,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision pipeline
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -474,6 +520,308 @@
 
       </a>
       
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#major-design-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Major Design Considerations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#glossary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Glossary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pipeline-stages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pipeline Stages
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Diagram
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interfaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interfaces
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Interfaces">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#core-data-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core data types
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#capture-v4l2capture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Capture: V4l2Capture
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#preprocess-rgapreprocess" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preprocess: RgaPreprocess
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#buffering-imagebufferpool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Buffering: ImageBufferPool
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#buffer-allocation-dmaheapallocator-dmaheapallocation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Buffer Allocation: DmaHeapAllocator + DmaHeapAllocation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ownership-lifetime-rules-for-buffers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ownership &amp; Lifetime Rules for Buffers
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Ownership &amp; Lifetime Rules for Buffers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#v4l2-ring-slots-framedescriptor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        V4L2 ring slots (FrameDescriptor)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#model-input-buffers-imagebufferpool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Model input buffers (ImageBufferPool)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#overview-of-producer-responsibilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview of Producer Responsibilities
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#consumer-responsibilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Consumer Responsibilities
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#threading-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Threading Model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#failure-modes-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Failure Modes &amp; Handling
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../producer_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Producer pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../consumer_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Consumer pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vision_telemetry_spec/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision telemetry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -733,6 +1081,213 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#major-design-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Major Design Considerations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#glossary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Glossary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pipeline-stages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pipeline Stages
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Diagram
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interfaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interfaces
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Interfaces">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#core-data-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core data types
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#capture-v4l2capture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Capture: V4l2Capture
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#preprocess-rgapreprocess" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preprocess: RgaPreprocess
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#buffering-imagebufferpool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Buffering: ImageBufferPool
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#buffer-allocation-dmaheapallocator-dmaheapallocation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Buffer Allocation: DmaHeapAllocator + DmaHeapAllocation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ownership-lifetime-rules-for-buffers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ownership &amp; Lifetime Rules for Buffers
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Ownership &amp; Lifetime Rules for Buffers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#v4l2-ring-slots-framedescriptor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        V4L2 ring slots (FrameDescriptor)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#model-input-buffers-imagebufferpool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Model input buffers (ImageBufferPool)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#overview-of-producer-responsibilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview of Producer Responsibilities
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#consumer-responsibilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Consumer Responsibilities
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#threading-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Threading Model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#failure-modes-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Failure Modes &amp; Handling
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -752,8 +1307,16 @@
 
 
 <h1 id="vision-pipeline">Vision Pipeline<a class="headerlink" href="#vision-pipeline" title="Permanent link">&para;</a></h1>
-<p>This document describes the architecture and implementation details of my multi-stage, low-latency, zero copy-ish, real-time computer vision pipeline that transforms raw pixel data of a scene into object detections within it. These detections drive the robot's navigation and behavior policy.</p>
-<h1 id="todo-when-online-write-some-measurements-here-eg-inference-achieves-xfps-at-y-format-here-maybe-link-to-profiler-jsonl-dump-etcs">TODO when online, write some measurements here, e.g. inference achieves xfps at Y format here, maybe link to profiler JSONL dump etcs<a class="headerlink" href="#todo-when-online-write-some-measurements-here-eg-inference-achieves-xfps-at-y-format-here-maybe-link-to-profiler-jsonl-dump-etcs" title="Permanent link">&para;</a></h1>
+<p><em>Status: implemented; target-hardware performance results still need publication</em></p>
+<p>This document describes the multi-stage, low-latency, zero-copy-oriented vision
+pipeline that transforms camera frames into open-vocabulary object detections. The
+current portfolio direction uses those detections for measured perception experiments,
+not autonomous seek-and-capture behavior.</p>
+<p>The producer, consumer, YOLO-World post-processing, text-embedding preparation,
+rolling telemetry, JSONL telemetry, native harness, and ROS bridge are implemented.
+Portable components are CI-verified. V4L2, RGA, and RKNN behavior requires the ROCK
+5B+ and is hardware-verified separately. A published performance table and repeatable
+experiment report remain planned.</p>
 <h2 id="major-design-considerations">Major Design Considerations<a class="headerlink" href="#major-design-considerations" title="Permanent link">&para;</a></h2>
 <ul>
 <li>
@@ -823,14 +1386,21 @@
 <td>Consumer</td>
 <td><code>ImageBuffer</code> (RGB DMA-BUF)</td>
 <td>model outputs</td>
-<td><code>vision/include/omniseer/vision/rknn_runner.hpp</code> (TODO), <code>vision/src/rknn_runner.cpp</code> (TODO)</td>
+<td><code>rknn_runner.hpp/cpp</code></td>
 </tr>
 <tr>
-<td>Postprocess/Publish</td>
+<td>Postprocess</td>
 <td>Consumer</td>
 <td>model outputs</td>
-<td>ROS msgs, telemetry</td>
-<td>TODO</td>
+<td>bounded source-space detections</td>
+<td><code>yolo_world_postprocess.hpp/cpp</code></td>
+</tr>
+<tr>
+<td>Publish</td>
+<td>Consumer/adapter</td>
+<td>canonical detections</td>
+<td>ROS messages, preview, telemetry</td>
+<td><code>consumer_pipeline.cpp</code>, <code>vision_bridge_node.cpp</code></td>
 </tr>
 </tbody>
 </table>
@@ -1041,7 +1611,7 @@ Return paths:
 </ul>
 <p>Provide a simple struct like:</p>
 <p>timestamp, list of {class_id, score, x1,y1,x2,y2} in original image coordinates</p>
-<p>Feed tracking / “seek-and-capture” logic.</p>
+<p>Feed typed ROS consumers, experiment recording, or optional operator tools.</p>
 <ul>
 <li>Release buffer</li>
 </ul>
@@ -1049,7 +1619,7 @@ Return paths:
 <p>A minimal consumer loop looks like:</p>
 <p>acquire → infer → decode → publish → release
 (no queue buildup, no waiting on stale frames)</p>
-<h2 id="threading-model-current-intended">Threading Model (Current Intended)<a class="headerlink" href="#threading-model-current-intended" title="Permanent link">&para;</a></h2>
+<h2 id="threading-model">Threading Model<a class="headerlink" href="#threading-model" title="Permanent link">&para;</a></h2>
 <p>Two threads:</p>
 <p>1) Capture/Preprocess thread (producer):
    - <code>cap.dequeue(frame)</code> (nonblocking loop/poll)
@@ -1058,9 +1628,11 @@ Return paths:
    - <code>pool.publish_ready(idx)</code>
    - <code>cap.requeue(frame.v4l2_index)</code></p>
 <p>2) Inference thread (consumer):
-   - <code>pool.acquire_read(idx)</code> (nonblocking loop/condition variable)
-   - <code>rknn.infer(pool.buffer_at(idx), ...)</code> (TODO)
-   - <code>pool.publish_release(idx)</code></p>
+   - acquire a move-only <code>ReadLease</code> from the latest-ready slot
+   - run pre-bound RKNN inference for that pool index
+   - decode, threshold, apply NMS, and inverse-map detections
+   - publish through narrow detection and optional preview sinks
+   - release the lease exactly once</p>
 <h2 id="failure-modes-handling">Failure Modes &amp; Handling<a class="headerlink" href="#failure-modes-handling" title="Permanent link">&para;</a></h2>
 
 
@@ -1082,7 +1654,7 @@ Return paths:
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 1, 2026 19:22:04 UTC">March 1, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 7, 2026 00:33:52 UTC">July 7, 2026</span>
   </span>
 
     

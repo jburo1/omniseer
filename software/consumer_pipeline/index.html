@@ -9,6 +9,10 @@
       
       
       
+        <link rel="prev" href="../producer_pipeline/">
+      
+      
+        <link rel="next" href="../vision_telemetry_spec/">
       
       
         
@@ -19,7 +23,7 @@
     
     
       
-        <title>Consumer pipeline: ready pool -> RKNN -> detections -> release (thread boundary) - omniseer</title>
+        <title>Consumer pipeline - omniseer</title>
       
     
     
@@ -104,7 +108,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Consumer pipeline: ready pool -&gt; RKNN -&gt; detections -&gt; release (thread boundary)
+              Consumer pipeline
             
           </span>
         </div>
@@ -275,8 +279,10 @@
       
   
   
+    
   
   
+  
     
     
     
@@ -287,11 +293,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
           <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
@@ -312,7 +318,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -322,6 +328,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../edge_to_cloud_perception/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Edge-to-cloud perception
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -450,6 +484,275 @@
     
   
     Vision pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../producer_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Producer pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Consumer pipeline
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Consumer pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#glossary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Glossary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#0-one-time-setup-preflight-arm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0) One-time setup (preflight / arm)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-acquire-latest-ready-slot-latest-wins" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1) Acquire latest ready slot (latest-wins)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-infer-stage-npu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2) Infer stage (NPU)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2) Infer stage (NPU)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fd-backed-binding-required-in-v1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FD-backed binding (required in v1)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-postprocess-stage-deterministic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3) Postprocess stage (deterministic)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-publish-stage-single-canonical-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4) Publish stage (single canonical output)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-release-stage-return-slot-to-pool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5) Release stage (return slot to pool)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-telemetry-and-latency-accounting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6) Telemetry and latency accounting
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-failure-policy-and-return-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7) Failure policy and return contract
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#definition-of-done-v1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Definition of Done (v1)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#compact-diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compact diagram
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vision_telemetry_spec/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision telemetry
   
 
     
@@ -882,6 +1185,7 @@
 
 
 <h1 id="consumer-pipeline-ready-pool-rknn-detections-release-thread-boundary">Consumer pipeline: ready pool -&gt; RKNN -&gt; detections -&gt; release (thread boundary)<a class="headerlink" href="#consumer-pipeline-ready-pool-rknn-detections-release-thread-boundary" title="Permanent link">&para;</a></h1>
+<p><em>Status: implemented and hardware-verified</em></p>
 <p>This document describes the <strong>per-frame hot path</strong> through the consumer side of the vision pipeline:</p>
 <p><strong>ImageBufferPool latest-ready slot</strong> -&gt; <strong>RKNN inference (NPU)</strong> -&gt; <strong>deterministic postprocess (decode + NMS + inverse letterbox)</strong> -&gt; <strong>publish canonical detections</strong> -&gt; <strong>release pool slot</strong>.</p>
 <p>Goals:
@@ -889,6 +1193,11 @@
 - <strong>One in-flight frame</strong>.
 - <strong>No per-frame allocations</strong>.
 - <strong>Minimal status surface</strong>.</p>
+<p>The consumer is integrated into <code>omniseer_vision_bridge</code>. The bridge loads a class
+list at startup, prepares YOLO-World text embeddings, publishes typed detections on
+<code>/yolo/detections</code>, and publishes rolling performance summaries on <code>/vision/perf</code>.
+Native runtime class replacement is planned; the existing Python <code>yolo_ros</code>
+<code>SetClasses</code> service does not currently reconfigure this native consumer.</p>
 <hr />
 <h2 id="glossary">Glossary<a class="headerlink" href="#glossary" title="Permanent link">&para;</a></h2>
 <ul>
@@ -1022,19 +1331,21 @@
 <hr />
 <h2 id="definition-of-done-v1">Definition of Done (v1)<a class="headerlink" href="#definition-of-done-v1" title="Permanent link">&para;</a></h2>
 <ul>
-<li>[ ] Single-thread consumer loop with latest-wins semantics.</li>
-<li>[ ] One in-flight frame max, no consumer backlog queue.</li>
-<li>[ ] No per-frame allocations in steady state.</li>
-<li>[ ] RKNN preflight includes IO query + warm-up.</li>
-<li>[ ] RKNN input path uses FD-backed <code>rknn_create_mem_from_fd</code> + <code>rknn_set_io_mem</code>.</li>
-<li>[ ] Consumer slot ownership uses <code>ReadLease</code> RAII (mirror of producer-side lease discipline).</li>
-<li>[ ] Deterministic postprocess bounds (<code>top_k_per_class</code>, <code>max_det</code>).</li>
-<li>[ ] Inverse letterbox mapping implemented and unit-tested.</li>
-<li>[ ] Single canonical publish boundary in consumer.</li>
-<li>[ ] Remap geometry is sourced from one immutable process-global config location.</li>
-<li>[ ] Telemetry emitted with consumer stage timings and status mask.</li>
-<li>[ ] Clean shutdown (stop loop, release resources, stop publishers).</li>
+<li>[x] Single-thread consumer loop with latest-wins semantics.</li>
+<li>[x] One in-flight frame max, no consumer backlog queue.</li>
+<li>[x] No per-frame allocations in steady state.</li>
+<li>[x] RKNN preflight includes IO query + warm-up.</li>
+<li>[x] RKNN input path uses FD-backed <code>rknn_create_mem_from_fd</code> + <code>rknn_set_io_mem</code>.</li>
+<li>[x] Consumer slot ownership uses <code>ReadLease</code> RAII.</li>
+<li>[x] Deterministic postprocess bounds and fixed-capacity detection output.</li>
+<li>[x] Inverse letterbox mapping implemented and unit-tested.</li>
+<li>[x] Single canonical publish boundary in consumer.</li>
+<li>[x] Remap geometry is provided from producer preflight.</li>
+<li>[x] Telemetry emitted with consumer stage timings and status mask.</li>
+<li>[x] Runtime shutdown joins threads and releases camera, runner, and pool resources.</li>
 </ul>
+<p>Remaining product work sits outside the v1 hot path: native runtime class updates,
+structured experiment recording, resource telemetry, and cloud review.</p>
 <hr />
 <h2 id="compact-diagram">Compact diagram<a class="headerlink" href="#compact-diagram" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code>Consumer thread:
@@ -1073,7 +1384,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 16, 2026 01:57:12 UTC">March 16, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 7, 2026 00:33:52 UTC">July 7, 2026</span>
   </span>
 
     

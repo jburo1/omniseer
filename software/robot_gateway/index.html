@@ -336,6 +336,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../edge_to_cloud_perception/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Edge-to-cloud perception
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../build_pipeline/" class="md-nav__link">
         
   
@@ -476,6 +504,90 @@
   
   
     <li class="md-nav__item">
+      <a href="../producer_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Producer pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../consumer_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Consumer pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vision_telemetry_spec/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision telemetry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../remote_monitoring_architecture/" class="md-nav__link">
         
   
@@ -586,10 +698,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#near-term-implementation-shape" class="md-nav__link">
+  <a href="#implementation-shape" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Near-Term Implementation Shape
+        Implementation Shape
       
     </span>
   </a>
@@ -608,10 +720,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#proposed-high-level-shape" class="md-nav__link">
+  <a href="#high-level-shape" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Proposed High-Level Shape
+        High-Level Shape
       
     </span>
   </a>
@@ -691,15 +803,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#suggested-internal-modules" class="md-nav__link">
+  <a href="#internal-modules" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Suggested Internal Modules
+        Internal Modules
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Suggested Internal Modules">
+    <nav class="md-nav" aria-label="Internal Modules">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -824,10 +936,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#first-slice-candidates" class="md-nav__link">
+  <a href="#rollout-status" class="md-nav__link">
     <span class="md-ellipsis">
       
-        First Slice Candidates
+        Rollout Status
       
     </span>
   </a>
@@ -1081,10 +1193,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#near-term-implementation-shape" class="md-nav__link">
+  <a href="#implementation-shape" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Near-Term Implementation Shape
+        Implementation Shape
       
     </span>
   </a>
@@ -1103,10 +1215,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#proposed-high-level-shape" class="md-nav__link">
+  <a href="#high-level-shape" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Proposed High-Level Shape
+        High-Level Shape
       
     </span>
   </a>
@@ -1186,15 +1298,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#suggested-internal-modules" class="md-nav__link">
+  <a href="#internal-modules" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Suggested Internal Modules
+        Internal Modules
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Suggested Internal Modules">
+    <nav class="md-nav" aria-label="Internal Modules">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1319,10 +1431,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#first-slice-candidates" class="md-nav__link">
+  <a href="#rollout-status" class="md-nav__link">
     <span class="md-ellipsis">
       
-        First Slice Candidates
+        Rollout Status
       
     </span>
   </a>
@@ -1361,12 +1473,11 @@
 
 
 <h1 id="robot-gateway">Robot Gateway<a class="headerlink" href="#robot-gateway" title="Permanent link">&para;</a></h1>
-<p>This document describes the planned operator-facing gateway that will sit
-between the robot's internal ROS 2 graph and the external operator laptop
-application.</p>
-<p>The gateway does <strong>not</strong> exist yet as a standalone implemented subsystem.
-However, the architecture direction is now clear enough to document the shape
-and build toward it deliberately.</p>
+<p><em>Status: implemented v1 diagnostics and preview-control slice</em></p>
+<p>This document describes the operator-facing gateway between the robot's internal
+ROS 2 graph and the external operator laptop application. The first C++ gateway,
+typed gRPC API, preview lifecycle manager, and Python operator tools are implemented.
+Teleop, experiment export control, and cloud integration remain planned.</p>
 <h2 id="purpose">Purpose<a class="headerlink" href="#purpose" title="Permanent link">&para;</a></h2>
 <p>Provide one explicit integration boundary for operator-facing features:</p>
 <ul>
@@ -1386,7 +1497,7 @@ and services.</p>
 <li>native vision runtime</li>
 <li><code>omniseer_vision_bridge</code> publishing detections into ROS 2</li>
 <li>RViz and debug tooling on the ROS side</li>
-<li>a draft remote monitoring architecture spec</li>
+<li>a remote monitoring architecture spec</li>
 <li>a <code>robot_diag_control_cpp</code> package with:</li>
 <li>a shared generated C++ gRPC/protobuf library from the locked <code>.proto</code></li>
 <li>an in-memory gateway state store</li>
@@ -1404,14 +1515,15 @@ and services.</p>
 <li>stream endpoint metadata in the API</li>
 <li>the intended low-overhead hardware H.265 preview path</li>
 <li>an embedded preview panel inside the host-side GUI</li>
+<li>experiment recording or cloud synchronization RPCs</li>
 </ul>
 <p>Near-term direction:</p>
 <ul>
-<li>start with <code>robot-diag-control</code> inside <code>robot-core</code></li>
-<li>let that component evolve into the first version of the robot gateway</li>
-<li>keep the first scope narrow: diagnostics and preview control</li>
+<li>keep <code>robot_diag_control_cpp</code> inside <code>robot-core</code></li>
+<li>use the gateway for optional status and preview control</li>
+<li>add experiment export control only after the local recorder contract is stable</li>
 </ul>
-<h2 id="near-term-implementation-shape">Near-Term Implementation Shape<a class="headerlink" href="#near-term-implementation-shape" title="Permanent link">&para;</a></h2>
+<h2 id="implementation-shape">Implementation Shape<a class="headerlink" href="#implementation-shape" title="Permanent link">&para;</a></h2>
 <p>The current C++ implementation stays deliberately simple:</p>
 <ul>
 <li>one process</li>
@@ -1424,13 +1536,13 @@ and services.</p>
 <ol>
 <li>add a standalone C++ gRPC service/server layer with tests</li>
 <li>wire that layer into the existing ROS-backed node</li>
-<li>replace the stubbed preview toggle with a gateway-owned subprocess lifecycle</li>
+<li>replace the original stubbed preview toggle with a gateway-owned subprocess lifecycle</li>
 <li>wire the first real preview export command into that lifecycle</li>
 </ol>
 <p>This keeps the control/status boundary small while avoiding premature async
 gRPC complexity.</p>
-<p>The next slice should be either an embedded preview panel or a targeted API
-expansion, not more transport abstraction.</p>
+<p>The next portfolio-facing slice is experiment observability and review integration,
+not more gateway transport abstraction.</p>
 <h2 id="major-design-considerations">Major Design Considerations<a class="headerlink" href="#major-design-considerations" title="Permanent link">&para;</a></h2>
 <ul>
 <li>
@@ -1457,7 +1569,7 @@ expansion, not more transport abstraction.</p>
   graph.</p>
 </li>
 </ul>
-<h2 id="proposed-high-level-shape">Proposed High-Level Shape<a class="headerlink" href="#proposed-high-level-shape" title="Permanent link">&para;</a></h2>
+<h2 id="high-level-shape">High-Level Shape<a class="headerlink" href="#high-level-shape" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code>                    [ Operator Laptop App ]
                                |
                     gRPC control / state API
@@ -1527,7 +1639,7 @@ expansion, not more transport abstraction.</p>
 <li>generic ROS graph proxying</li>
 <li>replacing local mission-critical ROS consumers</li>
 </ul>
-<h2 id="suggested-internal-modules">Suggested Internal Modules<a class="headerlink" href="#suggested-internal-modules" title="Permanent link">&para;</a></h2>
+<h2 id="internal-modules">Internal Modules<a class="headerlink" href="#internal-modules" title="Permanent link">&para;</a></h2>
 <h3 id="grpc-server">gRPC server<a class="headerlink" href="#grpc-server" title="Permanent link">&para;</a></h3>
 <p>Accepts operator requests and exposes state.</p>
 <p>Likely responsibilities:</p>
@@ -1578,7 +1690,7 @@ expansion, not more transport abstraction.</p>
 <li>Gateway validates the request.</li>
 <li>Gateway resolves a bounded preview profile.</li>
 <li>Gateway spawns the preview worker.</li>
-<li>Gateway reports preview state and stream endpoint.</li>
+<li>Gateway reports preview state; the current client uses configured endpoint data.</li>
 </ol>
 <h3 id="preview-disable-flow">Preview disable flow<a class="headerlink" href="#preview-disable-flow" title="Permanent link">&para;</a></h3>
 <ol>
@@ -1607,16 +1719,21 @@ and fail-closed behavior for optional diagnostics.</p>
 </ul>
 <p>This does not need a full metrics system on day one, but the component should
 be structured so that basic telemetry is easy to add.</p>
-<h2 id="first-slice-candidates">First Slice Candidates<a class="headerlink" href="#first-slice-candidates" title="Permanent link">&para;</a></h2>
-<ol>
-<li>Define the gRPC service and protobuf contract.</li>
-<li>Implement a minimal gateway process with:</li>
-<li><code>GetSystemStatus</code></li>
-<li><code>SetPreviewMode</code></li>
-<li>in-memory preview state only</li>
-<li>Add subprocess management for the preview worker.</li>
-<li>Add ROS adapter wiring once the API surface is stable enough.</li>
-</ol>
+<h2 id="rollout-status">Rollout Status<a class="headerlink" href="#rollout-status" title="Permanent link">&para;</a></h2>
+<p><strong>Implemented:</strong></p>
+<ul>
+<li>locked unary gRPC service and generated C++/Python code</li>
+<li>cache-backed system status from ROS vision and odometry inputs</li>
+<li>bounded preview profiles and subprocess lifecycle management</li>
+<li>CLI, monitor shell, Tk monitor, and SRT preview helper</li>
+</ul>
+<p><strong>Planned:</strong></p>
+<ul>
+<li>experiment recording/export control after the recorder contract is proven</li>
+<li>stream endpoint metadata and an embedded preview panel</li>
+<li>hardware H.265 encode</li>
+<li>any cloud-facing gateway behavior</li>
+</ul>
 <h2 id="related-docs">Related Docs<a class="headerlink" href="#related-docs" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../remote_monitoring_architecture/">Remote monitoring architecture</a></li>
@@ -1643,7 +1760,7 @@ be structured so that basic telemetry is easy to add.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 21, 2026 18:06:51 UTC">March 21, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 7, 2026 00:33:52 UTC">July 7, 2026</span>
   </span>
 
     

@@ -9,7 +9,7 @@
       
       
       
-        <link rel="prev" href="../vision_pipeline/">
+        <link rel="prev" href="../vision_telemetry_spec/">
       
       
         <link rel="next" href="../robot_gateway/">
@@ -336,6 +336,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../edge_to_cloud_perception/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Edge-to-cloud perception
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../build_pipeline/" class="md-nav__link">
         
   
@@ -456,6 +484,90 @@
     
   
     Vision pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../producer_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Producer pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../consumer_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Consumer pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vision_telemetry_spec/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision telemetry
   
 
     
@@ -2139,8 +2251,8 @@
 
 
 <h1 id="remote-monitoring-architecture-spec">Remote Monitoring Architecture Spec<a class="headerlink" href="#remote-monitoring-architecture-spec" title="Permanent link">&para;</a></h1>
-<p><em>Status: draft v0</em></p>
-<p><em>Last updated: 2026-03-19</em></p>
+<p><em>Status: v1 diagnostics baseline implemented; experiment/cloud review integration planned</em></p>
+<p><em>Last updated: 2026-07-06</em></p>
 <h2 id="1-purpose">1) Purpose<a class="headerlink" href="#1-purpose" title="Permanent link">&para;</a></h2>
 <p>Define a concrete architecture for:</p>
 <ul>
@@ -2148,10 +2260,15 @@
 <li>optional operator-controlled preview streaming to a laptop</li>
 <li>off-robot monitoring, visualization, recording, and analysis</li>
 </ul>
+<p>The gRPC status/control boundary, managed x264/SRT preview worker, and laptop tools
+described by the initial slices are now implemented. This specification remains the
+design reference for isolation and future evolution. The active portfolio direction
+uses these capabilities to support open-vocabulary perception experiments; structured
+recording, cloud synchronization, and hosted review are planned.</p>
 <p>The key constraint is that the SBC should spend nearly all steady-state compute on robot-critical work. Preview and diagnostics should be optional, explicitly budgeted, and easy to disable.</p>
 <h2 id="2-goals">2) Goals<a class="headerlink" href="#2-goals" title="Permanent link">&para;</a></h2>
 <ol>
-<li>Keep autonomy and perception functional even when diagnostics are disabled, disconnected, or broken.</li>
+<li>Keep robot behavior and perception functional even when diagnostics are disabled, disconnected, or broken.</li>
 <li>Make preview streaming opt-in and remotely controllable from the laptop.</li>
 <li>Keep ROS 2 internal to the robot runtime and use explicit external protocols for operator connectivity.</li>
 <li>Run RViz2, overlays, plots, bagging, and higher-cost analysis on the host.</li>
@@ -2196,7 +2313,7 @@
 <li>preprocess</li>
 <li>inference</li>
 <li>detection publication</li>
-<li>local behavior/autonomy consumers</li>
+<li>local robot-behavior consumers</li>
 <li>local health and perf reporting</li>
 </ul>
 <h3 id="52-diagnostic-plane">5.2 Diagnostic Plane<a class="headerlink" href="#52-diagnostic-plane" title="Permanent link">&para;</a></h3>
@@ -2683,18 +2800,28 @@ local helper process.</p>
 </ul>
 <p>This means preview has a strict lifecycle and no steady-state cost when disabled.</p>
 <h2 id="16-recommended-first-implementation-slices">16) Recommended First Implementation Slices<a class="headerlink" href="#16-recommended-first-implementation-slices" title="Permanent link">&para;</a></h2>
+<p>Completed:</p>
 <ol>
-<li>Add <code>robot-diag-control</code> inside <code>robot-core</code> with preview state reporting and a stubbed preview state machine.</li>
-<li>Add a narrow gRPC surface for preview status/control that can later grow into the robot gateway.</li>
-<li>Add a managed preview streamer subprocess controlled by <code>robot-diag-control</code>, using <code>/dev/video11</code>.</li>
-<li>Add host-side RViz2 / analysis integration.</li>
-<li>Only after that, decide whether a separate <code>robot-video</code> container or an exact-sync debug mode is worth the added complexity.</li>
+<li>Added <code>robot_diag_control_cpp</code> with cache-backed status and preview state.</li>
+<li>Added the narrow <code>GetSystemStatus</code> and <code>SetPreviewMode</code> gRPC surface.</li>
+<li>Added a managed x264/MPEG-TS/SRT preview subprocess using <code>/dev/video11</code>.</li>
+<li>Added packaged host CLI, shell, Tk monitor, and preview-viewer tools.</li>
+</ol>
+<p>Planned:</p>
+<ol>
+<li>Integrate experiment recording and offboard review without placing them on the
+   mission-critical hot path.</li>
+<li>Add hardware H.265 when the SBC userspace path is available.</li>
+<li>Revisit exact-sync preview or a separate video container only if measured needs
+   justify the complexity.</li>
 </ol>
 <h2 id="17-open-questions">17) Open Questions<a class="headerlink" href="#17-open-questions" title="Permanent link">&para;</a></h2>
 <ol>
 <li>What hardware H.265 userspace path should be installed or enabled on the SBC image.</li>
-<li>Whether the first preview slice should use software <code>x264</code> as a bring-up path or wait for hardware H.265 integration.</li>
-<li>Whether the first host-side overlay path should decode preview into ROS <code>Image</code> locally, or keep video display separate from ROS overlays until later.</li>
+<li>How the offboard review workflow should correlate preview evidence with detections
+   and performance samples.</li>
+<li>Whether the first hosted review should consume uploaded static run bundles or a
+   later gateway-mediated transport.</li>
 </ol>
 
 
@@ -2716,7 +2843,7 @@ local helper process.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 19, 2026 22:18:15 UTC">March 19, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 7, 2026 00:33:52 UTC">July 7, 2026</span>
   </span>
 
     

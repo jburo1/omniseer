@@ -336,6 +336,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../edge_to_cloud_perception/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Edge-to-cloud perception
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../build_pipeline/" class="md-nav__link">
         
   
@@ -456,6 +484,90 @@
     
   
     Vision pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../producer_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Producer pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../consumer_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Consumer pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vision_telemetry_spec/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision telemetry
   
 
     
@@ -708,15 +820,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#suggested-core-messages" class="md-nav__link">
+  <a href="#core-messages" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Suggested Core Messages
+        Core Messages
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Suggested Core Messages">
+    <nav class="md-nav" aria-label="Core Messages">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -769,10 +881,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#suggested-enums" class="md-nav__link">
+  <a href="#enums" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Suggested Enums
+        Enums
       
     </span>
   </a>
@@ -824,10 +936,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#first-slice-candidates" class="md-nav__link">
+  <a href="#rollout-history" class="md-nav__link">
     <span class="md-ellipsis">
       
-        First Slice Candidates
+        Rollout History
       
     </span>
   </a>
@@ -1091,15 +1203,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#suggested-core-messages" class="md-nav__link">
+  <a href="#core-messages" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Suggested Core Messages
+        Core Messages
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Suggested Core Messages">
+    <nav class="md-nav" aria-label="Core Messages">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1152,10 +1264,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#suggested-enums" class="md-nav__link">
+  <a href="#enums" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Suggested Enums
+        Enums
       
     </span>
   </a>
@@ -1207,10 +1319,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#first-slice-candidates" class="md-nav__link">
+  <a href="#rollout-history" class="md-nav__link">
     <span class="md-ellipsis">
       
-        First Slice Candidates
+        Rollout History
       
     </span>
   </a>
@@ -1249,6 +1361,7 @@
 
 
 <h1 id="gateway-api">Gateway API<a class="headerlink" href="#gateway-api" title="Permanent link">&para;</a></h1>
+<p><em>Status: locked unary v1 API implemented</em></p>
 <p>This document describes the intended external API contract between the operator
 laptop application and the robot gateway.</p>
 <p>The selected direction for the first implementation is:</p>
@@ -1324,8 +1437,8 @@ laptop application and the robot gateway.</p>
 <li><code>SubscribeEvents</code></li>
 <li><code>Ping</code></li>
 </ul>
-<p>Teleop and cloud-facing operations should wait until the diagnostics/control
-plane is stable.</p>
+<p>Teleop and cloud-facing operations remain outside v1. Experiment export control should
+be considered only after the local recorder contract is stable.</p>
 <h2 id="high-level-api-shape">High-Level API Shape<a class="headerlink" href="#high-level-api-shape" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code>Operator App  -- gRPC --&gt;  Robot Gateway  -- ROS adapter --&gt; internal ROS graph
                                      |
@@ -1383,7 +1496,7 @@ Keep it small and evolve additively.</p>
 <li>any streaming or multi-client behavior</li>
 <li>an embedded video panel inside the GUI</li>
 </ul>
-<h2 id="suggested-core-messages">Suggested Core Messages<a class="headerlink" href="#suggested-core-messages" title="Permanent link">&para;</a></h2>
+<h2 id="core-messages">Core Messages<a class="headerlink" href="#core-messages" title="Permanent link">&para;</a></h2>
 <h3 id="systemstatus"><code>SystemStatus</code><a class="headerlink" href="#systemstatus" title="Permanent link">&para;</a></h3>
 <p>Current contents:</p>
 <ul>
@@ -1426,10 +1539,9 @@ Keep it small and evolve additively.</p>
 <li><code>string message</code></li>
 <li><code>PreviewStatus preview</code></li>
 </ul>
-<h2 id="suggested-enums">Suggested Enums<a class="headerlink" href="#suggested-enums" title="Permanent link">&para;</a></h2>
-<p>The first version should use explicit enums rather than free-form strings where
-possible.</p>
-<p>Candidate enums:</p>
+<h2 id="enums">Enums<a class="headerlink" href="#enums" title="Permanent link">&para;</a></h2>
+<p>The first version uses explicit enums rather than free-form strings.</p>
+<p>Current enums:</p>
 <ul>
 <li><code>PreviewState</code></li>
 <li><code>PREVIEW_STATE_UNSPECIFIED</code></li>
@@ -1491,7 +1603,7 @@ leak into the protobuf contract.</p>
 <li>full teleop command set</li>
 <li>browser-specific signaling flows</li>
 </ul>
-<h2 id="first-slice-candidates">First Slice Candidates<a class="headerlink" href="#first-slice-candidates" title="Permanent link">&para;</a></h2>
+<h2 id="rollout-history">Rollout History<a class="headerlink" href="#rollout-history" title="Permanent link">&para;</a></h2>
 <ol>
 <li>Create the protobuf package and generate code for the chosen languages.</li>
 <li>Implement a standalone C++ gRPC service/server layer with:</li>
@@ -1505,6 +1617,8 @@ leak into the protobuf contract.</p>
 a minimal host-side preview helper that consumes the stream using a configured
 SRT endpoint. The gateway still does not publish endpoint metadata through the
 protobuf API.</p>
+<p>Cloud synchronization, hosted review, and experiment recording are planned product
+work and are not part of the current API.</p>
 <h2 id="related-docs">Related Docs<a class="headerlink" href="#related-docs" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../robot_gateway/">Robot gateway</a></li>
@@ -1531,7 +1645,7 @@ protobuf API.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 21, 2026 18:06:51 UTC">March 21, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 7, 2026 00:33:52 UTC">July 7, 2026</span>
   </span>
 
     
