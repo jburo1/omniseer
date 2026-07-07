@@ -20,6 +20,7 @@ plugins:
 nav:
   - Home: index.md
   - Architecture: architecture.md
+  - Evidence: evidence.md
   - Software:
     - Edge-to-cloud perception: software/edge_to_cloud_perception.md
     - Build pipeline: software/build_pipeline.md
