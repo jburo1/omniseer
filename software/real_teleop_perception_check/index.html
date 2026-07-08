@@ -9,6 +9,10 @@
       
       
       
+        <link rel="prev" href="../ci_cd/">
+      
+      
+        <link rel="next" href="../ros_packages/">
       
       
         
@@ -19,7 +23,7 @@
     
     
       
-        <title>Real Teleop + Native Perception Check - omniseer</title>
+        <title>Real teleop + native perception check - omniseer</title>
       
     
     
@@ -104,7 +108,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Real Teleop + Native Perception Check
+              Real teleop + native perception check
             
           </span>
         </div>
@@ -302,8 +306,10 @@
       
   
   
+    
   
   
+  
     
     
     
@@ -314,11 +320,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
           <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
@@ -339,7 +345,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
@@ -349,6 +355,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../scripts_frontdoor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scripts front door
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -429,6 +463,180 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Real teleop + native perception check
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Real teleop + native perception check
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#preconditions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preconditions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-native-vision-asset-overrides" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example Native Vision Asset Overrides
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bringup-command" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bringup Command
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#single-entry-helper" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Single-Entry Helper
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#teleop-command" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Teleop Command
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verification Commands
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#optional-passive-smoke-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optional Passive Smoke Check
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification-record" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verification Record
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1037,23 +1245,25 @@ those values with the real local paths before launch.</p>
 <li>No navigation stack processes are required for this check.</li>
 </ul>
 <h2 id="single-entry-helper">Single-Entry Helper<a class="headerlink" href="#single-entry-helper" title="Permanent link">&para;</a></h2>
-<p>For a repo-local wrapper around the same workflow, use:</p>
-<div class="highlight"><pre><span></span><code>scripts/phase05_real.sh<span class="w"> </span>phase05
+<p>For the supported repo-local entrypoint, use:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">0</span>.5
 </code></pre></div>
 <p>Other useful modes:</p>
 <ul>
-<li><code>scripts/phase05_real.sh smoke</code></li>
+<li><code>scripts/omni run real --phase 0.5 smoke</code></li>
 <li>start the Phase 0.5 bringup, run the passive verifier, then stop</li>
-<li><code>scripts/phase05_real.sh bringup</code></li>
+<li><code>scripts/omni run real --phase 0.5 bringup</code></li>
 <li>run only the Phase 0.5 bringup</li>
-<li><code>scripts/phase05_real.sh teleop</code></li>
+<li><code>scripts/omni run teleop</code></li>
 <li>run only the stamped keyboard teleop publisher</li>
-<li><code>scripts/phase05_real.sh verify</code></li>
+<li><code>scripts/omni check real-perception</code></li>
 <li>run only the passive verifier against an existing ROS graph</li>
 </ul>
+<p>The legacy <code>scripts/phase05_real.sh</code> helper still delegates to the same Phase 0.5
+implementation for compatibility.</p>
 <h2 id="teleop-command">Teleop Command<a class="headerlink" href="#teleop-command" title="Permanent link">&para;</a></h2>
 <p>In another terminal:</p>
-<div class="highlight"><pre><span></span><code>bash<span class="w"> </span>ros_ws/src/scripts/teleop.sh
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>teleop
 </code></pre></div>
 <p>This script publishes <code>geometry_msgs/msg/TwistStamped</code> to
 <code>/cmd_vel_keyboard</code>.</p>
@@ -1085,10 +1295,10 @@ ros2<span class="w"> </span>topic<span class="w"> </span>hz<span class="w"> </sp
 </ul>
 <h2 id="optional-passive-smoke-check">Optional Passive Smoke Check<a class="headerlink" href="#optional-passive-smoke-check" title="Permanent link">&para;</a></h2>
 <p>This helper does not publish motion commands:</p>
-<div class="highlight"><pre><span></span><code>scripts/check_real_teleop_perception.sh
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>check<span class="w"> </span>real-perception
 </code></pre></div>
 <p>To require at least one detection message as well:</p>
-<div class="highlight"><pre><span></span><code><span class="nv">OMNISEER_REQUIRE_DETECTIONS</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>scripts/check_real_teleop_perception.sh
+<div class="highlight"><pre><span></span><code><span class="nv">OMNISEER_REQUIRE_DETECTIONS</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>scripts/omni<span class="w"> </span>check<span class="w"> </span>real-perception
 </code></pre></div>
 <h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
 <table>
@@ -1123,7 +1333,7 @@ ros2<span class="w"> </span>topic<span class="w"> </span>hz<span class="w"> </sp
 <tr>
 <td><code>/cmd_vel_keyboard</code> type is <code>geometry_msgs/msg/Twist</code></td>
 <td>Teleop script not using stamped mode</td>
-<td>Re-run <code>bash ros_ws/src/scripts/teleop.sh</code> and inspect script contents</td>
+<td>Re-run <code>scripts/omni run teleop</code> and inspect the teleop wrapper contents</td>
 </tr>
 <tr>
 <td><code>/mecanum_drive_controller/reference</code> type does not match teleop input</td>
@@ -1170,7 +1380,7 @@ ros2<span class="w"> </span>topic<span class="w"> </span>hz<span class="w"> </sp
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 8, 2026 00:11:55 UTC">July 8, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 8, 2026 02:53:47 UTC">July 8, 2026</span>
   </span>
 
     

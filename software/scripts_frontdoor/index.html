@@ -9,10 +9,10 @@
       
       
       
-        <link rel="prev" href="../build_pipeline/">
+        <link rel="prev" href="../../evidence/">
       
       
-        <link rel="next" href="../real_teleop_perception_check/">
+        <link rel="next" href="../edge_to_cloud_perception/">
       
       
         
@@ -23,7 +23,7 @@
     
     
       
-        <title>CI/CD overview - omniseer</title>
+        <title>Scripts front door - omniseer</title>
       
     
     
@@ -72,7 +72,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#cicd-overview" class="md-skip">
+        <a href="#scripts-front-door" class="md-skip">
           Skip to content
         </a>
       
@@ -108,7 +108,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              CI/CD overview
+              Scripts front door
             
           </span>
         </div>
@@ -360,10 +360,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../scripts_frontdoor/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scripts front door
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -379,6 +406,275 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#core-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Usage
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#command-groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Command Groups
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Command Groups">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        setup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#build" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        build
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#test" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        test
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        run
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="run">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#run-sim" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        run sim
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-real-phase-number" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        run real --phase &lt;number&gt;
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#real-run-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real run modes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#flash" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        flash
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#docs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        docs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#clean" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        clean
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#suggested-workflows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Suggested Workflows
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Suggested Workflows">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fresh-local-ros-iteration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fresh local ROS iteration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#simulation-focused-iteration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Simulation-focused iteration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#real-phase-05-operator-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real Phase 0.5 operator check
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#native-vision-iteration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Native vision iteration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#firmware-loop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Firmware loop
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#compatibility-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compatibility Notes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#environment-overrides" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Environment Overrides
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -444,37 +740,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    CI/CD overview
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../ci_cd/" class="md-nav__link">
         
   
   
@@ -490,175 +759,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#current-automation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Current Automation
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#ci-triggers" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        CI Triggers
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#ci-jobs" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        CI Jobs
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="CI Jobs">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#lint" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        lint
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#ros-core" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ros-core
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#bringup-smoke" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        bringup-smoke
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#vision-host" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        vision-host
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#firmware-build" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        firmware-build
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#docs-build" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        docs-build
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#documentation-deployment" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Documentation Deployment
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#local-equivalents" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Local Equivalents
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#verification-boundary" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Verification Boundary
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#planned-extensions" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Planned Extensions
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1121,10 +1221,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#current-automation" class="md-nav__link">
+  <a href="#core-usage" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current Automation
+        Core Usage
       
     </span>
   </a>
@@ -1132,33 +1232,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#ci-triggers" class="md-nav__link">
+  <a href="#command-groups" class="md-nav__link">
     <span class="md-ellipsis">
       
-        CI Triggers
+        Command Groups
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#ci-jobs" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        CI Jobs
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="CI Jobs">
+    <nav class="md-nav" aria-label="Command Groups">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#lint" class="md-nav__link">
+  <a href="#setup" class="md-nav__link">
     <span class="md-ellipsis">
       
-        lint
+        setup
       
     </span>
   </a>
@@ -1166,10 +1255,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#ros-core" class="md-nav__link">
+  <a href="#build" class="md-nav__link">
     <span class="md-ellipsis">
       
-        ros-core
+        build
       
     </span>
   </a>
@@ -1177,10 +1266,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#bringup-smoke" class="md-nav__link">
+  <a href="#test" class="md-nav__link">
     <span class="md-ellipsis">
       
-        bringup-smoke
+        test
       
     </span>
   </a>
@@ -1188,10 +1277,22 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#vision-host" class="md-nav__link">
+  <a href="#run" class="md-nav__link">
     <span class="md-ellipsis">
       
-        vision-host
+        run
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="run">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#run-sim" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        run sim
       
     </span>
   </a>
@@ -1199,10 +1300,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#firmware-build" class="md-nav__link">
+  <a href="#run-real-phase-number" class="md-nav__link">
     <span class="md-ellipsis">
       
-        firmware-build
+        run real --phase &lt;number&gt;
       
     </span>
   </a>
@@ -1210,10 +1311,59 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#docs-build" class="md-nav__link">
+  <a href="#real-run-modes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        docs-build
+        Real run modes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#flash" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        flash
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#docs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        docs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#clean" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        clean
       
     </span>
   </a>
@@ -1226,10 +1376,82 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#documentation-deployment" class="md-nav__link">
+  <a href="#suggested-workflows" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Documentation Deployment
+        Suggested Workflows
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Suggested Workflows">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fresh-local-ros-iteration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fresh local ROS iteration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#simulation-focused-iteration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Simulation-focused iteration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#real-phase-05-operator-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real Phase 0.5 operator check
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#native-vision-iteration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Native vision iteration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#firmware-loop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Firmware loop
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#compatibility-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compatibility Notes
       
     </span>
   </a>
@@ -1237,32 +1459,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#local-equivalents" class="md-nav__link">
+  <a href="#environment-overrides" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Local Equivalents
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#verification-boundary" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Verification Boundary
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#planned-extensions" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Planned Extensions
+        Environment Overrides
       
     </span>
   </a>
@@ -1289,254 +1489,303 @@
   
 
 
-<h1 id="cicd-overview">CI/CD Overview<a class="headerlink" href="#cicd-overview" title="Permanent link">&para;</a></h1>
-<p>This page documents the automation currently implemented in Omniseer, when it runs,
-and what it does not prove.</p>
-<h2 id="current-automation">Current Automation<a class="headerlink" href="#current-automation" title="Permanent link">&para;</a></h2>
-<p>There are two GitHub Actions workflows:</p>
-<table>
-<thead>
-<tr>
-<th>Workflow</th>
-<th>Purpose</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>ci</code></td>
-<td>Lint, ROS build/tests, Gazebo smoke, portable vision tests, firmware compile, and strict docs build</td>
-</tr>
-<tr>
-<td><code>docs</code></td>
-<td>Build and publish MkDocs to the <code>gh-pages</code> branch</td>
-</tr>
-</tbody>
-</table>
-<p>Documentation publishing is the only current deployment flow. The repository does
-not automatically publish containers, firmware releases, robot images, experiment
-bundles, or cloud dashboards.</p>
-<h2 id="ci-triggers">CI Triggers<a class="headerlink" href="#ci-triggers" title="Permanent link">&para;</a></h2>
-<p>The <code>ci</code> workflow runs on:</p>
+<h1 id="scripts-front-door">Scripts Front Door<a class="headerlink" href="#scripts-front-door" title="Permanent link">&para;</a></h1>
+<p><em>Status: implemented; command surface expected to grow additively as the project advances</em></p>
+<p>The root <code>scripts/omni</code> entrypoint is the supported front door for common local
+workflows in this repository.</p>
+<p>Use it when you want a stable human-facing command instead of remembering:</p>
 <ul>
-<li>every push to <code>master</code></li>
-<li>every push to <code>portfolio/**</code></li>
-<li>pull requests when opened, updated, or reopened</li>
-<li>manual workflow dispatch</li>
+<li>which subdirectory owns a helper</li>
+<li>which workspace setup file must be sourced first</li>
+<li>which local build/test subset matches the documented workflow</li>
 </ul>
-<p>All six jobs run for every eligible event; the workflow currently has no path-based
-job filtering. Jobs run independently in parallel. Concurrency control cancels an
-older run when a newer commit is pushed to the same branch or pull request.</p>
-<h2 id="ci-jobs">CI Jobs<a class="headerlink" href="#ci-jobs" title="Permanent link">&para;</a></h2>
-<h3 id="lint"><code>lint</code><a class="headerlink" href="#lint" title="Permanent link">&para;</a></h3>
-<p>Runs inside <code>osrf/ros:kilted-desktop-full-noble</code>.</p>
+<p>The design intent is simple:</p>
 <ul>
-<li>creates an isolated Python virtual environment</li>
-<li>installs Ruff <code>0.13.3</code>, matching <code>pyproject.toml</code></li>
-<li>checks <code>analysis</code>, <code>bringup</code>, and <code>robot_diag_control</code></li>
+<li>one memorable top-level command</li>
+<li>thin wrappers around the existing build, test, run, and flash flows</li>
+<li>explicit phase selection for real-hardware bringup as the rollout expands</li>
+<li>additive growth without breaking familiar operator commands</li>
 </ul>
-<p>Ruff is not installed through the ROS dependency script. Package-level Ruff tests
-skip when the binary is unavailable because the dedicated lint lane owns that check.</p>
-<h3 id="ros-core"><code>ros-core</code><a class="headerlink" href="#ros-core" title="Permanent link">&para;</a></h3>
-<p>Runs inside the ROS Kilted desktop-full image.</p>
+<p>This does <strong>not</strong> replace every package-local helper. Narrow package-owned scripts
+still live close to their code. <code>scripts/omni</code> promotes the commands you are most
+likely to run repeatedly.</p>
+<h2 id="core-usage">Core Usage<a class="headerlink" href="#core-usage" title="Permanent link">&para;</a></h2>
+<p>General shape:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>&lt;command&gt;<span class="w"> </span><span class="o">[</span>subcommand<span class="o">]</span><span class="w"> </span><span class="o">[</span>args...<span class="o">]</span>
+</code></pre></div>
+<p>Use help at any level:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>--help
+scripts/omni<span class="w"> </span>run<span class="w"> </span>--help
+scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--help
+</code></pre></div>
+<p>Useful discovery command:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>env
+</code></pre></div>
+<p>This prints the resolved repo root, ROS setup path, workspace setup path, and the
+latest stable real phase.</p>
+<h2 id="command-groups">Command Groups<a class="headerlink" href="#command-groups" title="Permanent link">&para;</a></h2>
+<h3 id="setup"><code>setup</code><a class="headerlink" href="#setup" title="Permanent link">&para;</a></h3>
+<p>Install local prerequisites needed for the portable ROS workflow.</p>
+<p>Primary command:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>setup<span class="w"> </span>ros-deps
+</code></pre></div>
+<p>Use this when:</p>
 <ul>
-<li>installs dependencies from selected package manifests with rosdep</li>
-<li>builds the portable ROS package set</li>
-<li>excludes <code>rf2o_laser_odometry</code>, <code>yolo_bringup</code>, and <code>yolo_ros</code> from this graph</li>
-<li>runs package, unit, XML, CMake, and C++ lint tests</li>
-<li>conditionally builds <code>omniseer_vision_bridge</code> only when RKNN and RGA SDKs exist</li>
+<li>you are setting up a fresh machine or container</li>
+<li>ROS package dependencies have changed</li>
+<li>you want the local dependency set that matches the documented portable ROS flow</li>
 </ul>
-<p>Validated build packages:</p>
+<p>Notes:</p>
 <ul>
-<li><code>omniseer_gz_assets</code></li>
-<li><code>omniseer_msgs</code></li>
-<li><code>yolo_msgs</code></li>
-<li><code>omniseer_description</code></li>
-<li><code>analysis</code></li>
-<li><code>bringup</code></li>
-<li><code>robot_io_adapters</code></li>
-<li><code>robot_diag_control</code></li>
-<li><code>robot_diag_control_cpp</code></li>
+<li>this wraps <code>scripts/ci/install_ros_workspace_deps.sh</code></li>
+<li>it installs the default dependency set when no package paths are provided</li>
+<li>you can also pass explicit package paths when you want a narrower install</li>
 </ul>
-<p>The default GitHub image does not provide RKNN/RGA, so the native bridge conditional
-normally skips there. This lane does not prove NPU execution.</p>
-<h3 id="bringup-smoke"><code>bringup-smoke</code><a class="headerlink" href="#bringup-smoke" title="Permanent link">&para;</a></h3>
-<p>Builds a deliberately minimal package set and launches headless Gazebo with CI-safe
-geometry. It verifies that the launch remains alive and that these boundary topics
-appear with the expected types:</p>
-<table>
-<thead>
-<tr>
-<th>Topic</th>
-<th>Type</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>/clock</code></td>
-<td><code>rosgraph_msgs/msg/Clock</code></td>
-</tr>
-<tr>
-<td><code>/imu</code></td>
-<td><code>sensor_msgs/msg/Imu</code></td>
-</tr>
-<tr>
-<td><code>/scan</code></td>
-<td><code>sensor_msgs/msg/LaserScan</code></td>
-</tr>
-<tr>
-<td><code>/range</code></td>
-<td><code>sensor_msgs/msg/Range</code></td>
-</tr>
-<tr>
-<td><code>/mecanum_drive_controller/odometry</code></td>
-<td><code>nav_msgs/msg/Odometry</code></td>
-</tr>
-</tbody>
-</table>
-<p>Rosdep discovers local runtime packages so it does not search for nonexistent binary
-packages. Optional runtime packages that are not needed by the smoke launch are then
-explicitly excluded from the colcon build graph.</p>
-<h3 id="vision-host"><code>vision-host</code><a class="headerlink" href="#vision-host" title="Permanent link">&para;</a></h3>
-<p>Runs directly on Ubuntu 24.04 and explicitly installs CMake, a C++ compiler, Make, and
-GTest. It builds and runs only portable tests:</p>
+<h3 id="build"><code>build</code><a class="headerlink" href="#build" title="Permanent link">&para;</a></h3>
+<p>Run the main local build flows without reassembling the underlying commands.</p>
+<p>Commands:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>build<span class="w"> </span>ros
+scripts/omni<span class="w"> </span>build<span class="w"> </span>vision
+scripts/omni<span class="w"> </span>build<span class="w"> </span>firmware
+</code></pre></div>
+<p>Use <code>build ros</code> when:</p>
 <ul>
-<li><code>image_buffer_pool_test</code></li>
-<li><code>jsonl_telemetry_test</code></li>
-<li><code>rolling_telemetry_test</code></li>
+<li>you changed ROS packages, launch files, configs, or message wiring</li>
+<li>you need the workspace install tree refreshed before a launch</li>
 </ul>
-<p>RKNN, RGA, V4L2 camera, post-processing, text-embedding, and full pipeline tests stay
-outside this lane because they require target SDKs, devices, or hardware.</p>
-<h3 id="firmware-build"><code>firmware-build</code><a class="headerlink" href="#firmware-build" title="Permanent link">&para;</a></h3>
-<p>Performs a compile-only Teensy 4.1 build using:</p>
+<p>Use <code>build vision</code> when:</p>
 <ul>
-<li>PlatformIO <code>6.1.19</code> in <code>${HOME}/.platformio/penv</code></li>
-<li>Teensy platform <code>5.1.0</code></li>
-<li>micro-ROS PlatformIO pinned to commit
-  <code>cfee17faffaa532363b7151dd13af6a85c69d3c1</code></li>
+<li>you are iterating on the native vision code outside the ROS layer</li>
+<li>you want the default <code>vision/build</code> CMake flow</li>
 </ul>
-<p>The job uploads firmware build outputs. It does not flash a board or validate motor,
-sensor, transport, timing, or watchdog behavior.</p>
-<h3 id="docs-build"><code>docs-build</code><a class="headerlink" href="#docs-build" title="Permanent link">&para;</a></h3>
-<p>Uses Python 3.12 and runs <code>mkdocs build --strict</code> on every CI event. This catches
-navigation, Markdown, and plugin-level documentation build failures before merge.</p>
-<h2 id="documentation-deployment">Documentation Deployment<a class="headerlink" href="#documentation-deployment" title="Permanent link">&para;</a></h2>
-<p>The separate <code>docs</code> workflow runs when:</p>
+<p>Use <code>build firmware</code> when:</p>
 <ul>
-<li><code>docs/**</code> changes on <code>master</code></li>
-<li><code>mkdocs.yml</code> changes on <code>master</code></li>
-<li>it is manually dispatched</li>
+<li>you changed Teensy firmware</li>
+<li>you want a compile-only firmware check before flashing</li>
 </ul>
-<p>It checks out full history, builds the site strictly, and deploys with
-<code>mkdocs gh-deploy</code> to <code>gh-pages</code>. Pull requests validate documentation through the CI
-job but do not deploy it.</p>
-<h2 id="local-equivalents">Local Equivalents<a class="headerlink" href="#local-equivalents" title="Permanent link">&para;</a></h2>
-<p>Use the workflow as the authoritative command source. The representative local flow is:</p>
-<p>For the common happy path, the root scripts layer now wraps the main local flows:</p>
+<p>Suggestion:</p>
+<ul>
+<li><code>build ros</code> is the best default when your change touches launch, bringup, adapters, gateway diagnostics, or ROS message surfaces</li>
+<li><code>build vision</code> is better than a full ROS build when only the native C++ vision pipeline changed</li>
+</ul>
+<h3 id="test"><code>test</code><a class="headerlink" href="#test" title="Permanent link">&para;</a></h3>
+<p>Run focused local verification flows.</p>
+<p>Commands:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span><span class="nb">test</span><span class="w"> </span>ros
+scripts/omni<span class="w"> </span><span class="nb">test</span><span class="w"> </span>vision
+scripts/omni<span class="w"> </span><span class="nb">test</span><span class="w"> </span>smoke-sim
+</code></pre></div>
+<p>Use <code>test ros</code> when:</p>
+<ul>
+<li>you changed portable ROS packages</li>
+<li>you want the closest local equivalent to the documented ROS CI lane</li>
+</ul>
+<p>Use <code>test vision</code> when:</p>
+<ul>
+<li>you changed portable native vision components</li>
+<li>you want the targeted host-side vision tests from the CI docs</li>
+</ul>
+<p>Use <code>test smoke-sim</code> when:</p>
+<ul>
+<li>you changed simulation bringup or topic boundaries</li>
+<li>you want a headless Gazebo smoke check instead of a broad test sweep</li>
+</ul>
+<p>Suggestion:</p>
+<ul>
+<li>start with the smallest relevant test first</li>
+<li>use <code>test smoke-sim</code> after sim launch or boundary-topic changes</li>
+<li>use <code>test ros</code> after wider ROS package changes</li>
+</ul>
+<h3 id="run"><code>run</code><a class="headerlink" href="#run" title="Permanent link">&para;</a></h3>
+<p>Launch the operator-facing runtime workflows.</p>
+<p>Commands:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>sim
+scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">0</span>.5
+scripts/omni<span class="w"> </span>run<span class="w"> </span>teleop
+</code></pre></div>
+<h4 id="run-sim"><code>run sim</code><a class="headerlink" href="#run-sim" title="Permanent link">&para;</a></h4>
+<p>Launches the existing simulation bringup path.</p>
+<p>Use this when:</p>
+<ul>
+<li>you want the normal local simulation entrypoint</li>
+<li>you want the bringup-owned cleanup behavior before launch</li>
+</ul>
+<p>Example:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>sim<span class="w"> </span>headless:<span class="o">=</span><span class="nb">true</span>
+</code></pre></div>
+<h4 id="run-real-phase-number"><code>run real --phase &lt;number&gt;</code><a class="headerlink" href="#run-real-phase-number" title="Permanent link">&para;</a></h4>
+<p>Launches the selected real-hardware rollout slice.</p>
+<p>Current supported phase:</p>
+<ul>
+<li><code>0.5</code></li>
+</ul>
+<p>Examples:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">0</span>.5
+scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">0</span>.5<span class="w"> </span>smoke
+scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">0</span>.5<span class="w"> </span>bringup<span class="w"> </span>camera_device:<span class="o">=</span>/dev/video11
+</code></pre></div>
+<p>If <code>--phase</code> is omitted, the command selects the latest stable real phase and
+prints which one it chose.</p>
+<p>Why phases exist:</p>
+<ul>
+<li>the real stack is being completed incrementally</li>
+<li>different rollout slices may need different launch composition and checks</li>
+<li>the front door stays stable even as later phases are added</li>
+</ul>
+<h4 id="real-run-modes">Real run modes<a class="headerlink" href="#real-run-modes" title="Permanent link">&para;</a></h4>
+<p><code>phase05</code></p>
+<ul>
+<li>starts the phase <code>0.5</code> bringup in the background</li>
+<li>opens keyboard teleop in the current terminal</li>
+</ul>
+<p><code>smoke</code></p>
+<ul>
+<li>starts the same bringup</li>
+<li>runs the passive teleop/perception verifier</li>
+<li>shuts the bringup down afterward</li>
+</ul>
+<p><code>bringup</code></p>
+<ul>
+<li>launches only the phase bringup in the foreground</li>
+</ul>
+<p><code>teleop</code></p>
+<ul>
+<li>launches only the stamped keyboard teleop publisher</li>
+</ul>
+<p><code>verify</code></p>
+<ul>
+<li>runs only the passive verification helper against an existing ROS graph</li>
+</ul>
+<p>Suggestions:</p>
+<ul>
+<li>use <code>run real --phase 0.5</code> for interactive operator testing</li>
+<li>use <code>run real --phase 0.5 smoke</code> for a quick integrated health check</li>
+<li>use <code>run real --phase 0.5 bringup</code> when debugging launch or runtime issues</li>
+</ul>
+<h3 id="check"><code>check</code><a class="headerlink" href="#check" title="Permanent link">&para;</a></h3>
+<p>Run passive validation commands that inspect an existing graph rather than building
+or launching it.</p>
+<p>Command:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>check<span class="w"> </span>real-perception
+</code></pre></div>
+<p>Use this when:</p>
+<ul>
+<li>the real graph is already running</li>
+<li>you want to confirm the Phase <code>0.5</code> teleop/perception boundary topics</li>
+<li>you want a non-driving verification helper</li>
+</ul>
+<p>Suggestion:</p>
+<ul>
+<li>pair this with <code>run real --phase 0.5 smoke</code> for a quick end-to-end check</li>
+<li>use <code>OMNISEER_REQUIRE_DETECTIONS=1</code> when detections must be present for the run to count</li>
+</ul>
+<h3 id="flash"><code>flash</code><a class="headerlink" href="#flash" title="Permanent link">&para;</a></h3>
+<p>Run hardware flashing helpers.</p>
+<p>Command:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>flash<span class="w"> </span>teensy
+</code></pre></div>
+<p>Use this when:</p>
+<ul>
+<li>you need headless Teensy flashing over SSH or in a container</li>
+<li>you want the supported wrapper around the existing firmware flash helper</li>
+</ul>
+<h3 id="docs"><code>docs</code><a class="headerlink" href="#docs" title="Permanent link">&para;</a></h3>
+<p>Build the documentation site locally.</p>
+<p>Command:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>docs<span class="w"> </span>build
+</code></pre></div>
+<p>Use this when:</p>
+<ul>
+<li>you changed docs or <code>mkdocs.yml</code></li>
+<li>you want the local strict docs build without waiting for CI</li>
+</ul>
+<h3 id="clean"><code>clean</code><a class="headerlink" href="#clean" title="Permanent link">&para;</a></h3>
+<p>Remove generated local build artifacts.</p>
+<p>Commands:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>clean<span class="w"> </span>ros
+scripts/omni<span class="w"> </span>clean<span class="w"> </span>vision
+scripts/omni<span class="w"> </span>clean<span class="w"> </span>docs
+scripts/omni<span class="w"> </span>clean<span class="w"> </span>all
+</code></pre></div>
+<p>Use this when:</p>
+<ul>
+<li>a local build tree is stale or confusing</li>
+<li>you want to force a clean rebuild of a specific layer</li>
+</ul>
+<p>Suggestion:</p>
+<ul>
+<li>prefer the narrowest clean target that solves the problem</li>
+<li>avoid <code>clean all</code> unless multiple build trees are genuinely suspect</li>
+</ul>
+<h2 id="suggested-workflows">Suggested Workflows<a class="headerlink" href="#suggested-workflows" title="Permanent link">&para;</a></h2>
+<h3 id="fresh-local-ros-iteration">Fresh local ROS iteration<a class="headerlink" href="#fresh-local-ros-iteration" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>setup<span class="w"> </span>ros-deps
 scripts/omni<span class="w"> </span>build<span class="w"> </span>ros
 scripts/omni<span class="w"> </span><span class="nb">test</span><span class="w"> </span>ros
+</code></pre></div>
+<p>Use this for:</p>
+<ul>
+<li>normal ROS package development</li>
+<li>launch/config changes that need rebuild plus validation</li>
+</ul>
+<h3 id="simulation-focused-iteration">Simulation-focused iteration<a class="headerlink" href="#simulation-focused-iteration" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>build<span class="w"> </span>ros
 scripts/omni<span class="w"> </span><span class="nb">test</span><span class="w"> </span>smoke-sim
+scripts/omni<span class="w"> </span>run<span class="w"> </span>sim
+</code></pre></div>
+<p>Use this for:</p>
+<ul>
+<li>simulation bringup changes</li>
+<li>boundary-topic or launch-structure debugging</li>
+</ul>
+<h3 id="real-phase-05-operator-check">Real Phase <code>0.5</code> operator check<a class="headerlink" href="#real-phase-05-operator-check" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">0</span>.5<span class="w"> </span>smoke
+</code></pre></div>
+<p>Use this for:</p>
+<ul>
+<li>the quickest integrated Phase <code>0.5</code> health check</li>
+<li>validating teleop and perception boundaries before a longer session</li>
+</ul>
+<h3 id="native-vision-iteration">Native vision iteration<a class="headerlink" href="#native-vision-iteration" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>build<span class="w"> </span>vision
 scripts/omni<span class="w"> </span><span class="nb">test</span><span class="w"> </span>vision
-scripts/omni<span class="w"> </span>build<span class="w"> </span>firmware
-scripts/omni<span class="w"> </span>docs<span class="w"> </span>build
 </code></pre></div>
-<p>The exact underlying commands remain:</p>
-<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>/tmp/omniseer-ruff
-/tmp/omniseer-ruff/bin/python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span><span class="nv">ruff</span><span class="o">==</span><span class="m">0</span>.13.3
-/tmp/omniseer-ruff/bin/ruff<span class="w"> </span>check<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>ros_ws/src/analysis<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>ros_ws/src/bringup<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>ros_ws/src/robot_diag_control
-</code></pre></div>
-<div class="highlight"><pre><span></span><code>bash<span class="w"> </span>scripts/ci/install_ros_workspace_deps.sh<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>ros_ws/src/omniseer_gz_assets<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>ros_ws/src/omniseer_msgs<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>ros_ws/src/yolo_ros/yolo_msgs<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>ros_ws/src/omniseer_description<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>ros_ws/src/analysis<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>ros_ws/src/bringup<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>ros_ws/src/robot_io_adapters<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>ros_ws/src/robot_diag_control<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>ros_ws/src/robot_diag_control_cpp
-
-<span class="nb">set</span><span class="w"> </span>+u
-<span class="nb">source</span><span class="w"> </span>/opt/ros/kilted/setup.bash
-<span class="nb">set</span><span class="w"> </span>-u
-<span class="nb">cd</span><span class="w"> </span>ros_ws
-colcon<span class="w"> </span>build<span class="w"> </span>--merge-install<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--packages-ignore<span class="w"> </span>rf2o_laser_odometry<span class="w"> </span>yolo_bringup<span class="w"> </span>yolo_ros<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--packages-select<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>omniseer_gz_assets<span class="w"> </span>omniseer_msgs<span class="w"> </span>yolo_msgs<span class="w"> </span>omniseer_description<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>analysis<span class="w"> </span>bringup<span class="w"> </span>robot_io_adapters<span class="w"> </span>robot_diag_control<span class="w"> </span>robot_diag_control_cpp
-
-<span class="nb">set</span><span class="w"> </span>+u
-<span class="nb">source</span><span class="w"> </span>install/setup.bash
-<span class="nb">set</span><span class="w"> </span>-u
-colcon<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--merge-install<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--packages-ignore<span class="w"> </span>rf2o_laser_odometry<span class="w"> </span>yolo_bringup<span class="w"> </span>yolo_ros<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--packages-select<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>omniseer_description<span class="w"> </span>analysis<span class="w"> </span>bringup<span class="w"> </span>robot_io_adapters<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>robot_diag_control<span class="w"> </span>robot_diag_control_cpp
-colcon<span class="w"> </span>test-result<span class="w"> </span>--all<span class="w"> </span>--verbose
-</code></pre></div>
-<p>The headless smoke equivalent uses a narrower build:</p>
-<div class="highlight"><pre><span></span><code>bash<span class="w"> </span>scripts/ci/install_ros_workspace_deps.sh<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>ros_ws/src/omniseer_gz_assets<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>ros_ws/src/omniseer_msgs<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>ros_ws/src/omniseer_description<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>ros_ws/src/analysis<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>ros_ws/src/bringup<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>ros_ws/src/robot_io_adapters<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>ros_ws/src/robot_diag_control_cpp
-
-<span class="nb">set</span><span class="w"> </span>+u
-<span class="nb">source</span><span class="w"> </span>/opt/ros/kilted/setup.bash
-<span class="nb">set</span><span class="w"> </span>-u
-<span class="nb">cd</span><span class="w"> </span>ros_ws
-colcon<span class="w"> </span>build<span class="w"> </span>--merge-install<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--packages-ignore<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>analysis<span class="w"> </span>rf2o_laser_odometry<span class="w"> </span>robot_diag_control_cpp<span class="w"> </span>yolo_bringup<span class="w"> </span>yolo_ros<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--packages-select<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>omniseer_gz_assets<span class="w"> </span>omniseer_msgs<span class="w"> </span>omniseer_description<span class="w"> </span>bringup<span class="w"> </span>robot_io_adapters
-
-<span class="nb">set</span><span class="w"> </span>+u
-<span class="nb">source</span><span class="w"> </span>install/setup.bash
-<span class="nb">set</span><span class="w"> </span>-u
-<span class="nv">OMNISEER_RUN_SIM_SMOKE</span><span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>python3<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>-vv<span class="w"> </span>-s<span class="w"> </span>src/bringup/test/test_sim_launch_smoke.py
-</code></pre></div>
-<div class="highlight"><pre><span></span><code>cmake<span class="w"> </span>-S<span class="w"> </span>vision<span class="w"> </span>-B<span class="w"> </span>vision/build-verify<span class="w"> </span>-DVISION_BUILD_HARNESS<span class="o">=</span>OFF
-cmake<span class="w"> </span>--build<span class="w"> </span>vision/build-verify<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--target<span class="w"> </span>image_buffer_pool_test<span class="w"> </span>jsonl_telemetry_test<span class="w"> </span>rolling_telemetry_test
-ctest<span class="w"> </span>--test-dir<span class="w"> </span>vision/build-verify<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-R<span class="w"> </span><span class="s1">&#39;image_buffer_pool_test|jsonl_telemetry_test|rolling_telemetry_test&#39;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--output-on-failure
-
-<span class="si">${</span><span class="nv">HOME</span><span class="si">}</span>/.platformio/penv/bin/platformio<span class="w"> </span>run<span class="w"> </span>-d<span class="w"> </span>firmware<span class="w"> </span>-e<span class="w"> </span>teensy41
-mkdocs<span class="w"> </span>build<span class="w"> </span>--strict
-</code></pre></div>
-<h2 id="verification-boundary">Verification Boundary<a class="headerlink" href="#verification-boundary" title="Permanent link">&para;</a></h2>
-<p>CI currently does not guarantee:</p>
+<p>Use this for:</p>
 <ul>
-<li>camera capture or stable device enumeration</li>
-<li>RGA or RKNN execution</li>
-<li>detector accuracy or target-hardware latency</li>
-<li>real LiDAR, IMU, sonar, encoder, battery, or motor behavior</li>
-<li>firmware flashing or micro-ROS transport behavior</li>
-<li>long-duration simulation or robot soak behavior</li>
-<li>experiment recording, cloud synchronization, or hosted review</li>
-<li>release packaging or deployment</li>
+<li>portable native vision changes</li>
+<li>tight local C++ iteration without rebuilding the ROS workspace first</li>
 </ul>
-<p>Those checks require target hardware, a self-hosted runner, or later delivery
-infrastructure. CI evidence should not be presented as real-hardware evidence.</p>
-<h2 id="planned-extensions">Planned Extensions<a class="headerlink" href="#planned-extensions" title="Permanent link">&para;</a></h2>
+<h3 id="firmware-loop">Firmware loop<a class="headerlink" href="#firmware-loop" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>build<span class="w"> </span>firmware
+scripts/omni<span class="w"> </span>flash<span class="w"> </span>teensy
+</code></pre></div>
+<p>Use this for:</p>
 <ul>
-<li>target-hardware or hardware-in-the-loop validation</li>
-<li>run-bundle schema and recorder tests</li>
-<li>provider-neutral cloud synchronization checks</li>
-<li>hosted report build/deployment</li>
-<li>tagged release packaging for firmware and robot software</li>
+<li>firmware compile followed by hardware flashing</li>
 </ul>
+<h2 id="compatibility-notes">Compatibility Notes<a class="headerlink" href="#compatibility-notes" title="Permanent link">&para;</a></h2>
+<p>The new front door keeps a compatibility path for existing habits:</p>
+<ul>
+<li><code>scripts/phase05_real.sh</code> delegates to <code>scripts/omni run real --phase 0.5</code></li>
+<li><code>scripts/check_real_teleop_perception.sh</code> delegates to <code>scripts/omni check real-perception</code></li>
+</ul>
+<p>Those compatibility wrappers exist to reduce churn. New docs and day-to-day usage
+should prefer <code>scripts/omni</code>.</p>
+<h2 id="environment-overrides">Environment Overrides<a class="headerlink" href="#environment-overrides" title="Permanent link">&para;</a></h2>
+<p>Useful environment variables:</p>
+<ul>
+<li><code>OMNISEER_ROS_SETUP</code></li>
+<li><code>OMNISEER_WS_SETUP</code></li>
+<li><code>OMNISEER_UROS_WS_SETUP</code></li>
+<li><code>OMNISEER_ROS_DISTRO</code></li>
+<li><code>OMNISEER_LATEST_STABLE_REAL_PHASE</code></li>
+<li><code>OMNISEER_VISION_PARAMS_FILE</code></li>
+<li><code>OMNISEER_BRINGUP_DELAY_SEC</code></li>
+<li><code>OMNISEER_BRINGUP_LOG</code></li>
+<li><code>OMNISEER_REQUIRE_DETECTIONS</code></li>
+</ul>
+<p>Use <code>scripts/omni env</code> to confirm what the front door will resolve on the current
+machine.</p>
 
 
 
