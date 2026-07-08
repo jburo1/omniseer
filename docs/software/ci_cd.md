@@ -130,6 +130,20 @@ job but do not deploy it.
 
 Use the workflow as the authoritative command source. The representative local flow is:
 
+For the common happy path, the root scripts layer now wraps the main local flows:
+
+```bash
+scripts/omni setup ros-deps
+scripts/omni build ros
+scripts/omni test ros
+scripts/omni test smoke-sim
+scripts/omni test vision
+scripts/omni build firmware
+scripts/omni docs build
+```
+
+The exact underlying commands remain:
+
 ```bash
 python3 -m venv /tmp/omniseer-ruff
 /tmp/omniseer-ruff/bin/python -m pip install ruff==0.13.3

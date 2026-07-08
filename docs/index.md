@@ -21,6 +21,7 @@ Autonomous seek and capture are explicitly deferred.
 
 Start with:
 
+- [Scripts Front Door](software/scripts_frontdoor.md) for the supported local command surface
 - [Edge-to-Cloud Perception](software/edge_to_cloud_perception.md) for the active deliverable
 - [System Architecture](architecture.md) for runtime boundaries and implementation status
 - [Vision Pipeline](software/vision_pipeline.md) for the native hot path

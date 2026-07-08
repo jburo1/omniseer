@@ -68,29 +68,32 @@ Expected launch behavior:
 
 ## Single-Entry Helper
 
-For a repo-local wrapper around the same workflow, use:
+For the supported repo-local entrypoint, use:
 
 ```bash
-scripts/phase05_real.sh phase05
+scripts/omni run real --phase 0.5
 ```
 
 Other useful modes:
 
-- `scripts/phase05_real.sh smoke`
+- `scripts/omni run real --phase 0.5 smoke`
   - start the Phase 0.5 bringup, run the passive verifier, then stop
-- `scripts/phase05_real.sh bringup`
+- `scripts/omni run real --phase 0.5 bringup`
   - run only the Phase 0.5 bringup
-- `scripts/phase05_real.sh teleop`
+- `scripts/omni run teleop`
   - run only the stamped keyboard teleop publisher
-- `scripts/phase05_real.sh verify`
+- `scripts/omni check real-perception`
   - run only the passive verifier against an existing ROS graph
+
+The legacy `scripts/phase05_real.sh` helper still delegates to the same Phase 0.5
+implementation for compatibility.
 
 ## Teleop Command
 
 In another terminal:
 
 ```bash
-bash ros_ws/src/scripts/teleop.sh
+scripts/omni run teleop
 ```
 
 This script publishes `geometry_msgs/msg/TwistStamped` to
@@ -131,13 +134,13 @@ Expected observations:
 This helper does not publish motion commands:
 
 ```bash
-scripts/check_real_teleop_perception.sh
+scripts/omni check real-perception
 ```
 
 To require at least one detection message as well:
 
 ```bash
-OMNISEER_REQUIRE_DETECTIONS=1 scripts/check_real_teleop_perception.sh
+OMNISEER_REQUIRE_DETECTIONS=1 scripts/omni check real-perception
 ```
 
 ## Troubleshooting
@@ -148,7 +151,7 @@ OMNISEER_REQUIRE_DETECTIONS=1 scripts/check_real_teleop_perception.sh
 | `vision_bridge` exits with RKNN or RGA loader/runtime errors | Missing target-hardware acceleration libraries | Verify RKNN/RGA runtime install on the robot |
 | `vision_bridge` exits with `models.* must not be empty` or `classes.path must not be empty` | Required asset overrides missing | Re-run launch with concrete asset paths |
 | `/vision/perf` publishes but `/yolo/detections` stays empty | Scene does not contain configured classes, model/classes mismatch, or postprocess threshold too strict | Verify class list matches expected scene objects; temporarily lower score threshold if needed |
-| `/cmd_vel_keyboard` type is `geometry_msgs/msg/Twist` | Teleop script not using stamped mode | Re-run `bash ros_ws/src/scripts/teleop.sh` and inspect script contents |
+| `/cmd_vel_keyboard` type is `geometry_msgs/msg/Twist` | Teleop script not using stamped mode | Re-run `scripts/omni run teleop` and inspect the teleop wrapper contents |
 | `/mecanum_drive_controller/reference` type does not match teleop input | Twist mux/controller path mismatch | Check `twist_mux.yaml`, confirm teleop topic type, inspect launch remap to `/mecanum_drive_controller/reference` |
 | `vision_bridge` logs a fatal runtime stop after startup | Capture, preprocess, or inference pipeline failure | Read the `vision_bridge` error line for `producer` or `consumer` failure stage and errno |
 

@@ -22,9 +22,11 @@ nav:
   - Architecture: architecture.md
   - Evidence: evidence.md
   - Software:
+    - Scripts front door: software/scripts_frontdoor.md
     - Edge-to-cloud perception: software/edge_to_cloud_perception.md
     - Build pipeline: software/build_pipeline.md
     - CI/CD overview: software/ci_cd.md
+    - Real teleop + native perception check: software/real_teleop_perception_check.md
     - ROS packages: software/ros_packages.md
     - Code documentation: software/code_documentation.md
     - Vision pipeline: software/vision_pipeline.md

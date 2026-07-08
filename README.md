@@ -38,13 +38,23 @@ of the active deliverable.
 - [Edge-to-cloud perception](docs/software/edge_to_cloud_perception.md)
 - [CI/CD overview](docs/software/ci_cd.md)
 
-## Firmware
+## Common Commands
 
-For headless Teensy 4.1 flashing in Docker or over SSH, use:
+The root `scripts/omni` entrypoint is the supported front door for common local
+workflows:
 
 ```bash
-bash firmware/scripts/flash_teensy_headless.sh
+scripts/omni build ros
+scripts/omni test ros
+scripts/omni run sim
+scripts/omni run real --phase 0.5
+scripts/omni check real-perception
+scripts/omni flash teensy
+scripts/omni docs build
 ```
+
+For headless Teensy 4.1 flashing in Docker or over SSH, `scripts/omni flash teensy`
+wraps the existing firmware helper.
 
 ## Current Boundary
 

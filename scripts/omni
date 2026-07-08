@@ -1,0 +1,314 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# shellcheck disable=SC1091
+source "${script_dir}/lib/log.sh"
+# shellcheck disable=SC1091
+source "${script_dir}/lib/common.sh"
+# shellcheck disable=SC1091
+source "${script_dir}/lib/ros.sh"
+
+usage() {
+  cat <<'EOF'
+Usage:
+  scripts/omni <command> [args...]
+
+Commands:
+  setup   Environment and dependency helpers.
+  build   Local build helpers. Defaults to ROS.
+  test    Targeted local verification helpers. Defaults to ROS.
+  run     Operator-facing run commands for sim, real, and teleop.
+  check   Passive verification helpers.
+  flash   Hardware flashing helpers.
+  docs    Documentation build helpers.
+  env     Show resolved Omniseer environment settings.
+  clean   Remove local build artifacts.
+  help    Show this help text.
+
+Examples:
+  scripts/omni setup ros-deps
+  scripts/omni build ros
+  scripts/omni test smoke-sim
+  scripts/omni run sim headless:=true
+  scripts/omni run real --phase 0.5
+  scripts/omni check real-perception
+  scripts/omni flash teensy
+  scripts/omni docs build
+EOF
+}
+
+run_usage() {
+  cat <<'EOF'
+Usage:
+  scripts/omni run sim [launch args...]
+  scripts/omni run real [--phase <number>] [--mode <mode>] [mode] [launch args...]
+  scripts/omni run teleop
+
+Real modes:
+  phase05  Start bringup in the background, then open keyboard teleop.
+  smoke    Start bringup, run the passive verifier, then stop.
+  bringup  Start only the phase bringup in the foreground.
+  teleop   Start only the stamped keyboard teleop publisher.
+  verify   Run only the passive verifier against an existing ROS graph.
+EOF
+}
+
+env_usage() {
+  cat <<'EOF'
+Usage:
+  scripts/omni env
+
+Shows resolved repo, ROS, workspace, and phase defaults.
+EOF
+}
+
+clean_usage() {
+  cat <<'EOF'
+Usage:
+  scripts/omni clean <ros|vision|docs|all>
+
+Targets:
+  ros     Remove ROS workspace build/install/log trees.
+  vision  Remove vision build directories.
+  docs    Remove generated site and Doxygen outputs.
+  all     Remove all of the above.
+EOF
+}
+
+show_env() {
+  cat <<EOF
+repo_root=$(omni_repo_root)
+scripts_root=$(omni_scripts_root)
+ros_setup=$(omni_default_ros_setup)
+ws_setup=$(omni_default_ws_setup)
+uros_ws_setup=$(omni_default_uros_ws_setup)
+ros_ws_root=$(omni_ros_ws_root)
+latest_stable_real_phase=$(omni_latest_stable_real_phase)
+supported_real_phases=$(omni_supported_real_phases | paste -sd, -)
+EOF
+}
+
+clean_target() {
+  local target="$1"
+  local repo_root
+  repo_root="$(omni_repo_root)"
+
+  case "${target}" in
+    ros)
+      omni_info "Removing ROS workspace build artifacts"
+      rm -rf "${repo_root}/ros_ws/build" "${repo_root}/ros_ws/install" "${repo_root}/ros_ws/log"
+      ;;
+    vision)
+      omni_info "Removing vision build directories"
+      rm -rf "${repo_root}"/vision/build*
+      ;;
+    docs)
+      omni_info "Removing generated docs outputs"
+      rm -rf "${repo_root}/site" "${repo_root}/build/docs"
+      ;;
+    all)
+      clean_target ros
+      clean_target vision
+      clean_target docs
+      ;;
+    *)
+      omni_die "unknown clean target: ${target}"
+      ;;
+  esac
+}
+
+command_group="${1:-help}"
+if [[ $# -gt 0 ]]; then
+  shift
+fi
+
+case "${command_group}" in
+  help|-h|--help)
+    usage
+    ;;
+  setup)
+    subcommand="${1:-help}"
+    if [[ $# -gt 0 ]]; then
+      shift
+    fi
+    case "${subcommand}" in
+      ros-deps)
+        exec "${script_dir}/setup/dev.sh" ros-deps "$@"
+        ;;
+      help|-h|--help)
+        exec "${script_dir}/setup/dev.sh" --help
+        ;;
+      *)
+        omni_die "unknown setup subcommand: ${subcommand}"
+        ;;
+    esac
+    ;;
+  build)
+    subcommand="${1:-ros}"
+    if [[ $# -gt 0 ]]; then
+      shift
+    fi
+    case "${subcommand}" in
+      ros)
+        exec "${script_dir}/build/ros.sh" "$@"
+        ;;
+      vision)
+        exec "${script_dir}/build/vision.sh" "$@"
+        ;;
+      firmware)
+        exec "${script_dir}/build/firmware.sh" "$@"
+        ;;
+      help|-h|--help)
+        cat <<'EOF'
+Usage:
+  scripts/omni build [ros]
+  scripts/omni build vision
+  scripts/omni build firmware
+EOF
+        ;;
+      *)
+        omni_die "unknown build subcommand: ${subcommand}"
+        ;;
+    esac
+    ;;
+  test)
+    subcommand="${1:-ros}"
+    if [[ $# -gt 0 ]]; then
+      shift
+    fi
+    case "${subcommand}" in
+      ros)
+        exec "${script_dir}/test/ros.sh" "$@"
+        ;;
+      vision)
+        exec "${script_dir}/test/vision.sh" "$@"
+        ;;
+      smoke-sim)
+        exec "${script_dir}/test/smoke_sim.sh" "$@"
+        ;;
+      help|-h|--help)
+        cat <<'EOF'
+Usage:
+  scripts/omni test [ros]
+  scripts/omni test vision
+  scripts/omni test smoke-sim
+EOF
+        ;;
+      *)
+        omni_die "unknown test subcommand: ${subcommand}"
+        ;;
+    esac
+    ;;
+  run)
+    subcommand="${1:-help}"
+    if [[ $# -gt 0 ]]; then
+      shift
+    fi
+    case "${subcommand}" in
+      sim)
+        exec "${script_dir}/run/sim.sh" "$@"
+        ;;
+      real)
+        exec "${script_dir}/run/real.sh" "$@"
+        ;;
+      teleop)
+        exec "${script_dir}/run/teleop.sh" "$@"
+        ;;
+      help|-h|--help)
+        run_usage
+        ;;
+      *)
+        omni_die "unknown run subcommand: ${subcommand}"
+        ;;
+    esac
+    ;;
+  check)
+    subcommand="${1:-help}"
+    if [[ $# -gt 0 ]]; then
+      shift
+    fi
+    case "${subcommand}" in
+      real-perception)
+        exec "${script_dir}/check/real_teleop_perception.sh" "$@"
+        ;;
+      help|-h|--help)
+        cat <<'EOF'
+Usage:
+  scripts/omni check real-perception
+EOF
+        ;;
+      *)
+        omni_die "unknown check subcommand: ${subcommand}"
+        ;;
+    esac
+    ;;
+  flash)
+    subcommand="${1:-help}"
+    if [[ $# -gt 0 ]]; then
+      shift
+    fi
+    case "${subcommand}" in
+      teensy)
+        exec "${script_dir}/flash/teensy.sh" "$@"
+        ;;
+      help|-h|--help)
+        cat <<'EOF'
+Usage:
+  scripts/omni flash teensy
+EOF
+        ;;
+      *)
+        omni_die "unknown flash subcommand: ${subcommand}"
+        ;;
+    esac
+    ;;
+  docs)
+    subcommand="${1:-help}"
+    if [[ $# -gt 0 ]]; then
+      shift
+    fi
+    case "${subcommand}" in
+      build)
+        exec "${script_dir}/docs/build.sh" "$@"
+        ;;
+      help|-h|--help)
+        cat <<'EOF'
+Usage:
+  scripts/omni docs build
+EOF
+        ;;
+      *)
+        omni_die "unknown docs subcommand: ${subcommand}"
+        ;;
+    esac
+    ;;
+  env)
+    if [[ "${1:-}" =~ ^(-h|--help|help)$ ]]; then
+      env_usage
+    else
+      show_env
+    fi
+    ;;
+  clean)
+    target="${1:-}"
+    case "${target}" in
+      ros|vision|docs|all)
+        clean_target "${target}"
+        ;;
+      help|-h|--help|"")
+        clean_usage
+        if [[ -z "${target}" ]]; then
+          exit 2
+        fi
+        ;;
+      *)
+        omni_die "unknown clean target: ${target}"
+        ;;
+    esac
+    ;;
+  *)
+    omni_die "unknown top-level command: ${command_group}"
+    ;;
+esac
