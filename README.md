@@ -38,6 +38,14 @@ of the active deliverable.
 - [Edge-to-cloud perception](docs/software/edge_to_cloud_perception.md)
 - [CI/CD overview](docs/software/ci_cd.md)
 
+## Firmware
+
+For headless Teensy 4.1 flashing in Docker or over SSH, use:
+
+```bash
+bash firmware/scripts/flash_teensy_headless.sh
+```
+
 ## Current Boundary
 
 GitHub CI validates portable software and simulation contracts. Camera, RGA, RKNN,

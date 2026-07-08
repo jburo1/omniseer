@@ -3,7 +3,7 @@ import curses
 import serial
 import time
 
-PORT = "/dev/ttyACM0"
+PORT = "/dev/omniseer_teensy"
 BAUD = 115200
 
 LINEAR_SPEED = 0.2   # m/s
