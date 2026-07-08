@@ -66,6 +66,25 @@ Expected launch behavior:
 - `twist_mux` remains available even with nav disabled.
 - No navigation stack processes are required for this check.
 
+## Single-Entry Helper
+
+For a repo-local wrapper around the same workflow, use:
+
+```bash
+scripts/phase05_real.sh phase05
+```
+
+Other useful modes:
+
+- `scripts/phase05_real.sh smoke`
+  - start the Phase 0.5 bringup, run the passive verifier, then stop
+- `scripts/phase05_real.sh bringup`
+  - run only the Phase 0.5 bringup
+- `scripts/phase05_real.sh teleop`
+  - run only the stamped keyboard teleop publisher
+- `scripts/phase05_real.sh verify`
+  - run only the passive verifier against an existing ROS graph
+
 ## Teleop Command
 
 In another terminal:

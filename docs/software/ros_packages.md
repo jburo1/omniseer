@@ -319,7 +319,8 @@ Real-hardware-only producers and compute adapters below the boundary.
 
 Starts:
 
-- `micro_ros_agent`
+- `wait_for_teensy.py` startup preflight for `/dev/omniseer_teensy`
+- `micro_ros_agent` after the Teensy preflight succeeds
 - real LiDAR driver publishing `/scan`
   - prefer a stable `/dev/serial/by-id/...` path over `/dev/ttyUSB*` so real
     bringup is not coupled to USB enumeration order
@@ -339,7 +340,8 @@ Top-level sim bringup:
 Top-level real bringup:
 
 - start `real_io.launch.py`
-- wait for `/imu`, `/scan`, and `/mecanum_drive_controller/odometry`
+- wait for first live messages on `/imu`, `/encoder_counts`, `/scan`, and
+  `/mecanum_drive_controller/odometry`
 - start `common.launch.py`
 
 ## New Adapter Package

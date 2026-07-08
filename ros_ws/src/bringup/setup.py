@@ -16,6 +16,8 @@ setup(
         (f"{share_dir}/bringup", glob("bringup/*.py")),
         (f"{share_dir}/launch", glob("launch/*.launch.py")),
         (f"{share_dir}/config", glob("config/*")),
+        (f"{share_dir}/scripts", glob("scripts/*.py") + glob("scripts/*.sh")),
+        (f"{share_dir}/scripts/udev", glob("scripts/udev/*")),
         (f"{share_dir}/rviz", glob("rviz/*.rviz")),
         (f"{share_dir}/worlds", glob("worlds/*.world")),
     ],

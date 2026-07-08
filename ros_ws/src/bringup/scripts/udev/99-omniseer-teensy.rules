@@ -1,0 +1,1 @@
+SUBSYSTEM=="tty", ENV{ID_SERIAL}=="usb-Teensyduino_USB_Serial_16634450-if00", SYMLINK+="omniseer_teensy"

@@ -4,17 +4,32 @@
 from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
+    EmitEvent,
     ExecuteProcess,
     GroupAction,
     IncludeLaunchDescription,
+    LogInfo,
     RegisterEventHandler,
 )
 from launch.conditions import IfCondition, UnlessCondition
 from launch.event_handlers import OnProcessExit
+from launch.events import Shutdown
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
+
+
+def _handle_required_process_exit(process_name: str, success_actions, failure_reason: str):
+    def _on_exit(event, _context):
+        if event.returncode == 0:
+            return success_actions
+        return [
+            LogInfo(msg=f"{process_name} failed with exit code {event.returncode}"),
+            EmitEvent(event=Shutdown(reason=failure_reason)),
+        ]
+
+    return _on_exit
 
 
 def generate_launch_description():
@@ -24,8 +39,11 @@ def generate_launch_description():
         DeclareLaunchArgument("use_sim_time", default_value="false"),
         DeclareLaunchArgument("log_level", default_value="info"),
         DeclareLaunchArgument("start_micro_ros_agent", default_value="true"),
-        DeclareLaunchArgument("micro_ros_serial_device", default_value="/dev/ttyACM0"),
+        DeclareLaunchArgument("micro_ros_serial_device", default_value="/dev/omniseer_teensy"),
         DeclareLaunchArgument("micro_ros_baud", default_value="115200"),
+        DeclareLaunchArgument("require_teensy", default_value="true"),
+        DeclareLaunchArgument("teensy_preflight_timeout_sec", default_value="20"),
+        DeclareLaunchArgument("allow_teensy_power_cycle", default_value="false"),
         DeclareLaunchArgument("start_lidar", default_value="true"),
         DeclareLaunchArgument(
             "lidar_serial_device",
@@ -72,6 +90,9 @@ def generate_launch_description():
     start_micro_ros_agent = LaunchConfiguration("start_micro_ros_agent")
     micro_ros_serial_device = LaunchConfiguration("micro_ros_serial_device")
     micro_ros_baud = LaunchConfiguration("micro_ros_baud")
+    require_teensy = LaunchConfiguration("require_teensy")
+    teensy_preflight_timeout_sec = LaunchConfiguration("teensy_preflight_timeout_sec")
+    allow_teensy_power_cycle = LaunchConfiguration("allow_teensy_power_cycle")
     start_lidar = LaunchConfiguration("start_lidar")
     lidar_serial_device = LaunchConfiguration("lidar_serial_device")
     lidar_baudrate = LaunchConfiguration("lidar_baudrate")
@@ -116,6 +137,9 @@ def generate_launch_description():
             "start_micro_ros_agent": start_micro_ros_agent,
             "micro_ros_serial_device": micro_ros_serial_device,
             "micro_ros_baud": micro_ros_baud,
+            "require_teensy": require_teensy,
+            "teensy_preflight_timeout_sec": teensy_preflight_timeout_sec,
+            "allow_teensy_power_cycle": allow_teensy_power_cycle,
             "start_lidar": start_lidar,
             "lidar_serial_device": lidar_serial_device,
             "lidar_baudrate": lidar_baudrate,
@@ -217,11 +241,22 @@ def generate_launch_description():
             "bash",
             "-lc",
             (
-                "until ros2 topic list | grep -qx /imu "
-                "&& ros2 topic list | grep -qx /scan "
-                "&& ros2 topic list | grep -qx /mecanum_drive_controller/odometry; "
-                "do sleep 0.2; done"
+                "set -euo pipefail\n"
+                "timeout_sec=\"$1\"\n"
+                "check_topic() {\n"
+                "  local topic=\"$1\"\n"
+                "  if ! timeout \"${timeout_sec}\" ros2 topic echo --once \"${topic}\" >/dev/null 2>&1; then\n"
+                "    echo \"Timed out waiting for first message on ${topic}\" >&2\n"
+                "    exit 1\n"
+                "  fi\n"
+                "}\n"
+                "check_topic /imu\n"
+                "check_topic /encoder_counts\n"
+                "check_topic /scan\n"
+                "check_topic /mecanum_drive_controller/odometry\n"
             ),
+            "bash",
+            teensy_preflight_timeout_sec,
         ],
         name="wait_real_boundary_topics",
         condition=IfCondition(wait_for_boundary_topics),
@@ -230,7 +265,11 @@ def generate_launch_description():
     launch_common_after_wait = RegisterEventHandler(
         OnProcessExit(
             target_action=wait_boundary_topics,
-            on_exit=[GroupAction(actions=[common_launch_after_wait])],
+            on_exit=_handle_required_process_exit(
+                process_name="wait_real_boundary_topics",
+                success_actions=[GroupAction(actions=[common_launch_after_wait])],
+                failure_reason="Timed out waiting for real boundary topics",
+            ),
         )
     )
 
