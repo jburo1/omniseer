@@ -48,6 +48,7 @@ def generate_launch_description():
     start_nav = LaunchConfiguration("start_nav")
     start_rviz = LaunchConfiguration("start_rviz")
     start_gateway = LaunchConfiguration("start_gateway")
+    cleanup_script = PathJoinSubstitution([pkg_bringup, "scripts", "pre_launch_cleanup.sh"])
 
     sim_io_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([PathJoinSubstitution([pkg_bringup, "launch", "sim_io.launch.py"])]),
@@ -86,17 +87,7 @@ def generate_launch_description():
 
     cleanup = ExecuteProcess(
         name="pre_flight_cleanup",
-        cmd=[
-            "bash",
-            "-c",
-            r"""
-            echo "[cleanup] Gazebo…"
-            pkill -TERM -f 'gz[ _](sim|server|client|gui)' || true
-            echo "[cleanup] ROS2 Daemon…"
-            ros2 daemon stop  || true
-            ros2 daemon start || true
-            """,
-        ],
+        cmd=["bash", cleanup_script, "sim"],
         output="screen",
     )
 

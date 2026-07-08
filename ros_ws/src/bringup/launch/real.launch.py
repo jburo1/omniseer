@@ -32,104 +32,55 @@ def _handle_required_process_exit(process_name: str, success_actions, failure_re
     return _on_exit
 
 
-def generate_launch_description():
-    pkg_bringup = FindPackageShare("bringup")
-
-    declared_arguments = [
-        DeclareLaunchArgument("use_sim_time", default_value="false"),
-        DeclareLaunchArgument("log_level", default_value="info"),
-        DeclareLaunchArgument("start_micro_ros_agent", default_value="true"),
-        DeclareLaunchArgument("micro_ros_serial_device", default_value="/dev/omniseer_teensy"),
-        DeclareLaunchArgument("micro_ros_baud", default_value="115200"),
-        DeclareLaunchArgument("require_teensy", default_value="true"),
-        DeclareLaunchArgument("teensy_preflight_timeout_sec", default_value="20"),
-        DeclareLaunchArgument("allow_teensy_power_cycle", default_value="false"),
-        DeclareLaunchArgument("start_lidar", default_value="true"),
-        DeclareLaunchArgument(
-            "lidar_serial_device",
-            default_value="/dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0",
-        ),
-        DeclareLaunchArgument("lidar_baudrate", default_value="115200"),
-        DeclareLaunchArgument("lidar_frame_id", default_value="lidar_frame"),
-        DeclareLaunchArgument("lidar_inverted", default_value="false"),
-        DeclareLaunchArgument("lidar_angle_compensate", default_value="true"),
-        DeclareLaunchArgument("encoder_odometry_params_file", default_value="encoder_odometry.yaml"),
-        DeclareLaunchArgument("ekf_params_file", default_value="ekf_fusion_real.yaml"),
-        DeclareLaunchArgument("slam_tb_config_file", default_value="slam_toolbox_async_online.yaml"),
-        DeclareLaunchArgument("nav2_params_file", default_value="nav2_params.yaml"),
-        DeclareLaunchArgument("start_slam", default_value="true"),
-        DeclareLaunchArgument("start_rf2o", default_value="true"),
-        DeclareLaunchArgument("start_nav", default_value="true"),
-        DeclareLaunchArgument("wait_for_boundary_topics", default_value="true"),
-        DeclareLaunchArgument("start_gateway", default_value="false"),
-        DeclareLaunchArgument("gateway_preview_source_kind", default_value="camera"),
-        DeclareLaunchArgument("gateway_preview_device", default_value="/dev/video11"),
-        DeclareLaunchArgument("start_vision", default_value="true"),
-        DeclareLaunchArgument("vision_params_file", default_value="vision_bridge.real.yaml"),
-        DeclareLaunchArgument("camera_device", default_value="__from_config__"),
-        DeclareLaunchArgument("camera_width", default_value="__from_config__"),
-        DeclareLaunchArgument("camera_height", default_value="__from_config__"),
-        DeclareLaunchArgument("camera_buffer_count", default_value="__from_config__"),
-        DeclareLaunchArgument("pipeline_dst_width", default_value="__from_config__"),
-        DeclareLaunchArgument("pipeline_dst_height", default_value="__from_config__"),
-        DeclareLaunchArgument("detector_model_path", default_value="__from_config__"),
-        DeclareLaunchArgument("clip_model_path", default_value="__from_config__"),
-        DeclareLaunchArgument("clip_vocab_path", default_value="__from_config__"),
-        DeclareLaunchArgument("classes_path", default_value="__from_config__"),
-        DeclareLaunchArgument("classes_pad_token", default_value="__from_config__"),
-        DeclareLaunchArgument("producer_preflight_capture_wait_ms", default_value="__from_config__"),
-        DeclareLaunchArgument("runner_warmup_runs", default_value="__from_config__"),
-        DeclareLaunchArgument("postprocess_score_threshold", default_value="__from_config__"),
-        DeclareLaunchArgument("postprocess_nms_iou_threshold", default_value="__from_config__"),
-        DeclareLaunchArgument("postprocess_max_detections", default_value="__from_config__"),
-        DeclareLaunchArgument("camera_frame_id", default_value="__from_config__"),
-    ]
-
-    use_sim_time = LaunchConfiguration("use_sim_time")
-    log_level = LaunchConfiguration("log_level")
-    start_micro_ros_agent = LaunchConfiguration("start_micro_ros_agent")
-    micro_ros_serial_device = LaunchConfiguration("micro_ros_serial_device")
-    micro_ros_baud = LaunchConfiguration("micro_ros_baud")
-    require_teensy = LaunchConfiguration("require_teensy")
-    teensy_preflight_timeout_sec = LaunchConfiguration("teensy_preflight_timeout_sec")
-    allow_teensy_power_cycle = LaunchConfiguration("allow_teensy_power_cycle")
-    start_lidar = LaunchConfiguration("start_lidar")
-    lidar_serial_device = LaunchConfiguration("lidar_serial_device")
-    lidar_baudrate = LaunchConfiguration("lidar_baudrate")
-    lidar_frame_id = LaunchConfiguration("lidar_frame_id")
-    lidar_inverted = LaunchConfiguration("lidar_inverted")
-    lidar_angle_compensate = LaunchConfiguration("lidar_angle_compensate")
-    encoder_odometry_params_file = LaunchConfiguration("encoder_odometry_params_file")
-    ekf_params_file = LaunchConfiguration("ekf_params_file")
-    slam_tb_config_file = LaunchConfiguration("slam_tb_config_file")
-    nav2_params_file = LaunchConfiguration("nav2_params_file")
-    start_slam = LaunchConfiguration("start_slam")
-    start_rf2o = LaunchConfiguration("start_rf2o")
-    start_nav = LaunchConfiguration("start_nav")
-    wait_for_boundary_topics = LaunchConfiguration("wait_for_boundary_topics")
-    start_gateway = LaunchConfiguration("start_gateway")
-    gateway_preview_source_kind = LaunchConfiguration("gateway_preview_source_kind")
-    gateway_preview_device = LaunchConfiguration("gateway_preview_device")
-    start_vision = LaunchConfiguration("start_vision")
-    vision_params_file = LaunchConfiguration("vision_params_file")
-    camera_device = LaunchConfiguration("camera_device")
-    camera_width = LaunchConfiguration("camera_width")
-    camera_height = LaunchConfiguration("camera_height")
-    camera_buffer_count = LaunchConfiguration("camera_buffer_count")
-    pipeline_dst_width = LaunchConfiguration("pipeline_dst_width")
-    pipeline_dst_height = LaunchConfiguration("pipeline_dst_height")
-    detector_model_path = LaunchConfiguration("detector_model_path")
-    clip_model_path = LaunchConfiguration("clip_model_path")
-    clip_vocab_path = LaunchConfiguration("clip_vocab_path")
-    classes_path = LaunchConfiguration("classes_path")
-    classes_pad_token = LaunchConfiguration("classes_pad_token")
-    producer_preflight_capture_wait_ms = LaunchConfiguration("producer_preflight_capture_wait_ms")
-    runner_warmup_runs = LaunchConfiguration("runner_warmup_runs")
-    postprocess_score_threshold = LaunchConfiguration("postprocess_score_threshold")
-    postprocess_nms_iou_threshold = LaunchConfiguration("postprocess_nms_iou_threshold")
-    postprocess_max_detections = LaunchConfiguration("postprocess_max_detections")
-    camera_frame_id = LaunchConfiguration("camera_frame_id")
-
+def _build_real_bringup_actions(
+    *,
+    pkg_bringup,
+    use_sim_time,
+    log_level,
+    start_micro_ros_agent,
+    micro_ros_serial_device,
+    micro_ros_baud,
+    require_teensy,
+    teensy_preflight_timeout_sec,
+    allow_teensy_power_cycle,
+    start_lidar,
+    lidar_serial_device,
+    lidar_baudrate,
+    lidar_frame_id,
+    lidar_inverted,
+    lidar_angle_compensate,
+    encoder_odometry_params_file,
+    ekf_params_file,
+    slam_tb_config_file,
+    nav2_params_file,
+    start_slam,
+    start_rf2o,
+    start_nav,
+    wait_for_boundary_topics,
+    boundary_topics_timeout_sec,
+    start_gateway,
+    gateway_preview_source_kind,
+    gateway_preview_device,
+    start_vision,
+    vision_params_file,
+    camera_device,
+    camera_width,
+    camera_height,
+    camera_buffer_count,
+    pipeline_dst_width,
+    pipeline_dst_height,
+    detector_model_path,
+    clip_model_path,
+    clip_vocab_path,
+    classes_path,
+    classes_pad_token,
+    producer_preflight_capture_wait_ms,
+    runner_warmup_runs,
+    postprocess_score_threshold,
+    postprocess_nms_iou_threshold,
+    postprocess_max_detections,
+    camera_frame_id,
+):
     real_io_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([PathJoinSubstitution([pkg_bringup, "launch", "real_io.launch.py"])]),
         launch_arguments={
@@ -256,7 +207,7 @@ def generate_launch_description():
                 "check_topic /mecanum_drive_controller/odometry\n"
             ),
             "bash",
-            teensy_preflight_timeout_sec,
+            boundary_topics_timeout_sec,
         ],
         name="wait_real_boundary_topics",
         condition=IfCondition(wait_for_boundary_topics),
@@ -273,14 +224,231 @@ def generate_launch_description():
         )
     )
 
-    return LaunchDescription(
-        [
-            *declared_arguments,
-            real_io_launch,
-            real_vision_launch,
-            baseline_twist_mux_node,
-            wait_boundary_topics,
-            launch_common_after_wait,
-            common_launch_immediate,
-        ]
+    return [
+        real_io_launch,
+        real_vision_launch,
+        baseline_twist_mux_node,
+        wait_boundary_topics,
+        launch_common_after_wait,
+        common_launch_immediate,
+    ]
+
+
+def generate_launch_description():
+    pkg_bringup = FindPackageShare("bringup")
+
+    declared_arguments = [
+        DeclareLaunchArgument("use_sim_time", default_value="false"),
+        DeclareLaunchArgument("log_level", default_value="info"),
+        DeclareLaunchArgument("pre_launch_cleanup", default_value="true"),
+        DeclareLaunchArgument("start_micro_ros_agent", default_value="true"),
+        DeclareLaunchArgument("micro_ros_serial_device", default_value="/dev/omniseer_teensy"),
+        DeclareLaunchArgument("micro_ros_baud", default_value="115200"),
+        DeclareLaunchArgument("require_teensy", default_value="true"),
+        DeclareLaunchArgument("teensy_preflight_timeout_sec", default_value="20"),
+        DeclareLaunchArgument("allow_teensy_power_cycle", default_value="false"),
+        DeclareLaunchArgument("start_lidar", default_value="true"),
+        DeclareLaunchArgument(
+            "lidar_serial_device",
+            default_value="/dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0",
+        ),
+        DeclareLaunchArgument("lidar_baudrate", default_value="115200"),
+        DeclareLaunchArgument("lidar_frame_id", default_value="lidar_frame"),
+        DeclareLaunchArgument("lidar_inverted", default_value="false"),
+        DeclareLaunchArgument("lidar_angle_compensate", default_value="true"),
+        DeclareLaunchArgument("encoder_odometry_params_file", default_value="encoder_odometry.yaml"),
+        DeclareLaunchArgument("ekf_params_file", default_value="ekf_fusion_real.yaml"),
+        DeclareLaunchArgument("slam_tb_config_file", default_value="slam_toolbox_async_online.yaml"),
+        DeclareLaunchArgument("nav2_params_file", default_value="nav2_params.yaml"),
+        DeclareLaunchArgument("start_slam", default_value="true"),
+        DeclareLaunchArgument("start_rf2o", default_value="true"),
+        DeclareLaunchArgument("start_nav", default_value="true"),
+        DeclareLaunchArgument("wait_for_boundary_topics", default_value="true"),
+        DeclareLaunchArgument("boundary_topics_timeout_sec", default_value="20"),
+        DeclareLaunchArgument("start_gateway", default_value="false"),
+        DeclareLaunchArgument("gateway_preview_source_kind", default_value="camera"),
+        DeclareLaunchArgument("gateway_preview_device", default_value="/dev/video11"),
+        DeclareLaunchArgument("start_vision", default_value="true"),
+        DeclareLaunchArgument("vision_params_file", default_value="vision_bridge.real.yaml"),
+        DeclareLaunchArgument("camera_device", default_value="__from_config__"),
+        DeclareLaunchArgument("camera_width", default_value="__from_config__"),
+        DeclareLaunchArgument("camera_height", default_value="__from_config__"),
+        DeclareLaunchArgument("camera_buffer_count", default_value="__from_config__"),
+        DeclareLaunchArgument("pipeline_dst_width", default_value="__from_config__"),
+        DeclareLaunchArgument("pipeline_dst_height", default_value="__from_config__"),
+        DeclareLaunchArgument("detector_model_path", default_value="__from_config__"),
+        DeclareLaunchArgument("clip_model_path", default_value="__from_config__"),
+        DeclareLaunchArgument("clip_vocab_path", default_value="__from_config__"),
+        DeclareLaunchArgument("classes_path", default_value="__from_config__"),
+        DeclareLaunchArgument("classes_pad_token", default_value="__from_config__"),
+        DeclareLaunchArgument("producer_preflight_capture_wait_ms", default_value="__from_config__"),
+        DeclareLaunchArgument("runner_warmup_runs", default_value="__from_config__"),
+        DeclareLaunchArgument("postprocess_score_threshold", default_value="__from_config__"),
+        DeclareLaunchArgument("postprocess_nms_iou_threshold", default_value="__from_config__"),
+        DeclareLaunchArgument("postprocess_max_detections", default_value="__from_config__"),
+        DeclareLaunchArgument("camera_frame_id", default_value="__from_config__"),
+    ]
+
+    use_sim_time = LaunchConfiguration("use_sim_time")
+    log_level = LaunchConfiguration("log_level")
+    pre_launch_cleanup = LaunchConfiguration("pre_launch_cleanup")
+    start_micro_ros_agent = LaunchConfiguration("start_micro_ros_agent")
+    micro_ros_serial_device = LaunchConfiguration("micro_ros_serial_device")
+    micro_ros_baud = LaunchConfiguration("micro_ros_baud")
+    require_teensy = LaunchConfiguration("require_teensy")
+    teensy_preflight_timeout_sec = LaunchConfiguration("teensy_preflight_timeout_sec")
+    allow_teensy_power_cycle = LaunchConfiguration("allow_teensy_power_cycle")
+    start_lidar = LaunchConfiguration("start_lidar")
+    lidar_serial_device = LaunchConfiguration("lidar_serial_device")
+    lidar_baudrate = LaunchConfiguration("lidar_baudrate")
+    lidar_frame_id = LaunchConfiguration("lidar_frame_id")
+    lidar_inverted = LaunchConfiguration("lidar_inverted")
+    lidar_angle_compensate = LaunchConfiguration("lidar_angle_compensate")
+    encoder_odometry_params_file = LaunchConfiguration("encoder_odometry_params_file")
+    ekf_params_file = LaunchConfiguration("ekf_params_file")
+    slam_tb_config_file = LaunchConfiguration("slam_tb_config_file")
+    nav2_params_file = LaunchConfiguration("nav2_params_file")
+    start_slam = LaunchConfiguration("start_slam")
+    start_rf2o = LaunchConfiguration("start_rf2o")
+    start_nav = LaunchConfiguration("start_nav")
+    wait_for_boundary_topics = LaunchConfiguration("wait_for_boundary_topics")
+    boundary_topics_timeout_sec = LaunchConfiguration("boundary_topics_timeout_sec")
+    start_gateway = LaunchConfiguration("start_gateway")
+    gateway_preview_source_kind = LaunchConfiguration("gateway_preview_source_kind")
+    gateway_preview_device = LaunchConfiguration("gateway_preview_device")
+    start_vision = LaunchConfiguration("start_vision")
+    vision_params_file = LaunchConfiguration("vision_params_file")
+    camera_device = LaunchConfiguration("camera_device")
+    camera_width = LaunchConfiguration("camera_width")
+    camera_height = LaunchConfiguration("camera_height")
+    camera_buffer_count = LaunchConfiguration("camera_buffer_count")
+    pipeline_dst_width = LaunchConfiguration("pipeline_dst_width")
+    pipeline_dst_height = LaunchConfiguration("pipeline_dst_height")
+    detector_model_path = LaunchConfiguration("detector_model_path")
+    clip_model_path = LaunchConfiguration("clip_model_path")
+    clip_vocab_path = LaunchConfiguration("clip_vocab_path")
+    classes_path = LaunchConfiguration("classes_path")
+    classes_pad_token = LaunchConfiguration("classes_pad_token")
+    producer_preflight_capture_wait_ms = LaunchConfiguration("producer_preflight_capture_wait_ms")
+    runner_warmup_runs = LaunchConfiguration("runner_warmup_runs")
+    postprocess_score_threshold = LaunchConfiguration("postprocess_score_threshold")
+    postprocess_nms_iou_threshold = LaunchConfiguration("postprocess_nms_iou_threshold")
+    postprocess_max_detections = LaunchConfiguration("postprocess_max_detections")
+    camera_frame_id = LaunchConfiguration("camera_frame_id")
+    cleanup_script = PathJoinSubstitution([pkg_bringup, "scripts", "pre_launch_cleanup.sh"])
+
+    launch_group = GroupAction(
+        actions=_build_real_bringup_actions(
+            pkg_bringup=pkg_bringup,
+            use_sim_time=use_sim_time,
+            log_level=log_level,
+            start_micro_ros_agent=start_micro_ros_agent,
+            micro_ros_serial_device=micro_ros_serial_device,
+            micro_ros_baud=micro_ros_baud,
+            require_teensy=require_teensy,
+            teensy_preflight_timeout_sec=teensy_preflight_timeout_sec,
+            allow_teensy_power_cycle=allow_teensy_power_cycle,
+            start_lidar=start_lidar,
+            lidar_serial_device=lidar_serial_device,
+            lidar_baudrate=lidar_baudrate,
+            lidar_frame_id=lidar_frame_id,
+            lidar_inverted=lidar_inverted,
+            lidar_angle_compensate=lidar_angle_compensate,
+            encoder_odometry_params_file=encoder_odometry_params_file,
+            ekf_params_file=ekf_params_file,
+            slam_tb_config_file=slam_tb_config_file,
+            nav2_params_file=nav2_params_file,
+            start_slam=start_slam,
+            start_rf2o=start_rf2o,
+            start_nav=start_nav,
+            wait_for_boundary_topics=wait_for_boundary_topics,
+            boundary_topics_timeout_sec=boundary_topics_timeout_sec,
+            start_gateway=start_gateway,
+            gateway_preview_source_kind=gateway_preview_source_kind,
+            gateway_preview_device=gateway_preview_device,
+            start_vision=start_vision,
+            vision_params_file=vision_params_file,
+            camera_device=camera_device,
+            camera_width=camera_width,
+            camera_height=camera_height,
+            camera_buffer_count=camera_buffer_count,
+            pipeline_dst_width=pipeline_dst_width,
+            pipeline_dst_height=pipeline_dst_height,
+            detector_model_path=detector_model_path,
+            clip_model_path=clip_model_path,
+            clip_vocab_path=clip_vocab_path,
+            classes_path=classes_path,
+            classes_pad_token=classes_pad_token,
+            producer_preflight_capture_wait_ms=producer_preflight_capture_wait_ms,
+            runner_warmup_runs=runner_warmup_runs,
+            postprocess_score_threshold=postprocess_score_threshold,
+            postprocess_nms_iou_threshold=postprocess_nms_iou_threshold,
+            postprocess_max_detections=postprocess_max_detections,
+            camera_frame_id=camera_frame_id,
+        )
     )
+
+    cleanup = ExecuteProcess(
+        name="pre_launch_cleanup",
+        cmd=["bash", cleanup_script, "real"],
+        output="screen",
+        condition=IfCondition(pre_launch_cleanup),
+    )
+
+    after_cleanup = RegisterEventHandler(
+        OnProcessExit(target_action=cleanup, on_exit=[launch_group])
+    )
+
+    launch_without_cleanup = GroupAction(
+        actions=_build_real_bringup_actions(
+            pkg_bringup=pkg_bringup,
+            use_sim_time=use_sim_time,
+            log_level=log_level,
+            start_micro_ros_agent=start_micro_ros_agent,
+            micro_ros_serial_device=micro_ros_serial_device,
+            micro_ros_baud=micro_ros_baud,
+            require_teensy=require_teensy,
+            teensy_preflight_timeout_sec=teensy_preflight_timeout_sec,
+            allow_teensy_power_cycle=allow_teensy_power_cycle,
+            start_lidar=start_lidar,
+            lidar_serial_device=lidar_serial_device,
+            lidar_baudrate=lidar_baudrate,
+            lidar_frame_id=lidar_frame_id,
+            lidar_inverted=lidar_inverted,
+            lidar_angle_compensate=lidar_angle_compensate,
+            encoder_odometry_params_file=encoder_odometry_params_file,
+            ekf_params_file=ekf_params_file,
+            slam_tb_config_file=slam_tb_config_file,
+            nav2_params_file=nav2_params_file,
+            start_slam=start_slam,
+            start_rf2o=start_rf2o,
+            start_nav=start_nav,
+            wait_for_boundary_topics=wait_for_boundary_topics,
+            boundary_topics_timeout_sec=boundary_topics_timeout_sec,
+            start_gateway=start_gateway,
+            gateway_preview_source_kind=gateway_preview_source_kind,
+            gateway_preview_device=gateway_preview_device,
+            start_vision=start_vision,
+            vision_params_file=vision_params_file,
+            camera_device=camera_device,
+            camera_width=camera_width,
+            camera_height=camera_height,
+            camera_buffer_count=camera_buffer_count,
+            pipeline_dst_width=pipeline_dst_width,
+            pipeline_dst_height=pipeline_dst_height,
+            detector_model_path=detector_model_path,
+            clip_model_path=clip_model_path,
+            clip_vocab_path=clip_vocab_path,
+            classes_path=classes_path,
+            classes_pad_token=classes_pad_token,
+            producer_preflight_capture_wait_ms=producer_preflight_capture_wait_ms,
+            runner_warmup_runs=runner_warmup_runs,
+            postprocess_score_threshold=postprocess_score_threshold,
+            postprocess_nms_iou_threshold=postprocess_nms_iou_threshold,
+            postprocess_max_detections=postprocess_max_detections,
+            camera_frame_id=camera_frame_id,
+        ),
+        condition=UnlessCondition(pre_launch_cleanup),
+    )
+
+    return LaunchDescription([*declared_arguments, cleanup, after_cleanup, launch_without_cleanup])

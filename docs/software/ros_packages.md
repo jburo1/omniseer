@@ -331,6 +331,7 @@ Starts:
 
 Top-level sim bringup:
 
+- run shared targeted pre-launch cleanup for sim-owned and shared bringup processes
 - start `sim_io.launch.py`
 - start `common.launch.py`
 - optionally start RViz
@@ -339,9 +340,12 @@ Top-level sim bringup:
 
 Top-level real bringup:
 
+- run shared targeted pre-launch cleanup for stale bringup-owned processes by default
+  - opt out with `pre_launch_cleanup:=false`
 - start `real_io.launch.py`
 - wait for first live messages on `/imu`, `/encoder_counts`, `/scan`, and
   `/mecanum_drive_controller/odometry`
+  - timeout is controlled independently with `boundary_topics_timeout_sec`
 - start `common.launch.py`
 
 ## New Adapter Package

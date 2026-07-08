@@ -23,7 +23,43 @@ def _flatten_launch_value(value) -> str:
     return str(value)
 
 
+def _walk_entities(entities):
+    for entity in entities:
+        yield entity
+        nested_entities = None
+        if hasattr(entity, "get_sub_entities"):
+            nested_entities = entity.get_sub_entities()
+        elif hasattr(entity, "entities"):
+            nested_entities = entity.entities
+
+        if nested_entities:
+            yield from _walk_entities(nested_entities)
+
+
 class RealLaunchStructureTests(unittest.TestCase):
+    def test_real_launch_runs_pre_launch_cleanup_before_bringup(self) -> None:
+        module = _load_launch_module("real.launch.py")
+        launch_description = module.generate_launch_description()
+
+        cleanup_action = next(
+            (
+                entity
+                for entity in _walk_entities(launch_description.entities)
+                if isinstance(entity, ExecuteProcess) and "pre_launch_cleanup.sh" in _flatten_launch_value(entity.cmd)
+            ),
+            None,
+        )
+        self.assertIsNotNone(cleanup_action, "expected a pre-launch cleanup process in real.launch.py")
+        self.assertIn("real", _flatten_launch_value(cleanup_action.cmd))
+
+        matching_handlers = [
+            entity
+            for entity in launch_description.entities
+            if isinstance(entity, RegisterEventHandler)
+            and getattr(entity.event_handler, "_OnActionEventBase__action_matcher", None) is cleanup_action
+        ]
+        self.assertTrue(matching_handlers, "expected real bringup to wait for pre-launch cleanup")
+
     def test_real_io_launch_gates_micro_ros_agent_on_teensy_preflight(self) -> None:
         module = _load_launch_module("real_io.launch.py")
         launch_description = module.generate_launch_description()
@@ -37,7 +73,7 @@ class RealLaunchStructureTests(unittest.TestCase):
         teensy_preflight = next(
             (
                 entity
-                for entity in launch_description.entities
+                for entity in _walk_entities(launch_description.entities)
                 if isinstance(entity, ExecuteProcess) and "wait_for_teensy.py" in str(entity.cmd)
             ),
             None,
@@ -59,7 +95,7 @@ class RealLaunchStructureTests(unittest.TestCase):
         wait_action = next(
             (
                 entity
-                for entity in launch_description.entities
+                for entity in _walk_entities(launch_description.entities)
                 if isinstance(entity, ExecuteProcess)
                 and "ros2 topic echo --once" in _flatten_launch_value(entity.cmd)
             ),
@@ -71,3 +107,26 @@ class RealLaunchStructureTests(unittest.TestCase):
         self.assertIn("ros2 topic echo --once", cmd_text)
         self.assertIn("/encoder_counts", cmd_text)
         self.assertNotIn("ros2 topic list", cmd_text)
+
+    def test_sim_launch_runs_shared_cleanup_before_launch_group(self) -> None:
+        module = _load_launch_module("sim.launch.py")
+        launch_description = module.generate_launch_description()
+
+        cleanup_action = next(
+            (
+                entity
+                for entity in _walk_entities(launch_description.entities)
+                if isinstance(entity, ExecuteProcess) and "pre_launch_cleanup.sh" in _flatten_launch_value(entity.cmd)
+            ),
+            None,
+        )
+        self.assertIsNotNone(cleanup_action, "expected a shared cleanup process in sim.launch.py")
+        self.assertIn("sim", _flatten_launch_value(cleanup_action.cmd))
+
+        matching_handlers = [
+            entity
+            for entity in launch_description.entities
+            if isinstance(entity, RegisterEventHandler)
+            and getattr(entity.event_handler, "_OnActionEventBase__action_matcher", None) is cleanup_action
+        ]
+        self.assertTrue(matching_handlers, "expected sim launch to wait for cleanup before bringup")

@@ -58,6 +58,8 @@ Then reconnect the board or trigger udev again and confirm the symlink exists.
 The real bringup path already includes the real IO layer. Running
 `real.launch.py` starts:
 
+- a targeted pre-launch cleanup of stale bringup-owned ROS processes unless
+  `pre_launch_cleanup:=false` is passed
 - `micro_ros_agent`
 - LiDAR driver
 - encoder-to-odometry adapter
@@ -164,10 +166,37 @@ values.
 
 ## Real Bringup Command
 
+Recommended operator sequence from a fresh shell:
+
+```bash
+source /opt/ros/kilted/setup.bash
+cd /omniseer/ros_ws
+colcon build --merge-install --packages-select bringup
+source /omniseer/ros_ws/install/setup.bash
+export ROS_DOMAIN_ID=42
+cd /omniseer
+scripts/phase05_real.sh smoke
+```
+
+Notes:
+
+- `ros2 launch bringup ...` uses the installed package from
+  `ros_ws/install/share/bringup`, so rebuild `bringup` after changing launch
+  files or helper scripts.
+- `scripts/phase05_real.sh smoke` is the quickest full-stack stability check:
+  it runs the real bringup in the background, waits briefly, verifies the key
+  teleop/vision topics, then shuts the stack down.
+- the real bringup now performs targeted stale-process cleanup by default before
+  starting new nodes; opt out only if you intentionally want to preserve an
+  existing bringup session by passing `pre_launch_cleanup:=false`
+
 Launch the minimum real stack with navigation, SLAM, RF2O, and gateway
 disabled:
 
 ```bash
+source /opt/ros/kilted/setup.bash
+source /omniseer/ros_ws/install/setup.bash
+export ROS_DOMAIN_ID=42
 ros2 launch bringup real.launch.py \
   start_nav:=false \
   start_slam:=false \
@@ -185,6 +214,9 @@ ros2 launch bringup real.launch.py \
 If you want to override the camera or serial device explicitly, append them:
 
 ```bash
+source /opt/ros/kilted/setup.bash
+source /omniseer/ros_ws/install/setup.bash
+export ROS_DOMAIN_ID=42
 ros2 launch bringup real.launch.py \
   start_nav:=false \
   start_slam:=false \
@@ -204,6 +236,9 @@ ros2 launch bringup real.launch.py \
 If needed, also override hardware paths:
 
 ```bash
+source /opt/ros/kilted/setup.bash
+source /omniseer/ros_ws/install/setup.bash
+export ROS_DOMAIN_ID=42
 ros2 launch bringup real.launch.py \
   start_nav:=false \
   start_slam:=false \
