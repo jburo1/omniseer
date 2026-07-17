@@ -1,0 +1,115 @@
+#!/usr/bin/env bash
+
+_omni_common_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_omni_scripts_dir="$(cd "${_omni_common_dir}/.." && pwd)"
+OMNI_REPO_ROOT="$(cd "${_omni_scripts_dir}/.." && pwd)"
+readonly OMNI_REPO_ROOT
+
+omni_repo_root() {
+  printf '%s\n' "${OMNI_REPO_ROOT}"
+}
+
+omni_scripts_root() {
+  printf '%s\n' "${OMNI_REPO_ROOT}/scripts"
+}
+
+omni_require_command() {
+  local command_name="$1"
+  if ! command -v "${command_name}" >/dev/null 2>&1; then
+    omni_die "${command_name} not found in PATH"
+  fi
+}
+
+omni_latest_stable_real_phase() {
+  printf '%s\n' "${OMNISEER_LATEST_STABLE_REAL_PHASE:-0.5}"
+}
+
+omni_supported_real_phases() {
+  printf '%s\n' "0.5" "0.75"
+}
+
+omni_ros_dep_paths_core() {
+  cat <<'EOF'
+ros_ws/src/omniseer_gz_assets
+ros_ws/src/omniseer_msgs
+ros_ws/src/yolo_ros/yolo_msgs
+ros_ws/src/omniseer_description
+ros_ws/src/analysis
+ros_ws/src/bringup
+ros_ws/src/robot_io_adapters
+ros_ws/src/robot_diag_control
+ros_ws/src/robot_diag_control_cpp
+EOF
+}
+
+omni_ros_dep_paths_smoke() {
+  cat <<'EOF'
+ros_ws/src/omniseer_gz_assets
+ros_ws/src/omniseer_msgs
+ros_ws/src/omniseer_description
+ros_ws/src/analysis
+ros_ws/src/bringup
+ros_ws/src/robot_io_adapters
+ros_ws/src/robot_diag_control_cpp
+EOF
+}
+
+omni_ros_core_packages() {
+  cat <<'EOF'
+omniseer_gz_assets
+omniseer_msgs
+yolo_msgs
+omniseer_description
+analysis
+bringup
+robot_io_adapters
+robot_diag_control
+robot_diag_control_cpp
+EOF
+}
+
+omni_ros_core_ignore_packages() {
+  cat <<'EOF'
+rf2o_laser_odometry
+yolo_bringup
+yolo_ros
+EOF
+}
+
+omni_ros_test_packages() {
+  cat <<'EOF'
+omniseer_description
+analysis
+bringup
+robot_io_adapters
+robot_diag_control
+robot_diag_control_cpp
+EOF
+}
+
+omni_ros_smoke_packages() {
+  cat <<'EOF'
+omniseer_gz_assets
+omniseer_msgs
+omniseer_description
+bringup
+robot_io_adapters
+EOF
+}
+
+omni_ros_smoke_ignore_packages() {
+  cat <<'EOF'
+analysis
+rf2o_laser_odometry
+robot_diag_control_cpp
+yolo_bringup
+yolo_ros
+EOF
+}
+
+omni_read_lines_into_array() {
+  local destination_name="$1"
+  local producer="$2"
+  local -n destination_ref="${destination_name}"
+  mapfile -t destination_ref < <("${producer}")
+}

@@ -41,6 +41,12 @@ srv_gen/
 /**/install/
 /**/log/
 
+# Repository-maintained script helpers and build entry points
+!/scripts/lib/
+!/scripts/lib/**
+!/scripts/build/
+!/scripts/build/**
+
 # --- C/C++ / CMake build artifacts ---
 **/build-*/
 **/cmake-build-*/
