@@ -17,7 +17,7 @@ class PreviewViewerTests(unittest.TestCase):
 
         self.assertEqual(args.mode, "display")
         self.assertEqual(args.profile, "balanced")
-        self.assertEqual(args.preview_port, 7001)
+        self.assertEqual(args.preview_port, 7100)
 
     def test_build_player_command_uses_preview_host_override(self):
         parser = _build_parser()
@@ -35,7 +35,7 @@ class PreviewViewerTests(unittest.TestCase):
         command = _build_player_command(args)
 
         self.assertEqual(command[0], "gst-launch-1.0")
-        self.assertIn("uri=srt://10.0.0.3:7001?mode=caller", command)
+        self.assertIn("uri=srt://10.0.0.3:7100?mode=caller", command)
         self.assertIn("fakesink", command)
 
     def test_build_player_command_accepts_decoder_override(self):

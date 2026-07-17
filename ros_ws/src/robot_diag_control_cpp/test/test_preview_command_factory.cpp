@@ -16,7 +16,7 @@ TEST(PreviewCommandFactoryTest, BuildsCameraPipelineForBalancedProfile)
         "camera",
         "/dev/video11",
         "0.0.0.0",
-        7001,
+        7100,
         125,
     });
 
@@ -48,7 +48,7 @@ TEST(PreviewCommandFactoryTest, BuildsCameraPipelineForBalancedProfile)
     std::find(
       resolution.command.arguments.begin(),
       resolution.command.arguments.end(),
-      "localport=7001"),
+      "localport=7100"),
     resolution.command.arguments.end());
 }
 
@@ -60,7 +60,7 @@ TEST(PreviewCommandFactoryTest, RejectsUnsupportedSourceKind)
         "bogus",
         "/dev/video11",
         "0.0.0.0",
-        7001,
+        7100,
         125,
     });
 

@@ -319,7 +319,9 @@ Real-hardware-only producers and compute adapters below the boundary.
 
 Starts:
 
-- `wait_for_teensy.py` startup preflight for `/dev/omniseer_teensy`
+- `wait_for_teensy.py` startup preflight for the stable Teensy
+  `/dev/serial/by-id/...` path (`/dev/omniseer_teensy` remains an optional
+  udev alias/launch override)
 - `micro_ros_agent` after the Teensy preflight succeeds
 - real LiDAR driver publishing `/scan`
   - prefer a stable `/dev/serial/by-id/...` path over `/dev/ttyUSB*` so real

@@ -30,15 +30,10 @@ wait_for_topic_type() {
 
 wait_for_message() {
   local topic="$1"
-  local deadline=$((SECONDS + timeout_seconds))
-
-  while (( SECONDS < deadline )); do
-    if ros2 topic echo --once "${topic}" >/dev/null 2>&1; then
-      echo "ok: received one message on ${topic}"
-      return 0
-    fi
-    sleep 1
-  done
+  if timeout "${timeout_seconds}" ros2 topic echo --once "${topic}" >/dev/null 2>&1; then
+    echo "ok: received one message on ${topic}"
+    return 0
+  fi
 
   echo "no message received on ${topic} within ${timeout_seconds}s" >&2
   return 1

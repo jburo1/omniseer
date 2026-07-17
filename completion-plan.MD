@@ -410,11 +410,103 @@ chore(scripts): add real perception topic check helper
 
 ---
 
+# Phase 0.75: Operator-Integrated Real Demo
+
+## Purpose
+
+Prove that the verified robot-side teleop/perception slice can be driven from
+one laptop-facing workflow before adding experiment recording.
+
+The required behavior is:
+
+```text
+laptop monitor GUI
+  -> gateway status
+  -> preview control + external SRT viewer
+  -> bounded gateway teleop
+  -> /cmd_vel_keyboard
+  -> /mecanum_drive_controller/reference
+
+native perception
+  -> /vision/perf
+  -> gateway vision status
+  -> laptop monitor
+```
+
+This phase exists to make Phase 1 boring: the recorder should capture a known
+good integrated operator workflow, not discover gateway, preview, teleop, or
+visibility failures.
+
+## Tasks
+
+### 0.75.1 Add bounded gateway teleop
+
+Extend the operator gateway API additively with teleop enable/disable, bounded
+command submission, and teleop status in `SystemStatus`.
+
+Keep ROS topic names out of the external contract. The C++ gateway should own
+the internal adapter to the existing stamped command path.
+
+Minimum safety behavior:
+
+- teleop disabled by default
+- explicit enable required before motion commands
+- configured linear/angular bounds
+- command rate limiting
+- deadman timeout
+- zero command on disable, timeout, and gateway shutdown
+
+### 0.75.2 Upgrade the laptop monitor GUI
+
+Use the existing Tk monitor as the Phase 0.75 laptop app.
+
+It should provide:
+
+- status polling for health, preview, vision, and teleop
+- preview on/off/profile controls using the existing external SRT viewer
+- bounded teleop enable/disable/stop and directional controls
+- best-effort teleop disable when the app closes
+
+Do not embed video in the Tk window in this phase. Keep the external
+GStreamer viewer for lower risk.
+
+### 0.75.3 Add an operator-integrated demo checklist
+
+Add:
+
+```text
+docs/software/operator_integrated_demo.md
+```
+
+It should include exact robot and laptop commands, expected observations,
+troubleshooting, and a target-hardware verification record.
+
+## Definition of Done
+
+- Gateway status includes teleop state and fresh vision status.
+- The laptop monitor can enable preview and launch the external viewer.
+- The laptop monitor can enable, command, stop, and disable bounded teleop.
+- Teleop commands from the laptop reach `/mecanum_drive_controller/reference`.
+- Closing the laptop app or disabling teleop sends a zero command.
+- A target-hardware Phase 0.75 verification pass has been recorded.
+
+## Suggested commit names
+
+```text
+feat(gateway): add bounded teleop control
+feat(operator): add teleop controls to monitor gui
+docs(operator): add integrated real demo checklist
+docs(plan): insert phase 0.75 before run recording
+```
+
+---
+
 # Phase 1: Structured Perception Run Bundle
 
 ## Purpose
 
-Implement the missing local experiment artifact after Phase 0.5 proves the source topics.
+Implement the missing local experiment artifact after Phase 0.75 proves the
+operator-integrated source workflow.
 
 The system should be able to record one verified perception run into a structured directory that can later be analyzed, copied, uploaded, or rendered.
 
@@ -427,6 +519,8 @@ Do not begin this phase until:
 - native bridge publishes `/vision/perf`
 - teleop and perception can run at the same time
 - `docs/software/real_teleop_perception_check.md` exists
+- gateway-driven preview and bounded teleop have been verified from the laptop monitor
+- `docs/software/operator_integrated_demo.md` exists
 
 ## Proposed package
 
@@ -659,7 +753,7 @@ Prefer pure Python tests for schema/summary logic. ROS integration tests can com
 - The run contains `manifest.yaml`, `detections.jsonl`, `perf.jsonl`, and `summary.json`.
 - Tests cover schema and summary behavior.
 - README or docs include one reproducible command sequence.
-- The docs make clear that Phase 0.5 must be completed before meaningful real runs are recorded.
+- The docs make clear that Phase 0.75 must be completed before meaningful real runs are recorded.
 
 ## Suggested commit names
 

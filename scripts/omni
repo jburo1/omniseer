@@ -19,7 +19,7 @@ Commands:
   setup   Environment and dependency helpers.
   build   Local build helpers. Defaults to ROS.
   test    Targeted local verification helpers. Defaults to ROS.
-  run     Operator-facing run commands for sim, real, and teleop.
+  run     Operator-facing run commands for sim, real, monitor, and teleop.
   check   Passive verification helpers.
   flash   Hardware flashing helpers.
   docs    Documentation build helpers.
@@ -44,14 +44,19 @@ run_usage() {
 Usage:
   scripts/omni run sim [launch args...]
   scripts/omni run real [--phase <number>] [--mode <mode>] [mode] [launch args...]
+  scripts/omni run monitor [monitor args...]
   scripts/omni run teleop
 
 Real modes:
-  phase05  Start bringup in the background, then open keyboard teleop.
-  smoke    Start bringup, run the passive verifier, then stop.
+  phase05  Phase 0.5 only: start bringup, then open keyboard teleop.
+  smoke    Start bringup, run the phase verifier, then stop.
   bringup  Start only the phase bringup in the foreground.
   teleop   Start only the stamped keyboard teleop publisher.
   verify   Run only the passive verifier against an existing ROS graph.
+
+Phase defaults:
+  0.5   phase05
+  0.75  bringup
 EOF
 }
 
@@ -212,6 +217,9 @@ EOF
         ;;
       real)
         exec "${script_dir}/run/real.sh" "$@"
+        ;;
+      monitor)
+        exec "${script_dir}/run/monitor.sh" "$@"
         ;;
       teleop)
         exec "${script_dir}/run/teleop.sh" "$@"

@@ -5,6 +5,7 @@ from robot_diag_control.monitor_gui import (
     _build_parser,
     _build_preview_viewer_command,
     _resolved_preview_host,
+    _teleop_command_for_action,
 )
 
 
@@ -52,3 +53,21 @@ class MonitorGuiTests(unittest.TestCase):
         self.assertIn("--preview-host", command)
         self.assertIn("10.0.0.3", command)
         self.assertIn("--leave-preview-running", command)
+
+    def test_teleop_command_for_action_maps_to_bounded_steps(self):
+        self.assertEqual(
+            _teleop_command_for_action(
+                "forward",
+                linear_step_mps=0.12,
+                angular_step_rad_s=0.35,
+            ),
+            (0.12, 0.0, 0.0),
+        )
+        self.assertEqual(
+            _teleop_command_for_action(
+                "turn_right",
+                linear_step_mps=0.12,
+                angular_step_rad_s=0.35,
+            ),
+            (0.0, 0.0, -0.35),
+        )

@@ -145,6 +145,8 @@ Commands:
 ```bash
 scripts/omni run sim
 scripts/omni run real --phase 0.5
+scripts/omni run real --phase 0.75
+scripts/omni run monitor --host <robot-ip>
 scripts/omni run teleop
 ```
 
@@ -167,9 +169,10 @@ scripts/omni run sim headless:=true
 
 Launches the selected real-hardware rollout slice.
 
-Current supported phase:
+Current supported phases:
 
 - `0.5`
+- `0.75`
 
 Examples:
 
@@ -177,10 +180,15 @@ Examples:
 scripts/omni run real --phase 0.5
 scripts/omni run real --phase 0.5 smoke
 scripts/omni run real --phase 0.5 bringup camera_device:=/dev/video11
+scripts/omni run real --phase 0.75
 ```
 
 If `--phase` is omitted, the command selects the latest stable real phase and
 prints which one it chose.
+
+Phase `0.75` defaults to foreground `bringup` with native vision and the operator
+gateway enabled. Phase `0.5` retains its background bringup plus keyboard teleop
+default.
 
 Why phases exist:
 
@@ -218,6 +226,19 @@ Suggestions:
 - use `run real --phase 0.5` for interactive operator testing
 - use `run real --phase 0.5 smoke` for a quick integrated health check
 - use `run real --phase 0.5 bringup` when debugging launch or runtime issues
+- use `run real --phase 0.75` on the robot for the operator-integrated demo
+
+#### `run monitor`
+
+Launches the Tk operator monitor from the laptop workspace:
+
+```bash
+scripts/omni run monitor --host <robot-ip>
+```
+
+The wrapper sources ROS and the workspace, refreshes status on startup, and lets
+the GUI use the gateway host as the default preview host. Additional monitor
+arguments are forwarded to `robot_monitor_gui`.
 
 ### `check`
 
@@ -332,6 +353,29 @@ Use this for:
 
 - the quickest integrated Phase `0.5` health check
 - validating teleop and perception boundaries before a longer session
+
+### Real Phase `0.75` operator demo
+
+Robot:
+
+```bash
+scripts/omni run real --phase 0.75
+```
+
+Laptop:
+
+```bash
+scripts/omni run monitor --host <robot-ip>
+```
+
+Active zero-motion acceptance verification from a second robot shell:
+
+```bash
+OMNISEER_REQUIRE_DETECTIONS=1 scripts/omni run real --phase 0.75 verify
+```
+
+Use this for the integrated gateway status, preview, perception, and bounded
+teleop acceptance run described in `operator_integrated_demo.md`.
 
 ### Native vision iteration
 

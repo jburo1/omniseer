@@ -32,7 +32,7 @@ def _build_parser() -> argparse.ArgumentParser:
         default=None,
         help="preview stream host; defaults to --host",
     )
-    parser.add_argument("--preview-port", type=int, default=7001)
+    parser.add_argument("--preview-port", type=int, default=7100)
     parser.add_argument("--preview-latency-ms", type=int, default=125)
     parser.add_argument("--gst-launch-path", default="gst-launch-1.0")
     parser.add_argument(

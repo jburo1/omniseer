@@ -1,0 +1,140 @@
+# Operator-Integrated Real Demo
+
+_Status: Phase 0.75 implementation added; target-hardware verification record pending_
+
+This checklist verifies the Phase 0.75 slice between Phase 0.5 and the run
+bundle recorder:
+
+- real native perception publishes gateway-visible vision status
+- preview can be toggled from the laptop app
+- bounded teleop can be enabled and commanded from the laptop app
+- teleop commands reach the existing stamped command path
+
+The laptop app remains intentionally simple. It uses the existing Tk monitor for
+status, preview controls, and bounded teleop controls. Video still opens in the
+external GStreamer viewer rather than embedding in the Tk window.
+
+## Preconditions
+
+- Phase 0.5 has been run successfully on target hardware.
+- The robot and laptop workspaces have been built with `scripts/omni build ros`.
+- The laptop can reach the robot gateway gRPC port.
+- The laptop has GStreamer tools and SRT/H.264 decode plugins installed for
+  preview viewing.
+- Native vision asset paths are available on the robot.
+
+## Robot Command
+
+From the repository root on the robot, launch the Phase 0.75 stack. The phase
+profile enables the gateway and native vision, disables navigation/SLAM/RF2O,
+and resolves model paths from `vision_bridge.real.paths.yaml`:
+
+```bash
+scripts/omni run real --phase 0.75
+```
+
+Pass launch overrides after the phase, for example:
+
+```bash
+scripts/omni run real --phase 0.75 bringup camera_device:=/dev/video12
+```
+
+The default hardware split is inference on `rkisp_selfpath` (`/dev/video12`)
+and preview on `rkisp_mainpath` (`/dev/video11`). The Teensy defaults to its
+stable `/dev/serial/by-id/usb-Teensyduino_USB_Serial_16634450-if00` path; the
+`/dev/omniseer_teensy` alias remains usable as an explicit override when the
+repository udev rule is installed. Preview uses UDP `7100`; UDP `7001` is
+occupied by the ROS 2 CLI daemon on the target and must not be reused for SRT.
+
+Expected robot-side behavior:
+
+- `robot_diag_control_cpp` starts and listens on gRPC port `50051`.
+- `vision_bridge` publishes `/vision/perf`.
+- `/yolo/detections` publishes when configured classes are visible.
+- Teleop remains disabled until explicitly enabled from the laptop.
+
+## Laptop Command
+
+From the repository root on the laptop, launch the monitor through the same
+front door. The preview host defaults to `--host` and status refreshes when the
+window opens:
+
+```bash
+scripts/omni run monitor --host <robot-ip>
+```
+
+Use the GUI to:
+
+- refresh or watch system status
+- enable preview, then open the external viewer
+- enable teleop
+- send small directional commands or press `Space` for stop
+- disable teleop before ending the run
+
+Keyboard bindings while the window has focus:
+
+```text
+W/S: forward/back
+A/D: strafe left/right
+Q/E: turn left/right
+Space: stop
+```
+
+## Verification Commands
+
+Before driving, a second robot shell can run the Phase 0.75 acceptance checks
+against the existing graph:
+
+```bash
+OMNISEER_REQUIRE_DETECTIONS=1 scripts/omni run real --phase 0.75 verify
+```
+
+This requires live encoder, wheel-odometry, lidar, vision, and detection
+messages; healthy gateway status; and zero vision errors. It also briefly
+starts and stops preview, then enables teleop, sends only a zero command, checks
+that it reaches the stamped controller reference, and disables teleop. It fails
+if preview cannot bind its camera or SRT port. For focused debugging, inspect
+the individual topics on the robot:
+
+```bash
+ros2 topic echo --once /mecanum_drive_controller/reference
+ros2 topic echo --once /vision/perf
+ros2 topic echo --once /yolo/detections
+```
+
+Expected observations:
+
+- laptop status shows `vision` available and fresh
+- preview state changes to `running` when enabled
+- external preview viewer displays the SRT stream
+- teleop state changes to `enabled` after explicit enable
+- `/mecanum_drive_controller/reference` receives stamped commands
+- disabling teleop or closing the GUI sends a zero command
+
+## Troubleshooting
+
+| Symptom | Likely cause | Check |
+| --- | --- | --- |
+| GUI status refresh fails | gRPC host/port unreachable | Confirm robot IP, port `50051`, and firewall/network routing |
+| Preview toggles but viewer is blank | SRT/GStreamer issue | Run `robot_preview_viewer --mode fakesink` and inspect plugin availability |
+| Vision unavailable in GUI | `/vision/perf` not reaching gateway | Check `ros2 topic echo --once /vision/perf` on the robot |
+| Teleop command rejected as disabled | Teleop was not enabled | Press Enable before directional commands |
+| Teleop command rejected as rate limited | Commands are arriving faster than configured | Use buttons/keys at a slower cadence or tune gateway parameters |
+| Teleop timed out | Deadman timeout elapsed after last command | Disable and re-enable teleop, then continue |
+| Phase 0.75 is rejected by the script | Checkout predates the phase profile | Update the checkout and confirm `scripts/omni env` lists `0.5,0.75` |
+
+## Verification Record
+
+- Date:
+- Operator:
+- Robot / SBC:
+- Laptop:
+- Robot command (`scripts/omni run real --phase 0.75` plus overrides):
+- Laptop command (`scripts/omni run monitor` plus host):
+- Preview observed:
+- Vision status fresh in GUI:
+- `/yolo/detections` observed:
+- Teleop enabled in GUI:
+- `/mecanum_drive_controller/reference` observed:
+- Disable/close stop observed:
+- Notes:

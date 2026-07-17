@@ -13,8 +13,11 @@ from robot_diag_control.gateway_client import (
     create_stub,
     format_preview_response,
     format_system_status,
+    format_teleop_response,
     get_system_status,
+    send_teleop_command,
     set_preview_mode,
+    set_teleop_enabled,
     target_for,
 )
 
@@ -40,7 +43,7 @@ def _build_parser() -> argparse.ArgumentParser:
         default=None,
         help="preview stream host; defaults to --host",
     )
-    parser.add_argument("--preview-port", type=int, default=7001)
+    parser.add_argument("--preview-port", type=int, default=7100)
     parser.add_argument("--preview-latency-ms", type=int, default=125)
     parser.add_argument("--gst-launch-path", default="gst-launch-1.0")
     parser.add_argument(
@@ -103,6 +106,26 @@ def _build_preview_viewer_command(
     return command
 
 
+def _teleop_command_for_action(
+    action: str,
+    *,
+    linear_step_mps: float,
+    angular_step_rad_s: float,
+) -> tuple[float, float, float]:
+    commands = {
+        "forward": (linear_step_mps, 0.0, 0.0),
+        "back": (-linear_step_mps, 0.0, 0.0),
+        "left": (0.0, linear_step_mps, 0.0),
+        "right": (0.0, -linear_step_mps, 0.0),
+        "turn_left": (0.0, 0.0, angular_step_rad_s),
+        "turn_right": (0.0, 0.0, -angular_step_rad_s),
+        "stop": (0.0, 0.0, 0.0),
+    }
+    if action not in commands:
+        raise ValueError(f"unknown teleop action: {action}")
+    return commands[action]
+
+
 class RobotMonitorGui:
     def __init__(self, root: Any, parsed: argparse.Namespace) -> None:
         self._root = root
@@ -119,6 +142,8 @@ class RobotMonitorGui:
         self._gst_launch_path_var = tk.StringVar(value=parsed.gst_launch_path)
         self._poll_interval_var = tk.StringVar(value=str(parsed.poll_interval_seconds))
         self._profile_var = tk.StringVar(value="balanced")
+        self._teleop_linear_step_var = tk.StringVar(value="0.12")
+        self._teleop_angular_step_var = tk.StringVar(value="0.35")
         self._action_var = tk.StringVar(value="Ready")
 
         self._root.title("Robot Monitor")
@@ -200,6 +225,10 @@ class RobotMonitorGui:
         body = ttk.Panedwindow(container, orient=tk.VERTICAL)
         body.pack(fill=tk.BOTH, expand=True)
 
+        teleop_frame = ttk.LabelFrame(body, text="Teleop", padding=8)
+        self._build_teleop_controls(teleop_frame)
+        body.add(teleop_frame, weight=1)
+
         status_frame = ttk.LabelFrame(body, text="System Status", padding=8)
         self._status_text = scrolledtext.ScrolledText(
             status_frame,
@@ -223,6 +252,52 @@ class RobotMonitorGui:
         footer = ttk.Frame(container)
         footer.pack(fill=tk.X, pady=(10, 0))
         ttk.Label(footer, textvariable=self._action_var).pack(side=tk.LEFT)
+
+        self._root.bind("<KeyPress-w>", lambda _event: self.send_teleop_action("forward"))
+        self._root.bind("<KeyPress-s>", lambda _event: self.send_teleop_action("back"))
+        self._root.bind("<KeyPress-a>", lambda _event: self.send_teleop_action("left"))
+        self._root.bind("<KeyPress-d>", lambda _event: self.send_teleop_action("right"))
+        self._root.bind("<KeyPress-q>", lambda _event: self.send_teleop_action("turn_left"))
+        self._root.bind("<KeyPress-e>", lambda _event: self.send_teleop_action("turn_right"))
+        self._root.bind("<space>", lambda _event: self.send_teleop_action("stop"))
+
+    def _build_teleop_controls(self, parent: Any) -> None:
+        settings = ttk.Frame(parent)
+        settings.pack(side=tk.LEFT, fill=tk.Y, padx=(0, 14))
+        self._add_labeled_entry(settings, "Linear step", self._teleop_linear_step_var, 0, 0, width=8)
+        self._add_labeled_entry(settings, "Angular step", self._teleop_angular_step_var, 1, 0, width=8)
+        ttk.Button(settings, text="Enable", command=self.teleop_enable).grid(
+            row=2, column=0, sticky=tk.EW, pady=(10, 0)
+        )
+        ttk.Button(settings, text="Disable", command=self.teleop_disable).grid(
+            row=2, column=1, sticky=tk.EW, padx=(8, 0), pady=(10, 0)
+        )
+
+        pad = ttk.Frame(parent)
+        pad.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        ttk.Button(pad, text="Forward", command=lambda: self.send_teleop_action("forward")).grid(
+            row=0, column=1, sticky=tk.EW, padx=4, pady=4
+        )
+        ttk.Button(pad, text="Left", command=lambda: self.send_teleop_action("left")).grid(
+            row=1, column=0, sticky=tk.EW, padx=4, pady=4
+        )
+        ttk.Button(pad, text="Stop", command=lambda: self.send_teleop_action("stop")).grid(
+            row=1, column=1, sticky=tk.EW, padx=4, pady=4
+        )
+        ttk.Button(pad, text="Right", command=lambda: self.send_teleop_action("right")).grid(
+            row=1, column=2, sticky=tk.EW, padx=4, pady=4
+        )
+        ttk.Button(pad, text="Back", command=lambda: self.send_teleop_action("back")).grid(
+            row=2, column=1, sticky=tk.EW, padx=4, pady=4
+        )
+        ttk.Button(pad, text="Turn Left", command=lambda: self.send_teleop_action("turn_left")).grid(
+            row=0, column=0, sticky=tk.EW, padx=4, pady=4
+        )
+        ttk.Button(pad, text="Turn Right", command=lambda: self.send_teleop_action("turn_right")).grid(
+            row=0, column=2, sticky=tk.EW, padx=4, pady=4
+        )
+        for column in range(3):
+            pad.columnconfigure(column, weight=1)
 
     def _add_labeled_entry(
         self,
@@ -324,6 +399,58 @@ class RobotMonitorGui:
         self._append_log(format_preview_response(response))
         self.refresh_status()
 
+    def teleop_enable(self) -> None:
+        self._set_teleop_enabled(True)
+
+    def teleop_disable(self) -> None:
+        self._set_teleop_enabled(False)
+
+    def _set_teleop_enabled(self, enabled: bool) -> None:
+        try:
+            with grpc.insecure_channel(
+                target_for(self._connection_namespace().host, self._connection_namespace().port)
+            ) as channel:
+                response = set_teleop_enabled(create_stub(channel), enabled=enabled)
+        except (grpc.RpcError, ValueError) as error:
+            self._append_log(f"teleop request failed: {error}")
+            return
+
+        self._append_log(format_teleop_response(response))
+        self.refresh_status()
+
+    def send_teleop_action(self, action: str) -> None:
+        try:
+            linear_x, linear_y, angular_z = _teleop_command_for_action(
+                action,
+                linear_step_mps=float(self._teleop_linear_step_var.get().strip()),
+                angular_step_rad_s=float(self._teleop_angular_step_var.get().strip()),
+            )
+            with grpc.insecure_channel(
+                target_for(self._connection_namespace().host, self._connection_namespace().port)
+            ) as channel:
+                response = send_teleop_command(
+                    create_stub(channel),
+                    linear_x_mps=linear_x,
+                    linear_y_mps=linear_y,
+                    angular_z_rad_s=angular_z,
+                )
+        except (grpc.RpcError, ValueError) as error:
+            self._append_log(f"teleop command failed: {error}")
+            return
+
+        self._append_log(format_teleop_response(response))
+        self.refresh_status()
+
+    def close(self) -> None:
+        try:
+            with grpc.insecure_channel(
+                target_for(self._connection_namespace().host, self._connection_namespace().port)
+            ) as channel:
+                set_teleop_enabled(create_stub(channel), enabled=False)
+        except (grpc.RpcError, ValueError):
+            pass
+        self._root.destroy()
+
     def open_viewer(self) -> None:
         if self._viewer_process is not None and self._viewer_process.poll() is None:
             self._append_log("viewer already running")
@@ -389,7 +516,7 @@ def main(args: list[str] | None = None) -> int:
         return 1
 
     app = RobotMonitorGui(root, parsed)
-    root.protocol("WM_DELETE_WINDOW", root.destroy)
+    root.protocol("WM_DELETE_WINDOW", app.close)
     root.mainloop()
     app.stop_watch() if app._watch_after_id is not None else None
     if app._viewer_process is not None and app._viewer_process.poll() is None:

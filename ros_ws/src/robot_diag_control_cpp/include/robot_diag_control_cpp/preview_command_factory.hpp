@@ -13,7 +13,7 @@ struct GstreamerPreviewConfig
   std::string source_kind{"camera"};
   std::string device{"/dev/video11"};
   std::string srt_bind_address{"0.0.0.0"};
-  int srt_port{7001};
+  int srt_port{7100};
   int srt_latency_ms{125};
 };
 
