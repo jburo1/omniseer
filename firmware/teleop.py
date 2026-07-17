@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 import curses
+import os
 import serial
 import time
 
-PORT = "/dev/omniseer_teensy"
+PORT = os.environ.get(
+    "OMNISEER_TEENSY_PORT",
+    "/dev/serial/by-id/usb-Teensyduino_USB_Serial_16634450-if00",
+)
 BAUD = 115200
 
 LINEAR_SPEED = 0.2   # m/s

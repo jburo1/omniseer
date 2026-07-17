@@ -26,7 +26,7 @@ Examples:
   scripts/omni run real --phase 0.5
   scripts/omni run real --phase 0.5 smoke
   scripts/omni run real --phase 0.5 bringup camera_device:=/dev/video11
-  scripts/omni run real --phase 0.5 phase05 micro_ros_serial_device:=/dev/omniseer_teensy
+  scripts/omni run real --phase 0.5 phase05 micro_ros_serial_device:=/dev/serial/by-id/usb-Teensyduino_USB_Serial_16634450-if00
   scripts/omni run real --phase 0.75
 EOF
 }

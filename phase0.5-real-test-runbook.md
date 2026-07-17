@@ -35,17 +35,18 @@ Before launching anything, verify that the serial and camera devices are visible
 inside the container or dev environment:
 
 ```bash
-ls -l /dev/omniseer_teensy /dev/ttyACM* /dev/ttyUSB* 2>/dev/null
+ls -l /dev/serial/by-id/usb-Teensyduino_USB_Serial_16634450-if00 /dev/omniseer_teensy /dev/ttyACM* /dev/ttyUSB* 2>/dev/null
 ls -l /dev/video*
 v4l2-ctl --list-devices
 ```
 
 Repo defaults:
 
-- micro-ROS serial device: `/dev/omniseer_teensy`
+- micro-ROS serial device: `/dev/serial/by-id/usb-Teensyduino_USB_Serial_16634450-if00`
 - camera device: `/dev/video11`
 
-If `/dev/omniseer_teensy` is missing, install the repo-managed udev rule:
+The `/dev/omniseer_teensy` alias is optional. If you want to use it, install the
+repo-managed udev rule:
 
 ```bash
 sudo bash ros_ws/src/bringup/scripts/install_udev_rules.sh
@@ -84,17 +85,18 @@ Check these four things before blaming launch or teleop.
 
 ### 1. Correct Serial Device
 
-Confirm that the stable symlink resolves to the Teensy:
+Confirm that the stable by-id symlink resolves to the Teensy. The
+`/dev/omniseer_teensy` alias may also exist if the repo udev rule is installed.
 
 ```bash
-ls -l /dev/omniseer_teensy
 ls -l /dev/serial/by-id/usb-Teensyduino_USB_Serial_16634450-if00
+ls -l /dev/omniseer_teensy 2>/dev/null || true
 ```
 
 Expected:
 
-- `/dev/omniseer_teensy` points at the Teensy tty device
 - the `usb-Teensyduino_USB_Serial_16634450-if00` by-id entry exists
+- `/dev/omniseer_teensy`, when present, points at the same Teensy tty device
 
 ### 2. Correct ROS Domain
 
@@ -225,7 +227,7 @@ ros2 launch bringup real.launch.py \
   start_vision:=true \
   wait_for_boundary_topics:=false \
   vision_params_file:=vision_bridge.real.paths.yaml \
-  micro_ros_serial_device:=/dev/omniseer_teensy \
+  micro_ros_serial_device:=/dev/serial/by-id/usb-Teensyduino_USB_Serial_16634450-if00 \
   camera_device:=/dev/video11 \
   detector_model_path:=__from_config__ \
   clip_model_path:=__from_config__ \
@@ -246,7 +248,7 @@ ros2 launch bringup real.launch.py \
   start_gateway:=false \
   start_vision:=true \
   wait_for_boundary_topics:=false \
-  micro_ros_serial_device:=/dev/omniseer_teensy \
+  micro_ros_serial_device:=/dev/serial/by-id/usb-Teensyduino_USB_Serial_16634450-if00 \
   camera_device:=/dev/video11 \
   detector_model_path:="${DETECTOR_MODEL_PATH}" \
   clip_model_path:="${CLIP_MODEL_PATH}" \
@@ -287,7 +289,7 @@ All bringup-carrying modes accept additional launch overrides, for example:
 
 ```bash
 scripts/phase05_real.sh phase05 camera_device:=/dev/video11
-scripts/phase05_real.sh smoke micro_ros_serial_device:=/dev/omniseer_teensy
+scripts/phase05_real.sh smoke micro_ros_serial_device:=/dev/serial/by-id/usb-Teensyduino_USB_Serial_16634450-if00
 ```
 
 ## Teleop
@@ -364,7 +366,7 @@ OMNISEER_REQUIRE_DETECTIONS=1 scripts/check_real_teleop_perception.sh
 
 If no MCU topics appear:
 
-- check `/dev/omniseer_teensy` and its target
+- check `/dev/serial/by-id/usb-Teensyduino_USB_Serial_16634450-if00` and its target
 - check `ROS_DOMAIN_ID`
 - confirm the correct firmware is flashed
 - confirm the container has access to the serial device
@@ -378,7 +380,7 @@ If `/encoder_counts` appears but teleop does not move the robot:
 If you want to debug the agent separately, stop the launch and run:
 
 ```bash
-ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/omniseer_teensy -v6
+ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/serial/by-id/usb-Teensyduino_USB_Serial_16634450-if00 -v6
 ```
 
 ## Notes to Record After a Real Run
