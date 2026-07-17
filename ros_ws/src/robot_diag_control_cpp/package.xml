@@ -13,6 +13,7 @@
   <build_depend>protobuf-dev</build_depend>
   <build_depend>protobuf-compiler-grpc</build_depend>
   <depend>rclcpp</depend>
+  <depend>geometry_msgs</depend>
   <depend>nav_msgs</depend>
   <depend>omniseer_msgs</depend>
 

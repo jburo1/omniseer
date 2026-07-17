@@ -14,3 +14,8 @@ class CliTests(unittest.TestCase):
         self.assertEqual(preview_args.command, "preview")
         self.assertEqual(preview_args.mode, "on")
         self.assertEqual(preview_args.profile, "low_bw")
+
+        teleop_args = parser.parse_args(["teleop", "cmd", "--linear-x-mps", "0.1"])
+        self.assertEqual(teleop_args.command, "teleop")
+        self.assertEqual(teleop_args.mode, "cmd")
+        self.assertEqual(teleop_args.linear_x_mps, 0.1)

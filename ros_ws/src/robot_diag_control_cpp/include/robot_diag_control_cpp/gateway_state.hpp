@@ -61,6 +61,24 @@ struct RobotHealthSnapshot
   double           angular_speed_rad_s{0.0};
 };
 
+enum class TeleopState
+{
+  Disabled,
+  Enabled,
+  TimedOut,
+};
+
+struct TeleopStatusSnapshot
+{
+  TeleopState state{TeleopState::Disabled};
+  bool        enabled{false};
+  bool        timed_out{false};
+  uint64_t    last_command_age_ms{0};
+  double      max_linear_mps{0.35};
+  double      max_angular_rad_s{0.8};
+  std::string last_error{};
+};
+
 struct SystemStatusSnapshot
 {
   std::string          gateway_name{};
@@ -68,6 +86,7 @@ struct SystemStatusSnapshot
   PreviewStatusSnapshot preview{};
   VisionStatusSnapshot  vision{};
   RobotHealthSnapshot   health{};
+  TeleopStatusSnapshot  teleop{};
 };
 
 class GatewayStateStore
@@ -88,6 +107,8 @@ public:
   PreviewStatusSnapshot set_preview_running(PreviewProfile profile);
   PreviewStatusSnapshot set_preview_disabled(
     PreviewProfile profile, std::string last_error = "");
+  TeleopStatusSnapshot get_teleop_status() const;
+  void set_teleop_status(const TeleopStatusSnapshot & teleop);
   void update_vision_perf(const omniseer_msgs::msg::VisionPerfSummary & msg);
   void update_odometry(const nav_msgs::msg::Odometry & msg);
 
@@ -119,6 +140,7 @@ private:
   std::chrono::milliseconds   _odom_stale_after{1000};
   TimeSource                  _time_source{};
   PreviewStatusSnapshot       _preview{};
+  TeleopStatusSnapshot        _teleop{};
   bool                        _has_vision_perf{false};
   StoredVisionPerf            _vision_perf{};
   bool                        _has_odometry{false};

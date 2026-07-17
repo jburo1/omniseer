@@ -29,6 +29,13 @@ HEALTH_STATE_NAMES = {
     robot_gateway_pb2.ROBOT_HEALTH_DEGRADED: "degraded",
 }
 
+TELEOP_STATE_NAMES = {
+    robot_gateway_pb2.TELEOP_STATE_UNSPECIFIED: "unspecified",
+    robot_gateway_pb2.TELEOP_DISABLED: "disabled",
+    robot_gateway_pb2.TELEOP_ENABLED: "enabled",
+    robot_gateway_pb2.TELEOP_TIMED_OUT: "timed_out",
+}
+
 
 def target_for(host: str, port: int) -> str:
     return f"{host}:{port}"
@@ -65,10 +72,35 @@ def set_preview_mode(
     )
 
 
+def set_teleop_enabled(
+    stub: robot_gateway_pb2_grpc.RobotGatewayStub,
+    *,
+    enabled: bool,
+) -> robot_gateway_pb2.SetTeleopEnabledResponse:
+    return stub.SetTeleopEnabled(robot_gateway_pb2.SetTeleopEnabledRequest(enabled=enabled))
+
+
+def send_teleop_command(
+    stub: robot_gateway_pb2_grpc.RobotGatewayStub,
+    *,
+    linear_x_mps: float = 0.0,
+    linear_y_mps: float = 0.0,
+    angular_z_rad_s: float = 0.0,
+) -> robot_gateway_pb2.SendTeleopCommandResponse:
+    return stub.SendTeleopCommand(
+        robot_gateway_pb2.SendTeleopCommandRequest(
+            linear_x_mps=linear_x_mps,
+            linear_y_mps=linear_y_mps,
+            angular_z_rad_s=angular_z_rad_s,
+        )
+    )
+
+
 def format_system_status(response: robot_gateway_pb2.SystemStatus) -> str:
     health = response.health
     preview = response.preview
     vision = response.vision
+    teleop = response.teleop
     lines = [
         f"gateway: {response.gateway_name} ({response.gateway_version})",
         "health:"
@@ -82,9 +114,17 @@ def format_system_status(response: robot_gateway_pb2.SystemStatus) -> str:
         "preview:"
         f" state={STATE_NAMES.get(preview.state, 'unknown')}"
         f" profile={PROFILE_NAMES.get(preview.profile, 'unknown')}",
+        "teleop:"
+        f" state={TELEOP_STATE_NAMES.get(teleop.state, 'unknown')}"
+        f" enabled={str(teleop.enabled).lower()}"
+        f" timed_out={str(teleop.timed_out).lower()}"
+        f" last_command_age_ms={teleop.last_command_age_ms}"
+        f" bounds=linear:{teleop.max_linear_mps:.2f}mps angular:{teleop.max_angular_rad_s:.2f}radps",
     ]
     if preview.last_error:
         lines.append(f"preview_error: {preview.last_error}")
+    if teleop.last_error:
+        lines.append(f"teleop_error: {teleop.last_error}")
 
     if not vision.available:
         lines.append("vision: unavailable")
@@ -107,6 +147,7 @@ def format_system_status_summary(response: robot_gateway_pb2.SystemStatus) -> st
     health = response.health
     preview = response.preview
     vision = response.vision
+    teleop = response.teleop
     summary = (
         f"health={HEALTH_STATE_NAMES.get(health.state, 'unknown')}"
         f" ready={str(health.ready).lower()}"
@@ -114,11 +155,15 @@ def format_system_status_summary(response: robot_gateway_pb2.SystemStatus) -> st
         " "
         f"preview={STATE_NAMES.get(preview.state, 'unknown')}"
         f"/{PROFILE_NAMES.get(preview.profile, 'unknown')}"
+        " "
+        f"teleop={TELEOP_STATE_NAMES.get(teleop.state, 'unknown')}"
     )
     if health.summary:
         summary += f" health_summary={health.summary}"
     if preview.last_error:
         summary += f" preview_error={preview.last_error}"
+    if teleop.last_error:
+        summary += f" teleop_error={teleop.last_error}"
 
     if not vision.available:
         return summary + " vision=unavailable"
@@ -142,4 +187,17 @@ def format_preview_response(response: robot_gateway_pb2.SetPreviewModeResponse) 
         f" message={response.message}"
         f" state={STATE_NAMES.get(preview.state, 'unknown')}"
         f" profile={PROFILE_NAMES.get(preview.profile, 'unknown')}"
+    )
+
+
+def format_teleop_response(
+    response: robot_gateway_pb2.SetTeleopEnabledResponse
+    | robot_gateway_pb2.SendTeleopCommandResponse,
+) -> str:
+    teleop = response.teleop
+    return (
+        f"accepted={response.accepted}"
+        f" message={response.message}"
+        f" state={TELEOP_STATE_NAMES.get(teleop.state, 'unknown')}"
+        f" enabled={str(teleop.enabled).lower()}"
     )

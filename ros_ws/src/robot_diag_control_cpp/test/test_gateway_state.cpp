@@ -77,6 +77,8 @@ TEST(GatewayStateStoreTest, RobotHealthTracksOdometryAndVisionFreshness)
   EXPECT_FALSE(initial.health.ready);
   EXPECT_EQ(initial.health.state, RobotHealthState::Degraded);
   EXPECT_EQ(initial.health.summary, "waiting for odometry");
+  EXPECT_EQ(initial.teleop.state, TeleopState::Disabled);
+  EXPECT_FALSE(initial.teleop.enabled);
 
   nav_msgs::msg::Odometry odom{};
   odom.twist.twist.linear.x = 0.30;

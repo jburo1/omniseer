@@ -26,6 +26,7 @@ SystemStatusSnapshot GatewayStateStore::get_system_status() const
     _preview,
     vision,
     robot_health_snapshot_locked(vision),
+    _teleop,
   };
 }
 
@@ -33,6 +34,12 @@ PreviewStatusSnapshot GatewayStateStore::get_preview_status() const
 {
   std::lock_guard<std::mutex> lock(_mutex);
   return _preview;
+}
+
+TeleopStatusSnapshot GatewayStateStore::get_teleop_status() const
+{
+  std::lock_guard<std::mutex> lock(_mutex);
+  return _teleop;
 }
 
 PreviewStatusSnapshot GatewayStateStore::set_preview_running(PreviewProfile profile)
@@ -56,6 +63,12 @@ PreviewStatusSnapshot GatewayStateStore::set_preview_disabled(
     std::move(last_error),
   };
   return _preview;
+}
+
+void GatewayStateStore::set_teleop_status(const TeleopStatusSnapshot & teleop)
+{
+  std::lock_guard<std::mutex> lock(_mutex);
+  _teleop = teleop;
 }
 
 void GatewayStateStore::update_vision_perf(const omniseer_msgs::msg::VisionPerfSummary & msg)

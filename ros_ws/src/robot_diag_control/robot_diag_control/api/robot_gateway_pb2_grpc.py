@@ -30,6 +30,16 @@ class RobotGatewayStub(object):
                 request_serializer=robot__diag__control_dot_api_dot_robot__gateway__pb2.SetPreviewModeRequest.SerializeToString,
                 response_deserializer=robot__diag__control_dot_api_dot_robot__gateway__pb2.SetPreviewModeResponse.FromString,
                 )
+        self.SetTeleopEnabled = channel.unary_unary(
+                '/omniseer.gateway.v1.RobotGateway/SetTeleopEnabled',
+                request_serializer=robot__diag__control_dot_api_dot_robot__gateway__pb2.SetTeleopEnabledRequest.SerializeToString,
+                response_deserializer=robot__diag__control_dot_api_dot_robot__gateway__pb2.SetTeleopEnabledResponse.FromString,
+                )
+        self.SendTeleopCommand = channel.unary_unary(
+                '/omniseer.gateway.v1.RobotGateway/SendTeleopCommand',
+                request_serializer=robot__diag__control_dot_api_dot_robot__gateway__pb2.SendTeleopCommandRequest.SerializeToString,
+                response_deserializer=robot__diag__control_dot_api_dot_robot__gateway__pb2.SendTeleopCommandResponse.FromString,
+                )
 
 
 class RobotGatewayServicer(object):
@@ -56,6 +66,23 @@ class RobotGatewayServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def SetTeleopEnabled(self, request, context):
+        """Enables or disables bounded gateway teleop.
+        Disabling teleop also commands a stop on the internal robot command path.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SendTeleopCommand(self, request, context):
+        """Sends one bounded teleop velocity command.
+        The gateway rejects commands when teleop is disabled, stale, too fast, or
+        outside configured bounds.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_RobotGatewayServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -68,6 +95,16 @@ def add_RobotGatewayServicer_to_server(servicer, server):
                     servicer.SetPreviewMode,
                     request_deserializer=robot__diag__control_dot_api_dot_robot__gateway__pb2.SetPreviewModeRequest.FromString,
                     response_serializer=robot__diag__control_dot_api_dot_robot__gateway__pb2.SetPreviewModeResponse.SerializeToString,
+            ),
+            'SetTeleopEnabled': grpc.unary_unary_rpc_method_handler(
+                    servicer.SetTeleopEnabled,
+                    request_deserializer=robot__diag__control_dot_api_dot_robot__gateway__pb2.SetTeleopEnabledRequest.FromString,
+                    response_serializer=robot__diag__control_dot_api_dot_robot__gateway__pb2.SetTeleopEnabledResponse.SerializeToString,
+            ),
+            'SendTeleopCommand': grpc.unary_unary_rpc_method_handler(
+                    servicer.SendTeleopCommand,
+                    request_deserializer=robot__diag__control_dot_api_dot_robot__gateway__pb2.SendTeleopCommandRequest.FromString,
+                    response_serializer=robot__diag__control_dot_api_dot_robot__gateway__pb2.SendTeleopCommandResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -116,5 +153,39 @@ class RobotGateway(object):
         return grpc.experimental.unary_unary(request, target, '/omniseer.gateway.v1.RobotGateway/SetPreviewMode',
             robot__diag__control_dot_api_dot_robot__gateway__pb2.SetPreviewModeRequest.SerializeToString,
             robot__diag__control_dot_api_dot_robot__gateway__pb2.SetPreviewModeResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def SetTeleopEnabled(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/omniseer.gateway.v1.RobotGateway/SetTeleopEnabled',
+            robot__diag__control_dot_api_dot_robot__gateway__pb2.SetTeleopEnabledRequest.SerializeToString,
+            robot__diag__control_dot_api_dot_robot__gateway__pb2.SetTeleopEnabledResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def SendTeleopCommand(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/omniseer.gateway.v1.RobotGateway/SendTeleopCommand',
+            robot__diag__control_dot_api_dot_robot__gateway__pb2.SendTeleopCommandRequest.SerializeToString,
+            robot__diag__control_dot_api_dot_robot__gateway__pb2.SendTeleopCommandResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

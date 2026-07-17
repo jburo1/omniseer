@@ -15,6 +15,15 @@ service RobotGateway {
   // Enables or disables preview mode.
   // When enabled=false, the profile field is ignored.
   rpc SetPreviewMode(SetPreviewModeRequest) returns (SetPreviewModeResponse);
+
+  // Enables or disables bounded gateway teleop.
+  // Disabling teleop also commands a stop on the internal robot command path.
+  rpc SetTeleopEnabled(SetTeleopEnabledRequest) returns (SetTeleopEnabledResponse);
+
+  // Sends one bounded teleop velocity command.
+  // The gateway rejects commands when teleop is disabled, stale, too fast, or
+  // outside configured bounds.
+  rpc SendTeleopCommand(SendTeleopCommandRequest) returns (SendTeleopCommandResponse);
 }
 
 message GetSystemStatusRequest {}
@@ -36,6 +45,13 @@ enum RobotHealthState {
   ROBOT_HEALTH_STATE_UNSPECIFIED = 0;
   ROBOT_HEALTH_OK = 1;
   ROBOT_HEALTH_DEGRADED = 2;
+}
+
+enum TeleopState {
+  TELEOP_STATE_UNSPECIFIED = 0;
+  TELEOP_DISABLED = 1;
+  TELEOP_ENABLED = 2;
+  TELEOP_TIMED_OUT = 3;
 }
 
 message VisionStatus {
@@ -73,6 +89,7 @@ message SystemStatus {
   PreviewStatus preview = 3;
   VisionStatus vision = 4;
   RobotHealth health = 5;
+  TeleopStatus teleop = 6;
 }
 
 message SetPreviewModeRequest {
@@ -89,4 +106,36 @@ message SetPreviewModeResponse {
 
   // The post-request preview status snapshot.
   PreviewStatus preview = 3;
+}
+
+message TeleopStatus {
+  TeleopState state = 1;
+  bool enabled = 2;
+  bool timed_out = 3;
+  uint64 last_command_age_ms = 4;
+  float max_linear_mps = 5;
+  float max_angular_rad_s = 6;
+  string last_error = 7;
+}
+
+message SetTeleopEnabledRequest {
+  bool enabled = 1;
+}
+
+message SetTeleopEnabledResponse {
+  bool accepted = 1;
+  string message = 2;
+  TeleopStatus teleop = 3;
+}
+
+message SendTeleopCommandRequest {
+  float linear_x_mps = 1;
+  float linear_y_mps = 2;
+  float angular_z_rad_s = 3;
+}
+
+message SendTeleopCommandResponse {
+  bool accepted = 1;
+  string message = 2;
+  TeleopStatus teleop = 3;
 }

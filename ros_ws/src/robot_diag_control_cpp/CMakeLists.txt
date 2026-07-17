@@ -8,6 +8,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(gRPC CONFIG REQUIRED)
 find_package(Protobuf REQUIRED)
+find_package(geometry_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(omniseer_msgs REQUIRED)
@@ -62,6 +63,7 @@ add_library(robot_diag_control_cpp_core STATIC
   src/gateway_state.cpp
   src/preview_command_factory.cpp
   src/preview_process_manager.cpp
+  src/teleop_manager.cpp
 )
 
 target_compile_features(robot_diag_control_cpp_core PUBLIC cxx_std_17)
@@ -70,6 +72,7 @@ target_include_directories(robot_diag_control_cpp_core PUBLIC
   $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(robot_diag_control_cpp_core PUBLIC
+  ${geometry_msgs_TARGETS}
   ${nav_msgs_TARGETS}
   ${omniseer_msgs_TARGETS}
 )
@@ -95,6 +98,7 @@ add_executable(robot_diag_control_cpp_node
 
 target_compile_features(robot_diag_control_cpp_node PUBLIC cxx_std_17)
 target_link_libraries(robot_diag_control_cpp_node PRIVATE
+  ${geometry_msgs_TARGETS}
   ${omniseer_msgs_TARGETS}
   rclcpp::rclcpp
   robot_diag_control_cpp_grpc
@@ -138,6 +142,7 @@ if(BUILD_TESTING)
   target_compile_features(test_gateway_state PUBLIC cxx_std_17)
   target_link_libraries(test_gateway_state
     robot_diag_control_cpp_proto
+    ${geometry_msgs_TARGETS}
     ${omniseer_msgs_TARGETS}
     robot_diag_control_cpp_core
   )
@@ -158,6 +163,17 @@ if(BUILD_TESTING)
 
   ament_add_gtest(test_preview_command_factory
     test/test_preview_command_factory.cpp
+  )
+
+  ament_add_gtest(test_teleop_manager
+    test/test_teleop_manager.cpp
+  )
+  target_compile_features(test_teleop_manager PUBLIC cxx_std_17)
+  target_link_libraries(test_teleop_manager
+    robot_diag_control_cpp_core
+  )
+  target_include_directories(test_teleop_manager PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
   )
   target_compile_features(test_preview_command_factory PUBLIC cxx_std_17)
   target_link_libraries(test_preview_command_factory
