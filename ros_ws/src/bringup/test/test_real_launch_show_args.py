@@ -27,6 +27,10 @@ class RealLaunchShowArgsTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("pre_launch_cleanup", result.stdout)
         self.assertIn("micro_ros_serial_device", result.stdout)
+        self.assertIn(
+            "/dev/serial/by-id/usb-Teensyduino_USB_Serial_16634450-if00",
+            result.stdout,
+        )
         self.assertIn("require_teensy", result.stdout)
         self.assertIn("teensy_preflight_timeout_sec", result.stdout)
         self.assertIn("boundary_topics_timeout_sec", result.stdout)
@@ -45,6 +49,10 @@ class RealLaunchShowArgsTests(unittest.TestCase):
 
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("micro_ros_serial_device", result.stdout)
+        self.assertIn(
+            "/dev/serial/by-id/usb-Teensyduino_USB_Serial_16634450-if00",
+            result.stdout,
+        )
         self.assertIn("require_teensy", result.stdout)
         self.assertIn("teensy_preflight_timeout_sec", result.stdout)
         self.assertIn("allow_teensy_power_cycle", result.stdout)

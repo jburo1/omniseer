@@ -70,7 +70,10 @@ def generate_launch_description():
     declared_arguments = [
         DeclareLaunchArgument("log_level", default_value="info"),
         DeclareLaunchArgument("start_micro_ros_agent", default_value="true"),
-        DeclareLaunchArgument("micro_ros_serial_device", default_value="/dev/omniseer_teensy"),
+        DeclareLaunchArgument(
+            "micro_ros_serial_device",
+            default_value="/dev/serial/by-id/usb-Teensyduino_USB_Serial_16634450-if00",
+        ),
         DeclareLaunchArgument("micro_ros_baud", default_value="115200"),
         DeclareLaunchArgument("require_teensy", default_value="true"),
         DeclareLaunchArgument("teensy_preflight_timeout_sec", default_value="20"),

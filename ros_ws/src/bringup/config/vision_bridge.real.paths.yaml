@@ -1,6 +1,8 @@
 vision_bridge:
   ros__parameters:
-    camera.device: /dev/video11
+    # Keep inference on rkisp_selfpath so the optional preview worker can own
+    # rkisp_mainpath (/dev/video11) without contending for the same V4L2 node.
+    camera.device: /dev/video12
     camera.width: 1280
     camera.height: 720
     camera.buffer_count: 4

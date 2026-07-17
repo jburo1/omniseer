@@ -16,53 +16,65 @@ fi
 
 readonly profile
 
-declare -a shared_patterns=(
-  'micro_ros_agent'
-  'rplidar_composition'
-  'encoder_counts_to_odometry'
-  'vision_bridge(_node)?'
-  'robot_diag_control_cpp(_node)?'
-  'twist_mux'
-  'robot_state_publisher'
-  'ekf_(node|filter)'
-  'rf2o(_laser_odometry(_node)?)?'
-  'slam_toolbox|async_slam_toolbox_node'
-  'lifecycle_manager_(slam|navigation)|lifecycle_manager'
-  'nav2_container|component_container(_mt)?'
-  'controller_server'
-  'planner_server'
-  'bt_navigator'
-  'smoother_server'
-  'behavior_server'
-  'velocity_smoother'
-  'collision_monitor'
-  'waypoint_follower'
-  'docking_server'
-  'scan_to_range'
-  'ros2_control_node'
-  'controller_manager'
-  '(^|[^[:alnum:]_])spawner([^[:alnum:]_]|$)'
-  '(^|[^[:alnum:]_])jsb([^[:alnum:]_]|$)'
-  'joint_state_broadcaster'
-  'mecanum_drive_controller'
-  'parameter_bridge'
-  'image_bridge'
-  'ros2[[:space:]]+launch[[:space:]].*(bringup[[:space:]]+.*(real|sim)\.launch\.py|real\.launch\.py|sim\.launch\.py|orchestrate_sim\.launch\.py)'
+declare -A runtime_executables=(
+  [micro_ros_agent]=1
+  [rplidar_composition]=1
+  [encoder_counts_to_odometry]=1
+  [vision_bridge]=1
+  [vision_bridge_node]=1
+  [robot_diag_control_cpp]=1
+  [robot_diag_control_cpp_node]=1
+  [twist_mux]=1
+  [robot_state_publisher]=1
+  [ekf_node]=1
+  [ekf_filter]=1
+  [rf2o]=1
+  [rf2o_laser_odometry]=1
+  [rf2o_laser_odometry_node]=1
+  [slam_toolbox]=1
+  [async_slam_toolbox_node]=1
+  [lifecycle_manager]=1
+  [lifecycle_manager_slam]=1
+  [lifecycle_manager_navigation]=1
+  [nav2_container]=1
+  [component_container]=1
+  [component_container_mt]=1
+  [controller_server]=1
+  [planner_server]=1
+  [bt_navigator]=1
+  [smoother_server]=1
+  [behavior_server]=1
+  [velocity_smoother]=1
+  [collision_monitor]=1
+  [waypoint_follower]=1
+  [docking_server]=1
+  [scan_to_range]=1
+  [ros2_control_node]=1
+  [controller_manager]=1
+  [spawner]=1
+  [jsb]=1
+  [joint_state_broadcaster]=1
+  [mecanum_drive_controller]=1
+  [parameter_bridge]=1
+  [image_bridge]=1
 )
 
-declare -a sim_only_patterns=(
-  '(^|[^[:alnum:]_])create([^[:alnum:]_]|$)'
-  '(^|[^[:alnum:]_])rviz2([^[:alnum:]_]|$)'
-  '(^|[^[:alnum:]_])gz([^[:alnum:]_]|$)'
-  'gz[ _-](sim|server|client|gui)'
-  'gazebo(server|client)?'
-  'ros_gz(_(sim|bridge|image))?'
-)
-
-declare -a patterns=("${shared_patterns[@]}")
 if [[ "${profile}" == "sim" ]]; then
-  patterns+=("${sim_only_patterns[@]}")
+  runtime_executables[create]=1
+  runtime_executables[rviz2]=1
+  runtime_executables[gz]=1
+  runtime_executables[gz_sim]=1
+  runtime_executables[gzserver]=1
+  runtime_executables[gzclient]=1
+  runtime_executables[gazebo]=1
+  runtime_executables[gazeboserver]=1
+  runtime_executables[gazeboclient]=1
+  runtime_executables[ros_gz_sim]=1
+  runtime_executables[ros_gz_bridge]=1
+  runtime_executables[ros_gz_image]=1
 fi
+
+readonly launch_pattern='ros2[[:space:]]+launch[[:space:]].*(bringup[[:space:]]+.*(real|sim)\.launch\.py|real\.launch\.py|sim\.launch\.py|orchestrate_sim\.launch\.py)'
 
 declare -A excluded_pids=()
 current_pid="$$"
@@ -72,14 +84,34 @@ while [[ -n "${current_pid}" && "${current_pid}" != "0" ]]; do
 done
 
 list_matching_pids() {
-  local pattern=""
-  for pattern in "${patterns[@]}"; do
-    while IFS= read -r pid; do
-      [[ -z "${pid}" ]] && continue
-      [[ -n "${excluded_pids[${pid}]:-}" ]] && continue
-      printf '%s\n' "${pid}"
-    done < <(pgrep -f -- "${pattern}" 2>/dev/null || true)
-  done | sort -u
+  local proc_path=""
+  local pid=""
+  local argument=""
+  local executable=""
+  local -a arguments=()
+
+  for proc_path in /proc/[0-9]*; do
+    pid="${proc_path##*/}"
+    [[ -n "${excluded_pids[${pid}]:-}" ]] && continue
+    [[ -r "${proc_path}/cmdline" ]] || continue
+
+    arguments=()
+    mapfile -d '' -t arguments <"${proc_path}/cmdline" 2>/dev/null || continue
+    for argument in "${arguments[@]:0:2}"; do
+      [[ -z "${argument}" ]] && continue
+      executable="${argument##*/}"
+      if [[ -n "${runtime_executables[${executable}]:-}" ]]; then
+        printf '%s\n' "${pid}"
+        break
+      fi
+    done
+  done
+
+  while IFS= read -r pid; do
+    [[ -z "${pid}" ]] && continue
+    [[ -n "${excluded_pids[${pid}]:-}" ]] && continue
+    printf '%s\n' "${pid}"
+  done < <(pgrep -f -- "${launch_pattern}" 2>/dev/null || true)
 }
 
 print_matches() {
