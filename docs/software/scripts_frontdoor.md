@@ -71,6 +71,7 @@ Notes:
 - it installs the default dependency set when no package paths are provided
 - you can also pass explicit package paths when you want a narrower install
 
+
 ### `build`
 
 Run the main local build flows without reassembling the underlying commands.
@@ -299,6 +300,7 @@ Remove generated local build artifacts.
 Commands:
 
 ```bash
+scripts/omni clean
 scripts/omni clean ros
 scripts/omni clean vision
 scripts/omni clean docs
@@ -312,6 +314,7 @@ Use this when:
 
 Suggestion:
 
+- `clean` defaults to the ROS workspace, matching the `build` and `test` defaults
 - prefer the narrowest clean target that solves the problem
 - avoid `clean all` unless multiple build trees are genuinely suspect
 

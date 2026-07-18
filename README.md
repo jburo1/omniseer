@@ -56,6 +56,7 @@ scripts/omni docs build
 For headless Teensy 4.1 flashing in Docker or over SSH, `scripts/omni flash teensy`
 wraps the existing firmware helper.
 
+
 ## Current Boundary
 
 GitHub CI validates portable software and simulation contracts. Camera, RGA, RKNN,

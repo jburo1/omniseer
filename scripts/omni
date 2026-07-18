@@ -1,7 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+script_source="${BASH_SOURCE[0]}"
+while [[ -L "${script_source}" ]]; do
+  script_dir="$(cd "$(dirname "${script_source}")" && pwd -P)"
+  script_source="$(readlink "${script_source}")"
+  [[ "${script_source}" != /* ]] && script_source="${script_dir}/${script_source}"
+done
+
+script_dir="$(cd "$(dirname "${script_source}")" && pwd -P)"
 
 # shellcheck disable=SC1091
 source "${script_dir}/lib/log.sh"
@@ -36,6 +43,7 @@ Examples:
   scripts/omni check real-perception
   scripts/omni flash teensy
   scripts/omni docs build
+  scripts/omni clean ros
 EOF
 }
 
@@ -69,19 +77,6 @@ Shows resolved repo, ROS, workspace, and phase defaults.
 EOF
 }
 
-clean_usage() {
-  cat <<'EOF'
-Usage:
-  scripts/omni clean <ros|vision|docs|all>
-
-Targets:
-  ros     Remove ROS workspace build/install/log trees.
-  vision  Remove vision build directories.
-  docs    Remove generated site and Doxygen outputs.
-  all     Remove all of the above.
-EOF
-}
-
 show_env() {
   cat <<EOF
 repo_root=$(omni_repo_root)
@@ -93,35 +88,6 @@ ros_ws_root=$(omni_ros_ws_root)
 latest_stable_real_phase=$(omni_latest_stable_real_phase)
 supported_real_phases=$(omni_supported_real_phases | paste -sd, -)
 EOF
-}
-
-clean_target() {
-  local target="$1"
-  local repo_root
-  repo_root="$(omni_repo_root)"
-
-  case "${target}" in
-    ros)
-      omni_info "Removing ROS workspace build artifacts"
-      rm -rf "${repo_root}/ros_ws/build" "${repo_root}/ros_ws/install" "${repo_root}/ros_ws/log"
-      ;;
-    vision)
-      omni_info "Removing vision build directories"
-      rm -rf "${repo_root}"/vision/build*
-      ;;
-    docs)
-      omni_info "Removing generated docs outputs"
-      rm -rf "${repo_root}/site" "${repo_root}/build/docs"
-      ;;
-    all)
-      clean_target ros
-      clean_target vision
-      clean_target docs
-      ;;
-    *)
-      omni_die "unknown clean target: ${target}"
-      ;;
-  esac
 }
 
 command_group="${1:-help}"
@@ -300,19 +266,19 @@ EOF
     fi
     ;;
   clean)
-    target="${1:-}"
-    case "${target}" in
+    subcommand="${1:-ros}"
+    if [[ $# -gt 0 ]]; then
+      shift
+    fi
+    case "${subcommand}" in
       ros|vision|docs|all)
-        clean_target "${target}"
+        exec "${script_dir}/clean/local.sh" "${subcommand}" "$@"
         ;;
-      help|-h|--help|"")
-        clean_usage
-        if [[ -z "${target}" ]]; then
-          exit 2
-        fi
+      help|-h|--help)
+        exec "${script_dir}/clean/local.sh" --help
         ;;
       *)
-        omni_die "unknown clean target: ${target}"
+        omni_die "unknown clean subcommand: ${subcommand}"
         ;;
     esac
     ;;
