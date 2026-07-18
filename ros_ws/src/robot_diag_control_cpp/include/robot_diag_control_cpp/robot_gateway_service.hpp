@@ -37,6 +37,11 @@ public:
     const omniseer::gateway::v1::SendTeleopCommandRequest * request,
     omniseer::gateway::v1::SendTeleopCommandResponse * response) override;
 
+  grpc::Status GetOverlaySnapshot(
+    grpc::ServerContext * context,
+    const omniseer::gateway::v1::GetOverlaySnapshotRequest * request,
+    omniseer::gateway::v1::OverlaySnapshot * response) override;
+
 private:
   GatewayStateStore & _store;
   PreviewProcessManager & _preview_manager;

@@ -10,6 +10,9 @@ class CliTests(unittest.TestCase):
         status_args = parser.parse_args(["status"])
         self.assertEqual(status_args.command, "status")
 
+        overlay_args = parser.parse_args(["overlay"])
+        self.assertEqual(overlay_args.command, "overlay")
+
         preview_args = parser.parse_args(["preview", "on", "--profile", "low_bw"])
         self.assertEqual(preview_args.command, "preview")
         self.assertEqual(preview_args.mode, "on")

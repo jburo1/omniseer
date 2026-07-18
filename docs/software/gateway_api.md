@@ -60,25 +60,23 @@ This page now serves two roles:
 - Separation of concerns: control/state rides over gRPC; preview video rides
   over SRT and should not force extra transport detail into the first API slice.
 
-- Operator safety: teleop-related operations later need stricter semantics than
-  diagnostics operations.
+- Operator safety: teleop operations use bounded commands and explicit enable/disable
+  state rather than raw topic passthrough.
 
 ## Initial Scope (v1)
 
 The first API surface should stay narrow.
 
-Recommended initial RPCs:
+Implemented unary RPCs:
 
 - `GetSystemStatus`
 - `SetPreviewMode`
+- `SetTeleopEnabled`
+- `SendTeleopCommand`
+- `GetOverlaySnapshot`
 
-Optional early additions if they prove useful:
-
-- `SubscribeEvents`
-- `Ping`
-
-Teleop and cloud-facing operations remain outside v1. Experiment export control should
-be considered only after the local recorder contract is stable.
+Streaming events, cloud-facing operations, and experiment export control remain
+deferred until the local recorder contract is stable.
 
 ## High-Level API Shape
 
@@ -97,6 +95,9 @@ Keep it small and evolve additively.
 service RobotGateway {
   rpc GetSystemStatus(GetSystemStatusRequest) returns (SystemStatus);
   rpc SetPreviewMode(SetPreviewModeRequest) returns (SetPreviewModeResponse);
+  rpc SetTeleopEnabled(SetTeleopEnabledRequest) returns (SetTeleopEnabledResponse);
+  rpc SendTeleopCommand(SendTeleopCommandRequest) returns (SendTeleopCommandResponse);
+  rpc GetOverlaySnapshot(GetOverlaySnapshotRequest) returns (OverlaySnapshot);
 }
 ```
 
@@ -163,6 +164,21 @@ Deferred until later if needed:
 - robot mode or mission state
 - broader health summary
 - build/runtime details beyond gateway version
+
+### `OverlaySnapshot`
+
+Current contents:
+
+- current `SystemStatus`
+- latest detection overlay snapshot from `/yolo/detections`
+- detection freshness based on gateway receipt time
+- source-space detection geometry for laptop-side scaling over preview video
+
+Deferred until later if needed:
+
+- exact video/detection frame synchronization
+- streaming detection events
+- viewer-specific confidence filtering
 
 ### `PreviewStatus`
 

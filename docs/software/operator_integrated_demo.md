@@ -71,6 +71,13 @@ Use the GUI to:
 - send small directional commands or press `Space` for stop
 - disable teleop before ending the run
 
+For the first overlay data slice, the laptop can also confirm that detections
+are visible through the gateway contract without subscribing to ROS directly:
+
+```bash
+ros2 run robot_diag_control robot_gateway_cli --host <robot-ip> overlay
+```
+
 Keyboard bindings while the window has focus:
 
 ```text
@@ -105,6 +112,7 @@ ros2 topic echo --once /yolo/detections
 Expected observations:
 
 - laptop status shows `vision` available and fresh
+- laptop overlay command reports detection freshness and source-space detections when targets are visible
 - preview state changes to `running` when enabled
 - external preview viewer displays the SRT stream
 - teleop state changes to `enabled` after explicit enable

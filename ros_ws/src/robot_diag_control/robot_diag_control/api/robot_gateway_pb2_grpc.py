@@ -40,6 +40,11 @@ class RobotGatewayStub(object):
                 request_serializer=robot__diag__control_dot_api_dot_robot__gateway__pb2.SendTeleopCommandRequest.SerializeToString,
                 response_deserializer=robot__diag__control_dot_api_dot_robot__gateway__pb2.SendTeleopCommandResponse.FromString,
                 )
+        self.GetOverlaySnapshot = channel.unary_unary(
+                '/omniseer.gateway.v1.RobotGateway/GetOverlaySnapshot',
+                request_serializer=robot__diag__control_dot_api_dot_robot__gateway__pb2.GetOverlaySnapshotRequest.SerializeToString,
+                response_deserializer=robot__diag__control_dot_api_dot_robot__gateway__pb2.OverlaySnapshot.FromString,
+                )
 
 
 class RobotGatewayServicer(object):
@@ -76,8 +81,17 @@ class RobotGatewayServicer(object):
 
     def SendTeleopCommand(self, request, context):
         """Sends one bounded teleop velocity command.
-        The gateway rejects commands when teleop is disabled, stale, too fast, or
-        outside configured bounds.
+        The gateway rejects commands when teleop is disabled or outside configured
+        bounds.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetOverlaySnapshot(self, request, context):
+        """Returns the latest operator overlay snapshot.
+        Detection coordinates are source-image pixel coordinates; the viewer scales
+        them to the decoded preview frame.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -105,6 +119,11 @@ def add_RobotGatewayServicer_to_server(servicer, server):
                     servicer.SendTeleopCommand,
                     request_deserializer=robot__diag__control_dot_api_dot_robot__gateway__pb2.SendTeleopCommandRequest.FromString,
                     response_serializer=robot__diag__control_dot_api_dot_robot__gateway__pb2.SendTeleopCommandResponse.SerializeToString,
+            ),
+            'GetOverlaySnapshot': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetOverlaySnapshot,
+                    request_deserializer=robot__diag__control_dot_api_dot_robot__gateway__pb2.GetOverlaySnapshotRequest.FromString,
+                    response_serializer=robot__diag__control_dot_api_dot_robot__gateway__pb2.OverlaySnapshot.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -187,5 +206,22 @@ class RobotGateway(object):
         return grpc.experimental.unary_unary(request, target, '/omniseer.gateway.v1.RobotGateway/SendTeleopCommand',
             robot__diag__control_dot_api_dot_robot__gateway__pb2.SendTeleopCommandRequest.SerializeToString,
             robot__diag__control_dot_api_dot_robot__gateway__pb2.SendTeleopCommandResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def GetOverlaySnapshot(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/omniseer.gateway.v1.RobotGateway/GetOverlaySnapshot',
+            robot__diag__control_dot_api_dot_robot__gateway__pb2.GetOverlaySnapshotRequest.SerializeToString,
+            robot__diag__control_dot_api_dot_robot__gateway__pb2.OverlaySnapshot.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

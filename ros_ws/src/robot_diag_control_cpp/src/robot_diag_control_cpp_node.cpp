@@ -11,6 +11,7 @@
 #include "robot_diag_control_cpp/preview_process_manager.hpp"
 #include "robot_diag_control_cpp/robot_gateway_service.hpp"
 #include "robot_diag_control_cpp/teleop_manager.hpp"
+#include "yolo_msgs/msg/detection_array.hpp"
 
 namespace robot_diag_control_cpp
 {
@@ -24,6 +25,14 @@ public:
       declare_parameter<int64_t>("vision_stale_after_ms", 2000);
     const auto odom_stale_after_ms =
       declare_parameter<int64_t>("odom_stale_after_ms", 1000);
+    const auto detections_stale_after_ms =
+      declare_parameter<int64_t>("detections_stale_after_ms", 500);
+    const auto detections_topic =
+      declare_parameter<std::string>("detections_topic", "/yolo/detections");
+    const auto detection_source_width_px =
+      declare_parameter<int64_t>("detection_source_width_px", 1280);
+    const auto detection_source_height_px =
+      declare_parameter<int64_t>("detection_source_height_px", 720);
     const auto grpc_bind_address =
       declare_parameter<std::string>("grpc_bind_address", "0.0.0.0");
     const auto grpc_port = declare_parameter<int64_t>("grpc_port", 50051);
@@ -57,12 +66,22 @@ public:
     if (odom_stale_after_ms < 0) {
       throw std::runtime_error("odom_stale_after_ms must be non-negative");
     }
+    if (detections_stale_after_ms < 0) {
+      throw std::runtime_error("detections_stale_after_ms must be non-negative");
+    }
+    if (detection_source_width_px <= 0 || detection_source_height_px <= 0) {
+      throw std::runtime_error("detection source dimensions must be positive");
+    }
 
     _state_store = std::make_unique<GatewayStateStore>(
       get_name(),
       "0.1.0",
       std::chrono::milliseconds(vision_stale_after_ms),
-      std::chrono::milliseconds(odom_stale_after_ms));
+      std::chrono::milliseconds(odom_stale_after_ms),
+      std::chrono::steady_clock::now,
+      std::chrono::milliseconds(detections_stale_after_ms),
+      static_cast<uint32_t>(detection_source_width_px),
+      static_cast<uint32_t>(detection_source_height_px));
     PreviewCommandFactory preview_command_factory;
     if (!preview_command.empty()) {
       preview_command_factory = make_fixed_preview_command_factory(
@@ -116,6 +135,12 @@ public:
       {
         _state_store->update_odometry(msg);
       });
+    _detections_subscription = create_subscription<yolo_msgs::msg::DetectionArray>(
+      detections_topic, 10,
+      [this](const yolo_msgs::msg::DetectionArray & msg)
+      {
+        _state_store->update_detections(msg);
+      });
     _preview_poll_timer = create_wall_timer(
       std::chrono::milliseconds(250),
       [this]()
@@ -158,6 +183,7 @@ private:
   rclcpp::Subscription<omniseer_msgs::msg::VisionPerfSummary>::SharedPtr
     _vision_perf_subscription{};
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr _odometry_subscription{};
+  rclcpp::Subscription<yolo_msgs::msg::DetectionArray>::SharedPtr _detections_subscription{};
   rclcpp::TimerBase::SharedPtr _preview_poll_timer{};
   rclcpp::TimerBase::SharedPtr _teleop_poll_timer{};
 };

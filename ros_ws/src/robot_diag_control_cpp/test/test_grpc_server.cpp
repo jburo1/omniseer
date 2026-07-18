@@ -14,6 +14,7 @@
 #include "robot_diag_control_cpp/preview_process_manager.hpp"
 #include "robot_diag_control_cpp/robot_gateway_service.hpp"
 #include "robot_diag_control_cpp/teleop_manager.hpp"
+#include "yolo_msgs/msg/detection_array.hpp"
 
 namespace robot_diag_control_cpp
 {
@@ -48,6 +49,17 @@ TEST(RobotGatewayGrpcTest, ServesSystemStatusAndPreviewUpdatesOverGrpc)
   odom.twist.twist.linear.y = 0.4;
   odom.twist.twist.angular.z = 0.2;
   store.update_odometry(odom);
+  yolo_msgs::msg::DetectionArray detections_msg{};
+  yolo_msgs::msg::Detection detection{};
+  detection.class_id = 1;
+  detection.class_name = "person";
+  detection.score = 0.92;
+  detection.bbox.center.position.x = 640.0;
+  detection.bbox.center.position.y = 360.0;
+  detection.bbox.size.x = 120.0;
+  detection.bbox.size.y = 200.0;
+  detections_msg.detections.push_back(detection);
+  store.update_detections(detections_msg);
 
   RobotGatewayService service(store, preview_manager, teleop_manager);
   GrpcServer server(service, "127.0.0.1", 0);
@@ -84,6 +96,23 @@ TEST(RobotGatewayGrpcTest, ServesSystemStatusAndPreviewUpdatesOverGrpc)
   EXPECT_EQ(system_status.vision().infer_error_count(), 1U);
   EXPECT_EQ(system_status.teleop().state(), gateway_proto::TELEOP_DISABLED);
   EXPECT_FALSE(system_status.teleop().enabled());
+
+  gateway_proto::OverlaySnapshot overlay_snapshot;
+  gateway_proto::GetOverlaySnapshotRequest overlay_request;
+  grpc::ClientContext overlay_context;
+  const auto overlay_rpc_status =
+    stub->GetOverlaySnapshot(&overlay_context, overlay_request, &overlay_snapshot);
+  ASSERT_TRUE(overlay_rpc_status.ok());
+  EXPECT_EQ(overlay_snapshot.status().gateway_name(), "robot_diag_control_cpp");
+  EXPECT_TRUE(overlay_snapshot.detections().available());
+  EXPECT_FALSE(overlay_snapshot.detections().stale());
+  EXPECT_EQ(overlay_snapshot.detections().source_width_px(), 1280U);
+  EXPECT_EQ(overlay_snapshot.detections().source_height_px(), 720U);
+  EXPECT_EQ(overlay_snapshot.detections().detection_count(), 1U);
+  ASSERT_EQ(overlay_snapshot.detections().detections_size(), 1);
+  EXPECT_EQ(overlay_snapshot.detections().detections(0).class_name(), "person");
+  EXPECT_FLOAT_EQ(overlay_snapshot.detections().detections(0).score(), 0.92F);
+  EXPECT_FLOAT_EQ(overlay_snapshot.detections().detections(0).bbox_center_x_px(), 640.0F);
 
   gateway_proto::SetPreviewModeRequest preview_request;
   preview_request.set_enabled(true);

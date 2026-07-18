@@ -124,6 +124,35 @@ gateway_proto::TeleopStatus to_proto(const TeleopStatusSnapshot & snapshot)
   return response;
 }
 
+gateway_proto::OverlayDetection to_proto(const DetectionOverlayItem & snapshot)
+{
+  gateway_proto::OverlayDetection response;
+  response.set_class_id(snapshot.class_id);
+  response.set_class_name(snapshot.class_name);
+  response.set_score(static_cast<float>(snapshot.score));
+  response.set_track_id(snapshot.track_id);
+  response.set_bbox_center_x_px(static_cast<float>(snapshot.bbox_center_x_px));
+  response.set_bbox_center_y_px(static_cast<float>(snapshot.bbox_center_y_px));
+  response.set_bbox_width_px(static_cast<float>(snapshot.bbox_width_px));
+  response.set_bbox_height_px(static_cast<float>(snapshot.bbox_height_px));
+  return response;
+}
+
+gateway_proto::DetectionOverlayStatus to_proto(const DetectionOverlaySnapshot & snapshot)
+{
+  gateway_proto::DetectionOverlayStatus response;
+  response.set_available(snapshot.available);
+  response.set_stale(snapshot.stale);
+  response.set_age_ms(snapshot.age_ms);
+  response.set_source_width_px(snapshot.source_width_px);
+  response.set_source_height_px(snapshot.source_height_px);
+  response.set_detection_count(static_cast<uint32_t>(snapshot.detections.size()));
+  for (const auto & detection : snapshot.detections) {
+    *response.add_detections() = to_proto(detection);
+  }
+  return response;
+}
+
 gateway_proto::SystemStatus to_proto(const SystemStatusSnapshot & snapshot)
 {
   gateway_proto::SystemStatus response;
@@ -226,6 +255,19 @@ grpc::Status RobotGatewayService::SendTeleopCommand(
   response->set_accepted(result.accepted);
   response->set_message(result.message);
   *response->mutable_teleop() = to_proto(result.teleop);
+  return grpc::Status::OK;
+}
+
+grpc::Status RobotGatewayService::GetOverlaySnapshot(
+  grpc::ServerContext * context,
+  const gateway_proto::GetOverlaySnapshotRequest * request,
+  gateway_proto::OverlaySnapshot * response)
+{
+  (void)context;
+  (void)request;
+  _preview_manager.poll();
+  *response->mutable_status() = to_proto(_store.get_system_status());
+  *response->mutable_detections() = to_proto(_store.get_detection_overlay());
   return grpc::Status::OK;
 }
 } // namespace robot_diag_control_cpp

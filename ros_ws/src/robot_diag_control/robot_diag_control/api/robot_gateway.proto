@@ -24,9 +24,16 @@ service RobotGateway {
   // The gateway rejects commands when teleop is disabled or outside configured
   // bounds.
   rpc SendTeleopCommand(SendTeleopCommandRequest) returns (SendTeleopCommandResponse);
+
+  // Returns the latest operator overlay snapshot.
+  // Detection coordinates are source-image pixel coordinates; the viewer scales
+  // them to the decoded preview frame.
+  rpc GetOverlaySnapshot(GetOverlaySnapshotRequest) returns (OverlaySnapshot);
 }
 
 message GetSystemStatusRequest {}
+
+message GetOverlaySnapshotRequest {}
 
 enum PreviewState {
   PREVIEW_STATE_UNSPECIFIED = 0;
@@ -138,4 +145,37 @@ message SendTeleopCommandResponse {
   bool accepted = 1;
   string message = 2;
   TeleopStatus teleop = 3;
+}
+
+message OverlayDetection {
+  int32 class_id = 1;
+  string class_name = 2;
+  float score = 3;
+  string track_id = 4;
+  float bbox_center_x_px = 5;
+  float bbox_center_y_px = 6;
+  float bbox_width_px = 7;
+  float bbox_height_px = 8;
+}
+
+message DetectionOverlayStatus {
+  // False until at least one internal detection array has been observed.
+  bool available = 1;
+
+  // True when the last observed detection array is older than the gateway's
+  // freshness window.
+  bool stale = 2;
+
+  // Gateway-local age since the last detection array was received.
+  uint64 age_ms = 3;
+
+  uint32 source_width_px = 4;
+  uint32 source_height_px = 5;
+  uint32 detection_count = 6;
+  repeated OverlayDetection detections = 7;
+}
+
+message OverlaySnapshot {
+  SystemStatus status = 1;
+  DetectionOverlayStatus detections = 2;
 }

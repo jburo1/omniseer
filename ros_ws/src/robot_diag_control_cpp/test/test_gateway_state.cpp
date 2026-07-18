@@ -5,6 +5,7 @@
 #include "nav_msgs/msg/odometry.hpp"
 #include "omniseer_msgs/msg/vision_perf_summary.hpp"
 #include "robot_diag_control_cpp/gateway_state.hpp"
+#include "yolo_msgs/msg/detection_array.hpp"
 
 namespace robot_diag_control_cpp
 {
@@ -111,6 +112,55 @@ TEST(GatewayStateStoreTest, RobotHealthTracksOdometryAndVisionFreshness)
   EXPECT_EQ(stale_odom.health.state, RobotHealthState::Degraded);
   EXPECT_EQ(stale_odom.health.summary, "odometry stale");
   EXPECT_TRUE(stale_odom.health.odom_stale);
+}
+
+TEST(GatewayStateStoreTest, DetectionOverlaySnapshotTracksLatestDetectionsAndFreshness)
+{
+  TimePoint now{Clock::duration{std::chrono::seconds(100)}};
+  GatewayStateStore store(
+    "robot_diag_control_cpp", "0.1.0", std::chrono::milliseconds(1500),
+    std::chrono::milliseconds(1000),
+    [&now]()
+    {
+      return now;
+    },
+    std::chrono::milliseconds(400), 1280, 720);
+
+  const auto initial = store.get_detection_overlay();
+  EXPECT_FALSE(initial.available);
+  EXPECT_FALSE(initial.stale);
+  EXPECT_EQ(initial.source_width_px, 1280U);
+  EXPECT_EQ(initial.source_height_px, 720U);
+
+  yolo_msgs::msg::DetectionArray msg{};
+  yolo_msgs::msg::Detection detection{};
+  detection.class_id = 7;
+  detection.class_name = "person";
+  detection.score = 0.875;
+  detection.id = "track-1";
+  detection.bbox.center.position.x = 320.0;
+  detection.bbox.center.position.y = 180.0;
+  detection.bbox.size.x = 100.0;
+  detection.bbox.size.y = 80.0;
+  msg.detections.push_back(detection);
+  store.update_detections(msg);
+
+  const auto fresh = store.get_detection_overlay();
+  ASSERT_TRUE(fresh.available);
+  EXPECT_FALSE(fresh.stale);
+  EXPECT_EQ(fresh.age_ms, 0U);
+  ASSERT_EQ(fresh.detections.size(), 1U);
+  EXPECT_EQ(fresh.detections.front().class_id, 7);
+  EXPECT_EQ(fresh.detections.front().class_name, "person");
+  EXPECT_DOUBLE_EQ(fresh.detections.front().score, 0.875);
+  EXPECT_EQ(fresh.detections.front().track_id, "track-1");
+  EXPECT_DOUBLE_EQ(fresh.detections.front().bbox_center_x_px, 320.0);
+
+  now += std::chrono::milliseconds(450);
+  const auto stale = store.get_detection_overlay();
+  EXPECT_TRUE(stale.available);
+  EXPECT_TRUE(stale.stale);
+  EXPECT_EQ(stale.age_ms, 450U);
 }
 } // namespace
 } // namespace robot_diag_control_cpp

@@ -7,11 +7,16 @@ namespace robot_diag_control_cpp
 GatewayStateStore::GatewayStateStore(
   std::string gateway_name, std::string gateway_version,
   std::chrono::milliseconds vision_stale_after, std::chrono::milliseconds odom_stale_after,
-  TimeSource time_source)
+  TimeSource time_source,
+  std::chrono::milliseconds detections_stale_after, uint32_t detection_source_width_px,
+  uint32_t detection_source_height_px)
 : _gateway_name(std::move(gateway_name)),
   _gateway_version(std::move(gateway_version)),
   _vision_stale_after(vision_stale_after),
   _odom_stale_after(odom_stale_after),
+  _detections_stale_after(detections_stale_after),
+  _detection_source_width_px(detection_source_width_px),
+  _detection_source_height_px(detection_source_height_px),
   _time_source(std::move(time_source))
 {
 }
@@ -28,6 +33,12 @@ SystemStatusSnapshot GatewayStateStore::get_system_status() const
     robot_health_snapshot_locked(vision),
     _teleop,
   };
+}
+
+DetectionOverlaySnapshot GatewayStateStore::get_detection_overlay() const
+{
+  std::lock_guard<std::mutex> lock(_mutex);
+  return detection_overlay_snapshot_locked();
 }
 
 PreviewStatusSnapshot GatewayStateStore::get_preview_status() const
@@ -96,6 +107,30 @@ void GatewayStateStore::update_odometry(const nav_msgs::msg::Odometry & msg)
     static_cast<double>(msg.twist.twist.angular.z),
     _time_source(),
   };
+}
+
+void GatewayStateStore::update_detections(const yolo_msgs::msg::DetectionArray & msg)
+{
+  std::lock_guard<std::mutex> lock(_mutex);
+  _has_detections = true;
+  _detections.detections.clear();
+  _detections.detections.reserve(msg.detections.size());
+
+  for (const auto & detection : msg.detections) {
+    _detections.detections.push_back(
+      DetectionOverlayItem{
+        detection.class_id,
+        detection.class_name,
+        detection.score,
+        detection.id,
+        detection.bbox.center.position.x,
+        detection.bbox.center.position.y,
+        detection.bbox.size.x,
+        detection.bbox.size.y,
+      });
+  }
+
+  _detections.updated_at = _time_source();
 }
 
 VisionStatusSnapshot GatewayStateStore::vision_snapshot_locked() const
@@ -177,6 +212,31 @@ RobotHealthSnapshot GatewayStateStore::robot_health_snapshot_locked(
     false,
     _odometry.linear_speed_mps,
     _odometry.angular_speed_rad_s,
+  };
+}
+
+DetectionOverlaySnapshot GatewayStateStore::detection_overlay_snapshot_locked() const
+{
+  if (!_has_detections) {
+    return DetectionOverlaySnapshot{
+      false,
+      false,
+      0,
+      _detection_source_width_px,
+      _detection_source_height_px,
+      {},
+    };
+  }
+
+  const auto age = _time_source() - _detections.updated_at;
+  return DetectionOverlaySnapshot{
+    true,
+    age > _detections_stale_after,
+    static_cast<uint64_t>(
+      std::chrono::duration_cast<std::chrono::milliseconds>(age).count()),
+    _detection_source_width_px,
+    _detection_source_height_px,
+    _detections.detections,
   };
 }
 } // namespace robot_diag_control_cpp

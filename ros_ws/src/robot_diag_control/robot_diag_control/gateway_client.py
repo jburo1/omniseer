@@ -51,6 +51,12 @@ def get_system_status(
     return stub.GetSystemStatus(robot_gateway_pb2.GetSystemStatusRequest())
 
 
+def get_overlay_snapshot(
+    stub: robot_gateway_pb2_grpc.RobotGatewayStub,
+) -> robot_gateway_pb2.OverlaySnapshot:
+    return stub.GetOverlaySnapshot(robot_gateway_pb2.GetOverlaySnapshotRequest())
+
+
 def set_preview_mode(
     stub: robot_gateway_pb2_grpc.RobotGatewayStub,
     *,
@@ -200,3 +206,33 @@ def format_teleop_response(
         f" state={TELEOP_STATE_NAMES.get(teleop.state, 'unknown')}"
         f" enabled={str(teleop.enabled).lower()}"
     )
+
+
+def format_overlay_snapshot(response: robot_gateway_pb2.OverlaySnapshot) -> str:
+    lines = [format_system_status_summary(response.status)]
+    detections = response.detections
+    if not detections.available:
+        lines.append(
+            "detections:"
+            f" unavailable source={detections.source_width_px}x{detections.source_height_px}"
+        )
+        return "\n".join(lines)
+
+    freshness = "stale" if detections.stale else "fresh"
+    lines.append(
+        "detections:"
+        f" {freshness}"
+        f" age_ms={detections.age_ms}"
+        f" count={detections.detection_count}"
+        f" source={detections.source_width_px}x{detections.source_height_px}"
+    )
+    for detection in detections.detections:
+        left = detection.bbox_center_x_px - detection.bbox_width_px / 2.0
+        top = detection.bbox_center_y_px - detection.bbox_height_px / 2.0
+        lines.append(
+            "  -"
+            f" class={detection.class_name or detection.class_id}"
+            f" score={detection.score:.2f}"
+            f" bbox=({left:.1f},{top:.1f},{detection.bbox_width_px:.1f},{detection.bbox_height_px:.1f})"
+        )
+    return "\n".join(lines)

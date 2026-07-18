@@ -12,6 +12,7 @@ find_package(geometry_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(omniseer_msgs REQUIRED)
+find_package(yolo_msgs REQUIRED)
 
 set(robot_gateway_proto_root "${CMAKE_CURRENT_SOURCE_DIR}/../robot_diag_control")
 set(robot_gateway_proto "${robot_gateway_proto_root}/robot_diag_control/api/robot_gateway.proto")
@@ -75,6 +76,7 @@ target_link_libraries(robot_diag_control_cpp_core PUBLIC
   ${geometry_msgs_TARGETS}
   ${nav_msgs_TARGETS}
   ${omniseer_msgs_TARGETS}
+  ${yolo_msgs_TARGETS}
 )
 
 add_library(robot_diag_control_cpp_grpc STATIC
@@ -100,6 +102,7 @@ target_compile_features(robot_diag_control_cpp_node PUBLIC cxx_std_17)
 target_link_libraries(robot_diag_control_cpp_node PRIVATE
   ${geometry_msgs_TARGETS}
   ${omniseer_msgs_TARGETS}
+  ${yolo_msgs_TARGETS}
   rclcpp::rclcpp
   robot_diag_control_cpp_grpc
   robot_diag_control_cpp_core
@@ -144,6 +147,7 @@ if(BUILD_TESTING)
     robot_diag_control_cpp_proto
     ${geometry_msgs_TARGETS}
     ${omniseer_msgs_TARGETS}
+    ${yolo_msgs_TARGETS}
     robot_diag_control_cpp_core
   )
   target_include_directories(test_gateway_state PRIVATE

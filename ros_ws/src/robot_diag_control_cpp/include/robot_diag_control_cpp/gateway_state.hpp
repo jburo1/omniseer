@@ -7,9 +7,11 @@
 #include <optional>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "nav_msgs/msg/odometry.hpp"
 #include "omniseer_msgs/msg/vision_perf_summary.hpp"
+#include "yolo_msgs/msg/detection_array.hpp"
 
 namespace robot_diag_control_cpp
 {
@@ -79,6 +81,28 @@ struct TeleopStatusSnapshot
   std::string last_error{};
 };
 
+struct DetectionOverlayItem
+{
+  int32_t     class_id{0};
+  std::string class_name{};
+  double      score{0.0};
+  std::string track_id{};
+  double      bbox_center_x_px{0.0};
+  double      bbox_center_y_px{0.0};
+  double      bbox_width_px{0.0};
+  double      bbox_height_px{0.0};
+};
+
+struct DetectionOverlaySnapshot
+{
+  bool                              available{false};
+  bool                              stale{false};
+  uint64_t                          age_ms{0};
+  uint32_t                          source_width_px{1280};
+  uint32_t                          source_height_px{720};
+  std::vector<DetectionOverlayItem> detections{};
+};
+
 struct SystemStatusSnapshot
 {
   std::string          gateway_name{};
@@ -100,9 +124,13 @@ public:
     std::string gateway_version = "0.1.0",
     std::chrono::milliseconds vision_stale_after = std::chrono::milliseconds(2000),
     std::chrono::milliseconds odom_stale_after = std::chrono::milliseconds(1000),
-    TimeSource time_source = std::chrono::steady_clock::now);
+    TimeSource time_source = std::chrono::steady_clock::now,
+    std::chrono::milliseconds detections_stale_after = std::chrono::milliseconds(500),
+    uint32_t detection_source_width_px = 1280,
+    uint32_t detection_source_height_px = 720);
 
   SystemStatusSnapshot get_system_status() const;
+  DetectionOverlaySnapshot get_detection_overlay() const;
   PreviewStatusSnapshot get_preview_status() const;
   PreviewStatusSnapshot set_preview_running(PreviewProfile profile);
   PreviewStatusSnapshot set_preview_disabled(
@@ -111,6 +139,7 @@ public:
   void set_teleop_status(const TeleopStatusSnapshot & teleop);
   void update_vision_perf(const omniseer_msgs::msg::VisionPerfSummary & msg);
   void update_odometry(const nav_msgs::msg::Odometry & msg);
+  void update_detections(const yolo_msgs::msg::DetectionArray & msg);
 
 private:
   struct StoredVisionPerf
@@ -130,14 +159,24 @@ private:
     SteadyTimePoint updated_at{};
   };
 
+  struct StoredDetectionOverlay
+  {
+    std::vector<DetectionOverlayItem> detections{};
+    SteadyTimePoint                   updated_at{};
+  };
+
   VisionStatusSnapshot vision_snapshot_locked() const;
   RobotHealthSnapshot robot_health_snapshot_locked(const VisionStatusSnapshot & vision) const;
+  DetectionOverlaySnapshot detection_overlay_snapshot_locked() const;
 
   mutable std::mutex          _mutex{};
   std::string                 _gateway_name{};
   std::string                 _gateway_version{};
   std::chrono::milliseconds   _vision_stale_after{2000};
   std::chrono::milliseconds   _odom_stale_after{1000};
+  std::chrono::milliseconds   _detections_stale_after{500};
+  uint32_t                    _detection_source_width_px{1280};
+  uint32_t                    _detection_source_height_px{720};
   TimeSource                  _time_source{};
   PreviewStatusSnapshot       _preview{};
   TeleopStatusSnapshot        _teleop{};
@@ -145,5 +184,7 @@ private:
   StoredVisionPerf            _vision_perf{};
   bool                        _has_odometry{false};
   StoredOdometry              _odometry{};
+  bool                        _has_detections{false};
+  StoredDetectionOverlay      _detections{};
 };
 } // namespace robot_diag_control_cpp

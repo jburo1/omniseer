@@ -8,9 +8,11 @@ import grpc
 from robot_diag_control.gateway_client import (
     PROFILE_TO_PROTO,
     create_stub,
+    format_overlay_snapshot,
     format_preview_response,
     format_system_status,
     format_teleop_response,
+    get_overlay_snapshot,
     get_system_status,
     send_teleop_command,
     set_preview_mode,
@@ -26,6 +28,7 @@ def _build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     subparsers.add_parser("status", help="fetch gateway system status")
+    subparsers.add_parser("overlay", help="fetch latest gateway overlay snapshot")
 
     preview_parser = subparsers.add_parser("preview", help="set preview on or off")
     preview_parser.add_argument("mode", choices=("on", "off"))
@@ -56,6 +59,10 @@ def main(args: list[str] | None = None) -> None:
         stub = create_stub(channel)
         if parsed.command == "status":
             print(format_system_status(get_system_status(stub)))
+            return
+
+        if parsed.command == "overlay":
+            print(format_overlay_snapshot(get_overlay_snapshot(stub)))
             return
 
         if parsed.command == "teleop":
