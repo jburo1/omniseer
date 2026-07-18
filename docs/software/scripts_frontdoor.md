@@ -144,8 +144,8 @@ Commands:
 
 ```bash
 scripts/omni up sim
-scripts/omni up real --phase 0.75
-scripts/omni up real --phase 0.75 smoke
+scripts/omni up real --phase 3
+scripts/omni up real --phase 3 smoke
 ```
 
 Use `up` when:
@@ -157,8 +157,8 @@ Examples:
 
 ```bash
 scripts/omni up sim headless:=true
-scripts/omni up real --phase 0.75
-scripts/omni up real --phase 0.75 smoke
+scripts/omni up real --phase 3
+scripts/omni up real --phase 3 smoke
 ```
 
 ### `test`
@@ -202,8 +202,8 @@ Commands:
 
 ```bash
 scripts/omni run sim
-scripts/omni run real --phase 0.5
-scripts/omni run real --phase 0.75
+scripts/omni run real --phase 2
+scripts/omni run real --phase 3
 scripts/omni run monitor --host <robot-ip>
 scripts/omni run teleop
 ```
@@ -229,23 +229,23 @@ Launches the selected real-hardware rollout slice.
 
 Current supported phases:
 
-- `0.5`
-- `0.75`
+- `2`
+- `3`
 
 Examples:
 
 ```bash
-scripts/omni run real --phase 0.5
-scripts/omni run real --phase 0.5 smoke
-scripts/omni run real --phase 0.5 bringup camera_device:=/dev/video11
-scripts/omni run real --phase 0.75
+scripts/omni run real --phase 2
+scripts/omni run real --phase 2 smoke
+scripts/omni run real --phase 2 bringup camera_device:=/dev/video11
+scripts/omni run real --phase 3
 ```
 
 If `--phase` is omitted, the command selects the latest stable real phase and
 prints which one it chose.
 
-Phase `0.75` defaults to foreground `bringup` with native vision and the operator
-gateway enabled. Phase `0.5` retains its background bringup plus keyboard teleop
+Phase `3` defaults to foreground `bringup` with native vision and the operator
+gateway enabled. Phase `2` retains its background bringup plus keyboard teleop
 default.
 
 Why phases exist:
@@ -256,9 +256,9 @@ Why phases exist:
 
 #### Real run modes
 
-`phase05`
+`operator`
 
-- starts the phase `0.5` bringup in the background
+- starts the phase `2` bringup in the background
 - opens keyboard teleop in the current terminal
 
 `smoke`
@@ -282,10 +282,10 @@ Why phases exist:
 Suggestions:
 
 - use `up sim` or `up real` for the normal build-then-run path
-- use `run real --phase 0.5` for interactive operator testing
-- use `run real --phase 0.5 smoke` for a quick integrated health check
-- use `run real --phase 0.5 bringup` when debugging launch or runtime issues
-- use `run real --phase 0.75` on the robot for the operator-integrated demo
+- use `run real --phase 2` for interactive operator testing
+- use `run real --phase 2 smoke` for a quick integrated health check
+- use `run real --phase 2 bringup` when debugging launch or runtime issues
+- use `run real --phase 3` on the robot for the operator-integrated demo
 
 #### `run monitor`
 
@@ -314,12 +314,12 @@ scripts/omni check real-perception
 Use this when:
 
 - the real graph is already running
-- you want to confirm the Phase `0.5` teleop/perception boundary topics
+- you want to confirm the Phase `2` teleop/perception boundary topics
 - you want a non-driving verification helper
 
 Suggestion:
 
-- pair this with `run real --phase 0.5 smoke` for a quick end-to-end check
+- pair this with `run real --phase 2 smoke` for a quick end-to-end check
 - use `OMNISEER_REQUIRE_DETECTIONS=1` when detections must be present for the run to count
 
 ### `doctor`
@@ -421,23 +421,23 @@ Use this for:
 - simulation bringup changes
 - boundary-topic or launch-structure debugging
 
-### Real Phase `0.5` operator check
+### Real Phase `2` operator check
 
 ```bash
-scripts/omni run real --phase 0.5 smoke
+scripts/omni run real --phase 2 smoke
 ```
 
 Use this for:
 
-- the quickest integrated Phase `0.5` health check
+- the quickest integrated Phase `2` health check
 - validating teleop and perception boundaries before a longer session
 
-### Real Phase `0.75` operator demo
+### Real Phase `3` operator demo
 
 Robot:
 
 ```bash
-scripts/omni run real --phase 0.75
+scripts/omni run real --phase 3
 ```
 
 Laptop:
@@ -449,7 +449,7 @@ scripts/omni run monitor --host <robot-ip>
 Active zero-motion acceptance verification from a second robot shell:
 
 ```bash
-OMNISEER_REQUIRE_DETECTIONS=1 scripts/omni run real --phase 0.75 verify
+OMNISEER_REQUIRE_DETECTIONS=1 scripts/omni run real --phase 3 verify
 ```
 
 Use this for the integrated gateway status, preview, perception, and bounded
@@ -482,7 +482,7 @@ Use this for:
 
 The new front door keeps a compatibility path for existing habits:
 
-- `scripts/phase05_real.sh` delegates to `scripts/omni run real --phase 0.5`
+- `scripts/phase2_real.sh` delegates to `scripts/omni run real --phase 2`
 - `scripts/check_real_teleop_perception.sh` delegates to `scripts/omni check real-perception`
 
 Those compatibility wrappers exist to reduce churn. New docs and day-to-day usage

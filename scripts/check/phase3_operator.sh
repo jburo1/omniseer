@@ -98,7 +98,7 @@ require_output "${teleop_output}" "accepted=True" "teleop enable was rejected"
 require_output "${teleop_output}" "enabled=true" "teleop did not enable"
 teleop_enabled=1
 
-reference_output="$(mktemp /tmp/omniseer-phase075-reference.XXXXXX)"
+reference_output="$(mktemp /tmp/omniseer-phase3-reference.XXXXXX)"
 timeout "${timeout_seconds}" ros2 topic echo --once \
   /mecanum_drive_controller/reference >"${reference_output}" 2>&1 &
 reference_pid=$!
@@ -120,4 +120,4 @@ require_output "${teleop_output}" "accepted=True" "teleop disable was rejected"
 require_output "${teleop_output}" "enabled=false" "teleop did not disable"
 teleop_enabled=0
 
-echo "Phase 0.75 operator acceptance checks passed"
+echo "Phase 3 operator acceptance checks passed"

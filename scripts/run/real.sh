@@ -16,22 +16,22 @@ Usage:
   scripts/omni run real [--phase <number>] [--mode <mode>] [mode] [launch args...]
 
 Modes:
-  phase05  Phase 0.5 only: start bringup, then open keyboard teleop.
+  operator  Phase 2 only: start bringup, then open keyboard teleop.
   smoke    Start bringup, run the phase verifier, then stop.
   bringup  Start only the selected real bringup in the foreground.
   teleop   Start only the stamped keyboard teleop publisher.
   verify   Run the phase verifier against an existing ROS graph.
 
 Examples:
-  scripts/omni run real --phase 0.5
-  scripts/omni run real --phase 0.5 smoke
-  scripts/omni run real --phase 0.5 bringup camera_device:=/dev/video11
-  scripts/omni run real --phase 0.5 phase05 micro_ros_serial_device:=/dev/serial/by-id/usb-Teensyduino_USB_Serial_16634450-if00
-  scripts/omni run real --phase 0.75
+  scripts/omni run real --phase 2
+  scripts/omni run real --phase 2 smoke
+  scripts/omni run real --phase 2 bringup camera_device:=/dev/video11
+  scripts/omni run real --phase 2 operator micro_ros_serial_device:=/dev/serial/by-id/usb-Teensyduino_USB_Serial_16634450-if00
+  scripts/omni run real --phase 3
 EOF
 }
 
-phase05_launch_args() {
+operator_launch_args() {
   printf '%s\n' \
     "start_nav:=false" \
     "start_slam:=false" \
@@ -46,7 +46,7 @@ phase05_launch_args() {
     "classes_path:=__from_config__"
 }
 
-phase075_launch_args() {
+phase3_launch_args() {
   printf '%s\n' \
     "start_nav:=false" \
     "start_slam:=false" \
@@ -95,24 +95,24 @@ run_verify() {
   exec "${script_dir}/../check/real_teleop_perception.sh"
 }
 
-run_phase05_bringup() {
+run_operator_bringup() {
   local extra_args=("$@")
   local launch_args=()
-  omni_read_lines_into_array launch_args phase05_launch_args
+  omni_read_lines_into_array launch_args operator_launch_args
   omni_source_ros_workspace
   require_vision_bridge_package "${launch_args[@]}" "${extra_args[@]}"
   exec ros2 launch bringup real.launch.py "${launch_args[@]}" "${extra_args[@]}"
 }
 
-run_background_phase05_bringup() {
+run_background_operator_bringup() {
   local extra_args=("$@")
   local launch_args=()
-  omni_read_lines_into_array launch_args phase05_launch_args
+  omni_read_lines_into_array launch_args operator_launch_args
   omni_source_ros_workspace
   require_vision_bridge_package "${launch_args[@]}" "${extra_args[@]}"
 
   local bringup_delay_sec="${OMNISEER_BRINGUP_DELAY_SEC:-5}"
-  local bringup_log="${OMNISEER_BRINGUP_LOG:-/tmp/omniseer-phase05-bringup-$(date -u +%Y%m%dT%H%M%SZ).log}"
+  local bringup_log="${OMNISEER_BRINGUP_LOG:-/tmp/omniseer-operator-bringup-$(date -u +%Y%m%dT%H%M%SZ).log}"
 
   ros2 launch bringup real.launch.py "${launch_args[@]}" "${extra_args[@]}" >"${bringup_log}" 2>&1 &
   bringup_pid=$!
@@ -136,8 +136,8 @@ cleanup_background_bringup() {
   fi
 }
 
-run_phase05_default() {
-  run_background_phase05_bringup "$@"
+run_operator_default() {
+  run_background_operator_bringup "$@"
   trap cleanup_background_bringup EXIT INT TERM
   omni_info "Starting keyboard teleop in this terminal"
   omni_info "Use q or Ctrl-C to stop teleop; the background bringup will be cleaned up"
@@ -145,30 +145,30 @@ run_phase05_default() {
     --ros-args -p stamped:=true -r cmd_vel:=/cmd_vel_keyboard
 }
 
-run_phase05_smoke() {
-  run_background_phase05_bringup "$@"
+run_operator_smoke() {
+  run_background_operator_bringup "$@"
   trap cleanup_background_bringup EXIT INT TERM
   "${script_dir}/../check/real_teleop_perception.sh"
 }
 
-run_phase075_bringup() {
+run_phase3_bringup() {
   local extra_args=("$@")
   local launch_args=()
-  omni_read_lines_into_array launch_args phase075_launch_args
+  omni_read_lines_into_array launch_args phase3_launch_args
   omni_source_ros_workspace
   require_vision_bridge_package "${launch_args[@]}" "${extra_args[@]}"
   exec ros2 launch bringup real.launch.py "${launch_args[@]}" "${extra_args[@]}"
 }
 
-run_background_phase075_bringup() {
+run_background_phase3_bringup() {
   local extra_args=("$@")
   local launch_args=()
-  omni_read_lines_into_array launch_args phase075_launch_args
+  omni_read_lines_into_array launch_args phase3_launch_args
   omni_source_ros_workspace
   require_vision_bridge_package "${launch_args[@]}" "${extra_args[@]}"
 
   local bringup_delay_sec="${OMNISEER_BRINGUP_DELAY_SEC:-5}"
-  local bringup_log="${OMNISEER_BRINGUP_LOG:-/tmp/omniseer-phase075-bringup-$(date -u +%Y%m%dT%H%M%SZ).log}"
+  local bringup_log="${OMNISEER_BRINGUP_LOG:-/tmp/omniseer-phase3-bringup-$(date -u +%Y%m%dT%H%M%SZ).log}"
 
   ros2 launch bringup real.launch.py "${launch_args[@]}" "${extra_args[@]}" >"${bringup_log}" 2>&1 &
   bringup_pid=$!
@@ -185,29 +185,29 @@ run_background_phase075_bringup() {
   omni_info "bringup log: ${bringup_log}"
 }
 
-run_phase075_verify() {
-  "${script_dir}/../check/phase075_operator.sh"
+run_phase3_verify() {
+  "${script_dir}/../check/phase3_operator.sh"
 }
 
-run_phase075_smoke() {
-  run_background_phase075_bringup "$@"
+run_phase3_smoke() {
+  run_background_phase3_bringup "$@"
   trap cleanup_background_bringup EXIT INT TERM
-  run_phase075_verify
+  run_phase3_verify
 }
 
-run_real_phase_0_5() {
+run_real_phase_2() {
   local mode="$1"
   shift
 
   case "${mode}" in
-    phase05|all)
-      run_phase05_default "$@"
+    operator|all)
+      run_operator_default "$@"
       ;;
     smoke)
-      run_phase05_smoke "$@"
+      run_operator_smoke "$@"
       ;;
     bringup)
-      run_phase05_bringup "$@"
+      run_operator_bringup "$@"
       ;;
     teleop)
       run_teleop
@@ -224,26 +224,26 @@ run_real_phase_0_5() {
   esac
 }
 
-run_real_phase_0_75() {
+run_real_phase_3() {
   local mode="$1"
   shift
 
   case "${mode}" in
     bringup|demo|all)
-      run_phase075_bringup "$@"
+      run_phase3_bringup "$@"
       ;;
     smoke)
-      run_phase075_smoke "$@"
+      run_phase3_smoke "$@"
       ;;
     verify|check)
       omni_source_ros_workspace
-      run_phase075_verify
+      run_phase3_verify
       ;;
     help|-h|--help)
       usage
       ;;
     *)
-      omni_die "unknown Phase 0.75 real mode: ${mode}"
+      omni_die "unknown Phase 3 real mode: ${mode}"
       ;;
   esac
 }
@@ -285,13 +285,13 @@ else
 fi
 
 case "${resolved_phase}" in
-  0.5)
-    mode="${mode:-phase05}"
-    run_real_phase_0_5 "${mode}" "$@"
+  2)
+    mode="${mode:-operator}"
+    run_real_phase_2 "${mode}" "$@"
     ;;
-  0.75)
+  3)
     mode="${mode:-bringup}"
-    run_real_phase_0_75 "${mode}" "$@"
+    run_real_phase_3 "${mode}" "$@"
     ;;
   *)
     omni_die "unsupported real phase ${resolved_phase}; supported phases: $(omni_supported_real_phases | paste -sd, -)"

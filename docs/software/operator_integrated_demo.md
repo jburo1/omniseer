@@ -1,8 +1,8 @@
 # Operator-Integrated Real Demo
 
-_Status: Phase 0.75 implementation added; target-hardware verification record pending_
+_Status: Phase 3 implementation added; target-hardware verification record pending_
 
-This checklist verifies the Phase 0.75 slice between Phase 0.5 and the run
+This checklist verifies the Phase 3 slice between Phase 2 and the run
 bundle recorder:
 
 - real native perception publishes gateway-visible vision status
@@ -16,7 +16,7 @@ external GStreamer viewer rather than embedding in the Tk window.
 
 ## Preconditions
 
-- Phase 0.5 has been run successfully on target hardware.
+- Phase 2 has been run successfully on target hardware.
 - The robot and laptop workspaces have been built with `scripts/omni build ros`.
 - The laptop can reach the robot gateway gRPC port.
 - The laptop has GStreamer tools and SRT/H.264 decode plugins installed for
@@ -25,18 +25,18 @@ external GStreamer viewer rather than embedding in the Tk window.
 
 ## Robot Command
 
-From the repository root on the robot, launch the Phase 0.75 stack. The phase
+From the repository root on the robot, launch the Phase 3 stack. The phase
 profile enables the gateway and native vision, disables navigation/SLAM/RF2O,
 and resolves model paths from `vision_bridge.real.paths.yaml`:
 
 ```bash
-scripts/omni run real --phase 0.75
+scripts/omni run real --phase 3
 ```
 
 Pass launch overrides after the phase, for example:
 
 ```bash
-scripts/omni run real --phase 0.75 bringup camera_device:=/dev/video12
+scripts/omni run real --phase 3 bringup camera_device:=/dev/video12
 ```
 
 The default hardware split is inference on `rkisp_selfpath` (`/dev/video12`)
@@ -82,11 +82,11 @@ Space: stop
 
 ## Verification Commands
 
-Before driving, a second robot shell can run the Phase 0.75 acceptance checks
+Before driving, a second robot shell can run the Phase 3 acceptance checks
 against the existing graph:
 
 ```bash
-OMNISEER_REQUIRE_DETECTIONS=1 scripts/omni run real --phase 0.75 verify
+OMNISEER_REQUIRE_DETECTIONS=1 scripts/omni run real --phase 3 verify
 ```
 
 This requires live encoder, wheel-odometry, lidar, vision, and detection
@@ -121,7 +121,7 @@ Expected observations:
 | Teleop command rejected as disabled | Teleop was not enabled | Press Enable before directional commands |
 | Teleop command rejected as rate limited | Commands are arriving faster than configured | Use buttons/keys at a slower cadence or tune gateway parameters |
 | Teleop timed out | Deadman timeout elapsed after last command | Disable and re-enable teleop, then continue |
-| Phase 0.75 is rejected by the script | Checkout predates the phase profile | Update the checkout and confirm `scripts/omni env` lists `0.5,0.75` |
+| Phase 3 is rejected by the script | Checkout predates the phase profile | Update the checkout and confirm `scripts/omni env` lists `2,3` |
 
 ## Verification Record
 
@@ -129,7 +129,7 @@ Expected observations:
 - Operator:
 - Robot / SBC:
 - Laptop:
-- Robot command (`scripts/omni run real --phase 0.75` plus overrides):
+- Robot command (`scripts/omni run real --phase 3` plus overrides):
 - Laptop command (`scripts/omni run monitor` plus host):
 - Preview observed:
 - Vision status fresh in GUI:

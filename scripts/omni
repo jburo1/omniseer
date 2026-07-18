@@ -41,7 +41,7 @@ Examples:
   scripts/omni doctor
   scripts/omni build
   scripts/omni up sim headless:=true
-  scripts/omni up real --phase 0.75
+  scripts/omni up real --phase 3
   scripts/omni test smoke-sim
   scripts/omni build ros
   scripts/omni check real-perception
@@ -60,15 +60,15 @@ Usage:
   scripts/omni run teleop
 
 Real modes:
-  phase05  Phase 0.5 only: start bringup, then open keyboard teleop.
+  operator  Phase 2 only: start bringup, then open keyboard teleop.
   smoke    Start bringup, run the phase verifier, then stop.
   bringup  Start only the phase bringup in the foreground.
   teleop   Start only the stamped keyboard teleop publisher.
   verify   Run only the passive verifier against an existing ROS graph.
 
 Phase defaults:
-  0.5   phase05
-  0.75  bringup
+  2  operator
+  3  bringup
 EOF
 }
 

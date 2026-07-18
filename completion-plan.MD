@@ -64,7 +64,7 @@ Do not expand scope unless the current phase definition of done is already satis
 
 ---
 
-# Phase 0: Clean the Public Engineering Signal
+# Phase 1: Clean the Public Engineering Signal
 
 ## Purpose
 
@@ -72,7 +72,7 @@ Before adding features, make the repository look disciplined. A reviewer should 
 
 ## Tasks
 
-### 0.1 Align lint tooling
+### 1.1 Align lint tooling
 
 Ensure Ruff and pre-commit versions are consistent across:
 
@@ -83,7 +83,7 @@ Ensure Ruff and pre-commit versions are consistent across:
 
 Recommended target: keep CI and `pyproject.toml` on the current Ruff version, then update pre-commit to match.
 
-### 0.2 Restore green checks
+### 1.2 Restore green checks
 
 All visible public checks should pass on the default branch.
 
@@ -95,7 +95,7 @@ Minimum checks:
 
 If a check is not intended to be authoritative, either fix it, disable it, or document why it is non-blocking. Do not leave unexplained red status.
 
-### 0.3 Add verification-boundary documentation
+### 1.3 Add verification-boundary documentation
 
 Create or update a concise document such as:
 
@@ -111,16 +111,16 @@ The document should distinguish:
 
 It should avoid overstating hardware, RKNN, RGA, NPU, sensor, firmware-flash, or cloud-dashboard claims.
 
-### 0.4 Add focused GitHub issues or TODO entries
+### 1.4 Add focused GitHub issues or TODO entries
 
 Create a small visible backlog:
 
-- `P0: fix pre-commit/CI consistency`
-- `P0.5: verify real teleop + native YOLO detections`
-- `P1: perception run bundle v0`
-- `P1: laptop report generator`
-- `P2: target hardware evidence run`
-- `P2: hosted static report`
+- `P1: fix pre-commit/CI consistency`
+- `P2: verify real teleop + native YOLO detections`
+- `P4: perception run bundle v0`
+- `P5: laptop report generator`
+- `P7: target hardware evidence run`
+- `P8: hosted static report`
 
 ## Definition of Done
 
@@ -139,7 +139,7 @@ chore(project): add completion backlog for perception artifact
 
 ---
 
-# Phase 0.5: Real Teleop + Native Perception Verification
+# Phase 2: Real Teleop + Native Perception Verification
 
 ## Purpose
 
@@ -187,11 +187,11 @@ If the recorder is built first, it may hide or confuse more important integratio
 - `/yolo/detections` not publishing
 - real launch path not including the vision bridge
 
-Do not start Phase 1 until this phase has a documented manual verification pass.
+Do not start Phase 4 until this phase has a documented manual verification pass.
 
 ## Tasks
 
-### 0.5.1 Add a real vision launch file
+### 2.1 Add a real vision launch file
 
 Add:
 
@@ -230,7 +230,7 @@ frames.camera_frame_id
 
 Do not bury these as magic constants. The paths should be reviewable from a config file or launch arguments.
 
-### 0.5.2 Add a real vision config file
+### 2.2 Add a real vision config file
 
 Add:
 
@@ -270,7 +270,7 @@ vision_bridge:
 
 Model and class paths may initially be empty in committed config if they are machine-local, but the verification document must show the concrete command or override used on the target robot.
 
-### 0.5.3 Wire vision into real bringup
+### 2.3 Wire vision into real bringup
 
 Add launch arguments to `real.launch.py`:
 
@@ -283,7 +283,7 @@ Then conditionally include `real_vision.launch.py`.
 
 The native vision bridge belongs in the real hardware layer, not the common layer, because it depends on real camera/RGA/RKNN hardware.
 
-### 0.5.4 Verify teleop command type compatibility
+### 2.4 Verify teleop command type compatibility
 
 Check the command path carefully.
 
@@ -313,7 +313,7 @@ Acceptable fixes:
 
 Do not proceed with a hidden command type mismatch.
 
-### 0.5.5 Add a manual verification checklist
+### 2.5 Add a manual verification checklist
 
 Add:
 
@@ -369,7 +369,7 @@ The doc should include a short troubleshooting table for:
 - teleop command topic type mismatch
 - bridge fatal error
 
-### 0.5.6 Optional smoke script
+### 2.6 Optional smoke script
 
 Add an optional shell script:
 
@@ -410,7 +410,7 @@ chore(scripts): add real perception topic check helper
 
 ---
 
-# Phase 0.75: Operator-Integrated Real Demo
+# Phase 3: Operator-Integrated Real Demo
 
 ## Purpose
 
@@ -433,13 +433,13 @@ native perception
   -> laptop monitor
 ```
 
-This phase exists to make Phase 1 boring: the recorder should capture a known
+This phase exists to make Phase 4 boring: the recorder should capture a known
 good integrated operator workflow, not discover gateway, preview, teleop, or
 visibility failures.
 
 ## Tasks
 
-### 0.75.1 Add bounded gateway teleop
+### 3.1 Add bounded gateway teleop
 
 Extend the operator gateway API additively with teleop enable/disable, bounded
 command submission, and teleop status in `SystemStatus`.
@@ -456,9 +456,9 @@ Minimum safety behavior:
 - deadman timeout
 - zero command on disable, timeout, and gateway shutdown
 
-### 0.75.2 Upgrade the laptop monitor GUI
+### 3.2 Upgrade the laptop monitor GUI
 
-Use the existing Tk monitor as the Phase 0.75 laptop app.
+Use the existing Tk monitor as the Phase 3 laptop app.
 
 It should provide:
 
@@ -470,7 +470,7 @@ It should provide:
 Do not embed video in the Tk window in this phase. Keep the external
 GStreamer viewer for lower risk.
 
-### 0.75.3 Add an operator-integrated demo checklist
+### 3.3 Add an operator-integrated demo checklist
 
 Add:
 
@@ -488,7 +488,7 @@ troubleshooting, and a target-hardware verification record.
 - The laptop monitor can enable, command, stop, and disable bounded teleop.
 - Teleop commands from the laptop reach `/mecanum_drive_controller/reference`.
 - Closing the laptop app or disabling teleop sends a zero command.
-- A target-hardware Phase 0.75 verification pass has been recorded.
+- A target-hardware Phase 3 verification pass has been recorded.
 
 ## Suggested commit names
 
@@ -496,16 +496,16 @@ troubleshooting, and a target-hardware verification record.
 feat(gateway): add bounded teleop control
 feat(operator): add teleop controls to monitor gui
 docs(operator): add integrated real demo checklist
-docs(plan): insert phase 0.75 before run recording
+docs(plan): insert phase 3 before run recording
 ```
 
 ---
 
-# Phase 1: Structured Perception Run Bundle
+# Phase 4: Structured Perception Run Bundle
 
 ## Purpose
 
-Implement the missing local experiment artifact after Phase 0.75 proves the
+Implement the missing local experiment artifact after Phase 3 proves the
 operator-integrated source workflow.
 
 The system should be able to record one verified perception run into a structured directory that can later be analyzed, copied, uploaded, or rendered.
@@ -550,7 +550,7 @@ Optional later inputs:
 /operator_markers
 ```
 
-Do not block Phase 1 on optional inputs.
+Do not block Phase 4 on optional inputs.
 
 ## Output directory contract
 
@@ -753,7 +753,7 @@ Prefer pure Python tests for schema/summary logic. ROS integration tests can com
 - The run contains `manifest.yaml`, `detections.jsonl`, `perf.jsonl`, and `summary.json`.
 - Tests cover schema and summary behavior.
 - README or docs include one reproducible command sequence.
-- The docs make clear that Phase 0.75 must be completed before meaningful real runs are recorded.
+- The docs make clear that Phase 3 must be completed before meaningful real runs are recorded.
 
 ## Suggested commit names
 
@@ -767,7 +767,7 @@ docs(experiments): document local perception recording flow
 
 ---
 
-# Phase 2: Local Laptop Report Generator
+# Phase 5: Local Laptop Report Generator
 
 ## Purpose
 
@@ -838,7 +838,7 @@ The generated `index.html` should include:
 - model information
 - selected classes
 - robot/hardware notes
-- whether Phase 0.5 verification had been completed
+- whether Phase 2 verification had been completed
 
 ### Performance
 
@@ -920,7 +920,7 @@ docs(portfolio): add local report workflow
 
 ---
 
-# Phase 3: System Resource Telemetry
+# Phase 6: System Resource Telemetry
 
 ## Purpose
 
@@ -1032,7 +1032,7 @@ docs(experiments): document resource telemetry boundary
 
 ---
 
-# Phase 4: Hardware Evidence Pack
+# Phase 7: Hardware Evidence Pack
 
 ## Purpose
 
@@ -1155,7 +1155,7 @@ docs(portfolio): publish perception demo walkthrough
 
 ---
 
-# Phase 5: Hosted Static Review
+# Phase 8: Hosted Static Review
 
 ## Purpose
 
@@ -1346,7 +1346,7 @@ The project is portfolio-complete when all of the following are true:
 
 # Recommended Immediate Next Step
 
-Start with Phase 0, then Phase 0.5.
+Start with Phase 1, then Phase 2.
 
 Do not start with cloud. Do not start with autonomy. Do not start with UI polish. Do not start with the recorder before the real source topics are verified.
 

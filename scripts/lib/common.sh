@@ -69,11 +69,11 @@ omni_vision_bridge_deps_available() {
 }
 
 omni_latest_stable_real_phase() {
-  printf '%s\n' "${OMNISEER_LATEST_STABLE_REAL_PHASE:-0.5}"
+  printf '%s\n' "${OMNISEER_LATEST_STABLE_REAL_PHASE:-2}"
 }
 
 omni_supported_real_phases() {
-  printf '%s\n' "0.5" "0.75"
+  printf '%s\n' "2" "3"
 }
 
 omni_ros_dep_paths_core() {

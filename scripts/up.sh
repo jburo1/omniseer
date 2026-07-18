@@ -18,8 +18,8 @@ Builds the needed ROS workspace, then runs the selected profile.
 
 Examples:
   scripts/omni up sim headless:=true
-  scripts/omni up real --phase 0.75
-  scripts/omni up real --phase 0.75 smoke
+  scripts/omni up real --phase 3
+  scripts/omni up real --phase 3 smoke
 EOF
 }
 
