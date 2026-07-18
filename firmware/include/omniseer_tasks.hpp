@@ -26,11 +26,11 @@ void task_spin_executor();
 
 constexpr TaskFrequency tasks[] = {
   {task_motor_cmd, MOTOR_CMD_US},
+  {task_spin_executor, EXECUTOR_SPIN_US},
   {task_encoders, ENCODERS_US},
   {task_battery, BATTERY_US},
   {task_imu, IMU_US},
-  {task_sonar, SONAR_US},
-  {task_spin_executor, EXECUTOR_SPIN_US}
+  {task_sonar, SONAR_US}
 };
 
 constexpr size_t task_count = std::size(tasks);

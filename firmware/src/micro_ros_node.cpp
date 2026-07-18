@@ -2,6 +2,8 @@
 
 #include "micro_ros_node.hpp"
 
+#include <Arduino.h>
+
 static MicroRosNode* g_micro_ros_node_instance = nullptr;
 
 // rcl error checkers
@@ -24,6 +26,54 @@ namespace
     {
       g_micro_ros_node_instance->log_debugf("RCSOFTCHECK failed at %s rc=%d", where, (int) rc);
     }
+  }
+
+  bool omniseer_transport_open(uxrCustomTransport* transport)
+  {
+    (void) transport;
+    return true;
+  }
+
+  bool omniseer_transport_close(uxrCustomTransport* transport)
+  {
+    (void) transport;
+    return true;
+  }
+
+  size_t omniseer_transport_write(uxrCustomTransport* transport, const uint8_t* buf, size_t len,
+                                  uint8_t* err)
+  {
+    (void) err;
+
+    Stream* stream = static_cast<Stream*>(transport->args);
+    if (!stream || !Serial.dtr())
+    {
+      return 0;
+    }
+
+    const int available = stream->availableForWrite();
+    if (available <= 0)
+    {
+      return 0;
+    }
+
+    const size_t writable = min(len, static_cast<size_t>(available));
+    return stream->write(buf, writable);
+  }
+
+  size_t omniseer_transport_read(uxrCustomTransport* transport, uint8_t* buf, size_t len,
+                                 int timeout, uint8_t* err)
+  {
+    (void) err;
+
+    Stream* stream = static_cast<Stream*>(transport->args);
+    if (!stream)
+    {
+      return 0;
+    }
+
+    stream->setTimeout(timeout);
+    return stream->readBytes(reinterpret_cast<char*>(buf), len);
   }
 
 } // namespace
@@ -95,10 +145,22 @@ void MicroRosNode::spin_executor(uint32_t budget_us)
     return;
   }
 
+  const uint32_t now_ms = millis();
+
   if (!Serial.dtr())
   {
     _handle_disconnect("serial dtr dropped", 0);
     return;
+  }
+
+  if ((now_ms - _last_agent_ping_ms) >= AGENT_PING_PERIOD_MS)
+  {
+    _last_agent_ping_ms = now_ms;
+    if (!_ping_agent(AGENT_PING_TIMEOUT_MS, AGENT_PING_ATTEMPTS))
+    {
+      _handle_disconnect("agent ping failed", RMW_RET_ERROR);
+      return;
+    }
   }
 
   rcl_ret_t rc = rclc_executor_spin_some(&_executor, static_cast<uint64_t>(budget_us) * 1000ULL);
@@ -109,7 +171,6 @@ void MicroRosNode::spin_executor(uint32_t budget_us)
   }
 
   // periodic resync
-  const uint32_t now_ms = millis();
   if ((now_ms - _last_resync_ms) >= RESYNC_PERIOD_MS)
   {
     _sync_time(RESYNC_TIMEOUT_MS);
@@ -266,7 +327,8 @@ void MicroRosNode::_serial_logf(const char* fmt, ...)
 
 void MicroRosNode::_init_transport()
 {
-  set_microros_serial_transports(Serial);
+  rmw_uros_set_custom_transport(true, &Serial, omniseer_transport_open, omniseer_transport_close,
+                                omniseer_transport_write, omniseer_transport_read);
   _transport_initialized = true;
   _serial_logging_allowed = false;
 }
@@ -414,6 +476,10 @@ bool MicroRosNode::_create_entities()
   {
     return false;
   }
+  if (!_set_publisher_session_timeout(_debug_pub, "debug publish timeout"))
+  {
+    return false;
+  }
   _debug_pub_ready = true;
   _debug_ready = true;
 
@@ -423,6 +489,10 @@ bool MicroRosNode::_create_entities()
                                                                          WheelEncoderCounts),
                                              ENCODER_TOPIC),
                  "encoder publish create"))
+  {
+    return false;
+  }
+  if (!_set_publisher_session_timeout(_encoder_pub, "encoder publish timeout"))
   {
     return false;
   }
@@ -436,6 +506,10 @@ bool MicroRosNode::_create_entities()
   {
     return false;
   }
+  if (!_set_publisher_session_timeout(_imu_pub, "imu publish timeout"))
+  {
+    return false;
+  }
   _imu_pub_ready = true;
 
   // sonar range publisher
@@ -443,6 +517,10 @@ bool MicroRosNode::_create_entities()
                                              ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Range),
                                              SONAR_TOPIC),
                  "sonar publish create"))
+  {
+    return false;
+  }
+  if (!_set_publisher_session_timeout(_sonar_pub, "sonar publish timeout"))
   {
     return false;
   }
@@ -454,6 +532,10 @@ bool MicroRosNode::_create_entities()
                                                                          BatteryState),
                                              BATTERY_TOPIC),
                  "battery publish create"))
+  {
+    return false;
+  }
+  if (!_set_publisher_session_timeout(_battery_pub, "battery publish timeout"))
   {
     return false;
   }
@@ -483,6 +565,26 @@ bool MicroRosNode::_create_entities()
 bool MicroRosNode::_ping_agent(int timeout_ms, uint8_t attempts)
 {
   return rmw_uros_ping_agent(timeout_ms, attempts) == RMW_RET_OK;
+}
+
+bool MicroRosNode::_set_publisher_session_timeout(rcl_publisher_t& publisher, const char* where)
+{
+  rmw_publisher_t* rmw_publisher = rcl_publisher_get_rmw_handle(&publisher);
+  if (!rmw_publisher)
+  {
+    log_debugf("RCCHECK failed at %s rmw publisher=null", where);
+    return false;
+  }
+
+  const rmw_ret_t rc =
+      rmw_uros_set_publisher_session_timeout(rmw_publisher, PUBLISH_SESSION_TIMEOUT_MS);
+  if (rc != RMW_RET_OK)
+  {
+    log_debugf("RCCHECK failed at %s rc=%d", where, static_cast<int>(rc));
+    return false;
+  }
+
+  return true;
 }
 
 void MicroRosNode::_handle_disconnect(const char* where, int rc)

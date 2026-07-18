@@ -67,6 +67,7 @@ private:
 
     bool _create_entities();
     bool _ping_agent(int timeout_ms, uint8_t attempts);
+    bool _set_publisher_session_timeout(rcl_publisher_t& publisher, const char* where);
     void _handle_disconnect(const char* where, int rc);
     void _fini_entities();
     void _fini_messaging();
