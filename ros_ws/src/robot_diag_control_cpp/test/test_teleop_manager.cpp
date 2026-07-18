@@ -48,7 +48,7 @@ TEST(TeleopManagerTest, RejectsOutOfBoundsCommands)
     {
       published.push_back(command);
     },
-    TeleopManagerConfig{0.25, 0.5, std::chrono::milliseconds(500), std::chrono::milliseconds(0)});
+    TeleopManagerConfig{0.25, 0.5});
 
   manager.set_enabled(true);
   const auto result = manager.send_command(TeleopCommand{0.30, 0.0, 0.0});
@@ -59,7 +59,7 @@ TEST(TeleopManagerTest, RejectsOutOfBoundsCommands)
   EXPECT_EQ(store.get_system_status().teleop.last_error, result.message);
 }
 
-TEST(TeleopManagerTest, RateLimitsCommands)
+TEST(TeleopManagerTest, AcceptsBackToBackCommandsWhileEnabled)
 {
   TimePoint now{Clock::duration{std::chrono::seconds(100)}};
   GatewayStateStore store(
@@ -76,7 +76,7 @@ TEST(TeleopManagerTest, RateLimitsCommands)
     {
       published.push_back(command);
     },
-    TeleopManagerConfig{0.35, 0.8, std::chrono::milliseconds(500), std::chrono::milliseconds(50)},
+    TeleopManagerConfig{0.35, 0.8},
     [&now]()
     {
       return now;
@@ -84,17 +84,15 @@ TEST(TeleopManagerTest, RateLimitsCommands)
 
   manager.set_enabled(true);
   EXPECT_TRUE(manager.send_command(TeleopCommand{0.1, 0.0, 0.0}).accepted);
-  const auto limited = manager.send_command(TeleopCommand{0.2, 0.0, 0.0});
-  EXPECT_FALSE(limited.accepted);
-  EXPECT_EQ(limited.message, "teleop command rate limited");
-  EXPECT_EQ(published.size(), 1U);
-
-  now += std::chrono::milliseconds(50);
   EXPECT_TRUE(manager.send_command(TeleopCommand{0.2, 0.0, 0.0}).accepted);
   EXPECT_EQ(published.size(), 2U);
+
+  now += std::chrono::milliseconds(50);
+  EXPECT_TRUE(manager.send_command(TeleopCommand{0.3, 0.0, 0.0}).accepted);
+  EXPECT_EQ(published.size(), 3U);
 }
 
-TEST(TeleopManagerTest, DeadmanTimeoutDisablesAndStops)
+TEST(TeleopManagerTest, PollKeepsTeleopEnabledAfterCommandAges)
 {
   TimePoint now{Clock::duration{std::chrono::seconds(100)}};
   GatewayStateStore store(
@@ -111,7 +109,7 @@ TEST(TeleopManagerTest, DeadmanTimeoutDisablesAndStops)
     {
       published.push_back(command);
     },
-    TeleopManagerConfig{0.35, 0.8, std::chrono::milliseconds(500), std::chrono::milliseconds(0)},
+    TeleopManagerConfig{0.35, 0.8},
     [&now]()
     {
       return now;
@@ -119,16 +117,15 @@ TEST(TeleopManagerTest, DeadmanTimeoutDisablesAndStops)
 
   manager.set_enabled(true);
   ASSERT_TRUE(manager.send_command(TeleopCommand{0.1, 0.0, 0.0}).accepted);
-  now += std::chrono::milliseconds(501);
+  now += std::chrono::seconds(5);
   manager.poll();
 
   const auto status = store.get_system_status().teleop;
-  EXPECT_EQ(status.state, TeleopState::TimedOut);
-  EXPECT_FALSE(status.enabled);
-  EXPECT_TRUE(status.timed_out);
-  ASSERT_GE(published.size(), 2U);
-  EXPECT_DOUBLE_EQ(published.back().linear_x_mps, 0.0);
-  EXPECT_EQ(status.last_error, "teleop deadman timeout");
+  EXPECT_EQ(status.state, TeleopState::Enabled);
+  EXPECT_TRUE(status.enabled);
+  EXPECT_FALSE(status.timed_out);
+  EXPECT_EQ(published.size(), 1U);
+  EXPECT_EQ(status.last_error, "");
 }
 } // namespace
 } // namespace robot_diag_control_cpp

@@ -45,10 +45,6 @@ public:
     const auto teleop_max_linear_mps = declare_parameter<double>("teleop_max_linear_mps", 0.35);
     const auto teleop_max_angular_rad_s =
       declare_parameter<double>("teleop_max_angular_rad_s", 0.8);
-    const auto teleop_deadman_timeout_ms =
-      declare_parameter<int64_t>("teleop_deadman_timeout_ms", 500);
-    const auto teleop_min_command_interval_ms =
-      declare_parameter<int64_t>("teleop_min_command_interval_ms", 50);
     if (grpc_port < 0 || grpc_port > 65535) {
       throw std::runtime_error("grpc_port must be between 0 and 65535");
     }
@@ -60,12 +56,6 @@ public:
     }
     if (odom_stale_after_ms < 0) {
       throw std::runtime_error("odom_stale_after_ms must be non-negative");
-    }
-    if (teleop_deadman_timeout_ms <= 0) {
-      throw std::runtime_error("teleop_deadman_timeout_ms must be positive");
-    }
-    if (teleop_min_command_interval_ms < 0) {
-      throw std::runtime_error("teleop_min_command_interval_ms must be non-negative");
     }
 
     _state_store = std::make_unique<GatewayStateStore>(
@@ -107,8 +97,6 @@ public:
       TeleopManagerConfig{
         teleop_max_linear_mps,
         teleop_max_angular_rad_s,
-        std::chrono::milliseconds(teleop_deadman_timeout_ms),
-        std::chrono::milliseconds(teleop_min_command_interval_ms),
       });
     _grpc_service = std::make_unique<RobotGatewayService>(
       *_state_store, *_preview_manager, *_teleop_manager);

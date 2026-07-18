@@ -21,8 +21,8 @@ service RobotGateway {
   rpc SetTeleopEnabled(SetTeleopEnabledRequest) returns (SetTeleopEnabledResponse);
 
   // Sends one bounded teleop velocity command.
-  // The gateway rejects commands when teleop is disabled, stale, too fast, or
-  // outside configured bounds.
+  // The gateway rejects commands when teleop is disabled or outside configured
+  // bounds.
   rpc SendTeleopCommand(SendTeleopCommandRequest) returns (SendTeleopCommandResponse);
 }
 

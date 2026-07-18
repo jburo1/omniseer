@@ -219,8 +219,8 @@ Later addition.
 Likely responsibilities:
 
 - explicit teleop command validation
-- heartbeat/deadman enforcement
-- rate limiting
+- explicit enable/disable gating
+- command stop on disable and gateway shutdown
 - command arbitration
 
 ## Lifecycle

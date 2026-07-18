@@ -452,9 +452,8 @@ Minimum safety behavior:
 - teleop disabled by default
 - explicit enable required before motion commands
 - configured linear/angular bounds
-- command rate limiting
-- deadman timeout
-- zero command on disable, timeout, and gateway shutdown
+- zero command on disable and gateway shutdown
+- firmware/controller watchdogs remain the lower-layer stale-command guard
 
 ### 3.2 Upgrade the laptop monitor GUI
 

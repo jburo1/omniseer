@@ -18,6 +18,7 @@ namespace micro_ros_config {
     constexpr uint32_t    SPIN_BUDGET_US = 500;
     constexpr uint32_t    INIT_TIMEOUT_MS = 1000;
     constexpr uint32_t    INIT_RETRY_PERIOD_MS = 1000;
+    constexpr uint32_t    RECONNECT_LED_BLINK_PERIOD_MS = 250;
     constexpr uint32_t    SERIAL_READY_TIMEOUT_MS = 1000;
     constexpr uint32_t    AGENT_PING_PERIOD_MS   = 1000;
     constexpr uint32_t    AGENT_PING_TIMEOUT_MS  = 50;

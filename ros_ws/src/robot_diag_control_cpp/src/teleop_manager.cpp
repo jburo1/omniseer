@@ -38,12 +38,6 @@ TeleopManager::TeleopManager(
   if (_config.max_angular_rad_s <= 0.0) {
     throw std::runtime_error("teleop max_angular_rad_s must be positive");
   }
-  if (_config.deadman_timeout.count() <= 0) {
-    throw std::runtime_error("teleop deadman_timeout must be positive");
-  }
-  if (_config.min_command_interval.count() < 0) {
-    throw std::runtime_error("teleop min_command_interval must be non-negative");
-  }
   _store.set_teleop_status(status_locked());
 }
 
@@ -57,7 +51,6 @@ TeleopControlResult TeleopManager::set_enabled(bool enabled)
   std::lock_guard<std::mutex> lock(_mutex);
   if (enabled) {
     _enabled = true;
-    _timed_out = false;
     _last_error.clear();
     const auto status = status_locked();
     _store.set_teleop_status(status);
@@ -65,7 +58,6 @@ TeleopControlResult TeleopManager::set_enabled(bool enabled)
   }
 
   _enabled = false;
-  _timed_out = false;
   _last_error.clear();
   publish_stop_locked();
   const auto status = status_locked();
@@ -79,22 +71,14 @@ TeleopControlResult TeleopManager::send_command(const TeleopCommand & command)
   if (!_enabled) {
     return reject_locked("teleop disabled");
   }
-  if (_timed_out) {
-    return reject_locked("teleop timed out; re-enable required");
-  }
   if (!command_in_bounds(command)) {
     return reject_locked("teleop command exceeds configured bounds");
   }
 
   const auto now = _time_source();
-  if (_has_command && now - _last_publish_at < _config.min_command_interval) {
-    return reject_locked("teleop command rate limited");
-  }
-
   _publisher(command);
   _has_command = true;
   _last_command_at = now;
-  _last_publish_at = now;
   _last_error.clear();
   const auto status = status_locked();
   _store.set_teleop_status(status);
@@ -104,20 +88,6 @@ TeleopControlResult TeleopManager::send_command(const TeleopCommand & command)
 void TeleopManager::poll()
 {
   std::lock_guard<std::mutex> lock(_mutex);
-  if (!_enabled || _timed_out || !_has_command) {
-    _store.set_teleop_status(status_locked());
-    return;
-  }
-
-  if (_time_source() - _last_command_at <= _config.deadman_timeout) {
-    _store.set_teleop_status(status_locked());
-    return;
-  }
-
-  _enabled = false;
-  _timed_out = true;
-  _last_error = "teleop deadman timeout";
-  publish_stop_locked();
   _store.set_teleop_status(status_locked());
 }
 
@@ -144,7 +114,6 @@ bool TeleopManager::command_in_bounds(const TeleopCommand & command) const
 void TeleopManager::publish_stop_locked()
 {
   _publisher(TeleopCommand{});
-  _last_publish_at = _time_source();
 }
 
 TeleopStatusSnapshot TeleopManager::status_locked(std::string last_error) const
@@ -152,9 +121,9 @@ TeleopStatusSnapshot TeleopManager::status_locked(std::string last_error) const
   const auto now = _time_source();
   const auto error = last_error.empty() ? _last_error : std::move(last_error);
   return TeleopStatusSnapshot{
-    _timed_out ? TeleopState::TimedOut : (_enabled ? TeleopState::Enabled : TeleopState::Disabled),
+    _enabled ? TeleopState::Enabled : TeleopState::Disabled,
     _enabled,
-    _timed_out,
+    false,
     age_ms_or_zero(_has_command, now, _last_command_at),
     _config.max_linear_mps,
     _config.max_angular_rad_s,

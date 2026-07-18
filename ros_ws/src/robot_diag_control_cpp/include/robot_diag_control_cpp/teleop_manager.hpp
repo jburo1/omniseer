@@ -27,8 +27,6 @@ struct TeleopManagerConfig
 {
   double                    max_linear_mps{0.35};
   double                    max_angular_rad_s{0.8};
-  std::chrono::milliseconds deadman_timeout{500};
-  std::chrono::milliseconds min_command_interval{50};
 };
 
 using TeleopCommandPublisher = std::function<void(const TeleopCommand &)>;
@@ -64,10 +62,8 @@ private:
   TimeSource                _time_source{};
   mutable std::mutex        _mutex{};
   bool                      _enabled{false};
-  bool                      _timed_out{false};
   bool                      _has_command{false};
   SteadyTimePoint           _last_command_at{};
-  SteadyTimePoint           _last_publish_at{};
   std::string               _last_error{};
 };
 } // namespace robot_diag_control_cpp

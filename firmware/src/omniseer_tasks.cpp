@@ -29,15 +29,40 @@ MicroRosNode      micro_ros_node(motion_controller, imu_bno, sonar_hcsr04, motor
 namespace
 {
 
-  bool     g_micro_ros_ready         = false;
-  uint32_t g_last_micro_ros_retry_ms = 0;
+  bool     g_micro_ros_ready               = false;
+  uint32_t g_last_micro_ros_retry_ms       = 0;
+  uint32_t g_last_reconnect_led_toggle_ms = 0;
+  bool     g_reconnect_led_on             = false;
+
+  void set_micro_ros_led_connected()
+  {
+    g_reconnect_led_on = true;
+    digitalWrite(LED_BUILTIN, HIGH);
+  }
+
+  void update_micro_ros_reconnect_led(uint32_t now_ms)
+  {
+    if ((now_ms - g_last_reconnect_led_toggle_ms) < RECONNECT_LED_BLINK_PERIOD_MS)
+    {
+      return;
+    }
+
+    g_last_reconnect_led_toggle_ms = now_ms;
+    g_reconnect_led_on = !g_reconnect_led_on;
+    digitalWrite(LED_BUILTIN, g_reconnect_led_on ? HIGH : LOW);
+  }
 
 } // namespace
 
 
-void init_micro_ros(){
+void init_micro_ros()
+{
   g_micro_ros_ready = micro_ros_node.init();
   g_last_micro_ros_retry_ms = millis();
+  if (g_micro_ros_ready)
+  {
+    set_micro_ros_led_connected();
+  }
 }
 
 void init_peripherals()
@@ -48,30 +73,40 @@ void init_peripherals()
   sonar_hcsr04.init();
 }
 
-void task_motor_cmd(){
+void task_motor_cmd()
+{
   WheelSpeeds ws{};
   motion_controller.update(micros(), ws);
   motor_driver.set_wheel_speeds_rad_s(ws);
 }
 
-void task_spin_executor(){
-    if (!g_micro_ros_ready)
+void task_spin_executor()
+{
+  if (!g_micro_ros_ready)
+  {
+    const uint32_t now_ms = millis();
+    update_micro_ros_reconnect_led(now_ms);
+    if ((now_ms - g_last_micro_ros_retry_ms) >= INIT_RETRY_PERIOD_MS)
     {
-      const uint32_t now_ms = millis();
-      if ((now_ms - g_last_micro_ros_retry_ms) >= INIT_RETRY_PERIOD_MS)
+      g_last_micro_ros_retry_ms = now_ms;
+      g_micro_ros_ready = micro_ros_node.init();
+      if (g_micro_ros_ready)
       {
-        g_last_micro_ros_retry_ms = now_ms;
-        g_micro_ros_ready = micro_ros_node.init();
+        set_micro_ros_led_connected();
       }
-      return;
     }
+    return;
+  }
 
-    micro_ros_node.spin_executor(SPIN_BUDGET_US);
-    if (!micro_ros_node.is_ready())
-    {
-      g_micro_ros_ready = false;
-      g_last_micro_ros_retry_ms = millis();
-    }
+  micro_ros_node.spin_executor(SPIN_BUDGET_US);
+  if (!micro_ros_node.is_ready())
+  {
+    g_micro_ros_ready = false;
+    g_last_micro_ros_retry_ms = millis();
+    g_last_reconnect_led_toggle_ms = g_last_micro_ros_retry_ms;
+    g_reconnect_led_on = false;
+    digitalWrite(LED_BUILTIN, LOW);
+  }
 }
 
 void task_encoders()

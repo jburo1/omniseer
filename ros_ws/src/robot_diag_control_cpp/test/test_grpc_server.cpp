@@ -35,7 +35,7 @@ TEST(RobotGatewayGrpcTest, ServesSystemStatusAndPreviewUpdatesOverGrpc)
     {
       teleop_commands.push_back(command);
     },
-    TeleopManagerConfig{0.35, 0.8, std::chrono::milliseconds(500), std::chrono::milliseconds(0)});
+    TeleopManagerConfig{0.35, 0.8});
   omniseer_msgs::msg::VisionPerfSummary msg{};
   msg.producer_fps = 22.0F;
   msg.consumer_fps = 21.5F;

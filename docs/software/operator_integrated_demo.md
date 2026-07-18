@@ -119,8 +119,7 @@ Expected observations:
 | Preview toggles but viewer is blank | SRT/GStreamer issue | Run `robot_preview_viewer --mode fakesink` and inspect plugin availability |
 | Vision unavailable in GUI | `/vision/perf` not reaching gateway | Check `ros2 topic echo --once /vision/perf` on the robot |
 | Teleop command rejected as disabled | Teleop was not enabled | Press Enable before directional commands |
-| Teleop command rejected as rate limited | Commands are arriving faster than configured | Use buttons/keys at a slower cadence or tune gateway parameters |
-| Teleop timed out | Deadman timeout elapsed after last command | Disable and re-enable teleop, then continue |
+| Teleop command rejected as out of bounds | Linear or angular step exceeds gateway limits | Lower the GUI step value or tune gateway bounds intentionally |
 | Phase 3 is rejected by the script | Checkout predates the phase profile | Update the checkout and confirm `scripts/omni env` lists `2,3` |
 
 ## Verification Record
