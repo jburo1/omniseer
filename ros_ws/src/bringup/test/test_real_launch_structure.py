@@ -96,8 +96,7 @@ class RealLaunchStructureTests(unittest.TestCase):
             (
                 entity
                 for entity in _walk_entities(launch_description.entities)
-                if isinstance(entity, ExecuteProcess)
-                and "ros2 topic echo --once" in _flatten_launch_value(entity.cmd)
+                if isinstance(entity, ExecuteProcess) and "ros2 topic echo --once" in _flatten_launch_value(entity.cmd)
             ),
             None,
         )

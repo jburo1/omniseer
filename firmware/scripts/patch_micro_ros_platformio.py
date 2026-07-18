@@ -4,9 +4,8 @@
 from __future__ import annotations
 
 import argparse
-from pathlib import Path
 import sys
-
+from pathlib import Path
 
 ORIGINAL = """        # Fix build: Ignore rmw_test_fixture_implementation in rolling
         touch_command = ''
@@ -27,13 +26,7 @@ REPLACEMENT = """        # Ignore dev-only RMW test fixtures that pull in host R
 
 def patch_library_builder(project_dir: Path, pioenv: str) -> bool:
     target = (
-        project_dir
-        / ".pio"
-        / "libdeps"
-        / pioenv
-        / "micro_ros_platformio"
-        / "microros_utils"
-        / "library_builder.py"
+        project_dir / ".pio" / "libdeps" / pioenv / "micro_ros_platformio" / "microros_utils" / "library_builder.py"
     )
     if not target.exists():
         print(f"patch skipped: {target} does not exist yet", file=sys.stderr)
@@ -52,15 +45,7 @@ def patch_library_builder(project_dir: Path, pioenv: str) -> bool:
 
 def touch_existing_ignore_files(project_dir: Path, pioenv: str) -> None:
     base = (
-        project_dir
-        / ".pio"
-        / "libdeps"
-        / pioenv
-        / "micro_ros_platformio"
-        / "build"
-        / "dev"
-        / "src"
-        / "ament_cmake_ros"
+        project_dir / ".pio" / "libdeps" / pioenv / "micro_ros_platformio" / "build" / "dev" / "src" / "ament_cmake_ros"
     )
     for relative in ("rmw_test_fixture", "rmw_test_fixture_implementation"):
         ignore_path = base / relative / "COLCON_IGNORE"

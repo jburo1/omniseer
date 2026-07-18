@@ -191,8 +191,7 @@ def format_preview_response(response: robot_gateway_pb2.SetPreviewModeResponse) 
 
 
 def format_teleop_response(
-    response: robot_gateway_pb2.SetTeleopEnabledResponse
-    | robot_gateway_pb2.SendTeleopCommandResponse,
+    response: robot_gateway_pb2.SetTeleopEnabledResponse | robot_gateway_pb2.SendTeleopCommandResponse,
 ) -> str:
     teleop = response.teleop
     return (

@@ -22,9 +22,7 @@ from robot_diag_control.gateway_client import (
 
 
 def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        description="Minimal host-side monitor shell for the robot gateway"
-    )
+    parser = argparse.ArgumentParser(description="Minimal host-side monitor shell for the robot gateway")
     parser.add_argument("--host", default="127.0.0.1", help="gRPC gateway host")
     parser.add_argument("--port", type=int, default=50051, help="gRPC gateway port")
     parser.add_argument(

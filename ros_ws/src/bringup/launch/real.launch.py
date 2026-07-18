@@ -193,11 +193,11 @@ def _build_real_bringup_actions(
             "-lc",
             (
                 "set -euo pipefail\n"
-                "timeout_sec=\"$1\"\n"
+                'timeout_sec="$1"\n'
                 "check_topic() {\n"
-                "  local topic=\"$1\"\n"
-                "  if ! timeout \"${timeout_sec}\" ros2 topic echo --once \"${topic}\" >/dev/null 2>&1; then\n"
-                "    echo \"Timed out waiting for first message on ${topic}\" >&2\n"
+                '  local topic="$1"\n'
+                '  if ! timeout "${timeout_sec}" ros2 topic echo --once "${topic}" >/dev/null 2>&1; then\n'
+                '    echo "Timed out waiting for first message on ${topic}" >&2\n'
                 "    exit 1\n"
                 "  fi\n"
                 "}\n"
@@ -398,9 +398,7 @@ def generate_launch_description():
         condition=IfCondition(pre_launch_cleanup),
     )
 
-    after_cleanup = RegisterEventHandler(
-        OnProcessExit(target_action=cleanup, on_exit=[launch_group])
-    )
+    after_cleanup = RegisterEventHandler(OnProcessExit(target_action=cleanup, on_exit=[launch_group]))
 
     launch_without_cleanup = GroupAction(
         actions=_build_real_bringup_actions(

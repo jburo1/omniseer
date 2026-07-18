@@ -37,9 +37,7 @@ def generate_launch_description():
     ]
 
     def launch_setup(context):
-        vision_params_path = PathJoinSubstitution(
-            [pkg_bringup, "config", LaunchConfiguration("vision_params_file")]
-        )
+        vision_params_path = PathJoinSubstitution([pkg_bringup, "config", LaunchConfiguration("vision_params_file")])
         override_specs = [
             ("camera.device", "camera_device", str),
             ("camera.width", "camera_width", int),

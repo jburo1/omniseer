@@ -44,14 +44,7 @@ def _handle_teensy_preflight_exit(
                 EmitEvent(event=Shutdown(reason="Teensy preflight failed")),
             ]
 
-        return [
-            LogInfo(
-                msg=(
-                    f"{failure_message}; continuing without micro_ros_agent because "
-                    "require_teensy:=false"
-                )
-            )
-        ]
+        return [LogInfo(msg=(f"{failure_message}; continuing without micro_ros_agent because require_teensy:=false"))]
 
     return _on_exit
 
@@ -105,9 +98,7 @@ def generate_launch_description():
     lidar_angle_compensate = LaunchConfiguration("lidar_angle_compensate")
     encoder_odometry_params_file = LaunchConfiguration("encoder_odometry_params_file")
 
-    encoder_odometry_params_path = PathJoinSubstitution(
-        [pkg_bringup, "config", encoder_odometry_params_file]
-    )
+    encoder_odometry_params_path = PathJoinSubstitution([pkg_bringup, "config", encoder_odometry_params_file])
     wait_for_teensy_script = PathJoinSubstitution([pkg_bringup, "scripts", "wait_for_teensy.py"])
 
     micro_ros_agent_node = Node(

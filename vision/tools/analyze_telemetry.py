@@ -8,9 +8,9 @@ import json
 import math
 import statistics
 import sys
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Iterable
 
 
 def load_jsonl(path: Path) -> list[dict]:
@@ -33,7 +33,7 @@ def load_jsonl(path: Path) -> list[dict]:
 def quantile(values: list[int], p: float) -> int:
     if not values:
         raise ValueError("quantile() requires non-empty values")
-    idx = int(round((len(values) - 1) * p))
+    idx = round((len(values) - 1) * p)
     idx = max(0, min(len(values) - 1, idx))
     return values[idx]
 
@@ -94,7 +94,7 @@ def format_value(value: float | int | None, unit: str) -> str:
     if unit == "count":
         if value is None:
             return "n/a"
-        return str(int(round(float(value))))
+        return str(round(float(value)))
     raise ValueError(f"unsupported unit: {unit}")
 
 
@@ -210,14 +210,10 @@ def build_summary(path: Path, skip_first: int) -> RunSummary:
     consumed_records = filter_status(consumer_records, "consumer_status", "consumed", skip_first)
 
     producer_by_frame = {
-        frame_id: rec
-        for rec in produced_records
-        if (frame_id := get_field(rec, "frame_id")) is not None
+        frame_id: rec for rec in produced_records if (frame_id := get_field(rec, "frame_id")) is not None
     }
     consumer_by_frame = {
-        frame_id: rec
-        for rec in consumed_records
-        if (frame_id := get_field(rec, "frame_id")) is not None
+        frame_id: rec for rec in consumed_records if (frame_id := get_field(rec, "frame_id")) is not None
     }
     matched_frame_ids = sorted(producer_by_frame.keys() & consumer_by_frame.keys())
 
@@ -268,9 +264,7 @@ def build_summary(path: Path, skip_first: int) -> RunSummary:
         "requeue_ns": describe(
             value for rec in produced_records if (value := get_duration(rec, "requeue")) is not None
         ),
-        "total_ns": describe(
-            value for rec in produced_records if (value := get_duration(rec, "total")) is not None
-        ),
+        "total_ns": describe(value for rec in produced_records if (value := get_duration(rec, "total")) is not None),
     }
 
     consumer_metrics = {
@@ -283,9 +277,7 @@ def build_summary(path: Path, skip_first: int) -> RunSummary:
         "acquire_read_ns": describe(
             value for rec in consumed_records if (value := get_duration(rec, "acquire_read")) is not None
         ),
-        "infer_ns": describe(
-            value for rec in consumed_records if (value := get_duration(rec, "infer")) is not None
-        ),
+        "infer_ns": describe(value for rec in consumed_records if (value := get_duration(rec, "infer")) is not None),
         "postprocess_ns": describe(
             value for rec in consumed_records if (value := get_duration(rec, "postprocess")) is not None
         ),
@@ -295,9 +287,7 @@ def build_summary(path: Path, skip_first: int) -> RunSummary:
         "release_ns": describe(
             value for rec in consumed_records if (value := get_duration(rec, "release")) is not None
         ),
-        "total_ns": describe(
-            value for rec in consumed_records if (value := get_duration(rec, "total")) is not None
-        ),
+        "total_ns": describe(value for rec in consumed_records if (value := get_duration(rec, "total")) is not None),
     }
 
     freshness_metrics = {
@@ -314,9 +304,7 @@ def build_summary(path: Path, skip_first: int) -> RunSummary:
         "consumer_sequence_delta": describe(consecutive_deltas(consumed_records, "sequence")),
     }
 
-    schema_versions = sorted(
-        {int(value) for rec in records if (value := get_field(rec, "schema_version")) is not None}
-    )
+    schema_versions = sorted({int(value) for rec in records if (value := get_field(rec, "schema_version")) is not None})
 
     return RunSummary(
         path=path,
@@ -326,12 +314,8 @@ def build_summary(path: Path, skip_first: int) -> RunSummary:
         consumer_records=consumer_records,
         produced_records=produced_records,
         consumed_records=consumed_records,
-        producer_status_counts=collections.Counter(
-            str(rec.get("producer_status")) for rec in producer_records
-        ),
-        consumer_status_counts=collections.Counter(
-            str(rec.get("consumer_status")) for rec in consumer_records
-        ),
+        producer_status_counts=collections.Counter(str(rec.get("producer_status")) for rec in producer_records),
+        consumer_status_counts=collections.Counter(str(rec.get("consumer_status")) for rec in consumer_records),
         producer_metrics=producer_metrics,
         consumer_metrics=consumer_metrics,
         freshness_metrics=freshness_metrics,
@@ -457,14 +441,16 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
     summary = subparsers.add_parser("summary", help="Summarize one telemetry JSONL run.")
     summary.add_argument("jsonl", type=Path)
-    summary.add_argument("--skip-first", type=int, default=0,
-                         help="skip the first N produced/consumed samples before analysis")
+    summary.add_argument(
+        "--skip-first", type=int, default=0, help="skip the first N produced/consumed samples before analysis"
+    )
 
     compare = subparsers.add_parser("compare", help="Compare two telemetry JSONL runs.")
     compare.add_argument("run_a", type=Path)
     compare.add_argument("run_b", type=Path)
-    compare.add_argument("--skip-first", type=int, default=0,
-                         help="skip the first N produced/consumed samples in both runs")
+    compare.add_argument(
+        "--skip-first", type=int, default=0, help="skip the first N produced/consumed samples in both runs"
+    )
     compare.add_argument("--label-a", default="A")
     compare.add_argument("--label-b", default="B")
 
@@ -476,22 +462,22 @@ def main(argv: list[str]) -> int:
     args = parser.parse_args(argv)
 
     try:
-      if args.command == "summary":
-          summary = build_summary(args.jsonl, args.skip_first)
-          print_summary(summary, args.skip_first)
-          return 0
+        if args.command == "summary":
+            summary = build_summary(args.jsonl, args.skip_first)
+            print_summary(summary, args.skip_first)
+            return 0
 
-      if args.command == "compare":
-          run_a = build_summary(args.run_a, args.skip_first)
-          run_b = build_summary(args.run_b, args.skip_first)
-          print_summary(run_a, args.skip_first)
-          print()
-          print_summary(run_b, args.skip_first)
-          print_compare(run_a, run_b, args.label_a, args.label_b)
-          return 0o00
+        if args.command == "compare":
+            run_a = build_summary(args.run_a, args.skip_first)
+            run_b = build_summary(args.run_b, args.skip_first)
+            print_summary(run_a, args.skip_first)
+            print()
+            print_summary(run_b, args.skip_first)
+            print_compare(run_a, run_b, args.label_a, args.label_b)
+            return 0o00
     except (OSError, ValueError) as exc:
-      print(f"analyze_telemetry: {exc}", file=sys.stderr)
-      return 1
+        print(f"analyze_telemetry: {exc}", file=sys.stderr)
+        return 1
 
     parser.error(f"unknown command: {args.command}")
     return 2
