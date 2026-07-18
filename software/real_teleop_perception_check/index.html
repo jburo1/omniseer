@@ -1220,14 +1220,14 @@
 <h1 id="real-teleop-native-perception-check">Real Teleop + Native Perception Check<a class="headerlink" href="#real-teleop-native-perception-check" title="Permanent link">&para;</a></h1>
 <p><em>Status: planned; target-hardware verification record pending</em></p>
 <p>This checklist verifies the minimum integrated real-robot slice required by
-Phase 0.5:</p>
+Phase 2:</p>
 <ul>
 <li>keyboard teleop reaches <code>/mecanum_drive_controller/reference</code></li>
 <li>the native vision bridge publishes <code>/yolo/detections</code></li>
 <li>the native vision bridge publishes <code>/vision/perf</code></li>
 <li>teleop and perception run at the same time</li>
 </ul>
-<p>Do not mark Phase 0.5 complete until one target-hardware run has been recorded
+<p>Do not mark Phase 2 complete until one target-hardware run has been recorded
 in the verification record at the end of this document.</p>
 <h2 id="preconditions">Preconditions<a class="headerlink" href="#preconditions" title="Permanent link">&para;</a></h2>
 <ul>
@@ -1274,20 +1274,20 @@ those values with the real local paths before launch.</p>
 </ul>
 <h2 id="single-entry-helper">Single-Entry Helper<a class="headerlink" href="#single-entry-helper" title="Permanent link">&para;</a></h2>
 <p>For the supported repo-local entrypoint, use:</p>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">0</span>.5
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">2</span>
 </code></pre></div>
 <p>Other useful modes:</p>
 <ul>
-<li><code>scripts/omni run real --phase 0.5 smoke</code></li>
-<li>start the Phase 0.5 bringup, run the passive verifier, then stop</li>
-<li><code>scripts/omni run real --phase 0.5 bringup</code></li>
-<li>run only the Phase 0.5 bringup</li>
+<li><code>scripts/omni run real --phase 2 smoke</code></li>
+<li>start the Phase 2 bringup, run the passive verifier, then stop</li>
+<li><code>scripts/omni run real --phase 2 bringup</code></li>
+<li>run only the Phase 2 bringup</li>
 <li><code>scripts/omni run teleop</code></li>
 <li>run only the stamped keyboard teleop publisher</li>
 <li><code>scripts/omni check real-perception</code></li>
 <li>run only the passive verifier against an existing ROS graph</li>
 </ul>
-<p>The legacy <code>scripts/phase05_real.sh</code> helper still delegates to the same Phase 0.5
+<p>The legacy <code>scripts/phase2_real.sh</code> helper still delegates to the same Phase 2
 implementation for compatibility.</p>
 <h2 id="teleop-command">Teleop Command<a class="headerlink" href="#teleop-command" title="Permanent link">&para;</a></h2>
 <p>In another terminal:</p>
@@ -1408,7 +1408,7 @@ ros2<span class="w"> </span>topic<span class="w"> </span>hz<span class="w"> </sp
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 8, 2026 02:53:47 UTC">July 8, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 18, 2026 03:06:16 UTC">July 18, 2026</span>
   </span>
 
     

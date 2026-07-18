@@ -645,10 +645,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#real-phase-05-operator-check" class="md-nav__link">
+  <a href="#real-phase-2-operator-check" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Real Phase 0.5 operator check
+        Real Phase 2 operator check
       
     </span>
   </a>
@@ -656,10 +656,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#real-phase-075-operator-demo" class="md-nav__link">
+  <a href="#real-phase-3-operator-demo" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Real Phase 0.75 operator demo
+        Real Phase 3 operator demo
       
     </span>
   </a>
@@ -1515,10 +1515,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#real-phase-05-operator-check" class="md-nav__link">
+  <a href="#real-phase-2-operator-check" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Real Phase 0.5 operator check
+        Real Phase 2 operator check
       
     </span>
   </a>
@@ -1526,10 +1526,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#real-phase-075-operator-demo" class="md-nav__link">
+  <a href="#real-phase-3-operator-demo" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Real Phase 0.75 operator demo
+        Real Phase 3 operator demo
       
     </span>
   </a>
@@ -1720,8 +1720,8 @@ scripts/omni<span class="w"> </span>build<span class="w"> </span>firmware
 <p>Build the needed workspace, then launch the selected profile.</p>
 <p>Commands:</p>
 <div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>up<span class="w"> </span>sim
-scripts/omni<span class="w"> </span>up<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">0</span>.75
-scripts/omni<span class="w"> </span>up<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">0</span>.75<span class="w"> </span>smoke
+scripts/omni<span class="w"> </span>up<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">3</span>
+scripts/omni<span class="w"> </span>up<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">3</span><span class="w"> </span>smoke
 </code></pre></div>
 <p>Use <code>up</code> when:</p>
 <ul>
@@ -1730,8 +1730,8 @@ scripts/omni<span class="w"> </span>up<span class="w"> </span>real<span class="w
 </ul>
 <p>Examples:</p>
 <div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>up<span class="w"> </span>sim<span class="w"> </span>headless:<span class="o">=</span><span class="nb">true</span>
-scripts/omni<span class="w"> </span>up<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">0</span>.75
-scripts/omni<span class="w"> </span>up<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">0</span>.75<span class="w"> </span>smoke
+scripts/omni<span class="w"> </span>up<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">3</span>
+scripts/omni<span class="w"> </span>up<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">3</span><span class="w"> </span>smoke
 </code></pre></div>
 <h3 id="test"><code>test</code><a class="headerlink" href="#test" title="Permanent link">&para;</a></h3>
 <p>Run focused local verification flows.</p>
@@ -1765,8 +1765,8 @@ scripts/omni<span class="w"> </span><span class="nb">test</span><span class="w">
 <p>Launch the operator-facing runtime workflows without an implicit build.</p>
 <p>Commands:</p>
 <div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>sim
-scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">0</span>.5
-scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">0</span>.75
+scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">2</span>
+scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">3</span>
 scripts/omni<span class="w"> </span>run<span class="w"> </span>monitor<span class="w"> </span>--host<span class="w"> </span>&lt;robot-ip&gt;
 scripts/omni<span class="w"> </span>run<span class="w"> </span>teleop
 </code></pre></div>
@@ -1784,19 +1784,19 @@ scripts/omni<span class="w"> </span>run<span class="w"> </span>teleop
 <p>Launches the selected real-hardware rollout slice.</p>
 <p>Current supported phases:</p>
 <ul>
-<li><code>0.5</code></li>
-<li><code>0.75</code></li>
+<li><code>2</code></li>
+<li><code>3</code></li>
 </ul>
 <p>Examples:</p>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">0</span>.5
-scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">0</span>.5<span class="w"> </span>smoke
-scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">0</span>.5<span class="w"> </span>bringup<span class="w"> </span>camera_device:<span class="o">=</span>/dev/video11
-scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">0</span>.75
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">2</span>
+scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">2</span><span class="w"> </span>smoke
+scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">2</span><span class="w"> </span>bringup<span class="w"> </span>camera_device:<span class="o">=</span>/dev/video11
+scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">3</span>
 </code></pre></div>
 <p>If <code>--phase</code> is omitted, the command selects the latest stable real phase and
 prints which one it chose.</p>
-<p>Phase <code>0.75</code> defaults to foreground <code>bringup</code> with native vision and the operator
-gateway enabled. Phase <code>0.5</code> retains its background bringup plus keyboard teleop
+<p>Phase <code>3</code> defaults to foreground <code>bringup</code> with native vision and the operator
+gateway enabled. Phase <code>2</code> retains its background bringup plus keyboard teleop
 default.</p>
 <p>Why phases exist:</p>
 <ul>
@@ -1805,9 +1805,9 @@ default.</p>
 <li>the front door stays stable even as later phases are added</li>
 </ul>
 <h4 id="real-run-modes">Real run modes<a class="headerlink" href="#real-run-modes" title="Permanent link">&para;</a></h4>
-<p><code>phase05</code></p>
+<p><code>operator</code></p>
 <ul>
-<li>starts the phase <code>0.5</code> bringup in the background</li>
+<li>starts the phase <code>2</code> bringup in the background</li>
 <li>opens keyboard teleop in the current terminal</li>
 </ul>
 <p><code>smoke</code></p>
@@ -1831,10 +1831,10 @@ default.</p>
 <p>Suggestions:</p>
 <ul>
 <li>use <code>up sim</code> or <code>up real</code> for the normal build-then-run path</li>
-<li>use <code>run real --phase 0.5</code> for interactive operator testing</li>
-<li>use <code>run real --phase 0.5 smoke</code> for a quick integrated health check</li>
-<li>use <code>run real --phase 0.5 bringup</code> when debugging launch or runtime issues</li>
-<li>use <code>run real --phase 0.75</code> on the robot for the operator-integrated demo</li>
+<li>use <code>run real --phase 2</code> for interactive operator testing</li>
+<li>use <code>run real --phase 2 smoke</code> for a quick integrated health check</li>
+<li>use <code>run real --phase 2 bringup</code> when debugging launch or runtime issues</li>
+<li>use <code>run real --phase 3</code> on the robot for the operator-integrated demo</li>
 </ul>
 <h4 id="run-monitor"><code>run monitor</code><a class="headerlink" href="#run-monitor" title="Permanent link">&para;</a></h4>
 <p>Launches the Tk operator monitor from the laptop workspace:</p>
@@ -1853,12 +1853,12 @@ scripts/omni<span class="w"> </span>check<span class="w"> </span>real-perception
 <p>Use this when:</p>
 <ul>
 <li>the real graph is already running</li>
-<li>you want to confirm the Phase <code>0.5</code> teleop/perception boundary topics</li>
+<li>you want to confirm the Phase <code>2</code> teleop/perception boundary topics</li>
 <li>you want a non-driving verification helper</li>
 </ul>
 <p>Suggestion:</p>
 <ul>
-<li>pair this with <code>run real --phase 0.5 smoke</code> for a quick end-to-end check</li>
+<li>pair this with <code>run real --phase 2 smoke</code> for a quick end-to-end check</li>
 <li>use <code>OMNISEER_REQUIRE_DETECTIONS=1</code> when detections must be present for the run to count</li>
 </ul>
 <h3 id="doctor"><code>doctor</code><a class="headerlink" href="#doctor" title="Permanent link">&para;</a></h3>
@@ -1933,23 +1933,23 @@ scripts/omni<span class="w"> </span>run<span class="w"> </span>sim
 <li>simulation bringup changes</li>
 <li>boundary-topic or launch-structure debugging</li>
 </ul>
-<h3 id="real-phase-05-operator-check">Real Phase <code>0.5</code> operator check<a class="headerlink" href="#real-phase-05-operator-check" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">0</span>.5<span class="w"> </span>smoke
+<h3 id="real-phase-2-operator-check">Real Phase <code>2</code> operator check<a class="headerlink" href="#real-phase-2-operator-check" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">2</span><span class="w"> </span>smoke
 </code></pre></div>
 <p>Use this for:</p>
 <ul>
-<li>the quickest integrated Phase <code>0.5</code> health check</li>
+<li>the quickest integrated Phase <code>2</code> health check</li>
 <li>validating teleop and perception boundaries before a longer session</li>
 </ul>
-<h3 id="real-phase-075-operator-demo">Real Phase <code>0.75</code> operator demo<a class="headerlink" href="#real-phase-075-operator-demo" title="Permanent link">&para;</a></h3>
+<h3 id="real-phase-3-operator-demo">Real Phase <code>3</code> operator demo<a class="headerlink" href="#real-phase-3-operator-demo" title="Permanent link">&para;</a></h3>
 <p>Robot:</p>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">0</span>.75
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">3</span>
 </code></pre></div>
 <p>Laptop:</p>
 <div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>monitor<span class="w"> </span>--host<span class="w"> </span>&lt;robot-ip&gt;
 </code></pre></div>
 <p>Active zero-motion acceptance verification from a second robot shell:</p>
-<div class="highlight"><pre><span></span><code><span class="nv">OMNISEER_REQUIRE_DETECTIONS</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">0</span>.75<span class="w"> </span>verify
+<div class="highlight"><pre><span></span><code><span class="nv">OMNISEER_REQUIRE_DETECTIONS</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">3</span><span class="w"> </span>verify
 </code></pre></div>
 <p>Use this for the integrated gateway status, preview, perception, and bounded
 teleop acceptance run described in <code>operator_integrated_demo.md</code>.</p>
@@ -1973,7 +1973,7 @@ scripts/omni<span class="w"> </span>flash<span class="w"> </span>teensy
 <h2 id="compatibility-notes">Compatibility Notes<a class="headerlink" href="#compatibility-notes" title="Permanent link">&para;</a></h2>
 <p>The new front door keeps a compatibility path for existing habits:</p>
 <ul>
-<li><code>scripts/phase05_real.sh</code> delegates to <code>scripts/omni run real --phase 0.5</code></li>
+<li><code>scripts/phase2_real.sh</code> delegates to <code>scripts/omni run real --phase 2</code></li>
 <li><code>scripts/check_real_teleop_perception.sh</code> delegates to <code>scripts/omni check real-perception</code></li>
 </ul>
 <p>Those compatibility wrappers exist to reduce churn. New docs and day-to-day usage
@@ -2013,7 +2013,7 @@ machine.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 18, 2026 02:18:38 UTC">July 18, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 18, 2026 03:06:16 UTC">July 18, 2026</span>
   </span>
 
     
