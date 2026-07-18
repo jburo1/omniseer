@@ -30,31 +30,13 @@ namespace
 {
 
   bool     g_micro_ros_ready         = false;
-  bool     g_micro_ros_connected_once = false;
   uint32_t g_last_micro_ros_retry_ms = 0;
-  uint8_t  g_reconnect_failures      = 0;
-
-  void reboot_mcu_for_micro_ros_recovery()
-  {
-    motion_controller.set_cmd_vel(CmdVel{0.0f, 0.0f, 0.0f}, micros());
-    motor_driver.stop_wheels();
-    delay(50);
-    SCB_AIRCR = 0x05FA0004;
-    while (true)
-    {
-    }
-  }
 
 } // namespace
 
 
 void init_micro_ros(){
   g_micro_ros_ready = micro_ros_node.init();
-  if (g_micro_ros_ready)
-  {
-    g_micro_ros_connected_once = true;
-    g_reconnect_failures = 0;
-  }
   g_last_micro_ros_retry_ms = millis();
 }
 
@@ -80,19 +62,6 @@ void task_spin_executor(){
       {
         g_last_micro_ros_retry_ms = now_ms;
         g_micro_ros_ready = micro_ros_node.init();
-        if (g_micro_ros_ready)
-        {
-          g_micro_ros_connected_once = true;
-          g_reconnect_failures = 0;
-        }
-        else if (g_micro_ros_connected_once)
-        {
-          ++g_reconnect_failures;
-          if (g_reconnect_failures >= RECONNECT_RESET_ATTEMPTS)
-          {
-            reboot_mcu_for_micro_ros_recovery();
-          }
-        }
       }
       return;
     }
@@ -101,7 +70,6 @@ void task_spin_executor(){
     if (!micro_ros_node.is_ready())
     {
       g_micro_ros_ready = false;
-      g_reconnect_failures = 0;
       g_last_micro_ros_retry_ms = millis();
     }
 }

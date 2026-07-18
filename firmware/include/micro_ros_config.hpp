@@ -22,7 +22,6 @@ namespace micro_ros_config {
     constexpr uint32_t    AGENT_PING_PERIOD_MS   = 1000;
     constexpr uint32_t    AGENT_PING_TIMEOUT_MS  = 50;
     constexpr uint8_t     AGENT_PING_ATTEMPTS    = 1;
-    constexpr uint8_t     RECONNECT_RESET_ATTEMPTS = 5;
     constexpr uint32_t    RESYNC_PERIOD_MS       = 30000;
     constexpr uint32_t    RESYNC_TIMEOUT_MS      = 50;
     constexpr size_t      DEBUG_BUF_SIZE = 128;
