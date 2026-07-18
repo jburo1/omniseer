@@ -954,6 +954,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#overlaysnapshot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OverlaySnapshot
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#previewstatus" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1337,6 +1348,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#overlaysnapshot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OverlaySnapshot
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#previewstatus" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1532,24 +1554,22 @@ laptop application and the robot gateway.</p>
   over SRT and should not force extra transport detail into the first API slice.</p>
 </li>
 <li>
-<p>Operator safety: teleop-related operations later need stricter semantics than
-  diagnostics operations.</p>
+<p>Operator safety: teleop operations use bounded commands and explicit enable/disable
+  state rather than raw topic passthrough.</p>
 </li>
 </ul>
 <h2 id="initial-scope-v1">Initial Scope (v1)<a class="headerlink" href="#initial-scope-v1" title="Permanent link">&para;</a></h2>
 <p>The first API surface should stay narrow.</p>
-<p>Recommended initial RPCs:</p>
+<p>Implemented unary RPCs:</p>
 <ul>
 <li><code>GetSystemStatus</code></li>
 <li><code>SetPreviewMode</code></li>
+<li><code>SetTeleopEnabled</code></li>
+<li><code>SendTeleopCommand</code></li>
+<li><code>GetOverlaySnapshot</code></li>
 </ul>
-<p>Optional early additions if they prove useful:</p>
-<ul>
-<li><code>SubscribeEvents</code></li>
-<li><code>Ping</code></li>
-</ul>
-<p>Teleop and cloud-facing operations remain outside v1. Experiment export control should
-be considered only after the local recorder contract is stable.</p>
+<p>Streaming events, cloud-facing operations, and experiment export control remain
+deferred until the local recorder contract is stable.</p>
 <h2 id="high-level-api-shape">High-Level API Shape<a class="headerlink" href="#high-level-api-shape" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code>Operator App  -- gRPC --&gt;  Robot Gateway  -- ROS adapter --&gt; internal ROS graph
                                      |
@@ -1561,6 +1581,9 @@ Keep it small and evolve additively.</p>
 <div class="highlight"><pre><span></span><code><span class="kd">service</span><span class="w"> </span><span class="n">RobotGateway</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">rpc</span><span class="w"> </span><span class="n">GetSystemStatus</span><span class="p">(</span><span class="n">GetSystemStatusRequest</span><span class="p">)</span><span class="w"> </span><span class="k">returns</span><span class="w"> </span><span class="p">(</span><span class="n">SystemStatus</span><span class="p">);</span>
 <span class="w">  </span><span class="k">rpc</span><span class="w"> </span><span class="n">SetPreviewMode</span><span class="p">(</span><span class="n">SetPreviewModeRequest</span><span class="p">)</span><span class="w"> </span><span class="k">returns</span><span class="w"> </span><span class="p">(</span><span class="n">SetPreviewModeResponse</span><span class="p">);</span>
+<span class="w">  </span><span class="k">rpc</span><span class="w"> </span><span class="n">SetTeleopEnabled</span><span class="p">(</span><span class="n">SetTeleopEnabledRequest</span><span class="p">)</span><span class="w"> </span><span class="k">returns</span><span class="w"> </span><span class="p">(</span><span class="n">SetTeleopEnabledResponse</span><span class="p">);</span>
+<span class="w">  </span><span class="k">rpc</span><span class="w"> </span><span class="n">SendTeleopCommand</span><span class="p">(</span><span class="n">SendTeleopCommandRequest</span><span class="p">)</span><span class="w"> </span><span class="k">returns</span><span class="w"> </span><span class="p">(</span><span class="n">SendTeleopCommandResponse</span><span class="p">);</span>
+<span class="w">  </span><span class="k">rpc</span><span class="w"> </span><span class="n">GetOverlaySnapshot</span><span class="p">(</span><span class="n">GetOverlaySnapshotRequest</span><span class="p">)</span><span class="w"> </span><span class="k">returns</span><span class="w"> </span><span class="p">(</span><span class="n">OverlaySnapshot</span><span class="p">);</span>
 <span class="p">}</span>
 </code></pre></div>
 <h2 id="current-c-server-shape">Current C++ Server Shape<a class="headerlink" href="#current-c-server-shape" title="Permanent link">&para;</a></h2>
@@ -1621,6 +1644,20 @@ Keep it small and evolve additively.</p>
 <li>robot mode or mission state</li>
 <li>broader health summary</li>
 <li>build/runtime details beyond gateway version</li>
+</ul>
+<h3 id="overlaysnapshot"><code>OverlaySnapshot</code><a class="headerlink" href="#overlaysnapshot" title="Permanent link">&para;</a></h3>
+<p>Current contents:</p>
+<ul>
+<li>current <code>SystemStatus</code></li>
+<li>latest detection overlay snapshot from <code>/yolo/detections</code></li>
+<li>detection freshness based on gateway receipt time</li>
+<li>source-space detection geometry for laptop-side scaling over preview video</li>
+</ul>
+<p>Deferred until later if needed:</p>
+<ul>
+<li>exact video/detection frame synchronization</li>
+<li>streaming detection events</li>
+<li>viewer-specific confidence filtering</li>
 </ul>
 <h3 id="previewstatus"><code>PreviewStatus</code><a class="headerlink" href="#previewstatus" title="Permanent link">&para;</a></h3>
 <p>Current contents:</p>
@@ -1756,7 +1793,7 @@ work and are not part of the current API.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 7, 2026 00:33:52 UTC">July 7, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 18, 2026 17:41:07 UTC">July 18, 2026</span>
   </span>
 
     
