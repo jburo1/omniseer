@@ -468,6 +468,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#up" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        up
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#test" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -544,6 +555,17 @@
     <span class="md-ellipsis">
       
         check
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#doctor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        doctor
       
     </span>
   </a>
@@ -1316,6 +1338,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#up" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        up
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#test" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1392,6 +1425,17 @@
     <span class="md-ellipsis">
       
         check
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#doctor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        doctor
       
     </span>
   </a>
@@ -1592,9 +1636,11 @@ scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="
 </code></pre></div>
 <p>Useful discovery command:</p>
 <div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>env
+scripts/omni<span class="w"> </span>doctor
 </code></pre></div>
-<p>This prints the resolved repo root, ROS setup path, workspace setup path, and the
-latest stable real phase.</p>
+<p><code>env</code> prints resolved path/default settings. <code>doctor</code> checks local toolchains,
+workspace setup, hardware SDKs, camera devices, installed ROS packages, and the
+real vision asset paths used by the robot demo.</p>
 <h2 id="command-groups">Command Groups<a class="headerlink" href="#command-groups" title="Permanent link">&para;</a></h2>
 <h3 id="setup"><code>setup</code><a class="headerlink" href="#setup" title="Permanent link">&para;</a></h3>
 <p>Install local prerequisites needed for the portable ROS workflow.</p>
@@ -1616,14 +1662,42 @@ latest stable real phase.</p>
 <h3 id="build"><code>build</code><a class="headerlink" href="#build" title="Permanent link">&para;</a></h3>
 <p>Run the main local build flows without reassembling the underlying commands.</p>
 <p>Commands:</p>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>build<span class="w"> </span>ros
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>build
+scripts/omni<span class="w"> </span>build<span class="w"> </span>all
+scripts/omni<span class="w"> </span>build<span class="w"> </span>strict
+scripts/omni<span class="w"> </span>build<span class="w"> </span>ros<span class="w"> </span>--with-vision
+scripts/omni<span class="w"> </span>build<span class="w"> </span>ros<span class="w"> </span>--without-vision
 scripts/omni<span class="w"> </span>build<span class="w"> </span>vision
 scripts/omni<span class="w"> </span>build<span class="w"> </span>firmware
 </code></pre></div>
+<p>Use <code>build</code> or <code>build all</code> when:</p>
+<ul>
+<li>you want the normal product build from one command</li>
+<li>you want ROS built first, native vision built when CMake is available, and
+  firmware built when PlatformIO is available</li>
+<li>you want missing optional toolchains to warn instead of stopping the whole build</li>
+</ul>
+<p>Use <code>build strict</code> when:</p>
+<ul>
+<li>you want the same product build but missing native vision or firmware toolchains
+  should fail the command</li>
+</ul>
 <p>Use <code>build ros</code> when:</p>
 <ul>
 <li>you changed ROS packages, launch files, configs, or message wiring</li>
 <li>you need the workspace install tree refreshed before a launch</li>
+<li>you are on the robot and want hardware-only ROS packages included when their
+  SDK files are installed</li>
+</ul>
+<p>Use <code>build ros --with-vision</code> when:</p>
+<ul>
+<li>you need <code>omniseer_vision_bridge</code> installed for native RKNN/RGA perception</li>
+<li>you want the build to fail loudly if RKNN/RGA development files are missing</li>
+</ul>
+<p>Use <code>build ros --without-vision</code> when:</p>
+<ul>
+<li>you are on a robot image but intentionally want the portable ROS package set</li>
+<li>you are checking launch/package changes without rebuilding the native bridge</li>
 </ul>
 <p>Use <code>build vision</code> when:</p>
 <ul>
@@ -1637,9 +1711,28 @@ scripts/omni<span class="w"> </span>build<span class="w"> </span>firmware
 </ul>
 <p>Suggestion:</p>
 <ul>
-<li><code>build ros</code> is the best default when your change touches launch, bringup, adapters, gateway diagnostics, or ROS message surfaces</li>
+<li><code>build</code> is the best default before an operator run or handoff</li>
+<li><code>build ros</code> is the best focused target when your change touches launch, bringup, adapters, gateway diagnostics, or ROS message surfaces</li>
+<li><code>build ros --with-vision</code> requires RKNN/RGA development files and is expected to fail on hosts without the target SDKs</li>
 <li><code>build vision</code> is better than a full ROS build when only the native C++ vision pipeline changed</li>
 </ul>
+<h3 id="up"><code>up</code><a class="headerlink" href="#up" title="Permanent link">&para;</a></h3>
+<p>Build the needed workspace, then launch the selected profile.</p>
+<p>Commands:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>up<span class="w"> </span>sim
+scripts/omni<span class="w"> </span>up<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">0</span>.75
+scripts/omni<span class="w"> </span>up<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">0</span>.75<span class="w"> </span>smoke
+</code></pre></div>
+<p>Use <code>up</code> when:</p>
+<ul>
+<li>you want one command for the normal build-then-run loop</li>
+<li>you want launch-only commands to stay available for diagnostic runs</li>
+</ul>
+<p>Examples:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>up<span class="w"> </span>sim<span class="w"> </span>headless:<span class="o">=</span><span class="nb">true</span>
+scripts/omni<span class="w"> </span>up<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">0</span>.75
+scripts/omni<span class="w"> </span>up<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">0</span>.75<span class="w"> </span>smoke
+</code></pre></div>
 <h3 id="test"><code>test</code><a class="headerlink" href="#test" title="Permanent link">&para;</a></h3>
 <p>Run focused local verification flows.</p>
 <p>Commands:</p>
@@ -1669,7 +1762,7 @@ scripts/omni<span class="w"> </span><span class="nb">test</span><span class="w">
 <li>use <code>test ros</code> after wider ROS package changes</li>
 </ul>
 <h3 id="run"><code>run</code><a class="headerlink" href="#run" title="Permanent link">&para;</a></h3>
-<p>Launch the operator-facing runtime workflows.</p>
+<p>Launch the operator-facing runtime workflows without an implicit build.</p>
 <p>Commands:</p>
 <div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>sim
 scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">0</span>.5
@@ -1737,6 +1830,7 @@ default.</p>
 </ul>
 <p>Suggestions:</p>
 <ul>
+<li>use <code>up sim</code> or <code>up real</code> for the normal build-then-run path</li>
 <li>use <code>run real --phase 0.5</code> for interactive operator testing</li>
 <li>use <code>run real --phase 0.5 smoke</code> for a quick integrated health check</li>
 <li>use <code>run real --phase 0.5 bringup</code> when debugging launch or runtime issues</li>
@@ -1753,7 +1847,8 @@ arguments are forwarded to <code>robot_monitor_gui</code>.</p>
 <p>Run passive validation commands that inspect an existing graph rather than building
 or launching it.</p>
 <p>Command:</p>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>check<span class="w"> </span>real-perception
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>check
+scripts/omni<span class="w"> </span>check<span class="w"> </span>real-perception
 </code></pre></div>
 <p>Use this when:</p>
 <ul>
@@ -1765,6 +1860,17 @@ or launching it.</p>
 <ul>
 <li>pair this with <code>run real --phase 0.5 smoke</code> for a quick end-to-end check</li>
 <li>use <code>OMNISEER_REQUIRE_DETECTIONS=1</code> when detections must be present for the run to count</li>
+</ul>
+<h3 id="doctor"><code>doctor</code><a class="headerlink" href="#doctor" title="Permanent link">&para;</a></h3>
+<p>Report local environment state relevant to build and robot runs.</p>
+<p>Command:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>doctor
+</code></pre></div>
+<p>Use this when:</p>
+<ul>
+<li>a build or launch fails due to missing workspace, SDK, device, or asset state</li>
+<li>you are moving between laptop, container, and robot images</li>
+<li>you want to confirm whether <code>omniseer_vision_bridge</code> is installed and buildable</li>
 </ul>
 <h3 id="flash"><code>flash</code><a class="headerlink" href="#flash" title="Permanent link">&para;</a></h3>
 <p>Run hardware flashing helpers.</p>
@@ -1907,7 +2013,7 @@ machine.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 18, 2026 00:20:23 UTC">July 18, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 18, 2026 02:18:38 UTC">July 18, 2026</span>
   </span>
 
     
