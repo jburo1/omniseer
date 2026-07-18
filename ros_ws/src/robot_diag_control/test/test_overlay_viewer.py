@@ -7,8 +7,11 @@ from robot_diag_control.overlay_viewer import (
     _build_appsink_pipeline,
     _build_parser,
     _class_color,
+    _format_pipeline_open_error,
     _import_cv2,
+    _opencv_gstreamer_enabled,
     _scale_detection_box,
+    _validate_opencv_videoio_support,
 )
 
 
@@ -91,3 +94,23 @@ class OverlayViewerTests(unittest.TestCase):
     def test_import_cv2_reports_actionable_error(self):
         with self.assertRaisesRegex(RuntimeError, "python3-opencv"):
             _import_cv2()
+
+    def test_opencv_gstreamer_enabled_reads_build_information(self):
+        cv2 = mock.Mock()
+        cv2.getBuildInformation.return_value = "Video I/O:\n    GStreamer:                   YES (1.20.3)\n"
+
+        self.assertTrue(_opencv_gstreamer_enabled(cv2))
+
+    def test_validate_opencv_videoio_support_rejects_missing_gstreamer(self):
+        cv2 = mock.Mock()
+        cv2.getBuildInformation.return_value = "Video I/O:\n    GStreamer:                   NO\n"
+
+        with self.assertRaisesRegex(RuntimeError, "built without GStreamer"):
+            _validate_opencv_videoio_support(cv2)
+
+    def test_format_pipeline_open_error_includes_pipeline_and_action(self):
+        message = _format_pipeline_open_error("srtsrc ! appsink")
+
+        self.assertIn("failed to open overlay video pipeline", message)
+        self.assertIn("pipeline: srtsrc ! appsink", message)
+        self.assertIn("robot_preview_viewer", message)

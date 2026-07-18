@@ -257,6 +257,54 @@ def _import_cv2() -> Any:
     return cv2
 
 
+def _opencv_gstreamer_enabled(cv2: Any) -> bool | None:
+    get_build_information = getattr(cv2, "getBuildInformation", None)
+    if not callable(get_build_information):
+        return None
+
+    try:
+        build_information = get_build_information()
+    except Exception:
+        return None
+
+    for line in str(build_information).splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("GStreamer:"):
+            continue
+        value = stripped.split(":", maxsplit=1)[1].strip().lower()
+        if value.startswith("yes"):
+            return True
+        if value.startswith("no"):
+            return False
+
+    return None
+
+
+def _validate_opencv_videoio_support(cv2: Any) -> None:
+    if _opencv_gstreamer_enabled(cv2) is not False:
+        return
+
+    raise RuntimeError(
+        "OpenCV is installed, but it was built without GStreamer video I/O support. "
+        "The overlay viewer needs cv2.VideoCapture(..., cv2.CAP_GSTREAMER) to decode "
+        "the SRT preview into frames. On Ubuntu, install the distro OpenCV package "
+        "(python3-opencv) and make sure a pip opencv-python wheel is not shadowing it. "
+        "For a non-overlay preview path, use robot_preview_viewer."
+    )
+
+
+def _format_pipeline_open_error(pipeline: str) -> str:
+    return "\n".join(
+        [
+            "failed to open overlay video pipeline",
+            f"pipeline: {pipeline}",
+            "Check that the laptop can reach the robot's SRT preview port, that local firewall rules allow it, "
+            "and that Python OpenCV was built with GStreamer support.",
+            "For transport-only validation, run robot_preview_viewer with --mode=fakesink and a short duration.",
+        ]
+    )
+
+
 def _run_viewer(
     cv2: Any,
     capture: Any,
@@ -313,6 +361,7 @@ def run(parsed: argparse.Namespace) -> int:
     decoder_element = _validate_gstreamer_support(parsed)
     pipeline = _build_appsink_pipeline(parsed, decoder_element=decoder_element)
     cv2 = _import_cv2()
+    _validate_opencv_videoio_support(cv2)
     preview_was_enabled = False
 
     with grpc.insecure_channel(target_for(parsed.host, parsed.port)) as channel:
@@ -326,7 +375,7 @@ def run(parsed: argparse.Namespace) -> int:
         capture = cv2.VideoCapture(pipeline, cv2.CAP_GSTREAMER)
         try:
             if not capture.isOpened():
-                print("failed to open overlay video pipeline", file=sys.stderr)
+                print(_format_pipeline_open_error(pipeline), file=sys.stderr)
                 return 1
             return _run_viewer(cv2, capture, stub, parsed)
         finally:
@@ -339,7 +388,11 @@ def run(parsed: argparse.Namespace) -> int:
 
 
 def main(args: list[str] | None = None) -> int:
-    return run(parse_args(args))
+    try:
+        return run(parse_args(args))
+    except RuntimeError as error:
+        print(str(error), file=sys.stderr)
+        return 1
 
 
 if __name__ == "__main__":

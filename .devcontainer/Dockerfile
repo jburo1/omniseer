@@ -97,11 +97,23 @@ USER ${USERNAME}
 # Install uv and verify
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh && ~/.local/bin/uv --version
 
-# Install deps defined in pyproject (dev + perception) *into /opt/venv*
+# Install deps defined in pyproject (dev + perception) *into /opt/venv*.
+# Keep OpenCV on the Ubuntu package path: pip OpenCV wheels shadow python3-opencv
+# and do not provide the GStreamer video I/O backend needed by operator preview.
 RUN bash -lc 'source /opt/venv/bin/activate && cd /tmp/app && \
   ~/.local/bin/uv export --frozen --extra dev --extra perception -o /tmp/req.txt && \
+  sed -i "/^opencv-python==/d;/^opencv-python-headless==/d" /tmp/req.txt && \
   ~/.local/bin/uv pip install -U pip && \
-  ~/.local/bin/uv pip install -r /tmp/req.txt'
+  ~/.local/bin/uv pip install --no-deps -r /tmp/req.txt && \
+  ~/.local/bin/uv pip uninstall opencv-python opencv-python-headless || true && \
+  python - <<'"'"'PY'"'"'
+import cv2
+
+print(cv2.__file__)
+gstreamer_lines = [line for line in cv2.getBuildInformation().splitlines() if "GStreamer" in line]
+print(gstreamer_lines)
+assert gstreamer_lines and "YES" in gstreamer_lines[0], "OpenCV must come from python3-opencv with GStreamer enabled"
+PY'
 
 ARG TORCH_MODE=cpu   # cpu | cuda
 # PyTorch CUDA wheels (CUDA 12.8 channel)
