@@ -11,6 +11,7 @@ from robot_diag_control.api import robot_gateway_pb2
 from robot_diag_control.gateway_client import (
     PROFILE_TO_PROTO,
     create_stub,
+    format_operator_status,
     format_preview_response,
     format_system_status,
     format_teleop_response,
@@ -131,6 +132,7 @@ class RobotMonitorGui:
         self._watch_after_id: str | None = None
         self._viewer_process: subprocess.Popen[str] | None = None
         self._last_status: robot_gateway_pb2.SystemStatus | None = None
+        self._last_fault_line: str | None = None
 
         self._host_var = tk.StringVar(value=parsed.host)
         self._port_var = tk.StringVar(value=str(parsed.port))
@@ -209,7 +211,7 @@ class RobotMonitorGui:
         self._build_teleop_controls(teleop_frame)
         body.add(teleop_frame, weight=1)
 
-        status_frame = ttk.LabelFrame(body, text="System Status", padding=8)
+        status_frame = ttk.LabelFrame(body, text="Operator Overview", padding=8)
         self._status_text = scrolledtext.ScrolledText(
             status_frame,
             wrap=tk.WORD,
@@ -333,7 +335,12 @@ class RobotMonitorGui:
             return
 
         self._last_status = status
-        self._set_status_text(format_system_status(status))
+        operator_status = format_operator_status(status)
+        self._set_status_text(operator_status + "\n\nRaw status\n" + format_system_status(status))
+        fault_line = operator_status.splitlines()[-1] if operator_status else None
+        if fault_line and fault_line != "FAULT none" and fault_line != self._last_fault_line:
+            self._append_log(fault_line)
+        self._last_fault_line = fault_line
         self._append_log("status refreshed")
 
     def start_watch(self) -> None:

@@ -37,6 +37,61 @@ TELEOP_STATE_NAMES = {
 }
 
 
+def _odom_freshness(health: robot_gateway_pb2.RobotHealth) -> str:
+    if not health.odom_available:
+        return "MISSING"
+    if health.odom_stale:
+        return "STALE"
+    return "OK"
+
+
+def _vision_freshness(vision: robot_gateway_pb2.VisionStatus) -> str:
+    if not vision.available:
+        return "MISSING"
+    if vision.stale:
+        return "STALE"
+    return "OK"
+
+
+def _preview_state(preview: robot_gateway_pb2.PreviewStatus) -> str:
+    return STATE_NAMES.get(preview.state, "unknown").upper()
+
+
+def _teleop_state(teleop: robot_gateway_pb2.TeleopStatus) -> str:
+    return TELEOP_STATE_NAMES.get(teleop.state, "unknown").upper()
+
+
+def _operator_faults(response: robot_gateway_pb2.SystemStatus) -> list[str]:
+    faults: list[str] = []
+    health = response.health
+    preview = response.preview
+    vision = response.vision
+    teleop = response.teleop
+
+    if health.state == robot_gateway_pb2.ROBOT_HEALTH_DEGRADED or not health.ready:
+        faults.append(health.summary or "robot health degraded")
+    if not health.odom_available:
+        faults.append("ODOMETRY MISSING")
+    elif health.odom_stale:
+        faults.append("ODOMETRY STALE")
+    if not vision.available:
+        faults.append("VISION MISSING")
+    elif vision.stale:
+        faults.append("VISION STALE")
+    if vision.capture_fatal_error_count > 0:
+        faults.append(f"CAMERA CAPTURE FATALS {vision.capture_fatal_error_count}")
+    if vision.infer_error_count > 0:
+        faults.append(f"INFERENCE ERRORS {vision.infer_error_count}")
+    if teleop.timed_out or teleop.state == robot_gateway_pb2.TELEOP_TIMED_OUT:
+        faults.append("DEADMAN TIMEOUT")
+    if preview.last_error:
+        faults.append(f"PREVIEW ERROR: {preview.last_error}")
+    if teleop.last_error:
+        faults.append(f"TELEOP ERROR: {teleop.last_error}")
+
+    return faults
+
+
 def target_for(host: str, port: int) -> str:
     return f"{host}:{port}"
 
@@ -147,6 +202,45 @@ def format_system_status(response: robot_gateway_pb2.SystemStatus) -> str:
         f"{stale_suffix}"
     )
     return "\n".join(lines)
+
+
+def format_operator_status(response: robot_gateway_pb2.SystemStatus) -> str:
+    health = response.health
+    preview = response.preview
+    vision = response.vision
+    teleop = response.teleop
+
+    top_strip = (
+        f"REAL | {_teleop_state(teleop)} | "
+        f"{'READY' if health.ready else 'NOT READY'} | "
+        f"ODOM {_odom_freshness(health)} | "
+        f"VISION {_vision_freshness(vision)} | "
+        f"PREVIEW {_preview_state(preview)}"
+    )
+    perception_strip = (
+        "CAM "
+        f"{vision.producer_fps:.1f} FPS | "
+        f"DET {vision.consumer_fps:.1f} FPS | "
+        f"LAT {vision.last_infer_ms:.0f} ms | "
+        f"ERR infer={vision.infer_error_count} capture={vision.capture_fatal_error_count}"
+        if vision.available
+        else "CAM -- FPS | DET -- FPS | LAT -- ms | VISION MISSING"
+    )
+    motion_strip = (
+        f"MEAS vx {health.linear_speed_mps:+.2f} m/s | "
+        f"wz {health.angular_speed_rad_s:+.2f} rad/s | "
+        f"CMD AGE {teleop.last_command_age_ms} ms | "
+        f"DEADMAN {'TIMEOUT' if teleop.timed_out else 'ACTIVE' if teleop.enabled else 'DISABLED'}"
+    )
+    bounds_strip = (
+        f"BOUNDS vx <= {teleop.max_linear_mps:.2f} m/s | "
+        f"wz <= {teleop.max_angular_rad_s:.2f} rad/s | "
+        f"PROFILE {PROFILE_NAMES.get(preview.profile, 'unknown')}"
+    )
+
+    faults = _operator_faults(response)
+    fault_line = "FAULT none" if not faults else "FAULT " + " | ".join(faults)
+    return "\n".join([top_strip, perception_strip, motion_strip, bounds_strip, fault_line])
 
 
 def format_system_status_summary(response: robot_gateway_pb2.SystemStatus) -> str:

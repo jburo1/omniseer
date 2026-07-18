@@ -8,6 +8,7 @@ from robot_diag_control.overlay_viewer import (
     _build_parser,
     _class_color,
     _format_pipeline_open_error,
+    _hud_lines,
     _import_cv2,
     _opencv_gstreamer_enabled,
     _scale_detection_box,
@@ -89,6 +90,48 @@ class OverlayViewerTests(unittest.TestCase):
 
         self.assertEqual(color, _class_color("person", 0))
         self.assertTrue(all(80 <= channel <= 219 for channel in color))
+
+    def test_hud_lines_use_operator_view_language(self):
+        snapshot = robot_gateway_pb2.OverlaySnapshot(
+            status=robot_gateway_pb2.SystemStatus(
+                health=robot_gateway_pb2.RobotHealth(
+                    state=robot_gateway_pb2.ROBOT_HEALTH_DEGRADED,
+                    ready=False,
+                    summary="waiting for odometry",
+                    odom_available=True,
+                    odom_stale=True,
+                    linear_speed_mps=0.18,
+                    angular_speed_rad_s=-0.27,
+                ),
+                preview=robot_gateway_pb2.PreviewStatus(profile=robot_gateway_pb2.PREVIEW_PROFILE_BALANCED),
+                vision=robot_gateway_pb2.VisionStatus(
+                    available=True,
+                    stale=False,
+                    producer_fps=30.0,
+                    consumer_fps=9.0,
+                    last_infer_ms=104.0,
+                ),
+                teleop=robot_gateway_pb2.TeleopStatus(
+                    state=robot_gateway_pb2.TELEOP_TIMED_OUT,
+                    enabled=True,
+                    timed_out=True,
+                    last_command_age_ms=380,
+                ),
+            ),
+            detections=robot_gateway_pb2.DetectionOverlayStatus(
+                available=True,
+                stale=False,
+                age_ms=42,
+                detection_count=3,
+            ),
+        )
+
+        lines = _hud_lines(snapshot, overlay_enabled=True, min_score=0.25)
+
+        self.assertEqual(lines[0], "FAULT waiting for odometry | ODOM STALE | DEADMAN TIMEOUT")
+        self.assertIn("REAL | TIMED_OUT | NOT READY | ODOM STALE | VISION OK", lines)
+        self.assertIn("CAM 30.0 FPS | DET 9.0 FPS | LAT 104 ms | OBJ 3 | AGE 42 ms", lines)
+        self.assertIn("CMD AGE 380 ms | DEADMAN TIMEOUT", "\n".join(lines))
 
     @mock.patch.dict("sys.modules", {"cv2": None})
     def test_import_cv2_reports_actionable_error(self):

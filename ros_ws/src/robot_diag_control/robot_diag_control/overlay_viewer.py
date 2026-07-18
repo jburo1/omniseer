@@ -207,7 +207,80 @@ def _draw_detections(
         thickness = 1 if detections.stale else 2
         cv2.rectangle(frame, (box.x1, box.y1), (box.x2, box.y2), color, thickness)
         label = f"{detection.class_name or detection.class_id} {detection.score:.2f}"
+        if detection.track_id:
+            label += f" ID:{detection.track_id}"
+        label += f" {detections.age_ms}ms"
         _put_label(cv2, frame, label, (box.x1, max(16, box.y1)), color=(255, 255, 255), background=color)
+
+
+def _hud_lines(
+    snapshot: robot_gateway_pb2.OverlaySnapshot | None,
+    *,
+    overlay_enabled: bool,
+    min_score: float,
+) -> list[str]:
+    if snapshot is None:
+        return ["gateway: waiting for overlay snapshot"]
+
+    status = snapshot.status
+    detections = snapshot.detections
+    vision = status.vision
+    health = status.health
+    preview = status.preview
+    teleop = status.teleop
+
+    odom_state = "MISSING"
+    if health.odom_available:
+        odom_state = "STALE" if health.odom_stale else "OK"
+
+    vision_state = "MISSING"
+    if vision.available:
+        vision_state = "STALE" if vision.stale else "OK"
+
+    det_state = "MISSING"
+    if detections.available:
+        det_state = "STALE" if detections.stale else "OK"
+
+    deadman_state = "TIMEOUT" if teleop.timed_out else "ACTIVE" if teleop.enabled else "DISABLED"
+    fault_parts: list[str] = []
+    if health.state == robot_gateway_pb2.ROBOT_HEALTH_DEGRADED or not health.ready:
+        fault_parts.append(health.summary or "HEALTH DEGRADED")
+    if odom_state != "OK":
+        fault_parts.append(f"ODOM {odom_state}")
+    if vision_state != "OK":
+        fault_parts.append(f"VISION {vision_state}")
+    if det_state != "OK":
+        fault_parts.append(f"DET {det_state}")
+    if vision.capture_fatal_error_count:
+        fault_parts.append(f"CAPTURE ERR {vision.capture_fatal_error_count}")
+    if vision.infer_error_count:
+        fault_parts.append(f"INFER ERR {vision.infer_error_count}")
+    if teleop.timed_out:
+        fault_parts.append("DEADMAN TIMEOUT")
+
+    lines = [
+        "REAL | "
+        f"{TELEOP_STATE_NAMES.get(teleop.state, 'unknown').upper()} | "
+        f"{'READY' if health.ready else 'NOT READY'} | "
+        f"ODOM {odom_state} | VISION {vision_state}",
+        "CAM "
+        f"{vision.producer_fps:.1f} FPS | "
+        f"DET {vision.consumer_fps:.1f} FPS | "
+        f"LAT {vision.last_infer_ms:.0f} ms | "
+        f"OBJ {detections.detection_count} | AGE {detections.age_ms} ms",
+        "MEAS "
+        f"vx {health.linear_speed_mps:+.2f} | "
+        f"wz {health.angular_speed_rad_s:+.2f} | "
+        f"CMD AGE {teleop.last_command_age_ms} ms | "
+        f"DEADMAN {deadman_state}",
+        "PREVIEW "
+        f"{PROFILE_NAMES.get(preview.profile, 'unknown')} | "
+        f"overlay={'on' if overlay_enabled else 'off'} | "
+        f"min={min_score:.2f}",
+    ]
+    if fault_parts:
+        lines.insert(0, "FAULT " + " | ".join(fault_parts))
+    return lines
 
 
 def _draw_hud(
@@ -218,31 +291,15 @@ def _draw_hud(
     overlay_enabled: bool,
     min_score: float,
 ) -> None:
-    if snapshot is None:
-        lines = ["gateway: waiting for overlay snapshot"]
-    else:
-        status = snapshot.status
-        detections = snapshot.detections
-        vision = status.vision
-        health = status.health
-        preview = status.preview
-        det_state = "unavailable"
-        if detections.available:
-            det_state = "stale" if detections.stale else "fresh"
-        lines = [
-            f"health={health.summary or 'unknown'} teleop={TELEOP_STATE_NAMES.get(status.teleop.state, 'unknown')}",
-            "vision="
-            f"{'stale' if vision.stale else 'fresh'} "
-            f"prod={vision.producer_fps:.1f}Hz cons={vision.consumer_fps:.1f}Hz infer={vision.last_infer_ms:.1f}ms",
-            "detections="
-            f"{det_state} count={detections.detection_count} age={detections.age_ms}ms min={min_score:.2f}",
-            f"preview={PROFILE_NAMES.get(preview.profile, 'unknown')} overlay={'on' if overlay_enabled else 'off'}",
-        ]
+    lines = _hud_lines(snapshot, overlay_enabled=overlay_enabled, min_score=min_score)
 
     x = 10
     y = 24
     for line in lines:
-        _put_label(cv2, frame, line, (x, y), color=(245, 245, 245), background=(20, 20, 20))
+        background = (45, 45, 45)
+        if line.startswith("FAULT"):
+            background = (35, 35, 180)
+        _put_label(cv2, frame, line, (x, y), color=(245, 245, 245), background=background)
         y += 24
 
 

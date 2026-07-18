@@ -2,6 +2,7 @@ import unittest
 
 from robot_diag_control.api import robot_gateway_pb2
 from robot_diag_control.gateway_client import (
+    format_operator_status,
     format_overlay_snapshot,
     format_system_status,
     format_system_status_summary,
@@ -51,6 +52,44 @@ class GatewayClientFormattingTests(unittest.TestCase):
         self.assertIn("mobility: odom=fresh linear_speed_mps=0.50 angular_speed_rad_s=0.20", formatted)
         self.assertIn("teleop: state=enabled enabled=true timed_out=false", formatted)
         self.assertIn("vision: producer_fps=22.00", formatted)
+
+    def test_format_operator_status_surfaces_freshness_and_faults(self):
+        response = robot_gateway_pb2.SystemStatus(
+            health=robot_gateway_pb2.RobotHealth(
+                state=robot_gateway_pb2.ROBOT_HEALTH_DEGRADED,
+                ready=False,
+                summary="waiting for odometry",
+                odom_available=True,
+                odom_stale=True,
+                linear_speed_mps=0.2,
+                angular_speed_rad_s=-0.1,
+            ),
+            preview=robot_gateway_pb2.PreviewStatus(state=robot_gateway_pb2.PREVIEW_RUNNING),
+            vision=robot_gateway_pb2.VisionStatus(
+                available=True,
+                stale=True,
+                producer_fps=29.8,
+                consumer_fps=8.4,
+                last_infer_ms=116.0,
+                infer_error_count=2,
+            ),
+            teleop=robot_gateway_pb2.TeleopStatus(
+                state=robot_gateway_pb2.TELEOP_TIMED_OUT,
+                enabled=True,
+                timed_out=True,
+                last_command_age_ms=740,
+                max_linear_mps=0.35,
+                max_angular_rad_s=0.8,
+            ),
+        )
+
+        formatted = format_operator_status(response)
+
+        self.assertIn("REAL | TIMED_OUT | NOT READY | ODOM STALE | VISION STALE", formatted)
+        self.assertIn("CAM 29.8 FPS | DET 8.4 FPS | LAT 116 ms", formatted)
+        self.assertIn("MEAS vx +0.20 m/s | wz -0.10 rad/s | CMD AGE 740 ms", formatted)
+        self.assertIn("FAULT waiting for odometry | ODOMETRY STALE | VISION STALE", formatted)
+        self.assertIn("DEADMAN TIMEOUT", formatted)
 
     def test_format_system_status_summary_includes_health_state(self):
         response = robot_gateway_pb2.SystemStatus(
