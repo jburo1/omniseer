@@ -212,6 +212,9 @@ Current implemented host slice:
 
 - `robot_preview_viewer` can enable preview over gRPC and consume the fixed or
   configured SRT endpoint
+- `robot_overlay_viewer` can enable preview, decode SRT into an OpenCV window,
+  poll gateway overlay snapshots, and draw detections plus telemetry over the
+  live video
 - `robot_monitor_shell` can poll gateway status, run short watch loops, and
   launch `robot_preview_viewer` from one integrated tool
 - `robot_monitor_gui` can refresh status, toggle preview, and launch

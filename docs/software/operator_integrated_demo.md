@@ -78,6 +78,13 @@ are visible through the gateway contract without subscribing to ROS directly:
 ros2 run robot_diag_control robot_gateway_cli --host <robot-ip> overlay
 ```
 
+To view the live preview with gateway detections and telemetry drawn on top,
+launch the OpenCV overlay viewer:
+
+```bash
+ros2 run robot_diag_control robot_overlay_viewer --host <robot-ip>
+```
+
 Keyboard bindings while the window has focus:
 
 ```text
@@ -113,6 +120,7 @@ Expected observations:
 
 - laptop status shows `vision` available and fresh
 - laptop overlay command reports detection freshness and source-space detections when targets are visible
+- overlay viewer opens live preview, shows a telemetry HUD, and draws boxes when detections are present
 - preview state changes to `running` when enabled
 - external preview viewer displays the SRT stream
 - teleop state changes to `enabled` after explicit enable

@@ -25,6 +25,7 @@ setup(
             "robot_gateway_cli = robot_diag_control.cli:main",
             "robot_monitor_gui = robot_diag_control.monitor_gui:main",
             "robot_monitor_shell = robot_diag_control.monitor_shell:main",
+            "robot_overlay_viewer = robot_diag_control.overlay_viewer:main",
             "robot_preview_viewer = robot_diag_control.preview_viewer:main",
         ],
     },
