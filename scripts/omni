@@ -24,10 +24,12 @@ Usage:
 
 Commands:
   setup   Environment and dependency helpers.
-  build   Local build helpers. Defaults to ROS.
+  build   Local build helpers. Defaults to all available artifacts.
+  up      Build the needed workspace, then run a profile.
   test    Targeted local verification helpers. Defaults to ROS.
   run     Operator-facing run commands for sim, real, monitor, and teleop.
   check   Passive verification helpers.
+  doctor  Report local build, runtime, and robot dependency state.
   flash   Hardware flashing helpers.
   docs    Documentation build helpers.
   env     Show resolved Omniseer environment settings.
@@ -36,10 +38,12 @@ Commands:
 
 Examples:
   scripts/omni setup ros-deps
-  scripts/omni build ros
+  scripts/omni doctor
+  scripts/omni build
+  scripts/omni up sim headless:=true
+  scripts/omni up real --phase 0.75
   scripts/omni test smoke-sim
-  scripts/omni run sim headless:=true
-  scripts/omni run real --phase 0.5
+  scripts/omni build ros
   scripts/omni check real-perception
   scripts/omni flash teensy
   scripts/omni docs build
@@ -117,11 +121,17 @@ case "${command_group}" in
     esac
     ;;
   build)
-    subcommand="${1:-ros}"
+    subcommand="${1:-all}"
     if [[ $# -gt 0 ]]; then
       shift
     fi
     case "${subcommand}" in
+      all)
+        exec "${script_dir}/build/all.sh" "$@"
+        ;;
+      strict)
+        exec "${script_dir}/build/all.sh" --strict "$@"
+        ;;
       ros)
         exec "${script_dir}/build/ros.sh" "$@"
         ;;
@@ -134,7 +144,10 @@ case "${command_group}" in
       help|-h|--help)
         cat <<'EOF'
 Usage:
-  scripts/omni build [ros]
+  scripts/omni build [all]
+  scripts/omni build strict
+  scripts/omni build ros --with-vision
+  scripts/omni build ros --without-vision
   scripts/omni build vision
   scripts/omni build firmware
 EOF
@@ -143,6 +156,9 @@ EOF
         omni_die "unknown build subcommand: ${subcommand}"
         ;;
     esac
+    ;;
+  up)
+    exec "${script_dir}/up.sh" "$@"
     ;;
   test)
     subcommand="${1:-ros}"
@@ -199,7 +215,7 @@ EOF
     esac
     ;;
   check)
-    subcommand="${1:-help}"
+    subcommand="${1:-real-perception}"
     if [[ $# -gt 0 ]]; then
       shift
     fi
@@ -217,6 +233,9 @@ EOF
         omni_die "unknown check subcommand: ${subcommand}"
         ;;
     esac
+    ;;
+  doctor)
+    exec "${script_dir}/doctor.sh" "$@"
     ;;
   flash)
     subcommand="${1:-help}"

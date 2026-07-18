@@ -42,10 +42,12 @@ Useful discovery command:
 
 ```bash
 scripts/omni env
+scripts/omni doctor
 ```
 
-This prints the resolved repo root, ROS setup path, workspace setup path, and the
-latest stable real phase.
+`env` prints resolved path/default settings. `doctor` checks local toolchains,
+workspace setup, hardware SDKs, camera devices, installed ROS packages, and the
+real vision asset paths used by the robot demo.
 
 ## Command Groups
 
@@ -79,15 +81,43 @@ Run the main local build flows without reassembling the underlying commands.
 Commands:
 
 ```bash
-scripts/omni build ros
+scripts/omni build
+scripts/omni build all
+scripts/omni build strict
+scripts/omni build ros --with-vision
+scripts/omni build ros --without-vision
 scripts/omni build vision
 scripts/omni build firmware
 ```
+
+Use `build` or `build all` when:
+
+- you want the normal product build from one command
+- you want ROS built first, native vision built when CMake is available, and
+  firmware built when PlatformIO is available
+- you want missing optional toolchains to warn instead of stopping the whole build
+
+Use `build strict` when:
+
+- you want the same product build but missing native vision or firmware toolchains
+  should fail the command
 
 Use `build ros` when:
 
 - you changed ROS packages, launch files, configs, or message wiring
 - you need the workspace install tree refreshed before a launch
+- you are on the robot and want hardware-only ROS packages included when their
+  SDK files are installed
+
+Use `build ros --with-vision` when:
+
+- you need `omniseer_vision_bridge` installed for native RKNN/RGA perception
+- you want the build to fail loudly if RKNN/RGA development files are missing
+
+Use `build ros --without-vision` when:
+
+- you are on a robot image but intentionally want the portable ROS package set
+- you are checking launch/package changes without rebuilding the native bridge
 
 Use `build vision` when:
 
@@ -101,8 +131,35 @@ Use `build firmware` when:
 
 Suggestion:
 
-- `build ros` is the best default when your change touches launch, bringup, adapters, gateway diagnostics, or ROS message surfaces
+- `build` is the best default before an operator run or handoff
+- `build ros` is the best focused target when your change touches launch, bringup, adapters, gateway diagnostics, or ROS message surfaces
+- `build ros --with-vision` requires RKNN/RGA development files and is expected to fail on hosts without the target SDKs
 - `build vision` is better than a full ROS build when only the native C++ vision pipeline changed
+
+### `up`
+
+Build the needed workspace, then launch the selected profile.
+
+Commands:
+
+```bash
+scripts/omni up sim
+scripts/omni up real --phase 0.75
+scripts/omni up real --phase 0.75 smoke
+```
+
+Use `up` when:
+
+- you want one command for the normal build-then-run loop
+- you want launch-only commands to stay available for diagnostic runs
+
+Examples:
+
+```bash
+scripts/omni up sim headless:=true
+scripts/omni up real --phase 0.75
+scripts/omni up real --phase 0.75 smoke
+```
 
 ### `test`
 
@@ -139,7 +196,7 @@ Suggestion:
 
 ### `run`
 
-Launch the operator-facing runtime workflows.
+Launch the operator-facing runtime workflows without an implicit build.
 
 Commands:
 
@@ -224,6 +281,7 @@ Why phases exist:
 
 Suggestions:
 
+- use `up sim` or `up real` for the normal build-then-run path
 - use `run real --phase 0.5` for interactive operator testing
 - use `run real --phase 0.5 smoke` for a quick integrated health check
 - use `run real --phase 0.5 bringup` when debugging launch or runtime issues
@@ -249,6 +307,7 @@ or launching it.
 Command:
 
 ```bash
+scripts/omni check
 scripts/omni check real-perception
 ```
 
@@ -262,6 +321,22 @@ Suggestion:
 
 - pair this with `run real --phase 0.5 smoke` for a quick end-to-end check
 - use `OMNISEER_REQUIRE_DETECTIONS=1` when detections must be present for the run to count
+
+### `doctor`
+
+Report local environment state relevant to build and robot runs.
+
+Command:
+
+```bash
+scripts/omni doctor
+```
+
+Use this when:
+
+- a build or launch fails due to missing workspace, SDK, device, or asset state
+- you are moving between laptop, container, and robot images
+- you want to confirm whether `omniseer_vision_bridge` is installed and buildable
 
 ### `flash`
 

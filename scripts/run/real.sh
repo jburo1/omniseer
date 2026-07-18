@@ -61,6 +61,30 @@ phase075_launch_args() {
     "classes_path:=__from_config__"
 }
 
+launch_starts_vision() {
+  local start_vision="true"
+  local arg
+  for arg in "$@"; do
+    if [[ "${arg}" == start_vision:=* ]]; then
+      start_vision="${arg#start_vision:=}"
+    fi
+  done
+
+  [[ "${start_vision}" == "true" ]]
+}
+
+require_vision_bridge_package() {
+  if ! launch_starts_vision "$@"; then
+    return
+  fi
+
+  if ros2 pkg prefix omniseer_vision_bridge >/dev/null 2>&1; then
+    return
+  fi
+
+  omni_die "ROS package omniseer_vision_bridge is not installed in the sourced workspace; run 'scripts/omni build ros' on a robot image with RKNN/RGA development files, force it with 'scripts/omni build ros --with-vision', or launch with start_vision:=false"
+}
+
 run_teleop() {
   omni_source_ros_workspace
   exec "${script_dir}/teleop.sh"
@@ -76,6 +100,7 @@ run_phase05_bringup() {
   local launch_args=()
   omni_read_lines_into_array launch_args phase05_launch_args
   omni_source_ros_workspace
+  require_vision_bridge_package "${launch_args[@]}" "${extra_args[@]}"
   exec ros2 launch bringup real.launch.py "${launch_args[@]}" "${extra_args[@]}"
 }
 
@@ -84,6 +109,7 @@ run_background_phase05_bringup() {
   local launch_args=()
   omni_read_lines_into_array launch_args phase05_launch_args
   omni_source_ros_workspace
+  require_vision_bridge_package "${launch_args[@]}" "${extra_args[@]}"
 
   local bringup_delay_sec="${OMNISEER_BRINGUP_DELAY_SEC:-5}"
   local bringup_log="${OMNISEER_BRINGUP_LOG:-/tmp/omniseer-phase05-bringup-$(date -u +%Y%m%dT%H%M%SZ).log}"
@@ -130,6 +156,7 @@ run_phase075_bringup() {
   local launch_args=()
   omni_read_lines_into_array launch_args phase075_launch_args
   omni_source_ros_workspace
+  require_vision_bridge_package "${launch_args[@]}" "${extra_args[@]}"
   exec ros2 launch bringup real.launch.py "${launch_args[@]}" "${extra_args[@]}"
 }
 
@@ -138,6 +165,7 @@ run_background_phase075_bringup() {
   local launch_args=()
   omni_read_lines_into_array launch_args phase075_launch_args
   omni_source_ros_workspace
+  require_vision_bridge_package "${launch_args[@]}" "${extra_args[@]}"
 
   local bringup_delay_sec="${OMNISEER_BRINGUP_DELAY_SEC:-5}"
   local bringup_log="${OMNISEER_BRINGUP_LOG:-/tmp/omniseer-phase075-bringup-$(date -u +%Y%m%dT%H%M%SZ).log}"
@@ -244,7 +272,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [[ $# -gt 0 ]] && [[ "$1" != *=* ]]; then
+if [[ $# -gt 0 ]] && [[ "$1" != *=* && "$1" != --* ]]; then
   mode="$1"
   shift
 fi

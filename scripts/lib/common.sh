@@ -20,6 +20,54 @@ omni_require_command() {
   fi
 }
 
+omni_command_available() {
+  command -v "$1" >/dev/null 2>&1
+}
+
+omni_platformio_bin() {
+  if [[ -n "${PLATFORMIO_BIN:-}" ]]; then
+    [[ -x "${PLATFORMIO_BIN}" ]] || return 1
+    printf '%s\n' "${PLATFORMIO_BIN}"
+    return 0
+  fi
+
+  if [[ -x "${HOME}/.platformio/penv/bin/platformio" ]]; then
+    printf '%s\n' "${HOME}/.platformio/penv/bin/platformio"
+    return 0
+  fi
+
+  if omni_command_available platformio; then
+    command -v platformio
+    return 0
+  fi
+
+  if omni_command_available pio; then
+    command -v pio
+    return 0
+  fi
+
+  return 1
+}
+
+omni_vision_bridge_deps_available() {
+  omni_command_available pkg-config || return 1
+  pkg-config --exists librga || return 1
+
+  local cxx="${CXX:-c++}"
+  omni_command_available "${cxx}" || return 1
+  printf '#include <rknn_api.h>\n' | "${cxx}" -E -x c++ - >/dev/null 2>&1 || return 1
+
+  if omni_command_available ldconfig && ldconfig -p | grep -q 'librknnrt\.so'; then
+    return 0
+  fi
+
+  [[ -e /usr/lib/librknnrt.so ]] && return 0
+  [[ -e /usr/lib/aarch64-linux-gnu/librknnrt.so ]] && return 0
+  [[ -e /usr/local/lib/librknnrt.so ]] && return 0
+  [[ -e /lib/librknnrt.so ]] && return 0
+  find /usr /opt -name 'librknnrt.so*' -print -quit 2>/dev/null | grep -q .
+}
+
 omni_latest_stable_real_phase() {
   printf '%s\n' "${OMNISEER_LATEST_STABLE_REAL_PHASE:-0.5}"
 }
