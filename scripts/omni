@@ -249,7 +249,7 @@ EOF
     case "${subcommand}" in
       list|pull)
         omni_source_ros_workspace
-        exec retrieve_runs "${subcommand}" "$@"
+        exec ros2 run omniseer_experiments retrieve_runs "${subcommand}" "$@"
         ;;
       help|-h|--help)
         runs_usage

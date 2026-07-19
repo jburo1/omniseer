@@ -9,12 +9,12 @@ def _write_fake_setup(path: Path) -> None:
     path.write_text("# test setup shim\n", encoding="utf-8")
 
 
-def _write_fake_retrieve_runs(path: Path) -> None:
+def _write_fake_ros2(path: Path) -> None:
     path.write_text(
         "\n".join(
             [
                 "#!/usr/bin/env bash",
-                "printf 'retrieve_runs'",
+                "printf 'ros2'",
                 "for arg in \"$@\"; do",
                 "  printf ' %s' \"$arg\"",
                 "done",
@@ -29,9 +29,9 @@ def _write_fake_retrieve_runs(path: Path) -> None:
 
 def test_omni_runs_list_dispatches_to_retrieve_runs(tmp_path: Path) -> None:
     setup_file = tmp_path / "setup.bash"
-    retrieve_runs = tmp_path / "retrieve_runs"
+    ros2 = tmp_path / "ros2"
     _write_fake_setup(setup_file)
-    _write_fake_retrieve_runs(retrieve_runs)
+    _write_fake_ros2(ros2)
     env = os.environ.copy()
     env["PATH"] = f"{tmp_path}:{env['PATH']}"
     env["OMNISEER_ROS_SETUP"] = str(setup_file)
@@ -47,14 +47,14 @@ def test_omni_runs_list_dispatches_to_retrieve_runs(tmp_path: Path) -> None:
     )
 
     assert result.returncode == 0, result.stderr
-    assert result.stdout == "retrieve_runs list --host robot.local\n"
+    assert result.stdout == "ros2 run omniseer_experiments retrieve_runs list --host robot.local\n"
 
 
 def test_omni_runs_pull_dispatches_to_retrieve_runs(tmp_path: Path) -> None:
     setup_file = tmp_path / "setup.bash"
-    retrieve_runs = tmp_path / "retrieve_runs"
+    ros2 = tmp_path / "ros2"
     _write_fake_setup(setup_file)
-    _write_fake_retrieve_runs(retrieve_runs)
+    _write_fake_ros2(ros2)
     env = os.environ.copy()
     env["PATH"] = f"{tmp_path}:{env['PATH']}"
     env["OMNISEER_ROS_SETUP"] = str(setup_file)
@@ -79,4 +79,7 @@ def test_omni_runs_pull_dispatches_to_retrieve_runs(tmp_path: Path) -> None:
     )
 
     assert result.returncode == 0, result.stderr
-    assert result.stdout == "retrieve_runs pull demo_001 --host robot.local --out runs/imported/demo_001\n"
+    assert (
+        result.stdout
+        == "ros2 run omniseer_experiments retrieve_runs pull demo_001 --host robot.local --out runs/imported/demo_001\n"
+    )
