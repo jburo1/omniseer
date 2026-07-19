@@ -6,9 +6,12 @@ The goal is not to add random robot features. The goal is to make the existing e
 
 ## North Star
 
-A reviewer should be able to clone the repository, read the README, open one hosted or local report, and understand:
+A reviewer should be able to clone the repository, read the README, retrieve or open one
+recorded run, and understand:
 
-> Omniseer deploys open-vocabulary perception on constrained robot hardware, records detections and runtime telemetry, and produces a reproducible experiment report suitable for laptop or cloud review.
+> Omniseer deploys open-vocabulary perception on constrained robot hardware, records detections
+> and runtime telemetry, retrieves those runs for laptop analysis, and produces reproducible
+> evidence suitable for local or hosted review.
 
 The project should demonstrate the full loop:
 
@@ -18,8 +21,9 @@ camera
   -> ROS 2 detections and performance telemetry
   -> teleoperated real-robot verification
   -> structured experiment bundle
-  -> local laptop report
-  -> optional hosted/cloud review
+  -> laptop retrieval/import
+  -> local validation and analysis
+  -> optional report/export/hosted review
 ```
 
 ## Critical Sequencing Principle
@@ -32,7 +36,9 @@ The correct order is:
 clean public signal
   -> verify teleop + native YOLO detections + perf topics together
   -> record that known-good behavior
-  -> analyze/report that behavior
+  -> retrieve/import the robot-created bundle on a laptop
+  -> validate and enrich the recorded data
+  -> analyze/report that behavior offboard
   -> publish selected evidence
 ```
 
@@ -46,8 +52,10 @@ The recorder should be boring. It should not be where camera paths, model paths,
 - Real teleop + native RKNN YOLO-World verification.
 - Recording `/yolo/detections` and `/vision/perf`.
 - Capturing run metadata, timing, detection counts, and selected evidence.
-- Generating a static local report from a recorded run.
-- Publishing a boring hosted version of the report after local review works.
+- Retrieving robot-created run bundles onto the laptop for validation.
+- Enriching run bundles with resource and pipeline telemetry after retrieval works.
+- Generating local analysis and reports from imported run bundles.
+- Publishing a boring hosted version of selected evidence after local analysis works.
 - Clearly documenting what is CI-verified, hardware-verified, and still planned.
 
 ### Out of scope for this completion plan
@@ -118,9 +126,12 @@ Create a small visible backlog:
 - `P1: fix pre-commit/CI consistency`
 - `P2: verify real teleop + native YOLO detections`
 - `P4: perception run bundle v0`
-- `P5: laptop report generator`
-- `P7: target hardware evidence run`
-- `P8: hosted static report`
+- `P5: offboard run retrieval`
+- `P6: resource telemetry enrichment`
+- `P7: native pipeline telemetry persistence`
+- `P8: laptop analysis and report generator`
+- `P9: target hardware evidence run`
+- `P10: hosted static report`
 
 ## Definition of Done
 
@@ -766,155 +777,123 @@ docs(experiments): document local perception recording flow
 
 ---
 
-# Phase 5: Local Laptop Report Generator
+# Phase 5: Offboard Run Retrieval v0
 
 ## Purpose
 
-Turn a recorded run bundle into a human-readable report. This is what makes the project easy to review.
+Move robot-created run bundles onto the laptop in a reproducible, inspectable way.
 
-The report should answer:
+This phase is the bridge between robot-side recording and laptop-side analysis. It should be
+content-agnostic: retrieval must continue to work as later phases add `system.jsonl`,
+pipeline telemetry, notes, evidence, bags, or other additive files.
 
-1. Did the model run on the robot?
-2. What latency and FPS did it achieve?
-3. What classes did it detect?
-4. What evidence supports success and failure?
-5. What are the known limitations?
+The retrieval workflow should answer:
 
-## Proposed location
+1. Which run bundles exist on the robot?
+2. Can a selected bundle be copied to the laptop without changing its contents?
+3. Does the imported copy pass local inspection?
+4. Is the bundle complete, in progress, or incomplete?
 
-Use the existing analysis area, or create a focused module:
+## Design rule
 
-```text
-ros_ws/src/analysis/
-```
+Do not make retrieval depend on the current run-bundle schema beyond directory shape.
 
-or:
+The importer should preserve bundle contents byte-for-byte where practical. Inspection and
+analysis may interpret files after import, but the pull step itself should not rewrite,
+summarize, normalize, or delete robot-side evidence.
 
-```text
-tools/report_perception_run.py
-```
+## CLI-first workflow
 
-Prefer the simplest location that fits the repository conventions.
+Provide a boring command path first. The operator app can later call the same underlying
+logic or wrap the same commands.
 
-## CLI
-
-Provide:
+Suggested commands:
 
 ```bash
-python3 -m analysis.report_perception_run runs/demo_001 --out reports/demo_001
+scripts/omni runs list --host <robot-ip>
+scripts/omni runs pull <run_id> --host <robot-ip> --out runs/imported/<run_id>
+ros2 run omniseer_experiments inspect_run runs/imported/<run_id>
 ```
 
-or:
+Acceptable v0 implementation choices:
 
-```bash
-ros2 run analysis report_perception_run runs/demo_001 --out reports/demo_001
-```
+- use SSH/rsync/scp if the deployment already assumes shell access
+- keep host, user, robot runs root, and local import root explicit
+- fail clearly when the robot path is missing or a run id is not found
+- refuse to overwrite an existing local import unless an explicit overwrite flag is used
 
-## Output contract
+## Remote listing
+
+The list command should report at least:
 
 ```text
-reports/<run_id>/
-  index.html
+run_id
+remote_path
+state if inspect_run is available on the robot
+started_at if available
+ended_at if available
+```
+
+If robot-side inspection is unavailable, listing directory names is acceptable for v0, but the
+pull command must still validate the imported copy locally.
+
+## Import contract
+
+Default local layout:
+
+```text
+runs/imported/<run_id>/
+  manifest.yaml
+  detections.jsonl
+  perf.jsonl
   summary.json
-  latency.png
-  throughput.png
-  detections_by_class.png
-  confidence_by_class.png
-  assets/
+  evidence/
+  ...future additive files...
 ```
 
-For v0, static HTML is enough. Do not build a web app.
+The imported bundle should remain a valid run bundle. Do not wrap it in an extra metadata
+directory that would break existing inspection tools.
 
-## Report sections
+## Validation
 
-The generated `index.html` should include:
+After pulling, run local inspection and surface the state:
 
-### Run metadata
+```bash
+ros2 run omniseer_experiments inspect_run runs/imported/<run_id>
+```
 
-- run ID
-- timestamp
-- git SHA
-- model information
-- selected classes
-- robot/hardware notes
-- whether Phase 2 verification had been completed
-
-### Performance
-
-- producer FPS
-- consumer FPS
-- inference latency
-- preprocess latency
-- postprocess latency
-- publish latency
-- error counters
-
-### Detection summary
-
-- detections by class
-- confidence statistics
-- total detection messages
-- first/last detection timestamps
-
-### Evidence
-
-For v0, it is acceptable to show:
-
-- placeholder section if no frames/crops exist
-- manually copied images from `evidence/`
-- links to evidence files
-
-Do not block report generation on frame capture.
-
-### Known limitations
-
-The report should state whether the run lacks:
-
-- annotated frames
-- ground truth
-- resource telemetry
-- hardware temperature
-- cloud sync
-- runtime class update support
-
-This honesty is a strength.
-
-## Plotting
-
-Use simple Matplotlib plots:
-
-- inference latency over time
-- producer/consumer FPS over time
-- detections by class
-- confidence distribution by class
-
-Do not over-style. The report should look clear, not fancy.
+The pull command may print the same summary or instruct the user to run inspection. In either
+case, local inspection is the validation authority for v0.
 
 ## Tests
 
-Add tests for:
+Add tests around the retrieval helper logic where practical:
 
-- loading a run bundle
-- generating summary plots from synthetic JSONL
-- generating `index.html`
-- handling missing optional evidence
-- handling empty detections
+- remote path construction
+- local destination refusal when non-empty
+- overwrite behavior
+- preserve unknown additive files
+- local inspection of an imported fixture
+- clear error for missing remote run
+
+Prefer unit tests for command construction and local copy/import behavior. SSH end-to-end tests
+can be deferred unless a reliable local fixture is easy to create.
 
 ## Definition of Done
 
-- A recorded run can be converted into a static local report.
-- The report can be opened in a browser without a server.
-- Missing optional evidence does not crash the generator.
-- The report clearly distinguishes measured output from planned work.
+- A user can list robot-side run bundles from the laptop.
+- A user can pull one selected run into `runs/imported/<run_id>/`.
+- Unknown files and directories inside a run are preserved.
+- The imported bundle can be inspected locally with `inspect_run`.
+- Retrieval does not require changes when later phases add telemetry files.
 
 ## Suggested commit names
 
 ```text
-feat(analysis): load perception run bundles
-feat(analysis): render static perception report
-feat(analysis): add latency and detection plots
-test(analysis): cover report generation edge cases
-docs(portfolio): add local report workflow
+feat(experiments): add offboard run retrieval helpers
+feat(scripts): add runs list and pull commands
+test(experiments): cover run import edge cases
+docs(experiments): document offboard run retrieval
 ```
 
 ---
@@ -923,9 +902,13 @@ docs(portfolio): add local report workflow
 
 ## Purpose
 
-Make the edge-deployment story stronger by recording system load alongside perception performance.
+Make the edge-deployment story stronger by recording system load alongside perception
+performance after run retrieval is working.
 
 This phase should not modify the native hot path unless absolutely necessary.
+
+Resource telemetry should feed later laptop analysis and graphs. Do not make local reports or
+hosted publishing part of this phase's done criteria.
 
 ## Design rule
 
@@ -994,15 +977,6 @@ Recommended default sample rate:
 1 Hz
 ```
 
-## Report integration
-
-Add a system section to the report:
-
-- CPU over time
-- memory over time
-- temperature over time
-- any obvious throttling or thermal concerns
-
 ## Tests
 
 Add tests for:
@@ -1011,12 +985,12 @@ Add tests for:
 - missing temperature path
 - missing battery source
 - system JSONL writing
-- report behavior when `system.jsonl` is absent
+- `inspect_run` behavior when `system.jsonl` is present or absent
 
 ## Definition of Done
 
 - Run bundles may include `system.jsonl`.
-- Report generator displays resource telemetry when present.
+- Retrieval still preserves imported bundles with or without `system.jsonl`.
 - Missing system telemetry is treated as optional, not fatal.
 - No high-cost system sampling occurs in the vision hot path.
 
@@ -1024,14 +998,158 @@ Add tests for:
 
 ```text
 feat(experiments): add optional system resource sampler
-feat(analysis): include resource telemetry in reports
 test(experiments): cover system sampler fallbacks
 docs(experiments): document resource telemetry boundary
 ```
 
 ---
 
-# Phase 7: Hardware Evidence Pack
+# Phase 7: Native Pipeline Telemetry Persistence
+
+## Purpose
+
+Persist the existing producer/consumer pipeline telemetry into structured run bundles.
+
+This is the deeper timing slice. It should remain additive and preserve existing hot-path
+semantics. The native runtime already has producer/consumer telemetry and JSONL support; this
+phase wires that data into experiment bundles in a controlled way.
+
+## Design rule
+
+Do not invent a second per-frame telemetry schema if the native telemetry JSONL contract already
+fits the analysis need. Prefer routing or configuring the existing sink into the run directory.
+
+## Data to capture
+
+```text
+producer stage timing
+consumer stage timing
+frame_id correlation
+source age
+stage/status masks
+telemetry drop/fault accounting if exposed
+```
+
+## Output
+
+Add an explicitly named telemetry artifact, for example:
+
+```text
+runs/<run_id>/pipeline_telemetry.jsonl
+```
+
+## Implementation guidance
+
+- keep telemetry enablement explicit in launch/recording configuration
+- ensure file I/O remains off producer/consumer data-plane threads
+- preserve bounded queues and drop accounting
+- treat missing pipeline telemetry as optional for older bundles
+
+## Tests
+
+Add tests for:
+
+- configured telemetry path lands inside the run bundle
+- old bundles without pipeline telemetry still inspect cleanly
+- malformed telemetry is reported by analysis tooling without breaking bundle retrieval
+- timing-enabled and timing-disabled modes preserve existing behavior
+
+## Definition of Done
+
+- Completed runs may include producer/consumer telemetry JSONL.
+- Retrieval preserves pipeline telemetry without schema-specific changes.
+- Existing vision hot-path guarantees are preserved.
+- Later laptop analysis can compute per-frame timing distributions.
+
+## Suggested commit names
+
+```text
+feat(experiments): persist native pipeline telemetry in run bundles
+test(experiments): cover optional pipeline telemetry import
+docs(experiments): document pipeline telemetry boundary
+```
+
+---
+
+# Phase 8: Laptop Analysis and Report Generator
+
+## Purpose
+
+Turn imported and enriched run bundles into human-readable analysis.
+
+This is where graphs and reports belong. By this phase, run bundles should already be
+retrievable on the laptop and may include detections, `/vision/perf`, resource samples, and
+native pipeline telemetry.
+
+The analysis should answer:
+
+1. Did the model run on the robot?
+2. What latency and FPS did it achieve?
+3. What classes did it detect?
+4. How did resource load correlate with pipeline behavior?
+5. What evidence supports success and failure?
+6. What are the known limitations?
+
+## Outputs
+
+Start with local artifacts and keep hosted publishing separate:
+
+```text
+reports/<run_id>/
+  index.html or report.md
+  summary.json
+  latency.png
+  throughput.png
+  detections_by_class.png
+  confidence_by_class.png
+  resource_usage.png
+  assets/
+```
+
+Static HTML or Markdown is acceptable. Choose the simplest format that makes the imported run
+easy to review locally. Do not build a live dashboard in this phase.
+
+## Analysis sections
+
+- run metadata and inspection state
+- issues and missing optional streams
+- detection counts and confidence summaries
+- FPS and stage timing summaries
+- resource telemetry when present
+- pipeline telemetry distributions when present
+- evidence links or placeholders when evidence is absent
+- known limitations, including lack of ground truth or exact preview/detection sync
+
+## Tests
+
+Add tests for:
+
+- loading imported run bundles
+- handling absent optional telemetry files
+- generating plots from synthetic JSONL
+- generating the selected local report artifact
+- distinguishing measured output from planned work
+
+## Definition of Done
+
+- An imported run can be converted into a local analysis artifact.
+- Missing optional evidence or telemetry does not crash analysis.
+- The report includes performance plots and detection summaries.
+- The report clearly distinguishes measured output from planned work.
+
+## Suggested commit names
+
+```text
+feat(analysis): load imported perception run bundles
+feat(analysis): add latency and detection plots
+feat(analysis): include optional resource and pipeline telemetry
+test(analysis): cover report generation edge cases
+docs(portfolio): add local analysis workflow
+```
+
+---
+
+# Phase 9: Hardware Evidence Pack
 
 ## Purpose
 
@@ -1154,7 +1272,7 @@ docs(portfolio): publish perception demo walkthrough
 
 ---
 
-# Phase 8: Hosted Static Review
+# Phase 10: Hosted Static Review
 
 ## Purpose
 
@@ -1264,7 +1382,7 @@ Use:
 - YAML for run manifest
 - JSONL for time-series events
 - JSON for summaries
-- static HTML for reports
+- static HTML or Markdown for reports
 
 Avoid premature databases.
 
@@ -1323,11 +1441,18 @@ The project is portfolio-complete when all of the following are true:
 - The bundle includes manifest, detections, perf telemetry, and summary.
 - Optional system telemetry is supported.
 
-## Report generation
+## Offboard retrieval
 
-- A static report can be generated from a run bundle.
+- Robot-created bundles can be listed from the laptop.
+- A selected run can be pulled into `runs/imported/<run_id>/`.
+- Imported bundles preserve unknown additive files.
+- Imported bundles can be validated locally with `inspect_run`.
+
+## Laptop analysis
+
+- A local analysis artifact can be generated from an imported run bundle.
 - The report includes performance plots and detection summaries.
-- Missing optional evidence does not crash the report generator.
+- Missing optional evidence or telemetry does not crash analysis.
 
 ## Hardware evidence
 
@@ -1345,26 +1470,27 @@ The project is portfolio-complete when all of the following are true:
 
 # Recommended Immediate Next Step
 
-Start with Phase 1, then Phase 2.
+Complete the current recorder/inspection baseline, then move to Phase 5.
 
-Do not start with cloud. Do not start with autonomy. Do not start with UI polish. Do not start with the recorder before the real source topics are verified.
+Do not start with cloud. Do not start with autonomy. Do not start with UI polish. Do not
+start with graphing before robot-created bundles can be retrieved and validated on the laptop.
 
 Start here:
 
 ```text
-fix(lint): align pre-commit ruff with CI
+feat(experiments): add offboard run retrieval helpers
 ```
 
 Then:
 
 ```text
-feat(bringup): add real vision bridge launch
+feat(scripts): add runs list and pull commands
 ```
 
 Then:
 
 ```text
-docs(bringup): add real teleop perception verification checklist
+docs(experiments): document offboard run retrieval
 ```
 
 The artifact becomes compelling when the first real teleop perception run is verified, then recorded.
