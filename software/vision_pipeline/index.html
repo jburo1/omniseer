@@ -1418,7 +1418,7 @@
 
 
 <h1 id="vision-pipeline">Vision Pipeline<a class="headerlink" href="#vision-pipeline" title="Permanent link">&para;</a></h1>
-<p><em>Status: implemented; target-hardware performance results still need publication</em></p>
+<p><em>Status: implemented; integrated target-hardware verification record and performance publication pending</em></p>
 <p>This document describes the multi-stage, low-latency, zero-copy-oriented vision
 pipeline that transforms camera frames into open-vocabulary object detections. The
 current portfolio direction uses those detections for measured perception experiments,
@@ -1426,8 +1426,9 @@ not autonomous seek-and-capture behavior.</p>
 <p>The producer, consumer, YOLO-World post-processing, text-embedding preparation,
 rolling telemetry, JSONL telemetry, native harness, and ROS bridge are implemented.
 Portable components are CI-verified. V4L2, RGA, and RKNN behavior requires the ROCK
-5B+ and is hardware-verified separately. A published performance table and repeatable
-experiment report remain planned.</p>
+5B+ and is covered by target-oriented component checks. A published integrated
+target-hardware record, performance table, and repeatable experiment report remain
+planned.</p>
 <h2 id="major-design-considerations">Major Design Considerations<a class="headerlink" href="#major-design-considerations" title="Permanent link">&para;</a></h2>
 <ul>
 <li>
@@ -1765,7 +1766,7 @@ Return paths:
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 7, 2026 00:33:52 UTC">July 7, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 19, 2026 06:04:01 UTC">July 19, 2026</span>
   </span>
 
     

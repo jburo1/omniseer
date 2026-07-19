@@ -72,7 +72,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#ci-verified" class="md-skip">
+        <a href="#evidence-and-verification-boundary" class="md-skip">
           Skip to content
         </a>
       
@@ -288,6 +288,8 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
           
@@ -330,6 +332,8 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -341,7 +345,18 @@
   <a href="#ci-verified" class="md-nav__link">
     <span class="md-ellipsis">
       
-        CI verified
+        CI Verified
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#locally-verified" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Locally Verified
       
     </span>
   </a>
@@ -352,7 +367,7 @@
   <a href="#hardware-verified" class="md-nav__link">
     <span class="md-ellipsis">
       
-        hardware verified
+        Hardware Verified
       
     </span>
   </a>
@@ -360,10 +375,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#planned" class="md-nav__link">
+  <a href="#planned-not-yet-verified" class="md-nav__link">
     <span class="md-ellipsis">
       
-        planned
+        Planned / Not Yet Verified
       
     </span>
   </a>
@@ -1017,6 +1032,8 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -1028,7 +1045,18 @@
   <a href="#ci-verified" class="md-nav__link">
     <span class="md-ellipsis">
       
-        CI verified
+        CI Verified
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#locally-verified" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Locally Verified
       
     </span>
   </a>
@@ -1039,7 +1067,7 @@
   <a href="#hardware-verified" class="md-nav__link">
     <span class="md-ellipsis">
       
-        hardware verified
+        Hardware Verified
       
     </span>
   </a>
@@ -1047,10 +1075,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#planned" class="md-nav__link">
+  <a href="#planned-not-yet-verified" class="md-nav__link">
     <span class="md-ellipsis">
       
-        planned
+        Planned / Not Yet Verified
       
     </span>
   </a>
@@ -1077,20 +1105,67 @@
   
 
 
-  <h1>Evidence</h1>
-
-<h2 id="ci-verified">CI verified<a class="headerlink" href="#ci-verified" title="Permanent link">&para;</a></h2>
+<h1 id="evidence-and-verification-boundary">Evidence and Verification Boundary<a class="headerlink" href="#evidence-and-verification-boundary" title="Permanent link">&para;</a></h1>
+<p>This page defines what current Omniseer evidence proves, what it does not prove,
+and where the next verification work should land.</p>
+<h2 id="ci-verified">CI Verified<a class="headerlink" href="#ci-verified" title="Permanent link">&para;</a></h2>
+<p>GitHub Actions <code>ci</code> is the public software gate for the default branch. A green
+run means the repository passed these portable checks:</p>
 <ul>
-<li>Ruff is pinned to <code>0.13.3</code> in <code>pyproject.toml</code>, <code>.pre-commit-config.yaml</code>, and <code>.github/workflows/ci.yml</code>.</li>
+<li>Ruff lint for the Python ROS/operator packages.</li>
+<li>ROS Kilted package dependency install, build, and tests for the portable core
+  package set.</li>
+<li>Headless Gazebo smoke launch with CI-safe geometry and five boundary topics:
+  <code>/clock</code>, <code>/imu</code>, <code>/scan</code>, <code>/range</code>, and
+  <code>/mecanum_drive_controller/odometry</code>.</li>
+<li>Portable host vision tests for buffer pooling, JSONL telemetry, and rolling
+  telemetry.</li>
+<li>Compile-only Teensy 4.1 firmware build through <code>scripts/omni build firmware</code>.</li>
+<li>Strict MkDocs documentation build.</li>
 </ul>
-<h2 id="hardware-verified">hardware verified<a class="headerlink" href="#hardware-verified" title="Permanent link">&para;</a></h2>
+<p>CI does <strong>not</strong> prove camera capture, RGA/RKNN execution, NPU latency, real
+sensor/motor behavior, firmware flashing, micro-ROS transport, experiment
+recording, cloud synchronization, or hosted reporting.</p>
+<h2 id="locally-verified">Locally Verified<a class="headerlink" href="#locally-verified" title="Permanent link">&para;</a></h2>
+<p>Recent Radxa dev-container cleanup checks used the repository front door and
+focused CI-equivalent commands:</p>
 <ul>
-<li>Not verified for this change; it only updates lint/tooling metadata and docs.</li>
+<li><code>scripts/omni test smoke-sim</code></li>
+<li><code>scripts/omni build firmware</code></li>
+<li><code>scripts/omni docs build</code></li>
+<li>narrowed <code>rosdep check</code> for the smoke package set</li>
 </ul>
-<h2 id="planned">planned<a class="headerlink" href="#planned" title="Permanent link">&para;</a></h2>
+<p>These local checks confirm the scripts and portable workflows behave correctly in
+the current development container. They are not a substitute for target-hardware
+evidence.</p>
+<h2 id="hardware-verified">Hardware Verified<a class="headerlink" href="#hardware-verified" title="Permanent link">&para;</a></h2>
+<p>The native vision implementation includes target-oriented V4L2, RGA, RKNN,
+post-processing, and telemetry paths. Component-level target checks and harnesses
+support those implementation claims.</p>
+<p>The currently published docs do <strong>not</strong> yet include a completed integrated
+target-hardware verification record for:</p>
 <ul>
-<li>Reviewers can run <code>pre-commit run -a</code>, the local Ruff command from <code>docs/software/ci_cd.md</code>, and the existing docs build.</li>
+<li>real teleop reaching <code>/mecanum_drive_controller/reference</code></li>
+<li>native perception publishing <code>/yolo/detections</code></li>
+<li>native performance telemetry publishing <code>/vision/perf</code></li>
+<li>gateway/preview/overlay operation during the same real run</li>
 </ul>
+<p>Those records belong in the Phase 2 and Phase 3 verification checklists before
+Phase 4 run-bundle work is treated as evidence-backed.</p>
+<h2 id="planned-not-yet-verified">Planned / Not Yet Verified<a class="headerlink" href="#planned-not-yet-verified" title="Permanent link">&para;</a></h2>
+<p>The following remain planned or pending evidence:</p>
+<ul>
+<li>structured perception run bundle recorder</li>
+<li>run metadata, detections, telemetry, and selected evidence capture</li>
+<li>laptop report generator for recorded runs</li>
+<li>resource telemetry persisted into experiment bundles</li>
+<li>provider-neutral cloud synchronization</li>
+<li>hosted static review dashboard</li>
+<li>target-hardware or hardware-in-the-loop CI</li>
+<li>tagged release packaging for firmware and robot software</li>
+</ul>
+<p>These items should be described as planned until there is recorded local,
+hardware, or CI evidence for them.</p>
 
 
 
@@ -1111,7 +1186,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 7, 2026 03:12:58 UTC">July 7, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 19, 2026 06:04:01 UTC">July 19, 2026</span>
   </span>
 
     
