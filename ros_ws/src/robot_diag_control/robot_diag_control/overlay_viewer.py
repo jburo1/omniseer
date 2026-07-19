@@ -10,7 +10,6 @@ import grpc
 
 from robot_diag_control.api import robot_gateway_pb2
 from robot_diag_control.gateway_client import (
-    PROFILE_NAMES,
     PROFILE_TO_PROTO,
     TELEOP_STATE_NAMES,
     create_stub,
@@ -311,7 +310,6 @@ def _hud_lines(
     lines = [
         "TELEOP "
         f"{TELEOP_STATE_NAMES.get(teleop.state, 'unknown').upper()} | "
-        f"{'READY' if health.ready else 'NOT READY'} | "
         f"ODOM {odom_state} {health.odom_age_ms} ms | VISION {vision_state}",
     ]
     if layers.perception:
@@ -336,13 +334,6 @@ def _hud_lines(
         )
     if layers.system:
         lines.append(_platform_line(platform))
-    lines.append(
-        "PREVIEW "
-        f"{PROFILE_NAMES.get(preview.profile, 'unknown')} | "
-        f"layers={'P' if layers.perception else '-'}{'M' if layers.motion else '-'}"
-        f"{'S' if layers.system else '-'}{'E' if layers.events else '-'} | "
-        f"min={min_score:.2f}"
-    )
     if fault_parts:
         lines.insert(0, "FAULT " + " | ".join(fault_parts))
     if layers.events:

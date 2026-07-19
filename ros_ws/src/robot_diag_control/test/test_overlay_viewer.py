@@ -174,13 +174,14 @@ class OverlayViewerTests(unittest.TestCase):
         lines = _hud_lines(snapshot, layers=OverlayLayers(), min_score=0.25)
 
         self.assertEqual(lines[0], "FAULT waiting for odometry | ODOM STALE")
-        self.assertIn("TELEOP TIMED_OUT | NOT READY | ODOM STALE 740 ms | VISION OK", lines)
+        self.assertIn("TELEOP TIMED_OUT | ODOM STALE 740 ms | VISION OK", lines)
         self.assertIn("CAM 30.0 FPS | DET 9.0 FPS | LAT 104 ms | OBJ 3 | AGE 42 ms", lines)
         self.assertIn("CMD vx +0.20 vy +0.00 wz -0.30", "\n".join(lines))
         self.assertIn("MEAS vx +0.18 vy +0.01 wz -0.27", "\n".join(lines))
         self.assertIn("PWR LiPo 7.8V | ROCK 91% | Wi-Fi -58 dBm | CPU 43% 62 C | RAM 5.0/16G", lines)
-        self.assertIn("PREVIEW balanced | layers=PMSE | min=0.25", lines)
         self.assertIn("EVENT 18 ms odometry recovered", lines)
+        self.assertNotIn("READY", "\n".join(lines))
+        self.assertNotIn("PREVIEW", "\n".join(lines))
         self.assertNotIn("DEADMAN", "\n".join(lines))
 
     def test_hud_lines_can_hide_motion_system_and_events(self):
@@ -206,7 +207,8 @@ class OverlayViewerTests(unittest.TestCase):
 
         joined = "\n".join(lines)
         self.assertIn("CAM 0.0 FPS", joined)
-        self.assertIn("layers=P---", joined)
+        self.assertNotIn("layers=", joined)
+        self.assertNotIn("PREVIEW", joined)
         self.assertNotIn("CMD vx", joined)
         self.assertNotIn("PWR", joined)
         self.assertNotIn("EVENT", joined)
