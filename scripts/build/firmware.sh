@@ -7,9 +7,6 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${script_dir}/../lib/log.sh"
 # shellcheck disable=SC1091
 source "${script_dir}/../lib/common.sh"
-# shellcheck disable=SC1091
-source "${script_dir}/../lib/ros.sh"
-
 usage() {
   cat <<'EOF'
 Usage:
@@ -27,8 +24,6 @@ fi
 if ! platformio_bin="$(omni_platformio_bin)"; then
   omni_die "platformio not found; set PLATFORMIO_BIN or install PlatformIO"
 fi
-
-omni_source_ros
 
 firmware_dir="$(cd "${script_dir}/../../firmware" && pwd)"
 pio_env="${PIO_ENV:-teensy41}"
