@@ -38,7 +38,7 @@ def test_omni_runs_list_dispatches_to_retrieve_runs(tmp_path: Path) -> None:
     env["OMNISEER_WS_SETUP"] = str(setup_file)
 
     result = subprocess.run(
-        ["scripts/omni", "runs", "list", "--host", "robot.local"],
+        ["scripts/omni", "runs", "list"],
         cwd=REPO_ROOT,
         env=env,
         capture_output=True,
@@ -47,7 +47,9 @@ def test_omni_runs_list_dispatches_to_retrieve_runs(tmp_path: Path) -> None:
     )
 
     assert result.returncode == 0, result.stderr
-    assert result.stdout == "ros2 run omniseer_experiments retrieve_runs list --host robot.local\n"
+    assert result.stdout == (
+        "ros2 run omniseer_experiments retrieve_runs list --host 192.168.1.178 --user radxa\n"
+    )
 
 
 def test_omni_runs_pull_dispatches_to_retrieve_runs(tmp_path: Path) -> None:
@@ -81,5 +83,32 @@ def test_omni_runs_pull_dispatches_to_retrieve_runs(tmp_path: Path) -> None:
     assert result.returncode == 0, result.stderr
     assert (
         result.stdout
-        == "ros2 run omniseer_experiments retrieve_runs pull demo_001 --host robot.local --out runs/imported/demo_001\n"
+        == "ros2 run omniseer_experiments retrieve_runs pull demo_001 --host robot.local "
+        "--out runs/imported/demo_001 --user radxa\n"
+    )
+
+
+def test_omni_runs_preserves_explicit_host_and_user(tmp_path: Path) -> None:
+    setup_file = tmp_path / "setup.bash"
+    ros2 = tmp_path / "ros2"
+    _write_fake_setup(setup_file)
+    _write_fake_ros2(ros2)
+    env = os.environ.copy()
+    env["PATH"] = f"{tmp_path}:{env['PATH']}"
+    env["OMNISEER_ROS_SETUP"] = str(setup_file)
+    env["OMNISEER_WS_SETUP"] = str(setup_file)
+
+    result = subprocess.run(
+        ["scripts/omni", "runs", "list", "--host=robot.local", "--user=operator"],
+        cwd=REPO_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert (
+        result.stdout
+        == "ros2 run omniseer_experiments retrieve_runs list --host=robot.local --user=operator\n"
     )

@@ -315,6 +315,19 @@ The wrapper sources ROS and the workspace, refreshes status on startup, and lets
 the GUI use the gateway host as the default preview host. Additional monitor
 arguments are forwarded to `robot_monitor_gui`.
 
+### `runs`
+
+List and retrieve robot-side perception run bundles from the laptop workspace:
+
+```bash
+scripts/omni runs list
+scripts/omni runs pull demo_001
+```
+
+The front door defaults to SSH target `radxa@192.168.1.178`. Override that with
+`--host`, `--user`, `OMNISEER_ROBOT_HOST`, or `OMNISEER_ROBOT_USER` when using a
+different robot or account.
+
 ### `check`
 
 Run passive validation commands that inspect an existing graph rather than building

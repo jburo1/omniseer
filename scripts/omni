@@ -10,6 +10,9 @@ done
 
 script_dir="$(cd "$(dirname "${script_source}")" && pwd -P)"
 
+default_robot_runs_host="${OMNISEER_ROBOT_HOST:-192.168.1.178}"
+default_robot_runs_user="${OMNISEER_ROBOT_USER:-radxa}"
+
 # shellcheck disable=SC1091
 source "${script_dir}/lib/log.sh"
 # shellcheck disable=SC1091
@@ -43,8 +46,8 @@ Examples:
   scripts/omni build
   scripts/omni up sim headless:=true
   scripts/omni up real --phase 3
-  scripts/omni runs list --host <robot-ip>
-  scripts/omni runs pull demo_001 --host <robot-ip>
+  scripts/omni runs list
+  scripts/omni runs pull demo_001
   scripts/omni test smoke-sim
   scripts/omni build ros
   scripts/omni check real-perception
@@ -87,16 +90,33 @@ EOF
 runs_usage() {
   cat <<'EOF'
 Usage:
-  scripts/omni runs list --host <robot-ip> [retrieval args...]
-  scripts/omni runs pull <run_id> --host <robot-ip> [retrieval args...]
+  scripts/omni runs list [retrieval args...]
+  scripts/omni runs pull <run_id> [retrieval args...]
 
 Retrieval args:
+  --host <robot-ip>
   --user <ssh-user>
   --remote-root <robot-runs-root>
   --import-root <local-import-root>
   --out <local-run-dir>
   --overwrite
+
+Defaults:
+  --host 192.168.1.178, override with OMNISEER_ROBOT_HOST
+  --user radxa, override with OMNISEER_ROBOT_USER
 EOF
+}
+
+omni_arg_present() {
+  local name="$1"
+  shift
+  local arg
+  for arg in "$@"; do
+    if [[ "${arg}" == "${name}" || "${arg}" == "${name}="* ]]; then
+      return 0
+    fi
+  done
+  return 1
 }
 
 env_usage() {
@@ -249,7 +269,14 @@ EOF
     case "${subcommand}" in
       list|pull)
         omni_source_ros_workspace
-        exec ros2 run omniseer_experiments retrieve_runs "${subcommand}" "$@"
+        run_args=("$@")
+        if ! omni_arg_present "--host" "${run_args[@]}"; then
+          run_args+=("--host" "${default_robot_runs_host}")
+        fi
+        if ! omni_arg_present "--user" "${run_args[@]}"; then
+          run_args+=("--user" "${default_robot_runs_user}")
+        fi
+        exec ros2 run omniseer_experiments retrieve_runs "${subcommand}" "${run_args[@]}"
         ;;
       help|-h|--help)
         runs_usage

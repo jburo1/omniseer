@@ -62,15 +62,16 @@ available as an explicit override. Bundles are stored locally on the robot first
 From the laptop, list and retrieve robot-side bundles with:
 
 ```bash
-scripts/omni runs list --host <robot-ip>
-scripts/omni runs pull demo_001 --host <robot-ip>
+scripts/omni runs list
+scripts/omni runs pull demo_001
 ```
 
 The pull command imports the selected bundle into `runs/imported/<run_id>/` by
 default, preserves additive files, and validates the imported copy with
-`inspect_run`. Use `--user`, `--remote-root`, `--import-root`, `--out`, and
-`--overwrite` when the robot or laptop layout differs from the defaults. Report
-generation and cloud synchronization remain later slices.
+`inspect_run`. The front door defaults to `radxa@192.168.1.178`; use `--host`,
+`--user`, `--remote-root`, `--import-root`, `--out`, and `--overwrite` when the
+robot or laptop layout differs from the defaults. Report generation and cloud
+synchronization remain later slices.
 
 Pass launch overrides after the phase, for example:
 
