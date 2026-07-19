@@ -1638,12 +1638,16 @@ Keep it small and evolve additively.</p>
 <li>current robot health summary</li>
 <li>current preview state</li>
 <li>current normalized vision status summary</li>
+<li>odometry availability, staleness, age, and measured <code>vx</code>/<code>vy</code>/<code>wz</code></li>
+<li>bounded teleop status plus the last accepted commanded <code>vx</code>/<code>vy</code>/<code>wz</code></li>
 </ul>
 <p>Deferred until later if needed:</p>
 <ul>
 <li>robot mode or mission state</li>
 <li>broader health summary</li>
 <li>build/runtime details beyond gateway version</li>
+<li>execution environment labels such as <code>REAL</code> or <code>SIM</code></li>
+<li>teleop deadman/timeout semantics beyond the current bounded command path</li>
 </ul>
 <h3 id="overlaysnapshot"><code>OverlaySnapshot</code><a class="headerlink" href="#overlaysnapshot" title="Permanent link">&para;</a></h3>
 <p>Current contents:</p>
@@ -1652,12 +1656,16 @@ Keep it small and evolve additively.</p>
 <li>latest detection overlay snapshot from <code>/yolo/detections</code></li>
 <li>detection freshness based on gateway receipt time</li>
 <li>source-space detection geometry for laptop-side scaling over preview video</li>
+<li>a small capped recent operator event list for status transitions and gateway
+  errors</li>
 </ul>
 <p>Deferred until later if needed:</p>
 <ul>
 <li>exact video/detection frame synchronization</li>
 <li>streaming detection events</li>
 <li>viewer-specific confidence filtering</li>
+<li>host CPU/RAM/network metrics</li>
+<li>Teensy, battery, Wi-Fi, minimap, and target-selection overlays</li>
 </ul>
 <h3 id="previewstatus"><code>PreviewStatus</code><a class="headerlink" href="#previewstatus" title="Permanent link">&para;</a></h3>
 <p>Current contents:</p>
@@ -1793,7 +1801,7 @@ work and are not part of the current API.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 18, 2026 17:41:07 UTC">July 18, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 19, 2026 03:28:12 UTC">July 19, 2026</span>
   </span>
 
     
