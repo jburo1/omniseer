@@ -21,6 +21,7 @@ setup(
             "inspect_run = omniseer_experiments.run_inspection:inspect_run_main",
             "list_runs = omniseer_experiments.run_inspection:list_runs_main",
             "record_run = omniseer_experiments.record_run:main",
+            "retrieve_runs = omniseer_experiments.run_retrieval:main",
         ],
     },
 )

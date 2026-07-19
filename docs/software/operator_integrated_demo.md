@@ -58,8 +58,19 @@ Use `--record` instead of `--record-run <run_id>` for a timestamped run id. Use
 `--record-notes <text>` when the run needs explicit metadata. The recorder reads
 the active vision parameter file to store detector, CLIP, vocab, class-list path,
 and configured classes in `manifest.yaml`; `--record-classes <text>` remains
-available as an explicit override. Bundles are stored locally on the robot first;
-laptop download, report generation, and cloud synchronization are later slices.
+available as an explicit override. Bundles are stored locally on the robot first.
+From the laptop, list and retrieve robot-side bundles with:
+
+```bash
+scripts/omni runs list --host <robot-ip>
+scripts/omni runs pull demo_001 --host <robot-ip>
+```
+
+The pull command imports the selected bundle into `runs/imported/<run_id>/` by
+default, preserves additive files, and validates the imported copy with
+`inspect_run`. Use `--user`, `--remote-root`, `--import-root`, `--out`, and
+`--overwrite` when the robot or laptop layout differs from the defaults. Report
+generation and cloud synchronization remain later slices.
 
 Pass launch overrides after the phase, for example:
 

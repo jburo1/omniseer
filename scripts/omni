@@ -28,6 +28,7 @@ Commands:
   up      Build the needed workspace, then run a profile.
   test    Targeted local verification helpers. Defaults to ROS.
   run     Operator-facing run commands for sim, real, monitor, and teleop.
+  runs    List and retrieve robot-side perception run bundles.
   check   Passive verification helpers.
   doctor  Report local build, runtime, and robot dependency state.
   flash   Hardware flashing helpers.
@@ -42,6 +43,8 @@ Examples:
   scripts/omni build
   scripts/omni up sim headless:=true
   scripts/omni up real --phase 3
+  scripts/omni runs list --host <robot-ip>
+  scripts/omni runs pull demo_001 --host <robot-ip>
   scripts/omni test smoke-sim
   scripts/omni build ros
   scripts/omni check real-perception
@@ -78,6 +81,21 @@ Recording flags:
   --record-notes <text>
   --record-classes <text>
   --record-overwrite
+EOF
+}
+
+runs_usage() {
+  cat <<'EOF'
+Usage:
+  scripts/omni runs list --host <robot-ip> [retrieval args...]
+  scripts/omni runs pull <run_id> --host <robot-ip> [retrieval args...]
+
+Retrieval args:
+  --user <ssh-user>
+  --remote-root <robot-runs-root>
+  --import-root <local-import-root>
+  --out <local-run-dir>
+  --overwrite
 EOF
 }
 
@@ -220,6 +238,24 @@ EOF
         ;;
       *)
         omni_die "unknown run subcommand: ${subcommand}"
+        ;;
+    esac
+    ;;
+  runs)
+    subcommand="${1:-help}"
+    if [[ $# -gt 0 ]]; then
+      shift
+    fi
+    case "${subcommand}" in
+      list|pull)
+        omni_source_ros_workspace
+        exec retrieve_runs "${subcommand}" "$@"
+        ;;
+      help|-h|--help)
+        runs_usage
+        ;;
+      *)
+        omni_die "unknown runs subcommand: ${subcommand}"
         ;;
     esac
     ;;
