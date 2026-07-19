@@ -115,8 +115,8 @@ hardware validation responsibility.
 
 | Capability | Status | Evidence boundary |
 | --- | --- | --- |
-| Native producer and consumer vision pipeline | **Hardware-verified** | V4L2, RGA, RKNN target tests and harness |
-| YOLO-World post-processing and text embeddings | **Hardware-verified** | RKNN tests and integrated native runtime |
+| Native producer and consumer vision pipeline | **Implemented; target-oriented component evidence** | V4L2, RGA, RKNN target tests and harnesses; integrated real-run record pending |
+| YOLO-World post-processing and text embeddings | **Implemented; target-oriented component evidence** | RKNN tests and native runtime; integrated real-run record pending |
 | ROS detection and performance publication | **Implemented** | `omniseer_vision_bridge` |
 | Portable ROS, vision, firmware, simulation, and docs checks | **CI-verified** | GitHub Actions six-job workflow |
 | gRPC gateway, platform diagnostics, and managed SRT preview | **Implemented** | C++ and Python tests plus local integration |
@@ -139,6 +139,7 @@ hardware validation responsibility.
 ## Related Documentation
 
 - [Edge-to-Cloud Perception](software/edge_to_cloud_perception.md)
+- [Evidence and Verification Boundary](evidence.md)
 - [Vision Pipeline](software/vision_pipeline.md)
 - [Vision Telemetry](software/vision_telemetry_spec.md)
 - [Robot Gateway](software/robot_gateway.md)

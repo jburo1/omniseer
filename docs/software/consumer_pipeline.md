@@ -1,6 +1,6 @@
 # Consumer pipeline: ready pool -> RKNN -> detections -> release (thread boundary)
 
-_Status: implemented and hardware-verified_
+_Status: implemented; target-oriented component evidence exists_
 
 This document describes the **per-frame hot path** through the consumer side of the vision pipeline:
 

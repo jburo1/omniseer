@@ -37,9 +37,11 @@ required for this deliverable.
 
 ### Edge inference
 
-**Hardware-verified:** the native runtime captures NV12 frames, preprocesses them with
-RGA, prepares YOLO-World text embeddings, runs RKNN detector inference, maps detections
-back to source coordinates, and publishes bounded results.
+**Implemented with target-oriented component evidence:** the native runtime captures
+NV12 frames, preprocesses them with RGA, prepares YOLO-World text embeddings, runs
+RKNN detector inference, maps detections back to source coordinates, and publishes
+bounded results. The integrated real teleop plus native perception verification
+record is still pending.
 
 The native bridge currently receives classes from `classes.path` during startup.
 Changing classes requires restarting the bridge with a different class list. The
@@ -117,6 +119,7 @@ hardware/software configuration.
 ## Related Documentation
 
 - [System Architecture](../architecture.md)
+- [Evidence and Verification Boundary](../evidence.md)
 - [Vision Pipeline](vision_pipeline.md)
 - [Vision Telemetry](vision_telemetry_spec.md)
 - [Robot Gateway](robot_gateway.md)

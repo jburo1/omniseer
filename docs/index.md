@@ -24,6 +24,7 @@ Start with:
 - [Scripts Front Door](software/scripts_frontdoor.md) for the supported local command surface
 - [Edge-to-Cloud Perception](software/edge_to_cloud_perception.md) for the active deliverable
 - [System Architecture](architecture.md) for runtime boundaries and implementation status
+- [Evidence and Verification Boundary](evidence.md) for what current checks prove
 - [Vision Pipeline](software/vision_pipeline.md) for the native hot path
 - [CI/CD Overview](software/ci_cd.md) for automated verification and its limits
 - [Robot Gateway](software/robot_gateway.md) and [Preview Streaming](software/preview_streaming.md) for operator diagnostics

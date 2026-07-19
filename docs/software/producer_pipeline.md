@@ -1,6 +1,6 @@
 # Producer pipeline: camera → RGA → output pool (thread boundary)
 
-_Status: implemented and hardware-verified_
+_Status: implemented; target-oriented component evidence exists_
 
 This document describes the **per-frame hot path** through the producer side of the vision pipeline:
 

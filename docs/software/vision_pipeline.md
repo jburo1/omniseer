@@ -1,6 +1,6 @@
 # Vision Pipeline
 
-_Status: implemented; target-hardware performance results still need publication_
+_Status: implemented; integrated target-hardware verification record and performance publication pending_
 
 This document describes the multi-stage, low-latency, zero-copy-oriented vision
 pipeline that transforms camera frames into open-vocabulary object detections. The
@@ -10,8 +10,9 @@ not autonomous seek-and-capture behavior.
 The producer, consumer, YOLO-World post-processing, text-embedding preparation,
 rolling telemetry, JSONL telemetry, native harness, and ROS bridge are implemented.
 Portable components are CI-verified. V4L2, RGA, and RKNN behavior requires the ROCK
-5B+ and is hardware-verified separately. A published performance table and repeatable
-experiment report remain planned.
+5B+ and is covered by target-oriented component checks. A published integrated
+target-hardware record, performance table, and repeatable experiment report remain
+planned.
 
 
 ## Major Design Considerations

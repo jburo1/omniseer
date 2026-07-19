@@ -35,6 +35,7 @@ of the active deliverable.
 
 - [Project documentation](https://jburo1.github.io/omniseer/)
 - [System architecture](docs/architecture.md)
+- [Evidence and verification boundary](docs/evidence.md)
 - [Edge-to-cloud perception](docs/software/edge_to_cloud_perception.md)
 - [CI/CD overview](docs/software/ci_cd.md)
 
