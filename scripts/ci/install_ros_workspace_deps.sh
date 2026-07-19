@@ -37,4 +37,4 @@ rosdep update
 # These runtime packages are provided by repository overlays excluded from the
 # portable CI package set.
 rosdep install --from-paths "$@" --ignore-src -y --rosdistro "${ROS_DISTRO}" \
-  --skip-keys "micro_ros_agent rf2o_laser_odometry yolo_bringup"
+  --skip-keys "micro_ros_agent rf2o_laser_odometry robot_diag_control_cpp yolo_bringup"

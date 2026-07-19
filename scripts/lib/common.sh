@@ -95,10 +95,8 @@ omni_ros_dep_paths_smoke() {
 ros_ws/src/omniseer_gz_assets
 ros_ws/src/omniseer_msgs
 ros_ws/src/omniseer_description
-ros_ws/src/analysis
 ros_ws/src/bringup
 ros_ws/src/robot_io_adapters
-ros_ws/src/robot_diag_control_cpp
 EOF
 }
 

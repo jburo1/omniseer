@@ -193,10 +193,8 @@ bash scripts/ci/install_ros_workspace_deps.sh \
   ros_ws/src/omniseer_gz_assets \
   ros_ws/src/omniseer_msgs \
   ros_ws/src/omniseer_description \
-  ros_ws/src/analysis \
   ros_ws/src/bringup \
-  ros_ws/src/robot_io_adapters \
-  ros_ws/src/robot_diag_control_cpp
+  ros_ws/src/robot_io_adapters
 
 set +u
 source /opt/ros/kilted/setup.bash
