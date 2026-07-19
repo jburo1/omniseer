@@ -221,7 +221,7 @@ ctest --test-dir vision/build-verify \
   -R 'image_buffer_pool_test|jsonl_telemetry_test|rolling_telemetry_test' \
   --output-on-failure
 
-${HOME}/.platformio/penv/bin/platformio run -d firmware -e teensy41
+scripts/omni build firmware
 mkdocs build --strict
 ```
 

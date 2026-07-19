@@ -286,7 +286,7 @@ jobs:
         shell: bash
         run: |
           set -eux
-          platformio run -d firmware -e teensy41
+          scripts/omni build firmware
 
       - name: Upload firmware build outputs
         if: always()
