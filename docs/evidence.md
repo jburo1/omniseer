@@ -52,14 +52,15 @@ target-hardware verification record for:
 - gateway/preview/overlay operation during the same real run
 
 Those records belong in the Phase 2 and Phase 3 verification checklists before
-Phase 4 run-bundle work is treated as evidence-backed.
+Phase 4 run-bundle implementation is locally verified, but real recorded run
+evidence still depends on the Phase 2 and Phase 3 hardware checklists.
 
 ## Planned / Not Yet Verified
 
 The following remain planned or pending evidence:
 
-- structured perception run bundle recorder
-- run metadata, detections, telemetry, and selected evidence capture
+- target-hardware run bundle recorded through the Phase 3 workflow
+- selected visual evidence capture inside run bundles
 - laptop report generator for recorded runs
 - resource telemetry persisted into experiment bundles
 - provider-neutral cloud synchronization

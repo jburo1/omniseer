@@ -107,6 +107,28 @@ class RealLaunchStructureTests(unittest.TestCase):
         self.assertIn("/encoder_counts", cmd_text)
         self.assertNotIn("ros2 topic list", cmd_text)
 
+    def test_real_launch_includes_optional_experiment_recorder(self) -> None:
+        module = _load_launch_module("real.launch.py")
+        launch_description = module.generate_launch_description()
+
+        recorder_nodes = [
+            entity
+            for entity in _walk_entities(launch_description.entities)
+            if isinstance(entity, Node)
+            and "omniseer_experiments" in _flatten_launch_value(entity.node_package)
+            and "record_run" in _flatten_launch_value(entity.node_executable)
+        ]
+
+        self.assertTrue(recorder_nodes, "expected optional omniseer_experiments record_run node")
+        recorder_text = "".join(
+            _flatten_launch_value(getattr(node, "_Node__arguments", [])) for node in recorder_nodes
+        )
+        self.assertIn("--run-id", recorder_text)
+        self.assertIn("--vision-params-file", recorder_text)
+        self.assertIn("--detector-model-path", recorder_text)
+        self.assertIn("--classes-path", recorder_text)
+        self.assertIn("--duration-sec", recorder_text)
+
     def test_sim_launch_runs_shared_cleanup_before_launch_group(self) -> None:
         module = _load_launch_module("sim.launch.py")
         launch_description = module.generate_launch_description()

@@ -111,3 +111,6 @@ docs/software/project_journey.md
 *.db3
 *.mcap
 *.bag*
+
+# --- Local experiment artifacts ---
+runs/

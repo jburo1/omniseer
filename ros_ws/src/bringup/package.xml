@@ -38,6 +38,7 @@
   <exec_depend>mecanum_drive_controller</exec_depend>
   <exec_depend>gz_ros2_control</exec_depend>
   <exec_depend>omniseer_description</exec_depend>
+  <exec_depend>omniseer_experiments</exec_depend>
   <exec_depend>omniseer_gz_assets</exec_depend>
   <exec_depend>opennav_docking</exec_depend>
   <exec_depend>rclcpp_components</exec_depend>

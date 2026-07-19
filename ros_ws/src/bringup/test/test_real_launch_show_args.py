@@ -35,6 +35,10 @@ class RealLaunchShowArgsTests(unittest.TestCase):
         self.assertIn("teensy_preflight_timeout_sec", result.stdout)
         self.assertIn("boundary_topics_timeout_sec", result.stdout)
         self.assertIn("allow_teensy_power_cycle", result.stdout)
+        self.assertIn("start_experiment_recording", result.stdout)
+        self.assertIn("experiment_run_id", result.stdout)
+        self.assertIn("experiment_out_dir", result.stdout)
+        self.assertIn("experiment_duration_sec", result.stdout)
 
     @unittest.skipUnless(shutil.which("ros2"), "ros2 is required for launch argument checks")
     def test_real_io_launch_show_args_lists_teensy_gating_arguments(self) -> None:

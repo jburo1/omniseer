@@ -15,9 +15,10 @@ The active portfolio deliverable is narrower than autonomous object search:
 - record detections, telemetry, and useful evidence
 - review an experiment on a laptop and, later, through a cloud-hosted workflow
 
-Native runtime class updates, structured run bundles, cloud synchronization, and a
-hosted review dashboard are **planned**. They are not described as implemented.
-Autonomous seek and capture are explicitly deferred.
+Structured run bundles are implemented as local robot artifacts. Native runtime
+class updates, laptop report generation, cloud synchronization, and a hosted
+review dashboard are **planned**. Autonomous seek and capture are explicitly
+deferred.
 
 Start with:
 

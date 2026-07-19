@@ -32,8 +32,6 @@ The default loop is:
 
 Prefer the smallest change that fully solves the problem.
 
-Do not wait for remote CI/CD. The user will handle CI/CD manually.
-
 ## CI/CD Policy
 
 Unless explicitly asked:
@@ -46,20 +44,19 @@ Unless explicitly asked:
 
 Use targeted local verification instead: focused tests, builds, linters, static checks, launch checks, or runtime checks that are directly relevant to the change.
 
-In the final summary, distinguish between local verification and unverified analysis.
+Treat remote CI/CD as intentionally left to the user unless explicitly requested.
 
 ## Decision Rules
 
 * Apply Occam's razor: prefer the simplest explanation and the smallest effective fix.
-* Prefer targeted fixes over broad refactors.
 * Fix root causes when they are near and clear. Avoid speculative cleanup.
 * Make reasonable low-risk assumptions and continue.
 * Ask only when the decision is materially ambiguous, expensive to reverse, or likely to create user-visible churn.
 
 ## Architecture Boundaries
 
-* `robot-core` is sacred. Mission-critical robot behavior must not depend on optional operator tooling.
-* If preview, diagnostics, dashboard, or teleop tooling fails, robot-core must continue to operate safely.
+* `robot-core` is sacred. Mission-critical robot behavior must not depend on optional operator tooling, preview, diagnostics, dashboard, or teleop tooling.
+* Optional systems may fail, but `robot-core` must continue to operate safely.
 * Keep the mission path, gateway/control plane, operator UI, and infra/tooling as separate concerns unless the task explicitly requires crossing those boundaries.
 * Treat the robot, gateway, UI, and CI as one product with clear ownership boundaries.
 * Preserve existing architecture unless the task clearly requires structural change.
@@ -83,11 +80,8 @@ General ownership rule:
 ## Verification Standard
 
 * Return evidence, not confidence.
-* A change is not done because it looks right. It is done when the behavior is specified, verified, and the result is reported clearly.
-* Run the smallest meaningful validation first.
+* A change is done only when the intended behavior is specified, locally verified where practical, and reported clearly.
 * Prefer targeted tests, builds, lint, and runtime checks over broad expensive sweeps.
-* Do not use remote CI/CD as part of the agent verification loop unless explicitly asked.
-* Do not claim success without verification.
 * If hardware, camera, ROS graph, container, or SBC constraints block full validation, say so explicitly.
 
 For bug fixes:
@@ -186,16 +180,14 @@ When proposing or adding one:
 
 * Be concise, direct, and technical.
 * Keep progress updates short, factual, and useful.
-* Final summaries should cover what changed, what was verified locally, what was not verified, and what remains uncertain.
-* If remote CI/CD was not run, say so explicitly.
 * If presenting options, recommend one first and explain tradeoffs briefly.
 
-When summarizing, distinguish clearly between:
+Final summaries should distinguish clearly between:
 
 * changed
 * locally verified
 * not verified
-* intentionally left to user, including remote CI/CD
+* intentionally left to the user, including remote CI/CD
 
 ## Commit Style
 

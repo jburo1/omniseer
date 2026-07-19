@@ -34,6 +34,33 @@ and resolves model paths from `vision_bridge.real.paths.yaml`:
 scripts/omni run real --phase 3
 ```
 
+To record a local perception run bundle during the same Phase 3 bringup, enable
+the experiment recorder from the same front door:
+
+```bash
+scripts/omni run real --phase 3 --record-run demo_001
+```
+
+This starts an optional `omniseer_experiments` sidecar that subscribes to
+`/yolo/detections` and `/vision/perf` and writes:
+
+```text
+runs/demo_001/
+  manifest.yaml
+  detections.jsonl
+  perf.jsonl
+  summary.json
+  evidence/
+```
+
+Use `--record` instead of `--record-run <run_id>` for a timestamped run id. Use
+`--record-out <path>`, `--record-duration-sec <seconds>`, and
+`--record-notes <text>` when the run needs explicit metadata. The recorder reads
+the active vision parameter file to store detector, CLIP, vocab, class-list path,
+and configured classes in `manifest.yaml`; `--record-classes <text>` remains
+available as an explicit override. Bundles are stored locally on the robot first;
+laptop download, report generation, and cloud synchronization are later slices.
+
 Pass launch overrides after the phase, for example:
 
 ```bash
@@ -154,6 +181,7 @@ Expected observations:
 - Robot / SBC:
 - Laptop:
 - Robot command (`scripts/omni run real --phase 3` plus overrides):
+- Recording enabled / run id:
 - Laptop command (`scripts/omni run monitor` plus host):
 - Preview observed:
 - Vision status fresh in GUI:

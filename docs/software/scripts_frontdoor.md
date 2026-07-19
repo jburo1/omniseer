@@ -239,6 +239,7 @@ scripts/omni run real --phase 2
 scripts/omni run real --phase 2 smoke
 scripts/omni run real --phase 2 bringup camera_device:=/dev/video11
 scripts/omni run real --phase 3
+scripts/omni run real --phase 3 --record-run demo_001
 ```
 
 If `--phase` is omitted, the command selects the latest stable real phase and
@@ -247,6 +248,19 @@ prints which one it chose.
 Phase `3` defaults to foreground `bringup` with native vision and the operator
 gateway enabled. Phase `2` retains its background bringup plus keyboard teleop
 default.
+
+Recording flags can be used with modes that launch real bringup:
+
+```bash
+scripts/omni run real --phase 3 --record
+scripts/omni run real --phase 3 --record-run demo_001
+scripts/omni run real --phase 3 --record-run demo_001 --record-out runs/demo_001
+```
+
+The recorder is an optional sidecar. It writes a local bundle containing
+`manifest.yaml`, `detections.jsonl`, `perf.jsonl`, `summary.json`, and
+`evidence/`. The first slice stores bundles on the robot; laptop download and
+analysis tooling are intentionally later work.
 
 Why phases exist:
 
@@ -286,6 +300,8 @@ Suggestions:
 - use `run real --phase 2 smoke` for a quick integrated health check
 - use `run real --phase 2 bringup` when debugging launch or runtime issues
 - use `run real --phase 3` on the robot for the operator-integrated demo
+- add `--record-run <run_id>` to Phase `3` when the run should produce a local
+  perception bundle
 
 #### `run monitor`
 
@@ -438,6 +454,12 @@ Robot:
 
 ```bash
 scripts/omni run real --phase 3
+```
+
+Robot with local run-bundle recording:
+
+```bash
+scripts/omni run real --phase 3 --record-run demo_001
 ```
 
 Laptop:

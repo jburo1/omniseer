@@ -121,7 +121,7 @@ hardware validation responsibility.
 | Portable ROS, vision, firmware, simulation, and docs checks | **CI-verified** | GitHub Actions six-job workflow |
 | gRPC gateway, platform diagnostics, and managed SRT preview | **Implemented** | C++ and Python tests plus local integration |
 | Native runtime class updates | **Planned** | Python integration exists; native bridge support does not |
-| Structured experiment recorder and run bundle | **Planned** | No integrated recorder exists |
+| Structured experiment recorder and run bundle | **Implemented; local verification** | `omniseer_experiments` records detections/perf into local bundles; target-hardware run evidence pending |
 | Recorded resource telemetry in experiment bundles | **Planned** | Gateway live status reports compute/network/power; recorder does not persist it yet |
 | Cloud synchronization and hosted dashboard | **Planned** | No provider or transport selected |
 | Autonomous semantic search and capture | **Deferred** | Outside the active deliverable |
@@ -130,6 +130,7 @@ hardware validation responsibility.
 
 - `vision/` owns the native camera-to-detection runtime and detailed telemetry.
 - `ros_ws/src/omniseer_vision_bridge/` owns the native-to-ROS adapter.
+- `ros_ws/src/omniseer_experiments/` owns local perception run-bundle recording.
 - `ros_ws/src/bringup/` owns sim and real launch composition.
 - `robot_diag_control_cpp` owns the robot-side external gateway boundary.
 - `robot_diag_control` owns host-side operator tools.

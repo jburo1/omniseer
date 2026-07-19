@@ -80,6 +80,15 @@ def _build_real_bringup_actions(
     postprocess_nms_iou_threshold,
     postprocess_max_detections,
     camera_frame_id,
+    start_experiment_recording,
+    experiment_run_id,
+    experiment_out_dir,
+    experiment_classes,
+    experiment_notes,
+    experiment_duration_sec,
+    experiment_overwrite,
+    experiment_queue_size,
+    experiment_flush_interval_sec,
 ):
     real_io_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([PathJoinSubstitution([pkg_bringup, "launch", "real_io.launch.py"])]),
@@ -125,6 +134,45 @@ def _build_real_bringup_actions(
             "camera_frame_id": camera_frame_id,
         }.items(),
         condition=IfCondition(start_vision),
+    )
+
+    experiment_recorder_node = Node(
+        package="omniseer_experiments",
+        executable="record_run",
+        name="perception_run_recorder",
+        output="screen",
+        arguments=[
+            "--run-id",
+            experiment_run_id,
+            "--out",
+            experiment_out_dir,
+            "--classes",
+            experiment_classes,
+            "--vision-params-file",
+            PathJoinSubstitution([pkg_bringup, "config", vision_params_file]),
+            "--detector-model-path",
+            detector_model_path,
+            "--clip-model-path",
+            clip_model_path,
+            "--clip-vocab-path",
+            clip_vocab_path,
+            "--classes-path",
+            classes_path,
+            "--notes",
+            experiment_notes,
+            "--duration-sec",
+            experiment_duration_sec,
+            "--overwrite",
+            experiment_overwrite,
+            "--queue-size",
+            experiment_queue_size,
+            "--flush-interval-sec",
+            experiment_flush_interval_sec,
+            "--ros-args",
+            "--log-level",
+            log_level,
+        ],
+        condition=IfCondition(start_experiment_recording),
     )
 
     # Keep the teleop command path available even if lidar/nav boundary topics
@@ -227,6 +275,7 @@ def _build_real_bringup_actions(
     return [
         real_io_launch,
         real_vision_launch,
+        experiment_recorder_node,
         baseline_twist_mux_node,
         wait_boundary_topics,
         launch_common_after_wait,
@@ -290,6 +339,15 @@ def generate_launch_description():
         DeclareLaunchArgument("postprocess_nms_iou_threshold", default_value="__from_config__"),
         DeclareLaunchArgument("postprocess_max_detections", default_value="__from_config__"),
         DeclareLaunchArgument("camera_frame_id", default_value="__from_config__"),
+        DeclareLaunchArgument("start_experiment_recording", default_value="false"),
+        DeclareLaunchArgument("experiment_run_id", default_value=""),
+        DeclareLaunchArgument("experiment_out_dir", default_value=""),
+        DeclareLaunchArgument("experiment_classes", default_value=""),
+        DeclareLaunchArgument("experiment_notes", default_value=""),
+        DeclareLaunchArgument("experiment_duration_sec", default_value="0"),
+        DeclareLaunchArgument("experiment_overwrite", default_value="false"),
+        DeclareLaunchArgument("experiment_queue_size", default_value="256"),
+        DeclareLaunchArgument("experiment_flush_interval_sec", default_value="1.0"),
     ]
 
     use_sim_time = LaunchConfiguration("use_sim_time")
@@ -338,6 +396,15 @@ def generate_launch_description():
     postprocess_nms_iou_threshold = LaunchConfiguration("postprocess_nms_iou_threshold")
     postprocess_max_detections = LaunchConfiguration("postprocess_max_detections")
     camera_frame_id = LaunchConfiguration("camera_frame_id")
+    start_experiment_recording = LaunchConfiguration("start_experiment_recording")
+    experiment_run_id = LaunchConfiguration("experiment_run_id")
+    experiment_out_dir = LaunchConfiguration("experiment_out_dir")
+    experiment_classes = LaunchConfiguration("experiment_classes")
+    experiment_notes = LaunchConfiguration("experiment_notes")
+    experiment_duration_sec = LaunchConfiguration("experiment_duration_sec")
+    experiment_overwrite = LaunchConfiguration("experiment_overwrite")
+    experiment_queue_size = LaunchConfiguration("experiment_queue_size")
+    experiment_flush_interval_sec = LaunchConfiguration("experiment_flush_interval_sec")
     cleanup_script = PathJoinSubstitution([pkg_bringup, "scripts", "pre_launch_cleanup.sh"])
 
     launch_group = GroupAction(
@@ -388,6 +455,15 @@ def generate_launch_description():
             postprocess_nms_iou_threshold=postprocess_nms_iou_threshold,
             postprocess_max_detections=postprocess_max_detections,
             camera_frame_id=camera_frame_id,
+            start_experiment_recording=start_experiment_recording,
+            experiment_run_id=experiment_run_id,
+            experiment_out_dir=experiment_out_dir,
+            experiment_classes=experiment_classes,
+            experiment_notes=experiment_notes,
+            experiment_duration_sec=experiment_duration_sec,
+            experiment_overwrite=experiment_overwrite,
+            experiment_queue_size=experiment_queue_size,
+            experiment_flush_interval_sec=experiment_flush_interval_sec,
         )
     )
 
@@ -448,6 +524,15 @@ def generate_launch_description():
             postprocess_nms_iou_threshold=postprocess_nms_iou_threshold,
             postprocess_max_detections=postprocess_max_detections,
             camera_frame_id=camera_frame_id,
+            start_experiment_recording=start_experiment_recording,
+            experiment_run_id=experiment_run_id,
+            experiment_out_dir=experiment_out_dir,
+            experiment_classes=experiment_classes,
+            experiment_notes=experiment_notes,
+            experiment_duration_sec=experiment_duration_sec,
+            experiment_overwrite=experiment_overwrite,
+            experiment_queue_size=experiment_queue_size,
+            experiment_flush_interval_sec=experiment_flush_interval_sec,
         ),
         condition=UnlessCondition(pre_launch_cleanup),
     )

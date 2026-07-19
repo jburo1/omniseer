@@ -13,7 +13,7 @@ source "${script_dir}/../lib/ros.sh"
 usage() {
   cat <<'EOF'
 Usage:
-  scripts/omni run real [--phase <number>] [--mode <mode>] [mode] [launch args...]
+  scripts/omni run real [--phase <number>] [recording flags] [--mode <mode>] [mode] [launch args...]
 
 Modes:
   operator  Phase 2 only: start bringup, then open keyboard teleop.
@@ -28,6 +28,16 @@ Examples:
   scripts/omni run real --phase 2 bringup camera_device:=/dev/video11
   scripts/omni run real --phase 2 operator micro_ros_serial_device:=/dev/serial/by-id/usb-Teensyduino_USB_Serial_16634450-if00
   scripts/omni run real --phase 3
+  scripts/omni run real --phase 3 --record-run demo_001
+
+Recording flags:
+  --record                         Record a timestamped perception run bundle.
+  --record-run <run_id>            Record a named perception run bundle.
+  --record-out <path>              Override output directory; defaults to runs/<run_id>.
+  --record-duration-sec <seconds>  Stop recorder after a duration; 0 records until launch shutdown.
+  --record-notes <text>            Store notes in manifest.yaml.
+  --record-classes <text>          Store configured class names in manifest.yaml.
+  --record-overwrite               Replace an existing output directory.
 EOF
 }
 
@@ -59,6 +69,48 @@ phase3_launch_args() {
     "clip_model_path:=__from_config__" \
     "clip_vocab_path:=__from_config__" \
     "classes_path:=__from_config__"
+}
+
+recording_requested() {
+  [[ "${record_enabled}" == "true" ]]
+}
+
+require_no_recording() {
+  if recording_requested; then
+    omni_die "recording flags require a mode that launches real bringup"
+  fi
+}
+
+append_recording_launch_args() {
+  local -n target_args="$1"
+
+  if ! recording_requested; then
+    return
+  fi
+
+  if [[ -z "${record_run_id}" ]]; then
+    record_run_id="$(date -u +%Y%m%dT%H%M%SZ)"
+  fi
+
+  if [[ -z "${record_out_dir}" ]]; then
+    record_out_dir="runs/${record_run_id}"
+  fi
+
+  target_args+=(
+    "start_experiment_recording:=true"
+    "experiment_run_id:=${record_run_id}"
+    "experiment_out_dir:=${record_out_dir}"
+    "experiment_duration_sec:=${record_duration_sec}"
+    "experiment_overwrite:=${record_overwrite}"
+  )
+
+  if [[ -n "${record_notes}" ]]; then
+    target_args+=("experiment_notes:=${record_notes}")
+  fi
+
+  if [[ -n "${record_classes}" ]]; then
+    target_args+=("experiment_classes:=${record_classes}")
+  fi
 }
 
 launch_starts_vision() {
@@ -99,6 +151,7 @@ run_operator_bringup() {
   local extra_args=("$@")
   local launch_args=()
   omni_read_lines_into_array launch_args operator_launch_args
+  append_recording_launch_args launch_args
   omni_source_ros_workspace
   require_vision_bridge_package "${launch_args[@]}" "${extra_args[@]}"
   exec ros2 launch bringup real.launch.py "${launch_args[@]}" "${extra_args[@]}"
@@ -108,6 +161,7 @@ run_background_operator_bringup() {
   local extra_args=("$@")
   local launch_args=()
   omni_read_lines_into_array launch_args operator_launch_args
+  append_recording_launch_args launch_args
   omni_source_ros_workspace
   require_vision_bridge_package "${launch_args[@]}" "${extra_args[@]}"
 
@@ -155,6 +209,7 @@ run_phase3_bringup() {
   local extra_args=("$@")
   local launch_args=()
   omni_read_lines_into_array launch_args phase3_launch_args
+  append_recording_launch_args launch_args
   omni_source_ros_workspace
   require_vision_bridge_package "${launch_args[@]}" "${extra_args[@]}"
   exec ros2 launch bringup real.launch.py "${launch_args[@]}" "${extra_args[@]}"
@@ -164,6 +219,7 @@ run_background_phase3_bringup() {
   local extra_args=("$@")
   local launch_args=()
   omni_read_lines_into_array launch_args phase3_launch_args
+  append_recording_launch_args launch_args
   omni_source_ros_workspace
   require_vision_bridge_package "${launch_args[@]}" "${extra_args[@]}"
 
@@ -210,9 +266,11 @@ run_real_phase_2() {
       run_operator_bringup "$@"
       ;;
     teleop)
+      require_no_recording
       run_teleop
       ;;
     verify|check)
+      require_no_recording
       run_verify
       ;;
     help|-h|--help)
@@ -236,6 +294,7 @@ run_real_phase_3() {
       run_phase3_smoke "$@"
       ;;
     verify|check)
+      require_no_recording
       omni_source_ros_workspace
       run_phase3_verify
       ;;
@@ -250,6 +309,13 @@ run_real_phase_3() {
 
 resolved_phase=""
 mode=""
+record_enabled=false
+record_run_id=""
+record_out_dir=""
+record_duration_sec="0"
+record_notes=""
+record_classes=""
+record_overwrite="false"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --phase)
@@ -261,6 +327,45 @@ while [[ $# -gt 0 ]]; do
       [[ $# -ge 2 ]] || omni_die "--mode requires an argument"
       mode="$2"
       shift 2
+      ;;
+    --record)
+      record_enabled=true
+      shift
+      ;;
+    --record-run)
+      [[ $# -ge 2 ]] || omni_die "--record-run requires a run id"
+      record_enabled=true
+      record_run_id="$2"
+      shift 2
+      ;;
+    --record-out)
+      [[ $# -ge 2 ]] || omni_die "--record-out requires a path"
+      record_enabled=true
+      record_out_dir="$2"
+      shift 2
+      ;;
+    --record-duration-sec)
+      [[ $# -ge 2 ]] || omni_die "--record-duration-sec requires a numeric argument"
+      record_enabled=true
+      record_duration_sec="$2"
+      shift 2
+      ;;
+    --record-notes)
+      [[ $# -ge 2 ]] || omni_die "--record-notes requires text"
+      record_enabled=true
+      record_notes="$2"
+      shift 2
+      ;;
+    --record-classes)
+      [[ $# -ge 2 ]] || omni_die "--record-classes requires text"
+      record_enabled=true
+      record_classes="$2"
+      shift 2
+      ;;
+    --record-overwrite)
+      record_enabled=true
+      record_overwrite="true"
+      shift
       ;;
     help|-h|--help)
       usage

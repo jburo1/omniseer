@@ -55,7 +55,7 @@ run_usage() {
   cat <<'EOF'
 Usage:
   scripts/omni run sim [launch args...]
-  scripts/omni run real [--phase <number>] [--mode <mode>] [mode] [launch args...]
+  scripts/omni run real [--phase <number>] [recording flags] [--mode <mode>] [mode] [launch args...]
   scripts/omni run monitor [monitor args...]
   scripts/omni run teleop
 
@@ -69,6 +69,15 @@ Real modes:
 Phase defaults:
   2  operator
   3  bringup
+
+Recording flags:
+  --record
+  --record-run <run_id>
+  --record-out <path>
+  --record-duration-sec <seconds>
+  --record-notes <text>
+  --record-classes <text>
+  --record-overwrite
 EOF
 }
 

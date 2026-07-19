@@ -83,6 +83,7 @@ ros_ws/src/omniseer_msgs
 ros_ws/src/yolo_ros/yolo_msgs
 ros_ws/src/omniseer_description
 ros_ws/src/analysis
+ros_ws/src/omniseer_experiments
 ros_ws/src/bringup
 ros_ws/src/robot_io_adapters
 ros_ws/src/robot_diag_control
@@ -107,6 +108,7 @@ omniseer_msgs
 yolo_msgs
 omniseer_description
 analysis
+omniseer_experiments
 bringup
 robot_io_adapters
 robot_diag_control
@@ -126,6 +128,7 @@ omni_ros_test_packages() {
   cat <<'EOF'
 omniseer_description
 analysis
+omniseer_experiments
 bringup
 robot_io_adapters
 robot_diag_control
