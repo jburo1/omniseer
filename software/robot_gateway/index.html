@@ -1584,17 +1584,17 @@
 
 
 <h1 id="robot-gateway">Robot Gateway<a class="headerlink" href="#robot-gateway" title="Permanent link">&para;</a></h1>
-<p><em>Status: implemented v1 diagnostics and preview-control slice</em></p>
+<p><em>Status: implemented v1 diagnostics, preview-control, and bounded-teleop slice</em></p>
 <p>This document describes the operator-facing gateway between the robot's internal
 ROS 2 graph and the external operator laptop application. The first C++ gateway,
-typed gRPC API, preview lifecycle manager, and Python operator tools are implemented.
-Teleop, experiment export control, and cloud integration remain planned.</p>
+typed gRPC API, preview lifecycle manager, bounded teleop path, and Python operator
+tools are implemented. Experiment export control and cloud integration remain planned.</p>
 <h2 id="purpose">Purpose<a class="headerlink" href="#purpose" title="Permanent link">&para;</a></h2>
 <p>Provide one explicit integration boundary for operator-facing features:</p>
 <ul>
 <li>gRPC control and state access</li>
 <li>preview session management</li>
-<li>later teleop control</li>
+<li>bounded teleop control</li>
 <li>later recording/export triggers</li>
 <li>later cloud-bridge integration</li>
 </ul>
@@ -1615,10 +1615,12 @@ and services.</p>
 <li>a synchronous unary gRPC service/server layer</li>
 <li>a ROS-backed node that aggregates <code>/vision/perf</code>, filtered odometry, and serves the locked API</li>
 <li>a gateway-owned preview subprocess manager backing <code>SetPreviewMode</code></li>
+<li>a bounded teleop manager backing <code>SetTeleopEnabled</code> and <code>SendTeleopCommand</code></li>
+<li>live platform diagnostics for compute, Wi-Fi, LiPo, and onboard battery state</li>
 <li>a built-in GStreamer preview worker path using <code>/dev/video11 -&gt; x264 -&gt; MPEG-TS -&gt; SRT</code></li>
 <li>packaged Python client tools for gateway status/control and host-side preview consumption</li>
 <li>a packaged Python monitor shell that integrates status polling and preview launch</li>
-<li>a first packaged Tk monitor GUI for desktop status/control bring-up</li>
+<li>a first packaged Tk monitor GUI for desktop status, preview, and teleop bring-up</li>
 <li>local verification against those packaged Python tools</li>
 </ul>
 <p>What does <strong>not</strong> exist yet:</p>
@@ -1631,7 +1633,7 @@ and services.</p>
 <p>Near-term direction:</p>
 <ul>
 <li>keep <code>robot_diag_control_cpp</code> inside <code>robot-core</code></li>
-<li>use the gateway for optional status and preview control</li>
+<li>use the gateway for optional status, preview control, and bounded operator teleop</li>
 <li>add experiment export control only after the local recorder contract is stable</li>
 </ul>
 <h2 id="implementation-shape">Implementation Shape<a class="headerlink" href="#implementation-shape" title="Permanent link">&para;</a></h2>
@@ -1649,6 +1651,8 @@ and services.</p>
 <li>wire that layer into the existing ROS-backed node</li>
 <li>replace the original stubbed preview toggle with a gateway-owned subprocess lifecycle</li>
 <li>wire the first real preview export command into that lifecycle</li>
+<li>add bounded teleop enable/disable and command forwarding through the gateway</li>
+<li>surface live platform diagnostics in system status and overlay snapshots</li>
 </ol>
 <p>This keeps the control/status boundary small while avoiding premature async
 gRPC complexity.</p>
@@ -1703,8 +1707,8 @@ not more gateway transport abstraction.</p>
 <li>one gRPC server</li>
 <li>one ROS adapter layer</li>
 <li>one preview manager</li>
+<li>one bounded teleop manager</li>
 </ul>
-<p>Teleop can remain out of scope for the first slices.</p>
 <h2 id="responsibilities">Responsibilities<a class="headerlink" href="#responsibilities" title="Permanent link">&para;</a></h2>
 <h3 id="external-api-boundary">External API boundary<a class="headerlink" href="#external-api-boundary" title="Permanent link">&para;</a></h3>
 <p>Expose a versioned operator-facing API for:</p>
@@ -1712,14 +1716,16 @@ not more gateway transport abstraction.</p>
 <li>robot status</li>
 <li>preview enable/disable</li>
 <li>preview session status</li>
+<li>bounded teleop session control</li>
 <li>later recording/export control</li>
-<li>later teleop session control</li>
 </ul>
 <h3 id="state-aggregation">State aggregation<a class="headerlink" href="#state-aggregation" title="Permanent link">&para;</a></h3>
 <p>Collect and normalize data from the internal ROS graph:</p>
 <ul>
 <li>vision health/perf</li>
 <li>preview status</li>
+<li>teleop status</li>
+<li>platform diagnostics</li>
 <li>robot mode or mission state</li>
 <li>fault summaries</li>
 </ul>
@@ -1744,7 +1750,6 @@ not more gateway transport abstraction.</p>
 </ul>
 <h2 id="non-goals-v1">Non-Goals (v1)<a class="headerlink" href="#non-goals-v1" title="Permanent link">&para;</a></h2>
 <ul>
-<li>full teleop implementation</li>
 <li>browser-native delivery</li>
 <li>remote internet-facing access</li>
 <li>generic ROS graph proxying</li>
@@ -1834,9 +1839,10 @@ be structured so that basic telemetry is easy to add.</p>
 <p><strong>Implemented:</strong></p>
 <ul>
 <li>locked unary gRPC service and generated C++/Python code</li>
-<li>cache-backed system status from ROS vision and odometry inputs</li>
+<li>cache-backed system status from ROS vision, odometry, platform, preview, and teleop inputs</li>
 <li>bounded preview profiles and subprocess lifecycle management</li>
-<li>CLI, monitor shell, Tk monitor, and SRT preview helper</li>
+<li>bounded teleop enable/disable plus bounded velocity commands</li>
+<li>CLI, monitor shell, Tk monitor, SRT preview helper, and overlay viewer</li>
 </ul>
 <p><strong>Planned:</strong></p>
 <ul>
@@ -1871,7 +1877,7 @@ be structured so that basic telemetry is easy to add.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 18, 2026 17:10:03 UTC">July 18, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 19, 2026 04:46:42 UTC">July 19, 2026</span>
   </span>
 
     
