@@ -965,6 +965,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#platformstatus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PlatformStatus
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#previewstatus" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1359,6 +1370,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#platformstatus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PlatformStatus
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#previewstatus" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1529,6 +1551,8 @@ laptop application and the robot gateway.</p>
   helper</li>
 <li>a first Tk-based monitor GUI that refreshes status, toggles preview, and
   launches the preview helper as a separate process</li>
+<li>an additive platform health block for compute, Wi-Fi, LiPo, and onboard
+  battery state in the gateway status snapshot</li>
 </ul>
 <p>This page now serves two roles:</p>
 <ul>
@@ -1626,7 +1650,8 @@ Keep it small and evolve additively.</p>
 <ul>
 <li>stream endpoint metadata in the API</li>
 <li>a hardware H.265 preview path</li>
-<li>broader status sources beyond the current vision/perf aggregation</li>
+<li>status sources beyond odometry, vision, teleop, preview, platform health, and
+  the current battery topic</li>
 <li>any streaming or multi-client behavior</li>
 <li>an embedded video panel inside the GUI</li>
 </ul>
@@ -1640,11 +1665,13 @@ Keep it small and evolve additively.</p>
 <li>current normalized vision status summary</li>
 <li>odometry availability, staleness, age, and measured <code>vx</code>/<code>vy</code>/<code>wz</code></li>
 <li>bounded teleop status plus the last accepted commanded <code>vx</code>/<code>vy</code>/<code>wz</code></li>
+<li>platform status for SBC compute, Wi-Fi, LiPo battery, and onboard USB-C power
+  battery when the underlying Linux or ROS source is available</li>
 </ul>
 <p>Deferred until later if needed:</p>
 <ul>
 <li>robot mode or mission state</li>
-<li>broader health summary</li>
+<li>wheel-level/motor-controller diagnostics</li>
 <li>build/runtime details beyond gateway version</li>
 <li>execution environment labels such as <code>REAL</code> or <code>SIM</code></li>
 <li>teleop deadman/timeout semantics beyond the current bounded command path</li>
@@ -1658,15 +1685,30 @@ Keep it small and evolve additively.</p>
 <li>source-space detection geometry for laptop-side scaling over preview video</li>
 <li>a small capped recent operator event list for status transitions and gateway
   errors</li>
+<li>platform fault surfacing for stale/missing compute or network samples, weak
+  Wi-Fi, hot/throttled CPU, low LiPo voltage, and low onboard battery percentage</li>
 </ul>
 <p>Deferred until later if needed:</p>
 <ul>
 <li>exact video/detection frame synchronization</li>
 <li>streaming detection events</li>
 <li>viewer-specific confidence filtering</li>
-<li>host CPU/RAM/network metrics</li>
-<li>Teensy, battery, Wi-Fi, minimap, and target-selection overlays</li>
+<li>minimap and target-selection overlays</li>
 </ul>
+<h3 id="platformstatus"><code>PlatformStatus</code><a class="headerlink" href="#platformstatus" title="Permanent link">&para;</a></h3>
+<p>Current contents:</p>
+<ul>
+<li><code>ComputeStatus</code>: CPU utilization, optional CPU temperature, optional thermal
+  throttling, RAM usage, and optional disk usage</li>
+<li><code>NetworkStatus</code>: selected Wi-Fi interface, connection state, optional RSSI in
+  dBm, and optional link quality</li>
+<li><code>PowerStatus</code>: LiPo battery from <code>/battery</code> and onboard battery from Linux
+  <code>power_supply</code> data when present</li>
+</ul>
+<p>All platform sub-statuses carry <code>available</code>, <code>stale</code>, and <code>age_ms</code> fields so
+the operator can distinguish missing instrumentation from fresh healthy values.
+These values do not currently alter <code>RobotHealth.ready</code>; they are surfaced as
+operator diagnostics and events.</p>
 <h3 id="previewstatus"><code>PreviewStatus</code><a class="headerlink" href="#previewstatus" title="Permanent link">&para;</a></h3>
 <p>Current contents:</p>
 <ul>
@@ -1801,7 +1843,7 @@ work and are not part of the current API.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 19, 2026 03:28:12 UTC">July 19, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 19, 2026 04:16:11 UTC">July 19, 2026</span>
   </span>
 
     
