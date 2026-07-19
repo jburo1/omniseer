@@ -48,7 +48,8 @@ def test_omni_runs_list_dispatches_to_retrieve_runs(tmp_path: Path) -> None:
 
     assert result.returncode == 0, result.stderr
     assert result.stdout == (
-        "ros2 run omniseer_experiments retrieve_runs list --host 192.168.1.178 --user radxa\n"
+        "ros2 run omniseer_experiments retrieve_runs list --host 192.168.1.178 "
+        "--user radxa --remote-root /home/radxa/apps/omniseer/runs\n"
     )
 
 
@@ -84,7 +85,7 @@ def test_omni_runs_pull_dispatches_to_retrieve_runs(tmp_path: Path) -> None:
     assert (
         result.stdout
         == "ros2 run omniseer_experiments retrieve_runs pull demo_001 --host robot.local "
-        "--out runs/imported/demo_001 --user radxa\n"
+        "--out runs/imported/demo_001 --user radxa --remote-root /home/radxa/apps/omniseer/runs\n"
     )
 
 
@@ -99,7 +100,14 @@ def test_omni_runs_preserves_explicit_host_and_user(tmp_path: Path) -> None:
     env["OMNISEER_WS_SETUP"] = str(setup_file)
 
     result = subprocess.run(
-        ["scripts/omni", "runs", "list", "--host=robot.local", "--user=operator"],
+        [
+            "scripts/omni",
+            "runs",
+            "list",
+            "--host=robot.local",
+            "--user=operator",
+            "--remote-root=/tmp/runs",
+        ],
         cwd=REPO_ROOT,
         env=env,
         capture_output=True,
@@ -110,5 +118,6 @@ def test_omni_runs_preserves_explicit_host_and_user(tmp_path: Path) -> None:
     assert result.returncode == 0, result.stderr
     assert (
         result.stdout
-        == "ros2 run omniseer_experiments retrieve_runs list --host=robot.local --user=operator\n"
+        == "ros2 run omniseer_experiments retrieve_runs list --host=robot.local "
+        "--user=operator --remote-root=/tmp/runs\n"
     )

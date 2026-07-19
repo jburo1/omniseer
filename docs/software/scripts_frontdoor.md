@@ -324,9 +324,10 @@ scripts/omni runs list
 scripts/omni runs pull demo_001
 ```
 
-The front door defaults to SSH target `radxa@192.168.1.178`. Override that with
-`--host`, `--user`, `OMNISEER_ROBOT_HOST`, or `OMNISEER_ROBOT_USER` when using a
-different robot or account.
+The front door defaults to SSH target `radxa@192.168.1.178` and remote run root
+`/home/radxa/apps/omniseer/runs`. Override those with `--host`, `--user`,
+`--remote-root`, `OMNISEER_ROBOT_HOST`, `OMNISEER_ROBOT_USER`, or
+`OMNISEER_ROBOT_RUNS_ROOT` when using a different robot, account, or checkout.
 
 ### `check`
 

@@ -68,10 +68,11 @@ scripts/omni runs pull demo_001
 
 The pull command imports the selected bundle into `runs/imported/<run_id>/` by
 default, preserves additive files, and validates the imported copy with
-`inspect_run`. The front door defaults to `radxa@192.168.1.178`; use `--host`,
-`--user`, `--remote-root`, `--import-root`, `--out`, and `--overwrite` when the
-robot or laptop layout differs from the defaults. Report generation and cloud
-synchronization remain later slices.
+`inspect_run`. The front door defaults to `radxa@192.168.1.178` and remote root
+`/home/radxa/apps/omniseer/runs`; use `--host`, `--user`, `--remote-root`,
+`--import-root`, `--out`, and `--overwrite` when the robot or laptop layout
+differs from the defaults. Report generation and cloud synchronization remain
+later slices.
 
 Pass launch overrides after the phase, for example:
 

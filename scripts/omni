@@ -12,6 +12,7 @@ script_dir="$(cd "$(dirname "${script_source}")" && pwd -P)"
 
 default_robot_runs_host="${OMNISEER_ROBOT_HOST:-192.168.1.178}"
 default_robot_runs_user="${OMNISEER_ROBOT_USER:-radxa}"
+default_robot_runs_root="${OMNISEER_ROBOT_RUNS_ROOT:-/home/radxa/apps/omniseer/runs}"
 
 # shellcheck disable=SC1091
 source "${script_dir}/lib/log.sh"
@@ -104,6 +105,7 @@ Retrieval args:
 Defaults:
   --host 192.168.1.178, override with OMNISEER_ROBOT_HOST
   --user radxa, override with OMNISEER_ROBOT_USER
+  --remote-root /home/radxa/apps/omniseer/runs, override with OMNISEER_ROBOT_RUNS_ROOT
 EOF
 }
 
@@ -275,6 +277,9 @@ EOF
         fi
         if ! omni_arg_present "--user" "${run_args[@]}"; then
           run_args+=("--user" "${default_robot_runs_user}")
+        fi
+        if ! omni_arg_present "--remote-root" "${run_args[@]}"; then
+          run_args+=("--remote-root" "${default_robot_runs_root}")
         fi
         exec ros2 run omniseer_experiments retrieve_runs "${subcommand}" "${run_args[@]}"
         ;;

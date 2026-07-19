@@ -263,7 +263,7 @@ def _run_checked(
     if result.returncode == 0:
         return result
     detail = (result.stderr or result.stdout).strip()
-    message = f"failed to {action}: {' '.join(args)}"
+    message = f"failed to {action}: {shlex.join(args)}"
     if detail:
         message = f"{message}\n{detail}"
     raise RetrievalError(message)
