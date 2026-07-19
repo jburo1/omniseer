@@ -4,6 +4,11 @@
 
 namespace robot_diag_control_cpp
 {
+namespace
+{
+constexpr std::size_t kMaxOperatorEvents = 8;
+} // namespace
+
 GatewayStateStore::GatewayStateStore(
   std::string gateway_name, std::string gateway_version,
   std::chrono::milliseconds vision_stale_after, std::chrono::milliseconds odom_stale_after,
@@ -25,12 +30,14 @@ SystemStatusSnapshot GatewayStateStore::get_system_status() const
 {
   std::lock_guard<std::mutex> lock(_mutex);
   const auto vision = vision_snapshot_locked();
+  const auto health = robot_health_snapshot_locked(vision);
+  update_operator_events_locked(vision, health, _preview, _teleop);
   return SystemStatusSnapshot{
     _gateway_name,
     _gateway_version,
     _preview,
     vision,
-    robot_health_snapshot_locked(vision),
+    health,
     _teleop,
   };
 }
@@ -39,6 +46,12 @@ DetectionOverlaySnapshot GatewayStateStore::get_detection_overlay() const
 {
   std::lock_guard<std::mutex> lock(_mutex);
   return detection_overlay_snapshot_locked();
+}
+
+std::vector<OperatorEventSnapshot> GatewayStateStore::get_operator_events() const
+{
+  std::lock_guard<std::mutex> lock(_mutex);
+  return operator_events_snapshot_locked();
 }
 
 PreviewStatusSnapshot GatewayStateStore::get_preview_status() const
@@ -68,11 +81,16 @@ PreviewStatusSnapshot GatewayStateStore::set_preview_disabled(
   PreviewProfile profile, std::string last_error)
 {
   std::lock_guard<std::mutex> lock(_mutex);
+  const auto error = std::move(last_error);
   _preview = PreviewStatusSnapshot{
     PreviewState::Disabled,
     profile,
-    std::move(last_error),
+    error,
   };
+  if (!error.empty()) {
+    append_operator_event_locked("preview error: " + error);
+    _last_preview_error_active = true;
+  }
   return _preview;
 }
 
@@ -104,6 +122,9 @@ void GatewayStateStore::update_odometry(const nav_msgs::msg::Odometry & msg)
     std::hypot(
       static_cast<double>(msg.twist.twist.linear.x),
       static_cast<double>(msg.twist.twist.linear.y)),
+    static_cast<double>(msg.twist.twist.angular.z),
+    static_cast<double>(msg.twist.twist.linear.x),
+    static_cast<double>(msg.twist.twist.linear.y),
     static_cast<double>(msg.twist.twist.angular.z),
     _time_source(),
   };
@@ -163,10 +184,16 @@ RobotHealthSnapshot GatewayStateStore::robot_health_snapshot_locked(
       false,
       0.0,
       0.0,
+      0,
+      0.0,
+      0.0,
+      0.0,
     };
   }
 
   const auto odom_age = _time_source() - _odometry.updated_at;
+  const auto odom_age_ms = static_cast<uint64_t>(
+    std::chrono::duration_cast<std::chrono::milliseconds>(odom_age).count());
   const bool odom_stale = odom_age > _odom_stale_after;
   if (odom_stale) {
     return RobotHealthSnapshot{
@@ -177,6 +204,10 @@ RobotHealthSnapshot GatewayStateStore::robot_health_snapshot_locked(
       true,
       _odometry.linear_speed_mps,
       _odometry.angular_speed_rad_s,
+      odom_age_ms,
+      _odometry.measured_vx_mps,
+      _odometry.measured_vy_mps,
+      _odometry.measured_wz_rad_s,
     };
   }
 
@@ -189,6 +220,10 @@ RobotHealthSnapshot GatewayStateStore::robot_health_snapshot_locked(
       false,
       _odometry.linear_speed_mps,
       _odometry.angular_speed_rad_s,
+      odom_age_ms,
+      _odometry.measured_vx_mps,
+      _odometry.measured_vy_mps,
+      _odometry.measured_wz_rad_s,
     };
   }
 
@@ -201,6 +236,10 @@ RobotHealthSnapshot GatewayStateStore::robot_health_snapshot_locked(
       false,
       _odometry.linear_speed_mps,
       _odometry.angular_speed_rad_s,
+      odom_age_ms,
+      _odometry.measured_vx_mps,
+      _odometry.measured_vy_mps,
+      _odometry.measured_wz_rad_s,
     };
   }
 
@@ -212,6 +251,10 @@ RobotHealthSnapshot GatewayStateStore::robot_health_snapshot_locked(
     false,
     _odometry.linear_speed_mps,
     _odometry.angular_speed_rad_s,
+    odom_age_ms,
+    _odometry.measured_vx_mps,
+    _odometry.measured_vy_mps,
+    _odometry.measured_wz_rad_s,
   };
 }
 
@@ -238,5 +281,68 @@ DetectionOverlaySnapshot GatewayStateStore::detection_overlay_snapshot_locked() 
     _detection_source_height_px,
     _detections.detections,
   };
+}
+
+std::vector<OperatorEventSnapshot> GatewayStateStore::operator_events_snapshot_locked() const
+{
+  std::vector<OperatorEventSnapshot> events;
+  events.reserve(_operator_events.size());
+  const auto now = _time_source();
+  for (const auto & event : _operator_events) {
+    events.push_back(
+      OperatorEventSnapshot{
+        event.sequence,
+        static_cast<uint64_t>(
+          std::chrono::duration_cast<std::chrono::milliseconds>(now - event.created_at).count()),
+        event.message,
+      });
+  }
+  return events;
+}
+
+void GatewayStateStore::update_operator_events_locked(
+  const VisionStatusSnapshot & vision, const RobotHealthSnapshot & health,
+  const PreviewStatusSnapshot & preview, const TeleopStatusSnapshot & teleop) const
+{
+  const bool odom_fault_active = !health.odom_available || health.odom_stale;
+  if (_last_odom_fault_active.has_value() && *_last_odom_fault_active != odom_fault_active) {
+    append_operator_event_locked(odom_fault_active ? "odometry lost" : "odometry recovered");
+  }
+  _last_odom_fault_active = odom_fault_active;
+
+  const bool vision_fault_active = !vision.available || vision.stale;
+  if (_last_vision_fault_active.has_value() && *_last_vision_fault_active != vision_fault_active) {
+    append_operator_event_locked(vision_fault_active ? "vision stale" : "vision recovered");
+  }
+  _last_vision_fault_active = vision_fault_active;
+
+  const bool preview_error_active = !preview.last_error.empty();
+  if (_last_preview_error_active.has_value() &&
+    *_last_preview_error_active != preview_error_active)
+  {
+    append_operator_event_locked(
+      preview_error_active ? "preview error: " + preview.last_error : "preview recovered");
+  }
+  _last_preview_error_active = preview_error_active;
+
+  const bool teleop_error_active = !teleop.last_error.empty();
+  if (_last_teleop_error_active.has_value() && *_last_teleop_error_active != teleop_error_active) {
+    append_operator_event_locked(
+      teleop_error_active ? "teleop error: " + teleop.last_error : "teleop command recovered");
+  }
+  _last_teleop_error_active = teleop_error_active;
+}
+
+void GatewayStateStore::append_operator_event_locked(std::string message) const
+{
+  if (_operator_events.size() == kMaxOperatorEvents) {
+    _operator_events.erase(_operator_events.begin());
+  }
+  _operator_events.push_back(
+    StoredOperatorEvent{
+      _next_operator_event_sequence++,
+      _time_source(),
+      std::move(message),
+    });
 }
 } // namespace robot_diag_control_cpp

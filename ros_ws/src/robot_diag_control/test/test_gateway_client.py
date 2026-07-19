@@ -21,8 +21,12 @@ class GatewayClientFormattingTests(unittest.TestCase):
                 summary="robot healthy",
                 odom_available=True,
                 odom_stale=False,
+                odom_age_ms=18,
                 linear_speed_mps=0.5,
                 angular_speed_rad_s=0.2,
+                measured_vx_mps=0.3,
+                measured_vy_mps=0.4,
+                measured_wz_rad_s=0.2,
             ),
             preview=robot_gateway_pb2.PreviewStatus(
                 state=robot_gateway_pb2.PREVIEW_DISABLED,
@@ -43,14 +47,18 @@ class GatewayClientFormattingTests(unittest.TestCase):
                 last_command_age_ms=25,
                 max_linear_mps=0.35,
                 max_angular_rad_s=0.8,
+                last_command_vx_mps=0.12,
+                last_command_vy_mps=0.0,
+                last_command_wz_rad_s=-0.2,
             ),
         )
 
         formatted = format_system_status(response)
 
         self.assertIn("health: state=ok ready=true summary=robot healthy", formatted)
-        self.assertIn("mobility: odom=fresh linear_speed_mps=0.50 angular_speed_rad_s=0.20", formatted)
+        self.assertIn("mobility: odom=fresh odom_age_ms=18", formatted)
         self.assertIn("teleop: state=enabled enabled=true timed_out=false", formatted)
+        self.assertIn("last_command=(0.12,0.00,-0.20)", formatted)
         self.assertIn("vision: producer_fps=22.00", formatted)
 
     def test_format_operator_status_surfaces_freshness_and_faults(self):
@@ -61,8 +69,12 @@ class GatewayClientFormattingTests(unittest.TestCase):
                 summary="waiting for odometry",
                 odom_available=True,
                 odom_stale=True,
+                odom_age_ms=740,
                 linear_speed_mps=0.2,
                 angular_speed_rad_s=-0.1,
+                measured_vx_mps=0.18,
+                measured_vy_mps=0.01,
+                measured_wz_rad_s=-0.27,
             ),
             preview=robot_gateway_pb2.PreviewStatus(state=robot_gateway_pb2.PREVIEW_RUNNING),
             vision=robot_gateway_pb2.VisionStatus(
@@ -80,16 +92,20 @@ class GatewayClientFormattingTests(unittest.TestCase):
                 last_command_age_ms=740,
                 max_linear_mps=0.35,
                 max_angular_rad_s=0.8,
+                last_command_vx_mps=0.2,
+                last_command_vy_mps=0.0,
+                last_command_wz_rad_s=-0.3,
             ),
         )
 
         formatted = format_operator_status(response)
 
-        self.assertIn("REAL | TIMED_OUT | NOT READY | ODOM STALE | VISION STALE", formatted)
+        self.assertIn("TELEOP TIMED_OUT | NOT READY | ODOM STALE 740 ms | VISION STALE", formatted)
         self.assertIn("CAM 29.8 FPS | DET 8.4 FPS | LAT 116 ms", formatted)
-        self.assertIn("MEAS vx +0.20 m/s | wz -0.10 rad/s | CMD AGE 740 ms", formatted)
+        self.assertIn("CMD vx +0.20 vy +0.00 wz -0.30", formatted)
+        self.assertIn("MEAS vx +0.18 vy +0.01 wz -0.27", formatted)
         self.assertIn("FAULT waiting for odometry | ODOMETRY STALE | VISION STALE", formatted)
-        self.assertIn("DEADMAN TIMEOUT", formatted)
+        self.assertNotIn("DEADMAN", formatted)
 
     def test_format_system_status_summary_includes_health_state(self):
         response = robot_gateway_pb2.SystemStatus(
@@ -166,6 +182,9 @@ class GatewayClientFormattingTests(unittest.TestCase):
                     )
                 ],
             ),
+            events=[
+                robot_gateway_pb2.OperatorEvent(sequence=4, age_ms=35, message="odometry recovered"),
+            ],
         )
 
         formatted = format_overlay_snapshot(response)
@@ -173,6 +192,7 @@ class GatewayClientFormattingTests(unittest.TestCase):
         self.assertIn("preview=running/balanced", formatted)
         self.assertIn("detections: fresh age_ms=42 count=1 source=1280x720", formatted)
         self.assertIn("class=person score=0.88 bbox=(270.0,140.0,100.0,80.0)", formatted)
+        self.assertIn("event: seq=4 age_ms=35 message=odometry recovered", formatted)
 
     def test_format_overlay_snapshot_handles_unavailable_detections(self):
         response = robot_gateway_pb2.OverlaySnapshot(

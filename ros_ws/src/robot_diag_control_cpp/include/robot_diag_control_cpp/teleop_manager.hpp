@@ -64,6 +64,7 @@ private:
   bool                      _enabled{false};
   bool                      _has_command{false};
   SteadyTimePoint           _last_command_at{};
+  TeleopCommand             _last_command{};
   std::string               _last_error{};
 };
 } // namespace robot_diag_control_cpp

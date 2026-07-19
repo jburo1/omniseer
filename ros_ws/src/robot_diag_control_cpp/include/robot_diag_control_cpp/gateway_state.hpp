@@ -61,6 +61,10 @@ struct RobotHealthSnapshot
   bool             odom_stale{false};
   double           linear_speed_mps{0.0};
   double           angular_speed_rad_s{0.0};
+  uint64_t         odom_age_ms{0};
+  double           measured_vx_mps{0.0};
+  double           measured_vy_mps{0.0};
+  double           measured_wz_rad_s{0.0};
 };
 
 enum class TeleopState
@@ -79,6 +83,9 @@ struct TeleopStatusSnapshot
   double      max_linear_mps{0.35};
   double      max_angular_rad_s{0.8};
   std::string last_error{};
+  double      last_command_vx_mps{0.0};
+  double      last_command_vy_mps{0.0};
+  double      last_command_wz_rad_s{0.0};
 };
 
 struct DetectionOverlayItem
@@ -101,6 +108,13 @@ struct DetectionOverlaySnapshot
   uint32_t                          source_width_px{1280};
   uint32_t                          source_height_px{720};
   std::vector<DetectionOverlayItem> detections{};
+};
+
+struct OperatorEventSnapshot
+{
+  uint64_t    sequence{0};
+  uint64_t    age_ms{0};
+  std::string message{};
 };
 
 struct SystemStatusSnapshot
@@ -131,6 +145,7 @@ public:
 
   SystemStatusSnapshot get_system_status() const;
   DetectionOverlaySnapshot get_detection_overlay() const;
+  std::vector<OperatorEventSnapshot> get_operator_events() const;
   PreviewStatusSnapshot get_preview_status() const;
   PreviewStatusSnapshot set_preview_running(PreviewProfile profile);
   PreviewStatusSnapshot set_preview_disabled(
@@ -156,6 +171,9 @@ private:
   {
     double          linear_speed_mps{0.0};
     double          angular_speed_rad_s{0.0};
+    double          measured_vx_mps{0.0};
+    double          measured_vy_mps{0.0};
+    double          measured_wz_rad_s{0.0};
     SteadyTimePoint updated_at{};
   };
 
@@ -165,9 +183,21 @@ private:
     SteadyTimePoint                   updated_at{};
   };
 
+  struct StoredOperatorEvent
+  {
+    uint64_t        sequence{0};
+    SteadyTimePoint created_at{};
+    std::string     message{};
+  };
+
   VisionStatusSnapshot vision_snapshot_locked() const;
   RobotHealthSnapshot robot_health_snapshot_locked(const VisionStatusSnapshot & vision) const;
   DetectionOverlaySnapshot detection_overlay_snapshot_locked() const;
+  std::vector<OperatorEventSnapshot> operator_events_snapshot_locked() const;
+  void update_operator_events_locked(
+    const VisionStatusSnapshot & vision, const RobotHealthSnapshot & health,
+    const PreviewStatusSnapshot & preview, const TeleopStatusSnapshot & teleop) const;
+  void append_operator_event_locked(std::string message) const;
 
   mutable std::mutex          _mutex{};
   std::string                 _gateway_name{};
@@ -186,5 +216,11 @@ private:
   StoredOdometry              _odometry{};
   bool                        _has_detections{false};
   StoredDetectionOverlay      _detections{};
+  mutable std::vector<StoredOperatorEvent> _operator_events{};
+  mutable uint64_t            _next_operator_event_sequence{1};
+  mutable std::optional<bool> _last_odom_fault_active{};
+  mutable std::optional<bool> _last_vision_fault_active{};
+  mutable std::optional<bool> _last_preview_error_active{};
+  mutable std::optional<bool> _last_teleop_error_active{};
 };
 } // namespace robot_diag_control_cpp

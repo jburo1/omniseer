@@ -158,12 +158,16 @@ Current contents:
 - current robot health summary
 - current preview state
 - current normalized vision status summary
+- odometry availability, staleness, age, and measured `vx`/`vy`/`wz`
+- bounded teleop status plus the last accepted commanded `vx`/`vy`/`wz`
 
 Deferred until later if needed:
 
 - robot mode or mission state
 - broader health summary
 - build/runtime details beyond gateway version
+- execution environment labels such as `REAL` or `SIM`
+- teleop deadman/timeout semantics beyond the current bounded command path
 
 ### `OverlaySnapshot`
 
@@ -173,12 +177,16 @@ Current contents:
 - latest detection overlay snapshot from `/yolo/detections`
 - detection freshness based on gateway receipt time
 - source-space detection geometry for laptop-side scaling over preview video
+- a small capped recent operator event list for status transitions and gateway
+  errors
 
 Deferred until later if needed:
 
 - exact video/detection frame synchronization
 - streaming detection events
 - viewer-specific confidence filtering
+- host CPU/RAM/network metrics
+- Teensy, battery, Wi-Fi, minimap, and target-selection overlays
 
 ### `PreviewStatus`
 

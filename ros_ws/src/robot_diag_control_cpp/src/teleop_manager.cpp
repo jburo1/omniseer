@@ -79,6 +79,7 @@ TeleopControlResult TeleopManager::send_command(const TeleopCommand & command)
   _publisher(command);
   _has_command = true;
   _last_command_at = now;
+  _last_command = command;
   _last_error.clear();
   const auto status = status_locked();
   _store.set_teleop_status(status);
@@ -128,6 +129,9 @@ TeleopStatusSnapshot TeleopManager::status_locked(std::string last_error) const
     _config.max_linear_mps,
     _config.max_angular_rad_s,
     error,
+    _last_command.linear_x_mps,
+    _last_command.linear_y_mps,
+    _last_command.angular_z_rad_s,
   };
 }
 

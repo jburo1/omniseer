@@ -108,6 +108,10 @@ gateway_proto::RobotHealth to_proto(const RobotHealthSnapshot & snapshot)
   response.set_odom_stale(snapshot.odom_stale);
   response.set_linear_speed_mps(static_cast<float>(snapshot.linear_speed_mps));
   response.set_angular_speed_rad_s(static_cast<float>(snapshot.angular_speed_rad_s));
+  response.set_odom_age_ms(snapshot.odom_age_ms);
+  response.set_measured_vx_mps(static_cast<float>(snapshot.measured_vx_mps));
+  response.set_measured_vy_mps(static_cast<float>(snapshot.measured_vy_mps));
+  response.set_measured_wz_rad_s(static_cast<float>(snapshot.measured_wz_rad_s));
   return response;
 }
 
@@ -121,6 +125,9 @@ gateway_proto::TeleopStatus to_proto(const TeleopStatusSnapshot & snapshot)
   response.set_max_linear_mps(static_cast<float>(snapshot.max_linear_mps));
   response.set_max_angular_rad_s(static_cast<float>(snapshot.max_angular_rad_s));
   response.set_last_error(snapshot.last_error);
+  response.set_last_command_vx_mps(static_cast<float>(snapshot.last_command_vx_mps));
+  response.set_last_command_vy_mps(static_cast<float>(snapshot.last_command_vy_mps));
+  response.set_last_command_wz_rad_s(static_cast<float>(snapshot.last_command_wz_rad_s));
   return response;
 }
 
@@ -150,6 +157,15 @@ gateway_proto::DetectionOverlayStatus to_proto(const DetectionOverlaySnapshot & 
   for (const auto & detection : snapshot.detections) {
     *response.add_detections() = to_proto(detection);
   }
+  return response;
+}
+
+gateway_proto::OperatorEvent to_proto(const OperatorEventSnapshot & snapshot)
+{
+  gateway_proto::OperatorEvent response;
+  response.set_sequence(snapshot.sequence);
+  response.set_age_ms(snapshot.age_ms);
+  response.set_message(snapshot.message);
   return response;
 }
 
@@ -268,6 +284,9 @@ grpc::Status RobotGatewayService::GetOverlaySnapshot(
   _preview_manager.poll();
   *response->mutable_status() = to_proto(_store.get_system_status());
   *response->mutable_detections() = to_proto(_store.get_detection_overlay());
+  for (const auto & event : _store.get_operator_events()) {
+    *response->add_events() = to_proto(event);
+  }
   return grpc::Status::OK;
 }
 } // namespace robot_diag_control_cpp

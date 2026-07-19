@@ -100,8 +100,12 @@ class OverlayViewerTests(unittest.TestCase):
                     summary="waiting for odometry",
                     odom_available=True,
                     odom_stale=True,
+                    odom_age_ms=740,
                     linear_speed_mps=0.18,
                     angular_speed_rad_s=-0.27,
+                    measured_vx_mps=0.18,
+                    measured_vy_mps=0.01,
+                    measured_wz_rad_s=-0.27,
                 ),
                 preview=robot_gateway_pb2.PreviewStatus(profile=robot_gateway_pb2.PREVIEW_PROFILE_BALANCED),
                 vision=robot_gateway_pb2.VisionStatus(
@@ -116,6 +120,9 @@ class OverlayViewerTests(unittest.TestCase):
                     enabled=True,
                     timed_out=True,
                     last_command_age_ms=380,
+                    last_command_vx_mps=0.2,
+                    last_command_vy_mps=0.0,
+                    last_command_wz_rad_s=-0.3,
                 ),
             ),
             detections=robot_gateway_pb2.DetectionOverlayStatus(
@@ -124,14 +131,20 @@ class OverlayViewerTests(unittest.TestCase):
                 age_ms=42,
                 detection_count=3,
             ),
+            events=[
+                robot_gateway_pb2.OperatorEvent(sequence=1, age_ms=18, message="odometry recovered"),
+            ],
         )
 
         lines = _hud_lines(snapshot, overlay_enabled=True, min_score=0.25)
 
-        self.assertEqual(lines[0], "FAULT waiting for odometry | ODOM STALE | DEADMAN TIMEOUT")
-        self.assertIn("REAL | TIMED_OUT | NOT READY | ODOM STALE | VISION OK", lines)
+        self.assertEqual(lines[0], "FAULT waiting for odometry | ODOM STALE")
+        self.assertIn("TELEOP TIMED_OUT | NOT READY | ODOM STALE 740 ms | VISION OK", lines)
         self.assertIn("CAM 30.0 FPS | DET 9.0 FPS | LAT 104 ms | OBJ 3 | AGE 42 ms", lines)
-        self.assertIn("CMD AGE 380 ms | DEADMAN TIMEOUT", "\n".join(lines))
+        self.assertIn("CMD vx +0.20 vy +0.00 wz -0.30", "\n".join(lines))
+        self.assertIn("MEAS vx +0.18 vy +0.01 wz -0.27", "\n".join(lines))
+        self.assertIn("EVENT 18 ms odometry recovered", lines)
+        self.assertNotIn("DEADMAN", "\n".join(lines))
 
     @mock.patch.dict("sys.modules", {"cv2": None})
     def test_import_cv2_reports_actionable_error(self):

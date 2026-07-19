@@ -82,8 +82,6 @@ def _operator_faults(response: robot_gateway_pb2.SystemStatus) -> list[str]:
         faults.append(f"CAMERA CAPTURE FATALS {vision.capture_fatal_error_count}")
     if vision.infer_error_count > 0:
         faults.append(f"INFERENCE ERRORS {vision.infer_error_count}")
-    if teleop.timed_out or teleop.state == robot_gateway_pb2.TELEOP_TIMED_OUT:
-        faults.append("DEADMAN TIMEOUT")
     if preview.last_error:
         faults.append(f"PREVIEW ERROR: {preview.last_error}")
     if teleop.last_error:
@@ -170,6 +168,7 @@ def format_system_status(response: robot_gateway_pb2.SystemStatus) -> str:
         f" summary={health.summary}",
         "mobility:"
         f" odom={'unavailable' if not health.odom_available else ('stale' if health.odom_stale else 'fresh')}"
+        f" odom_age_ms={health.odom_age_ms}"
         f" linear_speed_mps={health.linear_speed_mps:.2f}"
         f" angular_speed_rad_s={health.angular_speed_rad_s:.2f}",
         "preview:"
@@ -180,6 +179,8 @@ def format_system_status(response: robot_gateway_pb2.SystemStatus) -> str:
         f" enabled={str(teleop.enabled).lower()}"
         f" timed_out={str(teleop.timed_out).lower()}"
         f" last_command_age_ms={teleop.last_command_age_ms}"
+        f" last_command=({teleop.last_command_vx_mps:.2f},{teleop.last_command_vy_mps:.2f},"
+        f"{teleop.last_command_wz_rad_s:.2f})"
         f" bounds=linear:{teleop.max_linear_mps:.2f}mps angular:{teleop.max_angular_rad_s:.2f}radps",
     ]
     if preview.last_error:
@@ -211,9 +212,9 @@ def format_operator_status(response: robot_gateway_pb2.SystemStatus) -> str:
     teleop = response.teleop
 
     top_strip = (
-        f"REAL | {_teleop_state(teleop)} | "
+        f"TELEOP {_teleop_state(teleop)} | "
         f"{'READY' if health.ready else 'NOT READY'} | "
-        f"ODOM {_odom_freshness(health)} | "
+        f"ODOM {_odom_freshness(health)} {health.odom_age_ms} ms | "
         f"VISION {_vision_freshness(vision)} | "
         f"PREVIEW {_preview_state(preview)}"
     )
@@ -227,10 +228,11 @@ def format_operator_status(response: robot_gateway_pb2.SystemStatus) -> str:
         else "CAM -- FPS | DET -- FPS | LAT -- ms | VISION MISSING"
     )
     motion_strip = (
-        f"MEAS vx {health.linear_speed_mps:+.2f} m/s | "
-        f"wz {health.angular_speed_rad_s:+.2f} rad/s | "
-        f"CMD AGE {teleop.last_command_age_ms} ms | "
-        f"DEADMAN {'TIMEOUT' if teleop.timed_out else 'ACTIVE' if teleop.enabled else 'DISABLED'}"
+        f"CMD vx {teleop.last_command_vx_mps:+.2f} vy {teleop.last_command_vy_mps:+.2f} "
+        f"wz {teleop.last_command_wz_rad_s:+.2f} | "
+        f"MEAS vx {health.measured_vx_mps:+.2f} vy {health.measured_vy_mps:+.2f} "
+        f"wz {health.measured_wz_rad_s:+.2f} | "
+        f"AGE {teleop.last_command_age_ms} ms"
     )
     bounds_strip = (
         f"BOUNDS vx <= {teleop.max_linear_mps:.2f} m/s | "
@@ -329,4 +331,6 @@ def format_overlay_snapshot(response: robot_gateway_pb2.OverlaySnapshot) -> str:
             f" score={detection.score:.2f}"
             f" bbox=({left:.1f},{top:.1f},{detection.bbox_width_px:.1f},{detection.bbox_height_px:.1f})"
         )
+    for event in response.events:
+        lines.append(f"event: seq={event.sequence} age_ms={event.age_ms} message={event.message}")
     return "\n".join(lines)

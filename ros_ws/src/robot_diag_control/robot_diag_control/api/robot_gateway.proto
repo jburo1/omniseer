@@ -88,6 +88,10 @@ message RobotHealth {
   bool odom_stale = 5;
   float linear_speed_mps = 6;
   float angular_speed_rad_s = 7;
+  uint64 odom_age_ms = 8;
+  float measured_vx_mps = 9;
+  float measured_vy_mps = 10;
+  float measured_wz_rad_s = 11;
 }
 
 message SystemStatus {
@@ -123,6 +127,9 @@ message TeleopStatus {
   float max_linear_mps = 5;
   float max_angular_rad_s = 6;
   string last_error = 7;
+  float last_command_vx_mps = 8;
+  float last_command_vy_mps = 9;
+  float last_command_wz_rad_s = 10;
 }
 
 message SetTeleopEnabledRequest {
@@ -175,7 +182,14 @@ message DetectionOverlayStatus {
   repeated OverlayDetection detections = 7;
 }
 
+message OperatorEvent {
+  uint64 sequence = 1;
+  uint64 age_ms = 2;
+  string message = 3;
+}
+
 message OverlaySnapshot {
   SystemStatus status = 1;
   DetectionOverlayStatus detections = 2;
+  repeated OperatorEvent events = 3;
 }

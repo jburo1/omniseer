@@ -92,6 +92,39 @@ TEST(TeleopManagerTest, AcceptsBackToBackCommandsWhileEnabled)
   EXPECT_EQ(published.size(), 3U);
 }
 
+TEST(TeleopManagerTest, StoresLastAcceptedCommandVector)
+{
+  TimePoint now{Clock::duration{std::chrono::seconds(100)}};
+  GatewayStateStore store(
+    "robot_diag_control_cpp", "0.1.0", std::chrono::milliseconds(1500),
+    std::chrono::milliseconds(1000),
+    [&now]()
+    {
+      return now;
+    });
+  std::vector<TeleopCommand> published;
+  TeleopManager manager(
+    store,
+    [&published](const TeleopCommand & command)
+    {
+      published.push_back(command);
+    },
+    TeleopManagerConfig{0.35, 0.8},
+    [&now]()
+    {
+      return now;
+    });
+
+  manager.set_enabled(true);
+  const auto result = manager.send_command(TeleopCommand{0.12, -0.03, 0.25});
+
+  ASSERT_TRUE(result.accepted);
+  const auto status = store.get_system_status().teleop;
+  EXPECT_DOUBLE_EQ(status.last_command_vx_mps, 0.12);
+  EXPECT_DOUBLE_EQ(status.last_command_vy_mps, -0.03);
+  EXPECT_DOUBLE_EQ(status.last_command_wz_rad_s, 0.25);
+}
+
 TEST(TeleopManagerTest, PollKeepsTeleopEnabledAfterCommandAges)
 {
   TimePoint now{Clock::duration{std::chrono::seconds(100)}};

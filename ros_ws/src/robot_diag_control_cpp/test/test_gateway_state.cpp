@@ -1,4 +1,5 @@
 #include <chrono>
+#include <string>
 
 #include <gtest/gtest.h>
 
@@ -92,8 +93,12 @@ TEST(GatewayStateStoreTest, RobotHealthTracksOdometryAndVisionFreshness)
   EXPECT_EQ(no_vision.health.summary, "waiting for vision telemetry");
   EXPECT_TRUE(no_vision.health.odom_available);
   EXPECT_FALSE(no_vision.health.odom_stale);
+  EXPECT_EQ(no_vision.health.odom_age_ms, 0U);
   EXPECT_DOUBLE_EQ(no_vision.health.linear_speed_mps, 0.5);
   EXPECT_DOUBLE_EQ(no_vision.health.angular_speed_rad_s, 0.25);
+  EXPECT_DOUBLE_EQ(no_vision.health.measured_vx_mps, 0.30);
+  EXPECT_DOUBLE_EQ(no_vision.health.measured_vy_mps, 0.40);
+  EXPECT_DOUBLE_EQ(no_vision.health.measured_wz_rad_s, 0.25);
 
   omniseer_msgs::msg::VisionPerfSummary msg{};
   msg.producer_fps = 14.0F;
@@ -112,6 +117,7 @@ TEST(GatewayStateStoreTest, RobotHealthTracksOdometryAndVisionFreshness)
   EXPECT_EQ(stale_odom.health.state, RobotHealthState::Degraded);
   EXPECT_EQ(stale_odom.health.summary, "odometry stale");
   EXPECT_TRUE(stale_odom.health.odom_stale);
+  EXPECT_EQ(stale_odom.health.odom_age_ms, 1100U);
 }
 
 TEST(GatewayStateStoreTest, DetectionOverlaySnapshotTracksLatestDetectionsAndFreshness)
@@ -161,6 +167,59 @@ TEST(GatewayStateStoreTest, DetectionOverlaySnapshotTracksLatestDetectionsAndFre
   EXPECT_TRUE(stale.available);
   EXPECT_TRUE(stale.stale);
   EXPECT_EQ(stale.age_ms, 450U);
+}
+
+TEST(GatewayStateStoreTest, OperatorEventsTrackTransitionsAndRemainCapped)
+{
+  TimePoint now{Clock::duration{std::chrono::seconds(100)}};
+  GatewayStateStore store(
+    "robot_diag_control_cpp", "0.1.0", std::chrono::milliseconds(1500),
+    std::chrono::milliseconds(1000),
+    [&now]()
+    {
+      return now;
+    });
+
+  store.get_system_status();
+
+  nav_msgs::msg::Odometry odom{};
+  store.update_odometry(odom);
+  auto status = store.get_system_status();
+  auto events = store.get_operator_events();
+  ASSERT_EQ(events.size(), 1U);
+  EXPECT_EQ(events.back().message, "odometry recovered");
+
+  now += std::chrono::milliseconds(1100);
+  status = store.get_system_status();
+  EXPECT_TRUE(status.health.odom_stale);
+  events = store.get_operator_events();
+  ASSERT_EQ(events.size(), 2U);
+  EXPECT_EQ(events.back().message, "odometry lost");
+  EXPECT_EQ(events.back().age_ms, 0U);
+
+  omniseer_msgs::msg::VisionPerfSummary vision{};
+  store.update_vision_perf(vision);
+  status = store.get_system_status();
+  events = store.get_operator_events();
+  ASSERT_EQ(events.size(), 3U);
+  EXPECT_EQ(events.back().message, "vision recovered");
+
+  now += std::chrono::milliseconds(1600);
+  status = store.get_system_status();
+  EXPECT_TRUE(status.vision.stale);
+  events = store.get_operator_events();
+  ASSERT_EQ(events.size(), 4U);
+  EXPECT_EQ(events.back().message, "vision stale");
+
+  for (int index = 0; index < 10; ++index) {
+    store.set_preview_disabled(PreviewProfile::Balanced, "preview failed " + std::to_string(index));
+  }
+
+  events = store.get_operator_events();
+  ASSERT_EQ(events.size(), 8U);
+  EXPECT_EQ(events.front().message, "preview error: preview failed 2");
+  EXPECT_EQ(events.back().message, "preview error: preview failed 9");
+  EXPECT_LT(events.front().sequence, events.back().sequence);
 }
 } // namespace
 } // namespace robot_diag_control_cpp

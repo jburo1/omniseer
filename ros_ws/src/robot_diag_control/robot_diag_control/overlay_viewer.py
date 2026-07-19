@@ -241,7 +241,6 @@ def _hud_lines(
     if detections.available:
         det_state = "STALE" if detections.stale else "OK"
 
-    deadman_state = "TIMEOUT" if teleop.timed_out else "ACTIVE" if teleop.enabled else "DISABLED"
     fault_parts: list[str] = []
     if health.state == robot_gateway_pb2.ROBOT_HEALTH_DEGRADED or not health.ready:
         fault_parts.append(health.summary or "HEALTH DEGRADED")
@@ -255,24 +254,30 @@ def _hud_lines(
         fault_parts.append(f"CAPTURE ERR {vision.capture_fatal_error_count}")
     if vision.infer_error_count:
         fault_parts.append(f"INFER ERR {vision.infer_error_count}")
-    if teleop.timed_out:
-        fault_parts.append("DEADMAN TIMEOUT")
+    if preview.last_error:
+        fault_parts.append(f"PREVIEW {preview.last_error}")
+    if teleop.last_error:
+        fault_parts.append(f"TELEOP {teleop.last_error}")
 
     lines = [
-        "REAL | "
+        "TELEOP "
         f"{TELEOP_STATE_NAMES.get(teleop.state, 'unknown').upper()} | "
         f"{'READY' if health.ready else 'NOT READY'} | "
-        f"ODOM {odom_state} | VISION {vision_state}",
+        f"ODOM {odom_state} {health.odom_age_ms} ms | VISION {vision_state}",
         "CAM "
         f"{vision.producer_fps:.1f} FPS | "
         f"DET {vision.consumer_fps:.1f} FPS | "
         f"LAT {vision.last_infer_ms:.0f} ms | "
         f"OBJ {detections.detection_count} | AGE {detections.age_ms} ms",
+        "CMD "
+        f"vx {teleop.last_command_vx_mps:+.2f} "
+        f"vy {teleop.last_command_vy_mps:+.2f} "
+        f"wz {teleop.last_command_wz_rad_s:+.2f} | "
         "MEAS "
-        f"vx {health.linear_speed_mps:+.2f} | "
-        f"wz {health.angular_speed_rad_s:+.2f} | "
-        f"CMD AGE {teleop.last_command_age_ms} ms | "
-        f"DEADMAN {deadman_state}",
+        f"vx {health.measured_vx_mps:+.2f} "
+        f"vy {health.measured_vy_mps:+.2f} "
+        f"wz {health.measured_wz_rad_s:+.2f} | "
+        f"AGE {teleop.last_command_age_ms} ms",
         "PREVIEW "
         f"{PROFILE_NAMES.get(preview.profile, 'unknown')} | "
         f"overlay={'on' if overlay_enabled else 'off'} | "
@@ -280,6 +285,8 @@ def _hud_lines(
     ]
     if fault_parts:
         lines.insert(0, "FAULT " + " | ".join(fault_parts))
+    for event in list(snapshot.events)[-3:]:
+        lines.append(f"EVENT {event.age_ms} ms {event.message}")
     return lines
 
 
@@ -299,6 +306,8 @@ def _draw_hud(
         background = (45, 45, 45)
         if line.startswith("FAULT"):
             background = (35, 35, 180)
+        elif line.startswith("EVENT"):
+            background = (35, 70, 70)
         _put_label(cv2, frame, line, (x, y), color=(245, 245, 245), background=background)
         y += 24
 
