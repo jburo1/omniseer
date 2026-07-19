@@ -1162,8 +1162,9 @@ bundle recorder:</p>
 <li>teleop commands reach the existing stamped command path</li>
 </ul>
 <p>The laptop app remains intentionally simple. It uses the existing Tk monitor for
-status, preview controls, and bounded teleop controls. Video still opens in the
-external GStreamer viewer rather than embedding in the Tk window.</p>
+status, preview controls, bounded teleop controls, and launching either the
+plain preview viewer or the overlay viewer. Video still opens in an external
+window rather than embedding in the Tk window.</p>
 <h2 id="preconditions">Preconditions<a class="headerlink" href="#preconditions" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Phase 2 has been run successfully on target hardware.</li>
@@ -1204,7 +1205,7 @@ window opens:</p>
 <p>Use the GUI to:</p>
 <ul>
 <li>refresh or watch system status</li>
-<li>enable preview, then open the external viewer</li>
+<li>enable preview, then open the overlay viewer</li>
 <li>enable teleop</li>
 <li>send small directional commands or press <code>Space</code> for stop</li>
 <li>disable teleop before ending the run</li>
@@ -1214,9 +1215,11 @@ are visible through the gateway contract without subscribing to ROS directly:</p
 <div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>robot_diag_control<span class="w"> </span>robot_gateway_cli<span class="w"> </span>--host<span class="w"> </span>&lt;robot-ip&gt;<span class="w"> </span>overlay
 </code></pre></div>
 <p>To view the live preview with gateway detections and telemetry drawn on top,
-launch the OpenCV overlay viewer:</p>
+press <code>Open Overlay</code> in the monitor or launch the OpenCV overlay viewer:</p>
 <div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>robot_diag_control<span class="w"> </span>robot_overlay_viewer<span class="w"> </span>--host<span class="w"> </span>&lt;robot-ip&gt;
 </code></pre></div>
+<p>Use <code>Open Viewer</code> or <code>robot_preview_viewer</code> as the transport-only fallback when
+debugging SRT/GStreamer separately from overlay drawing.</p>
 <p>Keyboard bindings while the window has focus:</p>
 <div class="highlight"><pre><span></span><code>W/S: forward/back
 A/D: strafe left/right
@@ -1230,10 +1233,13 @@ against the existing graph:</p>
 </code></pre></div>
 <p>This requires live encoder, wheel-odometry, lidar, vision, and detection
 messages; healthy gateway status; and zero vision errors. It also briefly
-starts and stops preview, then enables teleop, sends only a zero command, checks
-that it reaches the stamped controller reference, and disables teleop. It fails
-if preview cannot bind its camera or SRT port. For focused debugging, inspect
-the individual topics on the robot:</p>
+starts preview, runs a short headless overlay viewer smoke, stops preview, then
+enables teleop, sends only a zero command, checks that it reaches the stamped
+controller reference, and disables teleop. It fails if preview cannot bind its
+camera or SRT port, or if the local overlay viewer cannot consume the preview
+stream. Set <code>OMNISEER_SKIP_OVERLAY_SMOKE=1</code> only when running the script from a
+minimal target shell without laptop overlay dependencies. For focused debugging,
+inspect the individual topics on the robot:</p>
 <div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>--once<span class="w"> </span>/mecanum_drive_controller/reference
 ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>--once<span class="w"> </span>/vision/perf
 ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>--once<span class="w"> </span>/yolo/detections
@@ -1243,8 +1249,9 @@ ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</
 <li>laptop status shows <code>vision</code> available and fresh</li>
 <li>laptop overlay command reports detection freshness and source-space detections when targets are visible</li>
 <li>overlay viewer opens live preview, shows a telemetry HUD, and draws boxes when detections are present</li>
+<li>Phase 3 verification reports <code>ok: overlay viewer consumed preview</code></li>
 <li>preview state changes to <code>running</code> when enabled</li>
-<li>external preview viewer displays the SRT stream</li>
+<li>plain preview viewer displays the SRT stream when used as a fallback</li>
 <li>teleop state changes to <code>enabled</code> after explicit enable</li>
 <li><code>/mecanum_drive_controller/reference</code> receives stamped commands</li>
 <li>disabling teleop or closing the GUI sends a zero command</li>
@@ -1268,6 +1275,11 @@ ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</
 <td>Preview toggles but viewer is blank</td>
 <td>SRT/GStreamer issue</td>
 <td>Run <code>robot_preview_viewer --mode fakesink</code> and inspect plugin availability</td>
+</tr>
+<tr>
+<td>Overlay smoke fails before opening video</td>
+<td>Missing laptop OpenCV/GStreamer support</td>
+<td>Install <code>python3-opencv</code> and GStreamer plugins, or set <code>OMNISEER_SKIP_OVERLAY_SMOKE=1</code> for robot-only checks</td>
 </tr>
 <tr>
 <td>Vision unavailable in GUI</td>
@@ -1327,7 +1339,7 @@ ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 18, 2026 18:03:41 UTC">July 18, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 19, 2026 03:38:37 UTC">July 19, 2026</span>
   </span>
 
     
