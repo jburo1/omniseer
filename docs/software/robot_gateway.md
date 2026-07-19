@@ -1,11 +1,11 @@
 # Robot Gateway
 
-_Status: implemented v1 diagnostics and preview-control slice_
+_Status: implemented v1 diagnostics, preview-control, and bounded-teleop slice_
 
 This document describes the operator-facing gateway between the robot's internal
 ROS 2 graph and the external operator laptop application. The first C++ gateway,
-typed gRPC API, preview lifecycle manager, and Python operator tools are implemented.
-Teleop, experiment export control, and cloud integration remain planned.
+typed gRPC API, preview lifecycle manager, bounded teleop path, and Python operator
+tools are implemented. Experiment export control and cloud integration remain planned.
 
 ## Purpose
 
@@ -13,7 +13,7 @@ Provide one explicit integration boundary for operator-facing features:
 
 - gRPC control and state access
 - preview session management
-- later teleop control
+- bounded teleop control
 - later recording/export triggers
 - later cloud-bridge integration
 
@@ -36,10 +36,12 @@ What exists today:
   - a synchronous unary gRPC service/server layer
   - a ROS-backed node that aggregates `/vision/perf`, filtered odometry, and serves the locked API
   - a gateway-owned preview subprocess manager backing `SetPreviewMode`
+  - a bounded teleop manager backing `SetTeleopEnabled` and `SendTeleopCommand`
+  - live platform diagnostics for compute, Wi-Fi, LiPo, and onboard battery state
   - a built-in GStreamer preview worker path using `/dev/video11 -> x264 -> MPEG-TS -> SRT`
   - packaged Python client tools for gateway status/control and host-side preview consumption
   - a packaged Python monitor shell that integrates status polling and preview launch
-  - a first packaged Tk monitor GUI for desktop status/control bring-up
+  - a first packaged Tk monitor GUI for desktop status, preview, and teleop bring-up
   - local verification against those packaged Python tools
 
 What does **not** exist yet:
@@ -52,7 +54,7 @@ What does **not** exist yet:
 Near-term direction:
 
 - keep `robot_diag_control_cpp` inside `robot-core`
-- use the gateway for optional status and preview control
+- use the gateway for optional status, preview control, and bounded operator teleop
 - add experiment export control only after the local recorder contract is stable
 
 ## Implementation Shape
@@ -71,6 +73,8 @@ Completed slices:
 2. wire that layer into the existing ROS-backed node
 3. replace the original stubbed preview toggle with a gateway-owned subprocess lifecycle
 4. wire the first real preview export command into that lifecycle
+5. add bounded teleop enable/disable and command forwarding through the gateway
+6. surface live platform diagnostics in system status and overlay snapshots
 
 This keeps the control/status boundary small while avoiding premature async
 gRPC complexity.
@@ -123,8 +127,7 @@ The first implementation can be simpler than this diagram:
 - one gRPC server
 - one ROS adapter layer
 - one preview manager
-
-Teleop can remain out of scope for the first slices.
+- one bounded teleop manager
 
 ## Responsibilities
 
@@ -135,8 +138,8 @@ Expose a versioned operator-facing API for:
 - robot status
 - preview enable/disable
 - preview session status
+- bounded teleop session control
 - later recording/export control
-- later teleop session control
 
 ### State aggregation
 
@@ -144,6 +147,8 @@ Collect and normalize data from the internal ROS graph:
 
 - vision health/perf
 - preview status
+- teleop status
+- platform diagnostics
 - robot mode or mission state
 - fault summaries
 
@@ -172,7 +177,6 @@ Likely responsibilities:
 
 ## Non-Goals (v1)
 
-- full teleop implementation
 - browser-native delivery
 - remote internet-facing access
 - generic ROS graph proxying
@@ -277,9 +281,10 @@ be structured so that basic telemetry is easy to add.
 **Implemented:**
 
 - locked unary gRPC service and generated C++/Python code
-- cache-backed system status from ROS vision and odometry inputs
+- cache-backed system status from ROS vision, odometry, platform, preview, and teleop inputs
 - bounded preview profiles and subprocess lifecycle management
-- CLI, monitor shell, Tk monitor, and SRT preview helper
+- bounded teleop enable/disable plus bounded velocity commands
+- CLI, monitor shell, Tk monitor, SRT preview helper, and overlay viewer
 
 **Planned:**
 

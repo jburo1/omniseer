@@ -630,7 +630,8 @@ Completed:
 1. Added `robot_diag_control_cpp` with cache-backed status and preview state.
 2. Added the narrow `GetSystemStatus` and `SetPreviewMode` gRPC surface.
 3. Added a managed x264/MPEG-TS/SRT preview subprocess using `/dev/video11`.
-4. Added packaged host CLI, shell, Tk monitor, and preview-viewer tools.
+4. Added bounded teleop control, overlay snapshots, and live platform diagnostics.
+5. Added packaged host CLI, shell, Tk monitor, preview-viewer, and overlay-viewer tools.
 
 Planned:
 

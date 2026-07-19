@@ -54,8 +54,9 @@ reconfigure the native RKNN bridge.
 - `/vision/perf` as `omniseer_msgs/msg/VisionPerfSummary`
 
 The performance message reports producer and consumer rates, recent stage timings,
-source age, processed counts, and pipeline error counters. It does not currently
-report CPU utilization, memory use, or board temperature.
+source age, processed counts, and pipeline error counters. It intentionally stays
+focused on vision pipeline metrics; live CPU, memory, temperature, network, and power
+diagnostics are surfaced separately through the robot gateway status snapshot.
 
 ### Local observability
 
@@ -66,10 +67,11 @@ annotated image topic.
 
 ### Operator connectivity
 
-**Implemented:** the robot gateway exposes system status and preview control over
-gRPC. A managed GStreamer process exports an on-demand SRT video stream, and packaged
-Python tools receive it on the laptop. This preview is a diagnostic camera stream; it
-is not yet a frame-exact detection review surface.
+**Implemented:** the robot gateway exposes system status, platform diagnostics,
+preview control, overlay snapshots, and bounded teleop over gRPC. A managed GStreamer
+process exports an on-demand SRT video stream, and packaged Python tools receive it
+on the laptop. This preview is a diagnostic camera stream; it is not yet a
+frame-exact detection review surface.
 
 ## Planned Experiment Loop
 
@@ -80,7 +82,7 @@ The next implementation phase should add:
 3. A structured run directory containing metadata, telemetry, detections, evidence,
    and an optional rosbag.
 4. Selected annotated frames, crops, and operator-marked failure cases.
-5. CPU, memory, and temperature samples recorded outside the vision hot path.
+5. CPU, memory, temperature, network, and power samples recorded outside the vision hot path.
 6. A laptop report showing latency, throughput, detections, confidence, and evidence.
 7. Provider-neutral synchronization of completed run bundles to a hosted review path.
 

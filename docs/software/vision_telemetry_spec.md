@@ -330,7 +330,7 @@ Implemented:
 Planned product integration:
 
 - correlate telemetry with typed detections in a structured experiment bundle
-- add resource samples such as CPU, memory, and temperature outside the hot path
+- persist resource samples such as CPU, memory, temperature, network, and power outside the hot path
 - publish measured portfolio results and failure analysis
 
 ## 16) Open Questions for v2+

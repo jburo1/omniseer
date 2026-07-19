@@ -100,8 +100,9 @@ ROS status -> C++ gateway -> gRPC -> laptop tools
 ```
 
 The gateway aggregates vision and odometry health, implements the locked unary gRPC
-API, and manages preview as an optional child process. The current preview path is a
-software x264 bringup path; hardware H.265 remains planned.
+API, samples platform status for operator diagnostics, and manages preview as an
+optional child process. The current preview path is a software x264 bringup path;
+hardware H.265 remains planned.
 
 ### Simulation and Hardware
 
@@ -118,10 +119,10 @@ hardware validation responsibility.
 | YOLO-World post-processing and text embeddings | **Hardware-verified** | RKNN tests and integrated native runtime |
 | ROS detection and performance publication | **Implemented** | `omniseer_vision_bridge` |
 | Portable ROS, vision, firmware, simulation, and docs checks | **CI-verified** | GitHub Actions six-job workflow |
-| gRPC gateway and managed SRT preview | **Implemented** | C++ and Python tests plus local integration |
+| gRPC gateway, platform diagnostics, and managed SRT preview | **Implemented** | C++ and Python tests plus local integration |
 | Native runtime class updates | **Planned** | Python integration exists; native bridge support does not |
 | Structured experiment recorder and run bundle | **Planned** | No integrated recorder exists |
-| CPU, memory, and temperature telemetry | **Planned** | `/vision/perf` currently reports pipeline metrics only |
+| Recorded resource telemetry in experiment bundles | **Planned** | Gateway live status reports compute/network/power; recorder does not persist it yet |
 | Cloud synchronization and hosted dashboard | **Planned** | No provider or transport selected |
 | Autonomous semantic search and capture | **Deferred** | Outside the active deliverable |
 
