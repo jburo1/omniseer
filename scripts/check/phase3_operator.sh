@@ -6,6 +6,12 @@ timeout_seconds="${OMNISEER_TOPIC_TIMEOUT_SECONDS:-15}"
 gateway_host="${OMNISEER_GATEWAY_HOST:-127.0.0.1}"
 gateway_port="${OMNISEER_GATEWAY_PORT:-50051}"
 preview_profile="${OMNISEER_PREVIEW_PROFILE:-balanced}"
+preview_host="${OMNISEER_PREVIEW_HOST:-${gateway_host}}"
+preview_port="${OMNISEER_PREVIEW_PORT:-7100}"
+preview_latency_ms="${OMNISEER_PREVIEW_LATENCY_MS:-125}"
+gst_launch_path="${OMNISEER_GST_LAUNCH_PATH:-gst-launch-1.0}"
+overlay_smoke_seconds="${OMNISEER_OVERLAY_SMOKE_SECONDS:-2}"
+overlay_timeout_seconds="${OMNISEER_OVERLAY_TIMEOUT_SECONDS:-20}"
 teleop_enabled=0
 preview_enabled=0
 reference_output=""
@@ -84,6 +90,23 @@ require_output "${status_output}" "preview: state=running" "preview worker exite
 if grep -Fq -- "preview_error:" <<<"${status_output}"; then
   echo "failed: preview worker reported an error" >&2
   exit 1
+fi
+
+if [[ "${OMNISEER_SKIP_OVERLAY_SMOKE:-0}" != "1" ]]; then
+  timeout "${overlay_timeout_seconds}" ros2 run robot_diag_control robot_overlay_viewer \
+    --host "${gateway_host}" \
+    --port "${gateway_port}" \
+    --preview-host "${preview_host}" \
+    --preview-port "${preview_port}" \
+    --preview-latency-ms "${preview_latency_ms}" \
+    --gst-launch-path "${gst_launch_path}" \
+    --profile "${preview_profile}" \
+    --mode fakesink \
+    --duration-seconds "${overlay_smoke_seconds}" \
+    --leave-preview-running
+  echo "ok: overlay viewer consumed preview for ${overlay_smoke_seconds}s"
+else
+  echo "skipped: overlay viewer smoke disabled by OMNISEER_SKIP_OVERLAY_SMOKE=1"
 fi
 
 preview_output="$(gateway_cli preview off)"

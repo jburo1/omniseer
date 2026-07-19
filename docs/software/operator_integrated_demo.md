@@ -11,8 +11,9 @@ bundle recorder:
 - teleop commands reach the existing stamped command path
 
 The laptop app remains intentionally simple. It uses the existing Tk monitor for
-status, preview controls, and bounded teleop controls. Video still opens in the
-external GStreamer viewer rather than embedding in the Tk window.
+status, preview controls, bounded teleop controls, and launching either the
+plain preview viewer or the overlay viewer. Video still opens in an external
+window rather than embedding in the Tk window.
 
 ## Preconditions
 
@@ -66,7 +67,7 @@ scripts/omni run monitor --host <robot-ip>
 Use the GUI to:
 
 - refresh or watch system status
-- enable preview, then open the external viewer
+- enable preview, then open the overlay viewer
 - enable teleop
 - send small directional commands or press `Space` for stop
 - disable teleop before ending the run
@@ -79,11 +80,14 @@ ros2 run robot_diag_control robot_gateway_cli --host <robot-ip> overlay
 ```
 
 To view the live preview with gateway detections and telemetry drawn on top,
-launch the OpenCV overlay viewer:
+press `Open Overlay` in the monitor or launch the OpenCV overlay viewer:
 
 ```bash
 ros2 run robot_diag_control robot_overlay_viewer --host <robot-ip>
 ```
+
+Use `Open Viewer` or `robot_preview_viewer` as the transport-only fallback when
+debugging SRT/GStreamer separately from overlay drawing.
 
 Keyboard bindings while the window has focus:
 
@@ -105,10 +109,13 @@ OMNISEER_REQUIRE_DETECTIONS=1 scripts/omni run real --phase 3 verify
 
 This requires live encoder, wheel-odometry, lidar, vision, and detection
 messages; healthy gateway status; and zero vision errors. It also briefly
-starts and stops preview, then enables teleop, sends only a zero command, checks
-that it reaches the stamped controller reference, and disables teleop. It fails
-if preview cannot bind its camera or SRT port. For focused debugging, inspect
-the individual topics on the robot:
+starts preview, runs a short headless overlay viewer smoke, stops preview, then
+enables teleop, sends only a zero command, checks that it reaches the stamped
+controller reference, and disables teleop. It fails if preview cannot bind its
+camera or SRT port, or if the local overlay viewer cannot consume the preview
+stream. Set `OMNISEER_SKIP_OVERLAY_SMOKE=1` only when running the script from a
+minimal target shell without laptop overlay dependencies. For focused debugging,
+inspect the individual topics on the robot:
 
 ```bash
 ros2 topic echo --once /mecanum_drive_controller/reference
@@ -121,8 +128,9 @@ Expected observations:
 - laptop status shows `vision` available and fresh
 - laptop overlay command reports detection freshness and source-space detections when targets are visible
 - overlay viewer opens live preview, shows a telemetry HUD, and draws boxes when detections are present
+- Phase 3 verification reports `ok: overlay viewer consumed preview`
 - preview state changes to `running` when enabled
-- external preview viewer displays the SRT stream
+- plain preview viewer displays the SRT stream when used as a fallback
 - teleop state changes to `enabled` after explicit enable
 - `/mecanum_drive_controller/reference` receives stamped commands
 - disabling teleop or closing the GUI sends a zero command
@@ -133,6 +141,7 @@ Expected observations:
 | --- | --- | --- |
 | GUI status refresh fails | gRPC host/port unreachable | Confirm robot IP, port `50051`, and firewall/network routing |
 | Preview toggles but viewer is blank | SRT/GStreamer issue | Run `robot_preview_viewer --mode fakesink` and inspect plugin availability |
+| Overlay smoke fails before opening video | Missing laptop OpenCV/GStreamer support | Install `python3-opencv` and GStreamer plugins, or set `OMNISEER_SKIP_OVERLAY_SMOKE=1` for robot-only checks |
 | Vision unavailable in GUI | `/vision/perf` not reaching gateway | Check `ros2 topic echo --once /vision/perf` on the robot |
 | Teleop command rejected as disabled | Teleop was not enabled | Press Enable before directional commands |
 | Teleop command rejected as out of bounds | Linear or angular step exceeds gateway limits | Lower the GUI step value or tune gateway bounds intentionally |

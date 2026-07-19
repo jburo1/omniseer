@@ -2,6 +2,7 @@ import sys
 import unittest
 
 from robot_diag_control.monitor_gui import (
+    _build_overlay_viewer_command,
     _build_parser,
     _build_preview_viewer_command,
     _resolved_preview_host,
@@ -50,6 +51,34 @@ class MonitorGuiTests(unittest.TestCase):
         )
 
         self.assertEqual(command[:3], [sys.executable, "-m", "robot_diag_control.preview_viewer"])
+        self.assertIn("--preview-host", command)
+        self.assertIn("10.0.0.3", command)
+        self.assertIn("--leave-preview-running", command)
+
+    def test_build_overlay_viewer_command_uses_current_python(self):
+        parser = _build_parser()
+        args = parser.parse_args(
+            [
+                "--host",
+                "10.0.0.2",
+                "--port",
+                "50070",
+                "--preview-host",
+                "10.0.0.3",
+                "--preview-port",
+                "7010",
+                "--preview-latency-ms",
+                "150",
+            ]
+        )
+
+        command = _build_overlay_viewer_command(
+            args,
+            profile_name="balanced",
+            leave_preview_running=True,
+        )
+
+        self.assertEqual(command[:3], [sys.executable, "-m", "robot_diag_control.overlay_viewer"])
         self.assertIn("--preview-host", command)
         self.assertIn("10.0.0.3", command)
         self.assertIn("--leave-preview-running", command)

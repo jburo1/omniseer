@@ -105,6 +105,38 @@ def _build_preview_viewer_command(
     return command
 
 
+def _build_overlay_viewer_command(
+    parsed: argparse.Namespace,
+    *,
+    profile_name: str,
+    leave_preview_running: bool,
+) -> list[str]:
+    command = [
+        sys.executable,
+        "-m",
+        "robot_diag_control.overlay_viewer",
+        "--host",
+        parsed.host,
+        "--port",
+        str(parsed.port),
+        "--preview-host",
+        _resolved_preview_host(parsed),
+        "--preview-port",
+        str(parsed.preview_port),
+        "--preview-latency-ms",
+        str(parsed.preview_latency_ms),
+        "--gst-launch-path",
+        parsed.gst_launch_path,
+        "--profile",
+        profile_name,
+        "--mode",
+        "display",
+    ]
+    if leave_preview_running:
+        command.append("--leave-preview-running")
+    return command
+
+
 def _teleop_command_for_action(
     action: str,
     *,
@@ -203,6 +235,7 @@ class RobotMonitorGui:
         ttk.Button(controls, text="Preview On", command=self.preview_on).pack(side=tk.LEFT, padx=(24, 0))
         ttk.Button(controls, text="Preview Off", command=self.preview_off).pack(side=tk.LEFT, padx=(8, 0))
         ttk.Button(controls, text="Open Viewer", command=self.open_viewer).pack(side=tk.LEFT, padx=(24, 0))
+        ttk.Button(controls, text="Open Overlay", command=self.open_overlay).pack(side=tk.LEFT, padx=(8, 0))
 
         body = ttk.Panedwindow(container, orient=tk.VERTICAL)
         body.pack(fill=tk.BOTH, expand=True)
@@ -439,6 +472,12 @@ class RobotMonitorGui:
         self._root.destroy()
 
     def open_viewer(self) -> None:
+        self._open_viewer_process("viewer", _build_preview_viewer_command)
+
+    def open_overlay(self) -> None:
+        self._open_viewer_process("overlay", _build_overlay_viewer_command)
+
+    def _open_viewer_process(self, label: str, command_builder: Any) -> None:
         if self._viewer_process is not None and self._viewer_process.poll() is None:
             self._append_log("viewer already running")
             return
@@ -448,7 +487,7 @@ class RobotMonitorGui:
         leave_preview_running = (
             self._last_status is not None and self._last_status.preview.state == robot_gateway_pb2.PREVIEW_RUNNING
         )
-        command = _build_preview_viewer_command(
+        command = command_builder(
             argparse.Namespace(
                 host=settings.host,
                 port=settings.port,
@@ -464,10 +503,10 @@ class RobotMonitorGui:
         try:
             self._viewer_process = subprocess.Popen(command)
         except OSError as error:
-            self._append_log(f"failed to launch viewer: {error}")
+            self._append_log(f"failed to launch {label}: {error}")
             return
 
-        self._append_log(f"viewer launched with pid={self._viewer_process.pid}")
+        self._append_log(f"{label} launched with pid={self._viewer_process.pid}")
         self._poll_viewer_process()
 
     def _poll_viewer_process(self) -> None:
