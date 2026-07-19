@@ -3,6 +3,7 @@ from unittest import mock
 
 from robot_diag_control.api import robot_gateway_pb2
 from robot_diag_control.overlay_viewer import (
+    OverlayLayers,
     ScaledBox,
     _build_appsink_pipeline,
     _build_parser,
@@ -26,6 +27,9 @@ class OverlayViewerTests(unittest.TestCase):
         self.assertEqual(args.profile, "balanced")
         self.assertEqual(args.overlay_poll_hz, 12.0)
         self.assertEqual(args.preview_port, 7100)
+        self.assertFalse(args.hide_motion)
+        self.assertFalse(args.hide_system)
+        self.assertFalse(args.hide_events)
 
     def test_build_appsink_pipeline_uses_preview_host_override(self):
         parser = _build_parser()
@@ -124,6 +128,37 @@ class OverlayViewerTests(unittest.TestCase):
                     last_command_vy_mps=0.0,
                     last_command_wz_rad_s=-0.3,
                 ),
+                platform=robot_gateway_pb2.PlatformStatus(
+                    compute=robot_gateway_pb2.ComputeStatus(
+                        available=True,
+                        cpu_percent=43.0,
+                        cpu_temperature_available=True,
+                        cpu_temperature_c=62.0,
+                        ram_used_bytes=5 * 1024**3,
+                        ram_total_bytes=16 * 1024**3,
+                    ),
+                    network=robot_gateway_pb2.NetworkStatus(
+                        available=True,
+                        connected=True,
+                        interface_name="wlan0",
+                        wifi_signal_available=True,
+                        wifi_signal_dbm=-58,
+                    ),
+                    power=robot_gateway_pb2.PowerStatus(
+                        lipo_battery=robot_gateway_pb2.BatteryStatus(
+                            available=True,
+                            present=True,
+                            voltage_available=True,
+                            voltage=7.8,
+                        ),
+                        onboard_battery=robot_gateway_pb2.BatteryStatus(
+                            available=True,
+                            present=True,
+                            percentage_available=True,
+                            percentage=91.0,
+                        ),
+                    ),
+                ),
             ),
             detections=robot_gateway_pb2.DetectionOverlayStatus(
                 available=True,
@@ -136,15 +171,45 @@ class OverlayViewerTests(unittest.TestCase):
             ],
         )
 
-        lines = _hud_lines(snapshot, overlay_enabled=True, min_score=0.25)
+        lines = _hud_lines(snapshot, layers=OverlayLayers(), min_score=0.25)
 
         self.assertEqual(lines[0], "FAULT waiting for odometry | ODOM STALE")
         self.assertIn("TELEOP TIMED_OUT | NOT READY | ODOM STALE 740 ms | VISION OK", lines)
         self.assertIn("CAM 30.0 FPS | DET 9.0 FPS | LAT 104 ms | OBJ 3 | AGE 42 ms", lines)
         self.assertIn("CMD vx +0.20 vy +0.00 wz -0.30", "\n".join(lines))
         self.assertIn("MEAS vx +0.18 vy +0.01 wz -0.27", "\n".join(lines))
+        self.assertIn("PWR LiPo 7.8V | ROCK 91% | Wi-Fi -58 dBm | CPU 43% 62 C | RAM 5.0/16G", lines)
+        self.assertIn("PREVIEW balanced | layers=PMSE | min=0.25", lines)
         self.assertIn("EVENT 18 ms odometry recovered", lines)
         self.assertNotIn("DEADMAN", "\n".join(lines))
+
+    def test_hud_lines_can_hide_motion_system_and_events(self):
+        snapshot = robot_gateway_pb2.OverlaySnapshot(
+            status=robot_gateway_pb2.SystemStatus(
+                health=robot_gateway_pb2.RobotHealth(
+                    state=robot_gateway_pb2.ROBOT_HEALTH_OK,
+                    ready=True,
+                    odom_available=True,
+                ),
+                vision=robot_gateway_pb2.VisionStatus(available=True),
+                preview=robot_gateway_pb2.PreviewStatus(profile=robot_gateway_pb2.PREVIEW_PROFILE_BALANCED),
+            ),
+            detections=robot_gateway_pb2.DetectionOverlayStatus(available=True),
+            events=[robot_gateway_pb2.OperatorEvent(sequence=1, age_ms=2, message="hidden")],
+        )
+
+        lines = _hud_lines(
+            snapshot,
+            layers=OverlayLayers(perception=True, motion=False, system=False, events=False),
+            min_score=0.0,
+        )
+
+        joined = "\n".join(lines)
+        self.assertIn("CAM 0.0 FPS", joined)
+        self.assertIn("layers=P---", joined)
+        self.assertNotIn("CMD vx", joined)
+        self.assertNotIn("PWR", joined)
+        self.assertNotIn("EVENT", joined)
 
     @mock.patch.dict("sys.modules", {"cv2": None})
     def test_import_cv2_reports_actionable_error(self):

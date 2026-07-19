@@ -13,21 +13,21 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n*robot_diag_control/api/robot_gateway.proto\x12\x13omniseer.gateway.v1\"\x18\n\x16GetSystemStatusRequest\"\x1b\n\x19GetOverlaySnapshotRequest\"\xb1\x01\n\x0cVisionStatus\x12\x11\n\tavailable\x18\x01 \x01(\x08\x12\r\n\x05stale\x18\x02 \x01(\x08\x12\x14\n\x0cproducer_fps\x18\x03 \x01(\x02\x12\x14\n\x0c\x63onsumer_fps\x18\x04 \x01(\x02\x12\x15\n\rlast_infer_ms\x18\x05 \x01(\x02\x12\x19\n\x11infer_error_count\x18\x06 \x01(\x04\x12!\n\x19\x63\x61pture_fatal_error_count\x18\x07 \x01(\x04\"\x8b\x01\n\rPreviewStatus\x12\x30\n\x05state\x18\x01 \x01(\x0e\x32!.omniseer.gateway.v1.PreviewState\x12\x34\n\x07profile\x18\x02 \x01(\x0e\x32#.omniseer.gateway.v1.PreviewProfile\x12\x12\n\nlast_error\x18\x03 \x01(\t\"\xa8\x02\n\x0bRobotHealth\x12\x34\n\x05state\x18\x01 \x01(\x0e\x32%.omniseer.gateway.v1.RobotHealthState\x12\r\n\x05ready\x18\x02 \x01(\x08\x12\x0f\n\x07summary\x18\x03 \x01(\t\x12\x16\n\x0eodom_available\x18\x04 \x01(\x08\x12\x12\n\nodom_stale\x18\x05 \x01(\x08\x12\x18\n\x10linear_speed_mps\x18\x06 \x01(\x02\x12\x1b\n\x13\x61ngular_speed_rad_s\x18\x07 \x01(\x02\x12\x13\n\x0bodom_age_ms\x18\x08 \x01(\x04\x12\x17\n\x0fmeasured_vx_mps\x18\t \x01(\x02\x12\x17\n\x0fmeasured_vy_mps\x18\n \x01(\x02\x12\x19\n\x11measured_wz_rad_s\x18\x0b \x01(\x02\"\x8a\x02\n\x0cSystemStatus\x12\x14\n\x0cgateway_name\x18\x01 \x01(\t\x12\x17\n\x0fgateway_version\x18\x02 \x01(\t\x12\x33\n\x07preview\x18\x03 \x01(\x0b\x32\".omniseer.gateway.v1.PreviewStatus\x12\x31\n\x06vision\x18\x04 \x01(\x0b\x32!.omniseer.gateway.v1.VisionStatus\x12\x30\n\x06health\x18\x05 \x01(\x0b\x32 .omniseer.gateway.v1.RobotHealth\x12\x31\n\x06teleop\x18\x06 \x01(\x0b\x32!.omniseer.gateway.v1.TeleopStatus\"^\n\x15SetPreviewModeRequest\x12\x0f\n\x07\x65nabled\x18\x01 \x01(\x08\x12\x34\n\x07profile\x18\x02 \x01(\x0e\x32#.omniseer.gateway.v1.PreviewProfile\"p\n\x16SetPreviewModeResponse\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x33\n\x07preview\x18\x03 \x01(\x0b\x32\".omniseer.gateway.v1.PreviewStatus\"\xa0\x02\n\x0cTeleopStatus\x12/\n\x05state\x18\x01 \x01(\x0e\x32 .omniseer.gateway.v1.TeleopState\x12\x0f\n\x07\x65nabled\x18\x02 \x01(\x08\x12\x11\n\ttimed_out\x18\x03 \x01(\x08\x12\x1b\n\x13last_command_age_ms\x18\x04 \x01(\x04\x12\x16\n\x0emax_linear_mps\x18\x05 \x01(\x02\x12\x19\n\x11max_angular_rad_s\x18\x06 \x01(\x02\x12\x12\n\nlast_error\x18\x07 \x01(\t\x12\x1b\n\x13last_command_vx_mps\x18\x08 \x01(\x02\x12\x1b\n\x13last_command_vy_mps\x18\t \x01(\x02\x12\x1d\n\x15last_command_wz_rad_s\x18\n \x01(\x02\"*\n\x17SetTeleopEnabledRequest\x12\x0f\n\x07\x65nabled\x18\x01 \x01(\x08\"p\n\x18SetTeleopEnabledResponse\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x31\n\x06teleop\x18\x03 \x01(\x0b\x32!.omniseer.gateway.v1.TeleopStatus\"_\n\x18SendTeleopCommandRequest\x12\x14\n\x0clinear_x_mps\x18\x01 \x01(\x02\x12\x14\n\x0clinear_y_mps\x18\x02 \x01(\x02\x12\x17\n\x0f\x61ngular_z_rad_s\x18\x03 \x01(\x02\"q\n\x19SendTeleopCommandResponse\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x31\n\x06teleop\x18\x03 \x01(\x0b\x32!.omniseer.gateway.v1.TeleopStatus\"\xbc\x01\n\x10OverlayDetection\x12\x10\n\x08\x63lass_id\x18\x01 \x01(\x05\x12\x12\n\nclass_name\x18\x02 \x01(\t\x12\r\n\x05score\x18\x03 \x01(\x02\x12\x10\n\x08track_id\x18\x04 \x01(\t\x12\x18\n\x10\x62\x62ox_center_x_px\x18\x05 \x01(\x02\x12\x18\n\x10\x62\x62ox_center_y_px\x18\x06 \x01(\x02\x12\x15\n\rbbox_width_px\x18\x07 \x01(\x02\x12\x16\n\x0e\x62\x62ox_height_px\x18\x08 \x01(\x02\"\xd1\x01\n\x16\x44\x65tectionOverlayStatus\x12\x11\n\tavailable\x18\x01 \x01(\x08\x12\r\n\x05stale\x18\x02 \x01(\x08\x12\x0e\n\x06\x61ge_ms\x18\x03 \x01(\x04\x12\x17\n\x0fsource_width_px\x18\x04 \x01(\r\x12\x18\n\x10source_height_px\x18\x05 \x01(\r\x12\x17\n\x0f\x64\x65tection_count\x18\x06 \x01(\r\x12\x39\n\ndetections\x18\x07 \x03(\x0b\x32%.omniseer.gateway.v1.OverlayDetection\"B\n\rOperatorEvent\x12\x10\n\x08sequence\x18\x01 \x01(\x04\x12\x0e\n\x06\x61ge_ms\x18\x02 \x01(\x04\x12\x0f\n\x07message\x18\x03 \x01(\t\"\xb9\x01\n\x0fOverlaySnapshot\x12\x31\n\x06status\x18\x01 \x01(\x0b\x32!.omniseer.gateway.v1.SystemStatus\x12?\n\ndetections\x18\x02 \x01(\x0b\x32+.omniseer.gateway.v1.DetectionOverlayStatus\x12\x32\n\x06\x65vents\x18\x03 \x03(\x0b\x32\".omniseer.gateway.v1.OperatorEvent*X\n\x0cPreviewState\x12\x1d\n\x19PREVIEW_STATE_UNSPECIFIED\x10\x00\x12\x14\n\x10PREVIEW_DISABLED\x10\x01\x12\x13\n\x0fPREVIEW_RUNNING\x10\x02*\x8d\x01\n\x0ePreviewProfile\x12\x1f\n\x1bPREVIEW_PROFILE_UNSPECIFIED\x10\x00\x12\x1a\n\x16PREVIEW_PROFILE_LOW_BW\x10\x01\x12\x1c\n\x18PREVIEW_PROFILE_BALANCED\x10\x02\x12 \n\x1cPREVIEW_PROFILE_HIGH_QUALITY\x10\x03*f\n\x10RobotHealthState\x12\"\n\x1eROBOT_HEALTH_STATE_UNSPECIFIED\x10\x00\x12\x13\n\x0fROBOT_HEALTH_OK\x10\x01\x12\x19\n\x15ROBOT_HEALTH_DEGRADED\x10\x02*j\n\x0bTeleopState\x12\x1c\n\x18TELEOP_STATE_UNSPECIFIED\x10\x00\x12\x13\n\x0fTELEOP_DISABLED\x10\x01\x12\x12\n\x0eTELEOP_ENABLED\x10\x02\x12\x14\n\x10TELEOP_TIMED_OUT\x10\x03\x32\xad\x04\n\x0cRobotGateway\x12\x61\n\x0fGetSystemStatus\x12+.omniseer.gateway.v1.GetSystemStatusRequest\x1a!.omniseer.gateway.v1.SystemStatus\x12i\n\x0eSetPreviewMode\x12*.omniseer.gateway.v1.SetPreviewModeRequest\x1a+.omniseer.gateway.v1.SetPreviewModeResponse\x12o\n\x10SetTeleopEnabled\x12,.omniseer.gateway.v1.SetTeleopEnabledRequest\x1a-.omniseer.gateway.v1.SetTeleopEnabledResponse\x12r\n\x11SendTeleopCommand\x12-.omniseer.gateway.v1.SendTeleopCommandRequest\x1a..omniseer.gateway.v1.SendTeleopCommandResponse\x12j\n\x12GetOverlaySnapshot\x12..omniseer.gateway.v1.GetOverlaySnapshotRequest\x1a$.omniseer.gateway.v1.OverlaySnapshotb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n*robot_diag_control/api/robot_gateway.proto\x12\x13omniseer.gateway.v1\"\x18\n\x16GetSystemStatusRequest\"\x1b\n\x19GetOverlaySnapshotRequest\"\xb1\x01\n\x0cVisionStatus\x12\x11\n\tavailable\x18\x01 \x01(\x08\x12\r\n\x05stale\x18\x02 \x01(\x08\x12\x14\n\x0cproducer_fps\x18\x03 \x01(\x02\x12\x14\n\x0c\x63onsumer_fps\x18\x04 \x01(\x02\x12\x15\n\rlast_infer_ms\x18\x05 \x01(\x02\x12\x19\n\x11infer_error_count\x18\x06 \x01(\x04\x12!\n\x19\x63\x61pture_fatal_error_count\x18\x07 \x01(\x04\"\x8b\x01\n\rPreviewStatus\x12\x30\n\x05state\x18\x01 \x01(\x0e\x32!.omniseer.gateway.v1.PreviewState\x12\x34\n\x07profile\x18\x02 \x01(\x0e\x32#.omniseer.gateway.v1.PreviewProfile\x12\x12\n\nlast_error\x18\x03 \x01(\t\"\xa8\x02\n\x0bRobotHealth\x12\x34\n\x05state\x18\x01 \x01(\x0e\x32%.omniseer.gateway.v1.RobotHealthState\x12\r\n\x05ready\x18\x02 \x01(\x08\x12\x0f\n\x07summary\x18\x03 \x01(\t\x12\x16\n\x0eodom_available\x18\x04 \x01(\x08\x12\x12\n\nodom_stale\x18\x05 \x01(\x08\x12\x18\n\x10linear_speed_mps\x18\x06 \x01(\x02\x12\x1b\n\x13\x61ngular_speed_rad_s\x18\x07 \x01(\x02\x12\x13\n\x0bodom_age_ms\x18\x08 \x01(\x04\x12\x17\n\x0fmeasured_vx_mps\x18\t \x01(\x02\x12\x17\n\x0fmeasured_vy_mps\x18\n \x01(\x02\x12\x19\n\x11measured_wz_rad_s\x18\x0b \x01(\x02\"\xc1\x02\n\x0cSystemStatus\x12\x14\n\x0cgateway_name\x18\x01 \x01(\t\x12\x17\n\x0fgateway_version\x18\x02 \x01(\t\x12\x33\n\x07preview\x18\x03 \x01(\x0b\x32\".omniseer.gateway.v1.PreviewStatus\x12\x31\n\x06vision\x18\x04 \x01(\x0b\x32!.omniseer.gateway.v1.VisionStatus\x12\x30\n\x06health\x18\x05 \x01(\x0b\x32 .omniseer.gateway.v1.RobotHealth\x12\x31\n\x06teleop\x18\x06 \x01(\x0b\x32!.omniseer.gateway.v1.TeleopStatus\x12\x35\n\x08platform\x18\x07 \x01(\x0b\x32#.omniseer.gateway.v1.PlatformStatus\"^\n\x15SetPreviewModeRequest\x12\x0f\n\x07\x65nabled\x18\x01 \x01(\x08\x12\x34\n\x07profile\x18\x02 \x01(\x0e\x32#.omniseer.gateway.v1.PreviewProfile\"p\n\x16SetPreviewModeResponse\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x33\n\x07preview\x18\x03 \x01(\x0b\x32\".omniseer.gateway.v1.PreviewStatus\"\xa0\x02\n\x0cTeleopStatus\x12/\n\x05state\x18\x01 \x01(\x0e\x32 .omniseer.gateway.v1.TeleopState\x12\x0f\n\x07\x65nabled\x18\x02 \x01(\x08\x12\x11\n\ttimed_out\x18\x03 \x01(\x08\x12\x1b\n\x13last_command_age_ms\x18\x04 \x01(\x04\x12\x16\n\x0emax_linear_mps\x18\x05 \x01(\x02\x12\x19\n\x11max_angular_rad_s\x18\x06 \x01(\x02\x12\x12\n\nlast_error\x18\x07 \x01(\t\x12\x1b\n\x13last_command_vx_mps\x18\x08 \x01(\x02\x12\x1b\n\x13last_command_vy_mps\x18\t \x01(\x02\x12\x1d\n\x15last_command_wz_rad_s\x18\n \x01(\x02\"*\n\x17SetTeleopEnabledRequest\x12\x0f\n\x07\x65nabled\x18\x01 \x01(\x08\"p\n\x18SetTeleopEnabledResponse\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x31\n\x06teleop\x18\x03 \x01(\x0b\x32!.omniseer.gateway.v1.TeleopStatus\"_\n\x18SendTeleopCommandRequest\x12\x14\n\x0clinear_x_mps\x18\x01 \x01(\x02\x12\x14\n\x0clinear_y_mps\x18\x02 \x01(\x02\x12\x17\n\x0f\x61ngular_z_rad_s\x18\x03 \x01(\x02\"q\n\x19SendTeleopCommandResponse\x12\x10\n\x08\x61\x63\x63\x65pted\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x31\n\x06teleop\x18\x03 \x01(\x0b\x32!.omniseer.gateway.v1.TeleopStatus\"\xbc\x01\n\x10OverlayDetection\x12\x10\n\x08\x63lass_id\x18\x01 \x01(\x05\x12\x12\n\nclass_name\x18\x02 \x01(\t\x12\r\n\x05score\x18\x03 \x01(\x02\x12\x10\n\x08track_id\x18\x04 \x01(\t\x12\x18\n\x10\x62\x62ox_center_x_px\x18\x05 \x01(\x02\x12\x18\n\x10\x62\x62ox_center_y_px\x18\x06 \x01(\x02\x12\x15\n\rbbox_width_px\x18\x07 \x01(\x02\x12\x16\n\x0e\x62\x62ox_height_px\x18\x08 \x01(\x02\"\xd1\x01\n\x16\x44\x65tectionOverlayStatus\x12\x11\n\tavailable\x18\x01 \x01(\x08\x12\r\n\x05stale\x18\x02 \x01(\x08\x12\x0e\n\x06\x61ge_ms\x18\x03 \x01(\x04\x12\x17\n\x0fsource_width_px\x18\x04 \x01(\r\x12\x18\n\x10source_height_px\x18\x05 \x01(\r\x12\x17\n\x0f\x64\x65tection_count\x18\x06 \x01(\r\x12\x39\n\ndetections\x18\x07 \x03(\x0b\x32%.omniseer.gateway.v1.OverlayDetection\"B\n\rOperatorEvent\x12\x10\n\x08sequence\x18\x01 \x01(\x04\x12\x0e\n\x06\x61ge_ms\x18\x02 \x01(\x04\x12\x0f\n\x07message\x18\x03 \x01(\t\"\xd2\x02\n\rComputeStatus\x12\x11\n\tavailable\x18\x01 \x01(\x08\x12\r\n\x05stale\x18\x02 \x01(\x08\x12\x0e\n\x06\x61ge_ms\x18\x03 \x01(\x04\x12\x13\n\x0b\x63pu_percent\x18\x04 \x01(\x02\x12!\n\x19\x63pu_temperature_available\x18\x05 \x01(\x08\x12\x19\n\x11\x63pu_temperature_c\x18\x06 \x01(\x02\x12#\n\x1bthermal_throttled_available\x18\x07 \x01(\x08\x12\x19\n\x11thermal_throttled\x18\x08 \x01(\x08\x12\x16\n\x0eram_used_bytes\x18\t \x01(\x04\x12\x17\n\x0fram_total_bytes\x18\n \x01(\x04\x12\x18\n\x10ram_used_percent\x18\x0b \x01(\x02\x12\x16\n\x0e\x64isk_available\x18\x0c \x01(\x08\x12\x19\n\x11\x64isk_used_percent\x18\r \x01(\x02\"\xe2\x01\n\rNetworkStatus\x12\x11\n\tavailable\x18\x01 \x01(\x08\x12\r\n\x05stale\x18\x02 \x01(\x08\x12\x0e\n\x06\x61ge_ms\x18\x03 \x01(\x04\x12\x11\n\tconnected\x18\x04 \x01(\x08\x12\x16\n\x0einterface_name\x18\x05 \x01(\t\x12\x1d\n\x15wifi_signal_available\x18\x06 \x01(\x08\x12\x17\n\x0fwifi_signal_dbm\x18\x07 \x01(\x05\x12\x1e\n\x16link_quality_available\x18\x08 \x01(\x08\x12\x1c\n\x14link_quality_percent\x18\t \x01(\r\"\xee\x01\n\rBatteryStatus\x12\x11\n\tavailable\x18\x01 \x01(\x08\x12\r\n\x05stale\x18\x02 \x01(\x08\x12\x0e\n\x06\x61ge_ms\x18\x03 \x01(\x04\x12\x0e\n\x06source\x18\x04 \x01(\t\x12\x0f\n\x07present\x18\x05 \x01(\x08\x12\x19\n\x11voltage_available\x18\x06 \x01(\x08\x12\x0f\n\x07voltage\x18\x07 \x01(\x02\x12\x1c\n\x14percentage_available\x18\x08 \x01(\x08\x12\x12\n\npercentage\x18\t \x01(\x02\x12\x1a\n\x12\x63harging_available\x18\n \x01(\x08\x12\x10\n\x08\x63harging\x18\x0b \x01(\x08\"\x84\x01\n\x0bPowerStatus\x12\x38\n\x0clipo_battery\x18\x01 \x01(\x0b\x32\".omniseer.gateway.v1.BatteryStatus\x12;\n\x0fonboard_battery\x18\x02 \x01(\x0b\x32\".omniseer.gateway.v1.BatteryStatus\"\xab\x01\n\x0ePlatformStatus\x12\x33\n\x07\x63ompute\x18\x01 \x01(\x0b\x32\".omniseer.gateway.v1.ComputeStatus\x12\x33\n\x07network\x18\x02 \x01(\x0b\x32\".omniseer.gateway.v1.NetworkStatus\x12/\n\x05power\x18\x03 \x01(\x0b\x32 .omniseer.gateway.v1.PowerStatus\"\xb9\x01\n\x0fOverlaySnapshot\x12\x31\n\x06status\x18\x01 \x01(\x0b\x32!.omniseer.gateway.v1.SystemStatus\x12?\n\ndetections\x18\x02 \x01(\x0b\x32+.omniseer.gateway.v1.DetectionOverlayStatus\x12\x32\n\x06\x65vents\x18\x03 \x03(\x0b\x32\".omniseer.gateway.v1.OperatorEvent*X\n\x0cPreviewState\x12\x1d\n\x19PREVIEW_STATE_UNSPECIFIED\x10\x00\x12\x14\n\x10PREVIEW_DISABLED\x10\x01\x12\x13\n\x0fPREVIEW_RUNNING\x10\x02*\x8d\x01\n\x0ePreviewProfile\x12\x1f\n\x1bPREVIEW_PROFILE_UNSPECIFIED\x10\x00\x12\x1a\n\x16PREVIEW_PROFILE_LOW_BW\x10\x01\x12\x1c\n\x18PREVIEW_PROFILE_BALANCED\x10\x02\x12 \n\x1cPREVIEW_PROFILE_HIGH_QUALITY\x10\x03*f\n\x10RobotHealthState\x12\"\n\x1eROBOT_HEALTH_STATE_UNSPECIFIED\x10\x00\x12\x13\n\x0fROBOT_HEALTH_OK\x10\x01\x12\x19\n\x15ROBOT_HEALTH_DEGRADED\x10\x02*j\n\x0bTeleopState\x12\x1c\n\x18TELEOP_STATE_UNSPECIFIED\x10\x00\x12\x13\n\x0fTELEOP_DISABLED\x10\x01\x12\x12\n\x0eTELEOP_ENABLED\x10\x02\x12\x14\n\x10TELEOP_TIMED_OUT\x10\x03\x32\xad\x04\n\x0cRobotGateway\x12\x61\n\x0fGetSystemStatus\x12+.omniseer.gateway.v1.GetSystemStatusRequest\x1a!.omniseer.gateway.v1.SystemStatus\x12i\n\x0eSetPreviewMode\x12*.omniseer.gateway.v1.SetPreviewModeRequest\x1a+.omniseer.gateway.v1.SetPreviewModeResponse\x12o\n\x10SetTeleopEnabled\x12,.omniseer.gateway.v1.SetTeleopEnabledRequest\x1a-.omniseer.gateway.v1.SetTeleopEnabledResponse\x12r\n\x11SendTeleopCommand\x12-.omniseer.gateway.v1.SendTeleopCommandRequest\x1a..omniseer.gateway.v1.SendTeleopCommandResponse\x12j\n\x12GetOverlaySnapshot\x12..omniseer.gateway.v1.GetOverlaySnapshotRequest\x1a$.omniseer.gateway.v1.OverlaySnapshotb\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'robot_diag_control.api.robot_gateway_pb2', globals())
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  _PREVIEWSTATE._serialized_start=2542
-  _PREVIEWSTATE._serialized_end=2630
-  _PREVIEWPROFILE._serialized_start=2633
-  _PREVIEWPROFILE._serialized_end=2774
-  _ROBOTHEALTHSTATE._serialized_start=2776
-  _ROBOTHEALTHSTATE._serialized_end=2878
-  _TELEOPSTATE._serialized_start=2880
-  _TELEOPSTATE._serialized_end=2986
+  _PREVIEWSTATE._serialized_start=3717
+  _PREVIEWSTATE._serialized_end=3805
+  _PREVIEWPROFILE._serialized_start=3808
+  _PREVIEWPROFILE._serialized_end=3949
+  _ROBOTHEALTHSTATE._serialized_start=3951
+  _ROBOTHEALTHSTATE._serialized_end=4053
+  _TELEOPSTATE._serialized_start=4055
+  _TELEOPSTATE._serialized_end=4161
   _GETSYSTEMSTATUSREQUEST._serialized_start=67
   _GETSYSTEMSTATUSREQUEST._serialized_end=91
   _GETOVERLAYSNAPSHOTREQUEST._serialized_start=93
@@ -39,29 +39,39 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _ROBOTHEALTH._serialized_start=445
   _ROBOTHEALTH._serialized_end=741
   _SYSTEMSTATUS._serialized_start=744
-  _SYSTEMSTATUS._serialized_end=1010
-  _SETPREVIEWMODEREQUEST._serialized_start=1012
-  _SETPREVIEWMODEREQUEST._serialized_end=1106
-  _SETPREVIEWMODERESPONSE._serialized_start=1108
-  _SETPREVIEWMODERESPONSE._serialized_end=1220
-  _TELEOPSTATUS._serialized_start=1223
-  _TELEOPSTATUS._serialized_end=1511
-  _SETTELEOPENABLEDREQUEST._serialized_start=1513
-  _SETTELEOPENABLEDREQUEST._serialized_end=1555
-  _SETTELEOPENABLEDRESPONSE._serialized_start=1557
-  _SETTELEOPENABLEDRESPONSE._serialized_end=1669
-  _SENDTELEOPCOMMANDREQUEST._serialized_start=1671
-  _SENDTELEOPCOMMANDREQUEST._serialized_end=1766
-  _SENDTELEOPCOMMANDRESPONSE._serialized_start=1768
-  _SENDTELEOPCOMMANDRESPONSE._serialized_end=1881
-  _OVERLAYDETECTION._serialized_start=1884
-  _OVERLAYDETECTION._serialized_end=2072
-  _DETECTIONOVERLAYSTATUS._serialized_start=2075
-  _DETECTIONOVERLAYSTATUS._serialized_end=2284
-  _OPERATOREVENT._serialized_start=2286
-  _OPERATOREVENT._serialized_end=2352
-  _OVERLAYSNAPSHOT._serialized_start=2355
-  _OVERLAYSNAPSHOT._serialized_end=2540
-  _ROBOTGATEWAY._serialized_start=2989
-  _ROBOTGATEWAY._serialized_end=3546
+  _SYSTEMSTATUS._serialized_end=1065
+  _SETPREVIEWMODEREQUEST._serialized_start=1067
+  _SETPREVIEWMODEREQUEST._serialized_end=1161
+  _SETPREVIEWMODERESPONSE._serialized_start=1163
+  _SETPREVIEWMODERESPONSE._serialized_end=1275
+  _TELEOPSTATUS._serialized_start=1278
+  _TELEOPSTATUS._serialized_end=1566
+  _SETTELEOPENABLEDREQUEST._serialized_start=1568
+  _SETTELEOPENABLEDREQUEST._serialized_end=1610
+  _SETTELEOPENABLEDRESPONSE._serialized_start=1612
+  _SETTELEOPENABLEDRESPONSE._serialized_end=1724
+  _SENDTELEOPCOMMANDREQUEST._serialized_start=1726
+  _SENDTELEOPCOMMANDREQUEST._serialized_end=1821
+  _SENDTELEOPCOMMANDRESPONSE._serialized_start=1823
+  _SENDTELEOPCOMMANDRESPONSE._serialized_end=1936
+  _OVERLAYDETECTION._serialized_start=1939
+  _OVERLAYDETECTION._serialized_end=2127
+  _DETECTIONOVERLAYSTATUS._serialized_start=2130
+  _DETECTIONOVERLAYSTATUS._serialized_end=2339
+  _OPERATOREVENT._serialized_start=2341
+  _OPERATOREVENT._serialized_end=2407
+  _COMPUTESTATUS._serialized_start=2410
+  _COMPUTESTATUS._serialized_end=2748
+  _NETWORKSTATUS._serialized_start=2751
+  _NETWORKSTATUS._serialized_end=2977
+  _BATTERYSTATUS._serialized_start=2980
+  _BATTERYSTATUS._serialized_end=3218
+  _POWERSTATUS._serialized_start=3221
+  _POWERSTATUS._serialized_end=3353
+  _PLATFORMSTATUS._serialized_start=3356
+  _PLATFORMSTATUS._serialized_end=3527
+  _OVERLAYSNAPSHOT._serialized_start=3530
+  _OVERLAYSNAPSHOT._serialized_end=3715
+  _ROBOTGATEWAY._serialized_start=4164
+  _ROBOTGATEWAY._serialized_end=4721
 # @@protoc_insertion_point(module_scope)

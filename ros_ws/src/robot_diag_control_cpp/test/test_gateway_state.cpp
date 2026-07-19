@@ -1,4 +1,5 @@
 #include <chrono>
+#include <limits>
 #include <string>
 
 #include <gtest/gtest.h>
@@ -6,6 +7,7 @@
 #include "nav_msgs/msg/odometry.hpp"
 #include "omniseer_msgs/msg/vision_perf_summary.hpp"
 #include "robot_diag_control_cpp/gateway_state.hpp"
+#include "sensor_msgs/msg/battery_state.hpp"
 #include "yolo_msgs/msg/detection_array.hpp"
 
 namespace robot_diag_control_cpp
@@ -220,6 +222,69 @@ TEST(GatewayStateStoreTest, OperatorEventsTrackTransitionsAndRemainCapped)
   EXPECT_EQ(events.front().message, "preview error: preview failed 2");
   EXPECT_EQ(events.back().message, "preview error: preview failed 9");
   EXPECT_LT(events.front().sequence, events.back().sequence);
+}
+
+TEST(GatewayStateStoreTest, PlatformStatusTracksSamplesAndFreshness)
+{
+  TimePoint now{Clock::duration{std::chrono::seconds(100)}};
+  GatewayStateStore store(
+    "robot_diag_control_cpp", "0.1.0", std::chrono::milliseconds(1500),
+    std::chrono::milliseconds(1000),
+    [&now]()
+    {
+      return now;
+    });
+
+  ComputeStatusSnapshot compute{};
+  compute.available = true;
+  compute.cpu_percent = 43.0;
+  compute.cpu_temperature_available = true;
+  compute.cpu_temperature_c = 62.0;
+  compute.ram_used_bytes = 5U * 1024U * 1024U * 1024U;
+  compute.ram_total_bytes = 16U * 1024U * 1024U * 1024U;
+  compute.ram_used_percent = 31.25;
+  store.update_compute_status(compute);
+
+  NetworkStatusSnapshot network{};
+  network.available = true;
+  network.connected = true;
+  network.interface_name = "wlan0";
+  network.wifi_signal_available = true;
+  network.wifi_signal_dbm = -58;
+  store.update_network_status(network);
+
+  BatteryStatusSnapshot onboard{};
+  onboard.available = true;
+  onboard.source = "BAT0";
+  onboard.present = true;
+  onboard.percentage_available = true;
+  onboard.percentage = 91.0;
+  store.update_onboard_battery(onboard);
+
+  sensor_msgs::msg::BatteryState lipo{};
+  lipo.present = true;
+  lipo.voltage = 7.8F;
+  lipo.percentage = std::numeric_limits<float>::quiet_NaN();
+  store.update_lipo_battery(lipo);
+
+  auto status = store.get_system_status();
+  EXPECT_TRUE(status.platform.compute.available);
+  EXPECT_FALSE(status.platform.compute.stale);
+  EXPECT_DOUBLE_EQ(status.platform.compute.cpu_percent, 43.0);
+  EXPECT_TRUE(status.platform.network.available);
+  EXPECT_EQ(status.platform.network.interface_name, "wlan0");
+  EXPECT_EQ(status.platform.network.wifi_signal_dbm, -58);
+  EXPECT_TRUE(status.platform.power.lipo_battery.voltage_available);
+  EXPECT_NEAR(status.platform.power.lipo_battery.voltage, 7.8, 0.001);
+  EXPECT_TRUE(status.platform.power.onboard_battery.percentage_available);
+  EXPECT_DOUBLE_EQ(status.platform.power.onboard_battery.percentage, 91.0);
+
+  now += std::chrono::milliseconds(2100);
+  status = store.get_system_status();
+  EXPECT_TRUE(status.platform.compute.stale);
+  EXPECT_TRUE(status.platform.network.stale);
+  EXPECT_TRUE(status.platform.power.lipo_battery.stale);
+  EXPECT_EQ(status.platform.compute.age_ms, 2100U);
 }
 } // namespace
 } // namespace robot_diag_control_cpp

@@ -10,6 +10,41 @@ from robot_diag_control.gateway_client import (
 )
 
 
+def _healthy_platform() -> robot_gateway_pb2.PlatformStatus:
+    return robot_gateway_pb2.PlatformStatus(
+        compute=robot_gateway_pb2.ComputeStatus(
+            available=True,
+            cpu_percent=43.0,
+            cpu_temperature_available=True,
+            cpu_temperature_c=62.0,
+            ram_used_bytes=5 * 1024**3,
+            ram_total_bytes=16 * 1024**3,
+            ram_used_percent=31.25,
+        ),
+        network=robot_gateway_pb2.NetworkStatus(
+            available=True,
+            connected=True,
+            interface_name="wlan0",
+            wifi_signal_available=True,
+            wifi_signal_dbm=-58,
+        ),
+        power=robot_gateway_pb2.PowerStatus(
+            lipo_battery=robot_gateway_pb2.BatteryStatus(
+                available=True,
+                present=True,
+                voltage_available=True,
+                voltage=7.8,
+            ),
+            onboard_battery=robot_gateway_pb2.BatteryStatus(
+                available=True,
+                present=True,
+                percentage_available=True,
+                percentage=91.0,
+            ),
+        ),
+    )
+
+
 class GatewayClientFormattingTests(unittest.TestCase):
     def test_format_system_status_includes_robot_health_and_mobility(self):
         response = robot_gateway_pb2.SystemStatus(
@@ -51,6 +86,7 @@ class GatewayClientFormattingTests(unittest.TestCase):
                 last_command_vy_mps=0.0,
                 last_command_wz_rad_s=-0.2,
             ),
+            platform=_healthy_platform(),
         )
 
         formatted = format_system_status(response)
@@ -60,6 +96,9 @@ class GatewayClientFormattingTests(unittest.TestCase):
         self.assertIn("teleop: state=enabled enabled=true timed_out=false", formatted)
         self.assertIn("last_command=(0.12,0.00,-0.20)", formatted)
         self.assertIn("vision: producer_fps=22.00", formatted)
+        self.assertIn("compute: fresh", formatted)
+        self.assertIn("network: fresh", formatted)
+        self.assertIn("power: lipo=fresh present=true voltage=7.80V", formatted)
 
     def test_format_operator_status_surfaces_freshness_and_faults(self):
         response = robot_gateway_pb2.SystemStatus(
@@ -96,6 +135,7 @@ class GatewayClientFormattingTests(unittest.TestCase):
                 last_command_vy_mps=0.0,
                 last_command_wz_rad_s=-0.3,
             ),
+            platform=_healthy_platform(),
         )
 
         formatted = format_operator_status(response)
@@ -104,6 +144,7 @@ class GatewayClientFormattingTests(unittest.TestCase):
         self.assertIn("CAM 29.8 FPS | DET 8.4 FPS | LAT 116 ms", formatted)
         self.assertIn("CMD vx +0.20 vy +0.00 wz -0.30", formatted)
         self.assertIn("MEAS vx +0.18 vy +0.01 wz -0.27", formatted)
+        self.assertIn("PWR LiPo 7.8 V | ROCK 91% | Wi-Fi -58 dBm | CPU 43% 62 C", formatted)
         self.assertIn("FAULT waiting for odometry | ODOMETRY STALE | VISION STALE", formatted)
         self.assertNotIn("DEADMAN", formatted)
 
@@ -125,6 +166,7 @@ class GatewayClientFormattingTests(unittest.TestCase):
                 timed_out=True,
                 last_error="teleop deadman timeout",
             ),
+            platform=_healthy_platform(),
         )
 
         formatted = format_system_status_summary(response)
@@ -162,6 +204,7 @@ class GatewayClientFormattingTests(unittest.TestCase):
                 ),
                 vision=robot_gateway_pb2.VisionStatus(available=True, producer_fps=20.0),
                 teleop=robot_gateway_pb2.TeleopStatus(state=robot_gateway_pb2.TELEOP_ENABLED),
+                platform=_healthy_platform(),
             ),
             detections=robot_gateway_pb2.DetectionOverlayStatus(
                 available=True,

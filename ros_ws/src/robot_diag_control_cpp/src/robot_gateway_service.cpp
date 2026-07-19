@@ -131,6 +131,74 @@ gateway_proto::TeleopStatus to_proto(const TeleopStatusSnapshot & snapshot)
   return response;
 }
 
+gateway_proto::ComputeStatus to_proto(const ComputeStatusSnapshot & snapshot)
+{
+  gateway_proto::ComputeStatus response;
+  response.set_available(snapshot.available);
+  response.set_stale(snapshot.stale);
+  response.set_age_ms(snapshot.age_ms);
+  response.set_cpu_percent(static_cast<float>(snapshot.cpu_percent));
+  response.set_cpu_temperature_available(snapshot.cpu_temperature_available);
+  response.set_cpu_temperature_c(static_cast<float>(snapshot.cpu_temperature_c));
+  response.set_thermal_throttled_available(snapshot.thermal_throttled_available);
+  response.set_thermal_throttled(snapshot.thermal_throttled);
+  response.set_ram_used_bytes(snapshot.ram_used_bytes);
+  response.set_ram_total_bytes(snapshot.ram_total_bytes);
+  response.set_ram_used_percent(static_cast<float>(snapshot.ram_used_percent));
+  response.set_disk_available(snapshot.disk_available);
+  response.set_disk_used_percent(static_cast<float>(snapshot.disk_used_percent));
+  return response;
+}
+
+gateway_proto::NetworkStatus to_proto(const NetworkStatusSnapshot & snapshot)
+{
+  gateway_proto::NetworkStatus response;
+  response.set_available(snapshot.available);
+  response.set_stale(snapshot.stale);
+  response.set_age_ms(snapshot.age_ms);
+  response.set_connected(snapshot.connected);
+  response.set_interface_name(snapshot.interface_name);
+  response.set_wifi_signal_available(snapshot.wifi_signal_available);
+  response.set_wifi_signal_dbm(snapshot.wifi_signal_dbm);
+  response.set_link_quality_available(snapshot.link_quality_available);
+  response.set_link_quality_percent(snapshot.link_quality_percent);
+  return response;
+}
+
+gateway_proto::BatteryStatus to_proto(const BatteryStatusSnapshot & snapshot)
+{
+  gateway_proto::BatteryStatus response;
+  response.set_available(snapshot.available);
+  response.set_stale(snapshot.stale);
+  response.set_age_ms(snapshot.age_ms);
+  response.set_source(snapshot.source);
+  response.set_present(snapshot.present);
+  response.set_voltage_available(snapshot.voltage_available);
+  response.set_voltage(static_cast<float>(snapshot.voltage));
+  response.set_percentage_available(snapshot.percentage_available);
+  response.set_percentage(static_cast<float>(snapshot.percentage));
+  response.set_charging_available(snapshot.charging_available);
+  response.set_charging(snapshot.charging);
+  return response;
+}
+
+gateway_proto::PowerStatus to_proto(const PowerStatusSnapshot & snapshot)
+{
+  gateway_proto::PowerStatus response;
+  *response.mutable_lipo_battery() = to_proto(snapshot.lipo_battery);
+  *response.mutable_onboard_battery() = to_proto(snapshot.onboard_battery);
+  return response;
+}
+
+gateway_proto::PlatformStatus to_proto(const PlatformStatusSnapshot & snapshot)
+{
+  gateway_proto::PlatformStatus response;
+  *response.mutable_compute() = to_proto(snapshot.compute);
+  *response.mutable_network() = to_proto(snapshot.network);
+  *response.mutable_power() = to_proto(snapshot.power);
+  return response;
+}
+
 gateway_proto::OverlayDetection to_proto(const DetectionOverlayItem & snapshot)
 {
   gateway_proto::OverlayDetection response;
@@ -178,6 +246,7 @@ gateway_proto::SystemStatus to_proto(const SystemStatusSnapshot & snapshot)
   *response.mutable_vision() = to_proto(snapshot.vision);
   *response.mutable_health() = to_proto(snapshot.health);
   *response.mutable_teleop() = to_proto(snapshot.teleop);
+  *response.mutable_platform() = to_proto(snapshot.platform);
   return response;
 }
 } // namespace

@@ -7,10 +7,12 @@
 #include "rclcpp/rclcpp.hpp"
 #include "robot_diag_control_cpp/gateway_state.hpp"
 #include "robot_diag_control_cpp/grpc_server.hpp"
+#include "robot_diag_control_cpp/platform_status_sampler.hpp"
 #include "robot_diag_control_cpp/preview_command_factory.hpp"
 #include "robot_diag_control_cpp/preview_process_manager.hpp"
 #include "robot_diag_control_cpp/robot_gateway_service.hpp"
 #include "robot_diag_control_cpp/teleop_manager.hpp"
+#include "sensor_msgs/msg/battery_state.hpp"
 #include "yolo_msgs/msg/detection_array.hpp"
 
 namespace robot_diag_control_cpp
@@ -54,6 +56,9 @@ public:
     const auto teleop_max_linear_mps = declare_parameter<double>("teleop_max_linear_mps", 0.35);
     const auto teleop_max_angular_rad_s =
       declare_parameter<double>("teleop_max_angular_rad_s", 0.8);
+    const auto battery_topic = declare_parameter<std::string>("battery_topic", "/battery");
+    const auto platform_status_poll_ms =
+      declare_parameter<int64_t>("platform_status_poll_ms", 1000);
     if (grpc_port < 0 || grpc_port > 65535) {
       throw std::runtime_error("grpc_port must be between 0 and 65535");
     }
@@ -72,6 +77,9 @@ public:
     if (detection_source_width_px <= 0 || detection_source_height_px <= 0) {
       throw std::runtime_error("detection source dimensions must be positive");
     }
+    if (platform_status_poll_ms <= 0) {
+      throw std::runtime_error("platform_status_poll_ms must be positive");
+    }
 
     _state_store = std::make_unique<GatewayStateStore>(
       get_name(),
@@ -82,6 +90,7 @@ public:
       std::chrono::milliseconds(detections_stale_after_ms),
       static_cast<uint32_t>(detection_source_width_px),
       static_cast<uint32_t>(detection_source_height_px));
+    _platform_status_sampler = std::make_unique<PlatformStatusSampler>();
     PreviewCommandFactory preview_command_factory;
     if (!preview_command.empty()) {
       preview_command_factory = make_fixed_preview_command_factory(
@@ -141,6 +150,12 @@ public:
       {
         _state_store->update_detections(msg);
       });
+    _battery_subscription = create_subscription<sensor_msgs::msg::BatteryState>(
+      battery_topic, 10,
+      [this](const sensor_msgs::msg::BatteryState & msg)
+      {
+        _state_store->update_lipo_battery(msg);
+      });
     _preview_poll_timer = create_wall_timer(
       std::chrono::milliseconds(250),
       [this]()
@@ -153,14 +168,23 @@ public:
       {
         _teleop_manager->poll();
       });
+    _platform_status_timer = create_wall_timer(
+      std::chrono::milliseconds(platform_status_poll_ms),
+      [this]()
+      {
+        _state_store->update_compute_status(_platform_status_sampler->sample_compute());
+        _state_store->update_network_status(_platform_status_sampler->sample_network());
+        _state_store->update_onboard_battery(_platform_status_sampler->sample_onboard_battery());
+      });
 
     RCLCPP_INFO(
       get_logger(),
-      "C++ gateway node started; gRPC listening on %s, /vision/perf aggregation is active, robot health odom topic is %s, preview source is %s, teleop command topic is %s",
+      "C++ gateway node started; gRPC listening on %s, /vision/perf aggregation is active, robot health odom topic is %s, preview source is %s, teleop command topic is %s, battery topic is %s",
       _grpc_server->listen_address().c_str(),
       robot_health_odom_topic.c_str(),
       preview_command.empty() ? preview_source_kind.c_str() : preview_command.c_str(),
-      teleop_command_topic.c_str());
+      teleop_command_topic.c_str(),
+      battery_topic.c_str());
   }
 
   ~RobotDiagControlCppNode() override
@@ -175,6 +199,7 @@ public:
 
 private:
   std::unique_ptr<GatewayStateStore> _state_store{};
+  std::unique_ptr<PlatformStatusSampler> _platform_status_sampler{};
   std::unique_ptr<PreviewProcessManager> _preview_manager{};
   std::unique_ptr<TeleopManager> _teleop_manager{};
   std::unique_ptr<RobotGatewayService> _grpc_service{};
@@ -184,8 +209,10 @@ private:
     _vision_perf_subscription{};
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr _odometry_subscription{};
   rclcpp::Subscription<yolo_msgs::msg::DetectionArray>::SharedPtr _detections_subscription{};
+  rclcpp::Subscription<sensor_msgs::msg::BatteryState>::SharedPtr _battery_subscription{};
   rclcpp::TimerBase::SharedPtr _preview_poll_timer{};
   rclcpp::TimerBase::SharedPtr _teleop_poll_timer{};
+  rclcpp::TimerBase::SharedPtr _platform_status_timer{};
 };
 } // namespace robot_diag_control_cpp
 

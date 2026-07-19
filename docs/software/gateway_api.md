@@ -40,6 +40,8 @@ What exists today:
   helper
 - a first Tk-based monitor GUI that refreshes status, toggles preview, and
   launches the preview helper as a separate process
+- an additive platform health block for compute, Wi-Fi, LiPo, and onboard
+  battery state in the gateway status snapshot
 
 This page now serves two roles:
 
@@ -144,7 +146,8 @@ Still deferred:
 
 - stream endpoint metadata in the API
 - a hardware H.265 preview path
-- broader status sources beyond the current vision/perf aggregation
+- status sources beyond odometry, vision, teleop, preview, platform health, and
+  the current battery topic
 - any streaming or multi-client behavior
 - an embedded video panel inside the GUI
 
@@ -160,11 +163,13 @@ Current contents:
 - current normalized vision status summary
 - odometry availability, staleness, age, and measured `vx`/`vy`/`wz`
 - bounded teleop status plus the last accepted commanded `vx`/`vy`/`wz`
+- platform status for SBC compute, Wi-Fi, LiPo battery, and onboard USB-C power
+  battery when the underlying Linux or ROS source is available
 
 Deferred until later if needed:
 
 - robot mode or mission state
-- broader health summary
+- wheel-level/motor-controller diagnostics
 - build/runtime details beyond gateway version
 - execution environment labels such as `REAL` or `SIM`
 - teleop deadman/timeout semantics beyond the current bounded command path
@@ -179,14 +184,31 @@ Current contents:
 - source-space detection geometry for laptop-side scaling over preview video
 - a small capped recent operator event list for status transitions and gateway
   errors
+- platform fault surfacing for stale/missing compute or network samples, weak
+  Wi-Fi, hot/throttled CPU, low LiPo voltage, and low onboard battery percentage
 
 Deferred until later if needed:
 
 - exact video/detection frame synchronization
 - streaming detection events
 - viewer-specific confidence filtering
-- host CPU/RAM/network metrics
-- Teensy, battery, Wi-Fi, minimap, and target-selection overlays
+- minimap and target-selection overlays
+
+### `PlatformStatus`
+
+Current contents:
+
+- `ComputeStatus`: CPU utilization, optional CPU temperature, optional thermal
+  throttling, RAM usage, and optional disk usage
+- `NetworkStatus`: selected Wi-Fi interface, connection state, optional RSSI in
+  dBm, and optional link quality
+- `PowerStatus`: LiPo battery from `/battery` and onboard battery from Linux
+  `power_supply` data when present
+
+All platform sub-statuses carry `available`, `stale`, and `age_ms` fields so
+the operator can distinguish missing instrumentation from fresh healthy values.
+These values do not currently alter `RobotHealth.ready`; they are surfaced as
+operator diagnostics and events.
 
 ### `PreviewStatus`
 

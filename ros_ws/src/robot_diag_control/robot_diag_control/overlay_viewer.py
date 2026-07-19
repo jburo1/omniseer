@@ -30,6 +30,14 @@ class ScaledBox:
     y2: int
 
 
+@dataclass
+class OverlayLayers:
+    perception: bool = True
+    motion: bool = True
+    system: bool = True
+    events: bool = True
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Laptop video overlay viewer for the robot gateway")
     parser.add_argument("--host", default="127.0.0.1", help="gRPC gateway host")
@@ -70,6 +78,21 @@ def _build_parser() -> argparse.ArgumentParser:
         type=float,
         default=0.0,
         help="minimum score to draw",
+    )
+    parser.add_argument(
+        "--hide-motion",
+        action="store_true",
+        help="start with the motion telemetry HUD layer hidden",
+    )
+    parser.add_argument(
+        "--hide-system",
+        action="store_true",
+        help="start with the platform health HUD layer hidden",
+    )
+    parser.add_argument(
+        "--hide-events",
+        action="store_true",
+        help="start with the operator event HUD layer hidden",
     )
     parser.add_argument(
         "--gst-launch-path",
@@ -216,7 +239,7 @@ def _draw_detections(
 def _hud_lines(
     snapshot: robot_gateway_pb2.OverlaySnapshot | None,
     *,
-    overlay_enabled: bool,
+    layers: OverlayLayers,
     min_score: float,
 ) -> list[str]:
     if snapshot is None:
@@ -228,6 +251,11 @@ def _hud_lines(
     health = status.health
     preview = status.preview
     teleop = status.teleop
+    platform = status.platform
+    compute = platform.compute
+    network = platform.network
+    lipo = platform.power.lipo_battery
+    onboard = platform.power.onboard_battery
 
     odom_state = "MISSING"
     if health.odom_available:
@@ -258,36 +286,115 @@ def _hud_lines(
         fault_parts.append(f"PREVIEW {preview.last_error}")
     if teleop.last_error:
         fault_parts.append(f"TELEOP {teleop.last_error}")
+    if layers.system:
+        if not network.available:
+            fault_parts.append("Wi-Fi MISSING")
+        elif network.stale:
+            fault_parts.append("Wi-Fi STALE")
+        elif not network.connected:
+            fault_parts.append("Wi-Fi DOWN")
+        elif network.wifi_signal_available and network.wifi_signal_dbm <= -75:
+            fault_parts.append(f"Wi-Fi WEAK {network.wifi_signal_dbm} dBm")
+        if not compute.available:
+            fault_parts.append("COMPUTE MISSING")
+        elif compute.stale:
+            fault_parts.append("COMPUTE STALE")
+        elif compute.thermal_throttled:
+            fault_parts.append("CPU THROTTLING")
+        elif compute.cpu_temperature_available and compute.cpu_temperature_c >= 80.0:
+            fault_parts.append(f"CPU HOT {compute.cpu_temperature_c:.0f} C")
+        if lipo.available and not lipo.stale and lipo.voltage_available and lipo.voltage <= 7.0:
+            fault_parts.append(f"LiPo LOW {lipo.voltage:.1f} V")
+        if onboard.available and not onboard.stale and onboard.percentage_available and onboard.percentage <= 20.0:
+            fault_parts.append(f"ROCK BAT LOW {onboard.percentage:.0f}%")
 
     lines = [
         "TELEOP "
         f"{TELEOP_STATE_NAMES.get(teleop.state, 'unknown').upper()} | "
         f"{'READY' if health.ready else 'NOT READY'} | "
         f"ODOM {odom_state} {health.odom_age_ms} ms | VISION {vision_state}",
-        "CAM "
-        f"{vision.producer_fps:.1f} FPS | "
-        f"DET {vision.consumer_fps:.1f} FPS | "
-        f"LAT {vision.last_infer_ms:.0f} ms | "
-        f"OBJ {detections.detection_count} | AGE {detections.age_ms} ms",
-        "CMD "
-        f"vx {teleop.last_command_vx_mps:+.2f} "
-        f"vy {teleop.last_command_vy_mps:+.2f} "
-        f"wz {teleop.last_command_wz_rad_s:+.2f} | "
-        "MEAS "
-        f"vx {health.measured_vx_mps:+.2f} "
-        f"vy {health.measured_vy_mps:+.2f} "
-        f"wz {health.measured_wz_rad_s:+.2f} | "
-        f"AGE {teleop.last_command_age_ms} ms",
+    ]
+    if layers.perception:
+        lines.append(
+            "CAM "
+            f"{vision.producer_fps:.1f} FPS | "
+            f"DET {vision.consumer_fps:.1f} FPS | "
+            f"LAT {vision.last_infer_ms:.0f} ms | "
+            f"OBJ {detections.detection_count} | AGE {detections.age_ms} ms"
+        )
+    if layers.motion:
+        lines.append(
+            "CMD "
+            f"vx {teleop.last_command_vx_mps:+.2f} "
+            f"vy {teleop.last_command_vy_mps:+.2f} "
+            f"wz {teleop.last_command_wz_rad_s:+.2f} | "
+            "MEAS "
+            f"vx {health.measured_vx_mps:+.2f} "
+            f"vy {health.measured_vy_mps:+.2f} "
+            f"wz {health.measured_wz_rad_s:+.2f} | "
+            f"AGE {teleop.last_command_age_ms} ms"
+        )
+    if layers.system:
+        lines.append(_platform_line(platform))
+    lines.append(
         "PREVIEW "
         f"{PROFILE_NAMES.get(preview.profile, 'unknown')} | "
-        f"overlay={'on' if overlay_enabled else 'off'} | "
-        f"min={min_score:.2f}",
-    ]
+        f"layers={'P' if layers.perception else '-'}{'M' if layers.motion else '-'}"
+        f"{'S' if layers.system else '-'}{'E' if layers.events else '-'} | "
+        f"min={min_score:.2f}"
+    )
     if fault_parts:
         lines.insert(0, "FAULT " + " | ".join(fault_parts))
-    for event in list(snapshot.events)[-3:]:
-        lines.append(f"EVENT {event.age_ms} ms {event.message}")
+    if layers.events:
+        for event in list(snapshot.events)[-3:]:
+            lines.append(f"EVENT {event.age_ms} ms {event.message}")
     return lines
+
+
+def _battery_text(label: str, battery: robot_gateway_pb2.BatteryStatus) -> str:
+    if not battery.available:
+        return f"{label} --"
+    if battery.stale:
+        return f"{label} STALE"
+    if battery.voltage_available:
+        return f"{label} {battery.voltage:.1f}V"
+    if battery.percentage_available:
+        return f"{label} {battery.percentage:.0f}%"
+    return f"{label} OK"
+
+
+def _platform_line(platform: robot_gateway_pb2.PlatformStatus) -> str:
+    compute = platform.compute
+    network = platform.network
+    lipo = platform.power.lipo_battery
+    onboard = platform.power.onboard_battery
+
+    wifi = "Wi-Fi --"
+    if network.available:
+        if network.stale:
+            wifi = "Wi-Fi STALE"
+        elif network.wifi_signal_available:
+            wifi = f"Wi-Fi {network.wifi_signal_dbm} dBm"
+        elif network.link_quality_available:
+            wifi = f"Wi-Fi {network.link_quality_percent}%"
+        else:
+            wifi = f"Wi-Fi {network.interface_name or 'up'}"
+
+    cpu = "CPU --"
+    ram = "RAM --"
+    if compute.available:
+        cpu = f"CPU {compute.cpu_percent:.0f}%"
+        if compute.cpu_temperature_available:
+            cpu += f" {compute.cpu_temperature_c:.0f} C"
+        if compute.thermal_throttled:
+            cpu += " THROTTLE"
+        if compute.ram_total_bytes:
+            ram = f"RAM {compute.ram_used_bytes / (1024**3):.1f}/{compute.ram_total_bytes / (1024**3):.0f}G"
+
+    onboard_text = _battery_text("ROCK", onboard)
+    if onboard.available and not onboard.stale and onboard.percentage_available:
+        onboard_text = f"ROCK {onboard.percentage:.0f}%"
+    return f"PWR {_battery_text('LiPo', lipo)} | {onboard_text} | {wifi} | {cpu} | {ram}"
 
 
 def _draw_hud(
@@ -295,10 +402,10 @@ def _draw_hud(
     frame: Any,
     snapshot: robot_gateway_pb2.OverlaySnapshot | None,
     *,
-    overlay_enabled: bool,
+    layers: OverlayLayers,
     min_score: float,
 ) -> None:
-    lines = _hud_lines(snapshot, overlay_enabled=overlay_enabled, min_score=min_score)
+    lines = _hud_lines(snapshot, layers=layers, min_score=min_score)
 
     x = 10
     y = 24
@@ -317,8 +424,7 @@ def _import_cv2() -> Any:
         import cv2  # type: ignore[import-not-found]
     except ModuleNotFoundError as error:
         raise RuntimeError(
-            "OpenCV is not available. Install a GUI-capable OpenCV package on the laptop "
-            "(for Ubuntu: python3-opencv)."
+            "OpenCV is not available. Install a GUI-capable OpenCV package on the laptop (for Ubuntu: python3-opencv)."
         ) from error
     return cv2
 
@@ -381,7 +487,12 @@ def _run_viewer(
     last_poll = 0.0
     poll_interval = 1.0 / max(parsed.overlay_poll_hz, 0.1)
     started_at = time.monotonic()
-    overlay_enabled = True
+    layers = OverlayLayers(
+        perception=True,
+        motion=not parsed.hide_motion,
+        system=not parsed.hide_system,
+        events=not parsed.hide_events,
+    )
     min_score = max(0.0, parsed.min_score)
 
     if parsed.mode == "display":
@@ -404,9 +515,9 @@ def _run_viewer(
             time.sleep(0.02)
             continue
 
-        if overlay_enabled and last_snapshot is not None:
+        if layers.perception and last_snapshot is not None:
             _draw_detections(cv2, frame, last_snapshot, min_score=min_score)
-        _draw_hud(cv2, frame, last_snapshot, overlay_enabled=overlay_enabled, min_score=min_score)
+        _draw_hud(cv2, frame, last_snapshot, layers=layers, min_score=min_score)
 
         if parsed.mode == "fakesink":
             continue
@@ -415,8 +526,14 @@ def _run_viewer(
         key = cv2.waitKey(1) & 0xFF
         if key in {27, ord("q"), ord("x")}:
             return 0
-        if key == ord("o"):
-            overlay_enabled = not overlay_enabled
+        if key == ord("o") or key == ord("p"):
+            layers.perception = not layers.perception
+        elif key == ord("m"):
+            layers.motion = not layers.motion
+        elif key == ord("s"):
+            layers.system = not layers.system
+        elif key == ord("e"):
+            layers.events = not layers.events
         elif key == ord("["):
             min_score = max(0.0, min_score - 0.05)
         elif key == ord("]"):

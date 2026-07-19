@@ -101,6 +101,7 @@ message SystemStatus {
   VisionStatus vision = 4;
   RobotHealth health = 5;
   TeleopStatus teleop = 6;
+  PlatformStatus platform = 7;
 }
 
 message SetPreviewModeRequest {
@@ -186,6 +187,59 @@ message OperatorEvent {
   uint64 sequence = 1;
   uint64 age_ms = 2;
   string message = 3;
+}
+
+message ComputeStatus {
+  bool available = 1;
+  bool stale = 2;
+  uint64 age_ms = 3;
+  float cpu_percent = 4;
+  bool cpu_temperature_available = 5;
+  float cpu_temperature_c = 6;
+  bool thermal_throttled_available = 7;
+  bool thermal_throttled = 8;
+  uint64 ram_used_bytes = 9;
+  uint64 ram_total_bytes = 10;
+  float ram_used_percent = 11;
+  bool disk_available = 12;
+  float disk_used_percent = 13;
+}
+
+message NetworkStatus {
+  bool available = 1;
+  bool stale = 2;
+  uint64 age_ms = 3;
+  bool connected = 4;
+  string interface_name = 5;
+  bool wifi_signal_available = 6;
+  int32 wifi_signal_dbm = 7;
+  bool link_quality_available = 8;
+  uint32 link_quality_percent = 9;
+}
+
+message BatteryStatus {
+  bool available = 1;
+  bool stale = 2;
+  uint64 age_ms = 3;
+  string source = 4;
+  bool present = 5;
+  bool voltage_available = 6;
+  float voltage = 7;
+  bool percentage_available = 8;
+  float percentage = 9;
+  bool charging_available = 10;
+  bool charging = 11;
+}
+
+message PowerStatus {
+  BatteryStatus lipo_battery = 1;
+  BatteryStatus onboard_battery = 2;
+}
+
+message PlatformStatus {
+  ComputeStatus compute = 1;
+  NetworkStatus network = 2;
+  PowerStatus power = 3;
 }
 
 message OverlaySnapshot {
