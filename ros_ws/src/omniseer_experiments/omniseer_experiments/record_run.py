@@ -28,9 +28,11 @@ from omniseer_experiments.bundle import (
     make_detection_record,
     make_perf_record,
 )
+from omniseer_experiments.system_telemetry import SystemTelemetrySampler
 from omniseer_msgs.msg import VisionPerfSummary
 
 DEFAULT_QUEUE_SIZE = 256
+DEFAULT_SYSTEM_SAMPLE_INTERVAL_SEC = 1.0
 USE_CONFIG_SENTINEL = "__from_config__"
 
 
@@ -129,11 +131,43 @@ class AsyncBundleWriter:
             self._bundle.write_detection_record(record)
         elif stream == "perf":
             self._bundle.write_perf_record(record)
+        elif stream == "system":
+            self._bundle.write_system_record(record)
         else:
             self._bundle.record_drop(stream)
 
     def _flush(self) -> None:
         self._bundle.flush()
+
+
+class SystemTelemetryThread:
+    """Sample system telemetry on a recorder-owned background thread."""
+
+    def __init__(
+        self,
+        *,
+        sampler: SystemTelemetrySampler,
+        writer: AsyncBundleWriter,
+        interval_sec: float = DEFAULT_SYSTEM_SAMPLE_INTERVAL_SEC,
+    ) -> None:
+        if interval_sec <= 0.0:
+            raise ValueError("interval_sec must be > 0")
+        self._sampler = sampler
+        self._writer = writer
+        self._interval_sec = interval_sec
+        self._stop_requested = threading.Event()
+        self._thread = threading.Thread(target=self._run, name="omniseer_system_telemetry", daemon=True)
+        self._thread.start()
+
+    def stop(self) -> None:
+        self._stop_requested.set()
+        self._thread.join()
+
+    def _run(self) -> None:
+        while not self._stop_requested.is_set():
+            record = self._sampler.sample()
+            self._writer.submit("system", record)
+            self._stop_requested.wait(self._interval_sec)
 
 
 class PerceptionRunRecorder(Node):
@@ -165,6 +199,11 @@ class PerceptionRunRecorder(Node):
             queue_size=options.queue_size,
             flush_interval_sec=options.flush_interval_sec,
         )
+        self._system_telemetry = SystemTelemetryThread(
+            sampler=SystemTelemetrySampler(),
+            writer=self._writer,
+            interval_sec=DEFAULT_SYSTEM_SAMPLE_INTERVAL_SEC,
+        )
 
         qos = QoSProfile(
             reliability=QoSReliabilityPolicy.RELIABLE,
@@ -183,6 +222,7 @@ class PerceptionRunRecorder(Node):
         if self._closed:
             return self._writer.bundle.summary_from_disk()
         self._closed = True
+        self._system_telemetry.stop()
         summary = self._writer.close()
         self.get_logger().info(f"finalized perception run bundle: out_dir={self._options.out_dir}")
         return summary
@@ -425,6 +465,7 @@ __all__ = [
     "AsyncBundleWriter",
     "PerceptionRunRecorder",
     "RecorderOptions",
+    "SystemTelemetryThread",
     "detection_array_to_record",
     "main",
     "options_from_args",

@@ -88,6 +88,7 @@ class SummaryAccumulator:
         self.run_id = run_id
         self.detection_message_count = 0
         self.perf_message_count = 0
+        self.system_message_count = 0
         self.detections_by_class: Counter[str] = Counter()
         self._confidence_by_class: dict[str, list[float]] = defaultdict(list)
         self._producer_fps: list[float] = []
@@ -120,6 +121,9 @@ class SummaryAccumulator:
                 if value is not None:
                     self._errors[field_name] = max(self._errors[field_name], value)
 
+    def add_system_record(self, _record: dict[str, Any]) -> None:
+        self.system_message_count += 1
+
     def record_drop(self, stream: str, count: int = 1) -> None:
         if count > 0:
             self._dropped_records[stream] += count
@@ -132,6 +136,7 @@ class SummaryAccumulator:
             "message_counts": {
                 "detections": self.detection_message_count,
                 "perf": self.perf_message_count,
+                "system": self.system_message_count,
             },
             "detections_by_class": dict(sorted(self.detections_by_class.items())),
             "confidence_by_class": {
@@ -163,6 +168,7 @@ class RunBundleWriter:
         self._write_manifest()
         self._detections_handle = self.detections_path.open("a", encoding="utf-8")
         self._perf_handle = self.perf_path.open("a", encoding="utf-8")
+        self._system_handle = self.system_path.open("a", encoding="utf-8")
 
     @property
     def run_dir(self) -> Path:
@@ -181,6 +187,10 @@ class RunBundleWriter:
         return self.run_dir / "perf.jsonl"
 
     @property
+    def system_path(self) -> Path:
+        return self.run_dir / "system.jsonl"
+
+    @property
     def summary_path(self) -> Path:
         return self.run_dir / "summary.json"
 
@@ -196,6 +206,10 @@ class RunBundleWriter:
         self._write_jsonl(self._perf_handle, record)
         self.summary.add_perf_record(record)
 
+    def write_system_record(self, record: dict[str, Any]) -> None:
+        self._write_jsonl(self._system_handle, record)
+        self.summary.add_system_record(record)
+
     def record_drop(self, stream: str, count: int = 1) -> None:
         self.summary.record_drop(stream, count)
 
@@ -206,8 +220,10 @@ class RunBundleWriter:
         self.ended_at = ended_at or utc_now()
         self._detections_handle.flush()
         self._perf_handle.flush()
+        self._system_handle.flush()
         self._detections_handle.close()
         self._perf_handle.close()
+        self._system_handle.close()
 
         duration_sec = max(0.0, (self.ended_at - self.started_at).total_seconds())
         summary = self.summary.build_summary(duration_sec)
@@ -219,6 +235,7 @@ class RunBundleWriter:
     def flush(self) -> None:
         self._detections_handle.flush()
         self._perf_handle.flush()
+        self._system_handle.flush()
 
     def summary_from_disk(self) -> dict[str, Any]:
         return json.loads(self.summary_path.read_text(encoding="utf-8"))
@@ -332,6 +349,25 @@ def make_perf_record(
         "produced_count": produced_count,
         "consumed_count": consumed_count,
         "error_counts": error_counts,
+    }
+
+
+def make_system_record(
+    *,
+    recv_ts_ns: int,
+    cpu_percent: float,
+    memory_used_mb: float,
+    memory_available_mb: float,
+    soc_temp_c: float | None,
+) -> dict[str, Any]:
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "source": "system",
+        "recv_ts_ns": recv_ts_ns,
+        "cpu_percent": cpu_percent,
+        "memory_used_mb": memory_used_mb,
+        "memory_available_mb": memory_available_mb,
+        "soc_temp_c": soc_temp_c,
     }
 
 

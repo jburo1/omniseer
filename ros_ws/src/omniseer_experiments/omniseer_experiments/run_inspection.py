@@ -83,13 +83,16 @@ def inspect_run(run_dir: Path) -> RunInspection:
     manifest = _read_manifest(path / "manifest.yaml", issues)
     detections_scan = _scan_jsonl(path / "detections.jsonl", "detections")
     perf_scan = _scan_jsonl(path / "perf.jsonl", "perf")
+    system_scan = _scan_optional_jsonl(path / "system.jsonl", "system")
     issues.extend(detections_scan.issues)
     issues.extend(perf_scan.issues)
+    issues.extend(system_scan.issues)
 
     fallback_summary = _fallback_summary(
         run_id=_manifest_string(manifest, "run_id") or path.name,
         detections_records=detections_scan.records,
         perf_records=perf_scan.records,
+        system_records=system_scan.records,
     )
     summary = _read_summary(path / "summary.json", issues)
     summary_missing = summary is None and not (path / "summary.json").exists()
@@ -97,7 +100,7 @@ def inspect_run(run_dir: Path) -> RunInspection:
     started_at = _manifest_string(manifest, "started_at")
     ended_at = _manifest_string(manifest, "ended_at")
     manifest_missing = any(issue.code == "missing_manifest" for issue in issues)
-    jsonl_has_issues = bool(detections_scan.issues or perf_scan.issues)
+    jsonl_has_issues = bool(detections_scan.issues or perf_scan.issues or system_scan.issues)
     summary_has_issues = any(issue.code in {"invalid_summary", "unreadable_summary"} for issue in issues)
 
     if ended_at is None and not manifest_missing:
@@ -134,7 +137,7 @@ def inspect_run(run_dir: Path) -> RunInspection:
         started_at=started_at,
         ended_at=ended_at,
         duration_sec=_summary_float(effective_summary, "duration_sec"),
-        message_counts=_summary_counts(effective_summary),
+        message_counts=_summary_counts(effective_summary, system_count=system_scan.message_count),
         configured_classes=tuple(_manifest_list(manifest, "classes")),
         detections_by_class=_summary_int_map(effective_summary, "detections_by_class"),
         perf=_summary_dict(effective_summary, "perf"),
@@ -159,7 +162,8 @@ def format_run_summary(inspection: RunInspection) -> str:
         f"Ended: {_display_value(inspection.ended_at)}",
         f"Duration: {_format_duration(inspection.duration_sec)}",
         f"Messages: detections={inspection.message_counts.get('detections', 0)} "
-        f"perf={inspection.message_counts.get('perf', 0)}",
+        f"perf={inspection.message_counts.get('perf', 0)} "
+        f"system={inspection.message_counts.get('system', 0)}",
         f"Configured classes: {_format_sequence(inspection.configured_classes)}",
         f"Observed classes: {_format_counts(inspection.detections_by_class)}",
         f"Perf: {_format_perf(inspection.perf)}",
@@ -349,6 +353,12 @@ def _scan_jsonl(path: Path, stream: str) -> JsonlScan:
     return JsonlScan(message_count=len(records), issues=tuple(issues), records=tuple(records))
 
 
+def _scan_optional_jsonl(path: Path, stream: str) -> JsonlScan:
+    if not path.exists():
+        return JsonlScan(message_count=0, issues=(), records=())
+    return _scan_jsonl(path, stream)
+
+
 def _read_summary(path: Path, issues: list[InspectionIssue]) -> dict[str, Any] | None:
     try:
         raw = path.read_text(encoding="utf-8")
@@ -381,13 +391,19 @@ def _read_summary(path: Path, issues: list[InspectionIssue]) -> dict[str, Any] |
 
 
 def _fallback_summary(
-    *, run_id: str, detections_records: Sequence[dict[str, Any]], perf_records: Sequence[dict[str, Any]]
+    *,
+    run_id: str,
+    detections_records: Sequence[dict[str, Any]],
+    perf_records: Sequence[dict[str, Any]],
+    system_records: Sequence[dict[str, Any]],
 ) -> dict[str, Any]:
     accumulator = SummaryAccumulator(run_id)
     for record in detections_records:
         accumulator.add_detection_record(record)
     for record in perf_records:
         accumulator.add_perf_record(record)
+    for record in system_records:
+        accumulator.add_system_record(record)
     return accumulator.build_summary(0.0)
 
 
@@ -436,11 +452,12 @@ def _summary_float(summary: dict[str, Any], key: str) -> float | None:
     return float(value)
 
 
-def _summary_counts(summary: dict[str, Any]) -> dict[str, int]:
+def _summary_counts(summary: dict[str, Any], *, system_count: int = 0) -> dict[str, int]:
     counts = _summary_int_map(summary, "message_counts")
     return {
         "detections": counts.get("detections", 0),
         "perf": counts.get("perf", 0),
+        "system": counts.get("system", system_count),
     }
 
 

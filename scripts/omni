@@ -32,7 +32,7 @@ Commands:
   up      Build the needed workspace, then run a profile.
   test    Targeted local verification helpers. Defaults to ROS.
   run     Operator-facing run commands for sim, real, monitor, and teleop.
-  runs    List and retrieve robot-side perception run bundles.
+  runs    Inspect, list, and retrieve perception run bundles.
   check   Passive verification helpers.
   doctor  Report local build, runtime, and robot dependency state.
   flash   Hardware flashing helpers.
@@ -49,6 +49,8 @@ Examples:
   scripts/omni up real --phase 3
   scripts/omni runs list
   scripts/omni runs pull demo_001
+  scripts/omni runs inspect runs/imported/demo_001
+  scripts/omni runs local-list --root runs
   scripts/omni test smoke-sim
   scripts/omni build ros
   scripts/omni check real-perception
@@ -91,6 +93,8 @@ EOF
 runs_usage() {
   cat <<'EOF'
 Usage:
+  scripts/omni runs inspect <run_dir> [--json]
+  scripts/omni runs local-list [--root <local-runs-root>]
   scripts/omni runs list [retrieval args...]
   scripts/omni runs pull <run_id> [retrieval args...]
 
@@ -269,6 +273,14 @@ EOF
       shift
     fi
     case "${subcommand}" in
+      inspect)
+        omni_source_ros_workspace
+        exec ros2 run omniseer_experiments inspect_run "$@"
+        ;;
+      local-list)
+        omni_source_ros_workspace
+        exec ros2 run omniseer_experiments list_runs "$@"
+        ;;
       list|pull)
         omni_source_ros_workspace
         run_args=("$@")

@@ -4,9 +4,10 @@ import unittest
 from pathlib import Path
 from types import SimpleNamespace
 
-from omniseer_experiments.bundle import RunBundleConfig, RunBundleWriter
+from omniseer_experiments.bundle import RunBundleConfig, RunBundleWriter, make_system_record
 from omniseer_experiments.record_run import (
     AsyncBundleWriter,
+    SystemTelemetryThread,
     detection_array_to_record,
     options_from_args,
     perf_summary_to_record,
@@ -49,6 +50,25 @@ def _perf_message() -> SimpleNamespace:
         preprocess_error_count=3,
         infer_error_count=4,
     )
+
+
+def _system_record(recv_ts_ns: int = 300) -> dict:
+    return make_system_record(
+        recv_ts_ns=recv_ts_ns,
+        cpu_percent=38.2,
+        memory_used_mb=812.0,
+        memory_available_mb=7200.0,
+        soc_temp_c=None,
+    )
+
+
+class _FakeSampler:
+    def __init__(self) -> None:
+        self.count = 0
+
+    def sample(self) -> dict:
+        self.count += 1
+        return _system_record(recv_ts_ns=self.count)
 
 
 class RecordRunConversionTests(unittest.TestCase):
@@ -176,12 +196,15 @@ class AsyncBundleWriterTests(unittest.TestCase):
 
             self.assertTrue(writer.submit("detections", detection_array_to_record(_detection_message())))
             self.assertTrue(writer.submit("perf", perf_summary_to_record(_perf_message())))
+            self.assertTrue(writer.submit("system", _system_record()))
             summary = writer.close()
 
-            self.assertEqual(summary["message_counts"], {"detections": 1, "perf": 1})
+            self.assertEqual(summary["message_counts"], {"detections": 1, "perf": 1, "system": 1})
             self.assertEqual(summary["detections_by_class"], {"chair": 1})
             self.assertTrue((run_dir / "summary.json").is_file())
             with (run_dir / "perf.jsonl").open("r", encoding="utf-8") as handle:
+                self.assertEqual(len([json.loads(line) for line in handle if line.strip()]), 1)
+            with (run_dir / "system.jsonl").open("r", encoding="utf-8") as handle:
                 self.assertEqual(len([json.loads(line) for line in handle if line.strip()]), 1)
 
     def test_async_writer_rejects_submit_after_close(self) -> None:
@@ -193,3 +216,28 @@ class AsyncBundleWriterTests(unittest.TestCase):
             writer.close()
 
             self.assertFalse(writer.submit("detections", detection_array_to_record(_detection_message())))
+
+    def test_async_writer_counts_dropped_system_records(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "demo_001"
+            bundle = RunBundleWriter(RunBundleConfig(run_id="demo_001", out_dir=run_dir, git_sha="abc123"))
+            writer = AsyncBundleWriter(bundle, queue_size=1, flush_interval_sec=0.01)
+
+            writer.close()
+
+            self.assertFalse(writer.submit("system", _system_record()))
+            self.assertEqual(writer.bundle.summary.build_summary(0.0)["dropped_records"], {"system": 1})
+
+    def test_system_telemetry_thread_samples_and_stops(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "demo_001"
+            bundle = RunBundleWriter(RunBundleConfig(run_id="demo_001", out_dir=run_dir, git_sha="abc123"))
+            writer = AsyncBundleWriter(bundle, queue_size=8, flush_interval_sec=0.01)
+            sampler = _FakeSampler()
+
+            thread = SystemTelemetryThread(sampler=sampler, writer=writer, interval_sec=0.01)
+            thread.stop()
+            summary = writer.close()
+
+        self.assertGreaterEqual(sampler.count, 1)
+        self.assertGreaterEqual(summary["message_counts"]["system"], 1)

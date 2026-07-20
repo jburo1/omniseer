@@ -11,6 +11,7 @@ from omniseer_experiments.bundle import (
     default_run_id,
     make_detection_record,
     make_perf_record,
+    make_system_record,
 )
 
 STARTED_AT = datetime(2026, 7, 19, 12, 0, 0, tzinfo=timezone.utc)
@@ -81,6 +82,16 @@ def _perf_record(*, infer_ms: float, capture_fatal: int = 0) -> dict:
     )
 
 
+def _system_record() -> dict:
+    return make_system_record(
+        recv_ts_ns=300,
+        cpu_percent=38.2,
+        memory_used_mb=812.0,
+        memory_available_mb=7200.0,
+        soc_temp_c=61.4,
+    )
+
+
 class RunBundleWriterTests(unittest.TestCase):
     def test_creates_run_directory_and_start_manifest(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -89,6 +100,7 @@ class RunBundleWriterTests(unittest.TestCase):
             try:
                 self.assertTrue((run_dir / "evidence").is_dir())
                 self.assertTrue((run_dir / "manifest.yaml").is_file())
+                self.assertTrue((run_dir / "system.jsonl").is_file())
                 manifest = (run_dir / "manifest.yaml").read_text(encoding="utf-8")
                 self.assertIn("schema_version: 1", manifest)
                 self.assertIn('run_id: "demo_001"', manifest)
@@ -110,14 +122,17 @@ class RunBundleWriterTests(unittest.TestCase):
             writer.write_detection_record(_detection_record())
             writer.write_perf_record(_perf_record(infer_ms=8.0))
             writer.write_perf_record(_perf_record(infer_ms=12.0, capture_fatal=1))
+            writer.write_system_record(_system_record())
             summary = writer.finalize(ended_at=ENDED_AT)
 
             detections = _load_jsonl(run_dir / "detections.jsonl")
             perf = _load_jsonl(run_dir / "perf.jsonl")
+            system = _load_jsonl(run_dir / "system.jsonl")
             self.assertEqual(len(detections), 1)
             self.assertEqual(len(perf), 2)
+            self.assertEqual(len(system), 1)
             self.assertEqual(summary["duration_sec"], 60.0)
-            self.assertEqual(summary["message_counts"], {"detections": 1, "perf": 2})
+            self.assertEqual(summary["message_counts"], {"detections": 1, "perf": 2, "system": 1})
             self.assertEqual(summary["detections_by_class"], {"backpack": 1, "chair": 1})
             self.assertEqual(summary["confidence_by_class"]["chair"], {"min": 0.8, "mean": 0.8, "max": 0.8})
             self.assertEqual(summary["perf"]["producer_fps_mean"], 20.0)
@@ -141,7 +156,7 @@ class RunBundleWriterTests(unittest.TestCase):
             summary = writer.finalize(ended_at=STARTED_AT)
 
             self.assertEqual(summary["duration_sec"], 0.0)
-            self.assertEqual(summary["message_counts"], {"detections": 0, "perf": 0})
+            self.assertEqual(summary["message_counts"], {"detections": 0, "perf": 0, "system": 0})
             self.assertEqual(summary["detections_by_class"], {})
             self.assertEqual(summary["confidence_by_class"], {})
             self.assertEqual(summary["perf"]["infer_ms_mean"], 0.0)
@@ -186,6 +201,7 @@ class SummaryAccumulatorTests(unittest.TestCase):
 
         result = summary.build_summary(5.0)
         self.assertEqual(result["dropped_records"], {"detections": 2, "perf": 1})
+        self.assertEqual(result["message_counts"], {"detections": 0, "perf": 0, "system": 0})
 
 
 def _load_jsonl(path: Path) -> list[dict]:

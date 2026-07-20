@@ -49,6 +49,7 @@ runs/demo_001/
   manifest.yaml
   detections.jsonl
   perf.jsonl
+  system.jsonl
   summary.json
   evidence/
 ```
@@ -58,7 +59,9 @@ Use `--record` instead of `--record-run <run_id>` for a timestamped run id. Use
 `--record-notes <text>` when the run needs explicit metadata. The recorder reads
 the active vision parameter file to store detector, CLIP, vocab, class-list path,
 and configured classes in `manifest.yaml`; `--record-classes <text>` remains
-available as an explicit override. Bundles are stored locally on the robot first.
+available as an explicit override. `system.jsonl` is sampled automatically at
+1 Hz from Linux CPU, memory, and thermal state and remains optional for older
+bundles. Bundles are stored locally on the robot first.
 From the laptop, list and retrieve robot-side bundles with:
 
 ```bash
