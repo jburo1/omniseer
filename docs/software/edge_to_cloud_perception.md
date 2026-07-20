@@ -37,10 +37,12 @@ required for this deliverable.
 
 ### Edge inference
 
-**Implemented with target-oriented component evidence:** the native runtime captures
+**Implemented with target-hardware run evidence:** the native runtime captures
 NV12 frames, preprocesses them with RGA, prepares YOLO-World text embeddings, runs
 RKNN detector inference, maps detections back to source coordinates, and publishes
-bounded results. The integrated real teleop plus native perception verification
+bounded results. The local `runs/pipeline_001` bundle records detections,
+performance summaries, system telemetry, and native pipeline telemetry from a
+Phase 3 target run. The integrated real teleop plus operator preview verification
 record is still pending.
 
 The native bridge currently receives classes from `classes.path` during startup.

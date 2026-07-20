@@ -80,6 +80,7 @@ def _build_real_bringup_actions(
     postprocess_nms_iou_threshold,
     postprocess_max_detections,
     camera_frame_id,
+    pipeline_telemetry_path,
     start_experiment_recording,
     experiment_run_id,
     experiment_out_dir,
@@ -132,6 +133,7 @@ def _build_real_bringup_actions(
             "postprocess_nms_iou_threshold": postprocess_nms_iou_threshold,
             "postprocess_max_detections": postprocess_max_detections,
             "camera_frame_id": camera_frame_id,
+            "pipeline_telemetry_path": pipeline_telemetry_path,
         }.items(),
         condition=IfCondition(start_vision),
     )
@@ -339,6 +341,7 @@ def generate_launch_description():
         DeclareLaunchArgument("postprocess_nms_iou_threshold", default_value="__from_config__"),
         DeclareLaunchArgument("postprocess_max_detections", default_value="__from_config__"),
         DeclareLaunchArgument("camera_frame_id", default_value="__from_config__"),
+        DeclareLaunchArgument("pipeline_telemetry_path", default_value=""),
         DeclareLaunchArgument("start_experiment_recording", default_value="false"),
         DeclareLaunchArgument("experiment_run_id", default_value=""),
         DeclareLaunchArgument("experiment_out_dir", default_value=""),
@@ -396,6 +399,7 @@ def generate_launch_description():
     postprocess_nms_iou_threshold = LaunchConfiguration("postprocess_nms_iou_threshold")
     postprocess_max_detections = LaunchConfiguration("postprocess_max_detections")
     camera_frame_id = LaunchConfiguration("camera_frame_id")
+    pipeline_telemetry_path = LaunchConfiguration("pipeline_telemetry_path")
     start_experiment_recording = LaunchConfiguration("start_experiment_recording")
     experiment_run_id = LaunchConfiguration("experiment_run_id")
     experiment_out_dir = LaunchConfiguration("experiment_out_dir")
@@ -455,6 +459,7 @@ def generate_launch_description():
             postprocess_nms_iou_threshold=postprocess_nms_iou_threshold,
             postprocess_max_detections=postprocess_max_detections,
             camera_frame_id=camera_frame_id,
+            pipeline_telemetry_path=pipeline_telemetry_path,
             start_experiment_recording=start_experiment_recording,
             experiment_run_id=experiment_run_id,
             experiment_out_dir=experiment_out_dir,
@@ -524,6 +529,7 @@ def generate_launch_description():
             postprocess_nms_iou_threshold=postprocess_nms_iou_threshold,
             postprocess_max_detections=postprocess_max_detections,
             camera_frame_id=camera_frame_id,
+            pipeline_telemetry_path=pipeline_telemetry_path,
             start_experiment_recording=start_experiment_recording,
             experiment_run_id=experiment_run_id,
             experiment_out_dir=experiment_out_dir,

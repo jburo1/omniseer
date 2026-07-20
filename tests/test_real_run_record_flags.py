@@ -44,6 +44,7 @@ class RealRunRecordFlagsTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("start_experiment_recording:=true", result.stdout)
         self.assertIn("experiment_run_id:=demo_001", result.stdout)
+        self.assertIn("pipeline_telemetry_path:=runs/demo_001/pipeline_telemetry.jsonl", result.stdout)
         self.assertNotIn("experiment_notes:=", result.stdout)
         self.assertNotIn("experiment_classes:=", result.stdout)
 
@@ -90,6 +91,7 @@ class RealRunRecordFlagsTests(unittest.TestCase):
         self.assertIn("start_experiment_recording:=true", result.stdout)
         self.assertIn("experiment_run_id:=demo_001", result.stdout)
         self.assertIn("experiment_out_dir:=/tmp/demo_001", result.stdout)
+        self.assertIn("pipeline_telemetry_path:=/tmp/demo_001/pipeline_telemetry.jsonl", result.stdout)
         self.assertIn("experiment_duration_sec:=5", result.stdout)
         self.assertIn("experiment_notes:=note\\ text", result.stdout)
         self.assertIn("experiment_classes:=chair\\ backpack", result.stdout)

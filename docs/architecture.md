@@ -115,14 +115,14 @@ hardware validation responsibility.
 
 | Capability | Status | Evidence boundary |
 | --- | --- | --- |
-| Native producer and consumer vision pipeline | **Implemented; target-oriented component evidence** | V4L2, RGA, RKNN target tests and harnesses; integrated real-run record pending |
-| YOLO-World post-processing and text embeddings | **Implemented; target-oriented component evidence** | RKNN tests and native runtime; integrated real-run record pending |
+| Native producer and consumer vision pipeline | **Implemented; target-hardware run evidence** | V4L2, RGA, RKNN target tests and `runs/pipeline_001` recorded native pipeline telemetry |
+| YOLO-World post-processing and text embeddings | **Implemented; target-hardware run evidence** | RKNN tests, native runtime, and `runs/pipeline_001` recorded detections |
 | ROS detection and performance publication | **Implemented** | `omniseer_vision_bridge` |
 | Portable ROS, vision, firmware, simulation, and docs checks | **CI-verified** | GitHub Actions six-job workflow |
 | gRPC gateway, platform diagnostics, and managed SRT preview | **Implemented** | C++ and Python tests plus local integration |
 | Native runtime class updates | **Planned** | Python integration exists; native bridge support does not |
-| Structured experiment recorder and run bundle | **Implemented; local verification** | `omniseer_experiments` records detections/perf into local bundles; target-hardware run evidence pending |
-| Recorded resource telemetry in experiment bundles | **Planned** | Gateway live status reports compute/network/power; recorder does not persist it yet |
+| Structured experiment recorder and run bundle | **Implemented; target-hardware run evidence** | `runs/pipeline_001` records detections, perf, system telemetry, and native pipeline telemetry |
+| Recorded resource telemetry in experiment bundles | **Implemented; target-hardware run evidence** | `runs/pipeline_001` includes `system.jsonl`; gateway live status remains separate |
 | Cloud synchronization and hosted dashboard | **Planned** | No provider or transport selected |
 | Autonomous semantic search and capture | **Deferred** | Outside the active deliverable |
 

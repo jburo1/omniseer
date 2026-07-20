@@ -2,7 +2,7 @@ import importlib.util
 import unittest
 from pathlib import Path
 
-from launch.actions import ExecuteProcess, RegisterEventHandler
+from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription, RegisterEventHandler
 from launch_ros.actions import Node
 
 
@@ -126,6 +126,35 @@ class RealLaunchStructureTests(unittest.TestCase):
         self.assertIn("--detector-model-path", recorder_text)
         self.assertIn("--classes-path", recorder_text)
         self.assertIn("--duration-sec", recorder_text)
+
+    def test_real_launch_forwards_pipeline_telemetry_path_to_vision(self) -> None:
+        module = _load_launch_module("real.launch.py")
+        launch_description = module.generate_launch_description()
+
+        declared_names = {
+            _flatten_launch_value(entity.name)
+            for entity in launch_description.entities
+            if isinstance(entity, DeclareLaunchArgument)
+        }
+        self.assertIn("pipeline_telemetry_path", declared_names)
+
+        include_text = "".join(
+            str(getattr(entity, "launch_arguments", ""))
+            for entity in _walk_entities(launch_description.entities)
+            if isinstance(entity, IncludeLaunchDescription)
+        )
+        self.assertIn("pipeline_telemetry_path", include_text)
+
+    def test_real_vision_launch_exposes_pipeline_telemetry_path(self) -> None:
+        module = _load_launch_module("real_vision.launch.py")
+        launch_description = module.generate_launch_description()
+
+        declared_names = {
+            _flatten_launch_value(entity.name)
+            for entity in launch_description.entities
+            if isinstance(entity, DeclareLaunchArgument)
+        }
+        self.assertIn("pipeline_telemetry_path", declared_names)
 
     def test_sim_launch_runs_shared_cleanup_before_launch_group(self) -> None:
         module = _load_launch_module("sim.launch.py")

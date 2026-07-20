@@ -262,6 +262,33 @@ class RunInspectionTests(unittest.TestCase):
         self.assertEqual(inspection.message_counts, {"detections": 1, "perf": 1, "system": 1})
         self.assertEqual(inspection.issues, ())
 
+    def test_valid_pipeline_telemetry_jsonl_is_optional(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "demo_001"
+            _write_completed_bundle(run_dir)
+            (run_dir / "pipeline_telemetry.jsonl").write_text(
+                '{"schema_version":3,"source":"producer","tick_id":1}\n',
+                encoding="utf-8",
+            )
+
+            inspection = inspect_run(run_dir)
+
+        self.assertEqual(inspection.state, STATE_COMPLETE)
+        self.assertEqual(inspection.message_counts, {"detections": 1, "perf": 1, "system": 0})
+        self.assertEqual(inspection.issues, ())
+
+    def test_malformed_pipeline_telemetry_jsonl_is_reported(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "demo_001"
+            _write_completed_bundle(run_dir)
+            with (run_dir / "pipeline_telemetry.jsonl").open("a", encoding="utf-8") as handle:
+                handle.write("{bad json\n")
+
+            inspection = inspect_run(run_dir)
+
+        self.assertEqual(inspection.state, STATE_INCOMPLETE)
+        self.assertIn("malformed_pipeline_telemetry_jsonl", {issue.code for issue in inspection.issues})
+
     def test_malformed_system_jsonl_is_reported(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             run_dir = Path(tmp) / "demo_001"

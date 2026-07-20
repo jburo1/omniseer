@@ -84,9 +84,11 @@ def inspect_run(run_dir: Path) -> RunInspection:
     detections_scan = _scan_jsonl(path / "detections.jsonl", "detections")
     perf_scan = _scan_jsonl(path / "perf.jsonl", "perf")
     system_scan = _scan_optional_jsonl(path / "system.jsonl", "system")
+    pipeline_telemetry_scan = _scan_optional_jsonl(path / "pipeline_telemetry.jsonl", "pipeline_telemetry")
     issues.extend(detections_scan.issues)
     issues.extend(perf_scan.issues)
     issues.extend(system_scan.issues)
+    issues.extend(pipeline_telemetry_scan.issues)
 
     fallback_summary = _fallback_summary(
         run_id=_manifest_string(manifest, "run_id") or path.name,
@@ -100,7 +102,9 @@ def inspect_run(run_dir: Path) -> RunInspection:
     started_at = _manifest_string(manifest, "started_at")
     ended_at = _manifest_string(manifest, "ended_at")
     manifest_missing = any(issue.code == "missing_manifest" for issue in issues)
-    jsonl_has_issues = bool(detections_scan.issues or perf_scan.issues or system_scan.issues)
+    jsonl_has_issues = bool(
+        detections_scan.issues or perf_scan.issues or system_scan.issues or pipeline_telemetry_scan.issues
+    )
     summary_has_issues = any(issue.code in {"invalid_summary", "unreadable_summary"} for issue in issues)
 
     if ended_at is None and not manifest_missing:

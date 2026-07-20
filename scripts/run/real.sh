@@ -102,6 +102,7 @@ append_recording_launch_args() {
     "experiment_out_dir:=${record_out_dir}"
     "experiment_duration_sec:=${record_duration_sec}"
     "experiment_overwrite:=${record_overwrite}"
+    "pipeline_telemetry_path:=${record_out_dir}/pipeline_telemetry.jsonl"
   )
 
   if [[ -n "${record_notes}" ]]; then

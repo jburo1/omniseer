@@ -39,6 +39,7 @@ class RealLaunchShowArgsTests(unittest.TestCase):
         self.assertIn("experiment_run_id", result.stdout)
         self.assertIn("experiment_out_dir", result.stdout)
         self.assertIn("experiment_duration_sec", result.stdout)
+        self.assertIn("pipeline_telemetry_path", result.stdout)
 
     @unittest.skipUnless(shutil.which("ros2"), "ros2 is required for launch argument checks")
     def test_real_io_launch_show_args_lists_teensy_gating_arguments(self) -> None:

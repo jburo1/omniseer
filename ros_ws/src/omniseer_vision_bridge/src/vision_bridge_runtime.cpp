@@ -3,6 +3,7 @@
 #include <atomic>
 #include <chrono>
 #include <cstdint>
+#include <filesystem>
 #include <mutex>
 #include <optional>
 #include <stdexcept>
@@ -14,10 +15,12 @@
 #include <linux/videodev2.h>
 
 #include "omniseer/vision/class_list.hpp"
+#include "omniseer/vision/composite_telemetry.hpp"
 #include "omniseer/vision/consumer_pipeline.hpp"
 #include "omniseer/vision/detections_sink.hpp"
 #include "omniseer/vision/dma_heap_alloc.hpp"
 #include "omniseer/vision/image_buffer_pool.hpp"
+#include "omniseer/vision/jsonl_telemetry.hpp"
 #include "omniseer/vision/producer_pipeline.hpp"
 #include "omniseer/vision/rga_preprocess.hpp"
 #include "omniseer/vision/rknn_runner.hpp"
@@ -133,8 +136,23 @@ struct VisionBridgeRuntime::Impl
       omniseer::vision::ProducerPipelineConfig producer_config{};
       producer_config.preflight_capture_wait_ms = checked_u32(
         config.producer_preflight_capture_wait_ms, "producer.preflight_capture_wait_ms");
+      if (!config.pipeline_telemetry_path.empty())
+      {
+        const std::filesystem::path telemetry_path{config.pipeline_telemetry_path};
+        if (telemetry_path.has_parent_path())
+        {
+          std::filesystem::create_directories(telemetry_path.parent_path());
+        }
+        omniseer::vision::JsonlTelemetryConfig telemetry_config{};
+        telemetry_config.path = config.pipeline_telemetry_path;
+        jsonl_telemetry = std::make_unique<omniseer::vision::JsonlTelemetry>(telemetry_config);
+        telemetry = std::make_unique<omniseer::vision::CompositeTelemetry>(
+          std::vector<omniseer::vision::ITelemetry *>{&rolling_stats, jsonl_telemetry.get()});
+      }
+      omniseer::vision::ITelemetry * telemetry_sink =
+        telemetry ? static_cast<omniseer::vision::ITelemetry *>(telemetry.get()) : &rolling_stats;
       producer = std::make_unique<omniseer::vision::ProducerPipeline>(
-        *capture, *preprocess, *pool, &rolling_stats, producer_config);
+        *capture, *preprocess, *pool, telemetry_sink, producer_config);
       producer->preflight();
 
       omniseer::vision::YoloWorldTextEmbeddingsBuilderConfig embeddings_config{};
@@ -161,7 +179,7 @@ struct VisionBridgeRuntime::Impl
       consumer_config.max_detections = checked_u32(
         config.max_detections, "postprocess.max_detections");
       consumer = std::make_unique<omniseer::vision::ConsumerPipeline>(
-        *pool, *runner, &rolling_stats, config.detections_sink, consumer_config);
+        *pool, *runner, telemetry_sink, config.detections_sink, consumer_config);
       omniseer::vision::ConsumerPipelineStartup consumer_startup{};
       consumer_startup.remap = producer->remap();
       consumer_startup.text_embeddings = prepared_embeddings->view();
@@ -196,6 +214,8 @@ struct VisionBridgeRuntime::Impl
     prepared_embeddings.reset();
     text_builder.reset();
     producer.reset();
+    telemetry.reset();
+    jsonl_telemetry.reset();
     preprocess.reset();
     pool.reset();
     allocator.reset();
@@ -308,6 +328,8 @@ struct VisionBridgeRuntime::Impl
   std::string               fatal_message{};
 
   omniseer::vision::RollingTelemetryStats rolling_stats{};
+  std::unique_ptr<omniseer::vision::JsonlTelemetry> jsonl_telemetry{};
+  std::unique_ptr<omniseer::vision::CompositeTelemetry> telemetry{};
   std::vector<std::string> class_names{};
 
   std::unique_ptr<omniseer::vision::V4l2Capture> capture{};

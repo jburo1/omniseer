@@ -215,6 +215,10 @@ class RunRetrievalTests(unittest.TestCase):
             destination = Path(tmp) / "runs" / "imported" / "demo_001"
             _write_completed_bundle(source)
             (source / "system.jsonl").write_text('{"cpu": 12}\n', encoding="utf-8")
+            (source / "pipeline_telemetry.jsonl").write_text(
+                '{"schema_version":3,"source":"producer","tick_id":1}\n',
+                encoding="utf-8",
+            )
             (source / "future" / "nested").mkdir(parents=True)
             (source / "future" / "nested" / "artifact.txt").write_text("preserved", encoding="utf-8")
             runner = FakePullRunner(source)
@@ -224,6 +228,7 @@ class RunRetrievalTests(unittest.TestCase):
 
             self.assertEqual(result.inspection.state, STATE_COMPLETE)
             self.assertTrue((destination / "system.jsonl").exists())
+            self.assertTrue((destination / "pipeline_telemetry.jsonl").exists())
             self.assertEqual(
                 (destination / "future" / "nested" / "artifact.txt").read_text(encoding="utf-8"),
                 "preserved",

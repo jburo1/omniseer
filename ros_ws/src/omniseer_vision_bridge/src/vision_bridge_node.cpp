@@ -215,6 +215,8 @@ private:
 
     cfg.camera_frame_id =
       declare_parameter<std::string>("frames.camera_frame_id", cfg.camera_frame_id);
+    cfg.pipeline_telemetry_path =
+      declare_parameter<std::string>("telemetry.pipeline_jsonl_path", cfg.pipeline_telemetry_path);
 
     return cfg;
   }
@@ -239,7 +241,9 @@ private:
               << " postprocess.score_threshold=" << cfg.score_threshold
               << " postprocess.nms_iou_threshold=" << cfg.nms_iou_threshold
               << " postprocess.max_detections=" << cfg.max_detections
-              << " frames.camera_frame_id=" << quote_or_placeholder(cfg.camera_frame_id);
+              << " frames.camera_frame_id=" << quote_or_placeholder(cfg.camera_frame_id)
+              << " telemetry.pipeline_jsonl_path="
+              << quote_or_placeholder(cfg.pipeline_telemetry_path);
     RCLCPP_INFO(get_logger(), "%s", message.str().c_str());
   }
 

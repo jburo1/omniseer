@@ -34,6 +34,7 @@ def generate_launch_description():
         DeclareLaunchArgument("postprocess_nms_iou_threshold", default_value=USE_CONFIG_SENTINEL),
         DeclareLaunchArgument("postprocess_max_detections", default_value=USE_CONFIG_SENTINEL),
         DeclareLaunchArgument("camera_frame_id", default_value=USE_CONFIG_SENTINEL),
+        DeclareLaunchArgument("pipeline_telemetry_path", default_value=""),
     ]
 
     def launch_setup(context):
@@ -56,6 +57,7 @@ def generate_launch_description():
             ("postprocess.nms_iou_threshold", "postprocess_nms_iou_threshold", float),
             ("postprocess.max_detections", "postprocess_max_detections", int),
             ("frames.camera_frame_id", "camera_frame_id", str),
+            ("telemetry.pipeline_jsonl_path", "pipeline_telemetry_path", str),
         ]
 
         overrides = {}

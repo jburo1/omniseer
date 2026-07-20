@@ -26,6 +26,7 @@ add_library(omniseer_bridge_runtime STATIC
   ${VISION_ROOT}/src/consumer_pipeline.cpp
   ${VISION_ROOT}/src/dma_heap_alloc.cpp
   ${VISION_ROOT}/src/image_buffer_pool.cpp
+  ${VISION_ROOT}/src/jsonl_telemetry.cpp
   ${VISION_ROOT}/src/pipeline.cpp
   ${VISION_ROOT}/src/producer_pipeline.cpp
   ${VISION_ROOT}/src/rga_preprocess.cpp

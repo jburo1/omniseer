@@ -166,16 +166,29 @@ class RunBundleWriterTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             run_dir = Path(tmp) / "existing"
             run_dir.mkdir()
+            stale = run_dir / "detections.jsonl"
+            stale.write_text('{"old":true}\n', encoding="utf-8")
 
             with self.assertRaises(FileExistsError):
                 RunBundleWriter(_config(run_dir))
 
-            stale = run_dir / "detections.jsonl"
-            stale.write_text('{"old":true}\n', encoding="utf-8")
             writer = RunBundleWriter(_config(run_dir, overwrite=True), started_at=STARTED_AT)
             writer.finalize(ended_at=ENDED_AT)
 
             self.assertEqual((run_dir / "detections.jsonl").read_text(encoding="utf-8"), "")
+
+    def test_precreated_pipeline_telemetry_file_does_not_block_writer(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "precreated"
+            run_dir.mkdir()
+            (run_dir / "pipeline_telemetry.jsonl").write_text("", encoding="utf-8")
+
+            writer = RunBundleWriter(_config(run_dir), started_at=STARTED_AT)
+            try:
+                self.assertTrue((run_dir / "manifest.yaml").is_file())
+                self.assertTrue((run_dir / "pipeline_telemetry.jsonl").is_file())
+            finally:
+                writer.close()
 
     def test_manifest_renders_empty_classes_inline(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -1,6 +1,6 @@
 # Vision Pipeline
 
-_Status: implemented; integrated target-hardware verification record and performance publication pending_
+_Status: implemented; target-hardware run evidence recorded in `runs/pipeline_001`_
 
 This document describes the multi-stage, low-latency, zero-copy-oriented vision
 pipeline that transforms camera frames into open-vocabulary object detections. The

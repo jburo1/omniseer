@@ -191,6 +191,10 @@ class RunBundleWriter:
         return self.run_dir / "system.jsonl"
 
     @property
+    def pipeline_telemetry_path(self) -> Path:
+        return self.run_dir / "pipeline_telemetry.jsonl"
+
+    @property
     def summary_path(self) -> Path:
         return self.run_dir / "summary.json"
 
@@ -253,6 +257,8 @@ class RunBundleWriter:
     def _prepare_run_dir(self) -> None:
         if self.run_dir.exists():
             if not self.config.overwrite:
+                if self.run_dir.is_dir() and self._is_precreated_pipeline_telemetry_dir():
+                    return
                 raise FileExistsError(f"run directory already exists: {self.run_dir}")
             if not self.run_dir.is_dir():
                 raise NotADirectoryError(f"run output path is not a directory: {self.run_dir}")
@@ -260,6 +266,15 @@ class RunBundleWriter:
             self.run_dir.mkdir(parents=True)
         else:
             self.run_dir.mkdir(parents=True)
+
+    def _is_precreated_pipeline_telemetry_dir(self) -> bool:
+        try:
+            children = tuple(self.run_dir.iterdir())
+        except OSError:
+            return False
+        if not children:
+            return True
+        return len(children) == 1 and children[0] == self.pipeline_telemetry_path and children[0].is_file()
 
     def _manifest(self) -> dict[str, Any]:
         return {

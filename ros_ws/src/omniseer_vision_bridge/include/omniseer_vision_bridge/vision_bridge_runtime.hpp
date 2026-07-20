@@ -38,6 +38,7 @@ struct VisionBridgeRuntimeConfig
   int64_t max_detections{100};
 
   std::string camera_frame_id{"camera_optical_frame"};
+  std::string pipeline_telemetry_path{};
   omniseer::vision::IDetectionsSink * detections_sink{nullptr};
 };
 
