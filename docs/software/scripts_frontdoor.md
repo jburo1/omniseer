@@ -262,8 +262,9 @@ The recorder is an optional sidecar. It writes a local bundle containing
 `system.jsonl` resource telemetry, optional native
 `pipeline_telemetry.jsonl`, representative native JPEG evidence frames under
 `evidence/`, and `summary.json`. The first slice stores bundles on the robot;
-laptop download and analysis tooling are
-intentionally later work.
+laptop download, inspection, and evidence annotation are available through
+`scripts/omni runs`. Rich report generation and cloud synchronization remain
+later work.
 
 Why phases exist:
 
@@ -325,13 +326,16 @@ List and retrieve robot-side perception run bundles from the laptop workspace:
 ```bash
 scripts/omni runs local-list --root runs
 scripts/omni runs inspect runs/imported/demo_001
+scripts/omni runs annotate runs/imported/demo_001
 scripts/omni runs list
 scripts/omni runs pull demo_001
 ```
 
-`local-list` and `inspect` operate on local bundle directories through the
-`omniseer_experiments` inspection tools. `list` and `pull` operate on robot-side
-bundles over SSH and validate pulled bundles locally.
+`local-list`, `inspect`, and `annotate` operate on local bundle directories
+through the `omniseer_experiments` tools. `annotate` derives
+`evidence/annotated/*.jpg` from clean evidence frames and `evidence/evidence.jsonl`
+without modifying the canonical `evidence/frames/*.jpg` inputs. `list` and
+`pull` operate on robot-side bundles over SSH and validate pulled bundles locally.
 
 The front door defaults to SSH target `radxa@192.168.1.178` and remote run root
 `/home/radxa/apps/omniseer/runs`. Override those with `--host`, `--user`,

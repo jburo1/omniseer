@@ -18,6 +18,7 @@ setup(
     license="Apache-2.0",
     entry_points={
         "console_scripts": [
+            "annotate_evidence = omniseer_experiments.evidence_annotation:annotate_evidence_main",
             "inspect_run = omniseer_experiments.run_inspection:inspect_run_main",
             "list_runs = omniseer_experiments.run_inspection:list_runs_main",
             "record_run = omniseer_experiments.record_run:main",

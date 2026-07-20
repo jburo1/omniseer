@@ -66,8 +66,10 @@ available as an explicit override. `system.jsonl` is sampled automatically at
 1 Hz from Linux CPU, memory, and thermal state and remains optional for older
 bundles. Recorded real runs also enable native model-input JPEG evidence at
 roughly 1 Hz under `evidence/frames/`, with `evidence/evidence.jsonl` tying each
-image to native frame metadata and detections. Bundles are stored locally on the
-robot first.
+image to native frame metadata and detections. The clean JPEGs are the canonical
+record; generate review overlays later with `scripts/omni runs annotate <run_dir>`,
+which writes derived images under `evidence/annotated/`. Bundles are stored
+locally on the robot first.
 From the laptop, list and retrieve robot-side bundles with:
 
 ```bash
