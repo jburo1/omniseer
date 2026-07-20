@@ -277,6 +277,98 @@ class RunInspectionTests(unittest.TestCase):
         self.assertEqual(inspection.message_counts, {"detections": 1, "perf": 1, "system": 0})
         self.assertEqual(inspection.issues, ())
 
+    def test_valid_evidence_jsonl_is_optional(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "demo_001"
+            _write_completed_bundle(run_dir)
+            frames_dir = run_dir / "evidence" / "frames"
+            frames_dir.mkdir(parents=True)
+            (frames_dir / "frame_1.jpg").write_bytes(b"\xff\xd8demo")
+            (run_dir / "evidence" / "evidence.jsonl").write_text(
+                json.dumps(
+                    {
+                        "schema_version": 1,
+                        "artifact_type": "sampled_frame",
+                        "image_path": "evidence/frames/frame_1.jpg",
+                        "jpeg_quality": 85,
+                        "frame_id": 1,
+                        "sequence": 2,
+                        "capture_ts_real_ns": 3,
+                        "detections": [],
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            inspection = inspect_run(run_dir)
+
+        self.assertEqual(inspection.state, STATE_COMPLETE)
+        self.assertEqual(inspection.issues, ())
+
+    def test_missing_evidence_image_is_reported(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "demo_001"
+            _write_completed_bundle(run_dir)
+            (run_dir / "evidence" / "evidence.jsonl").write_text(
+                json.dumps(
+                    {
+                        "schema_version": 1,
+                        "artifact_type": "sampled_frame",
+                        "image_path": "evidence/frames/frame_1.jpg",
+                        "jpeg_quality": 85,
+                        "frame_id": 1,
+                        "sequence": 2,
+                        "capture_ts_real_ns": 3,
+                        "detections": [],
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            inspection = inspect_run(run_dir)
+
+        self.assertEqual(inspection.state, STATE_INCOMPLETE)
+        self.assertIn("missing_evidence_image", {issue.code for issue in inspection.issues})
+
+    def test_invalid_evidence_path_is_reported(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "demo_001"
+            _write_completed_bundle(run_dir)
+            (run_dir / "evidence" / "evidence.jsonl").write_text(
+                json.dumps(
+                    {
+                        "schema_version": 1,
+                        "artifact_type": "sampled_frame",
+                        "image_path": "../frame_1.jpg",
+                        "jpeg_quality": 85,
+                        "frame_id": 1,
+                        "sequence": 2,
+                        "capture_ts_real_ns": 3,
+                        "detections": [],
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            inspection = inspect_run(run_dir)
+
+        self.assertEqual(inspection.state, STATE_INCOMPLETE)
+        self.assertIn("invalid_evidence_path", {issue.code for issue in inspection.issues})
+
+    def test_malformed_evidence_jsonl_is_reported(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "demo_001"
+            _write_completed_bundle(run_dir)
+            (run_dir / "evidence" / "evidence.jsonl").write_text("{bad json\n", encoding="utf-8")
+
+            inspection = inspect_run(run_dir)
+
+        self.assertEqual(inspection.state, STATE_INCOMPLETE)
+        self.assertIn("malformed_evidence_jsonl", {issue.code for issue in inspection.issues})
+
     def test_malformed_pipeline_telemetry_jsonl_is_reported(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             run_dir = Path(tmp) / "demo_001"

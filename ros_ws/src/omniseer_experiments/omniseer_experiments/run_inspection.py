@@ -85,10 +85,13 @@ def inspect_run(run_dir: Path) -> RunInspection:
     perf_scan = _scan_jsonl(path / "perf.jsonl", "perf")
     system_scan = _scan_optional_jsonl(path / "system.jsonl", "system")
     pipeline_telemetry_scan = _scan_optional_jsonl(path / "pipeline_telemetry.jsonl", "pipeline_telemetry")
+    evidence_scan = _scan_optional_jsonl(path / "evidence" / "evidence.jsonl", "evidence")
     issues.extend(detections_scan.issues)
     issues.extend(perf_scan.issues)
     issues.extend(system_scan.issues)
     issues.extend(pipeline_telemetry_scan.issues)
+    issues.extend(evidence_scan.issues)
+    issues.extend(_validate_evidence_records(path, evidence_scan.records))
 
     fallback_summary = _fallback_summary(
         run_id=_manifest_string(manifest, "run_id") or path.name,
@@ -103,7 +106,14 @@ def inspect_run(run_dir: Path) -> RunInspection:
     ended_at = _manifest_string(manifest, "ended_at")
     manifest_missing = any(issue.code == "missing_manifest" for issue in issues)
     jsonl_has_issues = bool(
-        detections_scan.issues or perf_scan.issues or system_scan.issues or pipeline_telemetry_scan.issues
+        detections_scan.issues
+        or perf_scan.issues
+        or system_scan.issues
+        or pipeline_telemetry_scan.issues
+        or evidence_scan.issues
+    )
+    evidence_has_issues = any(
+        issue.code.startswith("invalid_evidence") or issue.code == "missing_evidence_image" for issue in issues
     )
     summary_has_issues = any(issue.code in {"invalid_summary", "unreadable_summary"} for issue in issues)
 
@@ -130,7 +140,7 @@ def inspect_run(run_dir: Path) -> RunInspection:
         manifest_missing=manifest_missing,
         summary_missing=summary_missing,
         summary_has_issues=summary_has_issues,
-        jsonl_has_issues=jsonl_has_issues,
+        jsonl_has_issues=jsonl_has_issues or evidence_has_issues,
     )
 
     return RunInspection(
@@ -363,6 +373,95 @@ def _scan_optional_jsonl(path: Path, stream: str) -> JsonlScan:
     return _scan_jsonl(path, stream)
 
 
+def _validate_evidence_records(run_dir: Path, records: Sequence[dict[str, Any]]) -> tuple[InspectionIssue, ...]:
+    issues: list[InspectionIssue] = []
+    for index, record in enumerate(records, start=1):
+        artifact_type = record.get("artifact_type")
+        if artifact_type == "evidence_status":
+            if not isinstance(record.get("stopped_reason"), str) or not record.get("stopped_reason"):
+                issues.append(
+                    InspectionIssue(
+                        code="invalid_evidence_record",
+                        message="evidence status record is missing stopped_reason",
+                        path=str(run_dir / "evidence" / "evidence.jsonl"),
+                        line=index,
+                    )
+                )
+            continue
+        if artifact_type != "sampled_frame":
+            issues.append(
+                InspectionIssue(
+                    code="invalid_evidence_record",
+                    message="evidence record artifact_type must be sampled_frame or evidence_status",
+                    path=str(run_dir / "evidence" / "evidence.jsonl"),
+                    line=index,
+                )
+            )
+            continue
+
+        image_path = record.get("image_path")
+        if not isinstance(image_path, str) or not image_path:
+            issues.append(
+                InspectionIssue(
+                    code="invalid_evidence_record",
+                    message="sampled evidence record is missing image_path",
+                    path=str(run_dir / "evidence" / "evidence.jsonl"),
+                    line=index,
+                )
+            )
+            continue
+        relative_path = Path(image_path)
+        if relative_path.is_absolute() or ".." in relative_path.parts:
+            issues.append(
+                InspectionIssue(
+                    code="invalid_evidence_path",
+                    message="sampled evidence image_path must be relative and stay inside the run bundle",
+                    path=str(run_dir / "evidence" / "evidence.jsonl"),
+                    line=index,
+                )
+            )
+            continue
+        if relative_path.suffix.lower() not in {".jpg", ".jpeg"}:
+            issues.append(
+                InspectionIssue(
+                    code="invalid_evidence_path",
+                    message="sampled evidence image_path must reference a JPEG image",
+                    path=str(run_dir / "evidence" / "evidence.jsonl"),
+                    line=index,
+                )
+            )
+        if not (run_dir / relative_path).is_file():
+            issues.append(
+                InspectionIssue(
+                    code="missing_evidence_image",
+                    message=f"sampled evidence image is missing: {image_path}",
+                    path=str(run_dir / "evidence" / "evidence.jsonl"),
+                    line=index,
+                )
+            )
+
+        for field_name in ("frame_id", "sequence", "capture_ts_real_ns", "jpeg_quality"):
+            if not _is_non_bool_int(record.get(field_name)):
+                issues.append(
+                    InspectionIssue(
+                        code="invalid_evidence_record",
+                        message=f"sampled evidence record has invalid {field_name}",
+                        path=str(run_dir / "evidence" / "evidence.jsonl"),
+                        line=index,
+                    )
+                )
+        if not isinstance(record.get("detections"), list):
+            issues.append(
+                InspectionIssue(
+                    code="invalid_evidence_record",
+                    message="sampled evidence record detections must be a list",
+                    path=str(run_dir / "evidence" / "evidence.jsonl"),
+                    line=index,
+                )
+            )
+    return tuple(issues)
+
+
 def _read_summary(path: Path, issues: list[InspectionIssue]) -> dict[str, Any] | None:
     try:
         raw = path.read_text(encoding="utf-8")
@@ -479,6 +578,10 @@ def _summary_int_map(summary: dict[str, Any], key: str) -> dict[str, int]:
         for item_key, item_value in value.items()
         if isinstance(item_value, int) and not isinstance(item_value, bool)
     }
+
+
+def _is_non_bool_int(value: object) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool)
 
 
 def _summary_errors(summary: dict[str, Any]) -> dict[str, int]:

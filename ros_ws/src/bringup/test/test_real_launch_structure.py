@@ -144,6 +144,11 @@ class RealLaunchStructureTests(unittest.TestCase):
             if isinstance(entity, IncludeLaunchDescription)
         )
         self.assertIn("pipeline_telemetry_path", include_text)
+        self.assertIn("evidence_dir", include_text)
+        self.assertIn("evidence_interval_sec", include_text)
+        self.assertIn("evidence_jpeg_quality", include_text)
+        self.assertIn("evidence_storage_budget_mb", include_text)
+        self.assertIn("evidence_min_free_mb", include_text)
 
     def test_real_vision_launch_exposes_pipeline_telemetry_path(self) -> None:
         module = _load_launch_module("real_vision.launch.py")
@@ -155,6 +160,11 @@ class RealLaunchStructureTests(unittest.TestCase):
             if isinstance(entity, DeclareLaunchArgument)
         }
         self.assertIn("pipeline_telemetry_path", declared_names)
+        self.assertIn("evidence_dir", declared_names)
+        self.assertIn("evidence_interval_sec", declared_names)
+        self.assertIn("evidence_jpeg_quality", declared_names)
+        self.assertIn("evidence_storage_budget_mb", declared_names)
+        self.assertIn("evidence_min_free_mb", declared_names)
 
     def test_sim_launch_runs_shared_cleanup_before_launch_group(self) -> None:
         module = _load_launch_module("sim.launch.py")

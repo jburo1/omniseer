@@ -202,6 +202,14 @@ class RunBundleWriter:
     def evidence_dir(self) -> Path:
         return self.run_dir / "evidence"
 
+    @property
+    def evidence_jsonl_path(self) -> Path:
+        return self.evidence_dir / "evidence.jsonl"
+
+    @property
+    def evidence_frames_dir(self) -> Path:
+        return self.evidence_dir / "frames"
+
     def write_detection_record(self, record: dict[str, Any]) -> None:
         self._write_jsonl(self._detections_handle, record)
         self.summary.add_detection_record(record)

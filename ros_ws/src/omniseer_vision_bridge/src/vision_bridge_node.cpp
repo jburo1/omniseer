@@ -217,6 +217,16 @@ private:
       declare_parameter<std::string>("frames.camera_frame_id", cfg.camera_frame_id);
     cfg.pipeline_telemetry_path =
       declare_parameter<std::string>("telemetry.pipeline_jsonl_path", cfg.pipeline_telemetry_path);
+    cfg.evidence_dir =
+      declare_parameter<std::string>("evidence.dir", cfg.evidence_dir);
+    cfg.evidence_interval_sec =
+      declare_parameter<double>("evidence.interval_sec", cfg.evidence_interval_sec);
+    cfg.evidence_jpeg_quality =
+      declare_parameter<int64_t>("evidence.jpeg_quality", cfg.evidence_jpeg_quality);
+    cfg.evidence_storage_budget_mb =
+      declare_parameter<int64_t>("evidence.storage_budget_mb", cfg.evidence_storage_budget_mb);
+    cfg.evidence_min_free_mb =
+      declare_parameter<int64_t>("evidence.min_free_mb", cfg.evidence_min_free_mb);
 
     return cfg;
   }
@@ -243,7 +253,12 @@ private:
               << " postprocess.max_detections=" << cfg.max_detections
               << " frames.camera_frame_id=" << quote_or_placeholder(cfg.camera_frame_id)
               << " telemetry.pipeline_jsonl_path="
-              << quote_or_placeholder(cfg.pipeline_telemetry_path);
+              << quote_or_placeholder(cfg.pipeline_telemetry_path)
+              << " evidence.dir=" << quote_or_placeholder(cfg.evidence_dir)
+              << " evidence.interval_sec=" << cfg.evidence_interval_sec
+              << " evidence.jpeg_quality=" << cfg.evidence_jpeg_quality
+              << " evidence.storage_budget_mb=" << cfg.evidence_storage_budget_mb
+              << " evidence.min_free_mb=" << cfg.evidence_min_free_mb;
     RCLCPP_INFO(get_logger(), "%s", message.str().c_str());
   }
 

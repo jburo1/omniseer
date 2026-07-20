@@ -81,6 +81,11 @@ def _build_real_bringup_actions(
     postprocess_max_detections,
     camera_frame_id,
     pipeline_telemetry_path,
+    evidence_dir,
+    evidence_interval_sec,
+    evidence_jpeg_quality,
+    evidence_storage_budget_mb,
+    evidence_min_free_mb,
     start_experiment_recording,
     experiment_run_id,
     experiment_out_dir,
@@ -134,6 +139,11 @@ def _build_real_bringup_actions(
             "postprocess_max_detections": postprocess_max_detections,
             "camera_frame_id": camera_frame_id,
             "pipeline_telemetry_path": pipeline_telemetry_path,
+            "evidence_dir": evidence_dir,
+            "evidence_interval_sec": evidence_interval_sec,
+            "evidence_jpeg_quality": evidence_jpeg_quality,
+            "evidence_storage_budget_mb": evidence_storage_budget_mb,
+            "evidence_min_free_mb": evidence_min_free_mb,
         }.items(),
         condition=IfCondition(start_vision),
     )
@@ -342,6 +352,11 @@ def generate_launch_description():
         DeclareLaunchArgument("postprocess_max_detections", default_value="__from_config__"),
         DeclareLaunchArgument("camera_frame_id", default_value="__from_config__"),
         DeclareLaunchArgument("pipeline_telemetry_path", default_value=""),
+        DeclareLaunchArgument("evidence_dir", default_value=""),
+        DeclareLaunchArgument("evidence_interval_sec", default_value="1.0"),
+        DeclareLaunchArgument("evidence_jpeg_quality", default_value="85"),
+        DeclareLaunchArgument("evidence_storage_budget_mb", default_value="1024"),
+        DeclareLaunchArgument("evidence_min_free_mb", default_value="256"),
         DeclareLaunchArgument("start_experiment_recording", default_value="false"),
         DeclareLaunchArgument("experiment_run_id", default_value=""),
         DeclareLaunchArgument("experiment_out_dir", default_value=""),
@@ -400,6 +415,11 @@ def generate_launch_description():
     postprocess_max_detections = LaunchConfiguration("postprocess_max_detections")
     camera_frame_id = LaunchConfiguration("camera_frame_id")
     pipeline_telemetry_path = LaunchConfiguration("pipeline_telemetry_path")
+    evidence_dir = LaunchConfiguration("evidence_dir")
+    evidence_interval_sec = LaunchConfiguration("evidence_interval_sec")
+    evidence_jpeg_quality = LaunchConfiguration("evidence_jpeg_quality")
+    evidence_storage_budget_mb = LaunchConfiguration("evidence_storage_budget_mb")
+    evidence_min_free_mb = LaunchConfiguration("evidence_min_free_mb")
     start_experiment_recording = LaunchConfiguration("start_experiment_recording")
     experiment_run_id = LaunchConfiguration("experiment_run_id")
     experiment_out_dir = LaunchConfiguration("experiment_out_dir")
@@ -460,6 +480,11 @@ def generate_launch_description():
             postprocess_max_detections=postprocess_max_detections,
             camera_frame_id=camera_frame_id,
             pipeline_telemetry_path=pipeline_telemetry_path,
+            evidence_dir=evidence_dir,
+            evidence_interval_sec=evidence_interval_sec,
+            evidence_jpeg_quality=evidence_jpeg_quality,
+            evidence_storage_budget_mb=evidence_storage_budget_mb,
+            evidence_min_free_mb=evidence_min_free_mb,
             start_experiment_recording=start_experiment_recording,
             experiment_run_id=experiment_run_id,
             experiment_out_dir=experiment_out_dir,
@@ -530,6 +555,11 @@ def generate_launch_description():
             postprocess_max_detections=postprocess_max_detections,
             camera_frame_id=camera_frame_id,
             pipeline_telemetry_path=pipeline_telemetry_path,
+            evidence_dir=evidence_dir,
+            evidence_interval_sec=evidence_interval_sec,
+            evidence_jpeg_quality=evidence_jpeg_quality,
+            evidence_storage_budget_mb=evidence_storage_budget_mb,
+            evidence_min_free_mb=evidence_min_free_mb,
             start_experiment_recording=start_experiment_recording,
             experiment_run_id=experiment_run_id,
             experiment_out_dir=experiment_out_dir,

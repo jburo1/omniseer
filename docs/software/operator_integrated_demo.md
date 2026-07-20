@@ -50,8 +50,11 @@ runs/demo_001/
   detections.jsonl
   perf.jsonl
   system.jsonl
+  pipeline_telemetry.jsonl
   summary.json
   evidence/
+    evidence.jsonl
+    frames/
 ```
 
 Use `--record` instead of `--record-run <run_id>` for a timestamped run id. Use
@@ -61,7 +64,10 @@ the active vision parameter file to store detector, CLIP, vocab, class-list path
 and configured classes in `manifest.yaml`; `--record-classes <text>` remains
 available as an explicit override. `system.jsonl` is sampled automatically at
 1 Hz from Linux CPU, memory, and thermal state and remains optional for older
-bundles. Bundles are stored locally on the robot first.
+bundles. Recorded real runs also enable native model-input JPEG evidence at
+roughly 1 Hz under `evidence/frames/`, with `evidence/evidence.jsonl` tying each
+image to native frame metadata and detections. Bundles are stored locally on the
+robot first.
 From the laptop, list and retrieve robot-side bundles with:
 
 ```bash

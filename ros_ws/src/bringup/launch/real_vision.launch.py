@@ -35,6 +35,11 @@ def generate_launch_description():
         DeclareLaunchArgument("postprocess_max_detections", default_value=USE_CONFIG_SENTINEL),
         DeclareLaunchArgument("camera_frame_id", default_value=USE_CONFIG_SENTINEL),
         DeclareLaunchArgument("pipeline_telemetry_path", default_value=""),
+        DeclareLaunchArgument("evidence_dir", default_value=""),
+        DeclareLaunchArgument("evidence_interval_sec", default_value="1.0"),
+        DeclareLaunchArgument("evidence_jpeg_quality", default_value="85"),
+        DeclareLaunchArgument("evidence_storage_budget_mb", default_value="1024"),
+        DeclareLaunchArgument("evidence_min_free_mb", default_value="256"),
     ]
 
     def launch_setup(context):
@@ -58,6 +63,11 @@ def generate_launch_description():
             ("postprocess.max_detections", "postprocess_max_detections", int),
             ("frames.camera_frame_id", "camera_frame_id", str),
             ("telemetry.pipeline_jsonl_path", "pipeline_telemetry_path", str),
+            ("evidence.dir", "evidence_dir", str),
+            ("evidence.interval_sec", "evidence_interval_sec", float),
+            ("evidence.jpeg_quality", "evidence_jpeg_quality", int),
+            ("evidence.storage_budget_mb", "evidence_storage_budget_mb", int),
+            ("evidence.min_free_mb", "evidence_min_free_mb", int),
         ]
 
         overrides = {}

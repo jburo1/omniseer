@@ -27,6 +27,7 @@
 #include "omniseer/vision/rolling_telemetry.hpp"
 #include "omniseer/vision/v4l2_capture.hpp"
 #include "omniseer/vision/yolo_world_text_embeddings.hpp"
+#include "omniseer_vision_bridge/evidence_frame_sink.hpp"
 
 namespace omniseer_vision_bridge
 {
@@ -126,9 +127,12 @@ struct VisionBridgeRuntime::Impl
 
       omniseer::vision::RgaPreprocessConfig preprocess_config{};
       preprocess_config.src_w = static_cast<int>(checked_u32(config.camera_width, "camera.width"));
-      preprocess_config.src_h = static_cast<int>(checked_u32(config.camera_height, "camera.height"));
-      preprocess_config.dst_w = static_cast<int>(checked_u32(config.pipeline_dst_width, "pipeline.dst_width"));
-      preprocess_config.dst_h = static_cast<int>(checked_u32(config.pipeline_dst_height, "pipeline.dst_height"));
+      preprocess_config.src_h = static_cast<int>(checked_u32(config.camera_height,
+          "camera.height"));
+      preprocess_config.dst_w = static_cast<int>(checked_u32(config.pipeline_dst_width,
+          "pipeline.dst_width"));
+      preprocess_config.dst_h = static_cast<int>(checked_u32(config.pipeline_dst_height,
+          "pipeline.dst_height"));
       preprocess_config.pad_value = 114;
       preprocess = std::make_unique<omniseer::vision::RgaPreprocess>(preprocess_config);
       prefill_pool(*pool, *preprocess);
@@ -136,11 +140,9 @@ struct VisionBridgeRuntime::Impl
       omniseer::vision::ProducerPipelineConfig producer_config{};
       producer_config.preflight_capture_wait_ms = checked_u32(
         config.producer_preflight_capture_wait_ms, "producer.preflight_capture_wait_ms");
-      if (!config.pipeline_telemetry_path.empty())
-      {
+      if (!config.pipeline_telemetry_path.empty()) {
         const std::filesystem::path telemetry_path{config.pipeline_telemetry_path};
-        if (telemetry_path.has_parent_path())
-        {
+        if (telemetry_path.has_parent_path()) {
           std::filesystem::create_directories(telemetry_path.parent_path());
         }
         omniseer::vision::JsonlTelemetryConfig telemetry_config{};
@@ -184,6 +186,17 @@ struct VisionBridgeRuntime::Impl
       consumer_startup.remap = producer->remap();
       consumer_startup.text_embeddings = prepared_embeddings->view();
       consumer->preflight(consumer_startup);
+      if (!config.evidence_dir.empty()) {
+        EvidenceFrameSinkConfig evidence_config{};
+        evidence_config.evidence_dir = config.evidence_dir;
+        evidence_config.class_names = class_names;
+        evidence_config.interval_sec = config.evidence_interval_sec;
+        evidence_config.jpeg_quality = config.evidence_jpeg_quality;
+        evidence_config.storage_budget_mb = config.evidence_storage_budget_mb;
+        evidence_config.min_free_mb = config.evidence_min_free_mb;
+        evidence_sink = std::make_unique<EvidenceFrameSink>(std::move(evidence_config));
+        consumer->set_preview_sink(evidence_sink.get());
+      }
 
       producer_thread = std::thread([this]() noexcept {producer_loop();});
       consumer_thread = std::thread([this]() noexcept {consumer_loop();});
@@ -210,6 +223,7 @@ struct VisionBridgeRuntime::Impl
     }
 
     consumer.reset();
+    evidence_sink.reset();
     runner.reset();
     prepared_embeddings.reset();
     text_builder.reset();
@@ -306,6 +320,15 @@ struct VisionBridgeRuntime::Impl
     (void) checked_u32(config.max_detections, "postprocess.max_detections");
     (void) checked_unit_float(config.score_threshold, "postprocess.score_threshold");
     (void) checked_unit_float(config.nms_iou_threshold, "postprocess.nms_iou_threshold");
+    if (config.evidence_interval_sec <= 0.0) {
+      throw std::invalid_argument("evidence.interval_sec must be > 0");
+    }
+    if (config.evidence_jpeg_quality < 1 || config.evidence_jpeg_quality > 100) {
+      throw std::invalid_argument("evidence.jpeg_quality must be in [1, 100]");
+    }
+    (void) checked_non_negative_u32(config.evidence_storage_budget_mb,
+      "evidence.storage_budget_mb");
+    (void) checked_non_negative_u32(config.evidence_min_free_mb, "evidence.min_free_mb");
   }
 
   void record_fatal(const std::string & message) noexcept
@@ -341,6 +364,7 @@ struct VisionBridgeRuntime::Impl
   std::unique_ptr<omniseer::vision::PreparedTextEmbeddings> prepared_embeddings{};
   std::unique_ptr<omniseer::vision::RknnRunner> runner{};
   std::unique_ptr<omniseer::vision::ConsumerPipeline> consumer{};
+  std::unique_ptr<EvidenceFrameSink> evidence_sink{};
 
   std::thread producer_thread{};
   std::thread consumer_thread{};

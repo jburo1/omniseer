@@ -260,8 +260,9 @@ scripts/omni run real --phase 3 --record-run demo_001 --record-out runs/demo_001
 The recorder is an optional sidecar. It writes a local bundle containing
 `manifest.yaml`, `detections.jsonl`, `perf.jsonl`, optional automatic
 `system.jsonl` resource telemetry, optional native
-`pipeline_telemetry.jsonl`, `summary.json`, and `evidence/`. The first slice
-stores bundles on the robot; laptop download and analysis tooling are
+`pipeline_telemetry.jsonl`, representative native JPEG evidence frames under
+`evidence/`, and `summary.json`. The first slice stores bundles on the robot;
+laptop download and analysis tooling are
 intentionally later work.
 
 Why phases exist:

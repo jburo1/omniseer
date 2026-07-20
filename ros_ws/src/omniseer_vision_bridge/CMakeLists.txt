@@ -13,6 +13,7 @@ find_package(builtin_interfaces REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(omniseer_msgs REQUIRED)
 find_package(yolo_msgs REQUIRED)
+find_package(JPEG REQUIRED)
 
 pkg_check_modules(RGA REQUIRED librga)
 find_path(RKNN_INCLUDE_DIR NAMES rknn_api.h REQUIRED)
@@ -21,6 +22,7 @@ find_library(RKNNRT_LIBRARY NAMES rknnrt REQUIRED)
 set(VISION_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../../../vision)
 
 add_library(omniseer_bridge_runtime STATIC
+  src/evidence_frame_sink.cpp
   src/vision_bridge_runtime.cpp
   ${VISION_ROOT}/src/class_list.cpp
   ${VISION_ROOT}/src/consumer_pipeline.cpp
@@ -50,6 +52,7 @@ target_link_libraries(omniseer_bridge_runtime PRIVATE
   Threads::Threads
   ${RGA_LIBRARIES}
   ${RKNNRT_LIBRARY}
+  JPEG::JPEG
 )
 target_compile_options(omniseer_bridge_runtime PRIVATE ${RGA_CFLAGS_OTHER})
 
@@ -84,10 +87,23 @@ install(FILES package.xml
 )
 
 if(BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
   find_package(ament_lint_auto REQUIRED)
   set(ament_cmake_copyright_FOUND TRUE)
   set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
+
+  ament_add_gtest(test_evidence_frame_sink
+    test/test_evidence_frame_sink.cpp
+  )
+  target_compile_features(test_evidence_frame_sink PUBLIC cxx_std_17)
+  target_include_directories(test_evidence_frame_sink PRIVATE
+    include
+    ${VISION_ROOT}/include
+  )
+  target_link_libraries(test_evidence_frame_sink
+    omniseer_bridge_runtime
+  )
 endif()
 
 ament_package()
