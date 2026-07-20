@@ -1191,8 +1191,11 @@ the experiment recorder from the same front door:</p>
   detections.jsonl
   perf.jsonl
   system.jsonl
+  pipeline_telemetry.jsonl
   summary.json
   evidence/
+    evidence.jsonl
+    frames/
 </code></pre></div>
 <p>Use <code>--record</code> instead of <code>--record-run &lt;run_id&gt;</code> for a timestamped run id. Use
 <code>--record-out &lt;path&gt;</code>, <code>--record-duration-sec &lt;seconds&gt;</code>, and
@@ -1201,7 +1204,10 @@ the active vision parameter file to store detector, CLIP, vocab, class-list path
 and configured classes in <code>manifest.yaml</code>; <code>--record-classes &lt;text&gt;</code> remains
 available as an explicit override. <code>system.jsonl</code> is sampled automatically at
 1 Hz from Linux CPU, memory, and thermal state and remains optional for older
-bundles. Bundles are stored locally on the robot first.
+bundles. Recorded real runs also enable native model-input JPEG evidence at
+roughly 1 Hz under <code>evidence/frames/</code>, with <code>evidence/evidence.jsonl</code> tying each
+image to native frame metadata and detections. Bundles are stored locally on the
+robot first.
 From the laptop, list and retrieve robot-side bundles with:</p>
 <div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>runs<span class="w"> </span>list
 scripts/omni<span class="w"> </span>runs<span class="w"> </span>pull<span class="w"> </span>demo_001
@@ -1373,7 +1379,7 @@ ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 20, 2026 01:35:32 UTC">July 20, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 20, 2026 22:32:47 UTC">July 20, 2026</span>
   </span>
 
     
