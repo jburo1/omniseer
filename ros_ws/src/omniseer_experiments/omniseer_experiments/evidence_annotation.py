@@ -290,8 +290,10 @@ def _validate_dimensions(
 ) -> AnnotationIssue | None:
     model_input = record.get("model_input")
     source_image = record.get("source_image")
-    if not isinstance(model_input, dict) or not _is_positive_int(model_input.get("width")) or not _is_positive_int(
-        model_input.get("height")
+    if (
+        not isinstance(model_input, dict)
+        or not _is_positive_int(model_input.get("width"))
+        or not _is_positive_int(model_input.get("height"))
     ):
         return AnnotationIssue(
             "invalid_evidence_record",
@@ -299,8 +301,10 @@ def _validate_dimensions(
             str(evidence_path),
             line,
         )
-    if not isinstance(source_image, dict) or not _is_positive_int(source_image.get("width")) or not _is_positive_int(
-        source_image.get("height")
+    if (
+        not isinstance(source_image, dict)
+        or not _is_positive_int(source_image.get("width"))
+        or not _is_positive_int(source_image.get("height"))
     ):
         return AnnotationIssue(
             "invalid_evidence_record",
