@@ -112,6 +112,46 @@ class RunRetrievalTests(unittest.TestCase):
             ["rsync", "-a", "robot@192.0.2.10:/omniseer/runs/demo_001/", "runs/imported/demo_001/"],
         )
 
+    def test_builds_commands_with_ssh_reuse_args(self) -> None:
+        config = RemoteConfig(
+            host="192.0.2.10",
+            user="robot",
+            remote_root="/omniseer/runs",
+            ssh_args=(
+                "-o",
+                "ControlMaster=auto",
+                "-o",
+                "ControlPersist=60",
+                "-o",
+                "ControlPath=/tmp/omniseer-%C",
+            ),
+        )
+
+        self.assertEqual(
+            build_remote_list_command(config)[:8],
+            [
+                "ssh",
+                "-o",
+                "ControlMaster=auto",
+                "-o",
+                "ControlPersist=60",
+                "-o",
+                "ControlPath=/tmp/omniseer-%C",
+                "robot@192.0.2.10",
+            ],
+        )
+        self.assertEqual(
+            build_rsync_command(config, "demo_001", Path("runs/imported/demo_001")),
+            [
+                "rsync",
+                "-a",
+                "-e",
+                "ssh -o ControlMaster=auto -o ControlPersist=60 -o ControlPath=/tmp/omniseer-%C",
+                "robot@192.0.2.10:/omniseer/runs/demo_001/",
+                "runs/imported/demo_001/",
+            ],
+        )
+
     def test_invalid_run_id_is_rejected(self) -> None:
         config = RemoteConfig(host="robot.local", user="robot", remote_root="/omniseer/runs")
 

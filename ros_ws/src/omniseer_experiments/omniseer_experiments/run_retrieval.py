@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import os
 import shlex
 import shutil
 import subprocess
 import sys
+import tempfile
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -32,6 +34,7 @@ class RemoteConfig:
     host: str
     user: str
     remote_root: str = DEFAULT_REMOTE_ROOT
+    ssh_args: tuple[str, ...] = ()
 
     @property
     def target(self) -> str:
@@ -89,11 +92,11 @@ def remote_run_spec(config: RemoteConfig, run_id: str) -> str:
 
 
 def build_remote_root_check_command(config: RemoteConfig) -> list[str]:
-    return ["ssh", config.target, f"test -d {shlex.quote(config.remote_root)}"]
+    return build_ssh_command(config, f"test -d {shlex.quote(config.remote_root)}")
 
 
 def build_remote_run_check_command(config: RemoteConfig, run_id: str) -> list[str]:
-    return ["ssh", config.target, f"test -d {shlex.quote(remote_run_path(config.remote_root, run_id))}"]
+    return build_ssh_command(config, f"test -d {shlex.quote(remote_run_path(config.remote_root, run_id))}")
 
 
 def build_remote_list_command(config: RemoteConfig) -> list[str]:
@@ -102,7 +105,7 @@ def build_remote_list_command(config: RemoteConfig) -> list[str]:
         f"if [ ! -d {root} ]; then exit 3; fi; "
         f"find {root} -mindepth 1 -maxdepth 1 -type d -printf '%f\\n' | sort"
     )
-    return ["ssh", config.target, remote_command]
+    return build_ssh_command(config, remote_command)
 
 
 def build_remote_inspect_command(config: RemoteConfig, run_id: str) -> list[str]:
@@ -114,13 +117,21 @@ def build_remote_inspect_command(config: RemoteConfig, run_id: str) -> list[str]
         f"inspect_run {run_path} --json; "
         "else exit 127; fi"
     )
-    return ["ssh", config.target, remote_command]
+    return build_ssh_command(config, remote_command)
+
+
+def build_ssh_command(config: RemoteConfig, remote_command: str) -> list[str]:
+    return ["ssh", *config.ssh_args, config.target, remote_command]
 
 
 def build_rsync_command(config: RemoteConfig, run_id: str, destination: Path) -> list[str]:
     remote_path = remote_run_path(config.remote_root, run_id).rstrip("/") + "/"
     source = f"{config.target}:{shlex.quote(remote_path)}"
-    return ["rsync", "-a", source, f"{destination}/"]
+    args = ["rsync", "-a"]
+    if config.ssh_args:
+        args.extend(["-e", shlex.join(["ssh", *config.ssh_args])])
+    args.extend([source, f"{destination}/"])
+    return args
 
 
 def run_process(args: Sequence[str]) -> subprocess.CompletedProcess[str]:
@@ -130,6 +141,30 @@ def run_process(args: Sequence[str]) -> subprocess.CompletedProcess[str]:
 def require_command(name: str) -> None:
     if shutil.which(name) is None:
         raise RetrievalError(f"{name} not found in PATH")
+
+
+@contextlib.contextmanager
+def ssh_connection_reuse(config: RemoteConfig):
+    with tempfile.TemporaryDirectory(prefix="omniseer-ssh-") as socket_dir:
+        ssh_args = (
+            "-o",
+            "ControlMaster=auto",
+            "-o",
+            "ControlPersist=60",
+            "-o",
+            f"ControlPath={Path(socket_dir) / '%C'}",
+        )
+        reusable_config = replace(config, ssh_args=ssh_args)
+        try:
+            yield reusable_config
+        finally:
+            subprocess.run(
+                ["ssh", *ssh_args, "-O", "exit", reusable_config.target],
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=10.0,
+            )
 
 
 def list_remote_runs(config: RemoteConfig, *, runner: CommandRunner = run_process) -> list[RemoteRun]:
@@ -212,18 +247,20 @@ def main(argv: list[str] | None = None) -> int:
         config = RemoteConfig(host=args.host, user=args.user, remote_root=args.remote_root)
         if args.command == "list":
             require_command("ssh")
-            print(format_remote_run_list(list_remote_runs(config)))
+            with ssh_connection_reuse(config) as reusable_config:
+                print(format_remote_run_list(list_remote_runs(reusable_config)))
             return 0
         if args.command == "pull":
             require_command("ssh")
             require_command("rsync")
-            result = pull_remote_run(
-                config,
-                args.run_id,
-                import_root=Path(args.import_root),
-                out=Path(args.out) if args.out else None,
-                overwrite=args.overwrite,
-            )
+            with ssh_connection_reuse(config) as reusable_config:
+                result = pull_remote_run(
+                    reusable_config,
+                    args.run_id,
+                    import_root=Path(args.import_root),
+                    out=Path(args.out) if args.out else None,
+                    overwrite=args.overwrite,
+                )
             print(format_pull_result(result))
             return 0
     except RetrievalError as exc:
@@ -329,6 +366,7 @@ __all__ = [
     "build_remote_root_check_command",
     "build_remote_run_check_command",
     "build_rsync_command",
+    "build_ssh_command",
     "format_pull_result",
     "format_remote_run_list",
     "list_remote_runs",
