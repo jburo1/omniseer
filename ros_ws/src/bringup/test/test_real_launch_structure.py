@@ -120,9 +120,7 @@ class RealLaunchStructureTests(unittest.TestCase):
         ]
 
         self.assertTrue(recorder_nodes, "expected optional omniseer_experiments record_run node")
-        recorder_text = "".join(
-            _flatten_launch_value(getattr(node, "_Node__arguments", [])) for node in recorder_nodes
-        )
+        recorder_text = "".join(_flatten_launch_value(getattr(node, "_Node__arguments", [])) for node in recorder_nodes)
         self.assertIn("--run-id", recorder_text)
         self.assertIn("--vision-params-file", recorder_text)
         self.assertIn("--detector-model-path", recorder_text)

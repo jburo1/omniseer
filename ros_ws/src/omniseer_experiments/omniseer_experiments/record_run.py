@@ -177,9 +177,7 @@ class PerceptionRunRecorder(Node):
         if options.duration_sec > 0.0:
             self.create_timer(options.duration_sec, self._finish_duration)
 
-        self.get_logger().info(
-            f"recording perception run bundle: run_id={options.run_id} out_dir={options.out_dir}"
-        )
+        self.get_logger().info(f"recording perception run bundle: run_id={options.run_id} out_dir={options.out_dir}")
 
     def close(self) -> dict[str, Any]:
         if self._closed:

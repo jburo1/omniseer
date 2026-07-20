@@ -102,8 +102,7 @@ def build_remote_run_check_command(config: RemoteConfig, run_id: str) -> list[st
 def build_remote_list_command(config: RemoteConfig) -> list[str]:
     root = shlex.quote(config.remote_root)
     remote_command = (
-        f"if [ ! -d {root} ]; then exit 3; fi; "
-        f"find {root} -mindepth 1 -maxdepth 1 -type d -printf '%f\\n' | sort"
+        f"if [ ! -d {root} ]; then exit 3; fi; find {root} -mindepth 1 -maxdepth 1 -type d -printf '%f\\n' | sort"
     )
     return build_ssh_command(config, remote_command)
 
@@ -271,9 +270,7 @@ def main(argv: list[str] | None = None) -> int:
     return 2
 
 
-def _remote_run_with_optional_inspection(
-    config: RemoteConfig, run_id: str, *, runner: CommandRunner
-) -> RemoteRun:
+def _remote_run_with_optional_inspection(config: RemoteConfig, run_id: str, *, runner: CommandRunner) -> RemoteRun:
     remote_path = remote_run_path(config.remote_root, run_id)
     result = runner(build_remote_inspect_command(config, run_id))
     if result.returncode != 0:
@@ -293,9 +290,7 @@ def _remote_run_with_optional_inspection(
     )
 
 
-def _run_checked(
-    args: Sequence[str], *, runner: CommandRunner, action: str
-) -> subprocess.CompletedProcess[str]:
+def _run_checked(args: Sequence[str], *, runner: CommandRunner, action: str) -> subprocess.CompletedProcess[str]:
     result = runner(args)
     if result.returncode == 0:
         return result

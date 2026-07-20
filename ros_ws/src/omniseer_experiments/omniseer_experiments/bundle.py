@@ -135,8 +135,7 @@ class SummaryAccumulator:
             },
             "detections_by_class": dict(sorted(self.detections_by_class.items())),
             "confidence_by_class": {
-                class_name: _describe_float(values)
-                for class_name, values in sorted(self._confidence_by_class.items())
+                class_name: _describe_float(values) for class_name, values in sorted(self._confidence_by_class.items())
             },
             "perf": {
                 "producer_fps_mean": _mean_or_zero(self._producer_fps),
