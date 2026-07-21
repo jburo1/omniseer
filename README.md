@@ -16,10 +16,10 @@ camera -> RKNN YOLO-World -> ROS detections + telemetry -> experiment bundle
 ```
 
 Robot-side inference, ROS publication, telemetry, simulation, firmware, gateway
-control, and preview streaming are implemented. Runtime class updates in the native
-RKNN bridge, structured experiment recording, cloud synchronization, and a hosted
-review dashboard are planned next. Autonomous object search and capture are not part
-of the active deliverable.
+control, preview streaming, structured experiment recording, and simple local HTML
+run reports are implemented. Runtime class updates in the native RKNN bridge,
+cloud synchronization, and a hosted review dashboard are planned next. Autonomous
+object search and capture are not part of the active deliverable.
 
 ## Current Capabilities
 

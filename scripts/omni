@@ -51,6 +51,7 @@ Examples:
   scripts/omni runs pull demo_001
   scripts/omni runs inspect runs/imported/demo_001
   scripts/omni runs annotate runs/imported/demo_001
+  scripts/omni runs report runs/imported/demo_001
   scripts/omni runs local-list --root runs
   scripts/omni test smoke-sim
   scripts/omni build ros
@@ -96,6 +97,7 @@ runs_usage() {
 Usage:
   scripts/omni runs inspect <run_dir> [--json]
   scripts/omni runs annotate <run_dir> [--overwrite]
+  scripts/omni runs report <run_dir> [--overwrite]
   scripts/omni runs local-list [--root <local-runs-root>]
   scripts/omni runs list [retrieval args...]
   scripts/omni runs pull <run_id> [retrieval args...]
@@ -282,6 +284,10 @@ EOF
       annotate)
         omni_source_ros_workspace
         exec ros2 run omniseer_experiments annotate_evidence "$@"
+        ;;
+      report)
+        omni_source_ros_workspace
+        exec ros2 run omniseer_experiments report_run "$@"
         ;;
       local-list)
         omni_source_ros_workspace

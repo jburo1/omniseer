@@ -16,9 +16,9 @@ The active portfolio deliverable is narrower than autonomous object search:
 - review an experiment on a laptop and, later, through a cloud-hosted workflow
 
 Structured run bundles are implemented as local robot artifacts. Native runtime
-class updates, laptop report generation, cloud synchronization, and a hosted
-review dashboard are **planned**. Autonomous seek and capture are explicitly
-deferred.
+class updates, cloud synchronization, and a hosted review dashboard are
+**planned**. A simple local HTML report is available for laptop review.
+Autonomous seek and capture are explicitly deferred.
 
 Start with:
 

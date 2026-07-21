@@ -1,0 +1,468 @@
+"""Static HTML report generation for local Omniseer run bundles."""
+
+from __future__ import annotations
+
+import argparse
+import html
+import json
+import os
+import statistics
+from collections import Counter, defaultdict
+from collections.abc import Iterable, Sequence
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+from omniseer_experiments.run_inspection import RunInspection, inspect_run
+
+
+@dataclass(frozen=True)
+class ReportSummary:
+    run_dir: Path
+    output_path: Path
+    evidence_items: int
+    issues: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class _JsonlRead:
+    records: tuple[dict[str, Any], ...]
+    issues: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class _EvidenceItem:
+    frame_id: str
+    sequence: str
+    capture_reason: str
+    image_href: str
+    source_href: str
+    labels: tuple[str, ...]
+    uses_annotation: bool
+
+
+def write_run_report(run_dir: Path, *, overwrite: bool = False) -> ReportSummary:
+    inspection = inspect_run(run_dir)
+    report_dir = run_dir / "report"
+    output_path = report_dir / "index.html"
+    if output_path.exists() and not overwrite:
+        raise FileExistsError(f"report already exists: {output_path}; pass --overwrite to replace it")
+
+    detections = _read_jsonl(run_dir / "detections.jsonl", required=True)
+    perf = _read_jsonl(run_dir / "perf.jsonl", required=True)
+    system = _read_jsonl(run_dir / "system.jsonl", required=False)
+    pipeline = _read_jsonl(run_dir / "pipeline_telemetry.jsonl", required=False)
+    evidence = _read_jsonl(run_dir / "evidence" / "evidence.jsonl", required=False)
+    evidence_items = _evidence_items(run_dir, report_dir, evidence.records)
+
+    issues = [
+        *[f"{issue.code}: {issue.message}" for issue in inspection.issues],
+        *detections.issues,
+        *perf.issues,
+        *system.issues,
+        *pipeline.issues,
+        *evidence.issues,
+    ]
+    html_text = _render_report(
+        inspection=inspection,
+        detections=detections.records,
+        perf=perf.records,
+        system=system.records,
+        pipeline=pipeline.records,
+        evidence_items=evidence_items,
+        issues=tuple(dict.fromkeys(issues)),
+    )
+
+    report_dir.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(html_text, encoding="utf-8")
+    return ReportSummary(
+        run_dir=run_dir,
+        output_path=output_path,
+        evidence_items=len(evidence_items),
+        issues=tuple(dict.fromkeys(issues)),
+    )
+
+
+def report_run_main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(description="Generate a static HTML report for a local run bundle.")
+    parser.add_argument("run_dir", help="path to a runs/<run_id> bundle")
+    parser.add_argument("--overwrite", action="store_true", help="replace an existing report/index.html")
+    args = parser.parse_args(argv)
+
+    try:
+        summary = write_run_report(Path(args.run_dir), overwrite=args.overwrite)
+    except FileExistsError as exc:
+        raise SystemExit(str(exc)) from exc
+
+    print(f"Report: {summary.output_path}")
+    print(f"Evidence items: {summary.evidence_items}")
+    print(f"Issues: {len(summary.issues)}")
+
+
+def _read_jsonl(path: Path, *, required: bool) -> _JsonlRead:
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except FileNotFoundError:
+        if required:
+            return _JsonlRead(records=(), issues=(f"missing file: {path}",))
+        return _JsonlRead(records=(), issues=())
+    except OSError as exc:
+        return _JsonlRead(records=(), issues=(f"unreadable file: {path}: {exc}",))
+
+    records: list[dict[str, Any]] = []
+    issues: list[str] = []
+    for line_number, line in enumerate(lines, start=1):
+        if not line.strip():
+            continue
+        try:
+            record = json.loads(line)
+        except json.JSONDecodeError as exc:
+            issues.append(f"malformed JSONL: {path}:{line_number}: {exc.msg}")
+            continue
+        if not isinstance(record, dict):
+            issues.append(f"invalid JSONL record: {path}:{line_number}: expected object")
+            continue
+        records.append(record)
+    return _JsonlRead(records=tuple(records), issues=tuple(issues))
+
+
+def _render_report(
+    *,
+    inspection: RunInspection,
+    detections: Sequence[dict[str, Any]],
+    perf: Sequence[dict[str, Any]],
+    system: Sequence[dict[str, Any]],
+    pipeline: Sequence[dict[str, Any]],
+    evidence_items: Sequence[_EvidenceItem],
+    issues: Sequence[str],
+) -> str:
+    title = f"Omniseer Run Report: {inspection.run_id}"
+    sections = [
+        _summary_section(inspection),
+        _health_section(inspection, evidence_items=evidence_items, pipeline=pipeline, issues=issues),
+        _detections_section(detections),
+        _perf_section("Performance", perf),
+        _perf_section("Pipeline Telemetry", pipeline),
+        _system_section(system),
+        _evidence_section(evidence_items),
+        _issues_section(issues),
+    ]
+    body = "\n".join(section for section in sections if section)
+    return (
+        "<!doctype html>\n"
+        '<html lang="en">\n'
+        "<head>\n"
+        '  <meta charset="utf-8">\n'
+        '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
+        f"  <title>{_esc(title)}</title>\n"
+        f"  <style>{_css()}</style>\n"
+        "</head>\n"
+        "<body>\n"
+        "  <main>\n"
+        f"    <h1>{_esc(title)}</h1>\n"
+        f"{body}\n"
+        "  </main>\n"
+        "</body>\n"
+        "</html>\n"
+    )
+
+
+def _summary_section(inspection: RunInspection) -> str:
+    rows = [
+        ("Run ID", inspection.run_id),
+        ("State", inspection.state),
+        ("Path", str(inspection.path)),
+        ("Started", _display(inspection.started_at)),
+        ("Ended", _display(inspection.ended_at)),
+        ("Duration", _format_duration(inspection.duration_sec)),
+        ("Configured classes", _join_or_dash(inspection.configured_classes)),
+    ]
+    return _section("Run Summary", _key_value_table(rows))
+
+
+def _health_section(
+    inspection: RunInspection,
+    *,
+    evidence_items: Sequence[_EvidenceItem],
+    pipeline: Sequence[dict[str, Any]],
+    issues: Sequence[str],
+) -> str:
+    annotated_count = sum(1 for item in evidence_items if item.uses_annotation)
+    rows = [
+        ("Detection messages", str(inspection.message_counts.get("detections", 0))),
+        ("Perf samples", str(inspection.message_counts.get("perf", 0))),
+        ("System samples", str(inspection.message_counts.get("system", 0))),
+        ("Pipeline telemetry samples", str(len(pipeline))),
+        ("Evidence items", str(len(evidence_items))),
+        ("Annotated evidence items", str(annotated_count)),
+        ("Issues", str(len(issues))),
+    ]
+    return _section("Health", _key_value_table(rows))
+
+
+def _detections_section(records: Sequence[dict[str, Any]]) -> str:
+    scores_by_class: dict[str, list[float]] = defaultdict(list)
+    counts: Counter[str] = Counter()
+    for detection in _iter_detections(records):
+        class_name = _class_name(detection)
+        counts[class_name] += 1
+        score = _as_float(detection.get("score"))
+        if score is not None:
+            scores_by_class[class_name].append(score)
+
+    if not counts:
+        return _section("Detections", "<p>No detections recorded.</p>")
+
+    rows = []
+    for class_name, count in sorted(counts.items()):
+        scores = scores_by_class[class_name]
+        rows.append(
+            [
+                class_name,
+                str(count),
+                _format_float(statistics.fmean(scores)) if scores else "-",
+                _format_float(max(scores)) if scores else "-",
+            ]
+        )
+    return _section("Detections", _table(["Class", "Count", "Mean Score", "Max Score"], rows))
+
+
+def _perf_section(title: str, records: Sequence[dict[str, Any]]) -> str:
+    fields = _numeric_fields(records, suffixes=("_ms", "_fps"), names=("producer_fps", "consumer_fps"))
+    if not fields:
+        return _section(title, "<p>No numeric samples recorded.</p>") if title == "Performance" else ""
+
+    rows = []
+    for field_name in fields:
+        values = [_as_float(record.get(field_name)) for record in records]
+        samples = [value for value in values if value is not None]
+        if not samples:
+            continue
+        rows.append(
+            [
+                field_name,
+                str(len(samples)),
+                _format_float(_percentile(samples, 50)),
+                _format_float(_percentile(samples, 95)),
+                _format_float(max(samples)),
+            ]
+        )
+    return _section(title, _table(["Metric", "Samples", "p50", "p95", "Max"], rows))
+
+
+def _system_section(records: Sequence[dict[str, Any]]) -> str:
+    fields = ("cpu_percent", "memory_used_mb", "memory_available_mb", "soc_temp_c")
+    rows = []
+    for field_name in fields:
+        samples = [_as_float(record.get(field_name)) for record in records]
+        values = [value for value in samples if value is not None]
+        if not values:
+            continue
+        rows.append(
+            [
+                field_name,
+                str(len(values)),
+                _format_float(min(values)),
+                _format_float(statistics.fmean(values)),
+                _format_float(max(values)),
+            ]
+        )
+    if not rows:
+        return _section("System", "<p>No system telemetry recorded.</p>")
+    return _section("System", _table(["Metric", "Samples", "Min", "Mean", "Max"], rows))
+
+
+def _evidence_section(items: Sequence[_EvidenceItem]) -> str:
+    if not items:
+        return _section("Evidence", "<p>No evidence images recorded.</p>")
+
+    cards = []
+    for item in items:
+        label_text = _join_or_dash(item.labels)
+        source_note = "annotated" if item.uses_annotation else "clean frame"
+        cards.append(
+            '<article class="evidence-card">'
+            f'<a href="{_attr(item.image_href)}"><img src="{_attr(item.image_href)}" alt="frame {item.frame_id}"></a>'
+            "<div>"
+            f"<strong>Frame {_esc(item.frame_id)}</strong>"
+            f"<span>Sequence {_esc(item.sequence)} &middot; {_esc(item.capture_reason)} "
+            f"&middot; {_esc(source_note)}</span>"
+            f"<span>{_esc(label_text)}</span>"
+            f'<a href="{_attr(item.source_href)}">clean frame</a>'
+            "</div>"
+            "</article>"
+        )
+    return _section("Evidence", f'<div class="evidence-grid">{"".join(cards)}</div>')
+
+
+def _issues_section(issues: Sequence[str]) -> str:
+    if not issues:
+        return _section("Issues", "<p>No issues found by local report inputs.</p>")
+    items = "".join(f"<li>{_esc(issue)}</li>" for issue in issues)
+    return _section("Issues", f"<ul>{items}</ul>")
+
+
+def _evidence_items(run_dir: Path, report_dir: Path, records: Sequence[dict[str, Any]]) -> tuple[_EvidenceItem, ...]:
+    items: list[_EvidenceItem] = []
+    for record in records:
+        if record.get("artifact_type") != "sampled_frame":
+            continue
+        image_path_value = record.get("image_path")
+        if not isinstance(image_path_value, str) or not image_path_value:
+            continue
+        relative_image_path = Path(image_path_value)
+        if relative_image_path.is_absolute() or ".." in relative_image_path.parts:
+            continue
+        source_path = run_dir / image_path_value
+        annotated_path = run_dir / "evidence" / "annotated" / source_path.name
+        display_path = annotated_path if annotated_path.is_file() else source_path
+        if not display_path.is_file():
+            continue
+        items.append(
+            _EvidenceItem(
+                frame_id=str(record.get("frame_id", "-")),
+                sequence=str(record.get("sequence", "-")),
+                capture_reason=str(record.get("capture_reason", "-")),
+                image_href=_relative_href(report_dir, display_path),
+                source_href=_relative_href(report_dir, source_path),
+                labels=_detection_labels(record.get("detections")),
+                uses_annotation=display_path == annotated_path,
+            )
+        )
+    return tuple(items)
+
+
+def _detection_labels(value: object) -> tuple[str, ...]:
+    if not isinstance(value, list):
+        return ()
+    labels = []
+    for index, item in enumerate(value):
+        if not isinstance(item, dict):
+            continue
+        label = _class_name(item, index=index)
+        score = _as_float(item.get("score"))
+        labels.append(f"{label} {_format_float(score)}" if score is not None else label)
+    return tuple(labels)
+
+
+def _iter_detections(records: Sequence[dict[str, Any]]) -> Iterable[dict[str, Any]]:
+    for record in records:
+        detections = record.get("detections")
+        if not isinstance(detections, list):
+            continue
+        for detection in detections:
+            if isinstance(detection, dict):
+                yield detection
+
+
+def _class_name(detection: dict[str, Any], *, index: int = 0) -> str:
+    class_name = detection.get("class_name")
+    if isinstance(class_name, str) and class_name:
+        return class_name
+    class_id = detection.get("class_id")
+    if class_id is not None:
+        return f"class_{class_id}"
+    return f"detection_{index}"
+
+
+def _numeric_fields(
+    records: Sequence[dict[str, Any]],
+    *,
+    suffixes: Sequence[str],
+    names: Sequence[str],
+) -> tuple[str, ...]:
+    fields: set[str] = set()
+    for record in records:
+        for key, value in record.items():
+            if _as_float(value) is None:
+                continue
+            if key in names or any(key.endswith(suffix) for suffix in suffixes):
+                fields.add(key)
+    return tuple(sorted(fields))
+
+
+def _percentile(values: Sequence[float], percentile: int) -> float:
+    if not values:
+        return 0.0
+    ordered = sorted(values)
+    index = round((len(ordered) - 1) * (percentile / 100.0))
+    return ordered[index]
+
+
+def _as_float(value: object) -> float | None:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    return float(value)
+
+
+def _format_float(value: float) -> str:
+    return f"{value:.2f}"
+
+
+def _format_duration(value: float | None) -> str:
+    if value is None:
+        return "-"
+    return f"{value:.1f}s"
+
+
+def _display(value: object) -> str:
+    if value is None or value == "":
+        return "-"
+    return str(value)
+
+
+def _join_or_dash(values: Sequence[str]) -> str:
+    return ", ".join(values) if values else "-"
+
+
+def _relative_href(from_dir: Path, target: Path) -> str:
+    return Path(os.path.relpath(target, start=from_dir)).as_posix()
+
+
+def _section(title: str, body: str) -> str:
+    return f'    <section>\n      <h2>{_esc(title)}</h2>\n      {body}\n    </section>'
+
+
+def _key_value_table(rows: Sequence[tuple[str, str]]) -> str:
+    table_rows = "".join(f"<tr><th>{_esc(key)}</th><td>{_esc(value)}</td></tr>" for key, value in rows)
+    return f'<table class="kv"><tbody>{table_rows}</tbody></table>'
+
+
+def _table(headers: Sequence[str], rows: Sequence[Sequence[str]]) -> str:
+    header_html = "".join(f"<th>{_esc(header)}</th>" for header in headers)
+    row_html = "".join(
+        "<tr>" + "".join(f"<td>{_esc(value)}</td>" for value in row) + "</tr>" for row in rows
+    )
+    return f"<table><thead><tr>{header_html}</tr></thead><tbody>{row_html}</tbody></table>"
+
+
+def _esc(value: object) -> str:
+    return html.escape(str(value), quote=False)
+
+
+def _attr(value: object) -> str:
+    return html.escape(str(value), quote=True)
+
+
+def _css() -> str:
+    return """
+:root { color-scheme: light; font-family: Arial, sans-serif; background: #f6f7f9; color: #1f2933; }
+body { margin: 0; }
+main { max-width: 1120px; margin: 0 auto; padding: 28px 20px 48px; }
+h1 { margin: 0 0 22px; font-size: 28px; font-weight: 700; }
+h2 { margin: 0 0 12px; font-size: 19px; font-weight: 700; }
+section { margin: 0 0 18px; padding: 16px; background: #ffffff; border: 1px solid #d8dee6; border-radius: 6px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { padding: 8px 10px; border-bottom: 1px solid #e6eaf0; text-align: left; vertical-align: top; }
+th { color: #3d4a5c; font-weight: 700; background: #f1f4f8; }
+tbody tr:last-child th, tbody tr:last-child td { border-bottom: 0; }
+.kv th { width: 220px; }
+p, ul { margin: 0; font-size: 14px; }
+ul { padding-left: 20px; }
+.evidence-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+.evidence-card { border: 1px solid #d8dee6; border-radius: 6px; overflow: hidden; background: #fbfcfe; }
+.evidence-card img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: contain; background: #111827; }
+.evidence-card div { display: grid; gap: 5px; padding: 10px; font-size: 13px; }
+.evidence-card span { color: #526173; }
+.evidence-card a { color: #185abc; }
+""".strip()

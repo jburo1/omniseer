@@ -82,8 +82,9 @@ default, preserves additive files, and validates the imported copy with
 `inspect_run`. The front door defaults to `radxa@192.168.1.178` and remote root
 `/home/radxa/apps/omniseer/runs`; use `--host`, `--user`, `--remote-root`,
 `--import-root`, `--out`, and `--overwrite` when the robot or laptop layout
-differs from the defaults. Report generation and cloud synchronization remain
-later slices.
+differs from the defaults. Generate a simple local HTML report with
+`scripts/omni runs report runs/imported/demo_001`. Cloud synchronization and
+hosted review remain later slices.
 
 Pass launch overrides after the phase, for example:
 
