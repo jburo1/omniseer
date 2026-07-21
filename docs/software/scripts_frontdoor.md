@@ -337,8 +337,11 @@ through the `omniseer_experiments` tools. `annotate` derives
 `evidence/annotated/*.jpg` from clean evidence frames and `evidence/evidence.jsonl`
 without modifying the canonical `evidence/frames/*.jpg` inputs. `report` writes
 a derived static HTML summary at `report/index.html`, using annotated evidence
-when present and falling back to clean evidence frames. `list` and `pull` operate
-on robot-side bundles over SSH and validate pulled bundles locally.
+when present and falling back to clean evidence frames. The report includes an
+evidence summary, run configuration, detection counts, performance and native
+pipeline telemetry, resource samples, error/drop counters, evidence links, and
+inspection issues. `list` and `pull` operate on robot-side bundles over SSH and
+validate pulled bundles locally.
 
 The front door defaults to SSH target `radxa@192.168.1.178` and remote run root
 `/home/radxa/apps/omniseer/runs`. Override those with `--host`, `--user`,

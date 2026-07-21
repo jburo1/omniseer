@@ -126,6 +126,61 @@ def _write_evidence(run_dir: Path) -> None:
     (run_dir / "evidence" / "evidence.jsonl").write_text(json.dumps(record) + "\n", encoding="utf-8")
 
 
+def _write_pipeline_telemetry(run_dir: Path) -> None:
+    records = [
+        {
+            "schema_version": 3,
+            "source": "producer",
+            "frame_id": 1,
+            "tick_id": 1,
+            "sequence": 10,
+            "event_ts_real_ns": 1000,
+            "source_age_dequeue_ns": 2_000_000,
+            "source_age_publish_ready_ns": 3_000_000,
+            "producer_status": "produced",
+            "capture_status": "ok",
+            "preprocess_status": "ok",
+            "capture_errno": 0,
+            "stage_mask": 31,
+            "dur_ns": {
+                "dequeue": 100_000,
+                "acquire_write": 20_000,
+                "preprocess": 1_100_000,
+                "publish_ready": 30_000,
+                "requeue": 80_000,
+                "total": 1_330_000,
+            },
+        },
+        {
+            "schema_version": 3,
+            "source": "consumer",
+            "frame_id": 1,
+            "tick_id": 1,
+            "sequence": 10,
+            "event_ts_real_ns": 1000,
+            "consumer_start_ts_real_ns": 2000,
+            "consumer_end_ts_real_ns": 3000,
+            "source_age_start_ns": 4_000_000,
+            "source_age_end_ns": 12_000_000,
+            "consumer_status": "consumed",
+            "infer_status": "ok",
+            "postprocess_status": "ok",
+            "infer_errno": 0,
+            "stage_mask": 31,
+            "dur_ns": {
+                "acquire_read": 10_000,
+                "infer": 8_000_000,
+                "postprocess": 200_000,
+                "publish": 300_000,
+                "release": 10_000,
+                "total": 8_520_000,
+            },
+        },
+    ]
+    text = "\n".join(json.dumps(record) for record in records) + "\n"
+    (run_dir / "pipeline_telemetry.jsonl").write_text(text, encoding="utf-8")
+
+
 class RunReportTests(unittest.TestCase):
     def test_writes_static_html_report_with_evidence_gallery(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -140,10 +195,34 @@ class RunReportTests(unittest.TestCase):
             self.assertEqual(summary.issues, ())
             self.assertIn("Omniseer Run Report: demo_001", output)
             self.assertIn("<h2>Run Summary</h2>", output)
+            self.assertIn("<h2>Evidence Summary</h2>", output)
+            self.assertIn("<h2>Configuration</h2>", output)
+            self.assertIn("<h2>Errors And Drops</h2>", output)
             self.assertIn("<h2>Detections</h2>", output)
+            self.assertIn("Messages with detections", output)
+            self.assertIn("Configured classes not observed", output)
             self.assertIn("chair", output)
             self.assertIn("../evidence/annotated/frame_1.jpg", output)
             self.assertIn("../evidence/frames/frame_1.jpg", output)
+
+    def test_writes_native_pipeline_telemetry_summary(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "demo_001"
+            _write_completed_bundle(run_dir)
+            _write_pipeline_telemetry(run_dir)
+
+            summary = write_run_report(run_dir)
+
+            output = summary.output_path.read_text(encoding="utf-8")
+            self.assertIn("<h2>Pipeline Telemetry</h2>", output)
+            self.assertIn("Status Distribution", output)
+            self.assertIn("Producer Stage Timings", output)
+            self.assertIn("Consumer Stage Timings", output)
+            self.assertIn("Source Age", output)
+            self.assertIn("producer status", output.lower())
+            self.assertIn("produced=1", output)
+            self.assertIn("source age at consumer end", output)
+            self.assertIn("<td>infer</td>", output)
 
     def test_existing_report_requires_overwrite(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

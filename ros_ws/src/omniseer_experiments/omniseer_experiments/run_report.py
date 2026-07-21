@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from omniseer_experiments.run_inspection import RunInspection, inspect_run
+from omniseer_experiments.run_inspection import RunInspection, _parse_generated_manifest, inspect_run
 
 
 @dataclass(frozen=True)
@@ -35,14 +35,18 @@ class _EvidenceItem:
     frame_id: str
     sequence: str
     capture_reason: str
+    relative_time: str
     image_href: str
     source_href: str
     labels: tuple[str, ...]
+    detection_count: int
+    top_score: str
     uses_annotation: bool
 
 
 def write_run_report(run_dir: Path, *, overwrite: bool = False) -> ReportSummary:
     inspection = inspect_run(run_dir)
+    manifest = _read_manifest(run_dir / "manifest.yaml")
     report_dir = run_dir / "report"
     output_path = report_dir / "index.html"
     if output_path.exists() and not overwrite:
@@ -65,6 +69,7 @@ def write_run_report(run_dir: Path, *, overwrite: bool = False) -> ReportSummary
     ]
     html_text = _render_report(
         inspection=inspection,
+        manifest=manifest,
         detections=detections.records,
         perf=perf.records,
         system=system.records,
@@ -129,6 +134,7 @@ def _read_jsonl(path: Path, *, required: bool) -> _JsonlRead:
 def _render_report(
     *,
     inspection: RunInspection,
+    manifest: dict[str, Any],
     detections: Sequence[dict[str, Any]],
     perf: Sequence[dict[str, Any]],
     system: Sequence[dict[str, Any]],
@@ -138,12 +144,22 @@ def _render_report(
 ) -> str:
     title = f"Omniseer Run Report: {inspection.run_id}"
     sections = [
+        _evidence_summary_section(
+            inspection=inspection,
+            manifest=manifest,
+            detections=detections,
+            perf=perf,
+            evidence_items=evidence_items,
+            issues=issues,
+        ),
         _summary_section(inspection),
+        _configuration_section(manifest),
         _health_section(inspection, evidence_items=evidence_items, pipeline=pipeline, issues=issues),
-        _detections_section(detections),
+        _detections_section(detections, configured_classes=inspection.configured_classes),
         _perf_section("Performance", perf),
-        _perf_section("Pipeline Telemetry", pipeline),
+        _pipeline_section(pipeline),
         _system_section(system),
+        _errors_section(inspection),
         _evidence_section(evidence_items),
         _issues_section(issues),
     ]
@@ -167,6 +183,37 @@ def _render_report(
     )
 
 
+def _evidence_summary_section(
+    *,
+    inspection: RunInspection,
+    manifest: dict[str, Any],
+    detections: Sequence[dict[str, Any]],
+    perf: Sequence[dict[str, Any]],
+    evidence_items: Sequence[_EvidenceItem],
+    issues: Sequence[str],
+) -> str:
+    total_detections = sum(1 for _ in _iter_detections(detections))
+    observed_classes = _join_or_dash(tuple(sorted(inspection.detections_by_class)))
+    configured_classes = _join_or_dash(inspection.configured_classes)
+    consumer_total_p95 = _p95_field(perf, "last_consumer_total_ms")
+    infer_p95 = _p95_field(perf, "last_infer_ms")
+    detector = _manifest_model_value(manifest, "detector")
+    hardware = _manifest_string(manifest, "sbc")
+
+    claims = [
+        f"Run state: {inspection.state}; duration {_format_duration(inspection.duration_sec)}; issues {len(issues)}.",
+        f"Target: {_display(hardware)} running {_display(detector)} with configured classes: {configured_classes}.",
+        f"Observed {total_detections} detections across {len(detections)} detection messages; "
+        f"classes observed: {observed_classes}.",
+        f"Performance samples: {len(perf)}; consumer total p95 {_format_optional_ms(consumer_total_p95)}; "
+        f"inference p95 {_format_optional_ms(infer_p95)}.",
+        f"Visual evidence: {len(evidence_items)} sampled frames, "
+        f"{sum(1 for item in evidence_items if item.uses_annotation)} annotated.",
+    ]
+    items = "".join(f"<li>{_esc(claim)}</li>" for claim in claims)
+    return _section("Evidence Summary", f'<ul class="summary-list">{items}</ul>')
+
+
 def _summary_section(inspection: RunInspection) -> str:
     rows = [
         ("Run ID", inspection.run_id),
@@ -178,6 +225,25 @@ def _summary_section(inspection: RunInspection) -> str:
         ("Configured classes", _join_or_dash(inspection.configured_classes)),
     ]
     return _section("Run Summary", _key_value_table(rows))
+
+
+def _configuration_section(manifest: dict[str, Any]) -> str:
+    model_rows = [
+        ("Robot", _manifest_string(manifest, "robot")),
+        ("SBC", _manifest_string(manifest, "sbc")),
+        ("ROS distro", _manifest_string(manifest, "ros_distro")),
+        ("Git SHA", _manifest_string(manifest, "git_sha")),
+        ("Detector", _manifest_model_value(manifest, "detector")),
+        ("Detector model", _path_basename(_manifest_model_value(manifest, "detector_model_path"))),
+        ("CLIP model", _path_basename(_manifest_model_value(manifest, "clip_model_path"))),
+        ("CLIP vocab", _path_basename(_manifest_model_value(manifest, "clip_vocab_path"))),
+        ("Classes file", _path_basename(_manifest_string(manifest, "classes_path"))),
+        ("Detections topic", _manifest_topic_value(manifest, "detections")),
+        ("Performance topic", _manifest_topic_value(manifest, "perf")),
+        ("Notes", _manifest_string(manifest, "notes")),
+    ]
+    rows = [(key, _display(value)) for key, value in model_rows]
+    return _section("Configuration", _key_value_table(rows))
 
 
 def _health_section(
@@ -200,18 +266,40 @@ def _health_section(
     return _section("Health", _key_value_table(rows))
 
 
-def _detections_section(records: Sequence[dict[str, Any]]) -> str:
+def _detections_section(records: Sequence[dict[str, Any]], *, configured_classes: Sequence[str]) -> str:
     scores_by_class: dict[str, list[float]] = defaultdict(list)
     counts: Counter[str] = Counter()
+    messages_with_detections = 0
+    messages_without_detections = 0
+    total_detections = 0
+    observed_classes: set[str] = set()
+    configured_class_set = set(configured_classes)
     for detection in _iter_detections(records):
         class_name = _class_name(detection)
         counts[class_name] += 1
+        observed_classes.add(class_name)
+        total_detections += 1
         score = _as_float(detection.get("score"))
         if score is not None:
             scores_by_class[class_name].append(score)
 
+    for record in records:
+        detections = record.get("detections")
+        if isinstance(detections, list) and detections:
+            messages_with_detections += 1
+        else:
+            messages_without_detections += 1
+
     if not counts:
-        return _section("Detections", "<p>No detections recorded.</p>")
+        summary = _key_value_table(
+            [
+                ("Detection messages", str(len(records))),
+                ("Messages with detections", str(messages_with_detections)),
+                ("Messages without detections", str(messages_without_detections)),
+                ("Total detections", "0"),
+            ]
+        )
+        return _section("Detections", summary + "<p>No detections recorded.</p>")
 
     rows = []
     for class_name, count in sorted(counts.items()):
@@ -220,11 +308,129 @@ def _detections_section(records: Sequence[dict[str, Any]]) -> str:
             [
                 class_name,
                 str(count),
+                _format_float(min(scores)) if scores else "-",
                 _format_float(statistics.fmean(scores)) if scores else "-",
                 _format_float(max(scores)) if scores else "-",
             ]
         )
-    return _section("Detections", _table(["Class", "Count", "Mean Score", "Max Score"], rows))
+    summary = _key_value_table(
+        [
+            ("Detection messages", str(len(records))),
+            ("Messages with detections", str(messages_with_detections)),
+            ("Messages without detections", str(messages_without_detections)),
+            ("Total detections", str(total_detections)),
+            ("Observed classes", _join_or_dash(tuple(sorted(observed_classes)))),
+            ("Configured classes not observed", _join_or_dash(tuple(sorted(configured_class_set - observed_classes)))),
+        ]
+    )
+    return _section("Detections", summary + _table(["Class", "Count", "Min Score", "Mean Score", "Max Score"], rows))
+
+
+def _pipeline_section(records: Sequence[dict[str, Any]]) -> str:
+    if not records:
+        return _section("Pipeline Telemetry", "<p>No native pipeline telemetry recorded.</p>")
+
+    body_parts = [
+        _pipeline_status_tables(records),
+        _pipeline_stage_table(records, source="producer"),
+        _pipeline_stage_table(records, source="consumer"),
+        _pipeline_age_table(records),
+    ]
+    return _section("Pipeline Telemetry", "".join(part for part in body_parts if part))
+
+
+def _pipeline_status_tables(records: Sequence[dict[str, Any]]) -> str:
+    fields = (
+        ("producer_status", "Producer status"),
+        ("capture_status", "Capture status"),
+        ("preprocess_status", "Preprocess status"),
+        ("consumer_status", "Consumer status"),
+        ("infer_status", "Infer status"),
+        ("postprocess_status", "Postprocess status"),
+    )
+    rows = []
+    for field_name, label in fields:
+        counts: Counter[str] = Counter()
+        for record in records:
+            value = record.get(field_name)
+            if isinstance(value, str) and value:
+                counts[value] += 1
+        if counts:
+            rows.append([label, ", ".join(f"{key}={value}" for key, value in sorted(counts.items()))])
+    if not rows:
+        return ""
+    return "<h3>Status Distribution</h3>" + _table(["Status Field", "Counts"], rows)
+
+
+def _pipeline_stage_table(records: Sequence[dict[str, Any]], *, source: str) -> str:
+    subset = [record for record in records if record.get("source") == source]
+    if not subset:
+        return ""
+    fields = (
+        ("dequeue", "dequeue"),
+        ("acquire_write", "acquire_write"),
+        ("preprocess", "preprocess"),
+        ("publish_ready", "publish_ready"),
+        ("requeue", "requeue"),
+        ("acquire_read", "acquire_read"),
+        ("infer", "infer"),
+        ("postprocess", "postprocess"),
+        ("publish", "publish"),
+        ("release", "release"),
+        ("total", "total"),
+    )
+    rows = []
+    for field_name, label in fields:
+        samples = []
+        for record in subset:
+            dur_ns = record.get("dur_ns")
+            if not isinstance(dur_ns, dict):
+                continue
+            value = _as_float(dur_ns.get(field_name))
+            if value is not None:
+                samples.append(value / 1_000_000.0)
+        if samples:
+            rows.append(
+                [
+                    label,
+                    str(len(samples)),
+                    _format_float(_percentile(samples, 50)),
+                    _format_float(_percentile(samples, 95)),
+                    _format_float(max(samples)),
+                ]
+            )
+    if not rows:
+        return ""
+    return f"<h3>{source.title()} Stage Timings</h3>" + _table(["Stage", "Samples", "p50 ms", "p95 ms", "Max ms"], rows)
+
+
+def _pipeline_age_table(records: Sequence[dict[str, Any]]) -> str:
+    fields = (
+        ("source_age_dequeue_ns", "source age at producer dequeue"),
+        ("source_age_publish_ready_ns", "source age at producer publish-ready"),
+        ("source_age_start_ns", "source age at consumer start"),
+        ("source_age_end_ns", "source age at consumer end"),
+    )
+    rows = []
+    for field_name, label in fields:
+        samples = [
+            value / 1_000_000.0
+            for value in (_as_float(record.get(field_name)) for record in records)
+            if value is not None
+        ]
+        if samples:
+            rows.append(
+                [
+                    label,
+                    str(len(samples)),
+                    _format_float(_percentile(samples, 50)),
+                    _format_float(_percentile(samples, 95)),
+                    _format_float(max(samples)),
+                ]
+            )
+    if not rows:
+        return ""
+    return "<h3>Source Age</h3>" + _table(["Metric", "Samples", "p50 ms", "p95 ms", "Max ms"], rows)
 
 
 def _perf_section(title: str, records: Sequence[dict[str, Any]]) -> str:
@@ -272,6 +478,22 @@ def _system_section(records: Sequence[dict[str, Any]]) -> str:
     return _section("System", _table(["Metric", "Samples", "Min", "Mean", "Max"], rows))
 
 
+def _errors_section(inspection: RunInspection) -> str:
+    error_rows = [[name, str(count)] for name, count in sorted(inspection.errors.items())]
+    drop_rows = [[name, str(count)] for name, count in sorted(inspection.dropped_records.items())]
+    if not error_rows:
+        error_rows = [["-", "0"]]
+    if not drop_rows:
+        drop_rows = [["-", "0"]]
+    body = (
+        "<h3>Pipeline Errors</h3>"
+        + _table(["Error Counter", "Count"], error_rows)
+        + "<h3>Dropped Records</h3>"
+        + _table(["Stream", "Count"], drop_rows)
+    )
+    return _section("Errors And Drops", body)
+
+
 def _evidence_section(items: Sequence[_EvidenceItem]) -> str:
     if not items:
         return _section("Evidence", "<p>No evidence images recorded.</p>")
@@ -287,12 +509,18 @@ def _evidence_section(items: Sequence[_EvidenceItem]) -> str:
             f"<strong>Frame {_esc(item.frame_id)}</strong>"
             f"<span>Sequence {_esc(item.sequence)} &middot; {_esc(item.capture_reason)} "
             f"&middot; {_esc(source_note)}</span>"
+            f"<span>t+{_esc(item.relative_time)} &middot; detections {item.detection_count} "
+            f"&middot; top score {_esc(item.top_score)}</span>"
             f"<span>{_esc(label_text)}</span>"
             f'<a href="{_attr(item.source_href)}">clean frame</a>'
             "</div>"
             "</article>"
         )
-    return _section("Evidence", f'<div class="evidence-grid">{"".join(cards)}</div>')
+    intro = (
+        "<p>Annotated images are derived review artifacts. Clean frames are the canonical captured evidence; "
+        "boxes are projected back into source image coordinates.</p>"
+    )
+    return _section("Evidence", f'{intro}<div class="evidence-grid">{"".join(cards)}</div>')
 
 
 def _issues_section(issues: Sequence[str]) -> str:
@@ -304,6 +532,15 @@ def _issues_section(issues: Sequence[str]) -> str:
 
 def _evidence_items(run_dir: Path, report_dir: Path, records: Sequence[dict[str, Any]]) -> tuple[_EvidenceItem, ...]:
     items: list[_EvidenceItem] = []
+    valid_records = [record for record in records if record.get("artifact_type") == "sampled_frame"]
+    base_capture_ts = min(
+        (
+            value
+            for value in (_as_float(record.get("capture_ts_real_ns")) for record in valid_records)
+            if value is not None
+        ),
+        default=None,
+    )
     for record in records:
         if record.get("artifact_type") != "sampled_frame":
             continue
@@ -318,18 +555,56 @@ def _evidence_items(run_dir: Path, report_dir: Path, records: Sequence[dict[str,
         display_path = annotated_path if annotated_path.is_file() else source_path
         if not display_path.is_file():
             continue
+        detections = record.get("detections")
+        detection_count = len(detections) if isinstance(detections, list) else 0
+        capture_ts = _as_float(record.get("capture_ts_real_ns"))
         items.append(
             _EvidenceItem(
                 frame_id=str(record.get("frame_id", "-")),
                 sequence=str(record.get("sequence", "-")),
                 capture_reason=str(record.get("capture_reason", "-")),
+                relative_time=_relative_time(capture_ts, base_capture_ts),
                 image_href=_relative_href(report_dir, display_path),
                 source_href=_relative_href(report_dir, source_path),
                 labels=_detection_labels(record.get("detections")),
+                detection_count=detection_count,
+                top_score=_top_score(record.get("detections")),
                 uses_annotation=display_path == annotated_path,
             )
         )
     return tuple(items)
+
+
+def _read_manifest(path: Path) -> dict[str, Any]:
+    try:
+        return _parse_generated_manifest(path.read_text(encoding="utf-8").splitlines())
+    except (FileNotFoundError, OSError):
+        return {}
+
+
+def _manifest_string(manifest: dict[str, Any], key: str) -> str:
+    value = manifest.get(key)
+    return value if isinstance(value, str) else ""
+
+
+def _manifest_model_value(manifest: dict[str, Any], key: str) -> str:
+    model = manifest.get("model")
+    if not isinstance(model, dict):
+        return ""
+    value = model.get(key)
+    return value if isinstance(value, str) else ""
+
+
+def _manifest_topic_value(manifest: dict[str, Any], key: str) -> str:
+    topics = manifest.get("topics")
+    if not isinstance(topics, dict):
+        return ""
+    value = topics.get(key)
+    return value if isinstance(value, str) else ""
+
+
+def _path_basename(value: str) -> str:
+    return Path(value).name if value else ""
 
 
 def _detection_labels(value: object) -> tuple[str, ...]:
@@ -343,6 +618,23 @@ def _detection_labels(value: object) -> tuple[str, ...]:
         score = _as_float(item.get("score"))
         labels.append(f"{label} {_format_float(score)}" if score is not None else label)
     return tuple(labels)
+
+
+def _top_score(value: object) -> str:
+    if not isinstance(value, list):
+        return "-"
+    scores = [
+        score
+        for score in (_as_float(item.get("score")) for item in value if isinstance(item, dict))
+        if score is not None
+    ]
+    return _format_float(max(scores)) if scores else "-"
+
+
+def _relative_time(capture_ts_ns: float | None, base_capture_ts_ns: float | None) -> str:
+    if capture_ts_ns is None or base_capture_ts_ns is None:
+        return "-"
+    return _format_duration(max(0.0, (capture_ts_ns - base_capture_ts_ns) / 1_000_000_000.0))
 
 
 def _iter_detections(records: Sequence[dict[str, Any]]) -> Iterable[dict[str, Any]]:
@@ -389,6 +681,13 @@ def _percentile(values: Sequence[float], percentile: int) -> float:
     return ordered[index]
 
 
+def _p95_field(records: Sequence[dict[str, Any]], field_name: str) -> float | None:
+    samples = [value for value in (_as_float(record.get(field_name)) for record in records) if value is not None]
+    if not samples:
+        return None
+    return _percentile(samples, 95)
+
+
 def _as_float(value: object) -> float | None:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         return None
@@ -397,6 +696,12 @@ def _as_float(value: object) -> float | None:
 
 def _format_float(value: float) -> str:
     return f"{value:.2f}"
+
+
+def _format_optional_ms(value: float | None) -> str:
+    if value is None:
+        return "-"
+    return f"{_format_float(value)} ms"
 
 
 def _format_duration(value: float | None) -> str:
@@ -420,7 +725,7 @@ def _relative_href(from_dir: Path, target: Path) -> str:
 
 
 def _section(title: str, body: str) -> str:
-    return f'    <section>\n      <h2>{_esc(title)}</h2>\n      {body}\n    </section>'
+    return f"    <section>\n      <h2>{_esc(title)}</h2>\n      {body}\n    </section>"
 
 
 def _key_value_table(rows: Sequence[tuple[str, str]]) -> str:
@@ -430,9 +735,7 @@ def _key_value_table(rows: Sequence[tuple[str, str]]) -> str:
 
 def _table(headers: Sequence[str], rows: Sequence[Sequence[str]]) -> str:
     header_html = "".join(f"<th>{_esc(header)}</th>" for header in headers)
-    row_html = "".join(
-        "<tr>" + "".join(f"<td>{_esc(value)}</td>" for value in row) + "</tr>" for row in rows
-    )
+    row_html = "".join("<tr>" + "".join(f"<td>{_esc(value)}</td>" for value in row) + "</tr>" for row in rows)
     return f"<table><thead><tr>{header_html}</tr></thead><tbody>{row_html}</tbody></table>"
 
 
@@ -451,6 +754,8 @@ body { margin: 0; }
 main { max-width: 1120px; margin: 0 auto; padding: 28px 20px 48px; }
 h1 { margin: 0 0 22px; font-size: 28px; font-weight: 700; }
 h2 { margin: 0 0 12px; font-size: 19px; font-weight: 700; }
+h3 { margin: 16px 0 8px; font-size: 15px; font-weight: 700; color: #3d4a5c; }
+h2 + h3 { margin-top: 0; }
 section { margin: 0 0 18px; padding: 16px; background: #ffffff; border: 1px solid #d8dee6; border-radius: 6px; }
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
 th, td { padding: 8px 10px; border-bottom: 1px solid #e6eaf0; text-align: left; vertical-align: top; }
@@ -460,6 +765,7 @@ tbody tr:last-child th, tbody tr:last-child td { border-bottom: 0; }
 p, ul { margin: 0; font-size: 14px; }
 ul { padding-left: 20px; }
 .evidence-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+p + .evidence-grid { margin-top: 12px; }
 .evidence-card { border: 1px solid #d8dee6; border-radius: 6px; overflow: hidden; background: #fbfcfe; }
 .evidence-card img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: contain; background: #111827; }
 .evidence-card div { display: grid; gap: 5px; padding: 10px; font-size: 13px; }
