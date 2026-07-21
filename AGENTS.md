@@ -193,3 +193,5 @@ Final summaries should distinguish clearly between:
 
 * When asked to commit, use a conventional prefix with an explicit scope and a descriptive sentence.
 * Mention notable secondary changes when they materially help review.
+* Before committing and pushing to `master`, run `python3 -m pre_commit run --all-files`.
+  If hooks modify files, review and stage those changes intentionally, rerun the hook, and commit only after it passes.
