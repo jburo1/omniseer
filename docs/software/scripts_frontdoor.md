@@ -15,7 +15,7 @@ The design intent is simple:
 
 - one memorable top-level command
 - thin wrappers around the existing build, test, run, and flash flows
-- explicit phase selection for real-hardware bringup as the rollout expands
+- explicit profile selection for real-hardware bringup as the rollout expands
 - additive growth without breaking familiar operator commands
 
 This does **not** replace every package-local helper. Narrow package-owned scripts
@@ -136,31 +136,6 @@ Suggestion:
 - `build ros --with-vision` requires RKNN/RGA development files and is expected to fail on hosts without the target SDKs
 - `build vision` is better than a full ROS build when only the native C++ vision pipeline changed
 
-### `up`
-
-Build the needed workspace, then launch the selected profile.
-
-Commands:
-
-```bash
-scripts/omni up sim
-scripts/omni up real --phase 3
-scripts/omni up real --phase 3 smoke
-```
-
-Use `up` when:
-
-- you want one command for the normal build-then-run loop
-- you want launch-only commands to stay available for diagnostic runs
-
-Examples:
-
-```bash
-scripts/omni up sim headless:=true
-scripts/omni up real --phase 3
-scripts/omni up real --phase 3 smoke
-```
-
 ### `test`
 
 Run focused local verification flows.
@@ -196,14 +171,16 @@ Suggestion:
 
 ### `run`
 
-Launch the operator-facing runtime workflows without an implicit build.
+Launch the operator-facing runtime workflows. Build explicitly first when code,
+launch files, or generated interfaces changed.
 
 Commands:
 
 ```bash
 scripts/omni run sim
-scripts/omni run real --phase 2
-scripts/omni run real --phase 3
+scripts/omni run real
+scripts/omni run real --profile perception --record-run demo_001
+scripts/omni run real --profile legacy-teleop smoke
 scripts/omni run monitor --host <robot-ip>
 scripts/omni run teleop
 ```
@@ -223,38 +200,42 @@ Example:
 scripts/omni run sim headless:=true
 ```
 
-#### `run real --phase <number>`
+#### `run real`
 
-Launches the selected real-hardware rollout slice.
+Launches a named real-hardware runtime profile.
 
-Current supported phases:
+Current supported profiles:
 
-- `2`
-- `3`
+- `current`: default alias for the current supported real robot runtime
+- `operator`: gateway, native vision, preview, bounded teleop, and recording
+- `perception`: native vision and recording without the gateway operator surface
+- `legacy-teleop`: older keyboard teleop path kept for hardware diagnostics
 
 Examples:
 
 ```bash
-scripts/omni run real --phase 2
-scripts/omni run real --phase 2 smoke
-scripts/omni run real --phase 2 bringup camera_device:=/dev/video11
-scripts/omni run real --phase 3
-scripts/omni run real --phase 3 --record-run demo_001
+scripts/omni run real
+scripts/omni run real smoke
+scripts/omni run real verify
+scripts/omni run real --record-run demo_001
+scripts/omni run real --profile perception --record-run demo_001
+scripts/omni run real --profile legacy-teleop operator camera_device:=/dev/video11
 ```
 
-If `--phase` is omitted, the command selects the latest stable real phase and
-prints which one it chose.
+If `--profile` is omitted, the command selects `current`. Today `current`
+resolves to `operator`; that alias can move as the supported real runtime
+changes.
 
-Phase `3` defaults to foreground `bringup` with native vision and the operator
-gateway enabled. Phase `2` retains its background bringup plus keyboard teleop
-default.
+The `operator` and `perception` profiles default to foreground `bringup`.
+`legacy-teleop` defaults to its older background bringup plus keyboard teleop
+mode.
 
 Recording flags can be used with modes that launch real bringup:
 
 ```bash
-scripts/omni run real --phase 3 --record
-scripts/omni run real --phase 3 --record-run demo_001
-scripts/omni run real --phase 3 --record-run demo_001 --record-out runs/demo_001
+scripts/omni run real --record
+scripts/omni run real --record-run demo_001
+scripts/omni run real --record-run demo_001 --record-out runs/demo_001
 ```
 
 The recorder is an optional sidecar. It writes a local bundle containing
@@ -266,17 +247,11 @@ laptop download, inspection, evidence annotation, and a simple local HTML report
 are available through `scripts/omni runs`. Rich hosted review and cloud
 synchronization remain later work.
 
-Why phases exist:
-
-- the real stack is being completed incrementally
-- different rollout slices may need different launch composition and checks
-- the front door stays stable even as later phases are added
-
 #### Real run modes
 
 `operator`
 
-- starts the phase `2` bringup in the background
+- starts the `legacy-teleop` bringup in the background
 - opens keyboard teleop in the current terminal
 
 `smoke`
@@ -287,7 +262,7 @@ Why phases exist:
 
 `bringup`
 
-- launches only the phase bringup in the foreground
+- launches only the selected profile bringup in the foreground
 
 `teleop`
 
@@ -299,13 +274,11 @@ Why phases exist:
 
 Suggestions:
 
-- use `up sim` or `up real` for the normal build-then-run path
-- use `run real --phase 2` for interactive operator testing
-- use `run real --phase 2 smoke` for a quick integrated health check
-- use `run real --phase 2 bringup` when debugging launch or runtime issues
-- use `run real --phase 3` on the robot for the operator-integrated demo
-- add `--record-run <run_id>` to Phase `3` when the run should produce a local
-  perception bundle
+- run `scripts/omni build ros` before `run` when code or launch wiring changed
+- use `run real` on the robot for the current supported real runtime
+- use `run real smoke` for a quick integrated health check
+- use `run real --profile legacy-teleop operator` for the old keyboard teleop path
+- add `--record-run <run_id>` when the run should produce a local perception bundle
 
 #### `run monitor`
 
@@ -363,12 +336,12 @@ scripts/omni check real-perception
 Use this when:
 
 - the real graph is already running
-- you want to confirm the Phase `2` teleop/perception boundary topics
+- you want to confirm the legacy teleop/perception boundary topics
 - you want a non-driving verification helper
 
 Suggestion:
 
-- pair this with `run real --phase 2 smoke` for a quick end-to-end check
+- pair this with `run real --profile legacy-teleop smoke` for a quick end-to-end check
 - use `OMNISEER_REQUIRE_DETECTIONS=1` when detections must be present for the run to count
 
 ### `doctor`
@@ -470,29 +443,29 @@ Use this for:
 - simulation bringup changes
 - boundary-topic or launch-structure debugging
 
-### Real Phase `2` operator check
+### Legacy Teleop Check
 
 ```bash
-scripts/omni run real --phase 2 smoke
+scripts/omni run real --profile legacy-teleop smoke
 ```
 
 Use this for:
 
-- the quickest integrated Phase `2` health check
+- the quickest legacy teleop health check
 - validating teleop and perception boundaries before a longer session
 
-### Real Phase `3` operator demo
+### Current Real Operator Demo
 
 Robot:
 
 ```bash
-scripts/omni run real --phase 3
+scripts/omni run real
 ```
 
 Robot with local run-bundle recording:
 
 ```bash
-scripts/omni run real --phase 3 --record-run demo_001
+scripts/omni run real --record-run demo_001
 ```
 
 Laptop:
@@ -504,7 +477,7 @@ scripts/omni run monitor --host <robot-ip>
 Active zero-motion acceptance verification from a second robot shell:
 
 ```bash
-OMNISEER_REQUIRE_DETECTIONS=1 scripts/omni run real --phase 3 verify
+OMNISEER_REQUIRE_DETECTIONS=1 scripts/omni run real verify
 ```
 
 Use this for the integrated gateway status, preview, perception, and bounded
@@ -537,7 +510,11 @@ Use this for:
 
 The new front door keeps a compatibility path for existing habits:
 
-- `scripts/phase2_real.sh` delegates to `scripts/omni run real --phase 2`
+- `scripts/omni up <profile>` still builds ROS before launching and emits a
+  deprecation warning
+- `scripts/omni run real --phase 2` maps to `--profile legacy-teleop`
+- `scripts/omni run real --phase 3` maps to `--profile operator`
+- `scripts/phase2_real.sh` delegates to `scripts/omni run real --profile legacy-teleop`
 - `scripts/check_real_teleop_perception.sh` delegates to `scripts/omni check real-perception`
 
 Those compatibility wrappers exist to reduce churn. New docs and day-to-day usage

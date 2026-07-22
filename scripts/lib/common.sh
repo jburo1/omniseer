@@ -68,12 +68,16 @@ omni_vision_bridge_deps_available() {
   find /usr /opt -name 'librknnrt.so*' -print -quit 2>/dev/null | grep -q .
 }
 
-omni_latest_stable_real_phase() {
-  printf '%s\n' "${OMNISEER_LATEST_STABLE_REAL_PHASE:-2}"
+omni_default_real_profile() {
+  printf '%s\n' "${OMNISEER_DEFAULT_REAL_PROFILE:-current}"
 }
 
-omni_supported_real_phases() {
-  printf '%s\n' "2" "3"
+omni_current_real_profile() {
+  printf '%s\n' "${OMNISEER_CURRENT_REAL_PROFILE:-operator}"
+}
+
+omni_supported_real_profiles() {
+  printf '%s\n' "current" "operator" "perception" "legacy-teleop"
 }
 
 omni_ros_dep_paths_core() {

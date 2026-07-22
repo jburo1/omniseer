@@ -13,22 +13,28 @@ source "${script_dir}/../lib/ros.sh"
 usage() {
   cat <<'EOF'
 Usage:
-  scripts/omni run real [--phase <number>] [recording flags] [--mode <mode>] [mode] [launch args...]
+  scripts/omni run real [--profile <name>] [recording flags] [--mode <mode>] [mode] [launch args...]
+
+Profiles:
+  current        Default alias for the current supported real robot runtime.
+  operator       Gateway, native vision, preview, bounded teleop, and recording.
+  perception     Native vision and recording without the gateway operator surface.
+  legacy-teleop  Older keyboard teleop path kept for hardware diagnostics.
 
 Modes:
-  operator  Phase 2 only: start bringup, then open keyboard teleop.
-  smoke    Start bringup, run the phase verifier, then stop.
-  bringup  Start only the selected real bringup in the foreground.
+  bringup  Start the selected real profile in the foreground.
+  smoke    Start the selected profile, run its verifier, then stop.
+  verify   Run the selected profile verifier against an existing ROS graph.
   teleop   Start only the stamped keyboard teleop publisher.
-  verify   Run the phase verifier against an existing ROS graph.
+  operator  Legacy-teleop profile only: start bringup, then open keyboard teleop.
 
 Examples:
-  scripts/omni run real --phase 2
-  scripts/omni run real --phase 2 smoke
-  scripts/omni run real --phase 2 bringup camera_device:=/dev/video11
-  scripts/omni run real --phase 2 operator micro_ros_serial_device:=/dev/serial/by-id/usb-Teensyduino_USB_Serial_16634450-if00
-  scripts/omni run real --phase 3
-  scripts/omni run real --phase 3 --record-run demo_001
+  scripts/omni run real
+  scripts/omni run real smoke
+  scripts/omni run real verify
+  scripts/omni run real --record-run demo_001
+  scripts/omni run real --profile perception --record-run demo_001
+  scripts/omni run real --profile legacy-teleop operator micro_ros_serial_device:=/dev/serial/by-id/usb-Teensyduino_USB_Serial_16634450-if00
 
 Recording flags:
   --record                         Record a timestamped perception run bundle.
@@ -41,7 +47,7 @@ Recording flags:
 EOF
 }
 
-operator_launch_args() {
+legacy_teleop_launch_args() {
   printf '%s\n' \
     "start_nav:=false" \
     "start_slam:=false" \
@@ -56,7 +62,11 @@ operator_launch_args() {
     "classes_path:=__from_config__"
 }
 
-phase3_launch_args() {
+perception_launch_args() {
+  legacy_teleop_launch_args
+}
+
+operator_launch_args() {
   printf '%s\n' \
     "start_nav:=false" \
     "start_slam:=false" \
@@ -149,26 +159,31 @@ run_verify() {
   exec "${script_dir}/../check/real_teleop_perception.sh"
 }
 
-run_operator_bringup() {
+run_profile_bringup() {
+  local launch_args_producer="$1"
+  shift
   local extra_args=("$@")
   local launch_args=()
-  omni_read_lines_into_array launch_args operator_launch_args
+  omni_read_lines_into_array launch_args "${launch_args_producer}"
   append_recording_launch_args launch_args
   omni_source_ros_workspace
   require_vision_bridge_package "${launch_args[@]}" "${extra_args[@]}"
   exec ros2 launch bringup real.launch.py "${launch_args[@]}" "${extra_args[@]}"
 }
 
-run_background_operator_bringup() {
+run_background_profile_bringup() {
+  local profile_name="$1"
+  local launch_args_producer="$2"
+  shift 2
   local extra_args=("$@")
   local launch_args=()
-  omni_read_lines_into_array launch_args operator_launch_args
+  omni_read_lines_into_array launch_args "${launch_args_producer}"
   append_recording_launch_args launch_args
   omni_source_ros_workspace
   require_vision_bridge_package "${launch_args[@]}" "${extra_args[@]}"
 
   local bringup_delay_sec="${OMNISEER_BRINGUP_DELAY_SEC:-5}"
-  local bringup_log="${OMNISEER_BRINGUP_LOG:-/tmp/omniseer-operator-bringup-$(date -u +%Y%m%dT%H%M%SZ).log}"
+  local bringup_log="${OMNISEER_BRINGUP_LOG:-/tmp/omniseer-${profile_name}-bringup-$(date -u +%Y%m%dT%H%M%SZ).log}"
 
   ros2 launch bringup real.launch.py "${launch_args[@]}" "${extra_args[@]}" >"${bringup_log}" 2>&1 &
   bringup_pid=$!
@@ -192,8 +207,8 @@ cleanup_background_bringup() {
   fi
 }
 
-run_operator_default() {
-  run_background_operator_bringup "$@"
+run_legacy_teleop_default() {
+  run_background_profile_bringup "legacy-teleop" legacy_teleop_launch_args "$@"
   trap cleanup_background_bringup EXIT INT TERM
   omni_info "Starting keyboard teleop in this terminal"
   omni_info "Use q or Ctrl-C to stop teleop; the background bringup will be cleaned up"
@@ -201,71 +216,41 @@ run_operator_default() {
     --ros-args -p stamped:=true -r cmd_vel:=/cmd_vel_keyboard
 }
 
-run_operator_smoke() {
-  run_background_operator_bringup "$@"
+run_legacy_teleop_smoke() {
+  run_background_profile_bringup "legacy-teleop" legacy_teleop_launch_args "$@"
   trap cleanup_background_bringup EXIT INT TERM
   "${script_dir}/../check/real_teleop_perception.sh"
 }
 
-run_phase3_bringup() {
-  local extra_args=("$@")
-  local launch_args=()
-  omni_read_lines_into_array launch_args phase3_launch_args
-  append_recording_launch_args launch_args
-  omni_source_ros_workspace
-  require_vision_bridge_package "${launch_args[@]}" "${extra_args[@]}"
-  exec ros2 launch bringup real.launch.py "${launch_args[@]}" "${extra_args[@]}"
+run_integrated_verify() {
+  "${script_dir}/../check/real_operator.sh"
 }
 
-run_background_phase3_bringup() {
-  local extra_args=("$@")
-  local launch_args=()
-  omni_read_lines_into_array launch_args phase3_launch_args
-  append_recording_launch_args launch_args
-  omni_source_ros_workspace
-  require_vision_bridge_package "${launch_args[@]}" "${extra_args[@]}"
-
-  local bringup_delay_sec="${OMNISEER_BRINGUP_DELAY_SEC:-5}"
-  local bringup_log="${OMNISEER_BRINGUP_LOG:-/tmp/omniseer-phase3-bringup-$(date -u +%Y%m%dT%H%M%SZ).log}"
-
-  ros2 launch bringup real.launch.py "${launch_args[@]}" "${extra_args[@]}" >"${bringup_log}" 2>&1 &
-  bringup_pid=$!
-
-  sleep "${bringup_delay_sec}"
-
-  if ! kill -0 "${bringup_pid}" 2>/dev/null; then
-    omni_error "bringup exited early; recent log output follows"
-    tail -n 40 "${bringup_log}" >&2 || true
-    exit 1
-  fi
-
-  omni_info "bringup running with pid ${bringup_pid}"
-  omni_info "bringup log: ${bringup_log}"
-}
-
-run_phase3_verify() {
-  "${script_dir}/../check/phase3_operator.sh"
-}
-
-run_phase3_smoke() {
-  run_background_phase3_bringup "$@"
+run_operator_smoke() {
+  run_background_profile_bringup "operator" operator_launch_args "$@"
   trap cleanup_background_bringup EXIT INT TERM
-  run_phase3_verify
+  run_integrated_verify
 }
 
-run_real_phase_2() {
+run_perception_smoke() {
+  run_background_profile_bringup "perception" perception_launch_args "$@"
+  trap cleanup_background_bringup EXIT INT TERM
+  "${script_dir}/../check/real_teleop_perception.sh"
+}
+
+run_real_profile_legacy_teleop() {
   local mode="$1"
   shift
 
   case "${mode}" in
     operator|all)
-      run_operator_default "$@"
+      run_legacy_teleop_default "$@"
       ;;
     smoke)
-      run_operator_smoke "$@"
+      run_legacy_teleop_smoke "$@"
       ;;
     bringup)
-      run_operator_bringup "$@"
+      run_profile_bringup legacy_teleop_launch_args "$@"
       ;;
     teleop)
       require_no_recording
@@ -284,32 +269,89 @@ run_real_phase_2() {
   esac
 }
 
-run_real_phase_3() {
+run_real_profile_operator() {
   local mode="$1"
   shift
 
   case "${mode}" in
     bringup|demo|all)
-      run_phase3_bringup "$@"
+      run_profile_bringup operator_launch_args "$@"
       ;;
     smoke)
-      run_phase3_smoke "$@"
+      run_operator_smoke "$@"
       ;;
     verify|check)
       require_no_recording
       omni_source_ros_workspace
-      run_phase3_verify
+      run_integrated_verify
+      ;;
+    teleop)
+      require_no_recording
+      run_teleop
       ;;
     help|-h|--help)
       usage
       ;;
     *)
-      omni_die "unknown Phase 3 real mode: ${mode}"
+      omni_die "unknown real mode: ${mode}"
       ;;
   esac
 }
 
-resolved_phase=""
+run_real_profile_perception() {
+  local mode="$1"
+  shift
+
+  case "${mode}" in
+    bringup|demo|all)
+      run_profile_bringup perception_launch_args "$@"
+      ;;
+    smoke)
+      run_perception_smoke "$@"
+      ;;
+    verify|check)
+      require_no_recording
+      omni_source_ros_workspace
+      "${script_dir}/../check/real_teleop_perception.sh"
+      ;;
+    teleop)
+      require_no_recording
+      run_teleop
+      ;;
+    help|-h|--help)
+      usage
+      ;;
+    *)
+      omni_die "unknown real mode: ${mode}"
+      ;;
+  esac
+}
+
+resolve_real_profile() {
+  local profile="$1"
+  case "${profile}" in
+    current)
+      local current_profile
+      current_profile="$(omni_current_real_profile)"
+      [[ "${current_profile}" != "current" ]] || omni_die "OMNISEER_CURRENT_REAL_PROFILE must not be current"
+      resolve_real_profile "${current_profile}"
+      ;;
+    operator|integrated|operator-integrated)
+      printf '%s\n' "operator"
+      ;;
+    perception)
+      printf '%s\n' "perception"
+      ;;
+    legacy-teleop|legacy|phase2)
+      printf '%s\n' "legacy-teleop"
+      ;;
+    *)
+      omni_die "unsupported real profile ${profile}; supported profiles: $(omni_supported_real_profiles | paste -sd, -)"
+      ;;
+  esac
+}
+
+requested_profile=""
 mode=""
 record_enabled=false
 record_run_id=""
@@ -320,9 +362,27 @@ record_classes=""
 record_overwrite="false"
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --profile)
+      [[ $# -ge 2 ]] || omni_die "--profile requires a profile name"
+      [[ -z "${requested_profile}" ]] || omni_die "real profile specified more than once"
+      requested_profile="$2"
+      shift 2
+      ;;
     --phase)
       [[ $# -ge 2 ]] || omni_die "--phase requires a numeric argument"
-      resolved_phase="$2"
+      [[ -z "${requested_profile}" ]] || omni_die "use either --profile or --phase, not both"
+      case "$2" in
+        2)
+          requested_profile="legacy-teleop"
+          ;;
+        3)
+          requested_profile="operator"
+          ;;
+        *)
+          omni_die "unsupported real phase $2; use --profile instead"
+          ;;
+      esac
+      omni_warn "--phase is deprecated; use --profile ${requested_profile}"
       shift 2
       ;;
     --mode)
@@ -384,23 +444,31 @@ if [[ $# -gt 0 ]] && [[ "$1" != *=* && "$1" != --* ]]; then
   shift
 fi
 
-if [[ -z "${resolved_phase}" ]]; then
-  resolved_phase="$(omni_latest_stable_real_phase)"
-  omni_info "No real phase specified; defaulting to latest stable phase ${resolved_phase}"
-else
-  omni_info "Using real phase ${resolved_phase}"
+if [[ -z "${requested_profile}" ]]; then
+  requested_profile="$(omni_default_real_profile)"
 fi
 
-case "${resolved_phase}" in
-  2)
+resolved_profile="$(resolve_real_profile "${requested_profile}")"
+if [[ "${requested_profile}" == "current" ]]; then
+  omni_info "Using real profile current (${resolved_profile})"
+else
+  omni_info "Using real profile ${resolved_profile}"
+fi
+
+case "${resolved_profile}" in
+  legacy-teleop)
     mode="${mode:-operator}"
-    run_real_phase_2 "${mode}" "$@"
+    run_real_profile_legacy_teleop "${mode}" "$@"
     ;;
-  3)
+  operator)
     mode="${mode:-bringup}"
-    run_real_phase_3 "${mode}" "$@"
+    run_real_profile_operator "${mode}" "$@"
+    ;;
+  perception)
+    mode="${mode:-bringup}"
+    run_real_profile_perception "${mode}" "$@"
     ;;
   *)
-    omni_die "unsupported real phase ${resolved_phase}; supported phases: $(omni_supported_real_phases | paste -sd, -)"
+    omni_die "unsupported real profile ${resolved_profile}"
     ;;
 esac

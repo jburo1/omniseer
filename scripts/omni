@@ -29,7 +29,6 @@ Usage:
 Commands:
   setup   Environment and dependency helpers.
   build   Local build helpers. Defaults to all available artifacts.
-  up      Build the needed workspace, then run a profile.
   test    Targeted local verification helpers. Defaults to ROS.
   run     Operator-facing run commands for sim, real, monitor, and teleop.
   runs    Inspect, list, and retrieve perception run bundles.
@@ -45,8 +44,8 @@ Examples:
   scripts/omni setup ros-deps
   scripts/omni doctor
   scripts/omni build
-  scripts/omni up sim headless:=true
-  scripts/omni up real --phase 3
+  scripts/omni run sim headless:=true
+  scripts/omni run real
   scripts/omni runs list
   scripts/omni runs pull demo_001
   scripts/omni runs inspect runs/imported/demo_001
@@ -66,20 +65,22 @@ run_usage() {
   cat <<'EOF'
 Usage:
   scripts/omni run sim [launch args...]
-  scripts/omni run real [--phase <number>] [recording flags] [--mode <mode>] [mode] [launch args...]
+  scripts/omni run real [--profile <name>] [recording flags] [--mode <mode>] [mode] [launch args...]
   scripts/omni run monitor [monitor args...]
   scripts/omni run teleop
 
-Real modes:
-  operator  Phase 2 only: start bringup, then open keyboard teleop.
-  smoke    Start bringup, run the phase verifier, then stop.
-  bringup  Start only the phase bringup in the foreground.
-  teleop   Start only the stamped keyboard teleop publisher.
-  verify   Run only the passive verifier against an existing ROS graph.
+Real profiles:
+  current        Default alias for the current supported real robot runtime.
+  operator       Gateway, native vision, preview, bounded teleop, and recording.
+  perception     Native vision and recording without the gateway operator surface.
+  legacy-teleop  Older keyboard teleop path kept for hardware diagnostics.
 
-Phase defaults:
-  2  operator
-  3  bringup
+Real modes:
+  bringup   Start the selected real profile in the foreground.
+  smoke     Start the selected profile, run its verifier, then stop.
+  verify    Run the selected profile verifier against an existing ROS graph.
+  teleop    Start only the stamped keyboard teleop publisher.
+  operator  Legacy-teleop profile only: start bringup, then open keyboard teleop.
 
 Recording flags:
   --record
@@ -134,7 +135,7 @@ env_usage() {
 Usage:
   scripts/omni env
 
-Shows resolved repo, ROS, workspace, and phase defaults.
+Shows resolved repo, ROS, workspace, and real profile defaults.
 EOF
 }
 
@@ -146,8 +147,9 @@ ros_setup=$(omni_default_ros_setup)
 ws_setup=$(omni_default_ws_setup)
 uros_ws_setup=$(omni_default_uros_ws_setup)
 ros_ws_root=$(omni_ros_ws_root)
-latest_stable_real_phase=$(omni_latest_stable_real_phase)
-supported_real_phases=$(omni_supported_real_phases | paste -sd, -)
+default_real_profile=$(omni_default_real_profile)
+current_real_profile=$(omni_current_real_profile)
+supported_real_profiles=$(omni_supported_real_profiles | paste -sd, -)
 EOF
 }
 
@@ -215,6 +217,7 @@ EOF
     esac
     ;;
   up)
+    omni_warn "'scripts/omni up' is deprecated; run 'scripts/omni build ros' then 'scripts/omni run sim' or 'scripts/omni run real'"
     exec "${script_dir}/up.sh" "$@"
     ;;
   test)

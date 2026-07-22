@@ -2,16 +2,16 @@
 
 _Status: planned; target-hardware verification record pending_
 
-This checklist verifies the minimum integrated real-robot slice required by
-Phase 2:
+This checklist verifies the minimum integrated real-robot slice kept as the
+`legacy-teleop` profile:
 
 - keyboard teleop reaches `/mecanum_drive_controller/reference`
 - the native vision bridge publishes `/yolo/detections`
 - the native vision bridge publishes `/vision/perf`
 - teleop and perception run at the same time
 
-Do not mark Phase 2 complete until one target-hardware run has been recorded
-in the verification record at the end of this document.
+Do not count the legacy teleop path as target-verified until one target-hardware
+run has been recorded in the verification record at the end of this document.
 
 ## Preconditions
 
@@ -71,22 +71,22 @@ Expected launch behavior:
 For the supported repo-local entrypoint, use:
 
 ```bash
-scripts/omni run real --phase 2
+scripts/omni run real --profile legacy-teleop
 ```
 
 Other useful modes:
 
-- `scripts/omni run real --phase 2 smoke`
-  - start the Phase 2 bringup, run the passive verifier, then stop
-- `scripts/omni run real --phase 2 bringup`
-  - run only the Phase 2 bringup
+- `scripts/omni run real --profile legacy-teleop smoke`
+  - start the legacy teleop bringup, run the passive verifier, then stop
+- `scripts/omni run real --profile legacy-teleop bringup`
+  - run only the legacy teleop bringup
 - `scripts/omni run teleop`
   - run only the stamped keyboard teleop publisher
 - `scripts/omni check real-perception`
   - run only the passive verifier against an existing ROS graph
 
-The legacy `scripts/phase2_real.sh` helper still delegates to the same Phase 2
-implementation for compatibility.
+The legacy `scripts/phase2_real.sh` helper still delegates to the same
+`legacy-teleop` implementation for compatibility.
 
 ## Teleop Command
 

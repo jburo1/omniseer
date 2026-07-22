@@ -48,7 +48,7 @@ workflows:
 scripts/omni build ros
 scripts/omni test ros
 scripts/omni run sim
-scripts/omni run real --phase 2
+scripts/omni run real
 scripts/omni check real-perception
 scripts/omni flash teensy
 scripts/omni docs build

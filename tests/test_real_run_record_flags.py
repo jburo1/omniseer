@@ -26,8 +26,6 @@ class RealRunRecordFlagsTests(unittest.TestCase):
             result = subprocess.run(
                 [
                     "scripts/run/real.sh",
-                    "--phase",
-                    "3",
                     "--record-run",
                     "demo_001",
                     "bringup",
@@ -42,6 +40,7 @@ class RealRunRecordFlagsTests(unittest.TestCase):
             )
 
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("start_gateway:=true", result.stdout)
         self.assertIn("start_experiment_recording:=true", result.stdout)
         self.assertIn("experiment_run_id:=demo_001", result.stdout)
         self.assertIn("pipeline_telemetry_path:=runs/demo_001/pipeline_telemetry.jsonl", result.stdout)
@@ -65,8 +64,8 @@ class RealRunRecordFlagsTests(unittest.TestCase):
             result = subprocess.run(
                 [
                     "scripts/run/real.sh",
-                    "--phase",
-                    "3",
+                    "--profile",
+                    "perception",
                     "--record-run",
                     "demo_001",
                     "--record-out",
@@ -89,6 +88,7 @@ class RealRunRecordFlagsTests(unittest.TestCase):
             )
 
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("start_gateway:=false", result.stdout)
         self.assertIn("start_experiment_recording:=true", result.stdout)
         self.assertIn("experiment_run_id:=demo_001", result.stdout)
         self.assertIn("experiment_out_dir:=/tmp/demo_001", result.stdout)
@@ -100,7 +100,7 @@ class RealRunRecordFlagsTests(unittest.TestCase):
 
     def test_record_flags_rejected_for_verify_mode(self) -> None:
         result = subprocess.run(
-            ["scripts/run/real.sh", "--phase", "3", "--record-run", "demo_001", "verify"],
+            ["scripts/run/real.sh", "--record-run", "demo_001", "verify"],
             cwd=_repo_root(),
             check=False,
             capture_output=True,

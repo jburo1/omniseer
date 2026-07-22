@@ -1,9 +1,8 @@
 # Operator-Integrated Real Demo
 
-_Status: Phase 3 implementation added; target-hardware verification record pending_
+_Status: operator real profile implemented; target-hardware verification record pending_
 
-This checklist verifies the Phase 3 slice between Phase 2 and the run
-bundle recorder:
+This checklist verifies the current operator real profile:
 
 - real native perception publishes gateway-visible vision status
 - preview can be toggled from the laptop app
@@ -17,7 +16,7 @@ window rather than embedding in the Tk window.
 
 ## Preconditions
 
-- Phase 2 has been run successfully on target hardware.
+- The legacy teleop profile has been run successfully on target hardware.
 - The robot and laptop workspaces have been built with `scripts/omni build ros`.
 - The laptop can reach the robot gateway gRPC port.
 - The laptop has GStreamer tools and SRT/H.264 decode plugins installed for
@@ -26,19 +25,20 @@ window rather than embedding in the Tk window.
 
 ## Robot Command
 
-From the repository root on the robot, launch the Phase 3 stack. The phase
-profile enables the gateway and native vision, disables navigation/SLAM/RF2O,
-and resolves model paths from `vision_bridge.real.paths.yaml`:
+From the repository root on the robot, launch the current real stack. Today the
+`current` profile resolves to `operator`, which enables the gateway and native
+vision, disables navigation/SLAM/RF2O, and resolves model paths from
+`vision_bridge.real.paths.yaml`:
 
 ```bash
-scripts/omni run real --phase 3
+scripts/omni run real
 ```
 
-To record a local perception run bundle during the same Phase 3 bringup, enable
+To record a local perception run bundle during the same real bringup, enable
 the experiment recorder from the same front door:
 
 ```bash
-scripts/omni run real --phase 3 --record-run demo_001
+scripts/omni run real --record-run demo_001
 ```
 
 This starts an optional `omniseer_experiments` sidecar that subscribes to
@@ -86,10 +86,10 @@ differs from the defaults. Generate a simple local HTML report with
 `scripts/omni runs report runs/imported/demo_001`. Cloud synchronization and
 hosted review remain later slices.
 
-Pass launch overrides after the phase, for example:
+Pass launch overrides after the mode, for example:
 
 ```bash
-scripts/omni run real --phase 3 bringup camera_device:=/dev/video12
+scripts/omni run real bringup camera_device:=/dev/video12
 ```
 
 The default hardware split is inference on `rkisp_selfpath` (`/dev/video12`)
@@ -152,11 +152,11 @@ Space: stop
 
 ## Verification Commands
 
-Before driving, a second robot shell can run the Phase 3 acceptance checks
+Before driving, a second robot shell can run the operator acceptance checks
 against the existing graph:
 
 ```bash
-OMNISEER_REQUIRE_DETECTIONS=1 scripts/omni run real --phase 3 verify
+OMNISEER_REQUIRE_DETECTIONS=1 scripts/omni run real verify
 ```
 
 This requires live encoder, wheel-odometry, lidar, vision, and detection
@@ -180,7 +180,7 @@ Expected observations:
 - laptop status shows `vision` available and fresh
 - laptop overlay command reports detection freshness and source-space detections when targets are visible
 - overlay viewer opens live preview, shows a telemetry HUD, and draws boxes when detections are present
-- Phase 3 verification reports `ok: overlay viewer consumed preview`
+- operator verification reports `ok: overlay viewer consumed preview`
 - preview state changes to `running` when enabled
 - plain preview viewer displays the SRT stream when used as a fallback
 - teleop state changes to `enabled` after explicit enable
@@ -197,7 +197,7 @@ Expected observations:
 | Vision unavailable in GUI | `/vision/perf` not reaching gateway | Check `ros2 topic echo --once /vision/perf` on the robot |
 | Teleop command rejected as disabled | Teleop was not enabled | Press Enable before directional commands |
 | Teleop command rejected as out of bounds | Linear or angular step exceeds gateway limits | Lower the GUI step value or tune gateway bounds intentionally |
-| Phase 3 is rejected by the script | Checkout predates the phase profile | Update the checkout and confirm `scripts/omni env` lists `2,3` |
+| Profile is rejected by the script | Checkout predates the profile frontdoor | Update the checkout and confirm `scripts/omni env` lists the expected real profiles |
 
 ## Verification Record
 
@@ -205,7 +205,7 @@ Expected observations:
 - Operator:
 - Robot / SBC:
 - Laptop:
-- Robot command (`scripts/omni run real --phase 3` plus overrides):
+- Robot command (`scripts/omni run real` plus overrides):
 - Recording enabled / run id:
 - Laptop command (`scripts/omni run monitor` plus host):
 - Preview observed:
