@@ -236,6 +236,11 @@ Recording flags can be used with modes that launch real bringup:
 scripts/omni run real --record
 scripts/omni run real --record-run demo_001
 scripts/omni run real --record-run demo_001 --record-out runs/demo_001
+scripts/omni run real --record-run demo_001 \
+  --record-container-image-ref ghcr.io/acme/omniseer:robot-v2 \
+  --record-container-image-digest sha256:<digest> \
+  --record-experiment-config experiments/container-smoke.yaml \
+  --record-experiment-parameter profile=operator
 ```
 
 The recorder is an optional sidecar. It writes a local bundle containing
@@ -246,6 +251,11 @@ The recorder is an optional sidecar. It writes a local bundle containing
 laptop download, inspection, evidence annotation, and a simple local HTML report
 are available through `scripts/omni runs`. Rich hosted review and cloud
 synchronization remain later work.
+
+Containerized runs can provide the same provenance through
+`OMNISEER_CONTAINER_IMAGE_REF`, `OMNISEER_CONTAINER_IMAGE_DIGEST`,
+`OMNISEER_EXPERIMENT_CONFIG`, and `OMNISEER_EXPERIMENT_PARAMETERS`. Experiment
+parameters may be a JSON object or comma/space-separated `key=value` pairs.
 
 #### Real run modes
 

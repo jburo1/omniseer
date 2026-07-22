@@ -43,6 +43,16 @@ Recording flags:
   --record-duration-sec <seconds>  Stop recorder after a duration; 0 records until launch shutdown.
   --record-notes <text>            Store notes in manifest.yaml.
   --record-classes <text>          Store configured class names in manifest.yaml.
+  --record-container-image-ref <ref>
+                                   Store container image reference in manifest.yaml.
+  --record-container-image-digest <digest>
+                                   Store container image digest in manifest.yaml.
+  --record-experiment-config <text>
+                                   Store experiment config identifier or path in manifest.yaml.
+  --record-experiment-parameters <items>
+                                   Store experiment parameters as JSON or key=value pairs.
+  --record-experiment-parameter <key=value>
+                                   Store one experiment parameter; may be repeated.
   --record-overwrite               Replace an existing output directory.
 EOF
 }
@@ -122,6 +132,38 @@ append_recording_launch_args() {
 
   if [[ -n "${record_classes}" ]]; then
     target_args+=("experiment_classes:=${record_classes}")
+  fi
+
+  local container_image_ref="${record_container_image_ref:-${OMNISEER_CONTAINER_IMAGE_REF:-}}"
+  local container_image_digest="${record_container_image_digest:-${OMNISEER_CONTAINER_IMAGE_DIGEST:-}}"
+  local experiment_config="${record_experiment_config:-${OMNISEER_EXPERIMENT_CONFIG:-}}"
+  local experiment_parameters="${OMNISEER_EXPERIMENT_PARAMETERS:-}"
+  local parameter_item
+  if [[ ${#record_experiment_parameters[@]} -gt 0 ]]; then
+    experiment_parameters=""
+    for parameter_item in "${record_experiment_parameters[@]}"; do
+      if [[ -z "${experiment_parameters}" ]]; then
+        experiment_parameters="${parameter_item}"
+      else
+        experiment_parameters="${experiment_parameters},${parameter_item}"
+      fi
+    done
+  fi
+
+  if [[ -n "${container_image_ref}" ]]; then
+    target_args+=("experiment_container_image_ref:=${container_image_ref}")
+  fi
+
+  if [[ -n "${container_image_digest}" ]]; then
+    target_args+=("experiment_container_image_digest:=${container_image_digest}")
+  fi
+
+  if [[ -n "${experiment_config}" ]]; then
+    target_args+=("experiment_config:=${experiment_config}")
+  fi
+
+  if [[ -n "${experiment_parameters}" ]]; then
+    target_args+=("experiment_parameters:=${experiment_parameters}")
   fi
 }
 
@@ -359,6 +401,10 @@ record_out_dir=""
 record_duration_sec="0"
 record_notes=""
 record_classes=""
+record_container_image_ref=""
+record_container_image_digest=""
+record_experiment_config=""
+record_experiment_parameters=()
 record_overwrite="false"
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -422,6 +468,36 @@ while [[ $# -gt 0 ]]; do
       [[ $# -ge 2 ]] || omni_die "--record-classes requires text"
       record_enabled=true
       record_classes="$2"
+      shift 2
+      ;;
+    --record-container-image-ref)
+      [[ $# -ge 2 ]] || omni_die "--record-container-image-ref requires an image reference"
+      record_enabled=true
+      record_container_image_ref="$2"
+      shift 2
+      ;;
+    --record-container-image-digest)
+      [[ $# -ge 2 ]] || omni_die "--record-container-image-digest requires an image digest"
+      record_enabled=true
+      record_container_image_digest="$2"
+      shift 2
+      ;;
+    --record-experiment-config)
+      [[ $# -ge 2 ]] || omni_die "--record-experiment-config requires text"
+      record_enabled=true
+      record_experiment_config="$2"
+      shift 2
+      ;;
+    --record-experiment-parameters)
+      [[ $# -ge 2 ]] || omni_die "--record-experiment-parameters requires JSON or key=value pairs"
+      record_enabled=true
+      record_experiment_parameters+=("$2")
+      shift 2
+      ;;
+    --record-experiment-parameter)
+      [[ $# -ge 2 ]] || omni_die "--record-experiment-parameter requires key=value"
+      record_enabled=true
+      record_experiment_parameters+=("$2")
       shift 2
       ;;
     --record-overwrite)

@@ -32,6 +32,10 @@ def _config(out_dir: Path, *, overwrite: bool = False) -> RunBundleConfig:
         clip_model_path="/models/clip.rknn",
         clip_vocab_path="/models/clip_vocab.bpe",
         classes_path="/models/classes.txt",
+        container_image_ref="ghcr.io/acme/omniseer:robot-v2",
+        container_image_digest="sha256:0123456789abcdef",
+        experiment_config="experiments/container-smoke.yaml",
+        experiment_parameters={"camera": "/dev/video11", "profile": "operator"},
     )
 
 
@@ -109,6 +113,14 @@ class RunBundleWriterTests(unittest.TestCase):
                 self.assertIn('vision_params_file: "/configs/vision.yaml"', manifest)
                 self.assertIn('clip_vocab_path: "/models/clip_vocab.bpe"', manifest)
                 self.assertIn('classes_path: "/models/classes.txt"', manifest)
+                self.assertIn("container:", manifest)
+                self.assertIn('image_ref: "ghcr.io/acme/omniseer:robot-v2"', manifest)
+                self.assertIn('image_digest: "sha256:0123456789abcdef"', manifest)
+                self.assertIn("experiment:", manifest)
+                self.assertIn('config: "experiments/container-smoke.yaml"', manifest)
+                self.assertIn("parameters:", manifest)
+                self.assertIn('camera: "/dev/video11"', manifest)
+                self.assertIn('profile: "operator"', manifest)
                 self.assertIn('- "chair"', manifest)
                 self.assertNotIn("verified_prerequisite", manifest)
             finally:

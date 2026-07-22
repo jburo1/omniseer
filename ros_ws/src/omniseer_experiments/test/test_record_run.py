@@ -1,4 +1,5 @@
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -185,6 +186,59 @@ class RecordRunConversionTests(unittest.TestCase):
         self.assertEqual(options.clip_vocab_path, "/models/clip_vocab.bpe")
         self.assertEqual(options.classes_path, str(classes_path))
         self.assertEqual(options.classes, ("person", "bus"))
+
+    def test_options_accept_container_and_experiment_provenance(self) -> None:
+        options = options_from_args(
+            [
+                "record_run",
+                "--run-id",
+                "demo_001",
+                "--container-image-ref",
+                "ghcr.io/acme/omniseer:robot-v2",
+                "--container-image-digest",
+                "sha256:0123456789abcdef",
+                "--experiment-config",
+                "experiments/container-smoke.yaml",
+                "--experiment-parameters",
+                "profile=operator,camera=/dev/video11",
+                "--experiment-parameter",
+                "scenario=smoke",
+            ]
+        )
+
+        self.assertEqual(options.container_image_ref, "ghcr.io/acme/omniseer:robot-v2")
+        self.assertEqual(options.container_image_digest, "sha256:0123456789abcdef")
+        self.assertEqual(options.experiment_config, "experiments/container-smoke.yaml")
+        self.assertEqual(
+            options.experiment_parameters,
+            {"camera": "/dev/video11", "profile": "operator", "scenario": "smoke"},
+        )
+
+    def test_options_use_env_fallback_for_container_and_experiment_provenance(self) -> None:
+        original_env = {
+            "OMNISEER_CONTAINER_IMAGE_REF": os.environ.get("OMNISEER_CONTAINER_IMAGE_REF"),
+            "OMNISEER_CONTAINER_IMAGE_DIGEST": os.environ.get("OMNISEER_CONTAINER_IMAGE_DIGEST"),
+            "OMNISEER_EXPERIMENT_CONFIG": os.environ.get("OMNISEER_EXPERIMENT_CONFIG"),
+            "OMNISEER_EXPERIMENT_PARAMETERS": os.environ.get("OMNISEER_EXPERIMENT_PARAMETERS"),
+        }
+        try:
+            os.environ["OMNISEER_CONTAINER_IMAGE_REF"] = "ghcr.io/acme/omniseer:env"
+            os.environ["OMNISEER_CONTAINER_IMAGE_DIGEST"] = "sha256:envdigest"
+            os.environ["OMNISEER_EXPERIMENT_CONFIG"] = "experiments/env.yaml"
+            os.environ["OMNISEER_EXPERIMENT_PARAMETERS"] = '{"profile":"operator","duration_sec":5}'
+
+            options = options_from_args(["record_run", "--run-id", "demo_001"])
+        finally:
+            for key, value in original_env.items():
+                if value is None:
+                    os.environ.pop(key, None)
+                else:
+                    os.environ[key] = value
+
+        self.assertEqual(options.container_image_ref, "ghcr.io/acme/omniseer:env")
+        self.assertEqual(options.container_image_digest, "sha256:envdigest")
+        self.assertEqual(options.experiment_config, "experiments/env.yaml")
+        self.assertEqual(options.experiment_parameters, {"duration_sec": "5", "profile": "operator"})
 
 
 class AsyncBundleWriterTests(unittest.TestCase):

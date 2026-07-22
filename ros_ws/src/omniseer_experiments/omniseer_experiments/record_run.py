@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import argparse
+import json
+import os
 import queue
+import shlex
 import signal
 import threading
 import time
@@ -51,6 +54,10 @@ class RecorderOptions:
     clip_model_path: str = ""
     clip_vocab_path: str = ""
     classes_path: str = ""
+    container_image_ref: str = ""
+    container_image_digest: str = ""
+    experiment_config: str = ""
+    experiment_parameters: dict[str, str] | None = None
     queue_size: int = DEFAULT_QUEUE_SIZE
     flush_interval_sec: float = 1.0
 
@@ -190,6 +197,10 @@ class PerceptionRunRecorder(Node):
                 clip_model_path=options.clip_model_path,
                 clip_vocab_path=options.clip_vocab_path,
                 classes_path=options.classes_path,
+                container_image_ref=options.container_image_ref,
+                container_image_digest=options.container_image_digest,
+                experiment_config=options.experiment_config,
+                experiment_parameters=options.experiment_parameters or {},
                 detections_topic=options.detections_topic,
                 perf_topic=options.perf_topic,
             )
@@ -315,6 +326,14 @@ def options_from_args(argv: list[str] | None = None) -> RecorderOptions:
     clip_vocab_path = _resolve_config_value(args.clip_vocab_path, vision_params, "models.clip_vocab_path")
     classes_path = _resolve_config_value(args.classes_path, vision_params, "classes.path")
     classes = _normalize_classes(args.classes) or _load_classes(classes_path)
+    try:
+        experiment_parameters = _experiment_parameters_from_args(
+            env_value=os.environ.get("OMNISEER_EXPERIMENT_PARAMETERS", ""),
+            raw_parameters=args.experiment_parameters,
+            raw_parameter_items=args.experiment_parameter,
+        )
+    except ValueError as exc:
+        parser.error(str(exc))
 
     return RecorderOptions(
         run_id=run_id,
@@ -330,6 +349,10 @@ def options_from_args(argv: list[str] | None = None) -> RecorderOptions:
         clip_model_path=clip_model_path,
         clip_vocab_path=clip_vocab_path,
         classes_path=classes_path,
+        container_image_ref=_env_fallback(args.container_image_ref, "OMNISEER_CONTAINER_IMAGE_REF"),
+        container_image_digest=_env_fallback(args.container_image_digest, "OMNISEER_CONTAINER_IMAGE_DIGEST"),
+        experiment_config=_env_fallback(args.experiment_config, "OMNISEER_EXPERIMENT_CONFIG"),
+        experiment_parameters=experiment_parameters,
         queue_size=args.queue_size,
         flush_interval_sec=args.flush_interval_sec,
     )
@@ -361,6 +384,20 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--clip-model-path", default="", help="CLIP text model path or __from_config__")
     parser.add_argument("--clip-vocab-path", default="", help="CLIP vocab path or __from_config__")
     parser.add_argument("--classes-path", default="", help="class list path or __from_config__")
+    parser.add_argument("--container-image-ref", default="", help="container image reference for run provenance")
+    parser.add_argument("--container-image-digest", default="", help="container image digest for run provenance")
+    parser.add_argument("--experiment-config", default="", help="experiment config identifier or path for provenance")
+    parser.add_argument(
+        "--experiment-parameters",
+        default="",
+        help="experiment parameters as JSON object or comma/space-separated key=value pairs",
+    )
+    parser.add_argument(
+        "--experiment-parameter",
+        action="append",
+        default=[],
+        help="single experiment parameter as key=value; may be repeated",
+    )
     parser.add_argument("--queue-size", type=int, default=DEFAULT_QUEUE_SIZE)
     parser.add_argument("--flush-interval-sec", type=float, default=1.0)
     return parser
@@ -381,6 +418,62 @@ def _as_bool(value: object) -> bool:
     if isinstance(value, str):
         return value.lower() in {"1", "true", "yes", "on"}
     return False
+
+
+def _env_fallback(value: str, env_name: str) -> str:
+    return value or os.environ.get(env_name, "")
+
+
+def _experiment_parameters_from_args(
+    *,
+    env_value: str,
+    raw_parameters: str,
+    raw_parameter_items: list[str],
+) -> dict[str, str]:
+    parameters: dict[str, str] = {}
+    parameters.update(_parse_experiment_parameters(env_value))
+    parameters.update(_parse_experiment_parameters(raw_parameters))
+    for item in raw_parameter_items:
+        key, value = _parse_experiment_parameter(item)
+        parameters[key] = value
+    return parameters
+
+
+def _parse_experiment_parameters(value: str) -> dict[str, str]:
+    if not value:
+        return {}
+
+    stripped = value.strip()
+    if not stripped:
+        return {}
+
+    if stripped.startswith("{"):
+        parsed = json.loads(stripped)
+        if not isinstance(parsed, dict):
+            raise ValueError("experiment parameters JSON must be an object")
+        return {str(key): _stringify_parameter_value(raw_value) for key, raw_value in parsed.items()}
+
+    parameters: dict[str, str] = {}
+    for item in shlex.split(stripped.replace(",", " ")):
+        key, raw_value = _parse_experiment_parameter(item)
+        parameters[key] = raw_value
+    return parameters
+
+
+def _parse_experiment_parameter(value: str) -> tuple[str, str]:
+    if "=" not in value:
+        raise ValueError(f"experiment parameter must be key=value: {value}")
+    key, raw_value = value.split("=", 1)
+    key = key.strip()
+    if not key:
+        raise ValueError(f"experiment parameter key must not be empty: {value}")
+    return key, raw_value.strip()
+
+
+def _stringify_parameter_value(value: object) -> str:
+    if isinstance(value, (dict, list)):
+        return json.dumps(value, separators=(",", ":"), sort_keys=True)
+    return str(value)
 
 
 def _resolve_config_value(raw_value: str, params: dict[str, str], key: str) -> str:

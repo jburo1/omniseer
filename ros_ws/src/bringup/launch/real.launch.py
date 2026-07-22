@@ -91,6 +91,10 @@ def _build_real_bringup_actions(
     experiment_out_dir,
     experiment_classes,
     experiment_notes,
+    experiment_container_image_ref,
+    experiment_container_image_digest,
+    experiment_config,
+    experiment_parameters,
     experiment_duration_sec,
     experiment_overwrite,
     experiment_queue_size,
@@ -172,6 +176,14 @@ def _build_real_bringup_actions(
             classes_path,
             "--notes",
             experiment_notes,
+            "--container-image-ref",
+            experiment_container_image_ref,
+            "--container-image-digest",
+            experiment_container_image_digest,
+            "--experiment-config",
+            experiment_config,
+            "--experiment-parameters",
+            experiment_parameters,
             "--duration-sec",
             experiment_duration_sec,
             "--overwrite",
@@ -362,6 +374,10 @@ def generate_launch_description():
         DeclareLaunchArgument("experiment_out_dir", default_value=""),
         DeclareLaunchArgument("experiment_classes", default_value=""),
         DeclareLaunchArgument("experiment_notes", default_value=""),
+        DeclareLaunchArgument("experiment_container_image_ref", default_value=""),
+        DeclareLaunchArgument("experiment_container_image_digest", default_value=""),
+        DeclareLaunchArgument("experiment_config", default_value=""),
+        DeclareLaunchArgument("experiment_parameters", default_value=""),
         DeclareLaunchArgument("experiment_duration_sec", default_value="0"),
         DeclareLaunchArgument("experiment_overwrite", default_value="false"),
         DeclareLaunchArgument("experiment_queue_size", default_value="256"),
@@ -425,6 +441,10 @@ def generate_launch_description():
     experiment_out_dir = LaunchConfiguration("experiment_out_dir")
     experiment_classes = LaunchConfiguration("experiment_classes")
     experiment_notes = LaunchConfiguration("experiment_notes")
+    experiment_container_image_ref = LaunchConfiguration("experiment_container_image_ref")
+    experiment_container_image_digest = LaunchConfiguration("experiment_container_image_digest")
+    experiment_config = LaunchConfiguration("experiment_config")
+    experiment_parameters = LaunchConfiguration("experiment_parameters")
     experiment_duration_sec = LaunchConfiguration("experiment_duration_sec")
     experiment_overwrite = LaunchConfiguration("experiment_overwrite")
     experiment_queue_size = LaunchConfiguration("experiment_queue_size")
@@ -490,6 +510,10 @@ def generate_launch_description():
             experiment_out_dir=experiment_out_dir,
             experiment_classes=experiment_classes,
             experiment_notes=experiment_notes,
+            experiment_container_image_ref=experiment_container_image_ref,
+            experiment_container_image_digest=experiment_container_image_digest,
+            experiment_config=experiment_config,
+            experiment_parameters=experiment_parameters,
             experiment_duration_sec=experiment_duration_sec,
             experiment_overwrite=experiment_overwrite,
             experiment_queue_size=experiment_queue_size,
@@ -565,6 +589,10 @@ def generate_launch_description():
             experiment_out_dir=experiment_out_dir,
             experiment_classes=experiment_classes,
             experiment_notes=experiment_notes,
+            experiment_container_image_ref=experiment_container_image_ref,
+            experiment_container_image_digest=experiment_container_image_digest,
+            experiment_config=experiment_config,
+            experiment_parameters=experiment_parameters,
             experiment_duration_sec=experiment_duration_sec,
             experiment_overwrite=experiment_overwrite,
             experiment_queue_size=experiment_queue_size,

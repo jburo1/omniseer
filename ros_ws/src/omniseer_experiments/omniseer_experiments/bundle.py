@@ -77,6 +77,10 @@ class RunBundleConfig:
     clip_model_path: str = ""
     clip_vocab_path: str = ""
     classes_path: str = ""
+    container_image_ref: str = ""
+    container_image_digest: str = ""
+    experiment_config: str = ""
+    experiment_parameters: dict[str, Any] = field(default_factory=dict)
     detections_topic: str = DEFAULT_DETECTIONS_TOPIC
     perf_topic: str = DEFAULT_PERF_TOPIC
 
@@ -304,6 +308,14 @@ class RunBundleWriter:
             },
             "classes_path": self.config.classes_path,
             "classes": list(self.config.classes),
+            "container": {
+                "image_ref": self.config.container_image_ref,
+                "image_digest": self.config.container_image_digest,
+            },
+            "experiment": {
+                "config": self.config.experiment_config,
+                "parameters": dict(sorted(self.config.experiment_parameters.items())),
+            },
             "topics": {
                 "detections": self.config.detections_topic,
                 "perf": self.config.perf_topic,

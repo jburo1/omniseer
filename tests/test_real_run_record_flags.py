@@ -98,6 +98,92 @@ class RealRunRecordFlagsTests(unittest.TestCase):
         self.assertIn("experiment_notes:=note\\ text", result.stdout)
         self.assertIn("experiment_classes:=chair\\ backpack", result.stdout)
 
+    def test_record_run_provenance_flags_map_to_real_launch_args(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            setup_file = pathlib.Path(tmp) / "setup.bash"
+            setup_file.write_text("# test setup shim\n", encoding="utf-8")
+            fake_ros2 = pathlib.Path(tmp) / "ros2"
+            fake_ros2.write_text("#!/usr/bin/env bash\nprintf '%q\\n' \"$@\"\n", encoding="utf-8")
+            fake_ros2.chmod(0o755)
+
+            env = os.environ.copy()
+            env["PATH"] = f"{tmp}:{env['PATH']}"
+            env["OMNISEER_ROS_SETUP"] = str(setup_file)
+            env["OMNISEER_WS_SETUP"] = str(setup_file)
+
+            result = subprocess.run(
+                [
+                    "scripts/run/real.sh",
+                    "--profile",
+                    "perception",
+                    "--record-run",
+                    "demo_001",
+                    "--record-container-image-ref",
+                    "ghcr.io/acme/omniseer:robot-v2",
+                    "--record-container-image-digest",
+                    "sha256:0123456789abcdef",
+                    "--record-experiment-config",
+                    "experiments/container-smoke.yaml",
+                    "--record-experiment-parameter",
+                    "profile=perception",
+                    "--record-experiment-parameter",
+                    "camera=/dev/video11",
+                    "bringup",
+                    "start_vision:=false",
+                ],
+                cwd=_repo_root(),
+                env=env,
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=30.0,
+            )
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("experiment_container_image_ref:=ghcr.io/acme/omniseer:robot-v2", result.stdout)
+        self.assertIn("experiment_container_image_digest:=sha256:0123456789abcdef", result.stdout)
+        self.assertIn("experiment_config:=experiments/container-smoke.yaml", result.stdout)
+        self.assertIn("experiment_parameters:=profile=perception\\,camera=/dev/video11", result.stdout)
+
+    def test_record_run_uses_provenance_env_fallbacks(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            setup_file = pathlib.Path(tmp) / "setup.bash"
+            setup_file.write_text("# test setup shim\n", encoding="utf-8")
+            fake_ros2 = pathlib.Path(tmp) / "ros2"
+            fake_ros2.write_text("#!/usr/bin/env bash\nprintf '%q\\n' \"$@\"\n", encoding="utf-8")
+            fake_ros2.chmod(0o755)
+
+            env = os.environ.copy()
+            env["PATH"] = f"{tmp}:{env['PATH']}"
+            env["OMNISEER_ROS_SETUP"] = str(setup_file)
+            env["OMNISEER_WS_SETUP"] = str(setup_file)
+            env["OMNISEER_CONTAINER_IMAGE_REF"] = "ghcr.io/acme/omniseer:env"
+            env["OMNISEER_CONTAINER_IMAGE_DIGEST"] = "sha256:envdigest"
+            env["OMNISEER_EXPERIMENT_CONFIG"] = "experiments/env.yaml"
+            env["OMNISEER_EXPERIMENT_PARAMETERS"] = "profile=operator"
+
+            result = subprocess.run(
+                [
+                    "scripts/run/real.sh",
+                    "--record-run",
+                    "demo_001",
+                    "bringup",
+                    "start_vision:=false",
+                ],
+                cwd=_repo_root(),
+                env=env,
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=30.0,
+            )
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("experiment_container_image_ref:=ghcr.io/acme/omniseer:env", result.stdout)
+        self.assertIn("experiment_container_image_digest:=sha256:envdigest", result.stdout)
+        self.assertIn("experiment_config:=experiments/env.yaml", result.stdout)
+        self.assertIn("experiment_parameters:=profile=operator", result.stdout)
+
     def test_record_flags_rejected_for_verify_mode(self) -> None:
         result = subprocess.run(
             ["scripts/run/real.sh", "--record-run", "demo_001", "verify"],

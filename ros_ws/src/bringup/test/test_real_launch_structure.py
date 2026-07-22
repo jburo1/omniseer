@@ -125,6 +125,10 @@ class RealLaunchStructureTests(unittest.TestCase):
         self.assertIn("--vision-params-file", recorder_text)
         self.assertIn("--detector-model-path", recorder_text)
         self.assertIn("--classes-path", recorder_text)
+        self.assertIn("--container-image-ref", recorder_text)
+        self.assertIn("--container-image-digest", recorder_text)
+        self.assertIn("--experiment-config", recorder_text)
+        self.assertIn("--experiment-parameters", recorder_text)
         self.assertIn("--duration-sec", recorder_text)
 
     def test_real_launch_forwards_pipeline_telemetry_path_to_vision(self) -> None:

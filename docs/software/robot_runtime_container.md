@@ -90,6 +90,21 @@ docker run --rm -it --privileged --network=host -v /dev:/dev -v "$PWD/runs:/runs
   run real --profile operator --record-run container_smoke --record-out /runs/container_smoke bringup
 ```
 
+For traceable container experiments, pass image and experiment metadata through
+environment variables or matching `scripts/omni run real` record flags:
+
+```bash
+docker run --rm -it --privileged --network=host \
+  -e OMNISEER_CONTAINER_IMAGE_REF=omniseer/robot-runtime:v2 \
+  -e OMNISEER_CONTAINER_IMAGE_DIGEST=sha256:<digest> \
+  -e OMNISEER_EXPERIMENT_CONFIG=experiments/container-smoke.yaml \
+  -e OMNISEER_EXPERIMENT_PARAMETERS=profile=operator,scenario=container_smoke \
+  -v /dev:/dev \
+  -v "$PWD/runs:/runs" \
+  omniseer/robot-runtime:v2 \
+  run real --profile operator --record-run container_smoke --record-out /runs/container_smoke bringup
+```
+
 Use the portable image only for launch and entrypoint checks; it defaults to
 `start_vision:=false` and is not a full robot runtime.
 
