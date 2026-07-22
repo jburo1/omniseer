@@ -54,6 +54,7 @@ Examples:
   scripts/omni runs local-list --root runs
   scripts/omni test smoke-sim
   scripts/omni build ros
+  scripts/omni build runtime-container
   scripts/omni check real-perception
   scripts/omni flash teensy
   scripts/omni docs build
@@ -200,6 +201,9 @@ case "${command_group}" in
       firmware)
         exec "${script_dir}/build/firmware.sh" "$@"
         ;;
+      runtime-container|container|runtime)
+        exec "${script_dir}/build/runtime_container.sh" "$@"
+        ;;
       help|-h|--help)
         cat <<'EOF'
 Usage:
@@ -209,6 +213,7 @@ Usage:
   scripts/omni build ros --without-vision
   scripts/omni build vision
   scripts/omni build firmware
+  scripts/omni build runtime-container
 EOF
         ;;
       *)

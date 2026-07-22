@@ -28,4 +28,5 @@ Start with:
 - [Evidence and Verification Boundary](evidence.md) for what current checks prove
 - [Vision Pipeline](software/vision_pipeline.md) for the native hot path
 - [CI/CD Overview](software/ci_cd.md) for automated verification and its limits
+- [Robot Runtime Container](software/robot_runtime_container.md) for the v2 robot image workflow
 - [Robot Gateway](software/robot_gateway.md) and [Preview Streaming](software/preview_streaming.md) for operator diagnostics

@@ -25,6 +25,7 @@ nav:
     - Scripts front door: software/scripts_frontdoor.md
     - Edge-to-cloud perception: software/edge_to_cloud_perception.md
     - Build pipeline: software/build_pipeline.md
+    - Robot runtime container: software/robot_runtime_container.md
     - CI/CD overview: software/ci_cd.md
     - Real teleop + native perception check: software/real_teleop_perception_check.md
     - Operator-integrated real demo: software/operator_integrated_demo.md
