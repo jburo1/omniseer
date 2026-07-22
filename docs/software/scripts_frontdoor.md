@@ -136,6 +136,27 @@ Suggestion:
 - `build ros --with-vision` requires RKNN/RGA development files and is expected to fail on hosts without the target SDKs
 - `build vision` is better than a full ROS build when only the native C++ vision pipeline changed
 
+### `runtime`
+
+Build, verify, publish, and pull robot runtime container checkpoints. This is a
+robot-local workflow; it does not require GitHub Actions to rebuild the
+hardware-specific image.
+
+Commands:
+
+```bash
+scripts/omni runtime build --tag runtime-20260722-001
+scripts/omni runtime verify --tag runtime-20260722-001
+scripts/omni runtime verify --tag runtime-20260722-001 --stage full
+scripts/omni runtime push --tag runtime-20260722-001
+scripts/omni runtime pull
+```
+
+Use `runtime verify` without `--stage` for a safe container smoke check. Use
+`--stage full` to run the real operator smoke path with run recording and image
+provenance. `runtime push` publishes only after a passed full verification for
+the same local image ID, then promotes the image to `robot-verified`.
+
 ### `test`
 
 Run focused local verification flows.

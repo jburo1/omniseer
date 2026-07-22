@@ -114,3 +114,4 @@ docs/software/project_journey.md
 
 # --- Local experiment artifacts ---
 runs/
+.omniseer/

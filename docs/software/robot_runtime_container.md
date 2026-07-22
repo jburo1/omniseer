@@ -25,6 +25,16 @@ On the ROCK 5B+ image, build the robot target:
 scripts/omni build runtime-container
 ```
 
+For checkpointed robot-local publishing, prefer the runtime workflow wrapper:
+
+```bash
+scripts/omni runtime build --tag runtime-20260722-001
+```
+
+This builds `ghcr.io/jburo1/omniseer-robot-runtime:<tag>` by default and records
+local build metadata under `.omniseer/runtime/`. Override the image base with
+`--image <base>` or `OMNISEER_RUNTIME_IMAGE`.
+
 The robot target requires RKNN SDK files on the build host:
 
 - `rknn_api.h`, default `/usr/include/rknn_api.h`
@@ -108,6 +118,39 @@ docker run --rm -it --privileged --network=host \
 Use the portable image only for launch and entrypoint checks; it defaults to
 `start_vision:=false` and is not a full robot runtime.
 
+## Checkpoint and Promotion
+
+The robot-local promotion loop is:
+
+```bash
+scripts/omni runtime build --tag runtime-20260722-001
+scripts/omni runtime verify --tag runtime-20260722-001
+scripts/omni runtime verify --tag runtime-20260722-001 --stage full
+scripts/omni runtime push --tag runtime-20260722-001
+```
+
+`runtime verify` defaults to a safe smoke stage. It starts the container with
+vision, Teensy, LiDAR, boundary-topic waits, and pre-launch cleanup disabled; a
+launch that survives until the smoke timeout is treated as a pass. Full
+verification runs the container's existing real operator smoke path with run
+recording enabled.
+
+`runtime push` refuses to publish unless a passed full verification exists for the
+same local image ID. It pushes the immutable checkpoint tag first, then promotes
+the same image to the moving `robot-verified` tag.
+
+Pull the latest verified image on the robot with:
+
+```bash
+scripts/omni runtime pull
+```
+
+Use an immutable tag for rollback or pinning:
+
+```bash
+scripts/omni runtime pull --tag runtime-20260722-001
+```
+
 ## Verification Boundary
 
 Local image builds verify that the ROS install tree is baked into the image and that
@@ -136,3 +179,8 @@ and control message dependencies, source-built micro-ROS Agent dependencies, and
 broad ROS runtime dependencies pulled in by Kilted packages. Some large
 development-labeled packages still arrive transitively through runtime package
 dependencies rather than from the explicit builder stage.
+
+Do not remove runtime packages only to shrink the image. First measure image
+history and package ownership, then remove a dependency only when the robot
+runtime verification path still passes and the removed package is not part of the
+operator, hardware IO, native vision, gateway, or recording surface.
