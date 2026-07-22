@@ -468,17 +468,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#up" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        up
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#test" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -513,10 +502,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#run-real-phase-number" class="md-nav__link">
+  <a href="#run-real" class="md-nav__link">
     <span class="md-ellipsis">
       
-        run real --phase &lt;number&gt;
+        run real
       
     </span>
   </a>
@@ -656,10 +645,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#real-phase-2-operator-check" class="md-nav__link">
+  <a href="#legacy-teleop-check" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Real Phase 2 operator check
+        Legacy Teleop Check
       
     </span>
   </a>
@@ -667,10 +656,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#real-phase-3-operator-demo" class="md-nav__link">
+  <a href="#current-real-operator-demo" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Real Phase 3 operator demo
+        Current Real Operator Demo
       
     </span>
   </a>
@@ -1349,17 +1338,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#up" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        up
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#test" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1394,10 +1372,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#run-real-phase-number" class="md-nav__link">
+  <a href="#run-real" class="md-nav__link">
     <span class="md-ellipsis">
       
-        run real --phase &lt;number&gt;
+        run real
       
     </span>
   </a>
@@ -1537,10 +1515,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#real-phase-2-operator-check" class="md-nav__link">
+  <a href="#legacy-teleop-check" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Real Phase 2 operator check
+        Legacy Teleop Check
       
     </span>
   </a>
@@ -1548,10 +1526,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#real-phase-3-operator-demo" class="md-nav__link">
+  <a href="#current-real-operator-demo" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Real Phase 3 operator demo
+        Current Real Operator Demo
       
     </span>
   </a>
@@ -1641,7 +1619,7 @@ workflows in this repository.</p>
 <ul>
 <li>one memorable top-level command</li>
 <li>thin wrappers around the existing build, test, run, and flash flows</li>
-<li>explicit phase selection for real-hardware bringup as the rollout expands</li>
+<li>explicit profile selection for real-hardware bringup as the rollout expands</li>
 <li>additive growth without breaking familiar operator commands</li>
 </ul>
 <p>This does <strong>not</strong> replace every package-local helper. Narrow package-owned scripts
@@ -1738,23 +1716,6 @@ scripts/omni<span class="w"> </span>build<span class="w"> </span>firmware
 <li><code>build ros --with-vision</code> requires RKNN/RGA development files and is expected to fail on hosts without the target SDKs</li>
 <li><code>build vision</code> is better than a full ROS build when only the native C++ vision pipeline changed</li>
 </ul>
-<h3 id="up"><code>up</code><a class="headerlink" href="#up" title="Permanent link">&para;</a></h3>
-<p>Build the needed workspace, then launch the selected profile.</p>
-<p>Commands:</p>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>up<span class="w"> </span>sim
-scripts/omni<span class="w"> </span>up<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">3</span>
-scripts/omni<span class="w"> </span>up<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">3</span><span class="w"> </span>smoke
-</code></pre></div>
-<p>Use <code>up</code> when:</p>
-<ul>
-<li>you want one command for the normal build-then-run loop</li>
-<li>you want launch-only commands to stay available for diagnostic runs</li>
-</ul>
-<p>Examples:</p>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>up<span class="w"> </span>sim<span class="w"> </span>headless:<span class="o">=</span><span class="nb">true</span>
-scripts/omni<span class="w"> </span>up<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">3</span>
-scripts/omni<span class="w"> </span>up<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">3</span><span class="w"> </span>smoke
-</code></pre></div>
 <h3 id="test"><code>test</code><a class="headerlink" href="#test" title="Permanent link">&para;</a></h3>
 <p>Run focused local verification flows.</p>
 <p>Commands:</p>
@@ -1784,11 +1745,13 @@ scripts/omni<span class="w"> </span><span class="nb">test</span><span class="w">
 <li>use <code>test ros</code> after wider ROS package changes</li>
 </ul>
 <h3 id="run"><code>run</code><a class="headerlink" href="#run" title="Permanent link">&para;</a></h3>
-<p>Launch the operator-facing runtime workflows without an implicit build.</p>
+<p>Launch the operator-facing runtime workflows. Build explicitly first when code,
+launch files, or generated interfaces changed.</p>
 <p>Commands:</p>
 <div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>sim
-scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">2</span>
-scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">3</span>
+scripts/omni<span class="w"> </span>run<span class="w"> </span>real
+scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--profile<span class="w"> </span>perception<span class="w"> </span>--record-run<span class="w"> </span>demo_001
+scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--profile<span class="w"> </span>legacy-teleop<span class="w"> </span>smoke
 scripts/omni<span class="w"> </span>run<span class="w"> </span>monitor<span class="w"> </span>--host<span class="w"> </span>&lt;robot-ip&gt;
 scripts/omni<span class="w"> </span>run<span class="w"> </span>teleop
 </code></pre></div>
@@ -1802,29 +1765,33 @@ scripts/omni<span class="w"> </span>run<span class="w"> </span>teleop
 <p>Example:</p>
 <div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>sim<span class="w"> </span>headless:<span class="o">=</span><span class="nb">true</span>
 </code></pre></div>
-<h4 id="run-real-phase-number"><code>run real --phase &lt;number&gt;</code><a class="headerlink" href="#run-real-phase-number" title="Permanent link">&para;</a></h4>
-<p>Launches the selected real-hardware rollout slice.</p>
-<p>Current supported phases:</p>
+<h4 id="run-real"><code>run real</code><a class="headerlink" href="#run-real" title="Permanent link">&para;</a></h4>
+<p>Launches a named real-hardware runtime profile.</p>
+<p>Current supported profiles:</p>
 <ul>
-<li><code>2</code></li>
-<li><code>3</code></li>
+<li><code>current</code>: default alias for the current supported real robot runtime</li>
+<li><code>operator</code>: gateway, native vision, preview, bounded teleop, and recording</li>
+<li><code>perception</code>: native vision and recording without the gateway operator surface</li>
+<li><code>legacy-teleop</code>: older keyboard teleop path kept for hardware diagnostics</li>
 </ul>
 <p>Examples:</p>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">2</span>
-scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">2</span><span class="w"> </span>smoke
-scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">2</span><span class="w"> </span>bringup<span class="w"> </span>camera_device:<span class="o">=</span>/dev/video11
-scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">3</span>
-scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">3</span><span class="w"> </span>--record-run<span class="w"> </span>demo_001
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>real
+scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>smoke
+scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>verify
+scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--record-run<span class="w"> </span>demo_001
+scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--profile<span class="w"> </span>perception<span class="w"> </span>--record-run<span class="w"> </span>demo_001
+scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--profile<span class="w"> </span>legacy-teleop<span class="w"> </span>operator<span class="w"> </span>camera_device:<span class="o">=</span>/dev/video11
 </code></pre></div>
-<p>If <code>--phase</code> is omitted, the command selects the latest stable real phase and
-prints which one it chose.</p>
-<p>Phase <code>3</code> defaults to foreground <code>bringup</code> with native vision and the operator
-gateway enabled. Phase <code>2</code> retains its background bringup plus keyboard teleop
-default.</p>
+<p>If <code>--profile</code> is omitted, the command selects <code>current</code>. Today <code>current</code>
+resolves to <code>operator</code>; that alias can move as the supported real runtime
+changes.</p>
+<p>The <code>operator</code> and <code>perception</code> profiles default to foreground <code>bringup</code>.
+<code>legacy-teleop</code> defaults to its older background bringup plus keyboard teleop
+mode.</p>
 <p>Recording flags can be used with modes that launch real bringup:</p>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">3</span><span class="w"> </span>--record
-scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">3</span><span class="w"> </span>--record-run<span class="w"> </span>demo_001
-scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">3</span><span class="w"> </span>--record-run<span class="w"> </span>demo_001<span class="w"> </span>--record-out<span class="w"> </span>runs/demo_001
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--record
+scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--record-run<span class="w"> </span>demo_001
+scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--record-run<span class="w"> </span>demo_001<span class="w"> </span>--record-out<span class="w"> </span>runs/demo_001
 </code></pre></div>
 <p>The recorder is an optional sidecar. It writes a local bundle containing
 <code>manifest.yaml</code>, <code>detections.jsonl</code>, <code>perf.jsonl</code>, optional automatic
@@ -1834,16 +1801,10 @@ scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="
 laptop download, inspection, evidence annotation, and a simple local HTML report
 are available through <code>scripts/omni runs</code>. Rich hosted review and cloud
 synchronization remain later work.</p>
-<p>Why phases exist:</p>
-<ul>
-<li>the real stack is being completed incrementally</li>
-<li>different rollout slices may need different launch composition and checks</li>
-<li>the front door stays stable even as later phases are added</li>
-</ul>
 <h4 id="real-run-modes">Real run modes<a class="headerlink" href="#real-run-modes" title="Permanent link">&para;</a></h4>
 <p><code>operator</code></p>
 <ul>
-<li>starts the phase <code>2</code> bringup in the background</li>
+<li>starts the <code>legacy-teleop</code> bringup in the background</li>
 <li>opens keyboard teleop in the current terminal</li>
 </ul>
 <p><code>smoke</code></p>
@@ -1854,7 +1815,7 @@ synchronization remain later work.</p>
 </ul>
 <p><code>bringup</code></p>
 <ul>
-<li>launches only the phase bringup in the foreground</li>
+<li>launches only the selected profile bringup in the foreground</li>
 </ul>
 <p><code>teleop</code></p>
 <ul>
@@ -1866,13 +1827,11 @@ synchronization remain later work.</p>
 </ul>
 <p>Suggestions:</p>
 <ul>
-<li>use <code>up sim</code> or <code>up real</code> for the normal build-then-run path</li>
-<li>use <code>run real --phase 2</code> for interactive operator testing</li>
-<li>use <code>run real --phase 2 smoke</code> for a quick integrated health check</li>
-<li>use <code>run real --phase 2 bringup</code> when debugging launch or runtime issues</li>
-<li>use <code>run real --phase 3</code> on the robot for the operator-integrated demo</li>
-<li>add <code>--record-run &lt;run_id&gt;</code> to Phase <code>3</code> when the run should produce a local
-  perception bundle</li>
+<li>run <code>scripts/omni build ros</code> before <code>run</code> when code or launch wiring changed</li>
+<li>use <code>run real</code> on the robot for the current supported real runtime</li>
+<li>use <code>run real smoke</code> for a quick integrated health check</li>
+<li>use <code>run real --profile legacy-teleop operator</code> for the old keyboard teleop path</li>
+<li>add <code>--record-run &lt;run_id&gt;</code> when the run should produce a local perception bundle</li>
 </ul>
 <h4 id="run-monitor"><code>run monitor</code><a class="headerlink" href="#run-monitor" title="Permanent link">&para;</a></h4>
 <p>Launches the Tk operator monitor from the laptop workspace:</p>
@@ -1914,12 +1873,12 @@ scripts/omni<span class="w"> </span>check<span class="w"> </span>real-perception
 <p>Use this when:</p>
 <ul>
 <li>the real graph is already running</li>
-<li>you want to confirm the Phase <code>2</code> teleop/perception boundary topics</li>
+<li>you want to confirm the legacy teleop/perception boundary topics</li>
 <li>you want a non-driving verification helper</li>
 </ul>
 <p>Suggestion:</p>
 <ul>
-<li>pair this with <code>run real --phase 2 smoke</code> for a quick end-to-end check</li>
+<li>pair this with <code>run real --profile legacy-teleop smoke</code> for a quick end-to-end check</li>
 <li>use <code>OMNISEER_REQUIRE_DETECTIONS=1</code> when detections must be present for the run to count</li>
 </ul>
 <h3 id="doctor"><code>doctor</code><a class="headerlink" href="#doctor" title="Permanent link">&para;</a></h3>
@@ -1994,26 +1953,26 @@ scripts/omni<span class="w"> </span>run<span class="w"> </span>sim
 <li>simulation bringup changes</li>
 <li>boundary-topic or launch-structure debugging</li>
 </ul>
-<h3 id="real-phase-2-operator-check">Real Phase <code>2</code> operator check<a class="headerlink" href="#real-phase-2-operator-check" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">2</span><span class="w"> </span>smoke
+<h3 id="legacy-teleop-check">Legacy Teleop Check<a class="headerlink" href="#legacy-teleop-check" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--profile<span class="w"> </span>legacy-teleop<span class="w"> </span>smoke
 </code></pre></div>
 <p>Use this for:</p>
 <ul>
-<li>the quickest integrated Phase <code>2</code> health check</li>
+<li>the quickest legacy teleop health check</li>
 <li>validating teleop and perception boundaries before a longer session</li>
 </ul>
-<h3 id="real-phase-3-operator-demo">Real Phase <code>3</code> operator demo<a class="headerlink" href="#real-phase-3-operator-demo" title="Permanent link">&para;</a></h3>
+<h3 id="current-real-operator-demo">Current Real Operator Demo<a class="headerlink" href="#current-real-operator-demo" title="Permanent link">&para;</a></h3>
 <p>Robot:</p>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">3</span>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>real
 </code></pre></div>
 <p>Robot with local run-bundle recording:</p>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">3</span><span class="w"> </span>--record-run<span class="w"> </span>demo_001
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--record-run<span class="w"> </span>demo_001
 </code></pre></div>
 <p>Laptop:</p>
 <div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>monitor<span class="w"> </span>--host<span class="w"> </span>&lt;robot-ip&gt;
 </code></pre></div>
 <p>Active zero-motion acceptance verification from a second robot shell:</p>
-<div class="highlight"><pre><span></span><code><span class="nv">OMNISEER_REQUIRE_DETECTIONS</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">3</span><span class="w"> </span>verify
+<div class="highlight"><pre><span></span><code><span class="nv">OMNISEER_REQUIRE_DETECTIONS</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>verify
 </code></pre></div>
 <p>Use this for the integrated gateway status, preview, perception, and bounded
 teleop acceptance run described in <code>operator_integrated_demo.md</code>.</p>
@@ -2037,7 +1996,11 @@ scripts/omni<span class="w"> </span>flash<span class="w"> </span>teensy
 <h2 id="compatibility-notes">Compatibility Notes<a class="headerlink" href="#compatibility-notes" title="Permanent link">&para;</a></h2>
 <p>The new front door keeps a compatibility path for existing habits:</p>
 <ul>
-<li><code>scripts/phase2_real.sh</code> delegates to <code>scripts/omni run real --phase 2</code></li>
+<li><code>scripts/omni up &lt;profile&gt;</code> still builds ROS before launching and emits a
+  deprecation warning</li>
+<li><code>scripts/omni run real --phase 2</code> maps to <code>--profile legacy-teleop</code></li>
+<li><code>scripts/omni run real --phase 3</code> maps to <code>--profile operator</code></li>
+<li><code>scripts/phase2_real.sh</code> delegates to <code>scripts/omni run real --profile legacy-teleop</code></li>
 <li><code>scripts/check_real_teleop_perception.sh</code> delegates to <code>scripts/omni check real-perception</code></li>
 </ul>
 <p>Those compatibility wrappers exist to reduce churn. New docs and day-to-day usage
@@ -2077,7 +2040,7 @@ machine.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 21, 2026 06:57:45 UTC">July 21, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 22, 2026 20:19:38 UTC">July 22, 2026</span>
   </span>
 
     

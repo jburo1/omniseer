@@ -1152,9 +1152,8 @@
 
 
 <h1 id="operator-integrated-real-demo">Operator-Integrated Real Demo<a class="headerlink" href="#operator-integrated-real-demo" title="Permanent link">&para;</a></h1>
-<p><em>Status: Phase 3 implementation added; target-hardware verification record pending</em></p>
-<p>This checklist verifies the Phase 3 slice between Phase 2 and the run
-bundle recorder:</p>
+<p><em>Status: operator real profile implemented; target-hardware verification record pending</em></p>
+<p>This checklist verifies the current operator real profile:</p>
 <ul>
 <li>real native perception publishes gateway-visible vision status</li>
 <li>preview can be toggled from the laptop app</li>
@@ -1167,7 +1166,7 @@ plain preview viewer or the overlay viewer. Video still opens in an external
 window rather than embedding in the Tk window.</p>
 <h2 id="preconditions">Preconditions<a class="headerlink" href="#preconditions" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Phase 2 has been run successfully on target hardware.</li>
+<li>The legacy teleop profile has been run successfully on target hardware.</li>
 <li>The robot and laptop workspaces have been built with <code>scripts/omni build ros</code>.</li>
 <li>The laptop can reach the robot gateway gRPC port.</li>
 <li>The laptop has GStreamer tools and SRT/H.264 decode plugins installed for
@@ -1175,14 +1174,15 @@ window rather than embedding in the Tk window.</p>
 <li>Native vision asset paths are available on the robot.</li>
 </ul>
 <h2 id="robot-command">Robot Command<a class="headerlink" href="#robot-command" title="Permanent link">&para;</a></h2>
-<p>From the repository root on the robot, launch the Phase 3 stack. The phase
-profile enables the gateway and native vision, disables navigation/SLAM/RF2O,
-and resolves model paths from <code>vision_bridge.real.paths.yaml</code>:</p>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">3</span>
+<p>From the repository root on the robot, launch the current real stack. Today the
+<code>current</code> profile resolves to <code>operator</code>, which enables the gateway and native
+vision, disables navigation/SLAM/RF2O, and resolves model paths from
+<code>vision_bridge.real.paths.yaml</code>:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>real
 </code></pre></div>
-<p>To record a local perception run bundle during the same Phase 3 bringup, enable
+<p>To record a local perception run bundle during the same real bringup, enable
 the experiment recorder from the same front door:</p>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">3</span><span class="w"> </span>--record-run<span class="w"> </span>demo_001
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--record-run<span class="w"> </span>demo_001
 </code></pre></div>
 <p>This starts an optional <code>omniseer_experiments</code> sidecar that subscribes to
 <code>/yolo/detections</code> and <code>/vision/perf</code> and writes:</p>
@@ -1222,8 +1222,8 @@ default, preserves additive files, and validates the imported copy with
 differs from the defaults. Generate a simple local HTML report with
 <code>scripts/omni runs report runs/imported/demo_001</code>. Cloud synchronization and
 hosted review remain later slices.</p>
-<p>Pass launch overrides after the phase, for example:</p>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">3</span><span class="w"> </span>bringup<span class="w"> </span>camera_device:<span class="o">=</span>/dev/video12
+<p>Pass launch overrides after the mode, for example:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>bringup<span class="w"> </span>camera_device:<span class="o">=</span>/dev/video12
 </code></pre></div>
 <p>The default hardware split is inference on <code>rkisp_selfpath</code> (<code>/dev/video12</code>)
 and preview on <code>rkisp_mainpath</code> (<code>/dev/video11</code>). The Teensy defaults to its
@@ -1269,9 +1269,9 @@ Q/E: turn left/right
 Space: stop
 </code></pre></div>
 <h2 id="verification-commands">Verification Commands<a class="headerlink" href="#verification-commands" title="Permanent link">&para;</a></h2>
-<p>Before driving, a second robot shell can run the Phase 3 acceptance checks
+<p>Before driving, a second robot shell can run the operator acceptance checks
 against the existing graph:</p>
-<div class="highlight"><pre><span></span><code><span class="nv">OMNISEER_REQUIRE_DETECTIONS</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--phase<span class="w"> </span><span class="m">3</span><span class="w"> </span>verify
+<div class="highlight"><pre><span></span><code><span class="nv">OMNISEER_REQUIRE_DETECTIONS</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>verify
 </code></pre></div>
 <p>This requires live encoder, wheel-odometry, lidar, vision, and detection
 messages; healthy gateway status; and zero vision errors. It also briefly
@@ -1291,7 +1291,7 @@ ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</
 <li>laptop status shows <code>vision</code> available and fresh</li>
 <li>laptop overlay command reports detection freshness and source-space detections when targets are visible</li>
 <li>overlay viewer opens live preview, shows a telemetry HUD, and draws boxes when detections are present</li>
-<li>Phase 3 verification reports <code>ok: overlay viewer consumed preview</code></li>
+<li>operator verification reports <code>ok: overlay viewer consumed preview</code></li>
 <li>preview state changes to <code>running</code> when enabled</li>
 <li>plain preview viewer displays the SRT stream when used as a fallback</li>
 <li>teleop state changes to <code>enabled</code> after explicit enable</li>
@@ -1339,9 +1339,9 @@ ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</
 <td>Lower the GUI step value or tune gateway bounds intentionally</td>
 </tr>
 <tr>
-<td>Phase 3 is rejected by the script</td>
-<td>Checkout predates the phase profile</td>
-<td>Update the checkout and confirm <code>scripts/omni env</code> lists <code>2,3</code></td>
+<td>Profile is rejected by the script</td>
+<td>Checkout predates the profile frontdoor</td>
+<td>Update the checkout and confirm <code>scripts/omni env</code> lists the expected real profiles</td>
 </tr>
 </tbody>
 </table>
@@ -1351,7 +1351,7 @@ ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</
 <li>Operator:</li>
 <li>Robot / SBC:</li>
 <li>Laptop:</li>
-<li>Robot command (<code>scripts/omni run real --phase 3</code> plus overrides):</li>
+<li>Robot command (<code>scripts/omni run real</code> plus overrides):</li>
 <li>Recording enabled / run id:</li>
 <li>Laptop command (<code>scripts/omni run monitor</code> plus host):</li>
 <li>Preview observed:</li>
@@ -1382,7 +1382,7 @@ ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 21, 2026 03:20:40 UTC">July 21, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 22, 2026 20:19:38 UTC">July 22, 2026</span>
   </span>
 
     
