@@ -230,6 +230,8 @@ class RecordRunConversionTests(unittest.TestCase):
                 "profile=operator,camera=/dev/video11",
                 "--experiment-parameter",
                 "scenario=smoke",
+                "--system-interval-sec",
+                "0.5",
                 "--launch-command",
                 "run real --profile operator bringup",
                 "--launch-profile",
@@ -250,6 +252,7 @@ class RecordRunConversionTests(unittest.TestCase):
             options.experiment_parameters,
             {"camera": "/dev/video11", "profile": "operator", "scenario": "smoke"},
         )
+        self.assertEqual(options.system_interval_sec, 0.5)
         self.assertEqual(options.launch_command, "run real --profile operator bringup")
         self.assertEqual(options.launch_profile, "operator")
         self.assertEqual(options.launch_mode, "bringup")

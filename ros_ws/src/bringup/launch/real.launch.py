@@ -100,6 +100,7 @@ def _build_real_bringup_actions(
     experiment_config,
     experiment_parameters,
     experiment_duration_sec,
+    experiment_system_interval_sec,
     experiment_overwrite,
     experiment_queue_size,
     experiment_flush_interval_sec,
@@ -198,6 +199,8 @@ def _build_real_bringup_actions(
             experiment_parameters,
             "--duration-sec",
             experiment_duration_sec,
+            "--system-interval-sec",
+            experiment_system_interval_sec,
             "--overwrite",
             experiment_overwrite,
             "--queue-size",
@@ -395,6 +398,7 @@ def generate_launch_description():
         DeclareLaunchArgument("experiment_config", default_value=""),
         DeclareLaunchArgument("experiment_parameters", default_value=""),
         DeclareLaunchArgument("experiment_duration_sec", default_value="0"),
+        DeclareLaunchArgument("experiment_system_interval_sec", default_value="1.0"),
         DeclareLaunchArgument("experiment_overwrite", default_value="false"),
         DeclareLaunchArgument("experiment_queue_size", default_value="256"),
         DeclareLaunchArgument("experiment_flush_interval_sec", default_value="1.0"),
@@ -466,6 +470,7 @@ def generate_launch_description():
     experiment_config = LaunchConfiguration("experiment_config")
     experiment_parameters = LaunchConfiguration("experiment_parameters")
     experiment_duration_sec = LaunchConfiguration("experiment_duration_sec")
+    experiment_system_interval_sec = LaunchConfiguration("experiment_system_interval_sec")
     experiment_overwrite = LaunchConfiguration("experiment_overwrite")
     experiment_queue_size = LaunchConfiguration("experiment_queue_size")
     experiment_flush_interval_sec = LaunchConfiguration("experiment_flush_interval_sec")
@@ -539,6 +544,7 @@ def generate_launch_description():
             experiment_config=experiment_config,
             experiment_parameters=experiment_parameters,
             experiment_duration_sec=experiment_duration_sec,
+            experiment_system_interval_sec=experiment_system_interval_sec,
             experiment_overwrite=experiment_overwrite,
             experiment_queue_size=experiment_queue_size,
             experiment_flush_interval_sec=experiment_flush_interval_sec,
@@ -622,6 +628,7 @@ def generate_launch_description():
             experiment_config=experiment_config,
             experiment_parameters=experiment_parameters,
             experiment_duration_sec=experiment_duration_sec,
+            experiment_system_interval_sec=experiment_system_interval_sec,
             experiment_overwrite=experiment_overwrite,
             experiment_queue_size=experiment_queue_size,
             experiment_flush_interval_sec=experiment_flush_interval_sec,

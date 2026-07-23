@@ -83,6 +83,8 @@ class RealRunRecordFlagsTests(unittest.TestCase):
                     str(run_dir),
                     "--record-duration-sec",
                     "5",
+                    "--record-system-interval-sec",
+                    "0.5",
                     "--record-notes",
                     "note text",
                     "--record-classes",
@@ -106,6 +108,7 @@ class RealRunRecordFlagsTests(unittest.TestCase):
         self.assertIn(f"pipeline_telemetry_path:={run_dir}/pipeline_telemetry.jsonl", result.stdout)
         self.assertIn(f"evidence_dir:={run_dir}/evidence", result.stdout)
         self.assertIn("experiment_duration_sec:=5", result.stdout)
+        self.assertIn("experiment_system_interval_sec:=0.5", result.stdout)
         self.assertIn("experiment_notes:=note\\ text", result.stdout)
         self.assertIn("experiment_classes:=chair\\ backpack", result.stdout)
         self.assertIn("experiment_launch_profile:=perception", result.stdout)

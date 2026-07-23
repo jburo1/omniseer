@@ -48,6 +48,7 @@ class RecorderOptions:
     classes: tuple[str, ...] = ()
     notes: str = ""
     duration_sec: float = 0.0
+    system_interval_sec: float = DEFAULT_SYSTEM_SAMPLE_INTERVAL_SEC
     overwrite: bool = False
     detections_topic: str = DEFAULT_DETECTIONS_TOPIC
     perf_topic: str = DEFAULT_PERF_TOPIC
@@ -231,7 +232,7 @@ class PerceptionRunRecorder(Node):
             sampler=SystemTelemetrySampler(),
             writer=self._writer,
             extra_snapshot=self._extra_system_snapshot,
-            interval_sec=DEFAULT_SYSTEM_SAMPLE_INTERVAL_SEC,
+            interval_sec=options.system_interval_sec,
         )
 
         qos = QoSProfile(
@@ -395,6 +396,7 @@ def options_from_args(argv: list[str] | None = None) -> RecorderOptions:
         classes=tuple(classes),
         notes=args.notes,
         duration_sec=args.duration_sec,
+        system_interval_sec=args.system_interval_sec,
         overwrite=_as_bool(args.overwrite),
         detections_topic=args.detections_topic,
         perf_topic=args.perf_topic,
@@ -428,6 +430,12 @@ def _build_parser() -> argparse.ArgumentParser:
         type=float,
         default=0.0,
         help="stop after this duration; 0 records until shutdown",
+    )
+    parser.add_argument(
+        "--system-interval-sec",
+        type=float,
+        default=DEFAULT_SYSTEM_SAMPLE_INTERVAL_SEC,
+        help="sample system/platform telemetry at this interval",
     )
     parser.add_argument(
         "--overwrite",

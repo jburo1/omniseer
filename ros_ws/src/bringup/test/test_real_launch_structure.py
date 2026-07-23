@@ -134,6 +134,7 @@ class RealLaunchStructureTests(unittest.TestCase):
         self.assertIn("--experiment-config", recorder_text)
         self.assertIn("--experiment-parameters", recorder_text)
         self.assertIn("--duration-sec", recorder_text)
+        self.assertIn("--system-interval-sec", recorder_text)
 
     def test_real_launch_forwards_pipeline_telemetry_path_to_vision(self) -> None:
         module = _load_launch_module("real.launch.py")
