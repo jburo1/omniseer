@@ -10,9 +10,11 @@ import statistics
 from collections import Counter, defaultdict
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from omniseer_experiments.evidence_annotation import annotate_evidence
 from omniseer_experiments.run_inspection import RunInspection, _parse_generated_manifest, inspect_run
 
 
@@ -52,6 +54,7 @@ def write_run_report(run_dir: Path, *, overwrite: bool = False) -> ReportSummary
     if output_path.exists() and not overwrite:
         raise FileExistsError(f"report already exists: {output_path}; pass --overwrite to replace it")
 
+    annotation_issues = _annotate_evidence_for_report(run_dir, overwrite=overwrite)
     detections = _read_jsonl(run_dir / "detections.jsonl", required=True)
     perf = _read_jsonl(run_dir / "perf.jsonl", required=True)
     system = _read_jsonl(run_dir / "system.jsonl", required=False)
@@ -66,6 +69,7 @@ def write_run_report(run_dir: Path, *, overwrite: bool = False) -> ReportSummary
         *system.issues,
         *pipeline.issues,
         *evidence.issues,
+        *annotation_issues,
     ]
     html_text = _render_report(
         inspection=inspection,
@@ -86,6 +90,16 @@ def write_run_report(run_dir: Path, *, overwrite: bool = False) -> ReportSummary
         evidence_items=len(evidence_items),
         issues=tuple(dict.fromkeys(issues)),
     )
+
+
+def _annotate_evidence_for_report(run_dir: Path, *, overwrite: bool) -> tuple[str, ...]:
+    if not (run_dir / "evidence" / "evidence.jsonl").exists():
+        return ()
+    try:
+        summary = annotate_evidence(run_dir, overwrite=overwrite)
+    except RuntimeError as exc:
+        return (f"annotation_failed: {exc}",)
+    return tuple(issue.format() for issue in summary.issues if issue.code != "annotated_image_exists")
 
 
 def report_run_main(argv: list[str] | None = None) -> None:
@@ -158,7 +172,7 @@ def _render_report(
         _detections_section(detections, configured_classes=inspection.configured_classes),
         _perf_section("Performance", perf),
         _pipeline_section(pipeline),
-        _system_section(system),
+        _system_section(system, manifest=manifest),
         _errors_section(inspection),
         _evidence_section(evidence_items),
         _issues_section(issues),
@@ -466,7 +480,7 @@ def _perf_section(title: str, records: Sequence[dict[str, Any]]) -> str:
     return _section(title, _table(["Metric", "Samples", "p50", "p95", "Max"], rows))
 
 
-def _system_section(records: Sequence[dict[str, Any]]) -> str:
+def _system_section(records: Sequence[dict[str, Any]], *, manifest: dict[str, Any]) -> str:
     fields = ("cpu_percent", "memory_used_mb", "memory_available_mb", "soc_temp_c")
     rows = []
     for field_name in fields:
@@ -485,8 +499,26 @@ def _system_section(records: Sequence[dict[str, Any]]) -> str:
         )
     if not rows:
         return _section("System", "<p>No system telemetry recorded.</p>")
-    body = _table(["Metric", "Samples", "Min", "Mean", "Max"], rows) + _platform_snapshot_tables(records)
+    body = (
+        _system_sample_table(records, manifest=manifest)
+        + _table(["Metric", "Samples", "Min", "Mean", "Max"], rows)
+        + _platform_snapshot_tables(records)
+    )
     return _section("System", body)
+
+
+def _system_sample_table(records: Sequence[dict[str, Any]], *, manifest: dict[str, Any]) -> str:
+    first_ts = _record_recv_ts(records[0]) if records else None
+    latest_ts = _record_recv_ts(records[-1]) if records else None
+    started_at = _parse_iso_datetime(_manifest_string(manifest, "started_at"))
+    return _key_value_table(
+        [
+            ("Samples", str(len(records))),
+            ("First sample", _format_ns_timestamp(first_ts)),
+            ("Latest sample", _format_ns_timestamp(latest_ts)),
+            ("Latest sample offset", _format_sample_offset(latest_ts, started_at)),
+        ]
+    )
 
 
 def _platform_snapshot_tables(records: Sequence[dict[str, Any]]) -> str:
@@ -782,6 +814,37 @@ def _as_float(value: object) -> float | None:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         return None
     return float(value)
+
+
+def _record_recv_ts(record: dict[str, Any]) -> int | None:
+    value = record.get("recv_ts_ns")
+    if isinstance(value, bool) or not isinstance(value, int):
+        return None
+    return value
+
+
+def _parse_iso_datetime(value: str) -> datetime | None:
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(value)
+    except ValueError:
+        return None
+
+
+def _format_ns_timestamp(value: int | None) -> str:
+    if value is None:
+        return "-"
+    return datetime.fromtimestamp(value / 1_000_000_000.0, tz=timezone.utc).isoformat()
+
+
+def _format_sample_offset(value: int | None, started_at: datetime | None) -> str:
+    if value is None or started_at is None:
+        return "-"
+    if started_at.tzinfo is None:
+        started_at = started_at.replace(tzinfo=timezone.utc)
+    sample_at = datetime.fromtimestamp(value / 1_000_000_000.0, tz=timezone.utc)
+    return _format_duration(max(0.0, (sample_at - started_at.astimezone(timezone.utc)).total_seconds()))
 
 
 def _format_float(value: float) -> str:

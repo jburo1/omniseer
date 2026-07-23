@@ -15,6 +15,13 @@ from omniseer_experiments.bundle import (
 )
 from omniseer_experiments.run_report import report_run_main, write_run_report
 
+try:
+    import cv2
+    import numpy as np
+except ImportError:  # pragma: no cover - dependency availability is environment-specific.
+    cv2 = None
+    np = None
+
 STARTED_AT = datetime(2026, 7, 19, 12, 0, 0, tzinfo=timezone.utc)
 ENDED_AT = datetime(2026, 7, 19, 12, 1, 5, tzinfo=timezone.utc)
 
@@ -127,13 +134,20 @@ def _write_completed_bundle(run_dir: Path) -> None:
     writer.finalize(ended_at=ENDED_AT)
 
 
-def _write_evidence(run_dir: Path) -> None:
+def _write_evidence(run_dir: Path, *, annotated: bool = True, valid_jpeg: bool = False) -> None:
     frames_dir = run_dir / "evidence" / "frames"
     annotated_dir = run_dir / "evidence" / "annotated"
     frames_dir.mkdir(parents=True, exist_ok=True)
-    annotated_dir.mkdir(parents=True, exist_ok=True)
-    (frames_dir / "frame_1.jpg").write_bytes(b"clean-jpeg-fixture")
-    (annotated_dir / "frame_1.jpg").write_bytes(b"annotated-jpeg-fixture")
+    if valid_jpeg:
+        assert cv2 is not None
+        assert np is not None
+        image = np.zeros((64, 64, 3), dtype=np.uint8)
+        assert cv2.imwrite(str(frames_dir / "frame_1.jpg"), image)
+    else:
+        (frames_dir / "frame_1.jpg").write_bytes(b"clean-jpeg-fixture")
+    if annotated:
+        annotated_dir.mkdir(parents=True, exist_ok=True)
+        (annotated_dir / "frame_1.jpg").write_bytes(b"annotated-jpeg-fixture")
     record = {
         "schema_version": 1,
         "artifact_type": "sampled_frame",
@@ -236,6 +250,10 @@ class RunReportTests(unittest.TestCase):
             self.assertIn("runtime-container-full", output)
             self.assertIn("profile=operator, stage=full", output)
             self.assertIn("<h2>Errors And Drops</h2>", output)
+            self.assertIn("First sample", output)
+            self.assertIn("Latest sample", output)
+            self.assertIn("1970-01-01T00:00:00", output)
+            self.assertIn("Latest sample offset", output)
             self.assertIn("Network Snapshot", output)
             self.assertIn("wlan0", output)
             self.assertIn("Battery Snapshot", output)
@@ -246,6 +264,20 @@ class RunReportTests(unittest.TestCase):
             self.assertIn("chair", output)
             self.assertIn("../evidence/annotated/frame_1.jpg", output)
             self.assertIn("../evidence/frames/frame_1.jpg", output)
+
+    @unittest.skipIf(cv2 is None or np is None, "OpenCV and NumPy are required for auto-annotation checks")
+    def test_report_generates_missing_annotations_before_rendering(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "demo_001"
+            _write_completed_bundle(run_dir)
+            _write_evidence(run_dir, annotated=False, valid_jpeg=True)
+
+            summary = write_run_report(run_dir)
+
+            output = summary.output_path.read_text(encoding="utf-8")
+            self.assertEqual(summary.issues, ())
+            self.assertTrue((run_dir / "evidence" / "annotated" / "frame_1.jpg").is_file())
+            self.assertIn("../evidence/annotated/frame_1.jpg", output)
 
     def test_writes_native_pipeline_telemetry_summary(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -103,7 +103,7 @@ runs_usage() {
 Usage:
   scripts/omni runs inspect <run_dir> [--json]
   scripts/omni runs annotate <run_dir> [--overwrite]
-  scripts/omni runs report <run_dir> [--overwrite]
+  scripts/omni runs report <run_dir> [--overwrite]   # also annotates evidence
   scripts/omni runs local-list [--root <local-runs-root>]
   scripts/omni runs list [retrieval args...]
   scripts/omni runs pull <run_id> [retrieval args...]
