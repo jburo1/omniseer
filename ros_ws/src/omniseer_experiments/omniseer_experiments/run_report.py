@@ -46,6 +46,16 @@ class _EvidenceItem:
     uses_annotation: bool
 
 
+@dataclass(frozen=True)
+class _NumericSummary:
+    samples: int
+    first: float
+    last: float
+    min_value: float
+    mean: float
+    max_value: float
+
+
 def write_run_report(run_dir: Path, *, overwrite: bool = False) -> ReportSummary:
     inspection = inspect_run(run_dir)
     manifest = _read_manifest(run_dir / "manifest.yaml")
@@ -502,7 +512,7 @@ def _system_section(records: Sequence[dict[str, Any]], *, manifest: dict[str, An
     body = (
         _system_sample_table(records, manifest=manifest)
         + _table(["Metric", "Samples", "Min", "Mean", "Max"], rows)
-        + _platform_snapshot_tables(records)
+        + _platform_summary_tables(records)
     )
     return _section("System", body)
 
@@ -521,59 +531,125 @@ def _system_sample_table(records: Sequence[dict[str, Any]], *, manifest: dict[st
     )
 
 
-def _platform_snapshot_tables(records: Sequence[dict[str, Any]]) -> str:
-    latest = records[-1] if records else {}
-    sections = []
-    thermal = latest.get("thermal")
-    if isinstance(thermal, dict):
-        sections.append(
-            "<h3>Thermal Snapshot</h3>"
-            + _key_value_table(
-                [
-                    ("Available", str(bool(thermal.get("available"))).lower()),
-                    ("SoC temperature C", _format_optional_float(_as_float(thermal.get("soc_temp_c")))),
-                    ("Throttled", _display(thermal.get("throttled"))),
-                ]
-            )
-        )
-    network = latest.get("network")
-    if isinstance(network, dict):
-        sections.append(
-            "<h3>Network Snapshot</h3>"
-            + _key_value_table(
-                [
-                    ("Available", str(bool(network.get("available"))).lower()),
-                    ("Connected", str(bool(network.get("connected"))).lower()),
-                    ("Interface", _display(network.get("interface"))),
-                    ("WiFi signal dBm", _display(network.get("wifi_signal_dbm"))),
-                    ("Link quality percent", _display(network.get("link_quality_percent"))),
-                ]
-            )
-        )
-    lipo = latest.get("lipo_battery")
-    onboard = latest.get("onboard_battery")
-    battery_rows = []
-    if isinstance(lipo, dict):
-        battery_rows.append(["LiPo", *_battery_snapshot_cells(lipo)])
-    if isinstance(onboard, dict):
-        battery_rows.append(["Onboard", *_battery_snapshot_cells(onboard)])
-    if battery_rows:
-        sections.append(
-            "<h3>Battery Snapshot</h3>"
-            + _table(["Battery", "Available", "Present", "Voltage", "Percentage", "Charging", "Source"], battery_rows)
-        )
-    return "".join(sections)
+def _platform_summary_tables(records: Sequence[dict[str, Any]]) -> str:
+    return _thermal_summary_table(records) + _network_summary_table(records) + _battery_summary_table(records)
 
 
-def _battery_snapshot_cells(snapshot: dict[str, Any]) -> list[str]:
-    return [
-        str(bool(snapshot.get("available"))).lower(),
-        str(bool(snapshot.get("present"))).lower(),
-        _format_optional_float(_as_float(snapshot.get("voltage"))),
-        _format_optional_float(_as_float(snapshot.get("percentage"))),
-        _display(snapshot.get("charging")),
-        _display(snapshot.get("source")),
-    ]
+def _thermal_summary_table(records: Sequence[dict[str, Any]]) -> str:
+    thermal_records = [record.get("thermal") for record in records if isinstance(record.get("thermal"), dict)]
+    if not thermal_records:
+        return ""
+
+    rows = []
+    soc_values = [_as_float(thermal.get("soc_temp_c")) for thermal in thermal_records]
+    soc_summary = _numeric_summary([value for value in soc_values if value is not None])
+    if soc_summary is not None:
+        rows.append(["SoC temperature C", *_numeric_summary_cells(soc_summary)])
+
+    zones: dict[str, list[float]] = defaultdict(list)
+    for thermal in thermal_records:
+        zone_items = thermal.get("zones")
+        if not isinstance(zone_items, list):
+            continue
+        for zone in zone_items:
+            if not isinstance(zone, dict):
+                continue
+            value = _as_float(zone.get("temp_c"))
+            if value is None:
+                continue
+            zones[_thermal_zone_label(zone)].append(value)
+    for label, values in sorted(zones.items()):
+        summary = _numeric_summary(values)
+        if summary is not None:
+            rows.append([label, *_numeric_summary_cells(summary)])
+
+    if not rows:
+        return ""
+
+    summary = _key_value_table(
+        [
+            ("Available samples", _count_bool(thermal.get("available") for thermal in thermal_records)),
+            ("Throttled states", _count_display(thermal.get("throttled") for thermal in thermal_records)),
+        ]
+    )
+    return "<h3>Thermal Summary</h3>" + summary + _table(_numeric_summary_headers("Metric"), rows)
+
+
+def _thermal_zone_label(zone: dict[str, Any]) -> str:
+    name = zone.get("name")
+    zone_type = zone.get("type")
+    name_text = name if isinstance(name, str) and name else "zone"
+    type_text = zone_type if isinstance(zone_type, str) and zone_type else ""
+    return f"{type_text} ({name_text})" if type_text else name_text
+
+
+def _network_summary_table(records: Sequence[dict[str, Any]]) -> str:
+    network_records = [record.get("network") for record in records if isinstance(record.get("network"), dict)]
+    if not network_records:
+        return ""
+
+    rows = []
+    for field_name, label in (
+        ("wifi_signal_dbm", "WiFi signal dBm"),
+        ("link_quality_percent", "Link quality percent"),
+    ):
+        values = [_as_float(network.get(field_name)) for network in network_records]
+        summary = _numeric_summary([value for value in values if value is not None])
+        if summary is not None:
+            rows.append([label, *_numeric_summary_cells(summary)])
+
+    summary = _key_value_table(
+        [
+            ("Available samples", _count_bool(network.get("available") for network in network_records)),
+            ("Connected samples", _count_bool(network.get("connected") for network in network_records)),
+            (
+                "Interfaces",
+                _join_or_dash(tuple(sorted(_string_values(network.get("interface") for network in network_records)))),
+            ),
+        ]
+    )
+    body = summary
+    if rows:
+        body += _table(_numeric_summary_headers("Metric"), rows)
+    return "<h3>Network Summary</h3>" + body
+
+
+def _battery_summary_table(records: Sequence[dict[str, Any]]) -> str:
+    battery_sources = (
+        ("LiPo", "lipo_battery"),
+        ("Onboard", "onboard_battery"),
+    )
+    state_rows = []
+    numeric_rows = []
+    for label, field_name in battery_sources:
+        snapshots = [record.get(field_name) for record in records if isinstance(record.get(field_name), dict)]
+        if not snapshots:
+            continue
+        state_rows.append(
+            [
+                label,
+                _count_bool(snapshot.get("available") for snapshot in snapshots),
+                _count_bool(snapshot.get("present") for snapshot in snapshots),
+                _count_display(snapshot.get("charging") for snapshot in snapshots),
+                _join_or_dash(tuple(sorted(_string_values(snapshot.get("source") for snapshot in snapshots)))),
+            ]
+        )
+        metrics = [("voltage", "Voltage")]
+        if field_name != "lipo_battery":
+            metrics.append(("percentage", "Percentage"))
+        for metric_name, metric_label in metrics:
+            values = [_as_float(snapshot.get(metric_name)) for snapshot in snapshots]
+            summary = _numeric_summary([value for value in values if value is not None])
+            if summary is not None:
+                numeric_rows.append([label, metric_label, *_numeric_summary_cells(summary)])
+
+    if not state_rows:
+        return ""
+
+    body = _table(["Battery", "Available", "Present", "Charging", "Sources"], state_rows)
+    if numeric_rows:
+        body += _table(_numeric_summary_headers("Battery", "Metric"), numeric_rows)
+    return "<h3>Battery Summary</h3>" + body
 
 
 def _errors_section(inspection: RunInspection) -> str:
@@ -808,6 +884,65 @@ def _p95_field(records: Sequence[dict[str, Any]], field_name: str) -> float | No
     if not samples:
         return None
     return _percentile(samples, 95)
+
+
+def _numeric_summary(values: Sequence[float]) -> _NumericSummary | None:
+    if not values:
+        return None
+    return _NumericSummary(
+        samples=len(values),
+        first=values[0],
+        last=values[-1],
+        min_value=min(values),
+        mean=statistics.fmean(values),
+        max_value=max(values),
+    )
+
+
+def _numeric_summary_headers(*leading: str) -> list[str]:
+    return [*leading, "Samples", "First", "Last", "Min", "Mean", "Max"]
+
+
+def _numeric_summary_cells(summary: _NumericSummary) -> list[str]:
+    return [
+        str(summary.samples),
+        _format_float(summary.first),
+        _format_float(summary.last),
+        _format_float(summary.min_value),
+        _format_float(summary.mean),
+        _format_float(summary.max_value),
+    ]
+
+
+def _count_bool(values: Iterable[object]) -> str:
+    counts: Counter[str] = Counter()
+    for value in values:
+        if isinstance(value, bool):
+            counts["true" if value else "false"] += 1
+    return _format_counts(counts)
+
+
+def _count_display(values: Iterable[object]) -> str:
+    counts: Counter[str] = Counter(_count_value_label(value) for value in values)
+    return _format_counts(counts)
+
+
+def _count_value_label(value: object) -> str:
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if value is None or value == "":
+        return "unavailable"
+    return str(value)
+
+
+def _format_counts(counts: Counter[str]) -> str:
+    if not counts:
+        return "-"
+    return ", ".join(f"{key}={count}" for key, count in sorted(counts.items()))
+
+
+def _string_values(values: Iterable[object]) -> set[str]:
+    return {value for value in values if isinstance(value, str) and value}
 
 
 def _as_float(value: object) -> float | None:

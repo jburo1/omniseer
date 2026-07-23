@@ -126,6 +126,48 @@ def _system_record() -> dict:
     )
 
 
+def _later_system_record() -> dict:
+    return make_system_record(
+        recv_ts_ns=400,
+        cpu_percent=42.0,
+        memory_used_mb=900.0,
+        memory_available_mb=7100.0,
+        soc_temp_c=64.2,
+        thermal={
+            "available": True,
+            "soc_temp_c": 64.2,
+            "throttled": True,
+            "zones": [
+                {"name": "thermal_zone0", "temp_c": 64.2, "type": "soc-thermal"},
+                {"name": "thermal_zone1", "temp_c": 66.0, "type": "bigcore0-thermal"},
+            ],
+        },
+        network={
+            "available": True,
+            "connected": False,
+            "interface": "wlan1",
+            "wifi_signal_dbm": -55,
+            "link_quality_percent": 70,
+        },
+        onboard_battery={
+            "available": True,
+            "source": "BAT0",
+            "present": True,
+            "voltage": 4.8,
+            "percentage": 88.0,
+            "charging": True,
+        },
+        lipo_battery={
+            "available": True,
+            "source": "/battery",
+            "present": True,
+            "voltage": 8.10,
+            "percentage": 48.0,
+            "charging": False,
+        },
+    )
+
+
 def _write_completed_bundle(run_dir: Path) -> None:
     writer = RunBundleWriter(_config(run_dir), started_at=STARTED_AT)
     writer.write_detection_record(_detection_record())
@@ -256,9 +298,9 @@ class RunReportTests(unittest.TestCase):
             self.assertIn("Latest sample", output)
             self.assertIn("1970-01-01T00:00:00", output)
             self.assertIn("Latest sample offset", output)
-            self.assertIn("Network Snapshot", output)
+            self.assertIn("Network Summary", output)
             self.assertIn("wlan0", output)
-            self.assertIn("Battery Snapshot", output)
+            self.assertIn("Battery Summary", output)
             self.assertIn("8.34", output)
             self.assertIn("<h2>Detections</h2>", output)
             self.assertIn("Messages with detections", output)
@@ -266,6 +308,40 @@ class RunReportTests(unittest.TestCase):
             self.assertIn("chair", output)
             self.assertIn("../evidence/annotated/frame_1.jpg", output)
             self.assertIn("../evidence/frames/frame_1.jpg", output)
+
+    def test_system_platform_tables_summarize_entire_run(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "demo_001"
+            writer = RunBundleWriter(_config(run_dir), started_at=STARTED_AT)
+            writer.write_detection_record(_detection_record())
+            writer.write_perf_record(_perf_record())
+            writer.write_system_record(_system_record())
+            writer.write_system_record(_later_system_record())
+            writer.finalize(ended_at=ENDED_AT)
+
+            summary = write_run_report(run_dir)
+
+            output = summary.output_path.read_text(encoding="utf-8")
+            self.assertIn("Thermal Summary", output)
+            self.assertIn("SoC temperature C", output)
+            self.assertIn("soc-thermal (thermal_zone0)", output)
+            self.assertIn("bigcore0-thermal (thermal_zone1)", output)
+            self.assertIn("Network Summary", output)
+            self.assertIn("Connected samples", output)
+            self.assertIn("false=1, true=1", output)
+            self.assertIn("wlan0, wlan1", output)
+            self.assertIn("WiFi signal dBm", output)
+            self.assertIn("-55.00", output)
+            self.assertIn("Battery Summary", output)
+            self.assertIn("LiPo", output)
+            self.assertIn("Onboard", output)
+            self.assertIn("4.80", output)
+            self.assertIn("88.00", output)
+            self.assertNotIn("<td>LiPo</td><td>Percentage</td>", output)
+            self.assertIn("<td>Onboard</td><td>Percentage</td>", output)
+            self.assertNotIn("Thermal Snapshot", output)
+            self.assertNotIn("Network Snapshot", output)
+            self.assertNotIn("Battery Snapshot", output)
 
     @unittest.skipIf(cv2 is None or np is None, "OpenCV and NumPy are required for auto-annotation checks")
     def test_report_generates_missing_annotations_before_rendering(self) -> None:
