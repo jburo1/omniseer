@@ -29,6 +29,25 @@ def _write_fake_docker(path: Path) -> None:
     path.chmod(0o755)
 
 
+def _write_fake_findmnt(path: Path, *, target: str, source: str) -> None:
+    path.write_text(
+        "\n".join(
+            [
+                "#!/usr/bin/env bash",
+                "set -euo pipefail",
+                'if [[ "$*" == *"TARGET"* ]]; then',
+                f'  printf "%s\\n" "{target}"',
+                'elif [[ "$*" == *"SOURCE"* ]]; then',
+                f'  printf "%s\\n" "{source}"',
+                "fi",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    path.chmod(0o755)
+
+
 def _runtime_env(tmp_path: Path) -> dict[str, str]:
     docker = tmp_path / "docker"
     _write_fake_docker(docker)
@@ -44,6 +63,7 @@ def _runtime_env(tmp_path: Path) -> dict[str, str]:
     env["OMNISEER_RKNN_INCLUDE"] = str(rknn_include)
     env["OMNISEER_RKNN_LIB"] = str(rknn_lib)
     env["OMNISEER_RUNTIME_SAFE_SMOKE_SEC"] = "1"
+    env["OMNISEER_RUNTIME_RUNS_HOST_ROOT"] = f"{REPO_ROOT}/runs"
     return env
 
 
@@ -99,6 +119,22 @@ def test_runtime_build_dispatches_to_robot_runtime_build_with_default_image(tmp_
     assert (Path(env["OMNISEER_RUNTIME_METADATA_DIR"]) / "build-runtime-test.env").is_file()
 
 
+def test_runtime_build_default_tag_uses_robot_candidate_name(tmp_path: Path) -> None:
+    env = _runtime_env(tmp_path)
+
+    result = subprocess.run(
+        ["scripts/omni", "runtime", "build"],
+        cwd=REPO_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "--tag ghcr.io/jburo1/omniseer-robot-runtime:robot-candidate-" in _docker_log(env)
+
+
 def test_runtime_run_uses_robot_container_flags_and_provenance(tmp_path: Path) -> None:
     env = _runtime_env(tmp_path)
 
@@ -130,6 +166,28 @@ def test_runtime_run_uses_robot_container_flags_and_provenance(tmp_path: Path) -
     assert "OMNISEER_RUNTIME_CONTAINER_COMMAND=run\\ real\\ bringup" in log
 
 
+def test_runtime_run_uses_devcontainer_workspace_source_for_runs_bind(tmp_path: Path) -> None:
+    env = _runtime_env(tmp_path)
+    env.pop("OMNISEER_RUNTIME_RUNS_HOST_ROOT")
+    _write_fake_findmnt(
+        tmp_path / "findmnt",
+        target=str(REPO_ROOT),
+        source="/dev/nvme0n1p3[/home/radxa/apps/omniseer]",
+    )
+
+    result = subprocess.run(
+        ["scripts/omni", "runtime", "run", "--tag", "runtime-test", "run", "real", "bringup"],
+        cwd=REPO_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "/home/radxa/apps/omniseer/runs:/runs" in _docker_log(env)
+
+
 def test_runtime_run_can_force_docker_tty_for_interactive_sessions(tmp_path: Path) -> None:
     env = _runtime_env(tmp_path)
     env["OMNISEER_RUNTIME_DOCKER_TTY"] = "always"
@@ -145,6 +203,72 @@ def test_runtime_run_can_force_docker_tty_for_interactive_sessions(tmp_path: Pat
 
     assert result.returncode == 0, result.stderr
     assert "docker run -it --rm" in _docker_log(env)
+
+
+def test_runtime_record_runs_operator_recording_with_defaults(tmp_path: Path) -> None:
+    env = _runtime_env(tmp_path)
+    env["OMNISEER_RUNTIME_DOCKER_TTY"] = "always"
+
+    result = subprocess.run(
+        ["scripts/omni", "runtime", "record", "--tag", "runtime-test"],
+        cwd=REPO_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    log = _docker_log(env)
+    assert "docker run" in log
+    assert "-it" not in log
+    assert "run real --profile operator" in log
+    assert "--record-run operator_" in log
+    assert "--record-out /runs/operator_" in log
+    assert "--record-overwrite" in log
+    assert "--record-system-interval-sec 1.0" in log
+    assert "--record-experiment-config operator-runtime" in log
+    assert "--record-experiment-parameter stage=manual-operator" in log
+    assert "--record-experiment-parameter stage=manual-operator bringup" in log
+    assert "Run bundle path:" in result.stderr
+
+
+def test_runtime_record_accepts_options_and_launch_args(tmp_path: Path) -> None:
+    env = _runtime_env(tmp_path)
+
+    result = subprocess.run(
+        [
+            "scripts/omni",
+            "runtime",
+            "record",
+            "--tag",
+            "runtime-test",
+            "--run-id",
+            "operator_debug",
+            "--system-interval-sec",
+            "0.5",
+            "--experiment-config",
+            "operator-runtime-debug",
+            "--experiment-parameter",
+            "note=desk",
+            "--",
+            "start_lidar:=false",
+        ],
+        cwd=REPO_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    log = _docker_log(env)
+    assert "--record-run operator_debug" in log
+    assert "--record-out /runs/operator_debug" in log
+    assert "--record-system-interval-sec 0.5" in log
+    assert "--record-experiment-config operator-runtime-debug" in log
+    assert "--record-experiment-parameter note=desk" in log
+    assert "bringup start_lidar:=false" in log
 
 
 def test_runtime_verify_safe_smoke_treats_timeout_as_pass(tmp_path: Path) -> None:
@@ -239,9 +363,52 @@ def test_runtime_push_promotes_verified_image(tmp_path: Path) -> None:
     assert "docker push ghcr.io/jburo1/omniseer-robot-runtime:runtime-test" in log
     assert (
         "docker tag ghcr.io/jburo1/omniseer-robot-runtime:runtime-test "
+        "ghcr.io/jburo1/omniseer-robot-runtime:robot-verified-runtime-test"
+    ) in log
+    assert "docker push ghcr.io/jburo1/omniseer-robot-runtime:robot-verified-runtime-test" in log
+    assert (
+        "docker tag ghcr.io/jburo1/omniseer-robot-runtime:runtime-test "
         "ghcr.io/jburo1/omniseer-robot-runtime:robot-verified"
     ) in log
     assert "docker push ghcr.io/jburo1/omniseer-robot-runtime:robot-verified" in log
+
+
+def test_runtime_push_promotes_candidate_to_matching_verified_tag(tmp_path: Path) -> None:
+    env = _runtime_env(tmp_path)
+    metadata_dir = Path(env["OMNISEER_RUNTIME_METADATA_DIR"])
+    metadata_dir.mkdir(parents=True)
+    tag = "robot-candidate-20260723T052827Z-g437c10907531"
+    (metadata_dir / f"verify-full-{tag}.env").write_text(
+        "\n".join(
+            [
+                "IMAGE_BASE=ghcr.io/jburo1/omniseer-robot-runtime",
+                f"TAG={tag}",
+                f"IMAGE_REF=ghcr.io/jburo1/omniseer-robot-runtime:{tag}",
+                "IMAGE_ID=sha256:local_image_id",
+                "STAGE=full",
+                "STATUS=passed",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        ["scripts/omni", "runtime", "push", "--tag", tag],
+        cwd=REPO_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    log = _docker_log(env)
+    assert (
+        "docker tag ghcr.io/jburo1/omniseer-robot-runtime:robot-candidate-20260723T052827Z-g437c10907531 "
+        "ghcr.io/jburo1/omniseer-robot-runtime:robot-verified-20260723T052827Z-g437c10907531"
+    ) in log
+    assert ("docker push ghcr.io/jburo1/omniseer-robot-runtime:robot-verified-20260723T052827Z-g437c10907531") in log
 
 
 def test_runtime_pull_defaults_to_robot_verified(tmp_path: Path) -> None:

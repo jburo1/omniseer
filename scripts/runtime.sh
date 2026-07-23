@@ -16,15 +16,22 @@ usage() {
 Usage:
   scripts/omni runtime build [--image <base>] [--tag <tag>] [build args...]
   scripts/omni runtime run [--image <base>] [--tag <tag>] [container command...]
+  scripts/omni runtime record [--image <base>] [--tag <tag>] [record args...] [-- launch args...]
   scripts/omni runtime verify [--image <base>] [--tag <tag>] [--stage smoke|full]
   scripts/omni runtime push [--image <base>] [--tag <tag>]
   scripts/omni runtime pull [--image <base>] [--tag <tag>]
 
 Defaults:
   --image defaults to ghcr.io/jburo1/omniseer-robot-runtime or OMNISEER_RUNTIME_IMAGE.
-  build creates a runtime-<UTC>-g<shortsha> tag when --tag is omitted.
-  run/verify/push use the latest local runtime build when --tag is omitted.
+  build creates a robot-candidate-<UTC>-g<shortsha> tag when --tag is omitted.
+  run/record/verify/push use the latest local runtime build when --tag is omitted.
   pull defaults to robot-verified when --tag is omitted.
+
+Record args:
+  --run-id <id>                         Default: operator_<UTC>
+  --system-interval-sec <seconds>       Default: 1.0
+  --experiment-config <name>            Default: operator-runtime
+  --experiment-parameter <key=value>    Repeatable; default: stage=manual-operator
 EOF
 }
 
@@ -49,13 +56,26 @@ runtime_timestamp() {
 }
 
 runtime_default_tag() {
-  printf 'runtime-%s-g%s\n' "$(runtime_timestamp)" "$(runtime_git_short_sha)"
+  printf 'robot-candidate-%s-g%s\n' "$(runtime_timestamp)" "$(runtime_git_short_sha)"
 }
 
 runtime_image_ref() {
   local image_base="$1"
   local tag="$2"
   printf '%s:%s\n' "${image_base}" "${tag}"
+}
+
+runtime_verified_tag_for() {
+  local tag="$1"
+  if [[ "${tag}" == robot-candidate-* ]]; then
+    printf 'robot-verified-%s\n' "${tag#robot-candidate-}"
+    return
+  fi
+  if [[ "${tag}" == robot-verified-* ]]; then
+    printf '%s\n' "${tag}"
+    return
+  fi
+  printf 'robot-verified-%s\n' "${tag}"
 }
 
 runtime_safe_tag() {
@@ -131,11 +151,49 @@ runtime_image_digest() {
   runtime_image_id "${image_ref}"
 }
 
+runtime_docker_bind_repo_root() {
+  local repo_root source target relative source_path
+  repo_root="$(omni_repo_root)"
+
+  if [[ -n "${OMNISEER_RUNTIME_HOST_REPO_ROOT:-}" ]]; then
+    printf '%s\n' "${OMNISEER_RUNTIME_HOST_REPO_ROOT}"
+    return 0
+  fi
+
+  if omni_command_available findmnt; then
+    target="$(findmnt -T "${repo_root}" -o TARGET --noheadings --raw 2>/dev/null | head -n 1 || true)"
+    source="$(findmnt -T "${repo_root}" -o SOURCE --noheadings --raw 2>/dev/null | head -n 1 || true)"
+    if [[ -n "${target}" && -n "${source}" && "${repo_root}" == "${target}"* && "${source}" == *"["*"]" ]]; then
+      source_path="${source#*[}"
+      source_path="${source_path%]}"
+      relative="${repo_root#${target}}"
+      relative="${relative#/}"
+      if [[ -n "${relative}" ]]; then
+        printf '%s/%s\n' "${source_path}" "${relative}"
+      else
+        printf '%s\n' "${source_path}"
+      fi
+      return 0
+    fi
+  fi
+
+  printf '%s\n' "${repo_root}"
+}
+
+runtime_runs_bind_root() {
+  if [[ -n "${OMNISEER_RUNTIME_RUNS_HOST_ROOT:-}" ]]; then
+    printf '%s\n' "${OMNISEER_RUNTIME_RUNS_HOST_ROOT}"
+    return 0
+  fi
+  printf '%s/runs\n' "$(runtime_docker_bind_repo_root)"
+}
+
 runtime_common_docker_args() {
   local image_ref="$1"
   local image_digest="$2"
-  local repo_root
+  local repo_root runs_bind_root
   repo_root="$(omni_repo_root)"
+  runs_bind_root="$(runtime_runs_bind_root)"
   mkdir -p "${repo_root}/runs"
   printf '%s\0' \
     "--rm" \
@@ -145,7 +203,7 @@ runtime_common_docker_args() {
     "--ipc=host" \
     "-v" "/dev:/dev" \
     "-v" "/run/udev:/run/udev:ro" \
-    "-v" "${repo_root}/runs:/runs" \
+    "-v" "${runs_bind_root}:/runs" \
     "-e" "OMNISEER_CONTAINER_IMAGE_REF=${image_ref}" \
     "-e" "OMNISEER_CONTAINER_IMAGE_DIGEST=${image_digest}"
 }
@@ -257,6 +315,93 @@ runtime_run() {
   runtime_docker_run "${image_ref}" "${runtime_remaining_args[@]}"
 }
 
+runtime_record() {
+  local image_base tag image_ref run_id system_interval_sec experiment_config status
+  local repo_root host_run_dir
+  local experiment_parameters=()
+  local launch_args=()
+  run_id="operator_$(runtime_timestamp)"
+  system_interval_sec="1.0"
+  experiment_config="operator-runtime"
+  experiment_parameters+=("stage=manual-operator")
+
+  runtime_parse_image_tag_args image_base tag "$@"
+  local remaining=("${runtime_remaining_args[@]}")
+  runtime_remaining_args=()
+  while [[ ${#remaining[@]} -gt 0 ]]; do
+    case "${remaining[0]}" in
+      --run-id|--record-run)
+        [[ ${#remaining[@]} -ge 2 ]] || omni_die "${remaining[0]} requires a value"
+        run_id="${remaining[1]}"
+        remaining=("${remaining[@]:2}")
+        ;;
+      --system-interval-sec|--record-system-interval-sec)
+        [[ ${#remaining[@]} -ge 2 ]] || omni_die "${remaining[0]} requires a value"
+        system_interval_sec="${remaining[1]}"
+        remaining=("${remaining[@]:2}")
+        ;;
+      --experiment-config|--record-experiment-config)
+        [[ ${#remaining[@]} -ge 2 ]] || omni_die "${remaining[0]} requires a value"
+        experiment_config="${remaining[1]}"
+        remaining=("${remaining[@]:2}")
+        ;;
+      --experiment-parameter|--record-experiment-parameter)
+        [[ ${#remaining[@]} -ge 2 ]] || omni_die "${remaining[0]} requires a value"
+        experiment_parameters+=("${remaining[1]}")
+        remaining=("${remaining[@]:2}")
+        ;;
+      --)
+        launch_args=("${remaining[@]:1}")
+        remaining=()
+        ;;
+      help|-h|--help)
+        usage
+        exit 0
+        ;;
+      --*)
+        omni_die "unknown runtime record argument: ${remaining[0]}"
+        ;;
+      *)
+        launch_args=("${remaining[@]}")
+        remaining=()
+        ;;
+    esac
+  done
+
+  tag="$(runtime_resolve_existing_tag "${tag}")"
+  image_ref="$(runtime_image_ref "${image_base}" "${tag}")"
+  repo_root="$(omni_repo_root)"
+  host_run_dir="${repo_root}/runs/${run_id}"
+
+  local command=(
+    run real
+    --profile operator
+    --record-run "${run_id}"
+    --record-out "/runs/${run_id}"
+    --record-overwrite
+    --record-system-interval-sec "${system_interval_sec}"
+    --record-experiment-config "${experiment_config}"
+  )
+  local parameter
+  for parameter in "${experiment_parameters[@]}"; do
+    command+=(--record-experiment-parameter "${parameter}")
+  done
+  command+=(bringup)
+  command+=("${launch_args[@]}")
+
+  omni_info "Recording runtime operator run ${run_id}"
+  omni_info "Run bundle path: ${host_run_dir}"
+  if [[ "$(runtime_runs_bind_root)" != "${repo_root}/runs" ]]; then
+    omni_info "Docker host run bind: $(runtime_runs_bind_root)/${run_id}"
+  fi
+  set +e
+  OMNISEER_RUNTIME_DOCKER_TTY=never runtime_docker_run "${image_ref}" "${command[@]}"
+  status=$?
+  set -e
+  omni_info "Run bundle path: ${host_run_dir}"
+  return "${status}"
+}
+
 runtime_verify_smoke() {
   local image_base="$1"
   local tag="$2"
@@ -358,7 +503,8 @@ runtime_verify() {
 }
 
 runtime_push() {
-  local image_base tag image_ref verify_file current_image_id verified_image_id promoted_ref
+  local image_base tag image_ref verify_file current_image_id verified_image_id immutable_verified_ref moving_verified_ref
+  local immutable_verified_tag
   runtime_parse_image_tag_args image_base tag "$@"
   [[ ${#runtime_remaining_args[@]} -eq 0 ]] || omni_die "unknown runtime push argument: ${runtime_remaining_args[0]}"
   tag="$(runtime_resolve_existing_tag "${tag}")"
@@ -374,10 +520,16 @@ runtime_push() {
     || omni_die "local image ID for ${image_ref} does not match verified image ID"
 
   docker push "${image_ref}"
-  promoted_ref="$(runtime_image_ref "${image_base}" "${verified_tag}")"
-  docker tag "${image_ref}" "${promoted_ref}"
-  docker push "${promoted_ref}"
-  omni_info "Pushed ${image_ref} and promoted ${promoted_ref}"
+  immutable_verified_tag="$(runtime_verified_tag_for "${tag}")"
+  immutable_verified_ref="$(runtime_image_ref "${image_base}" "${immutable_verified_tag}")"
+  moving_verified_ref="$(runtime_image_ref "${image_base}" "${verified_tag}")"
+  docker tag "${image_ref}" "${immutable_verified_ref}"
+  docker push "${immutable_verified_ref}"
+  docker tag "${image_ref}" "${moving_verified_ref}"
+  docker push "${moving_verified_ref}"
+  omni_info "Pushed ${image_ref}"
+  omni_info "Promoted immutable verified image ${immutable_verified_ref}"
+  omni_info "Promoted moving verified image ${moving_verified_ref}"
 }
 
 runtime_pull() {
@@ -401,6 +553,9 @@ case "${subcommand}" in
     ;;
   run)
     runtime_run "$@"
+    ;;
+  record)
+    runtime_record "$@"
     ;;
   verify)
     runtime_verify "$@"

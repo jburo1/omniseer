@@ -138,28 +138,51 @@ Suggestion:
 
 ### `runtime`
 
-Build, verify, publish, and pull robot runtime container checkpoints. This is a
-robot-local workflow; it does not require GitHub Actions to rebuild the
-hardware-specific image.
+Build, record, verify, publish, and pull robot runtime container checkpoints.
+This is a robot-local workflow; it does not require GitHub Actions to rebuild
+the hardware-specific image.
 
 Commands:
 
 ```bash
-scripts/omni runtime build --tag runtime-20260722-001
-scripts/omni runtime verify --tag runtime-20260722-001
-scripts/omni runtime verify --tag runtime-20260722-001 --stage full
-scripts/omni runtime push --tag runtime-20260722-001
+scripts/omni runtime build
+scripts/omni runtime record
+scripts/omni runtime verify
+scripts/omni runtime verify --stage full
+scripts/omni runtime push
 scripts/omni runtime pull
 ```
+
+Use `runtime record` for a manual operator evidence run. It starts the latest
+local runtime image in the operator profile, records an indefinite runbundle
+under `runs/operator_<UTC>`, samples system telemetry every second, and exits
+when the container is stopped or interrupted. Pass extra launch args after `--`,
+for example:
+
+```bash
+sudo scripts/omni runtime record -- start_lidar:=false
+```
+
+When these commands are launched from a devcontainer, the wrapper resolves the
+workspace's host-side bind path before starting Docker so runbundles still appear
+under this checkout's `runs/` directory. Override that detection with
+`OMNISEER_RUNTIME_RUNS_HOST_ROOT=/host/path/to/omniseer/runs` if needed.
 
 Use `runtime verify` without `--stage` for a safe container smoke check. Use
 `--stage full` to run the real operator smoke path with run recording and image
 provenance. `runtime push` publishes only after a passed full verification for
-the same local image ID, then promotes the image to `robot-verified`.
+the same local image ID. Default builds are tagged
+`robot-candidate-<UTC>-g<shortsha>`; push automatically promotes the same image
+to immutable `robot-verified-<UTC>-g<shortsha>` and moving `robot-verified`
+tags.
 `runtime verify` runs Docker without an interactive TTY so it works under `sudo`,
 SSH automation, and other non-interactive launch paths. For direct `runtime run`
 commands, Docker TTY allocation defaults to `auto`; set
 `OMNISEER_RUNTIME_DOCKER_TTY=always` or `never` to override it.
+
+See [Robot Runtime Container](robot_runtime_container.md#checkpoint-and-promotion)
+for the full pre-registry workflow, including runbundle inspection and report
+generation.
 
 ### `test`
 

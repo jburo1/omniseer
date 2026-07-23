@@ -31,7 +31,7 @@ Commands:
   build   Local build helpers. Defaults to all available artifacts.
   test    Targeted local verification helpers. Defaults to ROS.
   run     Operator-facing run commands for sim, real, monitor, and teleop.
-  runtime Build, verify, push, and pull robot runtime container checkpoints.
+  runtime Build, record, verify, push, and pull robot runtime container checkpoints.
   runs    Inspect, list, and retrieve perception run bundles.
   check   Passive verification helpers.
   doctor  Report local build, runtime, and robot dependency state.
@@ -57,6 +57,7 @@ Examples:
   scripts/omni build ros
   scripts/omni build runtime-container
   scripts/omni runtime build
+  scripts/omni runtime record
   scripts/omni runtime verify --stage full
   scripts/omni runtime push
   scripts/omni check real-perception

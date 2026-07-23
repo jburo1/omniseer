@@ -28,12 +28,15 @@ scripts/omni build runtime-container
 For checkpointed robot-local publishing, prefer the runtime workflow wrapper:
 
 ```bash
-scripts/omni runtime build --tag runtime-20260722-001
+scripts/omni runtime build
 ```
 
-This builds `ghcr.io/jburo1/omniseer-robot-runtime:<tag>` by default and records
-local build metadata under `.omniseer/runtime/`. Override the image base with
-`--image <base>` or `OMNISEER_RUNTIME_IMAGE`.
+This builds
+`ghcr.io/jburo1/omniseer-robot-runtime:robot-candidate-<UTC>-g<shortsha>` by
+default and records local build metadata under `.omniseer/runtime/`. The
+`g<shortsha>` suffix is the first 12 characters of the source git commit. Override
+the image base with `--image <base>` or `OMNISEER_RUNTIME_IMAGE`; pass `--tag`
+only when you need an explicit custom checkpoint tag.
 
 The robot target requires RKNN SDK files on the build host:
 
@@ -130,11 +133,43 @@ Use the portable image only for launch and entrypoint checks; it defaults to
 The robot-local promotion loop is:
 
 ```bash
-scripts/omni runtime build --tag runtime-20260722-001
-scripts/omni runtime verify --tag runtime-20260722-001
-scripts/omni runtime verify --tag runtime-20260722-001 --stage full
-scripts/omni runtime push --tag runtime-20260722-001
+scripts/omni runtime build
+scripts/omni runtime record
+scripts/omni runtime verify
+scripts/omni runtime verify --stage full
+scripts/omni runtime push
 ```
+
+For a full pre-registry verification pass on the robot:
+
+```bash
+sudo scripts/omni runtime build
+sudo scripts/omni runtime record
+
+RUN_DIR="$(ls -dt runs/operator_* | head -n 1)"
+scripts/omni runs inspect "${RUN_DIR}"
+scripts/omni runs report "${RUN_DIR}" --overwrite
+
+sudo scripts/omni runtime verify
+sudo scripts/omni runtime verify --stage full
+sudo scripts/omni runtime push
+```
+
+Review the generated run report before `runtime push`. The push step is the
+promotion boundary: it publishes the locally verified candidate image and moves
+the verified tags.
+
+`runtime record` is the manual operator evidence-capture path. It uses the latest
+local runtime build by default, starts `run real --profile operator ... bringup`
+without a Docker TTY, writes the runbundle to `runs/operator_<UTC>` on the host,
+and samples system telemetry every second. Stop the run with Ctrl-C when the
+experiment is complete.
+
+When launched from a devcontainer, the runtime wrapper resolves the host-side
+workspace bind path before starting Docker so the runtime container writes back
+into this checkout's `runs/` directory instead of a separate `/omniseer/runs`
+directory on the Docker host. Override that detection with
+`OMNISEER_RUNTIME_RUNS_HOST_ROOT=/host/path/to/omniseer/runs` if needed.
 
 `runtime verify` defaults to a safe smoke stage. It starts the container with
 vision, Teensy, LiDAR, boundary-topic waits, and pre-launch cleanup disabled; a
@@ -146,8 +181,9 @@ Direct `runtime run` commands allocate a TTY only when attached to one by
 default; override that with `OMNISEER_RUNTIME_DOCKER_TTY=always` or `never`.
 
 `runtime push` refuses to publish unless a passed full verification exists for the
-same local image ID. It pushes the immutable checkpoint tag first, then promotes
-the same image to the moving `robot-verified` tag.
+same local image ID. It pushes the candidate tag first, then automatically
+promotes the same image to immutable `robot-verified-<UTC>-g<shortsha>` and
+moving `robot-verified` tags.
 
 Pull the latest verified image on the robot with:
 
@@ -158,7 +194,7 @@ scripts/omni runtime pull
 Use an immutable tag for rollback or pinning:
 
 ```bash
-scripts/omni runtime pull --tag runtime-20260722-001
+scripts/omni runtime pull --tag robot-verified-20260723T052827Z-g437c10907531
 ```
 
 ## Verification Boundary

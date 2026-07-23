@@ -245,6 +245,8 @@ class RunReportTests(unittest.TestCase):
             self.assertIn("<h2>Configuration</h2>", output)
             self.assertIn("run real --profile operator bringup", output)
             self.assertIn("start_gateway:=true, camera_device:=/dev/video11", output)
+            self.assertIn("Runtime image ref", output)
+            self.assertIn("Runtime image digest", output)
             self.assertIn("ghcr.io/acme/omniseer:robot-v2", output)
             self.assertIn("ghcr.io/acme/omniseer@sha256:0123456789abcdef", output)
             self.assertIn("runtime-container-full", output)
