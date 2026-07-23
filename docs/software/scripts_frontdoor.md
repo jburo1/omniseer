@@ -156,6 +156,10 @@ Use `runtime verify` without `--stage` for a safe container smoke check. Use
 `--stage full` to run the real operator smoke path with run recording and image
 provenance. `runtime push` publishes only after a passed full verification for
 the same local image ID, then promotes the image to `robot-verified`.
+`runtime verify` runs Docker without an interactive TTY so it works under `sudo`,
+SSH automation, and other non-interactive launch paths. For direct `runtime run`
+commands, Docker TTY allocation defaults to `auto`; set
+`OMNISEER_RUNTIME_DOCKER_TTY=always` or `never` to override it.
 
 ### `test`
 
@@ -273,10 +277,20 @@ laptop download, inspection, evidence annotation, and a simple local HTML report
 are available through `scripts/omni runs`. Rich hosted review and cloud
 synchronization remain later work.
 
+`manifest.yaml` records the resolved real profile, mode, command, and launch
+arguments. `system.jsonl` records low-rate CPU, memory, thermal, WiFi/network,
+onboard battery, and `/battery` LiPo snapshots when those sources are available.
+
+`--record-overwrite` removes and recreates the selected run directory before
+launching ROS. The recorder then accepts an empty precreated directory, or one
+where the native vision node has already opened `pipeline_telemetry.jsonl` or
+`evidence/`, so startup ordering does not drop pipeline telemetry.
+
 Containerized runs can provide the same provenance through
 `OMNISEER_CONTAINER_IMAGE_REF`, `OMNISEER_CONTAINER_IMAGE_DIGEST`,
-`OMNISEER_EXPERIMENT_CONFIG`, and `OMNISEER_EXPERIMENT_PARAMETERS`. Experiment
-parameters may be a JSON object or comma/space-separated `key=value` pairs.
+`OMNISEER_GIT_SHA`, `OMNISEER_EXPERIMENT_CONFIG`, and
+`OMNISEER_EXPERIMENT_PARAMETERS`. Experiment parameters may be a JSON object or
+comma/space-separated `key=value` pairs.
 
 #### Real run modes
 

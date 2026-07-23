@@ -100,8 +100,10 @@ docker run --rm -it --privileged --network=host -v /dev:/dev -v "$PWD/runs:/runs
   run real --profile operator --record-run container_smoke --record-out /runs/container_smoke bringup
 ```
 
-For traceable container experiments, pass image and experiment metadata through
-environment variables or matching `scripts/omni run real` record flags:
+Runtime builds embed the source revision in `OMNISEER_GIT_SHA` and the
+`org.opencontainers.image.revision` label. For traceable container experiments,
+also pass image and experiment metadata through environment variables or matching
+`scripts/omni run real` record flags:
 
 ```bash
 docker run --rm -it --privileged --network=host \
@@ -114,6 +116,11 @@ docker run --rm -it --privileged --network=host \
   omniseer/robot-runtime:v2 \
   run real --profile operator --record-run container_smoke --record-out /runs/container_smoke bringup
 ```
+
+The generated run report surfaces the recorded source revision, image reference,
+image digest, launch command/profile/arguments, experiment config, experiment
+parameters, and the latest platform snapshots from `manifest.yaml` and
+`system.jsonl`.
 
 Use the portable image only for launch and entrypoint checks; it defaults to
 `start_vision:=false` and is not a full robot runtime.
@@ -133,7 +140,10 @@ scripts/omni runtime push --tag runtime-20260722-001
 vision, Teensy, LiDAR, boundary-topic waits, and pre-launch cleanup disabled; a
 launch that survives until the smoke timeout is treated as a pass. Full
 verification runs the container's existing real operator smoke path with run
-recording enabled.
+recording enabled. Verification runs Docker without an interactive TTY so it can
+be used under `sudo`, SSH automation, and other non-interactive launch paths.
+Direct `runtime run` commands allocate a TTY only when attached to one by
+default; override that with `OMNISEER_RUNTIME_DOCKER_TTY=always` or `never`.
 
 `runtime push` refuses to publish unless a passed full verification exists for the
 same local image ID. It pushes the immutable checkpoint tag first, then promotes

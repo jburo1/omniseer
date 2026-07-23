@@ -27,6 +27,14 @@ def _config(out_dir: Path) -> RunBundleConfig:
         notes="report fixture",
         ros_distro="kilted",
         git_sha="abc123",
+        launch_command="run real --profile operator bringup",
+        launch_profile="operator",
+        launch_mode="bringup",
+        launch_args=("start_gateway:=true", "camera_device:=/dev/video11"),
+        container_image_ref="ghcr.io/acme/omniseer:robot-v2",
+        container_image_digest="ghcr.io/acme/omniseer@sha256:0123456789abcdef",
+        experiment_config="runtime-container-full",
+        experiment_parameters={"profile": "operator", "stage": "full"},
     )
 
 
@@ -84,6 +92,30 @@ def _system_record() -> dict:
         memory_used_mb=812.0,
         memory_available_mb=7200.0,
         soc_temp_c=61.4,
+        thermal={"available": True, "soc_temp_c": 61.4, "throttled": False, "zones": []},
+        network={
+            "available": True,
+            "connected": True,
+            "interface": "wlan0",
+            "wifi_signal_dbm": -41,
+            "link_quality_percent": 90,
+        },
+        onboard_battery={
+            "available": False,
+            "source": "",
+            "present": False,
+            "voltage": None,
+            "percentage": None,
+            "charging": None,
+        },
+        lipo_battery={
+            "available": True,
+            "source": "/battery",
+            "present": True,
+            "voltage": 8.34,
+            "percentage": 0.0,
+            "charging": False,
+        },
     )
 
 
@@ -197,7 +229,17 @@ class RunReportTests(unittest.TestCase):
             self.assertIn("<h2>Run Summary</h2>", output)
             self.assertIn("<h2>Evidence Summary</h2>", output)
             self.assertIn("<h2>Configuration</h2>", output)
+            self.assertIn("run real --profile operator bringup", output)
+            self.assertIn("start_gateway:=true, camera_device:=/dev/video11", output)
+            self.assertIn("ghcr.io/acme/omniseer:robot-v2", output)
+            self.assertIn("ghcr.io/acme/omniseer@sha256:0123456789abcdef", output)
+            self.assertIn("runtime-container-full", output)
+            self.assertIn("profile=operator, stage=full", output)
             self.assertIn("<h2>Errors And Drops</h2>", output)
+            self.assertIn("Network Snapshot", output)
+            self.assertIn("wlan0", output)
+            self.assertIn("Battery Snapshot", output)
+            self.assertIn("8.34", output)
             self.assertIn("<h2>Detections</h2>", output)
             self.assertIn("Messages with detections", output)
             self.assertIn("Configured classes not observed", output)

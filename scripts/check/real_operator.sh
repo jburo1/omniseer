@@ -50,7 +50,8 @@ require_output() {
 
 wait_for_message() {
   local topic="$1"
-  if timeout "${timeout_seconds}" ros2 topic echo --once "${topic}" >/dev/null 2>&1; then
+  shift
+  if timeout "${timeout_seconds}" ros2 topic echo --once "$@" "${topic}" >/dev/null 2>&1; then
     echo "ok: received one message on ${topic}"
     return 0
   fi
@@ -61,7 +62,7 @@ wait_for_message() {
 "${script_dir}/real_teleop_perception.sh"
 wait_for_message "/encoder_counts"
 wait_for_message "/mecanum_drive_controller/odometry"
-wait_for_message "/scan"
+wait_for_message "/scan" --qos-reliability best_effort
 
 status_output="$(gateway_cli status)"
 echo "${status_output}"
@@ -122,14 +123,21 @@ require_output "${teleop_output}" "enabled=true" "teleop did not enable"
 teleop_enabled=1
 
 reference_output="$(mktemp /tmp/omniseer-operator-reference.XXXXXX)"
-timeout "${timeout_seconds}" ros2 topic echo --once \
+timeout "${timeout_seconds}" ros2 topic echo --once --qos-reliability best_effort \
   /mecanum_drive_controller/reference >"${reference_output}" 2>&1 &
 reference_pid=$!
-sleep 0.25
-
-teleop_output="$(gateway_cli teleop stop)"
-echo "${teleop_output}"
-require_output "${teleop_output}" "accepted=True" "zero teleop command was rejected"
+deadline=$((SECONDS + timeout_seconds))
+teleop_output=""
+teleop_command_observed=0
+while kill -0 "${reference_pid}" 2>/dev/null && (( SECONDS < deadline )); do
+  teleop_output="$(gateway_cli teleop stop)"
+  if [[ "${teleop_command_observed}" == "0" ]]; then
+    echo "${teleop_output}"
+    require_output "${teleop_output}" "accepted=True" "zero teleop command was rejected"
+    teleop_command_observed=1
+  fi
+  sleep 0.2
+done
 if ! wait "${reference_pid}"; then
   echo "failed: no teleop output reached /mecanum_drive_controller/reference" >&2
   cat "${reference_output}" >&2

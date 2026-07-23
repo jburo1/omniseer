@@ -9,9 +9,11 @@ from omniseer_experiments.bundle import RunBundleConfig, RunBundleWriter, make_s
 from omniseer_experiments.record_run import (
     AsyncBundleWriter,
     SystemTelemetryThread,
+    battery_state_to_snapshot,
     detection_array_to_record,
     options_from_args,
     perf_summary_to_record,
+    unavailable_lipo_battery_snapshot,
 )
 
 
@@ -50,6 +52,16 @@ def _perf_message() -> SimpleNamespace:
         capture_fatal_error_count=0,
         preprocess_error_count=3,
         infer_error_count=4,
+    )
+
+
+def _battery_message() -> SimpleNamespace:
+    return SimpleNamespace(
+        present=True,
+        voltage=8.34,
+        percentage=0.72,
+        power_supply_status=1,
+        POWER_SUPPLY_STATUS_CHARGING=1,
     )
 
 
@@ -113,6 +125,21 @@ class RecordRunConversionTests(unittest.TestCase):
                 "infer": 4,
             },
         )
+
+    def test_battery_state_to_snapshot_normalizes_percentage(self) -> None:
+        snapshot = battery_state_to_snapshot(_battery_message())
+
+        self.assertEqual(snapshot["topic"], "/battery")
+        self.assertEqual(snapshot["voltage"], 8.34)
+        self.assertEqual(snapshot["percentage"], 72.0)
+        self.assertEqual(snapshot["charging"], True)
+
+    def test_unavailable_lipo_battery_snapshot_has_explicit_shape(self) -> None:
+        snapshot = unavailable_lipo_battery_snapshot("/custom_battery")
+
+        self.assertEqual(snapshot["available"], False)
+        self.assertEqual(snapshot["topic"], "/custom_battery")
+        self.assertIsNone(snapshot["voltage"])
 
     def test_options_strip_program_name_and_ros_args(self) -> None:
         options = options_from_args(
@@ -203,6 +230,16 @@ class RecordRunConversionTests(unittest.TestCase):
                 "profile=operator,camera=/dev/video11",
                 "--experiment-parameter",
                 "scenario=smoke",
+                "--launch-command",
+                "run real --profile operator bringup",
+                "--launch-profile",
+                "operator",
+                "--launch-mode",
+                "bringup",
+                "--launch-args",
+                "start_gateway:=true camera_device:=/dev/video11",
+                "--battery-topic",
+                "/battery",
             ]
         )
 
@@ -213,6 +250,11 @@ class RecordRunConversionTests(unittest.TestCase):
             options.experiment_parameters,
             {"camera": "/dev/video11", "profile": "operator", "scenario": "smoke"},
         )
+        self.assertEqual(options.launch_command, "run real --profile operator bringup")
+        self.assertEqual(options.launch_profile, "operator")
+        self.assertEqual(options.launch_mode, "bringup")
+        self.assertEqual(options.launch_args, ("start_gateway:=true", "camera_device:=/dev/video11"))
+        self.assertEqual(options.battery_topic, "/battery")
 
     def test_options_use_env_fallback_for_container_and_experiment_provenance(self) -> None:
         original_env = {
@@ -289,9 +331,21 @@ class AsyncBundleWriterTests(unittest.TestCase):
             writer = AsyncBundleWriter(bundle, queue_size=8, flush_interval_sec=0.01)
             sampler = _FakeSampler()
 
-            thread = SystemTelemetryThread(sampler=sampler, writer=writer, interval_sec=0.01)
+            thread = SystemTelemetryThread(
+                sampler=sampler,
+                writer=writer,
+                extra_snapshot=lambda: {"lipo_battery": {"available": False}},
+                interval_sec=0.01,
+            )
             thread.stop()
             summary = writer.close()
+            system_records = _load_jsonl(run_dir / "system.jsonl")
 
         self.assertGreaterEqual(sampler.count, 1)
         self.assertGreaterEqual(summary["message_counts"]["system"], 1)
+        self.assertEqual(system_records[-1]["lipo_battery"], {"available": False})
+
+
+def _load_jsonl(path: Path) -> list[dict]:
+    with path.open("r", encoding="utf-8") as handle:
+        return [json.loads(line) for line in handle if line.strip()]

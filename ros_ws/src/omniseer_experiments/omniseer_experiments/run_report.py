@@ -228,11 +228,21 @@ def _summary_section(inspection: RunInspection) -> str:
 
 
 def _configuration_section(manifest: dict[str, Any]) -> str:
+    experiment_parameters = _manifest_nested_dict(manifest, "experiment", "parameters")
+    launch_args = _manifest_nested_list(manifest, "launch", "args")
     model_rows = [
         ("Robot", _manifest_string(manifest, "robot")),
         ("SBC", _manifest_string(manifest, "sbc")),
         ("ROS distro", _manifest_string(manifest, "ros_distro")),
         ("Git SHA", _manifest_string(manifest, "git_sha")),
+        ("Launch command", _manifest_nested_string(manifest, "launch", "command")),
+        ("Launch profile", _manifest_nested_string(manifest, "launch", "profile")),
+        ("Launch mode", _manifest_nested_string(manifest, "launch", "mode")),
+        ("Launch args", _join_or_dash(launch_args)),
+        ("Container image", _manifest_nested_string(manifest, "container", "image_ref")),
+        ("Container digest", _manifest_nested_string(manifest, "container", "image_digest")),
+        ("Experiment config", _manifest_nested_string(manifest, "experiment", "config")),
+        ("Experiment parameters", _format_mapping(experiment_parameters)),
         ("Detector", _manifest_model_value(manifest, "detector")),
         ("Detector model", _path_basename(_manifest_model_value(manifest, "detector_model_path"))),
         ("CLIP model", _path_basename(_manifest_model_value(manifest, "clip_model_path"))),
@@ -475,7 +485,63 @@ def _system_section(records: Sequence[dict[str, Any]]) -> str:
         )
     if not rows:
         return _section("System", "<p>No system telemetry recorded.</p>")
-    return _section("System", _table(["Metric", "Samples", "Min", "Mean", "Max"], rows))
+    body = _table(["Metric", "Samples", "Min", "Mean", "Max"], rows) + _platform_snapshot_tables(records)
+    return _section("System", body)
+
+
+def _platform_snapshot_tables(records: Sequence[dict[str, Any]]) -> str:
+    latest = records[-1] if records else {}
+    sections = []
+    thermal = latest.get("thermal")
+    if isinstance(thermal, dict):
+        sections.append(
+            "<h3>Thermal Snapshot</h3>"
+            + _key_value_table(
+                [
+                    ("Available", str(bool(thermal.get("available"))).lower()),
+                    ("SoC temperature C", _format_optional_float(_as_float(thermal.get("soc_temp_c")))),
+                    ("Throttled", _display(thermal.get("throttled"))),
+                ]
+            )
+        )
+    network = latest.get("network")
+    if isinstance(network, dict):
+        sections.append(
+            "<h3>Network Snapshot</h3>"
+            + _key_value_table(
+                [
+                    ("Available", str(bool(network.get("available"))).lower()),
+                    ("Connected", str(bool(network.get("connected"))).lower()),
+                    ("Interface", _display(network.get("interface"))),
+                    ("WiFi signal dBm", _display(network.get("wifi_signal_dbm"))),
+                    ("Link quality percent", _display(network.get("link_quality_percent"))),
+                ]
+            )
+        )
+    lipo = latest.get("lipo_battery")
+    onboard = latest.get("onboard_battery")
+    battery_rows = []
+    if isinstance(lipo, dict):
+        battery_rows.append(["LiPo", *_battery_snapshot_cells(lipo)])
+    if isinstance(onboard, dict):
+        battery_rows.append(["Onboard", *_battery_snapshot_cells(onboard)])
+    if battery_rows:
+        sections.append(
+            "<h3>Battery Snapshot</h3>"
+            + _table(["Battery", "Available", "Present", "Voltage", "Percentage", "Charging", "Source"], battery_rows)
+        )
+    return "".join(sections)
+
+
+def _battery_snapshot_cells(snapshot: dict[str, Any]) -> list[str]:
+    return [
+        str(bool(snapshot.get("available"))).lower(),
+        str(bool(snapshot.get("present"))).lower(),
+        _format_optional_float(_as_float(snapshot.get("voltage"))),
+        _format_optional_float(_as_float(snapshot.get("percentage"))),
+        _display(snapshot.get("charging")),
+        _display(snapshot.get("source")),
+    ]
 
 
 def _errors_section(inspection: RunInspection) -> str:
@@ -588,19 +654,43 @@ def _manifest_string(manifest: dict[str, Any], key: str) -> str:
 
 
 def _manifest_model_value(manifest: dict[str, Any], key: str) -> str:
-    model = manifest.get("model")
-    if not isinstance(model, dict):
-        return ""
-    value = model.get(key)
-    return value if isinstance(value, str) else ""
+    return _manifest_nested_string(manifest, "model", key)
 
 
 def _manifest_topic_value(manifest: dict[str, Any], key: str) -> str:
-    topics = manifest.get("topics")
-    if not isinstance(topics, dict):
+    return _manifest_nested_string(manifest, "topics", key)
+
+
+def _manifest_nested_string(manifest: dict[str, Any], section: str, key: str) -> str:
+    nested = manifest.get(section)
+    if not isinstance(nested, dict):
         return ""
-    value = topics.get(key)
+    value = nested.get(key)
     return value if isinstance(value, str) else ""
+
+
+def _manifest_nested_dict(manifest: dict[str, Any], section: str, key: str) -> dict[str, Any]:
+    nested = manifest.get(section)
+    if not isinstance(nested, dict):
+        return {}
+    value = nested.get(key)
+    return value if isinstance(value, dict) else {}
+
+
+def _manifest_nested_list(manifest: dict[str, Any], section: str, key: str) -> tuple[str, ...]:
+    nested = manifest.get(section)
+    if not isinstance(nested, dict):
+        return ()
+    value = nested.get(key)
+    if not isinstance(value, list):
+        return ()
+    return tuple(str(item) for item in value if item)
+
+
+def _format_mapping(value: dict[str, Any]) -> str:
+    if not value:
+        return ""
+    return ", ".join(f"{key}={item}" for key, item in sorted(value.items()))
 
 
 def _path_basename(value: str) -> str:
@@ -702,6 +792,10 @@ def _format_optional_ms(value: float | None) -> str:
     if value is None:
         return "-"
     return f"{_format_float(value)} ms"
+
+
+def _format_optional_float(value: float | None) -> str:
+    return "-" if value is None else _format_float(value)
 
 
 def _format_duration(value: float | None) -> str:

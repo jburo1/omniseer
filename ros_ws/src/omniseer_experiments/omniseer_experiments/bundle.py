@@ -44,6 +44,10 @@ def default_run_id(now: datetime | None = None) -> str:
 
 
 def resolve_git_sha(repo_root: Path | None = None) -> str:
+    env_sha = os.environ.get("OMNISEER_GIT_SHA", "").strip()
+    if env_sha and env_sha != "unknown":
+        return env_sha
+
     cwd = repo_root or Path.cwd()
     try:
         result = subprocess.run(
@@ -77,6 +81,10 @@ class RunBundleConfig:
     clip_model_path: str = ""
     clip_vocab_path: str = ""
     classes_path: str = ""
+    launch_command: str = ""
+    launch_profile: str = ""
+    launch_mode: str = ""
+    launch_args: tuple[str, ...] = ()
     container_image_ref: str = ""
     container_image_digest: str = ""
     experiment_config: str = ""
@@ -269,24 +277,34 @@ class RunBundleWriter:
     def _prepare_run_dir(self) -> None:
         if self.run_dir.exists():
             if not self.config.overwrite:
-                if self.run_dir.is_dir() and self._is_precreated_pipeline_telemetry_dir():
+                if self.run_dir.is_dir() and self._is_precreated_native_artifacts_dir():
                     return
                 raise FileExistsError(f"run directory already exists: {self.run_dir}")
             if not self.run_dir.is_dir():
                 raise NotADirectoryError(f"run output path is not a directory: {self.run_dir}")
+            if self._is_precreated_native_artifacts_dir():
+                return
             shutil.rmtree(self.run_dir)
             self.run_dir.mkdir(parents=True)
         else:
             self.run_dir.mkdir(parents=True)
 
-    def _is_precreated_pipeline_telemetry_dir(self) -> bool:
+    def _is_precreated_native_artifacts_dir(self) -> bool:
         try:
             children = tuple(self.run_dir.iterdir())
         except OSError:
             return False
         if not children:
             return True
-        return len(children) == 1 and children[0] == self.pipeline_telemetry_path and children[0].is_file()
+        allowed_names = {"pipeline_telemetry.jsonl", "evidence"}
+        for child in children:
+            if child.name not in allowed_names:
+                return False
+            if child.name == "pipeline_telemetry.jsonl" and not child.is_file():
+                return False
+            if child.name == "evidence" and not child.is_dir():
+                return False
+        return True
 
     def _manifest(self) -> dict[str, Any]:
         return {
@@ -308,6 +326,12 @@ class RunBundleWriter:
             },
             "classes_path": self.config.classes_path,
             "classes": list(self.config.classes),
+            "launch": {
+                "command": self.config.launch_command,
+                "profile": self.config.launch_profile,
+                "mode": self.config.launch_mode,
+                "args": list(self.config.launch_args),
+            },
             "container": {
                 "image_ref": self.config.container_image_ref,
                 "image_digest": self.config.container_image_digest,
@@ -394,8 +418,12 @@ def make_system_record(
     memory_used_mb: float,
     memory_available_mb: float,
     soc_temp_c: float | None,
+    thermal: dict[str, Any] | None = None,
+    network: dict[str, Any] | None = None,
+    onboard_battery: dict[str, Any] | None = None,
+    lipo_battery: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    return {
+    record: dict[str, Any] = {
         "schema_version": SCHEMA_VERSION,
         "source": "system",
         "recv_ts_ns": recv_ts_ns,
@@ -404,6 +432,15 @@ def make_system_record(
         "memory_available_mb": memory_available_mb,
         "soc_temp_c": soc_temp_c,
     }
+    if thermal is not None:
+        record["thermal"] = thermal
+    if network is not None:
+        record["network"] = network
+    if onboard_battery is not None:
+        record["onboard_battery"] = onboard_battery
+    if lipo_battery is not None:
+        record["lipo_battery"] = lipo_battery
+    return record
 
 
 def _class_key(detection: dict[str, Any]) -> str:

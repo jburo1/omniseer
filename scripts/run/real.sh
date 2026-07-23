@@ -2,6 +2,7 @@
 set -euo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+original_args=("$@")
 
 # shellcheck disable=SC1091
 source "${script_dir}/../lib/log.sh"
@@ -95,15 +96,30 @@ recording_requested() {
   [[ "${record_enabled}" == "true" ]]
 }
 
-require_no_recording() {
-  if recording_requested; then
-    omni_die "recording flags require a mode that launches real bringup"
-  fi
+shell_join() {
+  local parts=()
+  local arg
+  for arg in "$@"; do
+    parts+=("$(printf '%q' "${arg}")")
+  done
+  local IFS=" "
+  printf '%s\n' "${parts[*]}"
 }
 
-append_recording_launch_args() {
-  local -n target_args="$1"
+recording_launch_command() {
+  if [[ -n "${OMNISEER_RUNTIME_CONTAINER_COMMAND:-}" ]]; then
+    printf '%s\n' "${OMNISEER_RUNTIME_CONTAINER_COMMAND}"
+    return
+  fi
 
+  printf 'scripts/omni run real'
+  if [[ ${#original_args[@]} -gt 0 ]]; then
+    printf ' %s' "$(shell_join "${original_args[@]}")"
+  fi
+  printf '\n'
+}
+
+resolve_recording_defaults() {
   if ! recording_requested; then
     return
   fi
@@ -115,6 +131,44 @@ append_recording_launch_args() {
   if [[ -z "${record_out_dir}" ]]; then
     record_out_dir="runs/${record_run_id}"
   fi
+}
+
+prepare_recording_run_dir() {
+  if ! recording_requested; then
+    return
+  fi
+
+  resolve_recording_defaults
+  if [[ "${record_out_dir}" == "/" || -z "${record_out_dir}" ]]; then
+    omni_die "refusing unsafe run bundle output directory: ${record_out_dir}"
+  fi
+
+  if [[ "${record_overwrite}" == "true" ]]; then
+    rm -rf -- "${record_out_dir}"
+  fi
+  mkdir -p -- "${record_out_dir}"
+  record_overwrite="false"
+}
+
+require_no_recording() {
+  if recording_requested; then
+    omni_die "recording flags require a mode that launches real bringup"
+  fi
+}
+
+append_recording_launch_args() {
+  local -n target_args="$1"
+  shift
+  local extra_args=("$@")
+
+  if ! recording_requested; then
+    return
+  fi
+
+  resolve_recording_defaults
+  local launch_command launch_args_text
+  launch_command="$(recording_launch_command)"
+  launch_args_text="$(shell_join "${target_args[@]}" "${extra_args[@]}")"
 
   target_args+=(
     "start_experiment_recording:=true"
@@ -124,6 +178,10 @@ append_recording_launch_args() {
     "experiment_overwrite:=${record_overwrite}"
     "pipeline_telemetry_path:=${record_out_dir}/pipeline_telemetry.jsonl"
     "evidence_dir:=${record_out_dir}/evidence"
+    "experiment_launch_command:=${launch_command}"
+    "experiment_launch_profile:=${resolved_profile}"
+    "experiment_launch_mode:=${mode}"
+    "experiment_launch_args:=${launch_args_text}"
   )
 
   if [[ -n "${record_notes}" ]]; then
@@ -207,7 +265,8 @@ run_profile_bringup() {
   local extra_args=("$@")
   local launch_args=()
   omni_read_lines_into_array launch_args "${launch_args_producer}"
-  append_recording_launch_args launch_args
+  prepare_recording_run_dir
+  append_recording_launch_args launch_args "${extra_args[@]}"
   omni_source_ros_workspace
   require_vision_bridge_package "${launch_args[@]}" "${extra_args[@]}"
   exec ros2 launch bringup real.launch.py "${launch_args[@]}" "${extra_args[@]}"
@@ -220,7 +279,8 @@ run_background_profile_bringup() {
   local extra_args=("$@")
   local launch_args=()
   omni_read_lines_into_array launch_args "${launch_args_producer}"
-  append_recording_launch_args launch_args
+  prepare_recording_run_dir
+  append_recording_launch_args launch_args "${extra_args[@]}"
   omni_source_ros_workspace
   require_vision_bridge_package "${launch_args[@]}" "${extra_args[@]}"
 

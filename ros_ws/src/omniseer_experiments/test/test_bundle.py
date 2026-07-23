@@ -1,4 +1,5 @@
 import json
+import os
 import tempfile
 import unittest
 from datetime import datetime, timezone
@@ -32,6 +33,10 @@ def _config(out_dir: Path, *, overwrite: bool = False) -> RunBundleConfig:
         clip_model_path="/models/clip.rknn",
         clip_vocab_path="/models/clip_vocab.bpe",
         classes_path="/models/classes.txt",
+        launch_command="run real --profile operator bringup",
+        launch_profile="operator",
+        launch_mode="bringup",
+        launch_args=("start_gateway:=true", "camera_device:=/dev/video11"),
         container_image_ref="ghcr.io/acme/omniseer:robot-v2",
         container_image_digest="sha256:0123456789abcdef",
         experiment_config="experiments/container-smoke.yaml",
@@ -113,6 +118,12 @@ class RunBundleWriterTests(unittest.TestCase):
                 self.assertIn('vision_params_file: "/configs/vision.yaml"', manifest)
                 self.assertIn('clip_vocab_path: "/models/clip_vocab.bpe"', manifest)
                 self.assertIn('classes_path: "/models/classes.txt"', manifest)
+                self.assertIn("launch:", manifest)
+                self.assertIn('command: "run real --profile operator bringup"', manifest)
+                self.assertIn('profile: "operator"', manifest)
+                self.assertIn('mode: "bringup"', manifest)
+                self.assertIn('- "start_gateway:=true"', manifest)
+                self.assertIn('- "camera_device:=/dev/video11"', manifest)
                 self.assertIn("container:", manifest)
                 self.assertIn('image_ref: "ghcr.io/acme/omniseer:robot-v2"', manifest)
                 self.assertIn('image_digest: "sha256:0123456789abcdef"', manifest)
@@ -201,6 +212,54 @@ class RunBundleWriterTests(unittest.TestCase):
                 self.assertTrue((run_dir / "pipeline_telemetry.jsonl").is_file())
             finally:
                 writer.close()
+
+    def test_precreated_native_artifacts_do_not_block_writer(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "precreated"
+            run_dir.mkdir()
+            (run_dir / "pipeline_telemetry.jsonl").write_text('{"source":"producer"}\n', encoding="utf-8")
+            (run_dir / "evidence").mkdir()
+
+            writer = RunBundleWriter(_config(run_dir), started_at=STARTED_AT)
+            try:
+                self.assertTrue((run_dir / "manifest.yaml").is_file())
+                self.assertEqual(
+                    (run_dir / "pipeline_telemetry.jsonl").read_text(encoding="utf-8"),
+                    '{"source":"producer"}\n',
+                )
+                self.assertTrue((run_dir / "evidence").is_dir())
+            finally:
+                writer.close()
+
+    def test_overwrite_preserves_only_precreated_native_artifacts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "precreated"
+            run_dir.mkdir()
+            (run_dir / "pipeline_telemetry.jsonl").write_text('{"source":"producer"}\n', encoding="utf-8")
+            (run_dir / "evidence").mkdir()
+
+            writer = RunBundleWriter(_config(run_dir, overwrite=True), started_at=STARTED_AT)
+            try:
+                self.assertTrue((run_dir / "manifest.yaml").is_file())
+                self.assertEqual(
+                    (run_dir / "pipeline_telemetry.jsonl").read_text(encoding="utf-8"),
+                    '{"source":"producer"}\n',
+                )
+            finally:
+                writer.close()
+
+    def test_resolve_git_sha_prefers_runtime_image_env(self) -> None:
+        original_value = os.environ.get("OMNISEER_GIT_SHA")
+        try:
+            os.environ["OMNISEER_GIT_SHA"] = "runtime-image-sha"
+            config = RunBundleConfig(run_id="demo_001", out_dir=Path("/tmp/unused"))
+        finally:
+            if original_value is None:
+                os.environ.pop("OMNISEER_GIT_SHA", None)
+            else:
+                os.environ["OMNISEER_GIT_SHA"] = original_value
+
+        self.assertEqual(config.git_sha, "runtime-image-sha")
 
     def test_manifest_renders_empty_classes_inline(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

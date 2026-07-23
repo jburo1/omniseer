@@ -255,33 +255,32 @@ def _read_manifest(path: Path, issues: list[InspectionIssue]) -> dict[str, Any]:
 
 def _parse_generated_manifest(lines: Sequence[str]) -> dict[str, Any]:
     result: dict[str, Any] = {}
-    section: str | None = None
+    stack: list[tuple[int, dict[str, Any] | list[Any]]] = [(-1, result)]
     for raw in lines:
         if not raw.strip():
             continue
         indent = len(raw) - len(raw.lstrip(" "))
         stripped = raw.strip()
 
-        if indent == 0:
-            key, raw_value = _split_yaml_pair(stripped)
-            section = key if raw_value == "" else None
-            if raw_value == "":
-                result[key] = [] if key == "classes" else {}
-            else:
-                result[key] = _parse_yaml_scalar(raw_value)
+        while stack and indent <= stack[-1][0]:
+            stack.pop()
+        parent = stack[-1][1] if stack else result
+
+        if stripped.startswith("- "):
+            if isinstance(parent, list):
+                parent.append(_parse_yaml_scalar(stripped[2:].strip()))
             continue
 
-        if section == "classes" and stripped.startswith("- "):
-            classes = result.setdefault("classes", [])
-            if isinstance(classes, list):
-                classes.append(_parse_yaml_scalar(stripped[2:].strip()))
+        key, raw_value = _split_yaml_pair(stripped)
+        if not isinstance(parent, dict):
             continue
 
-        if section and indent == 2 and ":" in stripped:
-            key, raw_value = _split_yaml_pair(stripped)
-            nested = result.setdefault(section, {})
-            if isinstance(nested, dict):
-                nested[key] = _parse_yaml_scalar(raw_value)
+        if raw_value == "":
+            value: dict[str, Any] | list[Any] = [] if key in {"args", "classes"} else {}
+            parent[key] = value
+            stack.append((indent, value))
+        else:
+            parent[key] = _parse_yaml_scalar(raw_value)
 
     return result
 

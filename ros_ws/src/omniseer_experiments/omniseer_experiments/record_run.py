@@ -10,6 +10,7 @@ import shlex
 import signal
 import threading
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -19,6 +20,7 @@ from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from rclpy.qos import QoSHistoryPolicy, QoSProfile, QoSReliabilityPolicy
 from rclpy.utilities import remove_ros_args
+from sensor_msgs.msg import BatteryState
 from yolo_msgs.msg import DetectionArray
 
 from omniseer_experiments.bundle import (
@@ -54,12 +56,17 @@ class RecorderOptions:
     clip_model_path: str = ""
     clip_vocab_path: str = ""
     classes_path: str = ""
+    launch_command: str = ""
+    launch_profile: str = ""
+    launch_mode: str = ""
+    launch_args: tuple[str, ...] = ()
     container_image_ref: str = ""
     container_image_digest: str = ""
     experiment_config: str = ""
     experiment_parameters: dict[str, str] | None = None
     queue_size: int = DEFAULT_QUEUE_SIZE
     flush_interval_sec: float = 1.0
+    battery_topic: str = "/battery"
 
 
 class AsyncBundleWriter:
@@ -155,12 +162,14 @@ class SystemTelemetryThread:
         *,
         sampler: SystemTelemetrySampler,
         writer: AsyncBundleWriter,
+        extra_snapshot: Callable[[], dict[str, Any]] | None = None,
         interval_sec: float = DEFAULT_SYSTEM_SAMPLE_INTERVAL_SEC,
     ) -> None:
         if interval_sec <= 0.0:
             raise ValueError("interval_sec must be > 0")
         self._sampler = sampler
         self._writer = writer
+        self._extra_snapshot = extra_snapshot
         self._interval_sec = interval_sec
         self._stop_requested = threading.Event()
         self._thread = threading.Thread(target=self._run, name="omniseer_system_telemetry", daemon=True)
@@ -173,6 +182,8 @@ class SystemTelemetryThread:
     def _run(self) -> None:
         while not self._stop_requested.is_set():
             record = self._sampler.sample()
+            if self._extra_snapshot is not None:
+                record.update(self._extra_snapshot())
             self._writer.submit("system", record)
             self._stop_requested.wait(self._interval_sec)
 
@@ -184,6 +195,8 @@ class PerceptionRunRecorder(Node):
         super().__init__("perception_run_recorder")
         self._options = options
         self._closed = False
+        self._battery_lock = threading.Lock()
+        self._latest_lipo_battery: dict[str, Any] | None = None
 
         bundle = RunBundleWriter(
             RunBundleConfig(
@@ -197,6 +210,10 @@ class PerceptionRunRecorder(Node):
                 clip_model_path=options.clip_model_path,
                 clip_vocab_path=options.clip_vocab_path,
                 classes_path=options.classes_path,
+                launch_command=options.launch_command,
+                launch_profile=options.launch_profile,
+                launch_mode=options.launch_mode,
+                launch_args=options.launch_args,
                 container_image_ref=options.container_image_ref,
                 container_image_digest=options.container_image_digest,
                 experiment_config=options.experiment_config,
@@ -213,6 +230,7 @@ class PerceptionRunRecorder(Node):
         self._system_telemetry = SystemTelemetryThread(
             sampler=SystemTelemetrySampler(),
             writer=self._writer,
+            extra_snapshot=self._extra_system_snapshot,
             interval_sec=DEFAULT_SYSTEM_SAMPLE_INTERVAL_SEC,
         )
 
@@ -223,6 +241,7 @@ class PerceptionRunRecorder(Node):
         )
         self.create_subscription(DetectionArray, options.detections_topic, self._on_detections, qos)
         self.create_subscription(VisionPerfSummary, options.perf_topic, self._on_perf, qos)
+        self.create_subscription(BatteryState, options.battery_topic, self._on_battery, qos)
 
         if options.duration_sec > 0.0:
             self.create_timer(options.duration_sec, self._finish_duration)
@@ -249,6 +268,17 @@ class PerceptionRunRecorder(Node):
         accepted = self._writer.submit("perf", record)
         if not accepted:
             self.get_logger().warning("dropped perf record because recorder queue is full")
+
+    def _on_battery(self, message: BatteryState) -> None:
+        snapshot = battery_state_to_snapshot(message, topic=self._options.battery_topic)
+        with self._battery_lock:
+            self._latest_lipo_battery = snapshot
+
+    def _extra_system_snapshot(self) -> dict[str, Any]:
+        with self._battery_lock:
+            if self._latest_lipo_battery is None:
+                return {"lipo_battery": unavailable_lipo_battery_snapshot(self._options.battery_topic)}
+            return {"lipo_battery": dict(self._latest_lipo_battery)}
 
     def _finish_duration(self) -> None:
         self.get_logger().info("recording duration elapsed; shutting down recorder")
@@ -311,6 +341,30 @@ def stamp_to_dict(stamp: Any) -> dict[str, int]:
     return {"sec": int(stamp.sec), "nanosec": int(stamp.nanosec)}
 
 
+def battery_state_to_snapshot(message: BatteryState, *, topic: str = "/battery") -> dict[str, Any]:
+    return {
+        "available": True,
+        "topic": topic,
+        "source": topic,
+        "present": bool(message.present),
+        "voltage": _finite_or_none(float(message.voltage)),
+        "percentage": _battery_percentage(float(message.percentage)),
+        "charging": int(message.power_supply_status) == BatteryState.POWER_SUPPLY_STATUS_CHARGING,
+    }
+
+
+def unavailable_lipo_battery_snapshot(topic: str = "/battery") -> dict[str, Any]:
+    return {
+        "available": False,
+        "topic": topic,
+        "source": topic,
+        "present": False,
+        "voltage": None,
+        "percentage": None,
+        "charging": None,
+    }
+
+
 def options_from_args(argv: list[str] | None = None) -> RecorderOptions:
     parser = _build_parser()
     cli_args = remove_ros_args(args=argv)
@@ -349,12 +403,17 @@ def options_from_args(argv: list[str] | None = None) -> RecorderOptions:
         clip_model_path=clip_model_path,
         clip_vocab_path=clip_vocab_path,
         classes_path=classes_path,
+        launch_command=args.launch_command,
+        launch_profile=args.launch_profile,
+        launch_mode=args.launch_mode,
+        launch_args=tuple(shlex.split(args.launch_args)) if args.launch_args else (),
         container_image_ref=_env_fallback(args.container_image_ref, "OMNISEER_CONTAINER_IMAGE_REF"),
         container_image_digest=_env_fallback(args.container_image_digest, "OMNISEER_CONTAINER_IMAGE_DIGEST"),
         experiment_config=_env_fallback(args.experiment_config, "OMNISEER_EXPERIMENT_CONFIG"),
         experiment_parameters=experiment_parameters,
         queue_size=args.queue_size,
         flush_interval_sec=args.flush_interval_sec,
+        battery_topic=args.battery_topic,
     )
 
 
@@ -384,6 +443,10 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--clip-model-path", default="", help="CLIP text model path or __from_config__")
     parser.add_argument("--clip-vocab-path", default="", help="CLIP vocab path or __from_config__")
     parser.add_argument("--classes-path", default="", help="class list path or __from_config__")
+    parser.add_argument("--launch-command", default="", help="resolved command that launched the run")
+    parser.add_argument("--launch-profile", default="", help="resolved real profile used for the run")
+    parser.add_argument("--launch-mode", default="", help="resolved real mode used for the run")
+    parser.add_argument("--launch-args", default="", help="shell-quoted real.launch.py key:=value arguments")
     parser.add_argument("--container-image-ref", default="", help="container image reference for run provenance")
     parser.add_argument("--container-image-digest", default="", help="container image digest for run provenance")
     parser.add_argument("--experiment-config", default="", help="experiment config identifier or path for provenance")
@@ -400,6 +463,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--queue-size", type=int, default=DEFAULT_QUEUE_SIZE)
     parser.add_argument("--flush-interval-sec", type=float, default=1.0)
+    parser.add_argument("--battery-topic", default="/battery", help="battery topic for LiPo snapshots")
     return parser
 
 
@@ -474,6 +538,19 @@ def _stringify_parameter_value(value: object) -> str:
     if isinstance(value, (dict, list)):
         return json.dumps(value, separators=(",", ":"), sort_keys=True)
     return str(value)
+
+
+def _finite_or_none(value: float) -> float | None:
+    if value != value or value in {float("inf"), float("-inf")}:
+        return None
+    return value
+
+
+def _battery_percentage(value: float) -> float | None:
+    finite = _finite_or_none(value)
+    if finite is None or finite < 0.0:
+        return None
+    return finite * 100.0 if finite <= 1.0 else finite
 
 
 def _resolve_config_value(raw_value: str, params: dict[str, str], key: str) -> str:

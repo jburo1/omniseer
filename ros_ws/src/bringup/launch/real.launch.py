@@ -93,6 +93,10 @@ def _build_real_bringup_actions(
     experiment_notes,
     experiment_container_image_ref,
     experiment_container_image_digest,
+    experiment_launch_command,
+    experiment_launch_profile,
+    experiment_launch_mode,
+    experiment_launch_args,
     experiment_config,
     experiment_parameters,
     experiment_duration_sec,
@@ -180,6 +184,14 @@ def _build_real_bringup_actions(
             experiment_container_image_ref,
             "--container-image-digest",
             experiment_container_image_digest,
+            "--launch-command",
+            experiment_launch_command,
+            "--launch-profile",
+            experiment_launch_profile,
+            "--launch-mode",
+            experiment_launch_mode,
+            "--launch-args",
+            experiment_launch_args,
             "--experiment-config",
             experiment_config,
             "--experiment-parameters",
@@ -376,6 +388,10 @@ def generate_launch_description():
         DeclareLaunchArgument("experiment_notes", default_value=""),
         DeclareLaunchArgument("experiment_container_image_ref", default_value=""),
         DeclareLaunchArgument("experiment_container_image_digest", default_value=""),
+        DeclareLaunchArgument("experiment_launch_command", default_value=""),
+        DeclareLaunchArgument("experiment_launch_profile", default_value=""),
+        DeclareLaunchArgument("experiment_launch_mode", default_value=""),
+        DeclareLaunchArgument("experiment_launch_args", default_value=""),
         DeclareLaunchArgument("experiment_config", default_value=""),
         DeclareLaunchArgument("experiment_parameters", default_value=""),
         DeclareLaunchArgument("experiment_duration_sec", default_value="0"),
@@ -443,6 +459,10 @@ def generate_launch_description():
     experiment_notes = LaunchConfiguration("experiment_notes")
     experiment_container_image_ref = LaunchConfiguration("experiment_container_image_ref")
     experiment_container_image_digest = LaunchConfiguration("experiment_container_image_digest")
+    experiment_launch_command = LaunchConfiguration("experiment_launch_command")
+    experiment_launch_profile = LaunchConfiguration("experiment_launch_profile")
+    experiment_launch_mode = LaunchConfiguration("experiment_launch_mode")
+    experiment_launch_args = LaunchConfiguration("experiment_launch_args")
     experiment_config = LaunchConfiguration("experiment_config")
     experiment_parameters = LaunchConfiguration("experiment_parameters")
     experiment_duration_sec = LaunchConfiguration("experiment_duration_sec")
@@ -512,6 +532,10 @@ def generate_launch_description():
             experiment_notes=experiment_notes,
             experiment_container_image_ref=experiment_container_image_ref,
             experiment_container_image_digest=experiment_container_image_digest,
+            experiment_launch_command=experiment_launch_command,
+            experiment_launch_profile=experiment_launch_profile,
+            experiment_launch_mode=experiment_launch_mode,
+            experiment_launch_args=experiment_launch_args,
             experiment_config=experiment_config,
             experiment_parameters=experiment_parameters,
             experiment_duration_sec=experiment_duration_sec,
@@ -591,6 +615,10 @@ def generate_launch_description():
             experiment_notes=experiment_notes,
             experiment_container_image_ref=experiment_container_image_ref,
             experiment_container_image_digest=experiment_container_image_digest,
+            experiment_launch_command=experiment_launch_command,
+            experiment_launch_profile=experiment_launch_profile,
+            experiment_launch_mode=experiment_launch_mode,
+            experiment_launch_args=experiment_launch_args,
             experiment_config=experiment_config,
             experiment_parameters=experiment_parameters,
             experiment_duration_sec=experiment_duration_sec,

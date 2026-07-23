@@ -3,16 +3,20 @@
 ARG ROS_DISTRO=kilted
 ARG ROS_BASE=ros:${ROS_DISTRO}-ros-core-noble
 ARG MICRO_ROS_AGENT_REF=f0d809138de19a61fe1a640d5c5a3076cd648360
+ARG OMNISEER_GIT_SHA=unknown
 
 FROM ${ROS_BASE} AS runtime-base
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 ARG ROS_DISTRO=kilted
+ARG OMNISEER_GIT_SHA=unknown
+LABEL org.opencontainers.image.revision="${OMNISEER_GIT_SHA}"
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8 \
     PYTHONUNBUFFERED=1 \
+    OMNISEER_GIT_SHA=${OMNISEER_GIT_SHA} \
     ROS_DISTRO=${ROS_DISTRO} \
     ROS_DOMAIN_ID=42 \
     ROS_LOCALHOST_ONLY=0 \
@@ -169,9 +173,15 @@ RUN set -eux; \
   apt-get install -y --no-install-recommends \
     libdrm-dev \
     libv4l-0 \
+    libv4l-0t64 \
+    libv4l2rds0t64 \
+    libv4lconvert0t64 \
     librga-dev \
     librga2 \
+    v4l-utils \
     ros-${ROS_DISTRO}-rplidar-ros; \
+  printf '/usr/lib/aarch64-linux-gnu/libv4l/plugins\n' > /etc/ld.so.conf.d/rockchip-v4l-mplane.conf; \
+  ldconfig; \
   rm -rf /var/lib/apt/lists/*
 
 FROM robot-source AS robot-builder
@@ -224,14 +234,21 @@ RUN set -eux; \
   apt-get install -y --no-install-recommends \
     libdrm2 \
     libv4l-0 \
+    libv4l-0t64 \
+    libv4l2rds0t64 \
+    libv4lconvert0t64 \
     librga2 \
+    v4l-utils \
     ros-${ROS_DISTRO}-rplidar-ros; \
+  printf '/usr/lib/aarch64-linux-gnu/libv4l/plugins\n' > /etc/ld.so.conf.d/rockchip-v4l-mplane.conf; \
+  ldconfig; \
   rm -rf /var/lib/apt/lists/*
 
 WORKDIR /opt/omniseer
 
 COPY --from=robot-builder /usr/lib/librknnrt.so /usr/lib/librknnrt.so
 COPY --from=robot-builder /opt/omniseer-src/ros_ws/install /ros_ws/install
+COPY --from=robot-builder /opt/omniseer-src/vision/testdata /omniseer/vision/testdata
 COPY scripts ./scripts
 COPY docker/runtime/entrypoint.sh /usr/local/bin/omniseer-runtime-entrypoint
 

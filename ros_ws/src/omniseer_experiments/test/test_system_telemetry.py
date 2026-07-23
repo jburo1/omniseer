@@ -8,7 +8,10 @@ from omniseer_experiments.system_telemetry import (
     cpu_percent,
     parse_proc_meminfo,
     parse_proc_stat_cpu,
+    read_network_snapshot,
+    read_onboard_battery_snapshot,
     read_temperature_c,
+    read_thermal_snapshot,
 )
 
 
@@ -76,13 +79,35 @@ class SystemTelemetryTests(unittest.TestCase):
             root = Path(tmp)
             proc_stat = root / "stat"
             proc_meminfo = root / "meminfo"
+            proc_wireless = root / "wireless"
+            sys_root = root / "sys"
             temperature = root / "temp"
             proc_stat.write_text("cpu  100 0 50 850 0 0 0 0 0 0\n", encoding="utf-8")
             proc_meminfo.write_text("MemTotal: 2048000 kB\nMemAvailable: 1024000 kB\n", encoding="utf-8")
+            proc_wireless.write_text(
+                "Inter-| sta-|   Quality        |   Discarded packets               | Missed | WE\n"
+                " face | tus | link level noise |  nwid  crypt   frag  retry   misc | beacon | 22\n"
+                " wlan0: 0000   63.  -41.  -256        0      0      0      0      0        0\n",
+                encoding="utf-8",
+            )
+            (sys_root / "class/net/wlan0/wireless").mkdir(parents=True)
+            (sys_root / "class/net/wlan0/operstate").write_text("up\n", encoding="utf-8")
+            battery = sys_root / "class/power_supply/bat0"
+            battery.mkdir(parents=True)
+            (battery / "type").write_text("Battery\n", encoding="utf-8")
+            (battery / "present").write_text("1\n", encoding="utf-8")
+            (battery / "voltage_now").write_text("8300000\n", encoding="utf-8")
+            (battery / "capacity").write_text("71\n", encoding="utf-8")
+            (battery / "status").write_text("Discharging\n", encoding="utf-8")
+            (sys_root / "class/thermal/thermal_zone0").mkdir(parents=True)
+            (sys_root / "class/thermal/thermal_zone0/temp").write_text("43000\n", encoding="utf-8")
+            (sys_root / "class/thermal/thermal_zone0/type").write_text("soc-thermal\n", encoding="utf-8")
             temperature.write_text("42000\n", encoding="utf-8")
             sampler = SystemTelemetrySampler(
                 proc_stat_path=proc_stat,
                 proc_meminfo_path=proc_meminfo,
+                proc_net_wireless_path=proc_wireless,
+                sys_root=sys_root,
                 temperature_paths=[temperature],
                 time_ns=lambda: 123,
             )
@@ -96,6 +121,21 @@ class SystemTelemetryTests(unittest.TestCase):
         self.assertEqual(record["memory_used_mb"], 1000.0)
         self.assertEqual(record["memory_available_mb"], 1000.0)
         self.assertEqual(record["soc_temp_c"], 42.0)
+        self.assertEqual(record["thermal"]["soc_temp_c"], 42.0)
+        self.assertEqual(record["thermal"]["zones"][0]["type"], "soc-thermal")
+        self.assertEqual(record["network"]["interface"], "wlan0")
+        self.assertEqual(record["network"]["wifi_signal_dbm"], -41)
+        self.assertEqual(record["network"]["link_quality_percent"], 90)
+        self.assertEqual(record["onboard_battery"]["voltage"], 8.3)
+        self.assertEqual(record["onboard_battery"]["percentage"], 71.0)
+
+    def test_platform_snapshot_helpers_return_unavailable_shapes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+
+            self.assertEqual(read_network_snapshot(sys_root=root)["available"], False)
+            self.assertEqual(read_onboard_battery_snapshot(root)["available"], False)
+            self.assertEqual(read_thermal_snapshot(root / "thermal", sys_root=root)["available"], False)
 
 
 if __name__ == "__main__":

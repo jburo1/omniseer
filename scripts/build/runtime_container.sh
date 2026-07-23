@@ -94,6 +94,7 @@ esac
 omni_require_command docker
 
 repo_root="$(omni_repo_root)"
+git_sha="$(git -C "${repo_root}" rev-parse HEAD 2>/dev/null || printf '%s\n' "unknown")"
 declare -a build_context_args
 
 if [[ "${target}" == "robot-runtime" ]]; then
@@ -126,6 +127,7 @@ exec env DOCKER_BUILDKIT="${DOCKER_BUILDKIT:-1}" docker build \
   --tag "${image}" \
   --build-arg "ROS_DISTRO=${ros_distro}" \
   --build-arg "MICRO_ROS_AGENT_REF=${micro_ros_agent_ref}" \
+  --build-arg "OMNISEER_GIT_SHA=${git_sha}" \
   "${build_context_args[@]}" \
   "${docker_args[@]}" \
   .

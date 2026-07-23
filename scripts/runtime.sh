@@ -62,6 +62,16 @@ runtime_safe_tag() {
   printf '%s' "$1" | tr -c '[:alnum:]_.-' '_'
 }
 
+runtime_shell_join() {
+  local parts=()
+  local arg
+  for arg in "$@"; do
+    parts+=("$(printf '%q' "${arg}")")
+  done
+  local IFS=" "
+  printf '%s\n' "${parts[*]}"
+}
+
 runtime_metadata_file() {
   local kind="$1"
   local tag="$2"
@@ -129,7 +139,6 @@ runtime_common_docker_args() {
   mkdir -p "${repo_root}/runs"
   printf '%s\0' \
     "--rm" \
-    "-it" \
     "--privileged" \
     "--network=host" \
     "--pid=host" \
@@ -141,6 +150,25 @@ runtime_common_docker_args() {
     "-e" "OMNISEER_CONTAINER_IMAGE_DIGEST=${image_digest}"
 }
 
+runtime_docker_stream_args() {
+  local tty_mode="${OMNISEER_RUNTIME_DOCKER_TTY:-auto}"
+  case "${tty_mode}" in
+    auto)
+      if [[ -t 0 && -t 1 ]]; then
+        printf '%s\0' "-it"
+      fi
+      ;;
+    always)
+      printf '%s\0' "-it"
+      ;;
+    never)
+      ;;
+    *)
+      omni_die "unsupported OMNISEER_RUNTIME_DOCKER_TTY=${tty_mode}; expected auto, always, or never"
+      ;;
+  esac
+}
+
 runtime_docker_run() {
   local image_ref="$1"
   shift
@@ -149,7 +177,13 @@ runtime_docker_run() {
   local docker_args=()
   while IFS= read -r -d '' arg; do
     docker_args+=("${arg}")
+  done < <(runtime_docker_stream_args)
+  while IFS= read -r -d '' arg; do
+    docker_args+=("${arg}")
   done < <(runtime_common_docker_args "${image_ref}" "${image_digest}")
+  if [[ $# -gt 0 ]]; then
+    docker_args+=("-e" "OMNISEER_RUNTIME_CONTAINER_COMMAND=$(runtime_shell_join "$@")")
+  fi
   docker run "${docker_args[@]}" "${image_ref}" "$@"
 }
 
@@ -229,7 +263,7 @@ runtime_verify_smoke() {
   local timeout_sec="${OMNISEER_RUNTIME_SAFE_SMOKE_SEC:-20}"
   local status
   set +e
-  timeout "${timeout_sec}" "${BASH_SOURCE[0]}" run --image "${image_base}" --tag "${tag}" \
+  OMNISEER_RUNTIME_DOCKER_TTY=never timeout "${timeout_sec}" "${BASH_SOURCE[0]}" run --image "${image_base}" --tag "${tag}" \
     run real --profile operator bringup \
     start_vision:=false \
     start_micro_ros_agent:=false \
@@ -248,7 +282,7 @@ runtime_verify_smoke() {
 runtime_verify_full() {
   local image_ref="$1"
   local run_id="$2"
-  runtime_docker_run "${image_ref}" \
+  OMNISEER_RUNTIME_DOCKER_TTY=never runtime_docker_run "${image_ref}" \
     run real \
     --profile operator \
     --record-run "${run_id}" \

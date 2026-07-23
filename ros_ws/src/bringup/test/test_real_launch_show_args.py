@@ -39,6 +39,10 @@ class RealLaunchShowArgsTests(unittest.TestCase):
         self.assertIn("experiment_run_id", result.stdout)
         self.assertIn("experiment_out_dir", result.stdout)
         self.assertIn("experiment_duration_sec", result.stdout)
+        self.assertIn("experiment_launch_command", result.stdout)
+        self.assertIn("experiment_launch_profile", result.stdout)
+        self.assertIn("experiment_launch_mode", result.stdout)
+        self.assertIn("experiment_launch_args", result.stdout)
         self.assertIn("pipeline_telemetry_path", result.stdout)
 
     @unittest.skipUnless(shutil.which("ros2"), "ros2 is required for launch argument checks")
