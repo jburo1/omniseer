@@ -1780,7 +1780,11 @@ scripts/omni<span class="w"> </span>runtime<span class="w"> </span>pull
 <p>Use <code>runtime verify</code> without <code>--stage</code> for a safe container smoke check. Use
 <code>--stage full</code> to run the real operator smoke path with run recording and image
 provenance. <code>runtime push</code> publishes only after a passed full verification for
-the same local image ID, then promotes the image to <code>robot-verified</code>.</p>
+the same local image ID, then promotes the image to <code>robot-verified</code>.
+<code>runtime verify</code> runs Docker without an interactive TTY so it works under <code>sudo</code>,
+SSH automation, and other non-interactive launch paths. For direct <code>runtime run</code>
+commands, Docker TTY allocation defaults to <code>auto</code>; set
+<code>OMNISEER_RUNTIME_DOCKER_TTY=always</code> or <code>never</code> to override it.</p>
 <h3 id="test"><code>test</code><a class="headerlink" href="#test" title="Permanent link">&para;</a></h3>
 <p>Run focused local verification flows.</p>
 <p>Commands:</p>
@@ -1871,10 +1875,18 @@ scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="
 laptop download, inspection, evidence annotation, and a simple local HTML report
 are available through <code>scripts/omni runs</code>. Rich hosted review and cloud
 synchronization remain later work.</p>
+<p><code>manifest.yaml</code> records the resolved real profile, mode, command, and launch
+arguments. <code>system.jsonl</code> records low-rate CPU, memory, thermal, WiFi/network,
+onboard battery, and <code>/battery</code> LiPo snapshots when those sources are available.</p>
+<p><code>--record-overwrite</code> removes and recreates the selected run directory before
+launching ROS. The recorder then accepts an empty precreated directory, or one
+where the native vision node has already opened <code>pipeline_telemetry.jsonl</code> or
+<code>evidence/</code>, so startup ordering does not drop pipeline telemetry.</p>
 <p>Containerized runs can provide the same provenance through
 <code>OMNISEER_CONTAINER_IMAGE_REF</code>, <code>OMNISEER_CONTAINER_IMAGE_DIGEST</code>,
-<code>OMNISEER_EXPERIMENT_CONFIG</code>, and <code>OMNISEER_EXPERIMENT_PARAMETERS</code>. Experiment
-parameters may be a JSON object or comma/space-separated <code>key=value</code> pairs.</p>
+<code>OMNISEER_GIT_SHA</code>, <code>OMNISEER_EXPERIMENT_CONFIG</code>, and
+<code>OMNISEER_EXPERIMENT_PARAMETERS</code>. Experiment parameters may be a JSON object or
+comma/space-separated <code>key=value</code> pairs.</p>
 <h4 id="real-run-modes">Real run modes<a class="headerlink" href="#real-run-modes" title="Permanent link">&para;</a></h4>
 <p><code>operator</code></p>
 <ul>
@@ -2114,7 +2126,7 @@ machine.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 22, 2026 23:49:02 UTC">July 22, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 23, 2026 05:25:49 UTC">July 23, 2026</span>
   </span>
 
     
