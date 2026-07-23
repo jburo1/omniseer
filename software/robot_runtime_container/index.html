@@ -1177,11 +1177,14 @@ currently depend on it.</p>
 <div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>build<span class="w"> </span>runtime-container
 </code></pre></div>
 <p>For checkpointed robot-local publishing, prefer the runtime workflow wrapper:</p>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>build<span class="w"> </span>--tag<span class="w"> </span>runtime-20260722-001
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>build
 </code></pre></div>
-<p>This builds <code>ghcr.io/jburo1/omniseer-robot-runtime:&lt;tag&gt;</code> by default and records
-local build metadata under <code>.omniseer/runtime/</code>. Override the image base with
-<code>--image &lt;base&gt;</code> or <code>OMNISEER_RUNTIME_IMAGE</code>.</p>
+<p>This builds
+<code>ghcr.io/jburo1/omniseer-robot-runtime:robot-candidate-&lt;UTC&gt;-g&lt;shortsha&gt;</code> by
+default and records local build metadata under <code>.omniseer/runtime/</code>. The
+<code>g&lt;shortsha&gt;</code> suffix is the first 12 characters of the source git commit. Override
+the image base with <code>--image &lt;base&gt;</code> or <code>OMNISEER_RUNTIME_IMAGE</code>; pass <code>--tag</code>
+only when you need an explicit custom checkpoint tag.</p>
 <p>The robot target requires RKNN SDK files on the build host:</p>
 <ul>
 <li><code>rknn_api.h</code>, default <code>/usr/include/rknn_api.h</code></li>
@@ -1251,11 +1254,37 @@ parameters, and the latest platform snapshots from <code>manifest.yaml</code> an
 <code>start_vision:=false</code> and is not a full robot runtime.</p>
 <h2 id="checkpoint-and-promotion">Checkpoint and Promotion<a class="headerlink" href="#checkpoint-and-promotion" title="Permanent link">&para;</a></h2>
 <p>The robot-local promotion loop is:</p>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>build<span class="w"> </span>--tag<span class="w"> </span>runtime-20260722-001
-scripts/omni<span class="w"> </span>runtime<span class="w"> </span>verify<span class="w"> </span>--tag<span class="w"> </span>runtime-20260722-001
-scripts/omni<span class="w"> </span>runtime<span class="w"> </span>verify<span class="w"> </span>--tag<span class="w"> </span>runtime-20260722-001<span class="w"> </span>--stage<span class="w"> </span>full
-scripts/omni<span class="w"> </span>runtime<span class="w"> </span>push<span class="w"> </span>--tag<span class="w"> </span>runtime-20260722-001
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>build
+scripts/omni<span class="w"> </span>runtime<span class="w"> </span>record
+scripts/omni<span class="w"> </span>runtime<span class="w"> </span>verify
+scripts/omni<span class="w"> </span>runtime<span class="w"> </span>verify<span class="w"> </span>--stage<span class="w"> </span>full
+scripts/omni<span class="w"> </span>runtime<span class="w"> </span>push
 </code></pre></div>
+<p>For a full pre-registry verification pass on the robot:</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>build
+sudo<span class="w"> </span>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>record
+
+<span class="nv">RUN_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>ls<span class="w"> </span>-dt<span class="w"> </span>runs/operator_*<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-n<span class="w"> </span><span class="m">1</span><span class="k">)</span><span class="s2">&quot;</span>
+scripts/omni<span class="w"> </span>runs<span class="w"> </span>inspect<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">RUN_DIR</span><span class="si">}</span><span class="s2">&quot;</span>
+scripts/omni<span class="w"> </span>runs<span class="w"> </span>report<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">RUN_DIR</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span>--overwrite
+
+sudo<span class="w"> </span>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>verify
+sudo<span class="w"> </span>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>verify<span class="w"> </span>--stage<span class="w"> </span>full
+sudo<span class="w"> </span>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>push
+</code></pre></div>
+<p>Review the generated run report before <code>runtime push</code>. The push step is the
+promotion boundary: it publishes the locally verified candidate image and moves
+the verified tags.</p>
+<p><code>runtime record</code> is the manual operator evidence-capture path. It uses the latest
+local runtime build by default, starts <code>run real --profile operator ... bringup</code>
+without a Docker TTY, writes the runbundle to <code>runs/operator_&lt;UTC&gt;</code> on the host,
+and samples system telemetry every second. Stop the run with Ctrl-C when the
+experiment is complete.</p>
+<p>When launched from a devcontainer, the runtime wrapper resolves the host-side
+workspace bind path before starting Docker so the runtime container writes back
+into this checkout's <code>runs/</code> directory instead of a separate <code>/omniseer/runs</code>
+directory on the Docker host. Override that detection with
+<code>OMNISEER_RUNTIME_RUNS_HOST_ROOT=/host/path/to/omniseer/runs</code> if needed.</p>
 <p><code>runtime verify</code> defaults to a safe smoke stage. It starts the container with
 vision, Teensy, LiDAR, boundary-topic waits, and pre-launch cleanup disabled; a
 launch that survives until the smoke timeout is treated as a pass. Full
@@ -1265,13 +1294,14 @@ be used under <code>sudo</code>, SSH automation, and other non-interactive launc
 Direct <code>runtime run</code> commands allocate a TTY only when attached to one by
 default; override that with <code>OMNISEER_RUNTIME_DOCKER_TTY=always</code> or <code>never</code>.</p>
 <p><code>runtime push</code> refuses to publish unless a passed full verification exists for the
-same local image ID. It pushes the immutable checkpoint tag first, then promotes
-the same image to the moving <code>robot-verified</code> tag.</p>
+same local image ID. It pushes the candidate tag first, then automatically
+promotes the same image to immutable <code>robot-verified-&lt;UTC&gt;-g&lt;shortsha&gt;</code> and
+moving <code>robot-verified</code> tags.</p>
 <p>Pull the latest verified image on the robot with:</p>
 <div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>pull
 </code></pre></div>
 <p>Use an immutable tag for rollback or pinning:</p>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>pull<span class="w"> </span>--tag<span class="w"> </span>runtime-20260722-001
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>pull<span class="w"> </span>--tag<span class="w"> </span>robot-verified-20260723T052827Z-g437c10907531
 </code></pre></div>
 <h2 id="verification-boundary">Verification Boundary<a class="headerlink" href="#verification-boundary" title="Permanent link">&para;</a></h2>
 <p>Local image builds verify that the ROS install tree is baked into the image and that
@@ -1349,7 +1379,7 @@ operator, hardware IO, native vision, gateway, or recording surface.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 23, 2026 05:25:49 UTC">July 23, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 23, 2026 19:05:07 UTC">July 23, 2026</span>
   </span>
 
     

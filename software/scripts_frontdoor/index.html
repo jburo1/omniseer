@@ -1767,24 +1767,42 @@ scripts/omni<span class="w"> </span>build<span class="w"> </span>firmware
 <li><code>build vision</code> is better than a full ROS build when only the native C++ vision pipeline changed</li>
 </ul>
 <h3 id="runtime"><code>runtime</code><a class="headerlink" href="#runtime" title="Permanent link">&para;</a></h3>
-<p>Build, verify, publish, and pull robot runtime container checkpoints. This is a
-robot-local workflow; it does not require GitHub Actions to rebuild the
-hardware-specific image.</p>
+<p>Build, record, verify, publish, and pull robot runtime container checkpoints.
+This is a robot-local workflow; it does not require GitHub Actions to rebuild
+the hardware-specific image.</p>
 <p>Commands:</p>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>build<span class="w"> </span>--tag<span class="w"> </span>runtime-20260722-001
-scripts/omni<span class="w"> </span>runtime<span class="w"> </span>verify<span class="w"> </span>--tag<span class="w"> </span>runtime-20260722-001
-scripts/omni<span class="w"> </span>runtime<span class="w"> </span>verify<span class="w"> </span>--tag<span class="w"> </span>runtime-20260722-001<span class="w"> </span>--stage<span class="w"> </span>full
-scripts/omni<span class="w"> </span>runtime<span class="w"> </span>push<span class="w"> </span>--tag<span class="w"> </span>runtime-20260722-001
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>build
+scripts/omni<span class="w"> </span>runtime<span class="w"> </span>record
+scripts/omni<span class="w"> </span>runtime<span class="w"> </span>verify
+scripts/omni<span class="w"> </span>runtime<span class="w"> </span>verify<span class="w"> </span>--stage<span class="w"> </span>full
+scripts/omni<span class="w"> </span>runtime<span class="w"> </span>push
 scripts/omni<span class="w"> </span>runtime<span class="w"> </span>pull
 </code></pre></div>
+<p>Use <code>runtime record</code> for a manual operator evidence run. It starts the latest
+local runtime image in the operator profile, records an indefinite runbundle
+under <code>runs/operator_&lt;UTC&gt;</code>, samples system telemetry every second, and exits
+when the container is stopped or interrupted. Pass extra launch args after <code>--</code>,
+for example:</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>record<span class="w"> </span>--<span class="w"> </span>start_lidar:<span class="o">=</span><span class="nb">false</span>
+</code></pre></div>
+<p>When these commands are launched from a devcontainer, the wrapper resolves the
+workspace's host-side bind path before starting Docker so runbundles still appear
+under this checkout's <code>runs/</code> directory. Override that detection with
+<code>OMNISEER_RUNTIME_RUNS_HOST_ROOT=/host/path/to/omniseer/runs</code> if needed.</p>
 <p>Use <code>runtime verify</code> without <code>--stage</code> for a safe container smoke check. Use
 <code>--stage full</code> to run the real operator smoke path with run recording and image
 provenance. <code>runtime push</code> publishes only after a passed full verification for
-the same local image ID, then promotes the image to <code>robot-verified</code>.
+the same local image ID. Default builds are tagged
+<code>robot-candidate-&lt;UTC&gt;-g&lt;shortsha&gt;</code>; push automatically promotes the same image
+to immutable <code>robot-verified-&lt;UTC&gt;-g&lt;shortsha&gt;</code> and moving <code>robot-verified</code>
+tags.
 <code>runtime verify</code> runs Docker without an interactive TTY so it works under <code>sudo</code>,
 SSH automation, and other non-interactive launch paths. For direct <code>runtime run</code>
 commands, Docker TTY allocation defaults to <code>auto</code>; set
 <code>OMNISEER_RUNTIME_DOCKER_TTY=always</code> or <code>never</code> to override it.</p>
+<p>See <a href="../robot_runtime_container/#checkpoint-and-promotion">Robot Runtime Container</a>
+for the full pre-registry workflow, including runbundle inspection and report
+generation.</p>
 <h3 id="test"><code>test</code><a class="headerlink" href="#test" title="Permanent link">&para;</a></h3>
 <p>Run focused local verification flows.</p>
 <p>Commands:</p>
@@ -2126,7 +2144,7 @@ machine.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 23, 2026 05:56:34 UTC">July 23, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 23, 2026 19:05:07 UTC">July 23, 2026</span>
   </span>
 
     
