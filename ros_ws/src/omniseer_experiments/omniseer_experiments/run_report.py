@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import html
 import json
+import math
 import os
 import statistics
 from collections import Counter, defaultdict
@@ -54,6 +55,13 @@ class _NumericSummary:
     min_value: float
     mean: float
     max_value: float
+
+
+@dataclass(frozen=True)
+class _ChartSeries:
+    name: str
+    points: tuple[tuple[float, float], ...]
+    unit: str
 
 
 def write_run_report(run_dir: Path, *, overwrite: bool = False) -> ReportSummary:
@@ -324,6 +332,7 @@ def _detections_section(records: Sequence[dict[str, Any]], *, configured_classes
         else:
             messages_without_detections += 1
 
+    chart = _detections_chart(records)
     if not counts:
         summary = _key_value_table(
             [
@@ -333,7 +342,7 @@ def _detections_section(records: Sequence[dict[str, Any]], *, configured_classes
                 ("Total detections", "0"),
             ]
         )
-        return _section("Detections", summary + "<p>No detections recorded.</p>")
+        return _section("Detections", chart + summary + "<p>No detections recorded.</p>")
 
     rows = []
     for class_name, count in sorted(counts.items()):
@@ -357,7 +366,10 @@ def _detections_section(records: Sequence[dict[str, Any]], *, configured_classes
             ("Configured classes not observed", _join_or_dash(tuple(sorted(configured_class_set - observed_classes)))),
         ]
     )
-    return _section("Detections", summary + _table(["Class", "Count", "Min Score", "Mean Score", "Max Score"], rows))
+    return _section(
+        "Detections",
+        chart + summary + _table(["Class", "Count", "Min Score", "Mean Score", "Max Score"], rows),
+    )
 
 
 def _pipeline_section(records: Sequence[dict[str, Any]]) -> str:
@@ -368,6 +380,7 @@ def _pipeline_section(records: Sequence[dict[str, Any]]) -> str:
         _pipeline_status_tables(records),
         _pipeline_stage_table(records, source="producer"),
         _pipeline_stage_table(records, source="consumer"),
+        _pipeline_age_chart(records),
         _pipeline_age_table(records),
     ]
     return _section("Pipeline Telemetry", "".join(part for part in body_parts if part))
@@ -487,7 +500,7 @@ def _perf_section(title: str, records: Sequence[dict[str, Any]]) -> str:
                 _format_float(max(samples)),
             ]
         )
-    return _section(title, _table(["Metric", "Samples", "p50", "p95", "Max"], rows))
+    return _section(title, _performance_charts(records) + _table(["Metric", "Samples", "p50", "p95", "Max"], rows))
 
 
 def _system_section(records: Sequence[dict[str, Any]], *, manifest: dict[str, Any]) -> str:
@@ -510,7 +523,8 @@ def _system_section(records: Sequence[dict[str, Any]], *, manifest: dict[str, An
     if not rows:
         return _section("System", "<p>No system telemetry recorded.</p>")
     body = (
-        _system_sample_table(records, manifest=manifest)
+        _system_charts(records)
+        + _system_sample_table(records, manifest=manifest)
         + _table(["Metric", "Samples", "Min", "Mean", "Max"], rows)
         + _platform_summary_tables(records)
     )
@@ -855,6 +869,443 @@ def _class_name(detection: dict[str, Any], *, index: int = 0) -> str:
     return f"detection_{index}"
 
 
+def _detections_chart(records: Sequence[dict[str, Any]]) -> str:
+    base_ts = _first_valid_timestamp(records, ("recv_ts_ns",))
+    if base_ts is None:
+        return ""
+
+    count_points: list[tuple[float, float]] = []
+    score_points: list[tuple[float, float]] = []
+    for record in records:
+        timestamp = _timestamp_from_fields(record, ("recv_ts_ns",))
+        if timestamp is None:
+            continue
+        detections = record.get("detections")
+        if not isinstance(detections, list):
+            continue
+        x_value = (timestamp - base_ts) / 1_000_000_000.0
+        count_points.append((x_value, float(len(detections))))
+        scores = [
+            score
+            for score in (_as_float(detection.get("score")) for detection in detections if isinstance(detection, dict))
+            if score is not None
+        ]
+        score_points.append((x_value, max(scores) if scores else 0.0))
+
+    return _line_chart(
+        "Detection Activity Over Time",
+        (
+            _ChartSeries("detections per message", tuple(count_points), "count"),
+            _ChartSeries("top detection score", tuple(score_points), "score"),
+        ),
+        "count / score",
+        zero_floor=True,
+    )
+
+
+def _performance_charts(records: Sequence[dict[str, Any]]) -> str:
+    base_ts = _first_valid_timestamp(records, ("recv_ts_ns",))
+    return _line_chart(
+        "Vision FPS Over Time",
+        (
+            _series_from_records(records, "recv_ts_ns", "producer_fps", base_ts_ns=base_ts),
+            _series_from_records(records, "recv_ts_ns", "consumer_fps", base_ts_ns=base_ts),
+        ),
+        "fps",
+        zero_floor=True,
+    ) + _line_chart(
+        "Vision Latency Over Time",
+        (
+            _series_from_records(records, "recv_ts_ns", "last_infer_ms", base_ts_ns=base_ts),
+            _series_from_records(records, "recv_ts_ns", "last_consumer_total_ms", base_ts_ns=base_ts),
+        ),
+        "ms",
+        zero_floor=True,
+    )
+
+
+def _pipeline_age_chart(records: Sequence[dict[str, Any]]) -> str:
+    producer_records = [record for record in records if record.get("source") == "producer"]
+    consumer_records = [record for record in records if record.get("source") == "consumer"]
+    base_ts = _first_valid_timestamp(
+        records,
+        ("event_ts_real_ns", "consumer_start_ts_real_ns", "consumer_end_ts_real_ns"),
+    )
+    return _line_chart(
+        "Pipeline Source Age Over Time",
+        (
+            _series_from_records(
+                producer_records,
+                "event_ts_real_ns",
+                "source_age_dequeue_ns",
+                scale=1 / 1_000_000.0,
+                name="source age at producer dequeue",
+                unit="ms",
+                base_ts_ns=base_ts,
+            ),
+            _series_from_records_any_timestamp(
+                consumer_records,
+                ("consumer_start_ts_real_ns", "event_ts_real_ns"),
+                "source_age_start_ns",
+                scale=1 / 1_000_000.0,
+                name="source age at consumer start",
+                unit="ms",
+                base_ts_ns=base_ts,
+            ),
+            _series_from_records_any_timestamp(
+                consumer_records,
+                ("consumer_end_ts_real_ns", "event_ts_real_ns"),
+                "source_age_end_ns",
+                scale=1 / 1_000_000.0,
+                name="source age at consumer end",
+                unit="ms",
+                base_ts_ns=base_ts,
+            ),
+        ),
+        "ms",
+        zero_floor=True,
+        robust_y=True,
+    )
+
+
+def _system_charts(records: Sequence[dict[str, Any]]) -> str:
+    base_ts = _first_valid_timestamp(records, ("recv_ts_ns",))
+    return (
+        _line_chart(
+            "System CPU Over Time",
+            (_series_from_records(records, "recv_ts_ns", "cpu_percent", unit="%", base_ts_ns=base_ts),),
+            "%",
+            zero_floor=True,
+        )
+        + _line_chart(
+            "System Memory Over Time",
+            (_series_from_records(records, "recv_ts_ns", "memory_used_mb", unit="MB", base_ts_ns=base_ts),),
+            "MB",
+        )
+        + _line_chart(
+            "System Temperature Over Time",
+            (_series_from_records(records, "recv_ts_ns", "soc_temp_c", unit="C", base_ts_ns=base_ts),),
+            "C",
+        )
+        + _line_chart(
+            "WiFi Signal Over Time",
+            (
+                _series_from_nested_records(
+                    records,
+                    "network",
+                    "wifi_signal_dbm",
+                    name="WiFi signal dBm",
+                    unit="dBm",
+                    base_ts_ns=base_ts,
+                ),
+            ),
+            "dBm",
+        )
+        + _line_chart(
+            "Network Link Quality Over Time",
+            (
+                _series_from_nested_records(
+                    records,
+                    "network",
+                    "link_quality_percent",
+                    name="Link quality percent",
+                    unit="%",
+                    base_ts_ns=base_ts,
+                ),
+            ),
+            "%",
+            zero_floor=True,
+        )
+        + _line_chart(
+            "LiPo Voltage Over Time",
+            (
+                _series_from_nested_records(
+                    records,
+                    "lipo_battery",
+                    "voltage",
+                    name="LiPo voltage",
+                    unit="V",
+                    base_ts_ns=base_ts,
+                ),
+            ),
+            "V",
+        )
+    )
+
+
+def _series_from_records(
+    records: Sequence[dict[str, Any]],
+    timestamp_field: str,
+    value_field: str,
+    *,
+    scale: float = 1.0,
+    name: str | None = None,
+    unit: str = "",
+    base_ts_ns: int | None = None,
+) -> _ChartSeries:
+    return _series_from_records_any_timestamp(
+        records,
+        (timestamp_field,),
+        value_field,
+        scale=scale,
+        name=name,
+        unit=unit,
+        base_ts_ns=base_ts_ns,
+    )
+
+
+def _series_from_records_any_timestamp(
+    records: Sequence[dict[str, Any]],
+    timestamp_fields: Sequence[str],
+    value_field: str,
+    *,
+    scale: float = 1.0,
+    name: str | None = None,
+    unit: str = "",
+    base_ts_ns: int | None = None,
+) -> _ChartSeries:
+    if base_ts_ns is None:
+        base_ts_ns = _first_valid_timestamp(records, timestamp_fields)
+    if base_ts_ns is None:
+        return _ChartSeries(name or value_field, (), unit)
+    points = []
+    for record in records:
+        timestamp = _timestamp_from_fields(record, timestamp_fields)
+        value = _as_float(record.get(value_field))
+        if timestamp is None or value is None:
+            continue
+        points.append(((timestamp - base_ts_ns) / 1_000_000_000.0, value * scale))
+    return _ChartSeries(name or value_field, _finite_points(points), unit)
+
+
+def _series_from_nested_records(
+    records: Sequence[dict[str, Any]],
+    parent_field: str,
+    value_field: str,
+    *,
+    name: str,
+    unit: str = "",
+    base_ts_ns: int | None = None,
+) -> _ChartSeries:
+    if base_ts_ns is None:
+        base_ts_ns = _first_valid_timestamp(records, ("recv_ts_ns",))
+    if base_ts_ns is None:
+        return _ChartSeries(name, (), unit)
+    points = []
+    for record in records:
+        timestamp = _timestamp_from_fields(record, ("recv_ts_ns",))
+        parent = record.get(parent_field)
+        value = _as_float(parent.get(value_field)) if isinstance(parent, dict) else None
+        if timestamp is None or value is None:
+            continue
+        points.append(((timestamp - base_ts_ns) / 1_000_000_000.0, value))
+    return _ChartSeries(name, _finite_points(points), unit)
+
+
+def _line_chart(
+    title: str,
+    series: Sequence[_ChartSeries],
+    y_label: str,
+    *,
+    zero_floor: bool = False,
+    robust_y: bool = False,
+) -> str:
+    chart_series = tuple(_ChartSeries(item.name, _finite_points(item.points), item.unit) for item in series)
+    chart_series = tuple(item for item in chart_series if len(item.points) >= 2)
+    if not chart_series:
+        return ""
+
+    width = 720.0
+    height = 220.0
+    left = 56.0
+    right = 18.0
+    top = 28.0
+    bottom = 40.0
+    plot_width = width - left - right
+    plot_height = height - top - bottom
+
+    all_points = [point for item in chart_series for point in item.points]
+    x_min = min(point[0] for point in all_points)
+    x_max = max(point[0] for point in all_points)
+    y_values = [point[1] for point in all_points]
+    y_min = min(y_values)
+    y_max = max(y_values)
+    if x_min == x_max:
+        return ""
+    x_axis_min = 0.0 if x_min >= 0.0 else _nice_lower(x_min)
+    x_axis_max = x_axis_min + _nice_tick_upper(x_max - x_axis_min, ticks=4)
+    if x_axis_min == x_axis_max:
+        x_axis_max = x_axis_min + 1.0
+
+    clipped_y_max = False
+    if robust_y and len(y_values) >= 8:
+        p95 = _percentile(y_values, 95)
+        if p95 > 0.0 and y_max > p95 * 3.0:
+            y_max = p95 * 1.2
+            clipped_y_max = True
+    if zero_floor and y_min >= 0.0:
+        y_min = 0.0
+        y_max = _nice_tick_upper(y_max, ticks=4)
+    elif y_min == y_max:
+        padding = max(1.0, abs(y_min) * 0.1)
+        y_min -= padding
+        y_max += padding
+    else:
+        padding = (y_max - y_min) * 0.08
+        y_min -= padding
+        y_max += padding
+
+    def x_coord(value: float) -> float:
+        return left + ((_clamp(value, x_axis_min, x_axis_max) - x_axis_min) / (x_axis_max - x_axis_min)) * plot_width
+
+    def y_coord(value: float) -> float:
+        return top + (1.0 - ((_clamp(value, y_min, y_max) - y_min) / (y_max - y_min))) * plot_height
+
+    colors = ("#185abc", "#c5221f", "#137333", "#b06000", "#5f259f")
+    grid_lines = []
+    y_tick_step = (y_max - y_min) / 4
+    for index in range(5):
+        fraction = index / 4
+        y = top + fraction * plot_height
+        value = y_max - fraction * (y_max - y_min)
+        grid_lines.append(
+            f'<line class="chart-grid" x1="{left:.1f}" y1="{y:.1f}" x2="{width - right:.1f}" y2="{y:.1f}" />'
+            f'<text class="chart-axis-label" x="{left - 8:.1f}" y="{y + 4:.1f}" text-anchor="end">'
+            f"{_esc(_format_chart_number(value, step=y_tick_step))}</text>"
+        )
+    x_tick_step = (x_axis_max - x_axis_min) / 4
+    for index in range(5):
+        fraction = index / 4
+        x = left + fraction * plot_width
+        value = x_axis_min + fraction * (x_axis_max - x_axis_min)
+        grid_lines.append(
+            f'<line class="chart-grid" x1="{x:.1f}" y1="{top:.1f}" x2="{x:.1f}" y2="{height - bottom:.1f}" />'
+            f'<text class="chart-axis-label" x="{x:.1f}" y="{height - 14:.1f}" text-anchor="middle">'
+            f"{_esc(_format_chart_number(value, step=x_tick_step))}s</text>"
+        )
+
+    polylines = []
+    legend_items = []
+    for index, item in enumerate(chart_series):
+        color = colors[index % len(colors)]
+        polyline_points = " ".join(f"{x_coord(x):.1f},{y_coord(y):.1f}" for x, y in item.points)
+        polylines.append(f'<polyline class="chart-line" points="{polyline_points}" stroke="{color}" />')
+        legend_label = f"{item.name} ({item.unit})" if item.unit else item.name
+        legend_items.append(
+            '<span class="chart-legend-item">'
+            f'<span class="chart-swatch" style="background: {color}"></span>{_esc(legend_label)}'
+            "</span>"
+        )
+
+    note = ""
+    if clipped_y_max:
+        note = (
+            f'<span class="chart-note">y-axis clipped above {_esc(_format_chart_number(y_max, step=y_tick_step))} '
+            f"{_esc(y_label)}</span>"
+        )
+
+    return (
+        '<figure class="chart">'
+        f"<figcaption>{_esc(title)}</figcaption>"
+        f'<svg viewBox="0 0 {width:.0f} {height:.0f}" role="img" aria-label="{_attr(title)}">'
+        f"<title>{_esc(title)}</title>"
+        f'<text class="chart-axis-title" x="{left:.1f}" y="16">{_esc(y_label)}</text>'
+        f'<line class="chart-axis" x1="{left:.1f}" y1="{height - bottom:.1f}" '
+        f'x2="{width - right:.1f}" y2="{height - bottom:.1f}" />'
+        f'<line class="chart-axis" x1="{left:.1f}" y1="{top:.1f}" x2="{left:.1f}" y2="{height - bottom:.1f}" />'
+        f"{''.join(grid_lines)}"
+        f"{''.join(polylines)}"
+        "</svg>"
+        f'<div class="chart-legend">{"".join(legend_items)}{note}</div>'
+        "</figure>"
+    )
+
+
+def _first_valid_timestamp(records: Sequence[dict[str, Any]], fields: Sequence[str]) -> int | None:
+    timestamps = [
+        timestamp
+        for timestamp in (_timestamp_from_fields(record, fields) for record in records)
+        if timestamp is not None
+    ]
+    return min(timestamps) if timestamps else None
+
+
+def _timestamp_from_fields(record: dict[str, Any], fields: Sequence[str]) -> int | None:
+    for field_name in fields:
+        value = record.get(field_name)
+        if isinstance(value, bool) or not isinstance(value, int):
+            continue
+        return value
+    return None
+
+
+def _finite_points(points: Iterable[tuple[float, float]]) -> tuple[tuple[float, float], ...]:
+    return tuple((x, y) for x, y in points if math.isfinite(x) and math.isfinite(y))
+
+
+def _format_chart_number(value: float, *, step: float | None = None) -> str:
+    if step is not None:
+        absolute_step = abs(step)
+        if absolute_step < 0.01:
+            return f"{value:.3f}"
+        if absolute_step < 1:
+            return f"{value:.2f}"
+        if absolute_step < 10:
+            return f"{value:.1f}"
+        return f"{value:.0f}"
+    if abs(value) >= 100:
+        return f"{value:.0f}"
+    if abs(value) >= 10:
+        return f"{value:.1f}"
+    return f"{value:.2f}"
+
+
+def _nice_upper(value: float, *, ticks: int) -> float:
+    if value <= 0.0:
+        return 1.0
+    step = _nice_step(value / ticks)
+    return math.ceil(value / step) * step
+
+
+def _nice_tick_upper(value: float, *, ticks: int) -> float:
+    if value <= 0.0:
+        return 1.0
+    step = _nice_step(value / ticks)
+    upper = math.ceil(value / step) * step
+    if upper / step < ticks:
+        upper += step
+    return upper
+
+
+def _nice_lower(value: float) -> float:
+    if value >= 0.0:
+        return 0.0
+    step = _nice_step(abs(value) / 4)
+    return math.floor(value / step) * step
+
+
+def _nice_step(value: float) -> float:
+    if value <= 0.0:
+        return 1.0
+    exponent = math.floor(math.log10(value))
+    fraction = value / (10**exponent)
+    if fraction <= 1.0:
+        nice_fraction = 1.0
+    elif fraction <= 2.0:
+        nice_fraction = 2.0
+    elif fraction <= 2.5:
+        nice_fraction = 2.5
+    elif fraction <= 5.0:
+        nice_fraction = 5.0
+    else:
+        nice_fraction = 10.0
+    return nice_fraction * (10**exponent)
+
+
+def _clamp(value: float, minimum: float, maximum: float) -> float:
+    return min(max(value, minimum), maximum)
+
+
 def _numeric_fields(
     records: Sequence[dict[str, Any]],
     *,
@@ -1056,6 +1507,19 @@ tbody tr:last-child th, tbody tr:last-child td { border-bottom: 0; }
 .kv th { width: 220px; }
 p, ul { margin: 0; font-size: 14px; }
 ul { padding-left: 20px; }
+.chart { margin: 0 0 14px; padding: 12px; border: 1px solid #e1e6ee; border-radius: 6px; background: #fbfcfe; }
+.chart + .chart { margin-top: -4px; }
+.chart figcaption { margin: 0 0 8px; font-size: 14px; font-weight: 700; color: #3d4a5c; }
+.chart svg { display: block; width: 100%; height: 220px; overflow: visible; }
+.chart-axis { stroke: #778397; stroke-width: 1.2; }
+.chart-axis-label, .chart-axis-title { fill: #526173; font-size: 11px; }
+.chart-axis-title { font-weight: 700; }
+.chart-grid { stroke: #d8dee6; stroke-width: 1; }
+.chart-line { fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.chart-legend { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 8px; font-size: 12px; color: #3d4a5c; }
+.chart-legend-item { display: inline-flex; align-items: center; gap: 6px; }
+.chart-swatch { width: 10px; height: 10px; border-radius: 2px; }
+.chart-note { color: #6b7280; font-style: italic; }
 .evidence-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
 p + .evidence-grid { margin-top: 12px; }
 .evidence-card { border: 1px solid #d8dee6; border-radius: 6px; overflow: hidden; background: #fbfcfe; }

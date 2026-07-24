@@ -67,6 +67,22 @@ def _detection_record() -> dict:
     )
 
 
+def _later_detection_record() -> dict:
+    return make_detection_record(
+        recv_ts_ns=1_000_000_100,
+        header_stamp={"sec": 2, "nanosec": 2},
+        frame_id="camera_frame",
+        detections=[
+            {
+                "class_id": 0,
+                "class_name": "chair",
+                "score": 0.7,
+                "bbox": {"center_x": 12.0, "center_y": 22.0, "size_x": 32.0, "size_y": 42.0},
+            }
+        ],
+    )
+
+
 def _perf_record() -> dict:
     return make_perf_record(
         recv_ts_ns=200,
@@ -82,6 +98,31 @@ def _perf_record() -> dict:
         last_consumer_total_ms=9.0,
         produced_count=10,
         consumed_count=9,
+        error_counts={
+            "no_writable_buffer": 0,
+            "capture_retryable": 1,
+            "capture_fatal": 0,
+            "preprocess": 0,
+            "infer": 2,
+        },
+    )
+
+
+def _later_perf_record() -> dict:
+    return make_perf_record(
+        recv_ts_ns=1_000_000_200,
+        header_stamp={"sec": 4, "nanosec": 4},
+        frame_id="camera_frame",
+        producer_fps=21.0,
+        consumer_fps=18.0,
+        last_preprocess_ms=1.2,
+        last_infer_ms=9.0,
+        last_postprocess_ms=2.2,
+        last_publish_ms=0.6,
+        last_producer_total_ms=3.4,
+        last_consumer_total_ms=10.0,
+        produced_count=20,
+        consumed_count=18,
         error_counts={
             "no_writable_buffer": 0,
             "capture_retryable": 1,
@@ -171,8 +212,11 @@ def _later_system_record() -> dict:
 def _write_completed_bundle(run_dir: Path) -> None:
     writer = RunBundleWriter(_config(run_dir), started_at=STARTED_AT)
     writer.write_detection_record(_detection_record())
+    writer.write_detection_record(_later_detection_record())
     writer.write_perf_record(_perf_record())
+    writer.write_perf_record(_later_perf_record())
     writer.write_system_record(_system_record())
+    writer.write_system_record(_later_system_record())
     writer.finalize(ended_at=ENDED_AT)
 
 
@@ -264,6 +308,54 @@ def _write_pipeline_telemetry(run_dir: Path) -> None:
                 "total": 8_520_000,
             },
         },
+        {
+            "schema_version": 3,
+            "source": "producer",
+            "frame_id": 2,
+            "tick_id": 2,
+            "sequence": 11,
+            "event_ts_real_ns": 1_000_001_000,
+            "source_age_dequeue_ns": 2_500_000,
+            "source_age_publish_ready_ns": 3_500_000,
+            "producer_status": "produced",
+            "capture_status": "ok",
+            "preprocess_status": "ok",
+            "capture_errno": 0,
+            "stage_mask": 31,
+            "dur_ns": {
+                "dequeue": 120_000,
+                "acquire_write": 30_000,
+                "preprocess": 1_200_000,
+                "publish_ready": 40_000,
+                "requeue": 90_000,
+                "total": 1_480_000,
+            },
+        },
+        {
+            "schema_version": 3,
+            "source": "consumer",
+            "frame_id": 2,
+            "tick_id": 2,
+            "sequence": 11,
+            "event_ts_real_ns": 1_000_001_000,
+            "consumer_start_ts_real_ns": 1_000_002_000,
+            "consumer_end_ts_real_ns": 1_000_003_000,
+            "source_age_start_ns": 5_000_000,
+            "source_age_end_ns": 13_000_000,
+            "consumer_status": "consumed",
+            "infer_status": "ok",
+            "postprocess_status": "ok",
+            "infer_errno": 0,
+            "stage_mask": 31,
+            "dur_ns": {
+                "acquire_read": 20_000,
+                "infer": 9_000_000,
+                "postprocess": 300_000,
+                "publish": 400_000,
+                "release": 20_000,
+                "total": 9_740_000,
+            },
+        },
     ]
     text = "\n".join(json.dumps(record) for record in records) + "\n"
     (run_dir / "pipeline_telemetry.jsonl").write_text(text, encoding="utf-8")
@@ -306,6 +398,19 @@ class RunReportTests(unittest.TestCase):
             self.assertIn("Messages with detections", output)
             self.assertIn("Configured classes not observed", output)
             self.assertIn("chair", output)
+            self.assertIn('class="chart"', output)
+            self.assertIn("<svg", output)
+            self.assertIn("Detection Activity Over Time", output)
+            self.assertIn("Vision FPS Over Time", output)
+            self.assertIn("Vision Latency Over Time", output)
+            self.assertIn("System CPU Over Time", output)
+            self.assertIn("System Memory Over Time", output)
+            self.assertIn("System Temperature Over Time", output)
+            self.assertIn("WiFi Signal Over Time", output)
+            self.assertIn("Network Link Quality Over Time", output)
+            self.assertIn("LiPo Voltage Over Time", output)
+            self.assertIn("consumer_fps", output)
+            self.assertIn("last_infer_ms", output)
             self.assertIn("../evidence/annotated/frame_1.jpg", output)
             self.assertIn("../evidence/frames/frame_1.jpg", output)
 
@@ -372,9 +477,32 @@ class RunReportTests(unittest.TestCase):
             self.assertIn("Consumer Stage Timings", output)
             self.assertIn("Source Age", output)
             self.assertIn("producer status", output.lower())
-            self.assertIn("produced=1", output)
+            self.assertIn("produced=2", output)
             self.assertIn("source age at consumer end", output)
             self.assertIn("<td>infer</td>", output)
+            self.assertIn("Pipeline Source Age Over Time", output)
+            self.assertIn("source age at producer dequeue", output)
+            self.assertIn('class="chart"', output)
+            self.assertIn("<svg", output)
+
+    def test_sparse_or_missing_streams_do_not_render_empty_charts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "demo_001"
+            writer = RunBundleWriter(_config(run_dir), started_at=STARTED_AT)
+            writer.write_detection_record(_detection_record())
+            writer.write_perf_record(_perf_record())
+            writer.write_system_record(_system_record())
+            writer.finalize(ended_at=ENDED_AT)
+
+            summary = write_run_report(run_dir)
+
+            output = summary.output_path.read_text(encoding="utf-8")
+            self.assertIn("<h2>Detections</h2>", output)
+            self.assertIn("<h2>Performance</h2>", output)
+            self.assertIn("<h2>System</h2>", output)
+            self.assertIn("<h2>Pipeline Telemetry</h2>", output)
+            self.assertIn("No native pipeline telemetry recorded.", output)
+            self.assertNotIn('class="chart"', output)
 
     def test_existing_report_requires_overwrite(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
