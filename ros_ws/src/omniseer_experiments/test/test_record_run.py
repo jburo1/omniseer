@@ -166,6 +166,19 @@ class RecordRunConversionTests(unittest.TestCase):
         self.assertEqual(options.out_dir, Path("runs") / "demo_001")
         self.assertEqual(options.classes, ())
 
+    def test_options_preserve_comma_delimited_class_phrases(self) -> None:
+        options = options_from_args(
+            [
+                "record_run",
+                "--run-id",
+                "demo_001",
+                "--classes",
+                "person, fire extinguisher\ntraffic cone",
+            ]
+        )
+
+        self.assertEqual(options.classes, ("person", "fire extinguisher", "traffic cone"))
+
     def test_options_accept_launch_style_overwrite_value(self) -> None:
         options = options_from_args(["record_run", "--run-id", "demo_001", "--overwrite", "true"])
 

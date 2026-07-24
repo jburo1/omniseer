@@ -251,6 +251,10 @@ def test_runtime_record_accepts_options_and_launch_args(tmp_path: Path) -> None:
             "operator-runtime-debug",
             "--experiment-parameter",
             "note=desk",
+            "--record-notes",
+            "lighting changed",
+            "--record-classes",
+            "person,fire extinguisher",
             "--",
             "start_lidar:=false",
         ],
@@ -268,6 +272,8 @@ def test_runtime_record_accepts_options_and_launch_args(tmp_path: Path) -> None:
     assert "--record-system-interval-sec 0.5" in log
     assert "--record-experiment-config operator-runtime-debug" in log
     assert "--record-experiment-parameter note=desk" in log
+    assert "--record-notes lighting\\ changed" in log
+    assert "--record-classes person\\,fire\\ extinguisher" in log
     assert "bringup start_lidar:=false" in log
 
 

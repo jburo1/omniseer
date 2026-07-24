@@ -478,7 +478,15 @@ def _build_parser() -> argparse.ArgumentParser:
 def _normalize_classes(values: list[str]) -> list[str]:
     classes: list[str] = []
     for value in values:
-        for token in value.replace(",", " ").split():
+        stripped = value.strip()
+        if not stripped:
+            continue
+        if "," in stripped or "\n" in stripped:
+            tokens = [token for line in stripped.splitlines() for token in line.split(",")]
+        else:
+            tokens = [stripped]
+        for token in tokens:
+            token = token.strip()
             if token:
                 classes.append(token)
     return classes

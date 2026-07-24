@@ -29,6 +29,8 @@ Defaults:
 
 Record args:
   --run-id <id>                         Default: operator_<UTC>
+  --notes <text>                        Store notes in manifest.yaml.
+  --classes <text>                      Store configured class names in manifest.yaml.
   --system-interval-sec <seconds>       Default: 1.0
   --experiment-config <name>            Default: operator-runtime
   --experiment-parameter <key=value>    Repeatable; default: stage=manual-operator
@@ -320,6 +322,8 @@ runtime_record() {
   local repo_root host_run_dir
   local experiment_parameters=()
   local launch_args=()
+  local notes=""
+  local classes=""
   run_id="operator_$(runtime_timestamp)"
   system_interval_sec="1.0"
   experiment_config="operator-runtime"
@@ -338,6 +342,16 @@ runtime_record() {
       --system-interval-sec|--record-system-interval-sec)
         [[ ${#remaining[@]} -ge 2 ]] || omni_die "${remaining[0]} requires a value"
         system_interval_sec="${remaining[1]}"
+        remaining=("${remaining[@]:2}")
+        ;;
+      --notes|--record-notes)
+        [[ ${#remaining[@]} -ge 2 ]] || omni_die "${remaining[0]} requires a value"
+        notes="${remaining[1]}"
+        remaining=("${remaining[@]:2}")
+        ;;
+      --classes|--record-classes)
+        [[ ${#remaining[@]} -ge 2 ]] || omni_die "${remaining[0]} requires a value"
+        classes="${remaining[1]}"
         remaining=("${remaining[@]:2}")
         ;;
       --experiment-config|--record-experiment-config)
@@ -382,6 +396,12 @@ runtime_record() {
     --record-system-interval-sec "${system_interval_sec}"
     --record-experiment-config "${experiment_config}"
   )
+  if [[ -n "${notes}" ]]; then
+    command+=(--record-notes "${notes}")
+  fi
+  if [[ -n "${classes}" ]]; then
+    command+=(--record-classes "${classes}")
+  fi
   local parameter
   for parameter in "${experiment_parameters[@]}"; do
     command+=(--record-experiment-parameter "${parameter}")
