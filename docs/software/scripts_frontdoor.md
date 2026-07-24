@@ -156,11 +156,20 @@ scripts/omni runtime pull
 Use `runtime record` for a manual operator evidence run. It starts the latest
 local runtime image in the operator profile, records an indefinite runbundle
 under `runs/operator_<UTC>`, samples system telemetry every second, and exits
-when the container is stopped or interrupted. Pass extra launch args after `--`,
-for example:
+when the container receives a graceful interrupt. Ctrl-C and the monitor GUI Stop
+Run button are the supported stop paths because they let the recorder finalize
+`manifest.yaml` and `summary.json`. Pass extra launch args after `--`, for
+example:
 
 ```bash
 sudo scripts/omni runtime record -- start_lidar:=false
+```
+
+If a GUI-started runtime container outlives its SSH session, stop it explicitly
+with:
+
+```bash
+sudo scripts/omni runtime stop --run-id <run_id>
 ```
 
 When these commands are launched from a devcontainer, the wrapper resolves the
@@ -177,8 +186,8 @@ to immutable `robot-verified-<UTC>-g<shortsha>` and moving `robot-verified`
 tags.
 `runtime verify` runs Docker without an interactive TTY so it works under `sudo`,
 SSH automation, and other non-interactive launch paths. For direct `runtime run`
-commands, Docker TTY allocation defaults to `auto`; set
-`OMNISEER_RUNTIME_DOCKER_TTY=always` or `never` to override it.
+and manual `runtime record` commands, Docker TTY allocation defaults to `auto`;
+set `OMNISEER_RUNTIME_DOCKER_TTY=always` or `never` to override it.
 
 See [Robot Runtime Container](robot_runtime_container.md#checkpoint-and-promotion)
 for the full pre-registry workflow, including runbundle inspection and report

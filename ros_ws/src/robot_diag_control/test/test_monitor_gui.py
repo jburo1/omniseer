@@ -12,6 +12,7 @@ from robot_diag_control.monitor_gui import (
     _build_preview_viewer_command,
     _build_pull_run_command,
     _build_remote_mkdir_command,
+    _build_remote_runtime_stop_command,
     _build_remote_start_command,
     _build_report_command,
     _build_upload_classes_command,
@@ -170,11 +171,11 @@ class MonitorGuiTests(unittest.TestCase):
             devcontainer_exec_template="ignored {command}",
         )
 
-        self.assertEqual(command[0:2], ["ssh", "radxa@10.0.0.2"])
-        self.assertIn("scripts/omni runtime record", command[2])
-        self.assertIn("--record-notes 'lighting changed'", command[2])
-        self.assertIn("--record-classes 'person,fire extinguisher'", command[2])
-        self.assertIn("classes_path:=/runs/operator_001/classes.txt", command[2])
+        self.assertEqual(command[0:3], ["ssh", "-tt", "radxa@10.0.0.2"])
+        self.assertIn("scripts/omni runtime record", command[3])
+        self.assertIn("--record-notes 'lighting changed'", command[3])
+        self.assertIn("--record-classes 'person,fire extinguisher'", command[3])
+        self.assertIn("classes_path:=/runs/operator_001/classes.txt", command[3])
 
     def test_devcontainer_backend_uses_robot_host_visible_class_path(self):
         command = _build_remote_start_command(
@@ -188,11 +189,22 @@ class MonitorGuiTests(unittest.TestCase):
             devcontainer_exec_template="docker exec omniseer-dev bash -lc {command}",
         )
 
-        self.assertEqual(command[0:2], ["ssh", "radxa@10.0.0.2"])
-        self.assertIn("docker exec omniseer-dev bash -lc", command[2])
-        self.assertIn("scripts/omni run real --profile operator", command[2])
+        self.assertEqual(command[0:3], ["ssh", "-tt", "radxa@10.0.0.2"])
+        self.assertIn("docker exec omniseer-dev bash -lc", command[3])
+        self.assertIn("scripts/omni run real --profile operator", command[3])
         class_path = _remote_class_list_path_for("/home/radxa/apps/omniseer", "operator_001")
-        self.assertIn(f"classes_path:={class_path}", command[2])
+        self.assertIn(f"classes_path:={class_path}", command[3])
+
+    def test_runtime_stop_command_targets_named_runtime_record_container(self):
+        command = _build_remote_runtime_stop_command(
+            ssh_user="radxa",
+            host="10.0.0.2",
+            remote_repo_root="/home/radxa/apps/omniseer",
+            run_id="operator_001",
+        )
+
+        self.assertEqual(command[0:2], ["ssh", "radxa@10.0.0.2"])
+        self.assertIn("scripts/omni runtime stop --run-id operator_001", command[2])
 
     def test_build_pull_command_uses_import_root_and_remote_root(self):
         command = _build_pull_run_command(

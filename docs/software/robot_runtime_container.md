@@ -161,9 +161,13 @@ the verified tags.
 
 `runtime record` is the manual operator evidence-capture path. It uses the latest
 local runtime build by default, starts `run real --profile operator ... bringup`
-without a Docker TTY, writes the runbundle to `runs/operator_<UTC>` on the host,
-and samples system telemetry every second. Stop the run with Ctrl-C when the
-experiment is complete.
+with automatic Docker TTY detection, writes the runbundle to `runs/operator_<UTC>`
+on the host, and samples system telemetry every second. Stop the run with Ctrl-C
+or the monitor GUI Stop Run button when the experiment is complete; the recorder
+needs that graceful interrupt to finalize `manifest.yaml` and `summary.json`.
+The monitor GUI also issues `scripts/omni runtime stop --run-id <id>` as a
+container-level fallback, which targets the named runtime record container for
+that run id.
 
 When launched from a devcontainer, the runtime wrapper resolves the host-side
 workspace bind path before starting Docker so the runtime container writes back
@@ -177,8 +181,9 @@ launch that survives until the smoke timeout is treated as a pass. Full
 verification runs the container's existing real operator smoke path with run
 recording enabled. Verification runs Docker without an interactive TTY so it can
 be used under `sudo`, SSH automation, and other non-interactive launch paths.
-Direct `runtime run` commands allocate a TTY only when attached to one by
-default; override that with `OMNISEER_RUNTIME_DOCKER_TTY=always` or `never`.
+Direct `runtime run` and manual `runtime record` commands allocate a TTY only
+when attached to one by default; override that with
+`OMNISEER_RUNTIME_DOCKER_TTY=always` or `never`.
 
 `runtime push` refuses to publish unless a passed full verification exists for the
 same local image ID. It pushes the candidate tag first, then automatically

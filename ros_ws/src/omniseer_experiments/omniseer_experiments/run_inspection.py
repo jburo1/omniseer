@@ -6,6 +6,7 @@ import argparse
 import json
 from collections.abc import Sequence
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -93,17 +94,23 @@ def inspect_run(run_dir: Path) -> RunInspection:
     issues.extend(evidence_scan.issues)
     issues.extend(_validate_evidence_records(path, evidence_scan.records))
 
-    fallback_summary = _fallback_summary(
-        run_id=_manifest_string(manifest, "run_id") or path.name,
-        detections_records=detections_scan.records,
-        perf_records=perf_scan.records,
-        system_records=system_scan.records,
-    )
     summary = _read_summary(path / "summary.json", issues)
     summary_missing = summary is None and not (path / "summary.json").exists()
 
     started_at = _manifest_string(manifest, "started_at")
     ended_at = _manifest_string(manifest, "ended_at")
+    fallback_duration_sec = _fallback_duration_sec(
+        started_at=started_at,
+        ended_at=ended_at,
+        records=(*detections_scan.records, *perf_scan.records, *system_scan.records),
+    )
+    fallback_summary = _fallback_summary(
+        run_id=_manifest_string(manifest, "run_id") or path.name,
+        detections_records=detections_scan.records,
+        perf_records=perf_scan.records,
+        system_records=system_scan.records,
+        duration_sec=fallback_duration_sec,
+    )
     manifest_missing = any(issue.code == "missing_manifest" for issue in issues)
     jsonl_has_issues = bool(
         detections_scan.issues
@@ -498,6 +505,7 @@ def _fallback_summary(
     detections_records: Sequence[dict[str, Any]],
     perf_records: Sequence[dict[str, Any]],
     system_records: Sequence[dict[str, Any]],
+    duration_sec: float,
 ) -> dict[str, Any]:
     accumulator = SummaryAccumulator(run_id)
     for record in detections_records:
@@ -506,7 +514,49 @@ def _fallback_summary(
         accumulator.add_perf_record(record)
     for record in system_records:
         accumulator.add_system_record(record)
-    return accumulator.build_summary(0.0)
+    return accumulator.build_summary(duration_sec)
+
+
+def _fallback_duration_sec(
+    *,
+    started_at: str | None,
+    ended_at: str | None,
+    records: Sequence[dict[str, Any]],
+) -> float:
+    started_datetime = _parse_iso_datetime(started_at)
+    ended_datetime = _parse_iso_datetime(ended_at)
+    if started_datetime is not None and ended_datetime is not None:
+        return max(0.0, (ended_datetime - started_datetime).total_seconds())
+
+    recv_ts_values = sorted(value for record in records if (value := _record_recv_ts_ns(record)) is not None)
+    if not recv_ts_values:
+        return 0.0
+
+    last_recv_datetime = datetime.fromtimestamp(recv_ts_values[-1] / 1_000_000_000, tz=timezone.utc)
+    if started_datetime is not None:
+        return max(0.0, (last_recv_datetime - started_datetime).total_seconds())
+
+    first_recv_datetime = datetime.fromtimestamp(recv_ts_values[0] / 1_000_000_000, tz=timezone.utc)
+    return max(0.0, (last_recv_datetime - first_recv_datetime).total_seconds())
+
+
+def _parse_iso_datetime(value: str | None) -> datetime | None:
+    if not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def _record_recv_ts_ns(record: dict[str, Any]) -> int | None:
+    value = record.get("recv_ts_ns")
+    if isinstance(value, int) and not isinstance(value, bool) and value >= 0:
+        return value
+    return None
 
 
 def _state_from_issues(

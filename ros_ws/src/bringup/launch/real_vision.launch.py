@@ -2,13 +2,25 @@
 """Launch the native real-hardware vision bridge."""
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, OpaqueFunction
+from launch.actions import DeclareLaunchArgument, EmitEvent, LogInfo, OpaqueFunction, RegisterEventHandler
+from launch.event_handlers import OnProcessExit
+from launch.events import Shutdown
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterFile
 from launch_ros.substitutions import FindPackageShare
 
 USE_CONFIG_SENTINEL = "__from_config__"
+
+
+def _required_vision_exit_handler(process_name: str):
+    def _on_exit(event, _context):
+        return [
+            LogInfo(msg=f"{process_name} exited with code {event.returncode}"),
+            EmitEvent(event=Shutdown(reason=f"{process_name} exited")),
+        ]
+
+    return _on_exit
 
 
 def generate_launch_description():
@@ -86,6 +98,13 @@ def generate_launch_description():
             parameters=[ParameterFile(vision_params_path, allow_substs=True), overrides],
         )
 
-        return [vision_bridge_node]
+        vision_bridge_exit_handler = RegisterEventHandler(
+            OnProcessExit(
+                target_action=vision_bridge_node,
+                on_exit=_required_vision_exit_handler("vision_bridge"),
+            )
+        )
+
+        return [vision_bridge_node, vision_bridge_exit_handler]
 
     return LaunchDescription([*declared_arguments, OpaqueFunction(function=launch_setup)])

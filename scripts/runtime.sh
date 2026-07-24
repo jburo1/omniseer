@@ -10,6 +10,7 @@ source "${script_dir}/lib/common.sh"
 
 default_image_base="ghcr.io/jburo1/omniseer-robot-runtime"
 verified_tag="robot-verified"
+runtime_docker_extra_args=()
 
 usage() {
   cat <<'EOF'
@@ -17,6 +18,7 @@ Usage:
   scripts/omni runtime build [--image <base>] [--tag <tag>] [build args...]
   scripts/omni runtime run [--image <base>] [--tag <tag>] [container command...]
   scripts/omni runtime record [--image <base>] [--tag <tag>] [record args...] [-- launch args...]
+  scripts/omni runtime stop --run-id <id> [--time <seconds>]
   scripts/omni runtime verify [--image <base>] [--tag <tag>] [--stage smoke|full]
   scripts/omni runtime push [--image <base>] [--tag <tag>]
   scripts/omni runtime pull [--image <base>] [--tag <tag>]
@@ -82,6 +84,10 @@ runtime_verified_tag_for() {
 
 runtime_safe_tag() {
   printf '%s' "$1" | tr -c '[:alnum:]_.-' '_'
+}
+
+runtime_record_container_name() {
+  printf 'omniseer-runtime-record-%s\n' "$(runtime_safe_tag "$1")"
 }
 
 runtime_shell_join() {
@@ -199,6 +205,7 @@ runtime_common_docker_args() {
   mkdir -p "${repo_root}/runs"
   printf '%s\0' \
     "--rm" \
+    "--sig-proxy=true" \
     "--privileged" \
     "--network=host" \
     "--pid=host" \
@@ -241,6 +248,7 @@ runtime_docker_run() {
   while IFS= read -r -d '' arg; do
     docker_args+=("${arg}")
   done < <(runtime_common_docker_args "${image_ref}" "${image_digest}")
+  docker_args+=("${runtime_docker_extra_args[@]}")
   if [[ $# -gt 0 ]]; then
     docker_args+=("-e" "OMNISEER_RUNTIME_CONTAINER_COMMAND=$(runtime_shell_join "$@")")
   fi
@@ -414,12 +422,54 @@ runtime_record() {
   if [[ "$(runtime_runs_bind_root)" != "${repo_root}/runs" ]]; then
     omni_info "Docker host run bind: $(runtime_runs_bind_root)/${run_id}"
   fi
+  runtime_docker_extra_args=(
+    "--name" "$(runtime_record_container_name "${run_id}")"
+    "--label" "org.omniseer.kind=runtime-record"
+    "--label" "org.omniseer.run_id=${run_id}"
+  )
   set +e
-  OMNISEER_RUNTIME_DOCKER_TTY=never runtime_docker_run "${image_ref}" "${command[@]}"
+  runtime_docker_run "${image_ref}" "${command[@]}"
   status=$?
+  runtime_docker_extra_args=()
   set -e
   omni_info "Run bundle path: ${host_run_dir}"
   return "${status}"
+}
+
+runtime_stop() {
+  local run_id="" timeout_sec="20"
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --run-id|--record-run)
+        [[ $# -ge 2 ]] || omni_die "$1 requires a value"
+        run_id="$2"
+        shift 2
+        ;;
+      --time|--timeout)
+        [[ $# -ge 2 ]] || omni_die "$1 requires a value"
+        timeout_sec="$2"
+        shift 2
+        ;;
+      help|-h|--help)
+        usage
+        exit 0
+        ;;
+      *)
+        omni_die "unknown runtime stop argument: $1"
+        ;;
+    esac
+  done
+  [[ -n "${run_id}" ]] || omni_die "runtime stop requires --run-id"
+
+  local container_name
+  container_name="$(runtime_record_container_name "${run_id}")"
+  if ! docker container inspect "${container_name}" >/dev/null 2>&1; then
+    omni_warn "runtime record container is not present: ${container_name}"
+    return 0
+  fi
+
+  docker stop --time "${timeout_sec}" "${container_name}" >/dev/null
+  omni_info "Stopped runtime record container ${container_name}"
 }
 
 runtime_verify_smoke() {
@@ -576,6 +626,9 @@ case "${subcommand}" in
     ;;
   record)
     runtime_record "$@"
+    ;;
+  stop)
+    runtime_stop "$@"
     ;;
   verify)
     runtime_verify "$@"

@@ -51,6 +51,7 @@ DEFAULT_LOCAL_IMPORT_ROOT = "runs/imported"
 DEFAULT_DEVCONTAINER_EXEC_TEMPLATE = "devcontainer exec --workspace-folder {remote_repo_root} bash -lc {command}"
 DEFAULT_ROBOT_HOST = "192.168.1.178"
 DEFAULT_ROBOT_USER = "radxa"
+RUN_STOP_GRACE_MS = 8000
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -290,6 +291,18 @@ def _build_remote_start_command(
         )
     else:
         raise ValueError(f"unsupported run backend: {backend}")
+    return ["ssh", "-tt", _ssh_target(ssh_user, host), remote_command]
+
+
+def _build_remote_runtime_stop_command(
+    *,
+    ssh_user: str,
+    host: str,
+    remote_repo_root: str,
+    run_id: str,
+) -> list[str]:
+    inner = ["scripts/omni", "runtime", "stop", "--run-id", run_id]
+    remote_command = f"cd {shlex.quote(remote_repo_root)} && {_shell_join(inner)}"
     return ["ssh", _ssh_target(ssh_user, host), remote_command]
 
 
@@ -425,6 +438,7 @@ class RobotMonitorGui:
         self._viewer_process: subprocess.Popen[str] | None = None
         self._run_process: subprocess.Popen[str] | None = None
         self._active_run_id: str | None = None
+        self._run_stop_after_id: str | None = None
         self._last_status: robot_gateway_pb2.SystemStatus | None = None
         self._last_fault_line: str | None = None
 
@@ -753,6 +767,7 @@ class RobotMonitorGui:
             self._run_process = subprocess.Popen(
                 command,
                 cwd=self._repo_root(),
+                stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
@@ -813,15 +828,83 @@ class RobotMonitorGui:
         threading.Thread(target=_read_output, name="omniseer_remote_run_log", daemon=True).start()
 
     def stop_run(self) -> None:
-        if self._run_process is None or self._run_process.poll() is not None:
-            self._append_log("run not running")
+        if not self._request_run_stop():
+            if not self._request_remote_runtime_stop():
+                self._append_log("run not running")
+            return
+
+        self._append_log("run stop requested; waiting for remote shutdown")
+
+    def _request_run_stop(self) -> bool:
+        process = self._run_process
+        if process is None or process.poll() is not None:
+            return False
+
+        try:
+            if process.stdin is None:
+                raise OSError("run process stdin is unavailable")
+            process.stdin.write("\x03")
+            process.stdin.flush()
+        except OSError:
+            self._force_stop_run_process()
+            return True
+
+        if self._run_stop_after_id is None:
+            self._run_stop_after_id = self._root.after(RUN_STOP_GRACE_MS, self._force_stop_run_process)
+        return True
+
+    def _force_stop_run_process(self) -> None:
+        self._run_stop_after_id = None
+        self._request_remote_runtime_stop()
+        process = self._run_process
+        if process is None or process.poll() is not None:
             return
 
         try:
-            os.killpg(self._run_process.pid, signal.SIGINT)
+            os.killpg(process.pid, signal.SIGINT)
         except OSError:
-            self._run_process.terminate()
-        self._append_log("run stop requested")
+            process.terminate()
+        self._append_log("remote run did not exit after graceful stop; local ssh session interrupted")
+
+    def _request_remote_runtime_stop(self) -> bool:
+        try:
+            if self._selected_run_backend() != RUN_BACKEND_RUNTIME:
+                return False
+            run_id = self._active_run_id or _sanitize_run_id(self._run_id_var.get())
+            if not run_id:
+                return False
+            settings = self._connection_namespace()
+            command = _build_remote_runtime_stop_command(
+                ssh_user=self._ssh_user_var.get().strip(),
+                host=settings.host,
+                remote_repo_root=self._remote_repo_root(),
+                run_id=run_id,
+            )
+        except ValueError as error:
+            self._append_log(f"runtime stop command failed: {error}")
+            return False
+
+        self._append_log("$ " + _shell_join(command))
+
+        def _stop_remote_container() -> None:
+            completed = subprocess.run(
+                command,
+                cwd=self._repo_root(),
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            detail = (completed.stderr or completed.stdout).strip()
+            if completed.returncode == 0:
+                message = "runtime container stop requested"
+                if detail:
+                    message = f"{message}: {detail}"
+            else:
+                message = f"runtime container stop failed: {detail or completed.returncode}"
+            self._append_log_threadsafe(message)
+
+        threading.Thread(target=_stop_remote_container, name="omniseer_runtime_stop", daemon=True).start()
+        return True
 
     def _poll_run_process(self) -> None:
         if self._run_process is None:
@@ -833,6 +916,9 @@ class RobotMonitorGui:
 
         run_id = self._active_run_id or self._resolved_run_id()
         self._append_log(f"remote run exited with code {exit_code}: {run_id}")
+        if self._run_stop_after_id is not None:
+            self._root.after_cancel(self._run_stop_after_id)
+            self._run_stop_after_id = None
         self._run_process = None
 
     def retrieve_results(self) -> None:
@@ -1002,11 +1088,7 @@ class RobotMonitorGui:
         self.refresh_status()
 
     def close(self) -> None:
-        if self._run_process is not None and self._run_process.poll() is None:
-            try:
-                os.killpg(self._run_process.pid, signal.SIGINT)
-            except OSError:
-                self._run_process.terminate()
+        self._request_run_stop()
         try:
             with grpc.insecure_channel(
                 target_for(self._connection_namespace().host, self._connection_namespace().port)

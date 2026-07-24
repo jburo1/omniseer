@@ -175,6 +175,15 @@ class RealLaunchStructureTests(unittest.TestCase):
         self.assertIn("evidence_storage_budget_mb", declared_names)
         self.assertIn("evidence_min_free_mb", declared_names)
 
+    def test_real_vision_launch_treats_vision_bridge_exit_as_fault(self) -> None:
+        launch_path = Path(__file__).resolve().parents[1] / "launch" / "real_vision.launch.py"
+        source = launch_path.read_text(encoding="utf-8")
+
+        self.assertIn("RegisterEventHandler", source)
+        self.assertIn("OnProcessExit", source)
+        self.assertIn("target_action=vision_bridge_node", source)
+        self.assertIn('Shutdown(reason=f"{process_name} exited")', source)
+
     def test_sim_launch_runs_shared_cleanup_before_launch_group(self) -> None:
         module = _load_launch_module("sim.launch.py")
         launch_description = module.generate_launch_description()

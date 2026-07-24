@@ -152,6 +152,7 @@ def test_runtime_run_uses_robot_container_flags_and_provenance(tmp_path: Path) -
     assert "docker image inspect" in log
     assert "docker run" in log
     assert "-it" not in log
+    assert "--sig-proxy=true" in log
     assert "--privileged" in log
     assert "--network=host" in log
     assert "--pid=host" in log
@@ -207,7 +208,6 @@ def test_runtime_run_can_force_docker_tty_for_interactive_sessions(tmp_path: Pat
 
 def test_runtime_record_runs_operator_recording_with_defaults(tmp_path: Path) -> None:
     env = _runtime_env(tmp_path)
-    env["OMNISEER_RUNTIME_DOCKER_TTY"] = "always"
 
     result = subprocess.run(
         ["scripts/omni", "runtime", "record", "--tag", "runtime-test"],
@@ -222,6 +222,8 @@ def test_runtime_record_runs_operator_recording_with_defaults(tmp_path: Path) ->
     log = _docker_log(env)
     assert "docker run" in log
     assert "-it" not in log
+    assert "--name omniseer-runtime-record-operator_" in log
+    assert "--label org.omniseer.kind=runtime-record" in log
     assert "run real --profile operator" in log
     assert "--record-run operator_" in log
     assert "--record-out /runs/operator_" in log
@@ -231,6 +233,43 @@ def test_runtime_record_runs_operator_recording_with_defaults(tmp_path: Path) ->
     assert "--record-experiment-parameter stage=manual-operator" in log
     assert "--record-experiment-parameter stage=manual-operator bringup" in log
     assert "Run bundle path:" in result.stderr
+
+
+def test_runtime_record_respects_forced_docker_tty(tmp_path: Path) -> None:
+    env = _runtime_env(tmp_path)
+    env["OMNISEER_RUNTIME_DOCKER_TTY"] = "always"
+
+    result = subprocess.run(
+        ["scripts/omni", "runtime", "record", "--tag", "runtime-test", "--run-id", "operator_debug"],
+        cwd=REPO_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    log = _docker_log(env)
+    assert "docker run -it --rm" in log
+    assert "--record-run operator_debug" in log
+
+
+def test_runtime_stop_stops_named_record_container(tmp_path: Path) -> None:
+    env = _runtime_env(tmp_path)
+
+    result = subprocess.run(
+        ["scripts/omni", "runtime", "stop", "--run-id", "operator_debug", "--time", "7"],
+        cwd=REPO_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    log = _docker_log(env)
+    assert "docker container inspect omniseer-runtime-record-operator_debug" in log
+    assert "docker stop --time 7 omniseer-runtime-record-operator_debug" in log
 
 
 def test_runtime_record_accepts_options_and_launch_args(tmp_path: Path) -> None:

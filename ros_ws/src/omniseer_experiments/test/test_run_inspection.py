@@ -198,6 +198,7 @@ class RunInspectionTests(unittest.TestCase):
 
         self.assertEqual(inspection.state, STATE_INCOMPLETE)
         self.assertIn("missing_summary", {issue.code for issue in inspection.issues})
+        self.assertEqual(inspection.duration_sec, 65.0)
         self.assertEqual(inspection.message_counts, {"detections": 1, "perf": 1, "system": 0})
         self.assertEqual(inspection.detections_by_class, {"backpack": 1, "chair": 1})
 
@@ -211,6 +212,20 @@ class RunInspectionTests(unittest.TestCase):
         self.assertEqual(inspection.state, STATE_IN_PROGRESS)
         self.assertEqual({issue.code for issue in inspection.issues}, {"missing_summary", "run_open"})
         self.assertEqual(inspection.message_counts, {"detections": 1, "perf": 1, "system": 0})
+
+    def test_open_missing_summary_uses_latest_record_timestamp_for_duration(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "demo_001"
+            _write_in_progress_bundle(run_dir)
+            system_record = _system_record()
+            system_record["recv_ts_ns"] = int((STARTED_AT.timestamp() + 12.5) * 1_000_000_000)
+            (run_dir / "system.jsonl").write_text(json.dumps(system_record) + "\n", encoding="utf-8")
+
+            inspection = inspect_run(run_dir)
+
+        self.assertEqual(inspection.state, STATE_IN_PROGRESS)
+        self.assertEqual(inspection.duration_sec, 12.5)
+        self.assertEqual(inspection.message_counts, {"detections": 1, "perf": 1, "system": 1})
 
     def test_malformed_jsonl_is_incomplete(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
