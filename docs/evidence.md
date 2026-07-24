@@ -16,12 +16,15 @@ run means the repository passed these portable checks:
   `/mecanum_drive_controller/odometry`.
 - Portable host vision tests for buffer pooling, JSONL telemetry, and rolling
   telemetry.
+- Portable run-bundle tests for manifest/summary handling, recording helpers,
+  inspection, retrieval edge cases, system telemetry parsing, evidence annotation,
+  and static report generation.
 - Compile-only Teensy 4.1 firmware build through `scripts/omni build firmware`.
 - Strict MkDocs documentation build.
 
 CI does **not** prove camera capture, RGA/RKNN execution, NPU latency, real
-sensor/motor behavior, firmware flashing, micro-ROS transport, experiment
-recording, cloud synchronization, or hosted reporting.
+sensor/motor behavior, firmware flashing, micro-ROS transport, target-hardware
+experiment recording, cloud synchronization, or hosted reporting.
 
 ## Locally Verified
 
@@ -72,10 +75,10 @@ claiming the full operator-integrated hardware slice is complete.
 
 The following remain planned or pending evidence:
 
-- selected visual evidence capture inside run bundles
-- laptop report generator for recorded runs
+- a curated hardware evidence pack with run notes, representative successes, false
+  positives, misses, and limitations
 - provider-neutral cloud synchronization
-- hosted static review dashboard
+- hosted static review path
 - target-hardware or hardware-in-the-loop CI
 - tagged release packaging for firmware and robot software
 

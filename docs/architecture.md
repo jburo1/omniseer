@@ -1,15 +1,15 @@
 # System Architecture
 
 This page is the top-level technical map of Omniseer. It distinguishes the
-implemented robot and operator paths from the planned experiment and cloud-review
-work.
+implemented robot, operator, and local experiment-review paths from the planned
+cloud-review work.
 
 ## Active Direction
 
 The active deliverable is an open-vocabulary edge perception and evaluation loop:
 
 ```text
-                       [ Laptop / Planned Cloud Review ]
+                       [ Laptop Review / Planned Hosted Review ]
                                      ^
                                      |
                          experiment results and evidence
@@ -22,9 +22,10 @@ The active deliverable is an open-vocabulary edge perception and evaluation loop
 ```
 
 The robot performs inference locally. ROS 2 carries normalized detections and
-performance summaries. The next product slice will record those outputs into a
-reproducible experiment bundle and support offboard review. Cloud synchronization
-and hosted reporting are planned, provider-neutral work.
+performance summaries. The local experiment workflow records those outputs into a
+reproducible run bundle, retrieves robot-created bundles onto the laptop, annotates
+selected evidence, and generates static HTML reports. Cloud synchronization and hosted
+reporting are planned, provider-neutral work.
 
 Navigation, SLAM, simulation, firmware, and operator connectivity remain valuable
 platform capabilities. They support data collection and robot operation but are not
@@ -58,6 +59,7 @@ The laptop currently supports:
 - gRPC status and preview control
 - SRT preview receive and decode
 - CLI, monitor shell, and initial Tk monitoring workflows
+- perception run retrieval, inspection, evidence annotation, and static HTML reports
 - RViz, telemetry analysis, and other development tools
 
 The laptop is also the first review target for recorded perception experiments. It

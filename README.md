@@ -12,14 +12,16 @@ The active portfolio deliverable is a reproducible perception evaluation loop:
 
 ```text
 camera -> RKNN YOLO-World -> ROS detections + telemetry -> experiment bundle
-                                                           -> laptop/cloud review
+                                                           -> laptop report
+                                                           -> planned hosted review
 ```
 
 Robot-side inference, ROS publication, telemetry, simulation, firmware, gateway
-control, preview streaming, structured experiment recording, and simple local HTML
-run reports are implemented. Runtime class updates in the native RKNN bridge,
-cloud synchronization, and a hosted review dashboard are planned next. Autonomous
-object search and capture are not part of the active deliverable.
+control, preview streaming, structured experiment recording, offboard run retrieval,
+evidence annotation, and simple local HTML run reports are implemented. Runtime class
+updates in the native RKNN bridge, cloud synchronization, and a hosted static review
+path are planned next. Autonomous object search and capture are not part of the active
+deliverable.
 
 ## Current Capabilities
 
@@ -27,6 +29,9 @@ object search and capture are not part of the active deliverable.
 - YOLO-World text-embedding preparation and bounded detection post-processing.
 - Typed `/yolo/detections` and `/vision/perf` ROS 2 contracts.
 - JSONL stage telemetry, rolling performance summaries, and offline analysis tools.
+- Local perception run bundles with detections, performance summaries, system
+  telemetry, native pipeline telemetry, evidence frames, inspection, retrieval,
+  annotation, and static HTML reports.
 - ROS 2 simulation and real-hardware bringup with firmware and micro-ROS integration.
 - gRPC system status and preview control with on-demand SRT video export.
 - Six-lane GitHub CI covering lint, ROS, Gazebo smoke, portable vision, firmware, and docs.
@@ -49,6 +54,9 @@ scripts/omni build ros
 scripts/omni test ros
 scripts/omni run sim
 scripts/omni run real
+scripts/omni run real --record-run demo_001
+scripts/omni runs inspect runs/demo_001
+scripts/omni runs report runs/demo_001
 scripts/omni check real-perception
 scripts/omni flash teensy
 scripts/omni docs build
@@ -60,6 +68,8 @@ wraps the existing firmware helper.
 
 ## Current Boundary
 
-GitHub CI validates portable software and simulation contracts. Camera, RGA, RKNN,
-NPU, sensor, motor, and firmware-flash behavior still require validation on the
-target hardware. See the CI/CD documentation for the exact coverage boundary.
+GitHub CI validates portable software and simulation contracts. Target-hardware
+camera, RGA, RKNN/NPU, and recording evidence exists in local run bundles, while
+sensor, motor, firmware-flash, preview, and full operator-integrated behavior still
+require explicit target-hardware verification records. See the CI/CD and evidence
+documentation for the exact coverage boundary.

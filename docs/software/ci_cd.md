@@ -235,7 +235,7 @@ CI currently does not guarantee:
 - real LiDAR, IMU, sonar, encoder, battery, or motor behavior
 - firmware flashing or micro-ROS transport behavior
 - long-duration simulation or robot soak behavior
-- experiment recording, cloud synchronization, or hosted review
+- target-hardware experiment recording, cloud synchronization, or hosted review
 - release packaging or deployment
 
 Those checks require target hardware, a self-hosted runner, or later delivery
@@ -244,7 +244,7 @@ infrastructure. CI evidence should not be presented as real-hardware evidence.
 ## Planned Extensions
 
 - target-hardware or hardware-in-the-loop validation
-- run-bundle schema and recorder tests
+- broader run-bundle schema and recorder compatibility tests
 - provider-neutral cloud synchronization checks
 - hosted report build/deployment
 - tagged release packaging for firmware and robot software

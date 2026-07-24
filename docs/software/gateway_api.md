@@ -321,8 +321,10 @@ a minimal host-side preview helper that consumes the stream using a configured
 SRT endpoint. The gateway still does not publish endpoint metadata through the
 protobuf API.
 
-Cloud synchronization, hosted review, and experiment recording are planned product
-work and are not part of the current API.
+Local experiment recording and run-bundle review are implemented outside this gRPC
+API through the real launch profile and `scripts/omni runs` front door. Cloud
+synchronization, hosted review, and gateway-mediated recording/export RPCs remain
+planned product work and are not part of the current API.
 
 ## Related Docs
 

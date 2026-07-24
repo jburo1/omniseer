@@ -24,8 +24,8 @@ report.
 camera
   -> native V4L2/RGA/RKNN runtime
   -> /yolo/detections + /vision/perf
-  -> planned experiment recorder
-  -> planned run bundle
+  -> experiment recorder
+  -> local run bundle
   -> laptop review
   -> planned cloud sync and hosted report
 ```
@@ -66,8 +66,10 @@ diagnostics are surfaced separately through the robot gateway status snapshot.
 
 **Implemented:** the native harness supports an annotated OpenCV preview, JSONL stage
 telemetry, rolling statistics, and offline telemetry analysis. The ROS bridge is
-headless and currently publishes detections and performance summaries rather than an
-annotated image topic.
+headless and publishes detections and performance summaries rather than an annotated
+image topic. The experiment workflow can record local run bundles containing
+manifest metadata, detections, performance summaries, system telemetry, native
+pipeline telemetry, evidence frames, and generated summaries.
 
 ### Operator connectivity
 
@@ -77,21 +79,28 @@ process exports an on-demand SRT video stream, and packaged Python tools receive
 on the laptop. This preview is a diagnostic camera stream; it is not yet a
 frame-exact detection review surface.
 
-## Planned Experiment Loop
+### Offboard review
 
-The next implementation phase should add:
+**Implemented:** `scripts/omni runs` can inspect local bundles, list and pull
+robot-side bundles onto a laptop, annotate recorded evidence frames, and generate a
+simple static HTML report. Retrieval preserves additive files inside the bundle so
+new telemetry or evidence streams do not require a transport redesign.
+
+## Remaining Product Loop
+
+The next implementation work should focus on:
 
 1. Native runtime class updates with explicit lifecycle and failure semantics.
-2. A recorder that correlates typed detections and performance summaries by time.
-3. A structured run directory containing metadata, telemetry, detections, evidence,
-   and an optional rosbag.
-4. Selected annotated frames, crops, and operator-marked failure cases.
-5. CPU, memory, temperature, network, and power samples recorded outside the vision hot path.
-6. A laptop report showing latency, throughput, detections, confidence, and evidence.
-7. Provider-neutral synchronization of completed run bundles to a hosted review path.
+2. Completed target-hardware verification records for the full operator-integrated
+   slice: preview, gateway status, bounded teleop, detections, and stop behavior.
+3. Curated hardware evidence packs with run notes, representative successes, false
+   positives, misses, and limitations.
+4. Provider-neutral synchronization of completed run bundles or generated reports to
+   a hosted static review path.
 
-The exact run-bundle schema and cloud provider remain intentionally unspecified until
-the local recording and review workflow proves what data is useful.
+The local run-bundle contract is intentionally file-based and additive. The cloud
+provider and hosted publication path remain unspecified until selected reports are
+ready to publish.
 
 ## Portfolio Success Criteria
 
@@ -105,6 +114,7 @@ The artifact is complete when a reviewer can:
 - inspect detections by class and confidence
 - review representative successes, false positives, and missed detections
 - fetch or open the same completed run through the offboard review workflow
+- view at least one selected report from the hosted documentation path
 
 Claims should be supported by measured output, captured evidence, and a documented
 hardware/software configuration.
@@ -116,7 +126,7 @@ hardware/software configuration.
 - visual servoing or grasp/capture behavior
 - production fleet management
 - browser-based live robot control
-- choosing a cloud provider before the run-bundle contract is validated locally
+- choosing a cloud provider before the selected static-report workflow is ready
 
 ## Related Documentation
 

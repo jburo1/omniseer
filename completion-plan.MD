@@ -4,6 +4,20 @@ This document is the guiding plan for turning Omniseer into a complete, reviewab
 
 The goal is not to add random robot features. The goal is to make the existing edge-perception system observable, reproducible, and easy for an engineering reviewer to understand.
 
+## Current Status
+
+The repository has advanced beyond the original Phase 5 recommendation. Local
+run-bundle recording, offboard retrieval, inspection, system telemetry, native
+pipeline telemetry persistence, evidence annotation, and simple static HTML reports
+are implemented through `scripts/omni run real --record-run ...` and
+`scripts/omni runs`.
+
+The remaining portfolio work is evidence and publication focused: complete the
+operator-integrated target-hardware verification record, curate hardware evidence
+runs with notes and representative successes/failures, add native runtime class
+updates if needed for the demo story, and publish at least one selected static
+report through the docs path.
+
 ## North Star
 
 A reviewer should be able to clone the repository, read the README, retrieve or open one
@@ -1470,27 +1484,29 @@ The project is portfolio-complete when all of the following are true:
 
 # Recommended Immediate Next Step
 
-Complete the current recorder/inspection baseline, then move to Phase 5.
+Complete the operator-integrated target-hardware verification record and promote one
+strong run into a curated evidence/demo page.
 
-Do not start with cloud. Do not start with autonomy. Do not start with UI polish. Do not
-start with graphing before robot-created bundles can be retrieved and validated on the laptop.
+Do not start with a dynamic cloud dashboard. Do not start with autonomy. The local
+recording, retrieval, inspection, annotation, and static report path exists; the next
+step is to make the evidence easy to trust and easy to review.
 
 Start here:
 
 ```text
-feat(experiments): add offboard run retrieval helpers
+docs(operator): record integrated real demo verification
 ```
 
 Then:
 
 ```text
-feat(scripts): add runs list and pull commands
+docs(demo): add perception hardware evidence walkthrough
 ```
 
 Then:
 
 ```text
-docs(experiments): document offboard run retrieval
+docs(readme): link selected static perception report
 ```
 
 The artifact becomes compelling when the first real teleop perception run is verified, then recorded.

@@ -13,11 +13,13 @@ The active portfolio deliverable is narrower than autonomous object search:
 - select semantic target classes
 - run and measure onboard inference
 - record detections, telemetry, and useful evidence
-- review an experiment on a laptop and, later, through a cloud-hosted workflow
+- retrieve and review an experiment on a laptop
+- later publish selected evidence through a hosted static workflow
 
 Structured run bundles are implemented as local robot artifacts. Native runtime
-class updates, cloud synchronization, and a hosted review dashboard are
-**planned**. A simple local HTML report is available for laptop review.
+class updates, cloud synchronization, and a hosted static review path are
+**planned**. Laptop-side inspection, evidence annotation, and a simple local HTML
+report are available through `scripts/omni runs`.
 Autonomous seek and capture are explicitly deferred.
 
 Start with:

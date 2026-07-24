@@ -544,7 +544,7 @@ Below that line:
 - decide whether simulation needs a `/vision/perf` stub
 - expand contract checks to frame identifiers, timestamps, rates, and stale behavior
 - add a mocked real-launch smoke path
-- add replay support for the normalized boundary and planned experiment workflow
+- add replay support for the normalized boundary and implemented experiment workflow
 
 ## Verification Standard for the Boundary
 

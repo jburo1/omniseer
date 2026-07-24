@@ -16,7 +16,8 @@ The gRPC status/control boundary, managed x264/SRT preview worker, and laptop to
 described by the initial slices are now implemented. This specification remains the
 design reference for isolation and future evolution. The active portfolio direction
 uses these capabilities to support open-vocabulary perception experiments; structured
-recording, cloud synchronization, and hosted review are planned.
+local recording, run retrieval, evidence annotation, and static laptop reports are
+implemented. Cloud synchronization and hosted review remain planned.
 
 The key constraint is that the SBC should spend nearly all steady-state compute on robot-critical work. Preview and diagnostics should be optional, explicitly budgeted, and easy to disable.
 
@@ -635,8 +636,8 @@ Completed:
 
 Planned:
 
-1. Integrate experiment recording and offboard review without placing them on the
-   mission-critical hot path.
+1. Add gateway/cloud export integration without placing it on the mission-critical
+   hot path.
 2. Add hardware H.265 when the SBC userspace path is available.
 3. Revisit exact-sync preview or a separate video container only if measured needs
    justify the complexity.
