@@ -528,16 +528,27 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#offboard-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Offboard review
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#planned-experiment-loop" class="md-nav__link">
+  <a href="#remaining-product-loop" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Planned Experiment Loop
+        Remaining Product Loop
       
     </span>
   </a>
@@ -1232,16 +1243,27 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#offboard-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Offboard review
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#planned-experiment-loop" class="md-nav__link">
+  <a href="#remaining-product-loop" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Planned Experiment Loop
+        Remaining Product Loop
       
     </span>
   </a>
@@ -1319,8 +1341,8 @@ report.</p>
 <div class="highlight"><pre><span></span><code>camera
   -&gt; native V4L2/RGA/RKNN runtime
   -&gt; /yolo/detections + /vision/perf
-  -&gt; planned experiment recorder
-  -&gt; planned run bundle
+  -&gt; experiment recorder
+  -&gt; local run bundle
   -&gt; laptop review
   -&gt; planned cloud sync and hosted report
 </code></pre></div>
@@ -1352,28 +1374,35 @@ diagnostics are surfaced separately through the robot gateway status snapshot.</
 <h3 id="local-observability">Local observability<a class="headerlink" href="#local-observability" title="Permanent link">&para;</a></h3>
 <p><strong>Implemented:</strong> the native harness supports an annotated OpenCV preview, JSONL stage
 telemetry, rolling statistics, and offline telemetry analysis. The ROS bridge is
-headless and currently publishes detections and performance summaries rather than an
-annotated image topic.</p>
+headless and publishes detections and performance summaries rather than an annotated
+image topic. The experiment workflow can record local run bundles containing
+manifest metadata, detections, performance summaries, system telemetry, native
+pipeline telemetry, evidence frames, and generated summaries.</p>
 <h3 id="operator-connectivity">Operator connectivity<a class="headerlink" href="#operator-connectivity" title="Permanent link">&para;</a></h3>
 <p><strong>Implemented:</strong> the robot gateway exposes system status, platform diagnostics,
 preview control, overlay snapshots, and bounded teleop over gRPC. A managed GStreamer
 process exports an on-demand SRT video stream, and packaged Python tools receive it
 on the laptop. This preview is a diagnostic camera stream; it is not yet a
 frame-exact detection review surface.</p>
-<h2 id="planned-experiment-loop">Planned Experiment Loop<a class="headerlink" href="#planned-experiment-loop" title="Permanent link">&para;</a></h2>
-<p>The next implementation phase should add:</p>
+<h3 id="offboard-review">Offboard review<a class="headerlink" href="#offboard-review" title="Permanent link">&para;</a></h3>
+<p><strong>Implemented:</strong> <code>scripts/omni runs</code> can inspect local bundles, list and pull
+robot-side bundles onto a laptop, annotate recorded evidence frames, and generate a
+simple static HTML report. Retrieval preserves additive files inside the bundle so
+new telemetry or evidence streams do not require a transport redesign.</p>
+<h2 id="remaining-product-loop">Remaining Product Loop<a class="headerlink" href="#remaining-product-loop" title="Permanent link">&para;</a></h2>
+<p>The next implementation work should focus on:</p>
 <ol>
 <li>Native runtime class updates with explicit lifecycle and failure semantics.</li>
-<li>A recorder that correlates typed detections and performance summaries by time.</li>
-<li>A structured run directory containing metadata, telemetry, detections, evidence,
-   and an optional rosbag.</li>
-<li>Selected annotated frames, crops, and operator-marked failure cases.</li>
-<li>CPU, memory, temperature, network, and power samples recorded outside the vision hot path.</li>
-<li>A laptop report showing latency, throughput, detections, confidence, and evidence.</li>
-<li>Provider-neutral synchronization of completed run bundles to a hosted review path.</li>
+<li>Completed target-hardware verification records for the full operator-integrated
+   slice: preview, gateway status, bounded teleop, detections, and stop behavior.</li>
+<li>Curated hardware evidence packs with run notes, representative successes, false
+   positives, misses, and limitations.</li>
+<li>Provider-neutral synchronization of completed run bundles or generated reports to
+   a hosted static review path.</li>
 </ol>
-<p>The exact run-bundle schema and cloud provider remain intentionally unspecified until
-the local recording and review workflow proves what data is useful.</p>
+<p>The local run-bundle contract is intentionally file-based and additive. The cloud
+provider and hosted publication path remain unspecified until selected reports are
+ready to publish.</p>
 <h2 id="portfolio-success-criteria">Portfolio Success Criteria<a class="headerlink" href="#portfolio-success-criteria" title="Permanent link">&para;</a></h2>
 <p>The artifact is complete when a reviewer can:</p>
 <ul>
@@ -1385,6 +1414,7 @@ the local recording and review workflow proves what data is useful.</p>
 <li>inspect detections by class and confidence</li>
 <li>review representative successes, false positives, and missed detections</li>
 <li>fetch or open the same completed run through the offboard review workflow</li>
+<li>view at least one selected report from the hosted documentation path</li>
 </ul>
 <p>Claims should be supported by measured output, captured evidence, and a documented
 hardware/software configuration.</p>
@@ -1395,7 +1425,7 @@ hardware/software configuration.</p>
 <li>visual servoing or grasp/capture behavior</li>
 <li>production fleet management</li>
 <li>browser-based live robot control</li>
-<li>choosing a cloud provider before the run-bundle contract is validated locally</li>
+<li>choosing a cloud provider before the selected static-report workflow is ready</li>
 </ul>
 <h2 id="related-documentation">Related Documentation<a class="headerlink" href="#related-documentation" title="Permanent link">&para;</a></h2>
 <ul>
@@ -1426,7 +1456,7 @@ hardware/software configuration.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 20, 2026 20:18:54 UTC">July 20, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 24, 2026 00:14:03 UTC">July 24, 2026</span>
   </span>
 
     
