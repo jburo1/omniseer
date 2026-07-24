@@ -13,9 +13,10 @@ source "${script_dir}/../lib/ros.sh"
 usage() {
   cat <<'EOF'
 Usage:
-  scripts/omni run monitor --host <robot-ip> [monitor args...]
+  scripts/omni run monitor [monitor args...]
 
-Launches the laptop Tk monitor. The preview host defaults to the gateway host.
+Launches the laptop Tk monitor. The default robot target is radxa@192.168.1.178.
+The preview host defaults to the gateway host. Override with --host and --ssh-user.
 EOF
 }
 

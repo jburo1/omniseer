@@ -229,7 +229,7 @@ scripts/omni run sim
 scripts/omni run real
 scripts/omni run real --profile perception --record-run demo_001
 scripts/omni run real --profile legacy-teleop smoke
-scripts/omni run monitor --host <robot-ip>
+scripts/omni run monitor
 scripts/omni run teleop
 ```
 
@@ -353,12 +353,31 @@ Suggestions:
 Launches the Tk operator monitor from the laptop workspace:
 
 ```bash
-scripts/omni run monitor --host <robot-ip>
+scripts/omni run monitor
 ```
 
 The wrapper sources ROS and the workspace, refreshes status on startup, and lets
-the GUI use the gateway host as the default preview host. Additional monitor
-arguments are forwarded to `robot_monitor_gui`.
+the GUI use the gateway host as the default preview host. The default robot
+target is `radxa@192.168.1.178`; override it with `--host`, `--ssh-user`,
+`OMNISEER_ROBOT_HOST`, or `OMNISEER_ROBOT_USER`. Additional monitor arguments
+are forwarded to `robot_monitor_gui`.
+
+The monitor run starter is laptop-side only. It starts robot-side runs over SSH,
+then retrieves the completed bundle and generates the local report. Select either
+the runtime-container backend or the devcontainer backend in the GUI:
+
+```bash
+scripts/omni run monitor \
+  --host 192.168.1.178 \
+  --ssh-user radxa \
+  --remote-repo-root /home/radxa/apps/omniseer
+```
+
+The runtime-container backend runs `scripts/omni runtime record` on the robot and
+passes class files through the container-visible `/runs/<run_id>/classes.txt`
+path. The devcontainer backend runs a configurable remote exec template, defaulting
+to `devcontainer exec --workspace-folder {remote_repo_root} bash -lc {command}`,
+and passes the robot-host class path under the remote checkout.
 
 ### `runs`
 
@@ -539,7 +558,7 @@ scripts/omni run real --record-run demo_001
 Laptop:
 
 ```bash
-scripts/omni run monitor --host <robot-ip>
+scripts/omni run monitor
 ```
 
 Active zero-motion acceptance verification from a second robot shell:

@@ -109,11 +109,11 @@ Expected robot-side behavior:
 ## Laptop Command
 
 From the repository root on the laptop, launch the monitor through the same
-front door. The preview host defaults to `--host` and status refreshes when the
-window opens:
+front door. The default robot target is `radxa@192.168.1.178`, the preview host
+defaults to the gateway host, and status refreshes when the window opens:
 
 ```bash
-scripts/omni run monitor --host <robot-ip>
+scripts/omni run monitor
 ```
 
 Use the GUI to:
@@ -207,7 +207,7 @@ Expected observations:
 - Laptop:
 - Robot command (`scripts/omni run real` plus overrides):
 - Recording enabled / run id:
-- Laptop command (`scripts/omni run monitor` plus host):
+- Laptop command (`scripts/omni run monitor`, plus overrides if needed):
 - Preview observed:
 - Vision status fresh in GUI:
 - `/yolo/detections` observed:
