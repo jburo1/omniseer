@@ -274,6 +274,7 @@ def test_runtime_stop_stops_named_record_container(tmp_path: Path) -> None:
 
 def test_runtime_record_accepts_options_and_launch_args(tmp_path: Path) -> None:
     env = _runtime_env(tmp_path)
+    env["OMNISEER_RUNTIME_RUNS_HOST_ROOT"] = str(tmp_path / "runs")
 
     result = subprocess.run(
         [
@@ -313,7 +314,38 @@ def test_runtime_record_accepts_options_and_launch_args(tmp_path: Path) -> None:
     assert "--record-experiment-parameter note=desk" in log
     assert "--record-notes lighting\\ changed" in log
     assert "--record-classes person\\,fire\\ extinguisher" in log
-    assert "bringup start_lidar:=false" in log
+    assert "bringup classes_path:=/runs/operator_debug/classes.txt start_lidar:=false" in log
+
+
+def test_runtime_record_writes_class_file_in_runs_bind_root(tmp_path: Path) -> None:
+    env = _runtime_env(tmp_path)
+    runs_root = tmp_path / "runs"
+    env["OMNISEER_RUNTIME_RUNS_HOST_ROOT"] = str(runs_root)
+
+    result = subprocess.run(
+        [
+            "scripts/omni",
+            "runtime",
+            "record",
+            "--tag",
+            "runtime-test",
+            "--run-id",
+            "operator_debug",
+            "--record-classes",
+            "person, fire extinguisher",
+        ],
+        cwd=REPO_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert (runs_root / "operator_debug/classes.txt").read_text(encoding="utf-8") == "person\nfire extinguisher\n"
+    log = _docker_log(env)
+    assert f"{runs_root}:/runs" in log
+    assert "classes_path:=/runs/operator_debug/classes.txt" in log
 
 
 def test_runtime_verify_safe_smoke_treats_timeout_as_pass(tmp_path: Path) -> None:

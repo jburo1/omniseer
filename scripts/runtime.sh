@@ -90,6 +90,25 @@ runtime_record_container_name() {
   printf 'omniseer-runtime-record-%s\n' "$(runtime_safe_tag "$1")"
 }
 
+runtime_write_record_classes_file() {
+  local classes_text="$1"
+  local classes_path="$2"
+  mkdir -p "$(dirname "${classes_path}")"
+  printf '%s\n' "${classes_text}" | tr ',' '\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e '/^$/d' >"${classes_path}"
+}
+
+runtime_launch_arg_present() {
+  local name="$1"
+  shift
+  local arg
+  for arg in "$@"; do
+    if [[ "${arg}" == "${name}"* ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
 runtime_shell_join() {
   local parts=()
   local arg
@@ -327,7 +346,7 @@ runtime_run() {
 
 runtime_record() {
   local image_base tag image_ref run_id system_interval_sec experiment_config status
-  local repo_root host_run_dir
+  local repo_root runs_bind_root host_run_dir
   local experiment_parameters=()
   local launch_args=()
   local notes=""
@@ -393,7 +412,8 @@ runtime_record() {
   tag="$(runtime_resolve_existing_tag "${tag}")"
   image_ref="$(runtime_image_ref "${image_base}" "${tag}")"
   repo_root="$(omni_repo_root)"
-  host_run_dir="${repo_root}/runs/${run_id}"
+  runs_bind_root="$(runtime_runs_bind_root)"
+  host_run_dir="${runs_bind_root}/${run_id}"
 
   local command=(
     run real
@@ -414,13 +434,21 @@ runtime_record() {
   for parameter in "${experiment_parameters[@]}"; do
     command+=(--record-experiment-parameter "${parameter}")
   done
+
+  if [[ -n "${classes}" ]]; then
+    runtime_write_record_classes_file "${classes}" "${host_run_dir}/classes.txt"
+    if ! runtime_launch_arg_present "classes_path:=" "${launch_args[@]}"; then
+      launch_args=("classes_path:=/runs/${run_id}/classes.txt" "${launch_args[@]}")
+    fi
+  fi
+
   command+=(bringup)
   command+=("${launch_args[@]}")
 
   omni_info "Recording runtime operator run ${run_id}"
   omni_info "Run bundle path: ${host_run_dir}"
-  if [[ "$(runtime_runs_bind_root)" != "${repo_root}/runs" ]]; then
-    omni_info "Docker host run bind: $(runtime_runs_bind_root)/${run_id}"
+  if [[ "${runs_bind_root}" != "${repo_root}/runs" ]]; then
+    omni_info "Docker host run bind: ${runs_bind_root}/${run_id}"
   fi
   runtime_docker_extra_args=(
     "--name" "$(runtime_record_container_name "${run_id}")"
