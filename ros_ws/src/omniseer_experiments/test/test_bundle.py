@@ -213,6 +213,19 @@ class RunBundleWriterTests(unittest.TestCase):
             finally:
                 writer.close()
 
+    def test_precreated_classes_file_does_not_block_writer(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "precreated"
+            run_dir.mkdir()
+            (run_dir / "classes.txt").write_text("person\n", encoding="utf-8")
+
+            writer = RunBundleWriter(_config(run_dir), started_at=STARTED_AT)
+            try:
+                self.assertTrue((run_dir / "manifest.yaml").is_file())
+                self.assertEqual((run_dir / "classes.txt").read_text(encoding="utf-8"), "person\n")
+            finally:
+                writer.close()
+
     def test_precreated_native_artifacts_do_not_block_writer(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             run_dir = Path(tmp) / "precreated"
