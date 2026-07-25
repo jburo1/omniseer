@@ -148,6 +148,12 @@ prepare_recording_run_dir() {
     rm -rf -- "${record_out_dir}"
   fi
   mkdir -p -- "${record_out_dir}"
+  if [[ -n "${record_classes}" ]]; then
+    printf '%s\n' "${record_classes}" \
+      | tr ',' '\n' \
+      | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e '/^$/d' \
+      >"${record_out_dir}/classes.txt"
+  fi
   record_overwrite="false"
 }
 
