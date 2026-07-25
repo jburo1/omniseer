@@ -109,6 +109,11 @@ if platformio_bin="$(omni_platformio_bin)"; then
 else
   status_line "PlatformIO" "missing" "firmware build will be skipped by build all"
 fi
+if omni_teensy_attached; then
+  status_line "Teensy" "ok" "firmware included in build all"
+else
+  status_line "Teensy" "missing" "firmware skipped by build all; use build firmware for compile-only check"
+fi
 
 printf '\nHardware SDKs\n'
 printf '%s\n' '-------------'

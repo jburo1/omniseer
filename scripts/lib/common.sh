@@ -49,6 +49,19 @@ omni_platformio_bin() {
   return 1
 }
 
+omni_teensy_attached() {
+  if [[ -n "${OMNISEER_TEENSY_PORT:-}" ]]; then
+    [[ -e "${OMNISEER_TEENSY_PORT}" ]]
+    return
+  fi
+
+  local device_glob
+  for device_glob in ${OMNISEER_TEENSY_DEVICE_GLOBS:-/dev/omniseer_teensy /dev/serial/by-id/*Teensyduino* /dev/serial/by-id/*Teensy*}; do
+    compgen -G "${device_glob}" >/dev/null && return 0
+  done
+  return 1
+}
+
 omni_vision_bridge_deps_available() {
   omni_command_available pkg-config || return 1
   pkg-config --exists librga || return 1

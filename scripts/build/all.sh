@@ -56,11 +56,14 @@ else
   omni_warn "cmake not found; skipping native vision workspace"
 fi
 
-if omni_platformio_bin >/dev/null; then
+if omni_platformio_bin >/dev/null && { [[ "${strict}" == "true" ]] || omni_teensy_attached; }; then
   omni_info "Building firmware"
   "${script_dir}/firmware.sh"
 elif [[ "${strict}" == "true" ]]; then
   omni_die "platformio not found; cannot build firmware in strict mode"
+elif omni_platformio_bin >/dev/null; then
+  omni_warn "no Teensy detected; skipping firmware in build all"
+  omni_warn "run 'scripts/omni build firmware' for a compile-only firmware check"
 else
   omni_warn "platformio not found; skipping firmware"
 fi
