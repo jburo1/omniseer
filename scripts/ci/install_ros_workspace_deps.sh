@@ -21,7 +21,8 @@ apt-get install -y --no-install-recommends \
   python3-protobuf \
   python3-pytest \
   python3-rosdep \
-  python3-tk
+  python3-tk \
+  xvfb
 
 # ROS setup scripts may inspect optional environment variables while nounset is
 # enabled. Keep strict mode for this script, but do not impose it on vendor code.

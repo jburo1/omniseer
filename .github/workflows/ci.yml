@@ -121,7 +121,8 @@ jobs:
           set +u
           source install/setup.bash
           set -u
-          colcon test --merge-install \
+          xvfb-run -a --server-args="-screen 0 1280x1024x24" \
+            colcon test --merge-install \
             --packages-ignore rf2o_laser_odometry yolo_bringup yolo_ros \
             --packages-select \
               omniseer_description \
