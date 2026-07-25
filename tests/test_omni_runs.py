@@ -121,6 +121,30 @@ def test_omni_runs_preserves_explicit_host_and_user(tmp_path: Path) -> None:
     )
 
 
+def test_omni_run_monitor_does_not_force_startup_refresh(tmp_path: Path) -> None:
+    setup_file = tmp_path / "setup.bash"
+    ros2 = tmp_path / "ros2"
+    _write_fake_setup(setup_file)
+    _write_fake_ros2(ros2)
+    env = os.environ.copy()
+    env["PATH"] = f"{tmp_path}:{env['PATH']}"
+    env["OMNISEER_ROS_SETUP"] = str(setup_file)
+    env["OMNISEER_WS_SETUP"] = str(setup_file)
+
+    result = subprocess.run(
+        ["scripts/omni", "run", "monitor", "--host", "robot.local"],
+        cwd=REPO_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout == "ros2 run robot_diag_control robot_monitor_gui --host robot.local\n"
+    assert "--refresh-on-start" not in result.stdout
+
+
 def test_omni_runs_inspect_dispatches_to_inspect_run(tmp_path: Path) -> None:
     setup_file = tmp_path / "setup.bash"
     ros2 = tmp_path / "ros2"

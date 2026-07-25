@@ -27,4 +27,4 @@ fi
 
 omni_source_ros_workspace
 omni_info "Starting laptop operator monitor"
-exec ros2 run robot_diag_control robot_monitor_gui --refresh-on-start "$@"
+exec ros2 run robot_diag_control robot_monitor_gui "$@"

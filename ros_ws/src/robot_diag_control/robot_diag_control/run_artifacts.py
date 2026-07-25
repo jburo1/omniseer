@@ -1,0 +1,234 @@
+from __future__ import annotations
+
+import subprocess
+from collections.abc import Callable
+from dataclasses import dataclass
+from pathlib import Path
+
+from omniseer_experiments.run_inspection import STATE_COMPLETE, InspectionIssue, inspect_run
+
+from robot_diag_control.run_commands import (
+    RobotConnection,
+    build_pull_run_command,
+    local_import_dir_for,
+)
+from robot_diag_control.run_commands import (
+    build_report_command as build_omni_report_command,
+)
+
+CommandExecutor = Callable[[list[str], Path], subprocess.CompletedProcess[str]]
+
+
+@dataclass(frozen=True)
+class RunArtifactContext:
+    repo_root: Path
+    connection: RobotConnection
+    local_import_root: Path
+
+
+@dataclass(frozen=True)
+class RunArtifactResult:
+    command: list[str]
+    success: bool
+    message: str
+    path: Path | None = None
+    issues: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class RunArtifactInspection:
+    run_dir: Path
+    report_path: Path
+    state: str
+    issues: tuple[str, ...]
+    report_exists: bool
+
+    @property
+    def complete(self) -> bool:
+        return self.state == STATE_COMPLETE and not self.issues
+
+
+def _default_command_executor(command: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        command,
+        cwd=cwd,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+
+def _completed_detail(completed: subprocess.CompletedProcess[str]) -> str:
+    return (completed.stderr or completed.stdout).strip()
+
+
+def imported_run_dir(context: RunArtifactContext, run_id: str) -> Path:
+    return local_import_dir_for(context.local_import_root, run_id)
+
+
+def report_path(context: RunArtifactContext, run_id: str) -> Path:
+    return imported_run_dir(context, run_id) / "report" / "index.html"
+
+
+def inspect_run_artifacts(
+    context: RunArtifactContext,
+    run_id: str,
+    *,
+    require_report: bool = False,
+) -> RunArtifactInspection:
+    run_dir = imported_run_dir(context, run_id)
+    html_report_path = report_path(context, run_id)
+    issues: list[str] = []
+    state = "missing"
+
+    if not run_dir.exists():
+        issues.append(f"run bundle not found: {run_dir}")
+    elif not run_dir.is_dir():
+        issues.append(f"run bundle path is not a directory: {run_dir}")
+    else:
+        inspection = inspect_run(run_dir)
+        state = inspection.state
+        issues.extend(_format_inspection_issue(issue) for issue in inspection.issues)
+
+    if require_report:
+        if not html_report_path.is_file():
+            issues.append(f"report not found: {html_report_path}")
+        else:
+            issues.extend(_stale_report_issues(run_dir, html_report_path))
+
+    return RunArtifactInspection(
+        run_dir=run_dir,
+        report_path=html_report_path,
+        state=state,
+        issues=tuple(dict.fromkeys(issues)),
+        report_exists=html_report_path.is_file(),
+    )
+
+
+def build_pull_command(
+    context: RunArtifactContext,
+    *,
+    run_id: str,
+    overwrite: bool = True,
+) -> list[str]:
+    return build_pull_run_command(
+        repo_root=context.repo_root,
+        connection=context.connection,
+        local_import_root=context.local_import_root,
+        run_id=run_id,
+        overwrite=overwrite,
+    )
+
+
+def build_report_command(
+    context: RunArtifactContext,
+    *,
+    run_id: str,
+    overwrite: bool = True,
+) -> list[str]:
+    return build_omni_report_command(
+        repo_root=context.repo_root,
+        run_dir=imported_run_dir(context, run_id),
+        overwrite=overwrite,
+    )
+
+
+def retrieve_run_artifacts(
+    context: RunArtifactContext,
+    *,
+    run_id: str,
+    overwrite: bool = True,
+    command_executor: CommandExecutor = _default_command_executor,
+) -> RunArtifactResult:
+    command = build_pull_command(context, run_id=run_id, overwrite=overwrite)
+    path = imported_run_dir(context, run_id)
+    try:
+        completed = command_executor(command, context.repo_root)
+    except OSError as error:
+        return RunArtifactResult(command=command, success=False, message=f"retrieve failed: {error}")
+
+    if completed.returncode != 0:
+        detail = _completed_detail(completed)
+        return RunArtifactResult(command=command, success=False, message=f"retrieve failed: {detail}")
+    inspection = inspect_run_artifacts(context, run_id)
+    if not path.is_dir():
+        return RunArtifactResult(
+            command=command,
+            success=False,
+            message=f"retrieve completed but run bundle is missing: {path}",
+            path=path,
+            issues=inspection.issues,
+        )
+    return RunArtifactResult(
+        command=command,
+        success=True,
+        message=f"retrieved run: {path}",
+        path=path,
+        issues=inspection.issues,
+    )
+
+
+def generate_run_report(
+    context: RunArtifactContext,
+    *,
+    run_id: str,
+    overwrite: bool = True,
+    command_executor: CommandExecutor = _default_command_executor,
+) -> RunArtifactResult:
+    command = build_report_command(context, run_id=run_id, overwrite=overwrite)
+    path = report_path(context, run_id)
+    try:
+        completed = command_executor(command, context.repo_root)
+    except OSError as error:
+        return RunArtifactResult(command=command, success=False, message=f"failed to generate report: {error}")
+
+    if completed.returncode != 0:
+        detail = _completed_detail(completed)
+        return RunArtifactResult(command=command, success=False, message=f"report generation failed: {detail}")
+    inspection = inspect_run_artifacts(context, run_id, require_report=True)
+    if not path.is_file():
+        return RunArtifactResult(
+            command=command,
+            success=False,
+            message=f"report generation completed but report is missing: {path}",
+            path=path,
+            issues=inspection.issues,
+        )
+    message = f"report generated: {path}"
+    if inspection.issues:
+        message = f"report generated with artifact warnings: {path}"
+    return RunArtifactResult(
+        command=command,
+        success=True,
+        message=message,
+        path=path,
+        issues=inspection.issues,
+    )
+
+
+def _format_inspection_issue(issue: InspectionIssue) -> str:
+    if issue.path:
+        return f"{issue.code}: {issue.message} ({issue.path})"
+    return f"{issue.code}: {issue.message}"
+
+
+def _stale_report_issues(run_dir: Path, html_report_path: Path) -> tuple[str, ...]:
+    try:
+        report_mtime = html_report_path.stat().st_mtime
+    except OSError as error:
+        return (f"report is not readable: {html_report_path}: {error}",)
+
+    stale_against: list[str] = []
+    for source_name in ("manifest.yaml", "summary.json"):
+        source_path = run_dir / source_name
+        if not source_path.exists():
+            continue
+        try:
+            if source_path.stat().st_mtime > report_mtime:
+                stale_against.append(source_name)
+        except OSError as error:
+            return (f"run artifact is not readable: {source_path}: {error}",)
+
+    if stale_against:
+        return (f"report may be stale; regenerate after updated {', '.join(stale_against)}",)
+    return ()

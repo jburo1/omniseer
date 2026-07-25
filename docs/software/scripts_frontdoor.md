@@ -94,7 +94,7 @@ Use `build` or `build all` when:
 
 - you want the normal product build from one command
 - you want ROS built first, native vision built when CMake is available, and
-  firmware built when PlatformIO is available
+  firmware built when PlatformIO is available and a Teensy is attached
 - you want missing optional toolchains to warn instead of stopping the whole build
 
 Use `build strict` when:
@@ -128,6 +128,7 @@ Use `build firmware` when:
 
 - you changed Teensy firmware
 - you want a compile-only firmware check before flashing
+- you are on a laptop without a Teensy attached but still want to verify firmware
 
 Suggestion:
 
@@ -365,11 +366,13 @@ Launches the Tk operator monitor from the laptop workspace:
 scripts/omni run monitor
 ```
 
-The wrapper sources ROS and the workspace, refreshes status on startup, and lets
-the GUI use the gateway host as the default preview host. The default robot
-target is `radxa@192.168.1.178`; override it with `--host`, `--ssh-user`,
-`OMNISEER_ROBOT_HOST`, or `OMNISEER_ROBOT_USER`. Additional monitor arguments
-are forwarded to `robot_monitor_gui`.
+The wrapper sources ROS and the workspace, then launches the GUI without opening
+a gateway connection until the operator requests an action such as Refresh, Start
+Watch, Preview On, or Teleop Enable. Pass `--refresh-on-start` explicitly when a
+startup status probe is desired. The default robot target is
+`radxa@192.168.1.178`; override it with `--host`, `--ssh-user`,
+`OMNISEER_ROBOT_HOST`, or `OMNISEER_ROBOT_USER`. Additional monitor arguments are
+forwarded to `robot_monitor_gui`.
 
 The monitor run starter is laptop-side only. It starts robot-side runs over SSH,
 then retrieves the completed bundle and generates the local report. Select either
@@ -387,6 +390,9 @@ passes class files through the container-visible `/runs/<run_id>/classes.txt`
 path. The devcontainer backend runs a configurable remote exec template, defaulting
 to `devcontainer exec --workspace-folder {remote_repo_root} bash -lc {command}`,
 and passes the robot-host class path under the remote checkout.
+
+See [Operator Run Workflow](operator_run_workflow.md) for the current GUI
+start/stop/retrieve architecture and module ownership boundaries.
 
 ### `runs`
 
