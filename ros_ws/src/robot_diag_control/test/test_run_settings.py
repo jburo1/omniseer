@@ -1,7 +1,14 @@
 import unittest
 from pathlib import Path
 
-from robot_diag_control.run_commands import RUN_BACKEND_DEVCONTAINER, RUN_BACKEND_LABELS, RUN_BACKEND_RUNTIME
+from robot_diag_control.run_commands import (
+    RUN_BACKEND_DEVCONTAINER,
+    RUN_BACKEND_LABELS,
+    RUN_BACKEND_RUNTIME,
+    RUN_TYPE_AUTONOMY_CENTER,
+    RUN_TYPE_LABELS,
+    RUN_TYPE_PERCEPTION,
+)
 from robot_diag_control.run_settings import (
     DEFAULT_DEVCONTAINER_EXEC_TEMPLATE,
     DEFAULT_LOCAL_IMPORT_ROOT,
@@ -14,6 +21,7 @@ from robot_diag_control.run_settings import (
     resolve_run_form,
     resolved_run_id,
     selected_run_backend,
+    selected_run_type,
 )
 
 
@@ -26,6 +34,7 @@ def _values(**overrides: str) -> RunFormValues:
         "local_import_root": DEFAULT_LOCAL_IMPORT_ROOT,
         "run_id": " operator 001 ",
         "backend_label": RUN_BACKEND_LABELS[RUN_BACKEND_RUNTIME],
+        "run_type_label": RUN_TYPE_LABELS[RUN_TYPE_PERCEPTION],
         "classes_text": "person, cup\nperson",
         "notes": "  trial notes  ",
         "devcontainer_exec_template": "",
@@ -41,6 +50,13 @@ class RunSettingsTests(unittest.TestCase):
     def test_selected_run_backend_rejects_unknown_label(self):
         with self.assertRaisesRegex(ValueError, "unsupported run backend"):
             selected_run_backend("unknown backend")
+
+    def test_selected_run_type_maps_display_label_to_run_type_id(self):
+        self.assertEqual(selected_run_type(RUN_TYPE_LABELS[RUN_TYPE_AUTONOMY_CENTER]), RUN_TYPE_AUTONOMY_CENTER)
+
+    def test_selected_run_type_rejects_unknown_label(self):
+        with self.assertRaisesRegex(ValueError, "unsupported run type"):
+            selected_run_type("unknown run type")
 
     def test_normalized_remote_paths_use_defaults_and_strip_trailing_slashes(self):
         self.assertEqual(normalized_remote_repo_root(""), DEFAULT_REMOTE_REPO_ROOT)
@@ -74,6 +90,7 @@ class RunSettingsTests(unittest.TestCase):
         self.assertEqual(selection.run_config.backend, RUN_BACKEND_RUNTIME)
         self.assertEqual(selection.run_config.classes, ("person", "cup"))
         self.assertEqual(selection.run_config.notes, "trial notes")
+        self.assertEqual(selection.run_config.run_type, RUN_TYPE_PERCEPTION)
         self.assertEqual(selection.run_config.devcontainer_exec_template, DEFAULT_DEVCONTAINER_EXEC_TEMPLATE)
         self.assertEqual(selection.artifact_context.repo_root, Path("/repo"))
         self.assertEqual(selection.artifact_context.connection, selection.connection)

@@ -105,6 +105,20 @@ Use this rule of thumb:
 Prefer additive changes to `RunConfig` and command builders. Do not make the GUI
 assemble shell strings directly.
 
+## Autonomy Run Type
+
+The monitor can launch either a perception-only recording or the first bounded
+autonomy experiment, `Autonomy: center first class`. The autonomy mode still uses
+the runtime-container recording path, but appends launch arguments that start
+`omniseer_autonomy/target_centering_node`, set the target to the first configured
+class, and write `autonomy.jsonl` into the run bundle.
+
+The v1 autonomy behavior is yaw-only: it publishes `TwistStamped` commands to
+`/cmd_vel_autonomy`, relies on `twist_mux` arbitration, and records terminal
+state into the bundle for the HTML report. Translation, navigation, SLAM,
+tracking packages, and camera servo control remain out of scope for this run
+type.
+
 ## Verification
 
 Current local coverage focuses on behavior that does not require robot hardware:

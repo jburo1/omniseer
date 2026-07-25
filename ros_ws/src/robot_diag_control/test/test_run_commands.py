@@ -4,6 +4,7 @@ from pathlib import Path
 from robot_diag_control.run_commands import (
     RUN_BACKEND_DEVCONTAINER,
     RUN_BACKEND_RUNTIME,
+    RUN_TYPE_AUTONOMY_CENTER,
     RobotConnection,
     RunConfig,
     build_pull_run_command,
@@ -82,6 +83,34 @@ class RunCommandsTests(unittest.TestCase):
         self.assertIn("--record-notes 'lighting changed'", command[3])
         self.assertIn("--record-classes 'person,fire extinguisher'", command[3])
         self.assertIn("classes_path:=/runs/operator_001/classes.txt", command[3])
+        self.assertNotIn("start_autonomy:=true", command[3])
+
+    def test_runtime_backend_adds_autonomy_launch_args_for_centering_run(self):
+        command = build_remote_start_command(
+            connection=_connection(),
+            run_config=RunConfig(
+                run_id="operator_001",
+                backend=RUN_BACKEND_RUNTIME,
+                classes=("backpack", "chair"),
+                run_type=RUN_TYPE_AUTONOMY_CENTER,
+            ),
+        )
+
+        self.assertIn("start_autonomy:=true", command[3])
+        self.assertIn("autonomy_target_class:=backpack", command[3])
+        self.assertIn("autonomy_run_dir:=/runs/operator_001", command[3])
+        self.assertIn("evidence_interval_sec:=0.25", command[3])
+
+    def test_autonomy_run_requires_a_class(self):
+        with self.assertRaisesRegex(ValueError, "requires at least one target class"):
+            build_remote_start_command(
+                connection=_connection(),
+                run_config=RunConfig(
+                    run_id="operator_001",
+                    backend=RUN_BACKEND_RUNTIME,
+                    run_type=RUN_TYPE_AUTONOMY_CENTER,
+                ),
+            )
 
     def test_devcontainer_backend_uses_robot_host_visible_class_path(self):
         command = build_remote_start_command(

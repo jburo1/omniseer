@@ -361,6 +361,43 @@ def _write_pipeline_telemetry(run_dir: Path) -> None:
     (run_dir / "pipeline_telemetry.jsonl").write_text(text, encoding="utf-8")
 
 
+def _write_autonomy(run_dir: Path) -> None:
+    records = [
+        {"schema_version": 1, "time_sec": 0.0, "state": "scan", "event": "started", "target_loss_count": 0},
+        {
+            "schema_version": 1,
+            "time_sec": 0.4,
+            "state": "scan",
+            "event": "first_detection",
+            "target_loss_count": 0,
+            "target": {"class_name": "backpack", "confidence": 0.73},
+        },
+        {
+            "schema_version": 1,
+            "time_sec": 1.2,
+            "state": "center",
+            "event": "centered_first_frame",
+            "normalized_error": 0.03,
+            "target_loss_count": 1,
+            "target": {"class_name": "backpack", "confidence": 0.82},
+        },
+        {
+            "schema_version": 1,
+            "time_sec": 1.6,
+            "state": "success",
+            "event": "succeeded",
+            "reason": "centered",
+            "normalized_error": 0.02,
+            "target_loss_count": 1,
+            "target": {"class_name": "backpack", "confidence": 0.87},
+        },
+    ]
+    (run_dir / "autonomy.jsonl").write_text(
+        "\n".join(json.dumps(record) for record in records) + "\n",
+        encoding="utf-8",
+    )
+
+
 class RunReportTests(unittest.TestCase):
     def test_writes_static_html_report_with_evidence_gallery(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -413,6 +450,25 @@ class RunReportTests(unittest.TestCase):
             self.assertIn("last_infer_ms", output)
             self.assertIn("../evidence/annotated/frame_1.jpg", output)
             self.assertIn("../evidence/frames/frame_1.jpg", output)
+
+    def test_writes_autonomy_summary_when_autonomy_jsonl_exists(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "demo_001"
+            _write_completed_bundle(run_dir)
+            _write_autonomy(run_dir)
+
+            summary = write_run_report(run_dir)
+
+            output = summary.output_path.read_text(encoding="utf-8")
+            self.assertEqual(summary.issues, ())
+            self.assertIn("<h2>Autonomy</h2>", output)
+            self.assertIn("<th>Terminal state</th><td>success</td>", output)
+            self.assertIn("<th>Failure reason</th><td>-</td>", output)
+            self.assertIn("<th>Time to first detection</th><td>0.4s</td>", output)
+            self.assertIn("<th>Time to centered</th><td>1.2s</td>", output)
+            self.assertIn("<th>Final error</th><td>0.02</td>", output)
+            self.assertIn("<th>Final confidence</th><td>0.87</td>", output)
+            self.assertIn("<th>Target-loss count</th><td>1</td>", output)
 
     def test_system_platform_tables_summarize_entire_run(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

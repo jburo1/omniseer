@@ -9,6 +9,8 @@ from robot_diag_control.monitor_gui import (
     DEFAULT_ROBOT_HOST,
     DEFAULT_ROBOT_USER,
     RUN_BACKEND_RUNTIME,
+    RUN_TYPE_AUTONOMY_CENTER,
+    RUN_TYPE_LABELS,
     RobotMonitorGui,
     _build_overlay_viewer_command,
     _build_parser,
@@ -157,6 +159,7 @@ class MonitorGuiTests(unittest.TestCase):
                 )
                 gui = RobotMonitorGui(root, args)
                 gui._ssh_user_var.set(" radxa ")
+                gui._run_type_var.set(RUN_TYPE_LABELS[RUN_TYPE_AUTONOMY_CENTER])
                 gui._run_id_var.set(" demo run/01 ")
                 gui._run_classes_var.set("person, cup\nperson")
                 gui._run_notes_text.delete("1.0", tk.END)
@@ -170,6 +173,7 @@ class MonitorGuiTests(unittest.TestCase):
                 self.assertEqual(selection.connection.remote_repo_root, "/robot/repo")
                 self.assertEqual(selection.connection.remote_runs_root, "/robot/repo/runs")
                 self.assertEqual(selection.run_config.classes, ("person", "cup"))
+                self.assertEqual(selection.run_config.run_type, RUN_TYPE_AUTONOMY_CENTER)
                 self.assertEqual(selection.run_config.notes, "trial notes")
                 self.assertEqual(selection.artifact_context.repo_root, Path(repo_root).resolve())
                 self.assertEqual(

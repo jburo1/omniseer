@@ -11,6 +11,12 @@ RUN_BACKEND_LABELS = {
     RUN_BACKEND_RUNTIME: "Robot runtime container",
     RUN_BACKEND_DEVCONTAINER: "Robot devcontainer",
 }
+RUN_TYPE_PERCEPTION = "perception_recording"
+RUN_TYPE_AUTONOMY_CENTER = "autonomy_center_first_class"
+RUN_TYPE_LABELS = {
+    RUN_TYPE_PERCEPTION: "Perception recording",
+    RUN_TYPE_AUTONOMY_CENTER: "Autonomy: center first class",
+}
 
 
 @dataclass(frozen=True)
@@ -28,6 +34,7 @@ class RunConfig:
     classes: tuple[str, ...] = ()
     notes: str = ""
     devcontainer_exec_template: str = ""
+    run_type: str = RUN_TYPE_PERCEPTION
 
 
 def sanitize_run_id(run_id: str) -> str:
@@ -61,6 +68,10 @@ def remote_class_list_path_for(remote_repo_root: str, run_id: str) -> str:
 
 def _runtime_container_class_list_path(run_id: str) -> str:
     return f"/runs/{run_id}/classes.txt"
+
+
+def _runtime_container_run_dir(run_id: str) -> str:
+    return f"/runs/{run_id}"
 
 
 def _omni_command(repo_root: Path) -> str:
@@ -104,6 +115,7 @@ def _build_runtime_record_inner_command(
     run_id: str,
     classes: Sequence[str],
     notes: str,
+    run_type: str,
 ) -> list[str]:
     command = [
         "scripts/omni",
@@ -119,6 +131,13 @@ def _build_runtime_record_inner_command(
     command.append("--")
     if classes:
         command.append(f"classes_path:={_runtime_container_class_list_path(run_id)}")
+    command.extend(
+        _autonomy_launch_args(
+            classes=classes,
+            run_type=run_type,
+            run_dir=_runtime_container_run_dir(run_id),
+        )
+    )
     return command
 
 
@@ -128,6 +147,7 @@ def _build_devcontainer_record_inner_command(
     run_id: str,
     classes: Sequence[str],
     notes: str,
+    run_type: str,
 ) -> list[str]:
     remote_run_dir = remote_run_dir_for(remote_repo_root, run_id)
     command = [
@@ -149,7 +169,24 @@ def _build_devcontainer_record_inner_command(
     command.append("bringup")
     if classes:
         command.append(f"classes_path:={remote_class_list_path_for(remote_repo_root, run_id)}")
+    command.extend(_autonomy_launch_args(classes=classes, run_type=run_type, run_dir=remote_run_dir))
     return command
+
+
+def _autonomy_launch_args(*, classes: Sequence[str], run_type: str, run_dir: str) -> list[str]:
+    if run_type == RUN_TYPE_PERCEPTION:
+        return []
+    if run_type != RUN_TYPE_AUTONOMY_CENTER:
+        raise ValueError(f"unsupported run type: {run_type}")
+    if not classes:
+        raise ValueError("autonomy run requires at least one target class")
+    target_class = classes[0]
+    return [
+        "start_autonomy:=true",
+        f"autonomy_target_class:={target_class}",
+        f"autonomy_run_dir:={run_dir}",
+        "evidence_interval_sec:=0.25",
+    ]
 
 
 def _format_devcontainer_exec_template(
@@ -181,6 +218,7 @@ def build_remote_start_command(
             run_id=run_config.run_id,
             classes=run_config.classes,
             notes=run_config.notes,
+            run_type=run_config.run_type,
         )
         remote_command = f"cd {shlex.quote(connection.remote_repo_root)} && {shell_join(inner)}"
     elif run_config.backend == RUN_BACKEND_DEVCONTAINER:
@@ -189,6 +227,7 @@ def build_remote_start_command(
             run_id=run_config.run_id,
             classes=run_config.classes,
             notes=run_config.notes,
+            run_type=run_config.run_type,
         )
         inner_shell = f"cd {shlex.quote(connection.remote_repo_root)} && {shell_join(inner)}"
         remote_command = _format_devcontainer_exec_template(

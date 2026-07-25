@@ -9,7 +9,7 @@ import math
 import os
 import statistics
 from collections import Counter, defaultdict
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -77,6 +77,7 @@ def write_run_report(run_dir: Path, *, overwrite: bool = False) -> ReportSummary
     perf = _read_jsonl(run_dir / "perf.jsonl", required=True)
     system = _read_jsonl(run_dir / "system.jsonl", required=False)
     pipeline = _read_jsonl(run_dir / "pipeline_telemetry.jsonl", required=False)
+    autonomy = _read_jsonl(run_dir / "autonomy.jsonl", required=False)
     evidence = _read_jsonl(run_dir / "evidence" / "evidence.jsonl", required=False)
     evidence_items = _evidence_items(run_dir, report_dir, evidence.records)
 
@@ -86,6 +87,7 @@ def write_run_report(run_dir: Path, *, overwrite: bool = False) -> ReportSummary
         *perf.issues,
         *system.issues,
         *pipeline.issues,
+        *autonomy.issues,
         *evidence.issues,
         *annotation_issues,
     ]
@@ -96,6 +98,7 @@ def write_run_report(run_dir: Path, *, overwrite: bool = False) -> ReportSummary
         perf=perf.records,
         system=system.records,
         pipeline=pipeline.records,
+        autonomy=autonomy.records,
         evidence_items=evidence_items,
         issues=tuple(dict.fromkeys(issues)),
     )
@@ -171,6 +174,7 @@ def _render_report(
     perf: Sequence[dict[str, Any]],
     system: Sequence[dict[str, Any]],
     pipeline: Sequence[dict[str, Any]],
+    autonomy: Sequence[dict[str, Any]],
     evidence_items: Sequence[_EvidenceItem],
     issues: Sequence[str],
 ) -> str:
@@ -187,6 +191,7 @@ def _render_report(
         _summary_section(inspection),
         _configuration_section(manifest),
         _health_section(inspection, evidence_items=evidence_items, pipeline=pipeline, issues=issues),
+        _autonomy_section(autonomy),
         _detections_section(detections, configured_classes=inspection.configured_classes),
         _perf_section("Performance", perf),
         _pipeline_section(pipeline),
@@ -306,6 +311,37 @@ def _health_section(
         ("Issues", str(len(issues))),
     ]
     return _section("Health", _key_value_table(rows))
+
+
+def _autonomy_section(records: Sequence[dict[str, Any]]) -> str:
+    if not records:
+        return ""
+
+    terminal = _last_matching_record(records, lambda record: record.get("state") in {"success", "failed"})
+    first_detection = _first_matching_record(records, lambda record: record.get("event") == "first_detection")
+    first_centered = _first_matching_record(records, lambda record: record.get("event") == "centered_first_frame")
+    final_error = _last_numeric_field(records, "normalized_error")
+    final_confidence = _last_target_confidence(records)
+    target_loss_count = max((_as_int(record.get("target_loss_count")) or 0 for record in records), default=0)
+    terminal_state = _display(terminal.get("state") if terminal else "")
+    failure_reason = "-"
+    if terminal and terminal.get("state") == "failed":
+        failure_reason = _display(terminal.get("reason"))
+
+    rows = [
+        ("Terminal state", terminal_state),
+        ("Failure reason", failure_reason),
+        (
+            "Time to first detection",
+            _format_duration(_as_float(first_detection.get("time_sec")) if first_detection else None),
+        ),
+        ("Time to centered", _format_duration(_as_float(first_centered.get("time_sec")) if first_centered else None)),
+        ("Final error", _format_optional_float(final_error)),
+        ("Final confidence", _format_optional_float(final_confidence)),
+        ("Target-loss count", str(target_loss_count)),
+        ("Event records", str(len(records))),
+    ]
+    return _section("Autonomy", _key_value_table(rows))
 
 
 def _detections_section(records: Sequence[dict[str, Any]], *, configured_classes: Sequence[str]) -> str:
@@ -1400,6 +1436,48 @@ def _as_float(value: object) -> float | None:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         return None
     return float(value)
+
+
+def _as_int(value: object) -> int | None:
+    if isinstance(value, bool) or not isinstance(value, int):
+        return None
+    return value
+
+
+def _first_matching_record(
+    records: Sequence[dict[str, Any]], predicate: Callable[[dict[str, Any]], bool]
+) -> dict[str, Any] | None:
+    for record in records:
+        if predicate(record):
+            return record
+    return None
+
+
+def _last_matching_record(
+    records: Sequence[dict[str, Any]], predicate: Callable[[dict[str, Any]], bool]
+) -> dict[str, Any] | None:
+    for record in reversed(records):
+        if predicate(record):
+            return record
+    return None
+
+
+def _last_numeric_field(records: Sequence[dict[str, Any]], field_name: str) -> float | None:
+    for record in reversed(records):
+        value = _as_float(record.get(field_name))
+        if value is not None:
+            return value
+    return None
+
+
+def _last_target_confidence(records: Sequence[dict[str, Any]]) -> float | None:
+    for record in reversed(records):
+        target = record.get("target")
+        if isinstance(target, dict):
+            value = _as_float(target.get("confidence"))
+            if value is not None:
+                return value
+    return None
 
 
 def _record_recv_ts(record: dict[str, Any]) -> int | None:

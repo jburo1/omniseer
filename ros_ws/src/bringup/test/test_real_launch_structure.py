@@ -136,6 +136,42 @@ class RealLaunchStructureTests(unittest.TestCase):
         self.assertIn("--duration-sec", recorder_text)
         self.assertIn("--system-interval-sec", recorder_text)
 
+    def test_real_launch_includes_optional_autonomy_node(self) -> None:
+        module = _load_launch_module("real.launch.py")
+        launch_description = module.generate_launch_description()
+
+        declared_names = {
+            _flatten_launch_value(entity.name)
+            for entity in launch_description.entities
+            if isinstance(entity, DeclareLaunchArgument)
+        }
+        self.assertIn("start_autonomy", declared_names)
+        self.assertIn("autonomy_target_class", declared_names)
+        self.assertIn("autonomy_run_dir", declared_names)
+
+        autonomy_nodes = [
+            entity
+            for entity in _walk_entities(launch_description.entities)
+            if isinstance(entity, Node)
+            and "omniseer_autonomy" in _flatten_launch_value(entity.node_package)
+            and "target_centering_node" in _flatten_launch_value(entity.node_executable)
+        ]
+        self.assertTrue(autonomy_nodes, "expected optional omniseer_autonomy target_centering_node")
+
+        launch_text = (Path(__file__).resolve().parents[1] / "launch" / "real.launch.py").read_text(encoding="utf-8")
+        self.assertIn('"target_class": autonomy_target_class', launch_text)
+        self.assertIn('"run_dir": autonomy_run_dir', launch_text)
+
+    def test_twist_mux_includes_autonomy_below_keyboard_above_nav(self) -> None:
+        config_path = Path(__file__).resolve().parents[1] / "config" / "twist_mux.yaml"
+        text = config_path.read_text(encoding="utf-8")
+
+        self.assertIn("topic: /cmd_vel_nav\n        timeout: 0.50\n        priority: 1", text)
+        self.assertIn("topic: /cmd_vel_autonomy\n        timeout: 0.50\n        priority: 2", text)
+        self.assertIn("topic: /cmd_vel_keyboard\n        timeout: 0.50\n        priority: 3", text)
+        self.assertIn("topic: /cmd_vel_emergency_stop", text)
+        self.assertIn("priority: 255", text)
+
     def test_real_launch_forwards_pipeline_telemetry_path_to_vision(self) -> None:
         module = _load_launch_module("real.launch.py")
         launch_description = module.generate_launch_description()

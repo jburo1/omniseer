@@ -7,6 +7,7 @@ from pathlib import Path
 from robot_diag_control.run_artifacts import RunArtifactContext
 from robot_diag_control.run_commands import (
     RUN_BACKEND_LABELS,
+    RUN_TYPE_LABELS,
     RobotConnection,
     RunConfig,
     parse_run_classes,
@@ -27,6 +28,7 @@ class RunFormValues:
     local_import_root: str
     run_id: str
     backend_label: str
+    run_type_label: str
     classes_text: str
     notes: str
     devcontainer_exec_template: str
@@ -49,6 +51,13 @@ def selected_run_backend(selected_label: str) -> str:
         if selected_label == label:
             return backend
     raise ValueError(f"unsupported run backend: {selected_label}")
+
+
+def selected_run_type(selected_label: str) -> str:
+    for run_type, label in RUN_TYPE_LABELS.items():
+        if selected_label == label:
+            return run_type
+    raise ValueError(f"unsupported run type: {selected_label}")
 
 
 def normalized_remote_repo_root(value: str) -> str:
@@ -92,6 +101,7 @@ def resolve_run_form(
         classes=tuple(parse_run_classes(values.classes_text)),
         notes=values.notes.strip(),
         devcontainer_exec_template=values.devcontainer_exec_template.strip() or DEFAULT_DEVCONTAINER_EXEC_TEMPLATE,
+        run_type=selected_run_type(values.run_type_label),
     )
     artifact_context = RunArtifactContext(
         repo_root=repo_root,

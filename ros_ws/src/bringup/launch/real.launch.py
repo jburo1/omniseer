@@ -61,6 +61,9 @@ def _build_real_bringup_actions(
     start_gateway,
     gateway_preview_source_kind,
     gateway_preview_device,
+    start_autonomy,
+    autonomy_target_class,
+    autonomy_run_dir,
     start_vision,
     vision_params_file,
     camera_device,
@@ -214,6 +217,22 @@ def _build_real_bringup_actions(
         condition=IfCondition(start_experiment_recording),
     )
 
+    autonomy_node = Node(
+        package="omniseer_autonomy",
+        executable="target_centering_node",
+        name="target_centering_node",
+        output="screen",
+        arguments=["--ros-args", "--log-level", log_level],
+        parameters=[
+            {
+                "use_sim_time": use_sim_time,
+                "target_class": autonomy_target_class,
+                "run_dir": autonomy_run_dir,
+            }
+        ],
+        condition=IfCondition(start_autonomy),
+    )
+
     # Keep the teleop command path available even if lidar/nav boundary topics
     # are still missing.
     baseline_twist_mux_node = Node(
@@ -315,6 +334,7 @@ def _build_real_bringup_actions(
         real_io_launch,
         real_vision_launch,
         experiment_recorder_node,
+        autonomy_node,
         baseline_twist_mux_node,
         wait_boundary_topics,
         launch_common_after_wait,
@@ -359,6 +379,9 @@ def generate_launch_description():
         DeclareLaunchArgument("start_gateway", default_value="false"),
         DeclareLaunchArgument("gateway_preview_source_kind", default_value="camera"),
         DeclareLaunchArgument("gateway_preview_device", default_value="/dev/video11"),
+        DeclareLaunchArgument("start_autonomy", default_value="false"),
+        DeclareLaunchArgument("autonomy_target_class", default_value=""),
+        DeclareLaunchArgument("autonomy_run_dir", default_value=""),
         DeclareLaunchArgument("start_vision", default_value="true"),
         DeclareLaunchArgument("vision_params_file", default_value="vision_bridge.real.yaml"),
         DeclareLaunchArgument("camera_device", default_value="__from_config__"),
@@ -431,6 +454,9 @@ def generate_launch_description():
     start_gateway = LaunchConfiguration("start_gateway")
     gateway_preview_source_kind = LaunchConfiguration("gateway_preview_source_kind")
     gateway_preview_device = LaunchConfiguration("gateway_preview_device")
+    start_autonomy = LaunchConfiguration("start_autonomy")
+    autonomy_target_class = LaunchConfiguration("autonomy_target_class")
+    autonomy_run_dir = LaunchConfiguration("autonomy_run_dir")
     start_vision = LaunchConfiguration("start_vision")
     vision_params_file = LaunchConfiguration("vision_params_file")
     camera_device = LaunchConfiguration("camera_device")
@@ -505,6 +531,9 @@ def generate_launch_description():
             start_gateway=start_gateway,
             gateway_preview_source_kind=gateway_preview_source_kind,
             gateway_preview_device=gateway_preview_device,
+            start_autonomy=start_autonomy,
+            autonomy_target_class=autonomy_target_class,
+            autonomy_run_dir=autonomy_run_dir,
             start_vision=start_vision,
             vision_params_file=vision_params_file,
             camera_device=camera_device,
@@ -589,6 +618,9 @@ def generate_launch_description():
             start_gateway=start_gateway,
             gateway_preview_source_kind=gateway_preview_source_kind,
             gateway_preview_device=gateway_preview_device,
+            start_autonomy=start_autonomy,
+            autonomy_target_class=autonomy_target_class,
+            autonomy_run_dir=autonomy_run_dir,
             start_vision=start_vision,
             vision_params_file=vision_params_file,
             camera_device=camera_device,

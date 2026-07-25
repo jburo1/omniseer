@@ -7,10 +7,14 @@ twist_mux:
         topic: /cmd_vel_nav
         timeout: 0.50
         priority: 1
+      autonomy:
+        topic: /cmd_vel_autonomy
+        timeout: 0.50
+        priority: 2
       keyboard:
         topic: /cmd_vel_keyboard
         timeout: 0.50
-        priority: 2
+        priority: 3
     locks:
       e_stop:
         topic: /cmd_vel_emergency_stop

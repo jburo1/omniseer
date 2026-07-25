@@ -44,6 +44,9 @@ from robot_diag_control.run_artifacts import (
 from robot_diag_control.run_commands import (
     RUN_BACKEND_LABELS,
     RUN_BACKEND_RUNTIME,
+    RUN_TYPE_AUTONOMY_CENTER,
+    RUN_TYPE_LABELS,
+    RUN_TYPE_PERCEPTION,
     RobotConnection,
     RunConfig,
     sanitize_run_id,
@@ -329,6 +332,7 @@ class RobotMonitorGui:
         self._teleop_linear_step_var = tk.StringVar(value="0.12")
         self._teleop_angular_step_var = tk.StringVar(value="0.35")
         self._run_backend_var = tk.StringVar(value=RUN_BACKEND_LABELS[parsed.run_backend])
+        self._run_type_var = tk.StringVar(value=RUN_TYPE_LABELS[RUN_TYPE_PERCEPTION])
         self._ssh_user_var = tk.StringVar(value=parsed.ssh_user)
         self._remote_repo_root_var = tk.StringVar(value=parsed.remote_repo_root)
         remote_runs_root = parsed.remote_runs_root or default_remote_runs_root(parsed.remote_repo_root)
@@ -512,11 +516,19 @@ class RobotMonitorGui:
         self._add_labeled_entry(form, "Remote Runs", self._remote_runs_root_var, 1, 2)
         self._add_labeled_entry(form, "Local Import", self._local_import_root_var, 2, 0)
         self._add_labeled_entry(form, "Devcontainer Exec", self._devcontainer_exec_template_var, 2, 2)
-        self._add_labeled_entry(form, "Run ID", self._run_id_var, 3, 0)
-        self._add_labeled_entry(form, "Classes", self._run_classes_var, 3, 2)
-        ttk.Label(form, text="Notes").grid(row=4, column=0, sticky=tk.NW, pady=(8, 0))
+        ttk.Label(form, text="Run Type").grid(row=3, column=0, sticky=tk.W, pady=(8, 0))
+        run_type_box = ttk.Combobox(
+            form,
+            textvariable=self._run_type_var,
+            values=tuple(RUN_TYPE_LABELS.values()),
+            state="readonly",
+        )
+        run_type_box.grid(row=3, column=1, sticky=tk.EW, padx=(8, 0), pady=(8, 0))
+        self._add_labeled_entry(form, "Run ID", self._run_id_var, 4, 0)
+        self._add_labeled_entry(form, "Classes", self._run_classes_var, 4, 2)
+        ttk.Label(form, text="Notes").grid(row=5, column=0, sticky=tk.NW, pady=(8, 0))
         self._run_notes_text = tk.Text(form, height=3, width=40, wrap=tk.WORD)
-        self._run_notes_text.grid(row=4, column=1, columnspan=3, sticky=tk.EW, padx=(8, 0), pady=(8, 0))
+        self._run_notes_text.grid(row=5, column=1, columnspan=3, sticky=tk.EW, padx=(8, 0), pady=(8, 0))
         for column in range(4):
             form.columnconfigure(column, weight=1 if column in {1, 3} else 0)
 
@@ -582,6 +594,7 @@ class RobotMonitorGui:
             local_import_root=self._local_import_root_var.get(),
             run_id=run_id or self._run_id_var.get(),
             backend_label=self._run_backend_var.get(),
+            run_type_label=self._run_type_var.get(),
             classes_text=self._run_classes_var.get(),
             notes=self._run_notes(),
             devcontainer_exec_template=self._devcontainer_exec_template_var.get(),
@@ -710,9 +723,12 @@ class RobotMonitorGui:
         self._active_run_id = run_config.run_id
         self._set_run_state(RunPhase.RUNNING, run_id=run_config.run_id)
         class_text = ", ".join(run_config.classes) if run_config.classes else "from config"
+        autonomy_enabled = run_config.run_type == RUN_TYPE_AUTONOMY_CENTER
+        target_text = run_config.classes[0] if autonomy_enabled and run_config.classes else "-"
         self._append_log(
             f"run started remotely: {run_config.run_id}; "
-            f"backend={RUN_BACKEND_LABELS[run_config.backend]}; classes={class_text}"
+            f"backend={RUN_BACKEND_LABELS[run_config.backend]}; classes={class_text}; "
+            f"autonomy={str(autonomy_enabled).lower()}; target={target_text}"
         )
         self._append_log("$ " + shell_join(start_result.command))
         self._start_run_log_reader()
