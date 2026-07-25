@@ -1724,7 +1724,7 @@ scripts/omni<span class="w"> </span>build<span class="w"> </span>firmware
 <ul>
 <li>you want the normal product build from one command</li>
 <li>you want ROS built first, native vision built when CMake is available, and
-  firmware built when PlatformIO is available</li>
+  firmware built when PlatformIO is available and a Teensy is attached</li>
 <li>you want missing optional toolchains to warn instead of stopping the whole build</li>
 </ul>
 <p>Use <code>build strict</code> when:</p>
@@ -1758,6 +1758,7 @@ scripts/omni<span class="w"> </span>build<span class="w"> </span>firmware
 <ul>
 <li>you changed Teensy firmware</li>
 <li>you want a compile-only firmware check before flashing</li>
+<li>you are on a laptop without a Teensy attached but still want to verify firmware</li>
 </ul>
 <p>Suggestion:</p>
 <ul>
@@ -1947,11 +1948,13 @@ comma/space-separated <code>key=value</code> pairs.</p>
 <p>Launches the Tk operator monitor from the laptop workspace:</p>
 <div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>monitor
 </code></pre></div>
-<p>The wrapper sources ROS and the workspace, refreshes status on startup, and lets
-the GUI use the gateway host as the default preview host. The default robot
-target is <code>radxa@192.168.1.178</code>; override it with <code>--host</code>, <code>--ssh-user</code>,
-<code>OMNISEER_ROBOT_HOST</code>, or <code>OMNISEER_ROBOT_USER</code>. Additional monitor arguments
-are forwarded to <code>robot_monitor_gui</code>.</p>
+<p>The wrapper sources ROS and the workspace, then launches the GUI without opening
+a gateway connection until the operator requests an action such as Refresh, Start
+Watch, Preview On, or Teleop Enable. Pass <code>--refresh-on-start</code> explicitly when a
+startup status probe is desired. The default robot target is
+<code>radxa@192.168.1.178</code>; override it with <code>--host</code>, <code>--ssh-user</code>,
+<code>OMNISEER_ROBOT_HOST</code>, or <code>OMNISEER_ROBOT_USER</code>. Additional monitor arguments are
+forwarded to <code>robot_monitor_gui</code>.</p>
 <p>The monitor run starter is laptop-side only. It starts robot-side runs over SSH,
 then retrieves the completed bundle and generates the local report. Select either
 the runtime-container backend or the devcontainer backend in the GUI:</p>
@@ -1965,6 +1968,8 @@ passes class files through the container-visible <code>/runs/&lt;run_id&gt;/clas
 path. The devcontainer backend runs a configurable remote exec template, defaulting
 to <code>devcontainer exec --workspace-folder {remote_repo_root} bash -lc {command}</code>,
 and passes the robot-host class path under the remote checkout.</p>
+<p>See <a href="../operator_run_workflow/">Operator Run Workflow</a> for the current GUI
+start/stop/retrieve architecture and module ownership boundaries.</p>
 <h3 id="runs"><code>runs</code><a class="headerlink" href="#runs" title="Permanent link">&para;</a></h3>
 <p>List and retrieve robot-side perception run bundles from the laptop workspace:</p>
 <div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>runs<span class="w"> </span>local-list<span class="w"> </span>--root<span class="w"> </span>runs
@@ -2165,7 +2170,7 @@ machine.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 24, 2026 20:01:02 UTC">July 24, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 25, 2026 01:00:02 UTC">July 25, 2026</span>
   </span>
 
     
