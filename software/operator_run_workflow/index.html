@@ -1175,20 +1175,22 @@ testable without launching Tk.</p>
 <li>The GUI calls <code>RunManager.request_stop(...)</code>.</li>
 <li><code>run_lifecycle.request_remote_run_stop(...)</code> writes Ctrl-C to the SSH process
    stdin so the robot-side recorder can finalize the run bundle.</li>
-<li>The GUI starts a grace timer.</li>
-<li>If the process does not exit, the GUI calls <code>RunManager.force_stop(...)</code>.</li>
 <li>For the runtime-container backend, the GUI also calls
-   <code>RunManager.request_runtime_stop(...)</code>, which runs:</li>
+   <code>RunManager.request_runtime_stop(...)</code> immediately, which runs:</li>
 </ol>
 <div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>stop<span class="w"> </span>--run-id<span class="w"> </span>&lt;run_id&gt;
 </code></pre></div>
-<ol>
-<li><code>RunManager.completion(...)</code> converts the final exit state into a typed
-   result:</li>
-<li>operator-requested stop -&gt; <code>STOPPED</code></li>
-<li>zero exit -&gt; <code>STOPPED</code></li>
-<li>nonzero exit -&gt; <code>FAILED</code></li>
-</ol>
+<p>A successful container stop, including the already-stopped case, moves the GUI
+   to <code>STOPPED</code> and clears the stale SSH handle so the operator can start the
+   next run without waiting on that old session.
+4. For non-runtime backends, or if the runtime stop path is unavailable, the GUI
+   starts a grace timer and then calls <code>RunManager.force_stop(...)</code> if the process
+   does not exit.
+5. <code>RunManager.completion(...)</code> converts the final exit state into a typed
+   result:
+   - operator-requested stop -&gt; <code>STOPPED</code>
+   - zero exit -&gt; <code>STOPPED</code>
+   - nonzero exit -&gt; <code>FAILED</code></p>
 <p>The important invariant is that a graceful stop is preferred because the recorder
 needs it to write final metadata such as <code>manifest.yaml</code> and <code>summary.json</code>.</p>
 <h2 id="artifact-sequence">Artifact Sequence<a class="headerlink" href="#artifact-sequence" title="Permanent link">&para;</a></h2>
@@ -1266,7 +1268,7 @@ type.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 28, 2026 20:55:58 UTC">July 28, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 28, 2026 23:14:21 UTC">July 28, 2026</span>
   </span>
 
     
