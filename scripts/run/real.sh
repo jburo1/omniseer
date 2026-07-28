@@ -182,7 +182,7 @@ append_recording_launch_args() {
     "experiment_out_dir:=${record_out_dir}"
     "experiment_duration_sec:=${record_duration_sec}"
     "experiment_system_interval_sec:=${record_system_interval_sec}"
-    "experiment_overwrite:=${record_overwrite}"
+    "experiment_overwrite:=false"
     "pipeline_telemetry_path:=${record_out_dir}/pipeline_telemetry.jsonl"
     "evidence_dir:=${record_out_dir}/evidence"
     "experiment_launch_command:=${launch_command}"

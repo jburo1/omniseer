@@ -64,7 +64,7 @@ class RealScriptRecordingTests(unittest.TestCase):
             )
 
             args = ros_args_path.read_text(encoding="utf-8").splitlines()
-            self.assertIn("experiment_overwrite:=true", args)
+            self.assertIn("experiment_overwrite:=false", args)
             self.assertEqual((run_dir / "classes.txt").read_text(encoding="utf-8"), "plant\n")
 
 

@@ -441,9 +441,6 @@ runtime_record() {
       launch_args=("classes_path:=/runs/${run_id}/classes.txt" "${launch_args[@]}")
     fi
   fi
-  if ! runtime_launch_arg_present "experiment_overwrite:=" "${launch_args[@]}"; then
-    launch_args=("experiment_overwrite:=true" "${launch_args[@]}")
-  fi
 
   command+=(bringup)
   command+=("${launch_args[@]}")
