@@ -156,6 +156,7 @@ RUN set -eux; \
       omniseer_gz_assets \
       omniseer_msgs \
       yolo_msgs \
+      omniseer_autonomy \
       omniseer_description \
       omniseer_experiments \
       bringup \
@@ -201,6 +202,7 @@ RUN set -eux; \
       omniseer_gz_assets \
       omniseer_msgs \
       yolo_msgs \
+      omniseer_autonomy \
       omniseer_description \
       omniseer_experiments \
       bringup \
