@@ -315,6 +315,9 @@ class RobotMonitorGui:
         self._run_state: RunState = run_state(RunPhase.IDLE)
         self._active_run_id: str | None = None
         self._run_stop_after_id: str | None = None
+        self._run_poll_after_id: str | None = None
+        self._runtime_stop_pending_run_id: str | None = None
+        self._run_generation = 0
         self._run_buttons: dict[str, Any] = {}
         self._sections: dict[str, CollapsibleSection] = {}
         self._teleop_enabled = False
@@ -690,6 +693,21 @@ class RobotMonitorGui:
             self._run_id_var.set(run_id)
         return run_id
 
+    def _current_run_id(self) -> str:
+        return self._active_run_id or self._resolved_run_id()
+
+    def _cancel_run_stop_timer(self) -> None:
+        if self._run_stop_after_id is None:
+            return
+        self._root.after_cancel(self._run_stop_after_id)
+        self._run_stop_after_id = None
+
+    def _cancel_run_poll(self) -> None:
+        if self._run_poll_after_id is None:
+            return
+        self._root.after_cancel(self._run_poll_after_id)
+        self._run_poll_after_id = None
+
     def new_run_id(self) -> None:
         self._run_id_var.set(_default_run_id())
         self._append_log("new run id generated")
@@ -721,6 +739,7 @@ class RobotMonitorGui:
 
         self._run_process = start_result.remote_run
         self._active_run_id = run_config.run_id
+        self._run_generation += 1
         self._set_run_state(RunPhase.RUNNING, run_id=run_config.run_id)
         class_text = ", ".join(run_config.classes) if run_config.classes else "from config"
         autonomy_enabled = run_config.run_type == RUN_TYPE_AUTONOMY_CENTER
@@ -732,7 +751,11 @@ class RobotMonitorGui:
         )
         self._append_log("$ " + shell_join(start_result.command))
         self._start_run_log_reader()
-        self._poll_run_process()
+        self._poll_run_process(
+            remote_run=start_result.remote_run,
+            run_id=run_config.run_id,
+            generation=self._run_generation,
+        )
 
     def _start_run_log_reader(self) -> None:
         remote_run = self._run_process
@@ -743,19 +766,28 @@ class RobotMonitorGui:
     def stop_run(self) -> None:
         self._append_log("stop run requested")
         if not self._request_run_stop():
-            if not self._request_remote_runtime_stop():
+            runtime_stop_requested = self._request_remote_runtime_stop(finalize_on_success=True)
+            if runtime_stop_requested and self._run_state.phase != RunPhase.STOPPED:
+                run_id = self._active_run_id or sanitize_run_id(self._run_id_var.get())
+                self._set_run_state(RunPhase.STOPPING, run_id=run_id)
+            if not runtime_stop_requested:
                 self._append_log("run not running")
+                return
+            self._append_log("waiting for remote run shutdown")
             return
 
         self._append_log("waiting for remote run shutdown")
 
-    def _request_run_stop(self) -> bool:
+    def _request_run_stop(self, *, finalize_runtime_stop: bool = True) -> bool:
         stop_result = self._run_manager.request_stop(self._run_process)
         if not stop_result.accepted:
             return False
 
-        self._set_run_state(RunPhase.STOPPING, run_id=self._active_run_id or self._resolved_run_id())
-        if stop_result.graceful and self._run_stop_after_id is None:
+        run_id = self._current_run_id()
+        self._set_run_state(RunPhase.STOPPING, run_id=run_id)
+        if finalize_runtime_stop:
+            self._request_remote_runtime_stop(finalize_on_success=True)
+        if stop_result.graceful and self._run_state.phase != RunPhase.STOPPED and self._run_stop_after_id is None:
             self._run_stop_after_id = self._root.after(RUN_STOP_GRACE_MS, self._force_stop_run_process)
         elif stop_result.interrupted:
             self._append_log("remote run did not accept graceful stop; local ssh session interrupted")
@@ -763,49 +795,100 @@ class RobotMonitorGui:
 
     def _force_stop_run_process(self) -> None:
         self._run_stop_after_id = None
-        self._request_remote_runtime_stop()
+        self._request_remote_runtime_stop(finalize_on_success=True)
 
         stop_result = self._run_manager.force_stop(self._run_process)
         if stop_result.interrupted:
-            self._set_run_state(RunPhase.STOPPING, run_id=self._active_run_id or self._resolved_run_id())
+            self._set_run_state(RunPhase.STOPPING, run_id=self._current_run_id())
             self._append_log("remote run did not exit after graceful stop; local ssh session interrupted")
 
-    def _request_remote_runtime_stop(self) -> bool:
+    def _request_remote_runtime_stop(self, *, finalize_on_success: bool = False) -> bool:
         try:
             if selected_run_backend(self._run_backend_var.get()) != RUN_BACKEND_RUNTIME:
                 return False
             run_id = self._active_run_id or sanitize_run_id(self._run_id_var.get())
             if not run_id:
                 return False
-            return self._run_manager.request_runtime_stop(
+            if self._runtime_stop_pending_run_id == run_id:
+                return True
+
+            def _on_completion(success: bool, message: str) -> None:
+                self._root.after(0, lambda: self._complete_runtime_stop(success, message, run_id))
+
+            self._runtime_stop_pending_run_id = run_id
+            accepted = self._run_manager.request_runtime_stop(
                 connection=self._robot_connection(),
                 run_id=run_id,
                 on_command=lambda command: self._append_log("$ " + shell_join(command)),
                 on_message=self._append_log_threadsafe,
+                on_completion=_on_completion if finalize_on_success else None,
             )
+            if not accepted and self._runtime_stop_pending_run_id == run_id:
+                self._runtime_stop_pending_run_id = None
+            return accepted
         except ValueError as error:
+            if "run_id" in locals() and self._runtime_stop_pending_run_id == run_id:
+                self._runtime_stop_pending_run_id = None
             self._append_log(f"runtime stop command failed: {error}")
             return False
 
-    def _poll_run_process(self) -> None:
-        if self._run_process is None:
+    def _complete_runtime_stop(self, success: bool, _message: str, run_id: str) -> None:
+        if self._runtime_stop_pending_run_id == run_id:
+            self._runtime_stop_pending_run_id = None
+        if not success:
             return
-        run_id = self._active_run_id or self._resolved_run_id()
-        completion = self._run_manager.completion(self._run_process, run_id=run_id)
+        self._finish_stopped_run(run_id=run_id, log_message=f"remote runtime container stopped: {run_id}")
+
+    def _finish_stopped_run(self, *, run_id: str, log_message: str) -> None:
+        self._cancel_run_stop_timer()
+        self._cancel_run_poll()
+        remote_run = self._run_process
+        self._run_generation += 1
+        self._run_process = None
+        self._active_run_id = run_id
+        if self._runtime_stop_pending_run_id == run_id:
+            self._runtime_stop_pending_run_id = None
+        self._set_run_state(RunPhase.STOPPED, run_id=run_id)
+        self._append_log(log_message)
+        if remote_run_is_running(remote_run):
+            self._run_manager.force_stop(remote_run)
+
+    def _poll_run_process(
+        self,
+        *,
+        remote_run: RemoteRunProcess | None = None,
+        run_id: str | None = None,
+        generation: int | None = None,
+    ) -> None:
+        remote_run = remote_run or self._run_process
+        if remote_run is None:
+            return
+        if remote_run is not self._run_process:
+            return
+        if generation is not None and generation != self._run_generation:
+            return
+        run_id = run_id or self._current_run_id()
+        completion = self._run_manager.completion(remote_run, run_id=run_id)
         if completion is None:
-            self._root.after(1000, self._poll_run_process)
+            self._run_poll_after_id = self._root.after(
+                1000,
+                lambda: self._poll_run_process(
+                    remote_run=remote_run,
+                    run_id=run_id,
+                    generation=generation,
+                ),
+            )
             return
 
-        if self._run_stop_after_id is not None:
-            self._root.after_cancel(self._run_stop_after_id)
-            self._run_stop_after_id = None
+        self._cancel_run_stop_timer()
+        self._run_poll_after_id = None
         self._set_run_state(completion.phase, run_id=completion.run_id, message=completion.state_message)
         self._append_log(completion.log_message)
         self._run_process = None
 
     def retrieve_results(self) -> None:
         self._append_log("retrieve results requested")
-        run_id = self._active_run_id or self._resolved_run_id()
+        run_id = self._current_run_id()
         result = retrieve_run_artifacts(
             self._artifact_context(),
             run_id=run_id,
@@ -818,7 +901,7 @@ class RobotMonitorGui:
 
     def _generate_and_open_report(self) -> None:
         self._append_log("generating report after retrieval")
-        run_id = self._active_run_id or self._resolved_run_id()
+        run_id = self._current_run_id()
         result = generate_run_report(self._artifact_context(), run_id=run_id, overwrite=True)
         self._append_artifact_result(result)
         if not result.success:
@@ -828,7 +911,7 @@ class RobotMonitorGui:
 
     def open_report(self) -> None:
         self._append_log("open report requested")
-        run_id = self._active_run_id or self._resolved_run_id()
+        run_id = self._current_run_id()
         context = self._artifact_context()
         inspection = inspect_run_artifacts(context, run_id, require_report=True)
         self._append_artifact_warnings(inspection.issues)
@@ -954,7 +1037,7 @@ class RobotMonitorGui:
         self.refresh_status()
 
     def close(self) -> None:
-        self._request_run_stop()
+        self._request_run_stop(finalize_runtime_stop=False)
         try:
             settings = self._connection_settings()
             with grpc.insecure_channel(target_for(settings.host, settings.port)) as channel:

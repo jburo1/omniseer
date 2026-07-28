@@ -159,8 +159,10 @@ local runtime image in the operator profile, records an indefinite runbundle
 under `runs/operator_<UTC>`, samples system telemetry every second, and exits
 when the container receives a graceful interrupt. Ctrl-C and the monitor GUI Stop
 Run button are the supported stop paths because they let the recorder finalize
-`manifest.yaml` and `summary.json`. Pass extra launch args after `--`, for
-example:
+`manifest.yaml` and `summary.json`. For runtime-backed GUI runs, Stop Run also
+issues the named `runtime stop` command immediately and marks the GUI stopped
+after Docker confirms the container is stopped or already absent. Pass extra
+launch args after `--`, for example:
 
 ```bash
 sudo scripts/omni runtime record -- start_lidar:=false

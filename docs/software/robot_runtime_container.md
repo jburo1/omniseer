@@ -165,9 +165,10 @@ with automatic Docker TTY detection, writes the runbundle to `runs/operator_<UTC
 on the host, and samples system telemetry every second. Stop the run with Ctrl-C
 or the monitor GUI Stop Run button when the experiment is complete; the recorder
 needs that graceful interrupt to finalize `manifest.yaml` and `summary.json`.
-The monitor GUI also issues `scripts/omni runtime stop --run-id <id>` as a
-container-level fallback, which targets the named runtime record container for
-that run id.
+The monitor GUI also issues `scripts/omni runtime stop --run-id <id>` immediately
+for runtime-backed runs; that command targets the named runtime record container
+for the run id, confirms it is stopped or already absent, and lets the GUI become
+ready for the next run without waiting on a stale SSH session.
 
 When launched from a devcontainer, the runtime wrapper resolves the host-side
 workspace bind path before starting Docker so the runtime container writes back

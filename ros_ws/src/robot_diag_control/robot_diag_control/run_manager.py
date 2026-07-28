@@ -23,6 +23,7 @@ StopRequester = Callable[[RemoteRunProcess | None], bool]
 RunInterrupter = Callable[[RemoteRunProcess | None], bool]
 RuntimeStopRunner = Callable[[list[str], Path], subprocess.CompletedProcess[str]]
 RuntimeStopScheduler = Callable[[Callable[[], None]], None]
+RuntimeStopCompletionHandler = Callable[[bool, str], None]
 
 
 @dataclass(frozen=True)
@@ -161,6 +162,7 @@ class RunManager:
         run_id: str,
         on_command: Callable[[list[str]], None] | None = None,
         on_message: Callable[[str], None] | None = None,
+        on_completion: RuntimeStopCompletionHandler | None = None,
     ) -> bool:
         if not run_id:
             return False
@@ -171,8 +173,11 @@ class RunManager:
 
         def _stop_remote_container() -> None:
             completed = self._runtime_stop_runner(command, self._repo_root)
+            message = _format_runtime_stop_message(completed)
             if on_message is not None:
-                on_message(_format_runtime_stop_message(completed))
+                on_message(message)
+            if on_completion is not None:
+                on_completion(completed.returncode == 0, message)
 
         self._runtime_stop_scheduler(_stop_remote_container)
         return True

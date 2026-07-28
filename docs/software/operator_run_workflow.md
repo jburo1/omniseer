@@ -63,16 +63,20 @@ testable without launching Tk.
 1. The GUI calls `RunManager.request_stop(...)`.
 2. `run_lifecycle.request_remote_run_stop(...)` writes Ctrl-C to the SSH process
    stdin so the robot-side recorder can finalize the run bundle.
-3. The GUI starts a grace timer.
-4. If the process does not exit, the GUI calls `RunManager.force_stop(...)`.
-5. For the runtime-container backend, the GUI also calls
-   `RunManager.request_runtime_stop(...)`, which runs:
+3. For the runtime-container backend, the GUI also calls
+   `RunManager.request_runtime_stop(...)` immediately, which runs:
 
    ```bash
    scripts/omni runtime stop --run-id <run_id>
    ```
 
-6. `RunManager.completion(...)` converts the final exit state into a typed
+   A successful container stop, including the already-stopped case, moves the GUI
+   to `STOPPED` and clears the stale SSH handle so the operator can start the
+   next run without waiting on that old session.
+4. For non-runtime backends, or if the runtime stop path is unavailable, the GUI
+   starts a grace timer and then calls `RunManager.force_stop(...)` if the process
+   does not exit.
+5. `RunManager.completion(...)` converts the final exit state into a typed
    result:
    - operator-requested stop -> `STOPPED`
    - zero exit -> `STOPPED`

@@ -19,7 +19,9 @@ from robot_diag_control.monitor_gui import (
     _resolved_preview_host,
     _teleop_command_for_action,
 )
-from robot_diag_control.run_lifecycle import RunPhase
+from robot_diag_control.run_commands import RUN_BACKEND_LABELS, RobotConnection
+from robot_diag_control.run_lifecycle import RemoteRunProcess, RunPhase, run_state
+from robot_diag_control.run_manager import RunStopResult
 
 try:
     import tkinter as tk
@@ -33,6 +35,71 @@ class _FakeRpcError(grpc.RpcError):
 
     def details(self):
         return "failed to connect to all addresses"
+
+
+class _FakeTkVar:
+    def __init__(self, value: str = "") -> None:
+        self.value = value
+
+    def get(self) -> str:
+        return self.value
+
+    def set(self, value: str) -> None:
+        self.value = value
+
+
+class _FakeRoot:
+    def __init__(self) -> None:
+        self.cancelled: list[str] = []
+
+    def after(self, delay_ms: int, callback):
+        after_id = f"after-{delay_ms}"
+        if delay_ms == 0:
+            callback()
+        return after_id
+
+    def after_cancel(self, after_id: str) -> None:
+        self.cancelled.append(after_id)
+
+
+class _FakeProcess:
+    stdin = None
+    stdout = None
+    pid = 12345
+
+    def poll(self) -> int | None:
+        return None
+
+
+class _RuntimeStopCompletesManager:
+    def __init__(self) -> None:
+        self.runtime_stop_commands = 0
+        self.force_stops = 0
+
+    def request_stop(self, _remote_run: RemoteRunProcess | None) -> RunStopResult:
+        return RunStopResult(accepted=True, graceful=True)
+
+    def request_runtime_stop(
+        self,
+        *,
+        connection: RobotConnection,
+        run_id: str,
+        on_command=None,
+        on_message=None,
+        on_completion=None,
+    ) -> bool:
+        self.runtime_stop_commands += 1
+        if on_command is not None:
+            on_command(["ssh", connection.host, f"stop {run_id}"])
+        if on_message is not None:
+            on_message("runtime container stop requested")
+        if on_completion is not None:
+            on_completion(True, "runtime container stop requested")
+        return True
+
+    def force_stop(self, _remote_run: RemoteRunProcess | None) -> RunStopResult:
+        self.force_stops += 1
+        return RunStopResult(accepted=True, interrupted=True)
 
 
 class MonitorGuiTests(unittest.TestCase):
@@ -137,6 +204,45 @@ class MonitorGuiTests(unittest.TestCase):
         self.assertEqual(message, "status refresh failed: UNAVAILABLE; failed to connect to all addresses")
         self.assertNotIn("_InactiveRpcError", message)
         self.assertNotIn("debug_error_string", message)
+
+    def test_runtime_stop_completion_resets_gui_for_next_run(self):
+        gui = object.__new__(RobotMonitorGui)
+        root = _FakeRoot()
+        manager = _RuntimeStopCompletesManager()
+        logs: list[str] = []
+        gui._root = root
+        gui._run_manager = manager
+        gui._run_process = RemoteRunProcess(_FakeProcess())  # type: ignore[arg-type]
+        gui._run_state = run_state(RunPhase.RUNNING, run_id="operator_001")
+        gui._active_run_id = "operator_001"
+        gui._run_stop_after_id = None
+        gui._run_poll_after_id = "poll-old"
+        gui._runtime_stop_pending_run_id = None
+        gui._run_generation = 7
+        gui._run_buttons = {}
+        gui._run_backend_var = _FakeTkVar(RUN_BACKEND_LABELS[RUN_BACKEND_RUNTIME])
+        gui._run_id_var = _FakeTkVar("operator_001")
+        gui._mode_var = _FakeTkVar("running operator_001")
+        gui._robot_connection = lambda: RobotConnection(
+            host="10.0.0.2",
+            ssh_user="radxa",
+            remote_repo_root="/robot/repo",
+            remote_runs_root="/robot/repo/runs",
+        )
+        gui._append_log = logs.append
+        gui._append_log_threadsafe = logs.append
+
+        self.assertTrue(gui._request_run_stop())
+
+        self.assertEqual(gui._run_state.phase, RunPhase.STOPPED)
+        self.assertEqual(gui._run_state.run_id, "operator_001")
+        self.assertIsNone(gui._run_process)
+        self.assertEqual(gui._mode_var.get(), "stopped operator_001")
+        self.assertEqual(root.cancelled, ["poll-old"])
+        self.assertIsNone(gui._runtime_stop_pending_run_id)
+        self.assertEqual(manager.runtime_stop_commands, 1)
+        self.assertEqual(manager.force_stops, 1)
+        self.assertIn("remote runtime container stopped: operator_001", logs)
 
     @unittest.skipIf(tk is None, "tkinter is unavailable")
     def test_gui_run_form_selection_builds_run_domain_objects(self):

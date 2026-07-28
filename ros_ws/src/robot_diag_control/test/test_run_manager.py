@@ -198,6 +198,7 @@ class RunManagerTests(unittest.TestCase):
     def test_request_runtime_stop_runs_command_and_reports_success(self):
         commands: list[list[str]] = []
         messages: list[str] = []
+        completions: list[tuple[bool, str]] = []
 
         def runtime_stop_runner(command: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
             commands.append(command)
@@ -215,6 +216,7 @@ class RunManagerTests(unittest.TestCase):
             run_id="operator_001",
             on_command=commands.append,
             on_message=messages.append,
+            on_completion=lambda success, message: completions.append((success, message)),
         )
 
         self.assertTrue(accepted)
@@ -222,6 +224,7 @@ class RunManagerTests(unittest.TestCase):
         self.assertEqual(commands[0][0:2], ["ssh", "radxa@10.0.0.2"])
         self.assertIn("scripts/omni runtime stop --run-id operator_001", commands[0][2])
         self.assertEqual(messages, ["runtime container stop requested: stopped operator_001"])
+        self.assertEqual(completions, [(True, "runtime container stop requested: stopped operator_001")])
 
     def test_request_runtime_stop_reports_already_stopped_container(self):
         messages: list[str] = []
