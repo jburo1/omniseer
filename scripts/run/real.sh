@@ -154,7 +154,6 @@ prepare_recording_run_dir() {
       | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e '/^$/d' \
       >"${record_out_dir}/classes.txt"
   fi
-  record_overwrite="false"
 }
 
 require_no_recording() {

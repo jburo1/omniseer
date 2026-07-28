@@ -100,6 +100,7 @@ ros_ws/src/omniseer_msgs
 ros_ws/src/yolo_ros/yolo_msgs
 ros_ws/src/omniseer_description
 ros_ws/src/analysis
+ros_ws/src/omniseer_autonomy
 ros_ws/src/omniseer_experiments
 ros_ws/src/bringup
 ros_ws/src/robot_io_adapters
@@ -113,6 +114,7 @@ omni_ros_dep_paths_smoke() {
 ros_ws/src/omniseer_gz_assets
 ros_ws/src/omniseer_msgs
 ros_ws/src/omniseer_description
+ros_ws/src/omniseer_autonomy
 ros_ws/src/bringup
 ros_ws/src/robot_io_adapters
 EOF
@@ -125,6 +127,7 @@ omniseer_msgs
 yolo_msgs
 omniseer_description
 analysis
+omniseer_autonomy
 omniseer_experiments
 bringup
 robot_io_adapters
@@ -145,6 +148,7 @@ omni_ros_test_packages() {
   cat <<'EOF'
 omniseer_description
 analysis
+omniseer_autonomy
 omniseer_experiments
 bringup
 robot_io_adapters
@@ -158,6 +162,7 @@ omni_ros_smoke_packages() {
 omniseer_gz_assets
 omniseer_msgs
 omniseer_description
+omniseer_autonomy
 bringup
 robot_io_adapters
 EOF

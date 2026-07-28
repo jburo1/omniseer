@@ -82,6 +82,7 @@ class RunCommandsTests(unittest.TestCase):
         self.assertIn("scripts/omni runtime record", command[3])
         self.assertIn("--record-notes 'lighting changed'", command[3])
         self.assertIn("--record-classes 'person,fire extinguisher'", command[3])
+        self.assertIn("experiment_overwrite:=true", command[3])
         self.assertIn("classes_path:=/runs/operator_001/classes.txt", command[3])
         self.assertNotIn("start_autonomy:=true", command[3])
 

@@ -129,6 +129,7 @@ def _build_runtime_record_inner_command(
     if notes.strip():
         command.extend(["--record-notes", notes.strip()])
     command.append("--")
+    command.append("experiment_overwrite:=true")
     if classes:
         command.append(f"classes_path:={_runtime_container_class_list_path(run_id)}")
     command.extend(
