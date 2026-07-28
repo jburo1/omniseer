@@ -388,8 +388,13 @@ scripts/omni run monitor \
 The runtime-container backend runs `scripts/omni runtime record` on the robot and
 passes class files through the container-visible `/runs/<run_id>/classes.txt`
 path. The devcontainer backend runs a configurable remote exec template, defaulting
-to `devcontainer exec --workspace-folder {remote_repo_root} bash -lc {command}`,
-and passes the robot-host class path under the remote checkout.
+to a `docker exec` command that finds the running devcontainer by the
+`devcontainer.local_folder={remote_repo_root}` Docker label. The SSH preparation
+steps still create and upload run files under the robot-host checkout, while the
+command inside the devcontainer uses the container-visible workspace path
+`/<repo-name>` such as `/omniseer`. Override `--devcontainer-exec-template` or
+`OMNISEER_DEVCONTAINER_EXEC_TEMPLATE` when the robot devcontainer is launched
+without standard devcontainer labels.
 
 See [Operator Run Workflow](operator_run_workflow.md) for the current GUI
 start/stop/retrieve architecture and module ownership boundaries.

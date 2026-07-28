@@ -52,7 +52,9 @@ testable without launching Tk.
 5. `run_commands.build_remote_start_command(...)` builds the SSH command for the
    selected backend:
    - runtime container: `scripts/omni runtime record`
-   - devcontainer: `scripts/omni run real --profile operator ...`
+   - devcontainer: `docker exec` into the running robot devcontainer, then
+     `scripts/omni run real --profile operator ...` from the container-visible
+     workspace path
 6. `run_lifecycle.start_remote_run_process(...)` starts the local SSH process.
 7. The GUI starts the remote log reader and polls for completion.
 

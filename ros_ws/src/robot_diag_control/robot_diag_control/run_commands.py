@@ -3,7 +3,7 @@ from __future__ import annotations
 import shlex
 from collections.abc import Sequence
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 RUN_BACKEND_RUNTIME = "robot_runtime_container"
 RUN_BACKEND_DEVCONTAINER = "robot_devcontainer"
@@ -11,6 +11,14 @@ RUN_BACKEND_LABELS = {
     RUN_BACKEND_RUNTIME: "Robot runtime container",
     RUN_BACKEND_DEVCONTAINER: "Robot devcontainer",
 }
+DEFAULT_DEVCONTAINER_EXEC_TEMPLATE = (
+    "container=$(docker ps --filter label=devcontainer.local_folder={remote_repo_root} "
+    "--format '{{{{.Names}}}}' | head -n 1); "
+    'if [ -z "$container" ]; then '
+    'echo "no running Omniseer devcontainer found for {remote_repo_root}" >&2; exit 127; '
+    "fi; "
+    'docker exec -it "$container" bash -lc {command}'
+)
 RUN_TYPE_PERCEPTION = "perception_recording"
 RUN_TYPE_AUTONOMY_CENTER = "autonomy_center_first_class"
 RUN_TYPE_LABELS = {
@@ -64,6 +72,11 @@ def remote_run_dir_for(remote_repo_root: str, run_id: str) -> str:
 
 def remote_class_list_path_for(remote_repo_root: str, run_id: str) -> str:
     return f"{remote_run_dir_for(remote_repo_root, run_id)}/classes.txt"
+
+
+def devcontainer_workspace_root_for(remote_repo_root: str) -> str:
+    workspace_name = PurePosixPath(remote_repo_root.rstrip("/") or "/workspace").name
+    return f"/{workspace_name or 'workspace'}"
 
 
 def _runtime_container_class_list_path(run_id: str) -> str:
@@ -150,7 +163,8 @@ def _build_devcontainer_record_inner_command(
     notes: str,
     run_type: str,
 ) -> list[str]:
-    remote_run_dir = remote_run_dir_for(remote_repo_root, run_id)
+    container_repo_root = devcontainer_workspace_root_for(remote_repo_root)
+    container_run_dir = remote_run_dir_for(container_repo_root, run_id)
     command = [
         "scripts/omni",
         "run",
@@ -160,7 +174,7 @@ def _build_devcontainer_record_inner_command(
         "--record-run",
         run_id,
         "--record-out",
-        remote_run_dir,
+        container_run_dir,
         "--record-overwrite",
     ]
     if classes:
@@ -169,8 +183,8 @@ def _build_devcontainer_record_inner_command(
         command.extend(["--record-notes", notes.strip()])
     command.append("bringup")
     if classes:
-        command.append(f"classes_path:={remote_class_list_path_for(remote_repo_root, run_id)}")
-    command.extend(_autonomy_launch_args(classes=classes, run_type=run_type, run_dir=remote_run_dir))
+        command.append(f"classes_path:={remote_class_list_path_for(container_repo_root, run_id)}")
+    command.extend(_autonomy_launch_args(classes=classes, run_type=run_type, run_dir=container_run_dir))
     return command
 
 
@@ -223,6 +237,7 @@ def build_remote_start_command(
         )
         remote_command = f"cd {shlex.quote(connection.remote_repo_root)} && {shell_join(inner)}"
     elif run_config.backend == RUN_BACKEND_DEVCONTAINER:
+        container_repo_root = devcontainer_workspace_root_for(connection.remote_repo_root)
         inner = _build_devcontainer_record_inner_command(
             remote_repo_root=connection.remote_repo_root,
             run_id=run_config.run_id,
@@ -230,7 +245,7 @@ def build_remote_start_command(
             notes=run_config.notes,
             run_type=run_config.run_type,
         )
-        inner_shell = f"cd {shlex.quote(connection.remote_repo_root)} && {shell_join(inner)}"
+        inner_shell = f"cd {shlex.quote(container_repo_root)} && {shell_join(inner)}"
         remote_command = _format_devcontainer_exec_template(
             template=run_config.devcontainer_exec_template,
             command=inner_shell,

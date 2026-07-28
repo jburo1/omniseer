@@ -6,6 +6,7 @@ from pathlib import Path
 
 from robot_diag_control.run_artifacts import RunArtifactContext
 from robot_diag_control.run_commands import (
+    DEFAULT_DEVCONTAINER_EXEC_TEMPLATE,
     RUN_BACKEND_LABELS,
     RUN_TYPE_LABELS,
     RobotConnection,
@@ -16,7 +17,6 @@ from robot_diag_control.run_commands import (
 
 DEFAULT_REMOTE_REPO_ROOT = "/home/radxa/apps/omniseer"
 DEFAULT_LOCAL_IMPORT_ROOT = "runs/imported"
-DEFAULT_DEVCONTAINER_EXEC_TEMPLATE = "devcontainer exec --workspace-folder {remote_repo_root} bash -lc {command}"
 
 
 @dataclass(frozen=True)

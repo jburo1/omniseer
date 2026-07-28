@@ -2,6 +2,7 @@ import unittest
 from pathlib import Path
 
 from robot_diag_control.run_commands import (
+    DEFAULT_DEVCONTAINER_EXEC_TEMPLATE,
     RUN_BACKEND_DEVCONTAINER,
     RUN_BACKEND_RUNTIME,
     RUN_TYPE_AUTONOMY_CENTER,
@@ -13,6 +14,7 @@ from robot_diag_control.run_commands import (
     build_remote_start_command,
     build_report_command,
     build_upload_classes_command,
+    devcontainer_workspace_root_for,
     local_import_dir_for,
     parse_run_classes,
     remote_class_list_path_for,
@@ -38,6 +40,10 @@ class RunCommandsTests(unittest.TestCase):
 
     def test_run_id_sanitizer_keeps_path_safe_subset(self):
         self.assertEqual(sanitize_run_id(" demo run/01 "), "demo_run_01")
+
+    def test_devcontainer_workspace_root_uses_repo_basename(self):
+        self.assertEqual(devcontainer_workspace_root_for("/home/radxa/apps/omniseer"), "/omniseer")
+        self.assertEqual(devcontainer_workspace_root_for("/home/radxa/apps/omniseer/"), "/omniseer")
 
     def test_build_remote_mkdir_command_targets_robot_run_directory(self):
         command = build_remote_run_mkdir_command(
@@ -113,7 +119,7 @@ class RunCommandsTests(unittest.TestCase):
                 ),
             )
 
-    def test_devcontainer_backend_uses_robot_host_visible_class_path(self):
+    def test_devcontainer_backend_uses_container_visible_workspace_paths(self):
         command = build_remote_start_command(
             connection=_connection(),
             run_config=RunConfig(
@@ -126,9 +132,29 @@ class RunCommandsTests(unittest.TestCase):
 
         self.assertEqual(command[0:3], ["ssh", "-tt", "radxa@10.0.0.2"])
         self.assertIn("docker exec omniseer-dev bash -lc", command[3])
-        self.assertIn("scripts/omni run real --profile operator", command[3])
-        class_path = remote_class_list_path_for("/home/radxa/apps/omniseer", "operator_001")
+        self.assertIn("cd /omniseer && scripts/omni run real --profile operator", command[3])
+        self.assertIn("--record-out /omniseer/runs/operator_001", command[3])
+        class_path = remote_class_list_path_for("/omniseer", "operator_001")
         self.assertIn(f"classes_path:={class_path}", command[3])
+
+    def test_devcontainer_backend_default_exec_template_uses_running_container_label(self):
+        command = build_remote_start_command(
+            connection=_connection(),
+            run_config=RunConfig(
+                run_id="operator_001",
+                backend=RUN_BACKEND_DEVCONTAINER,
+                classes=("person",),
+                devcontainer_exec_template=DEFAULT_DEVCONTAINER_EXEC_TEMPLATE,
+            ),
+        )
+
+        self.assertIn("docker ps --filter label=devcontainer.local_folder=/home/radxa/apps/omniseer", command[3])
+        self.assertIn("--format '{{.Names}}'", command[3])
+        self.assertIn('docker exec -it "$container" bash -lc', command[3])
+        self.assertIn("cd /omniseer && scripts/omni run real --profile operator", command[3])
+        self.assertIn("--record-out /omniseer/runs/operator_001", command[3])
+        self.assertIn("classes_path:=/omniseer/runs/operator_001/classes.txt", command[3])
+        self.assertNotIn("devcontainer exec", command[3])
 
     def test_runtime_stop_command_targets_named_runtime_record_container(self):
         command = build_remote_runtime_stop_command(
