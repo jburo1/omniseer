@@ -1966,8 +1966,13 @@ the runtime-container backend or the devcontainer backend in the GUI:</p>
 <p>The runtime-container backend runs <code>scripts/omni runtime record</code> on the robot and
 passes class files through the container-visible <code>/runs/&lt;run_id&gt;/classes.txt</code>
 path. The devcontainer backend runs a configurable remote exec template, defaulting
-to <code>devcontainer exec --workspace-folder {remote_repo_root} bash -lc {command}</code>,
-and passes the robot-host class path under the remote checkout.</p>
+to a <code>docker exec</code> command that finds the running devcontainer by the
+<code>devcontainer.local_folder={remote_repo_root}</code> Docker label. The SSH preparation
+steps still create and upload run files under the robot-host checkout, while the
+command inside the devcontainer uses the container-visible workspace path
+<code>/&lt;repo-name&gt;</code> such as <code>/omniseer</code>. Override <code>--devcontainer-exec-template</code> or
+<code>OMNISEER_DEVCONTAINER_EXEC_TEMPLATE</code> when the robot devcontainer is launched
+without standard devcontainer labels.</p>
 <p>See <a href="../operator_run_workflow/">Operator Run Workflow</a> for the current GUI
 start/stop/retrieve architecture and module ownership boundaries.</p>
 <h3 id="runs"><code>runs</code><a class="headerlink" href="#runs" title="Permanent link">&para;</a></h3>
@@ -2170,7 +2175,7 @@ machine.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 25, 2026 01:00:02 UTC">July 25, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 28, 2026 20:55:58 UTC">July 28, 2026</span>
   </span>
 
     
