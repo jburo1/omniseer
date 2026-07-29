@@ -1,0 +1,80 @@
+# Shared D2 classes for Omniseer architecture diagrams.
+#
+# Keep this file small. Add classes only after a diagram demonstrates repeated
+# meaning or styling.
+
+classes: {
+  boundary: {
+    style.fill: "#F8FAFC"
+    style.stroke: "#334155"
+    style.stroke-width: 2
+    style.border-radius: 8
+  }
+
+  operator: {
+    shape: c4-person
+    style.fill: "#EFF6FF"
+    style.stroke: "#1D4ED8"
+    style.stroke-width: 2
+    style.border-radius: 6
+  }
+
+  laptop: {
+    style.fill: "#E0F2FE"
+    style.stroke: "#0369A1"
+    style.stroke-width: 2
+    style.border-radius: 6
+  }
+
+  robot_runtime: {
+    style.fill: "#ECFDF5"
+    style.stroke: "#047857"
+    style.stroke-width: 2
+    style.border-radius: 6
+  }
+
+  firmware: {
+    style.fill: "#FEF3C7"
+    style.stroke: "#B45309"
+    style.stroke-width: 2
+    style.border-radius: 6
+  }
+
+  hardware: {
+    style.fill: "#F1F5F9"
+    style.stroke: "#475569"
+    style.stroke-width: 2
+    style.border-radius: 6
+  }
+
+  evidence: {
+    shape: cylinder
+    style.fill: "#FCE7F3"
+    style.stroke: "#BE185D"
+    style.stroke-width: 2
+  }
+
+  optional: {
+    style.stroke-dash: 4
+    style.opacity: 0.82
+  }
+
+  command_edge: {
+    style.stroke: "#2563EB"
+    style.stroke-width: 2
+  }
+
+  telemetry_edge: {
+    style.stroke: "#0891B2"
+    style.stroke-width: 2
+  }
+
+  evidence_edge: {
+    style.stroke: "#BE185D"
+    style.stroke-width: 2
+  }
+
+  offline_edge: {
+    style.stroke-dash: 3
+  }
+}
