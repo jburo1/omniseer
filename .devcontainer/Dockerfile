@@ -10,6 +10,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ARG USERNAME=user
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
+ARG D2_VERSION=v0.7.1
 
 ARG DEBIAN_FRONTEND=noninteractive=
 ENV LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 \
@@ -64,6 +65,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-${ROS_DISTRO}-xacro \
  && rm -rf /var/lib/apt/lists/*
 
+# Diagramming CLI
+RUN set -eux; \
+  case "$(dpkg --print-architecture)" in \
+    amd64) d2_arch=amd64 ;; \
+    arm64) d2_arch=arm64 ;; \
+    *) echo "Unsupported D2 architecture: $(dpkg --print-architecture)" >&2; exit 1 ;; \
+  esac; \
+  curl -fsSL -o /tmp/d2.tar.gz \
+    "https://github.com/terrastruct/d2/releases/download/${D2_VERSION}/d2-${D2_VERSION}-linux-${d2_arch}.tar.gz"; \
+  mkdir -p /tmp/d2; \
+  tar -xzf /tmp/d2.tar.gz -C /tmp/d2 --strip-components=1; \
+  make -sC /tmp/d2 install PREFIX=/usr/local; \
+  d2 version; \
+  rm -rf /tmp/d2 /tmp/d2.tar.gz
 
 # Create hybrid venv
 RUN python3 -m venv /opt/venv --system-site-packages
