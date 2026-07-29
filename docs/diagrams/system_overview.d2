@@ -1,0 +1,119 @@
+direction: down
+
+operator: {
+  label: "Operator laptop"
+  tooltip: "Host-side tools for run control, diagnostics, preview, retrieval, and review."
+  link: "../software/operator_run_workflow/"
+
+  tools: {
+    label: "CLI / monitor / GUI"
+    tooltip: "Operator workflows launched through scripts/omni and host-side tools."
+    link: "../software/scripts_frontdoor/"
+  }
+
+  preview_rx: {
+    label: "Preview receiver"
+    tooltip: "Laptop-side SRT preview receive and decode path."
+    link: "../software/preview_streaming/"
+  }
+
+  review: {
+    label: "RunBundle review"
+    tooltip: "Inspect, annotate, and report recorded robot-run evidence."
+    link: "../evidence/"
+  }
+}
+
+robot: {
+  label: "Robot SBC"
+  tooltip: "ROCK 5B+ runtime boundary for perception, ROS, autonomy, gateway, and recording."
+  link: "../architecture/"
+
+  vision: {
+    label: "Native vision runtime\nV4L2 -> RGA -> RKNN"
+    tooltip: "Camera capture, hardware preprocessing, YOLO-World inference, postprocess, and telemetry."
+    link: "../software/vision_pipeline/"
+
+    producer: {
+      label: "Producer pipeline"
+      tooltip: "Camera ring lease, RGA preprocess, and latest-ready buffer publication."
+      link: "../software/producer_pipeline/"
+    }
+
+    consumer: {
+      label: "Consumer pipeline"
+      tooltip: "Latest-ready read lease, RKNN inference, postprocess, and canonical detection publication."
+      link: "../software/consumer_pipeline/"
+    }
+  }
+
+  ros: {
+    label: "ROS 2 mission graph"
+    tooltip: "Canonical sim/real contracts above the hardware-specific boundary."
+    link: "../software/ros_packages/"
+  }
+
+  autonomy: {
+    label: "Bounded target centering"
+    tooltip: "Detection-driven autonomy that emits bounded velocity commands."
+    link: "../architecture/#capability-status"
+  }
+
+  gateway: {
+    label: "Gateway + diagnostics"
+    tooltip: "Robot-side gRPC status/control boundary and optional managed preview worker."
+    link: "../software/robot_gateway/"
+  }
+
+  recorder: {
+    label: "Experiment recorder"
+    tooltip: "Robot-side run recording into retrievable RunBundles."
+    link: "../software/edge_to_cloud_perception/"
+  }
+}
+
+firmware: {
+  label: "Firmware / MCU"
+  tooltip: "Teensy firmware and micro-ROS IO for motor and sensor integration."
+  link: "../hardware/wiring/"
+
+  motor_io: "Motor control"
+  sensors: "IMU / range / battery"
+}
+
+verification: {
+  label: "Verification surface"
+  tooltip: "Local checks, CI coverage, target run evidence, and published documentation."
+  link: "../evidence/"
+
+  docs: {
+    label: "MkDocs"
+    tooltip: "Narrative project documentation and subsystem contracts."
+    link: "../software/code_documentation/"
+  }
+
+  checks: {
+    label: "Local + CI checks"
+    tooltip: "Portable build, test, simulation, firmware, vision, and docs verification."
+    link: "../software/ci_cd/"
+  }
+}
+
+operator.tools -> robot.gateway: "gRPC status / control"
+robot.gateway -> operator.preview_rx: "SRT preview"
+operator.tools -> robot.ros: "run / stop / teleop"
+
+robot.vision.producer -> robot.vision.consumer: "latest-ready DMA-BUF pool"
+robot.vision.consumer -> robot.ros: "/yolo/detections\n/vision/perf"
+robot.ros -> robot.autonomy: "detections"
+robot.autonomy -> robot.ros: "/cmd_vel_autonomy"
+
+robot.ros -> firmware: "micro-ROS boundary"
+firmware.motor_io -> robot.ros: "odometry"
+firmware.sensors -> robot.ros: "IMU / range / battery"
+
+robot.recorder -> operator.review: "retrieve RunBundle"
+robot.ros -> robot.recorder: "detections / perf / autonomy / telemetry"
+
+verification.docs -> operator.tools: "front door docs"
+verification.checks -> robot.ros: "contract checks"

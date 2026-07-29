@@ -10,6 +10,23 @@ through ROS 2, and can run a bounded target-centering controller. Operator tools
 provide gRPC status/control, on-demand SRT preview, RunBundle retrieval, inspection,
 annotation, and static report generation.
 
+## System Map
+
+The diagram below is the high-level entry point into the repository internals.
+Open a subsystem from the map, or continue into the architecture and evidence pages
+for the written system view.
+
+<div>
+  <object
+    type="image/svg+xml"
+    data="img/system_overview.svg"
+    aria-label="Clickable Omniseer system overview"
+    style="width: 100%; aspect-ratio: 2090 / 1397; min-height: 420px;"
+  >
+    <a href="img/system_overview.svg">Open the Omniseer system overview diagram.</a>
+  </object>
+</div>
+
 The documentation has three connected layers:
 
 - **Architecture** explains the major robot, operator, gateway, firmware, runtime,
