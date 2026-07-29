@@ -1,11 +1,9 @@
 # ROS Packages and Sim/Real Boundary
 
-_Status: phase-1 sim/real boundary implemented; remaining parity work planned_
-
 _Last updated: 2026-07-06_
 
-_Active portfolio scope: the sim/real boundary supports teleoperated perception data
-collection and evaluation. Autonomous semantic search and capture are deferred._
+The sim/real boundary supports teleoperated perception data collection,
+target-centering autonomy, and evaluation.
 
 ## Purpose
 
@@ -17,11 +15,11 @@ Define a concrete package and launch structure so that:
 - hardware-specific code stays below the boundary
 
 The shared detection and performance contracts now support the edge-to-cloud
-perception direction. Structured run recording, native runtime class updates, and
-cloud review remain planned and must stay outside mission-critical robot behavior.
+perception direction. Structured run recording stays outside mission-critical robot
+behavior.
 
-This page is intentionally practical. It is the working plan for the next
-bringup refactor, not just a general architecture description.
+This page is intentionally practical: it documents the package and launch boundary
+that keeps simulation, real hardware, and common robot behavior separated.
 
 ## Core Decision
 
@@ -103,7 +101,7 @@ Relevant files:
 
 ### Main Mismatches
 
-The key remaining mismatches are:
+The key parity differences are:
 
 - wheel odom derivation mismatch:
   - sim publishes `/mecanum_drive_controller/odometry` directly
@@ -146,7 +144,7 @@ of no-op relays and gets us to sim/real parity faster.
 | `/scan` | `sensor_msgs/msg/LaserScan` | planar LiDAR at `lidar_frame` | Gazebo bridge or real LiDAR driver | RF2O, SLAM, costmaps |
 | `/range` | `sensor_msgs/msg/Range` | forward range at `sonar_link` | sim sonar adapter or MCU renamed to publish directly | costmaps |
 | `/yolo/detections` | `yolo_msgs/msg/DetectionArray` | source-space detections | sim YOLO provider or real vision bridge | shared policy/consumers |
-| `/vision/perf` | `omniseer_msgs/msg/VisionPerfSummary` | normalized vision health/perf | real vision bridge, optional sim stub | gateway/diagnostics |
+| `/vision/perf` | `omniseer_msgs/msg/VisionPerfSummary` | normalized vision health/perf | real vision bridge, optional sim adapter | gateway/diagnostics |
 | `/battery` | `sensor_msgs/msg/BatteryState` | robot battery state | MCU direct | optional UI/diagnostics |
 
 ### Raw Image Contract
@@ -538,10 +536,10 @@ Below that line:
 - `/yolo/detections` and `/vision/perf` are the real perception contracts
 - CI verifies five sim boundary topics and message types in headless Gazebo
 
-### Remaining Parity Work
+### Parity Work
 
 - move provider-specific perception launch ownership fully below the sim/real boundary
-- decide whether simulation needs a `/vision/perf` stub
+- decide whether simulation needs a `/vision/perf` adapter
 - expand contract checks to frame identifiers, timestamps, rates, and stale behavior
 - add a mocked real-launch smoke path
 - add replay support for the normalized boundary and implemented experiment workflow
@@ -591,15 +589,7 @@ That is expected. The goal is not to make sim prove everything. The goal is to
 make sim prove the software architecture and contracts above a thin,
 well-defined hardware boundary.
 
-## Recommended Immediate Next Slice
+## Boundary Change Rule
 
-The active portfolio slice is now perception evaluation rather than additional
-autonomy integration:
-
-1. add safe native runtime class updates
-2. record detections and performance summaries into a reproducible run bundle
-3. capture selected evidence and failure cases
-4. build laptop-side review before selecting a cloud provider
-
-Boundary refactors should proceed only when they directly improve that workflow or
-correct a verified sim/real contract problem.
+Boundary refactors should proceed only when they directly improve robot operation,
+recording, review, or correct a verified sim/real contract problem.

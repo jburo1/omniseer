@@ -1,35 +1,36 @@
 # System Architecture
 
-This page is the top-level technical map of Omniseer. It distinguishes the
-implemented robot, operator, and local experiment-review paths from the planned
-cloud-review work.
+This page is the top-level technical map of Omniseer. It describes the implemented
+robot runtime, operator tooling, diagnostic gateway, firmware boundary, and local
+experiment-review path.
 
-## Active Direction
+## System Loop
 
-The active deliverable is an open-vocabulary edge perception and evaluation loop:
+Omniseer connects onboard perception, bounded robot behavior, and reviewable
+experiment evidence:
 
 ```text
-                       [ Laptop Review / Planned Hosted Review ]
-                                     ^
-                                     |
-                         experiment results and evidence
-                                     |
- [ Camera ] -> [ Native Vision Runtime ] -> [ ROS 2 Contracts ]
-                    |       |                    |
-                    |       +-> /vision/perf     +-> /yolo/detections
-                    |
-              V4L2 -> RGA -> RKNN
+[ Camera ] -> [ V4L2 / RGA / RKNN Vision Runtime ]
+                                |
+                 +--------------+--------------+
+                 |                             |
+          /yolo/detections              /vision/perf
+                 |                             |
+                 v                             v
+     [ Target-Centering Autonomy ]      [ RunBundle Recorder ]
+                 |                             |
+                 v                             v
+          /cmd_vel_autonomy          [ Laptop Inspection ]
 ```
 
 The robot performs inference locally. ROS 2 carries normalized detections and
-performance summaries. The local experiment workflow records those outputs into a
-reproducible run bundle, retrieves robot-created bundles onto the laptop, annotates
-selected evidence, and generates static HTML reports. Cloud synchronization and hosted
-reporting are planned, provider-neutral work.
+performance summaries. The target-centering controller consumes detections and emits
+bounded velocity commands through the same arbitration path as other robot commands.
+The experiment workflow records robot-created RunBundles, retrieves them onto the
+laptop, annotates selected evidence, and generates static HTML reports.
 
-Navigation, SLAM, simulation, firmware, and operator connectivity remain valuable
-platform capabilities. They support data collection and robot operation but are not
-the primary portfolio deliverable. Autonomous object search and capture are deferred.
+Navigation, SLAM, simulation, firmware, and operator connectivity support data
+collection, hardware operation, and reproducible validation.
 
 ## Runtime Boundaries
 
@@ -54,22 +55,15 @@ Real and simulated producers converge on the normalized boundary topics document
 
 ### Operator Laptop
 
-The laptop currently supports:
+The laptop supports:
 
 - gRPC status and preview control
 - SRT preview receive and decode
 - CLI, monitor shell, and initial Tk monitoring workflows
-- perception run retrieval, inspection, evidence annotation, and static HTML reports
+- RunBundle retrieval, inspection, evidence annotation, and static HTML reports
 - RViz, telemetry analysis, and other development tools
 
-The laptop is also the first review target for recorded perception experiments. It
-keeps dashboard, plotting, and evidence inspection work off the robot.
-
-### Cloud Review Layer
-
-**Planned:** upload a provider-neutral experiment bundle and render a hosted review of
-latency, detections, confidence, evidence, and failure cases. The repository does not
-currently implement cloud transport, storage, or a hosted dashboard.
+The laptop keeps dashboard, plotting, and evidence inspection work off the robot.
 
 ## Implemented Data Paths
 
@@ -90,8 +84,9 @@ currently implement cloud transport, storage, or a hosted dashboard.
 ```
 
 The native runtime loads its class list during startup, prepares CLIP text embeddings,
-and then runs producer and consumer threads. Runtime class replacement is implemented
-in the Python `yolo_ros` integration but not yet in the native RKNN bridge.
+and then runs producer and consumer threads. The Python `yolo_ros` integration
+includes a `SetClasses` service; the native RKNN bridge uses its configured startup
+class list.
 
 ### Operator Diagnostics
 
@@ -103,8 +98,8 @@ ROS status -> C++ gateway -> gRPC -> laptop tools
 
 The gateway aggregates vision and odometry health, implements the locked unary gRPC
 API, samples platform status for operator diagnostics, and manages preview as an
-optional child process. The current preview path is a software x264 bringup path;
-hardware H.265 remains planned.
+optional child process. The implemented preview path uses software x264 over
+MPEG-TS/SRT.
 
 ### Simulation and Hardware
 
@@ -120,13 +115,11 @@ hardware validation responsibility.
 | Native producer and consumer vision pipeline | **Implemented; target-hardware run evidence** | V4L2, RGA, RKNN target tests and `runs/pipeline_001` recorded native pipeline telemetry |
 | YOLO-World post-processing and text embeddings | **Implemented; target-hardware run evidence** | RKNN tests, native runtime, and `runs/pipeline_001` recorded detections |
 | ROS detection and performance publication | **Implemented** | `omniseer_vision_bridge` |
+| Bounded target-centering autonomy | **Implemented** | `omniseer_autonomy`, `scripts/omni run autonomy`, controller tests, and RunBundle `autonomy.jsonl` support |
 | Portable ROS, vision, firmware, simulation, and docs checks | **CI-verified** | GitHub Actions six-job workflow |
 | gRPC gateway, platform diagnostics, and managed SRT preview | **Implemented** | C++ and Python tests plus local integration |
-| Native runtime class updates | **Planned** | Python integration exists; native bridge support does not |
 | Structured experiment recorder and run bundle | **Implemented; target-hardware run evidence** | `runs/pipeline_001` records detections, perf, system telemetry, and native pipeline telemetry |
 | Recorded resource telemetry in experiment bundles | **Implemented; target-hardware run evidence** | `runs/pipeline_001` includes `system.jsonl`; gateway live status remains separate |
-| Cloud synchronization and hosted dashboard | **Planned** | No provider or transport selected |
-| Autonomous semantic search and capture | **Deferred** | Outside the active deliverable |
 
 ## Repository Ownership
 
@@ -142,7 +135,7 @@ hardware validation responsibility.
 ## Related Documentation
 
 - [Edge-to-Cloud Perception](software/edge_to_cloud_perception.md)
-- [Evidence and Verification Boundary](evidence.md)
+- [Verification Evidence](evidence.md)
 - [Vision Pipeline](software/vision_pipeline.md)
 - [Vision Telemetry](software/vision_telemetry_spec.md)
 - [Robot Gateway](software/robot_gateway.md)

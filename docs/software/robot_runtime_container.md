@@ -225,10 +225,10 @@ Measured locally on the ROCK 5B+ build host:
 
 V2 is acceptable as a bringup/runtime artifact because it is smaller than the
 devcontainer and no longer carries the compiler, colcon, or protobuf compiler in
-the final image. It is not yet a lean production runtime. The remaining size is
-mostly from the Python OpenCV stack, FFmpeg/GStreamer plugins, controller-manager
-and control message dependencies, source-built micro-ROS Agent dependencies, and
-broad ROS runtime dependencies pulled in by Kilted packages. Some large
+the final image. The image size is mostly from the Python OpenCV stack,
+FFmpeg/GStreamer plugins, controller-manager and control message dependencies,
+source-built micro-ROS Agent dependencies, and broad ROS runtime dependencies
+pulled in by Kilted packages. Some large
 development-labeled packages still arrive transitively through runtime package
 dependencies rather than from the explicit builder stage.
 

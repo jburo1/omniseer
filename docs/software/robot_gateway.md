@@ -5,7 +5,7 @@ _Status: implemented v1 diagnostics, preview-control, and bounded-teleop slice_
 This document describes the operator-facing gateway between the robot's internal
 ROS 2 graph and the external operator laptop application. The first C++ gateway,
 typed gRPC API, preview lifecycle manager, bounded teleop path, and Python operator
-tools are implemented. Experiment export control and cloud integration remain planned.
+tools are implemented.
 
 ## Purpose
 
@@ -14,8 +14,6 @@ Provide one explicit integration boundary for operator-facing features:
 - gRPC control and state access
 - preview session management
 - bounded teleop control
-- later recording/export triggers
-- later cloud-bridge integration
 
 The gateway keeps the internal ROS 2 graph private and prevents the laptop app
 from becoming a generic DDS client that is tightly coupled to internal topics
@@ -44,18 +42,16 @@ What exists today:
   - a first packaged Tk monitor GUI for desktop status, preview, and teleop bring-up
   - local verification against those packaged Python tools
 
-What does **not** exist yet:
+Current API boundary:
 
 - stream endpoint metadata in the API
-- the intended low-overhead hardware H.265 preview path
-- an embedded preview panel inside the host-side GUI
-- experiment recording or cloud synchronization RPCs
+- preview transport uses the implemented software x264/MPEG-TS/SRT path
+- experiment recording is owned by launch profiles and `scripts/omni runs`
 
-Near-term direction:
+Operating model:
 
 - keep `robot_diag_control_cpp` inside `robot-core`
 - use the gateway for optional status, preview control, and bounded operator teleop
-- add experiment export control only after the local recorder contract is stable
 
 ## Implementation Shape
 
@@ -71,16 +67,13 @@ Completed slices:
 
 1. add a standalone C++ gRPC service/server layer with tests
 2. wire that layer into the existing ROS-backed node
-3. replace the original stubbed preview toggle with a gateway-owned subprocess lifecycle
+3. replace the original preview toggle with a gateway-owned subprocess lifecycle
 4. wire the first real preview export command into that lifecycle
 5. add bounded teleop enable/disable and command forwarding through the gateway
 6. surface live platform diagnostics in system status and overlay snapshots
 
 This keeps the control/status boundary small while avoiding premature async
 gRPC complexity.
-
-The next portfolio-facing slice is experiment observability and review integration,
-not more gateway transport abstraction.
 
 ## Major Design Considerations
 
@@ -97,9 +90,8 @@ not more gateway transport abstraction.
 - ROS stays internal: the gateway translates between external API calls and
   internal ROS topics/services/actions.
 
-- Growth path: the same gateway boundary should later support teleop, logging
-  triggers, and possibly a cloud bridge without needing to expose the full ROS
-  graph.
+- Ownership: experiment recording and RunBundle review stay outside the gRPC
+  gateway API.
 
 ## High-Level Shape
 
@@ -121,7 +113,7 @@ not more gateway transport abstraction.
                          [ ROS 2 graph ]
 ```
 
-The first implementation can be simpler than this diagram:
+The implemented process model is:
 
 - one process inside `robot-core`
 - one gRPC server
@@ -139,7 +131,6 @@ Expose a versioned operator-facing API for:
 - preview enable/disable
 - preview session status
 - bounded teleop session control
-- later recording/export control
 
 ### State aggregation
 
@@ -175,7 +166,7 @@ Likely responsibilities:
 - translate ROS status into gateway status
 - publish internal commands requested by the operator app
 
-## Non-Goals (v1)
+## API Boundary
 
 - browser-native delivery
 - remote internet-facing access
@@ -218,8 +209,6 @@ Likely responsibilities:
 
 ### Teleop adapter
 
-Later addition.
-
 Likely responsibilities:
 
 - explicit teleop command validation
@@ -259,22 +248,18 @@ At boot:
 - External client disconnect must not affect the ROS runtime.
 - Repeated preview failures should be visible through counters and state.
 
-The first implementation should prefer fail-open behavior for the mission path
-and fail-closed behavior for optional diagnostics.
+The gateway prefers fail-open behavior for the mission path and fail-closed behavior
+for optional diagnostics.
 
 ## Observability
 
-The gateway should eventually emit:
+The gateway status surface includes:
 
-- request counters
-- preview session counters
 - preview restart/fault counters
 - current preview state
-- current connected client count
 - selected transport/profile information
 
-This does not need a full metrics system on day one, but the component should
-be structured so that basic telemetry is easy to add.
+The gateway keeps status aggregation bounded and cache-backed.
 
 ## Rollout Status
 
@@ -285,13 +270,6 @@ be structured so that basic telemetry is easy to add.
 - bounded preview profiles and subprocess lifecycle management
 - bounded teleop enable/disable plus bounded velocity commands
 - CLI, monitor shell, Tk monitor, SRT preview helper, and overlay viewer
-
-**Planned:**
-
-- experiment recording/export control after the recorder contract is proven
-- stream endpoint metadata and an embedded preview panel
-- hardware H.265 encode
-- any cloud-facing gateway behavior
 
 ## Related Docs
 

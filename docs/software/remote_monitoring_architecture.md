@@ -1,7 +1,5 @@
 # Remote Monitoring Architecture Spec
 
-_Status: v1 diagnostics baseline implemented; experiment/cloud review integration planned_
-
 _Last updated: 2026-07-06_
 
 ## 1) Purpose
@@ -14,10 +12,9 @@ Define a concrete architecture for:
 
 The gRPC status/control boundary, managed x264/SRT preview worker, and laptop tools
 described by the initial slices are now implemented. This specification remains the
-design reference for isolation and future evolution. The active portfolio direction
-uses these capabilities to support open-vocabulary perception experiments; structured
-local recording, run retrieval, evidence annotation, and static laptop reports are
-implemented. Cloud synchronization and hosted review remain planned.
+design reference for isolation and system evolution. These capabilities support
+open-vocabulary perception experiments; structured local recording, run retrieval,
+evidence annotation, and static laptop reports are implemented.
 
 The key constraint is that the SBC should spend nearly all steady-state compute on robot-critical work. Preview and diagnostics should be optional, explicitly budgeted, and easy to disable.
 
@@ -27,9 +24,9 @@ The key constraint is that the SBC should spend nearly all steady-state compute 
 2. Make preview streaming opt-in and remotely controllable from the laptop.
 3. Keep ROS 2 internal to the robot runtime and use explicit external protocols for operator connectivity.
 4. Run RViz2, overlays, plots, bagging, and higher-cost analysis on the host.
-5. Preserve a path to a more isolated split deployment later without reworking the whole system.
+5. Preserve a path to a more isolated split deployment without reworking the whole system.
 
-## 3) Non-Goals (v0)
+## 3) Scope Boundary (v0)
 
 - full cloud telemetry platform
 - browser-first remote operations stack
@@ -624,7 +621,7 @@ Recommended answer:
 
 This means preview has a strict lifecycle and no steady-state cost when disabled.
 
-## 16) Recommended First Implementation Slices
+## 16) Implemented Slices
 
 Completed:
 
@@ -634,18 +631,10 @@ Completed:
 4. Added bounded teleop control, overlay snapshots, and live platform diagnostics.
 5. Added packaged host CLI, shell, Tk monitor, preview-viewer, and overlay-viewer tools.
 
-Planned:
-
-1. Add gateway/cloud export integration without placing it on the mission-critical
-   hot path.
-2. Add hardware H.265 when the SBC userspace path is available.
-3. Revisit exact-sync preview or a separate video container only if measured needs
-   justify the complexity.
-
-## 17) Open Questions
+## 17) Integration Questions
 
 1. What hardware H.265 userspace path should be installed or enabled on the SBC image.
 2. How the offboard review workflow should correlate preview evidence with detections
    and performance samples.
-3. Whether the first hosted review should consume uploaded static run bundles or a
-   later gateway-mediated transport.
+3. How selected static RunBundle reports should be packaged with the documentation
+   site.

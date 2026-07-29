@@ -21,7 +21,7 @@ bundles, or cloud dashboards.
 The `ci` workflow runs on:
 
 - every push to `master`
-- every push to `portfolio/**`
+- every push to the configured feature-branch pattern
 - pull requests when opened, updated, or reopened
 - manual workflow dispatch
 

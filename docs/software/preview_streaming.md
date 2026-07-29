@@ -87,7 +87,7 @@ rkisp_mainpath (/dev/video11, NV12)
      operator laptop decode
             |
      +--> current external viewer process
-     +--> planned monitor app video panel
+     +--> monitor app preview viewer
             +--> optional local ROS Image bridge
             +--> optional host-side overlays / RViz2
 ```
@@ -110,7 +110,7 @@ operator monitoring.
 
 ## Transport Choice: SRT
 
-The selected transport for the first implementation is SRT.
+The implemented preview transport is SRT.
 
 Why:
 
@@ -234,7 +234,7 @@ only assume general-purpose CPU/GPU resources and likely hardware video decode.
 - what preview profile defaults should be used over the current Wi-Fi setup
 - whether decoded preview should be bridged into ROS on the host in the first
   UI slices or kept as a plain video panel initially
-- how recorded preview evidence should correlate with the planned perception run bundle
+- how recorded preview evidence correlates with the RunBundle evidence format
 
 ## Related Docs
 

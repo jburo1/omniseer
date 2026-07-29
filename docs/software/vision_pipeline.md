@@ -4,15 +4,13 @@ _Status: implemented; target-hardware run evidence recorded in `runs/pipeline_00
 
 This document describes the multi-stage, low-latency, zero-copy-oriented vision
 pipeline that transforms camera frames into open-vocabulary object detections. The
-current portfolio direction uses those detections for measured perception experiments,
-not autonomous seek-and-capture behavior.
+implemented robot workflow uses those detections for measured perception experiments
+and bounded target-centering behavior.
 
 The producer, consumer, YOLO-World post-processing, text-embedding preparation,
 rolling telemetry, JSONL telemetry, native harness, and ROS bridge are implemented.
 Portable components are CI-verified. V4L2, RGA, and RKNN behavior requires the ROCK
-5B+ and is covered by target-oriented component checks. A published integrated
-target-hardware record, performance table, and repeatable experiment report remain
-planned.
+5B+ and is covered by target-oriented component checks and RunBundle evidence.
 
 
 ## Major Design Considerations

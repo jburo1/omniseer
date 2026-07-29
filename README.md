@@ -3,33 +3,39 @@
 [![CI](https://github.com/jburo1/omniseer/actions/workflows/ci.yml/badge.svg)](https://github.com/jburo1/omniseer/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/github/deployments/jburo1/omniseer/github-pages?label=Docs)](https://jburo1.github.io/omniseer/)
 
-Omniseer is an edge-to-cloud embodied AI project built around open-vocabulary
-perception on a ROCK 5B+ mobile robot. The current system captures camera frames,
-runs YOLO-World inference on the Rockchip NPU, publishes typed ROS 2 detections and
-performance telemetry, and exposes optional operator diagnostics over gRPC and SRT.
+Omniseer is an embodied AI system for running open-vocabulary perception and
+bounded target-centering behavior on a ROCK 5B+ mobile robot. The repository
+contains the robot runtime, firmware integration, ROS 2 contracts, operator tools,
+diagnostic gateway, preview transport, experiment recorder, and local report
+workflow used to evaluate real robot runs.
 
-The active portfolio deliverable is a reproducible perception evaluation loop:
+The implemented loop connects robot execution to reviewable evidence:
 
 ```text
-camera -> RKNN YOLO-World -> ROS detections + telemetry -> experiment bundle
-                                                           -> laptop report
-                                                           -> planned hosted review
+camera -> V4L2/RGA/RKNN YOLO-World -> ROS detections + telemetry
+                                    -> bounded target centering
+                                    -> RunBundle evidence
+                                    -> laptop inspection and static report
 ```
 
-Robot-side inference, ROS publication, telemetry, simulation, firmware, gateway
-control, preview streaming, structured experiment recording, offboard run retrieval,
-evidence annotation, and simple local HTML run reports are implemented. Runtime class
-updates in the native RKNN bridge, cloud synchronization, and a hosted static review
-path are planned next. Autonomous object search and capture are not part of the active
-deliverable.
+The documentation is organized as three connected layers:
+
+- **Architecture** describes the runtime components, boundaries, and data/control
+  flows.
+- **MkDocs pages** explain the engineering rationale, subsystem contracts, commands,
+  and verification workflow.
+- **RunBundles** preserve robot-run evidence: manifest data, detections, performance
+  summaries, system telemetry, native pipeline telemetry, selected frames,
+  annotations, inspection results, and static HTML reports.
 
 ## Current Capabilities
 
-- Hardware-accelerated V4L2 -> RGA -> RKNN producer/consumer vision pipeline.
+- Hardware-accelerated V4L2 -> RGA -> RKNN producer/consumer vision runtime.
 - YOLO-World text-embedding preparation and bounded detection post-processing.
 - Typed `/yolo/detections` and `/vision/perf` ROS 2 contracts.
 - JSONL stage telemetry, rolling performance summaries, and offline analysis tools.
-- Local perception run bundles with detections, performance summaries, system
+- Bounded target-centering autonomy through `/cmd_vel_autonomy` and `twist_mux`.
+- Local RunBundles with detections, performance summaries, system
   telemetry, native pipeline telemetry, evidence frames, inspection, retrieval,
   annotation, and static HTML reports.
 - ROS 2 simulation and real-hardware bringup with firmware and micro-ROS integration.
@@ -40,7 +46,7 @@ deliverable.
 
 - [Project documentation](https://jburo1.github.io/omniseer/)
 - [System architecture](docs/architecture.md)
-- [Evidence and verification boundary](docs/evidence.md)
+- [Verification evidence](docs/evidence.md)
 - [Edge-to-cloud perception](docs/software/edge_to_cloud_perception.md)
 - [CI/CD overview](docs/software/ci_cd.md)
 
@@ -68,8 +74,8 @@ wraps the existing firmware helper.
 
 ## Current Boundary
 
-GitHub CI validates portable software and simulation contracts. Target-hardware
-camera, RGA, RKNN/NPU, and recording evidence exists in local run bundles, while
-sensor, motor, firmware-flash, preview, and full operator-integrated behavior still
-require explicit target-hardware verification records. See the CI/CD and evidence
-documentation for the exact coverage boundary.
+GitHub CI validates portable software, simulation contracts, firmware compilation,
+and documentation. RunBundle evidence records target-hardware camera, RGA,
+RKNN/NPU, telemetry, and recording behavior. The evidence documentation separates
+CI coverage, local checks, and target-hardware run records so implementation claims
+stay tied to reproducible artifacts.

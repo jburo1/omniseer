@@ -43,7 +43,7 @@ Define a low-coupling, low-overhead telemetry architecture for the vision pipeli
 - fixed-shape samples on hot path (no `std::optional`, no formatting)
 - one top-level timing gate per tick, then scoped stage timing inside that branch
 
-## 3) Non-Goals (v1)
+## 3) Scope Boundary (v1)
 
 - perfect reliability of telemetry delivery
 - dynamic attach/detach of telemetry while running
@@ -273,7 +273,7 @@ Notes:
 
 2. Shutdown:
 - stop producer and consumer loops
-- drain remaining telemetry queues
+- drain queued telemetry samples
 - flush sink
 - stop telemetry thread and join
 
@@ -327,11 +327,11 @@ Implemented:
 5. Producer and consumer stage timing with scoped timers.
 6. Portable JSONL and rolling-summary tests plus target pipeline tests.
 
-Planned product integration:
+RunBundle integration:
 
 - correlate telemetry with typed detections in a structured experiment bundle
 - persist resource samples such as CPU, memory, temperature, network, and power outside the hot path
-- publish measured portfolio results and failure analysis
+- publish measured results and failure analysis
 
 ## 16) Open Questions for v2+
 

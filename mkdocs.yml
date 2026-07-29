@@ -29,6 +29,7 @@ nav:
     - CI/CD overview: software/ci_cd.md
     - Real teleop + native perception check: software/real_teleop_perception_check.md
     - Operator-integrated real demo: software/operator_integrated_demo.md
+    - Operator run workflow: software/operator_run_workflow.md
     - ROS packages: software/ros_packages.md
     - Code documentation: software/code_documentation.md
     - Vision pipeline: software/vision_pipeline.md

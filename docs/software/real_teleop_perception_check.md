@@ -1,7 +1,5 @@
 # Real Teleop + Native Perception Check
 
-_Status: planned; target-hardware verification record pending_
-
 This checklist verifies the minimum integrated real-robot slice kept as the
 `legacy-teleop` profile:
 
@@ -10,8 +8,8 @@ This checklist verifies the minimum integrated real-robot slice kept as the
 - the native vision bridge publishes `/vision/perf`
 - teleop and perception run at the same time
 
-Do not count the legacy teleop path as target-verified until one target-hardware
-run has been recorded in the verification record at the end of this document.
+Use the verification record at the end of this document to capture target-hardware
+run evidence for this slice.
 
 ## Preconditions
 

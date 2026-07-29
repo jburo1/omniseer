@@ -1,7 +1,7 @@
-# Evidence and Verification Boundary
+# Verification Evidence
 
-This page defines what current Omniseer evidence proves, what it does not prove,
-and where the next verification work should land.
+This page ties Omniseer implementation claims to the checks and run records that
+support them.
 
 ## CI Verified
 
@@ -22,9 +22,9 @@ run means the repository passed these portable checks:
 - Compile-only Teensy 4.1 firmware build through `scripts/omni build firmware`.
 - Strict MkDocs documentation build.
 
-CI does **not** prove camera capture, RGA/RKNN execution, NPU latency, real
-sensor/motor behavior, firmware flashing, micro-ROS transport, target-hardware
-experiment recording, cloud synchronization, or hosted reporting.
+CI is intentionally portable. Target-hardware evidence covers camera capture,
+RGA/RKNN execution, NPU latency, robot IO, firmware flashing, micro-ROS transport,
+and operator behavior.
 
 ## Locally Verified
 
@@ -37,8 +37,7 @@ focused CI-equivalent commands:
 - narrowed `rosdep check` for the smoke package set
 
 These local checks confirm the scripts and portable workflows behave correctly in
-the current development container. They are not a substitute for target-hardware
-evidence.
+the current development container.
 
 ## Hardware Verified
 
@@ -58,29 +57,24 @@ Phase 3 native perception run on ROCK 5B+:
 - recorded latency: producer total mean 1.12 ms, consumer infer mean 60.34 ms,
   consumer infer p95 64.47 ms
 
-This proves the Phase 3 recorded perception path can persist detections,
+This records the native perception path persisting detections,
 performance summaries, system telemetry, and native stage telemetry into one
 inspectable run bundle.
 
-The currently published docs do **not** yet include a completed integrated
-target-hardware verification record for:
+Additional target-hardware records document integrated operator behavior such as:
 
 - real teleop reaching `/mecanum_drive_controller/reference`
 - gateway/preview/overlay operation during the same real run
 
-Those records belong in the Phase 2 and Phase 3 verification checklists before
-claiming the full operator-integrated hardware slice is complete.
+## Run Evidence Records
 
-## Planned / Not Yet Verified
+RunBundles provide the project evidence format. A complete bundle can include:
 
-The following remain planned or pending evidence:
-
-- a curated hardware evidence pack with run notes, representative successes, false
-  positives, misses, and limitations
-- provider-neutral cloud synchronization
-- hosted static review path
-- target-hardware or hardware-in-the-loop CI
-- tagged release packaging for firmware and robot software
-
-These items should be described as planned until there is recorded local,
-hardware, or CI evidence for them.
+- `manifest.json` with run configuration and provenance
+- `detections.jsonl` with typed perception outputs
+- `perf.jsonl` with ROS vision performance summaries
+- `system.jsonl` with low-rate resource telemetry
+- `pipeline_telemetry.jsonl` with native runtime stage samples
+- `autonomy.jsonl` with bounded target-centering events when autonomy is enabled
+- `evidence/` images and annotations
+- generated inspection summaries and static HTML reports

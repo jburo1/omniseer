@@ -43,11 +43,11 @@ See [CI/CD Overview](ci_cd.md) for:
 - workflow triggers
 - exact checks that run in CI
 - what is currently deployed automatically
-- current gaps and future expansion points
+- coverage boundaries
 
-## Future Direction
+## Pipeline Scope
 
-As the project grows, this page can become the umbrella view for:
+This page is the umbrella view for:
 
 - local build workflows
 - CI validation stages
@@ -55,13 +55,5 @@ As the project grows, this page can become the umbrella view for:
 - artifact publishing
 - hardware-in-the-loop execution
 
-For now, the detailed operational reference lives in
-[CI/CD Overview](ci_cd.md).
-
-The active product direction adds two planned layers after shared validation:
-
-- creation of a reproducible perception experiment bundle
-- provider-neutral synchronization and hosted review of completed runs
-
-Neither layer is implemented today. The current pipeline stops at validated source,
-build/test artifacts, and GitHub Pages documentation deployment.
+The detailed operational reference lives in [CI/CD Overview](ci_cd.md). Robot-run
+artifacts are produced by the RunBundle workflow rather than by CI.

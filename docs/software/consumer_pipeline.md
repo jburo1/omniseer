@@ -15,8 +15,9 @@ Goals:
 The consumer is integrated into `omniseer_vision_bridge`. The bridge loads a class
 list at startup, prepares YOLO-World text embeddings, publishes typed detections on
 `/yolo/detections`, and publishes rolling performance summaries on `/vision/perf`.
-Native runtime class replacement is planned; the existing Python `yolo_ros`
-`SetClasses` service does not currently reconfigure this native consumer.
+The native consumer uses its configured startup class list. The existing Python
+`yolo_ros` `SetClasses` service applies to the Python integration and does not
+reconfigure this native consumer.
 
 ---
 
@@ -173,7 +174,7 @@ Detailed diagnosis comes from:
 
 ---
 
-## Definition of Done (v1)
+## Implemented Consumer Contract
 
 - [x] Single-thread consumer loop with latest-wins semantics.
 - [x] One in-flight frame max, no consumer backlog queue.

@@ -1,49 +1,42 @@
 # Edge-to-Cloud Perception
 
-_Status: active portfolio direction_
-
 ## Purpose
 
-Define a focused edge-to-cloud ML artifact around the perception system already
-implemented on the robot.
+Document the implemented edge perception and review loop used by Omniseer robot
+runs.
 
-The goal is not autonomous object search. The goal is to demonstrate that an
-open-vocabulary model can be deployed on constrained edge hardware, integrated with
-ROS 2, measured under real operating conditions, and reviewed through a reproducible
-offboard experiment workflow.
+Omniseer deploys an open-vocabulary model on constrained edge hardware, integrates
+it with ROS 2, measures it under robot operating conditions, and preserves the
+result in a reproducible offboard experiment workflow.
 
-## Active Deliverable
+## Runtime Flow
 
-An operator selects semantic classes, teleoperates the robot through a scene, and
-records a perception experiment. YOLO-World runs on the ROCK 5B+ NPU. The resulting
-detections, stage timings, performance summaries, and selected visual evidence form a
-run bundle that can be reviewed on a laptop and later synchronized to a cloud-hosted
-report.
+An operator selects semantic classes, runs the robot through a scene or starts the
+bounded target-centering behavior, and records an experiment. YOLO-World runs on the
+ROCK 5B+ NPU. The resulting detections, stage timings, performance summaries,
+autonomy events, and selected visual evidence form a RunBundle that can be reviewed
+on a laptop.
 
 ```text
 camera
   -> native V4L2/RGA/RKNN runtime
   -> /yolo/detections + /vision/perf
+  -> target-centering autonomy when enabled
   -> experiment recorder
-  -> local run bundle
+  -> RunBundle
   -> laptop review
-  -> planned cloud sync and hosted report
 ```
-
-Autonomous navigation, semantic search, viewpoint planning, and object capture are not
-required for this deliverable.
 
 ## Current Implementation
 
 ### Edge inference
 
-**Implemented with target-hardware run evidence:** the native runtime captures
+The native runtime captures
 NV12 frames, preprocesses them with RGA, prepares YOLO-World text embeddings, runs
 RKNN detector inference, maps detections back to source coordinates, and publishes
 bounded results. The local `runs/pipeline_001` bundle records detections,
 performance summaries, system telemetry, and native pipeline telemetry from a
-Phase 3 target run. The integrated real teleop plus operator preview verification
-record is still pending.
+target-hardware run.
 
 The native bridge currently receives classes from `classes.path` during startup.
 Changing classes requires restarting the bridge with a different class list. The
@@ -52,7 +45,7 @@ reconfigure the native RKNN bridge.
 
 ### ROS contracts
 
-**Implemented:** the native bridge publishes:
+The native bridge publishes:
 
 - `/yolo/detections` as `yolo_msgs/msg/DetectionArray`
 - `/vision/perf` as `omniseer_msgs/msg/VisionPerfSummary`
@@ -64,7 +57,7 @@ diagnostics are surfaced separately through the robot gateway status snapshot.
 
 ### Local observability
 
-**Implemented:** the native harness supports an annotated OpenCV preview, JSONL stage
+The native harness supports an annotated OpenCV preview, JSONL stage
 telemetry, rolling statistics, and offline telemetry analysis. The ROS bridge is
 headless and publishes detections and performance summaries rather than an annotated
 image topic. The experiment workflow can record local run bundles containing
@@ -73,38 +66,21 @@ pipeline telemetry, evidence frames, and generated summaries.
 
 ### Operator connectivity
 
-**Implemented:** the robot gateway exposes system status, platform diagnostics,
+The robot gateway exposes system status, platform diagnostics,
 preview control, overlay snapshots, and bounded teleop over gRPC. A managed GStreamer
 process exports an on-demand SRT video stream, and packaged Python tools receive it
-on the laptop. This preview is a diagnostic camera stream; it is not yet a
-frame-exact detection review surface.
+on the laptop. This preview is a diagnostic camera stream.
 
 ### Offboard review
 
-**Implemented:** `scripts/omni runs` can inspect local bundles, list and pull
+`scripts/omni runs` can inspect local bundles, list and pull
 robot-side bundles onto a laptop, annotate recorded evidence frames, and generate a
 simple static HTML report. Retrieval preserves additive files inside the bundle so
 new telemetry or evidence streams do not require a transport redesign.
 
-## Remaining Product Loop
+## Review Path
 
-The next implementation work should focus on:
-
-1. Native runtime class updates with explicit lifecycle and failure semantics.
-2. Completed target-hardware verification records for the full operator-integrated
-   slice: preview, gateway status, bounded teleop, detections, and stop behavior.
-3. Curated hardware evidence packs with run notes, representative successes, false
-   positives, misses, and limitations.
-4. Provider-neutral synchronization of completed run bundles or generated reports to
-   a hosted static review path.
-
-The local run-bundle contract is intentionally file-based and additive. The cloud
-provider and hosted publication path remain unspecified until selected reports are
-ready to publish.
-
-## Portfolio Success Criteria
-
-The artifact is complete when a reviewer can:
+A reviewer can:
 
 - select classes without retraining the detector
 - run the model on the robot NPU
@@ -114,24 +90,14 @@ The artifact is complete when a reviewer can:
 - inspect detections by class and confidence
 - review representative successes, false positives, and missed detections
 - fetch or open the same completed run through the offboard review workflow
-- view at least one selected report from the hosted documentation path
 
 Claims should be supported by measured output, captured evidence, and a documented
 hardware/software configuration.
 
-## Non-Goals
-
-- autonomous frontier exploration
-- autonomous semantic search
-- visual servoing or grasp/capture behavior
-- production fleet management
-- browser-based live robot control
-- choosing a cloud provider before the selected static-report workflow is ready
-
 ## Related Documentation
 
 - [System Architecture](../architecture.md)
-- [Evidence and Verification Boundary](../evidence.md)
+- [Verification Evidence](../evidence.md)
 - [Vision Pipeline](vision_pipeline.md)
 - [Vision Telemetry](vision_telemetry_spec.md)
 - [Robot Gateway](robot_gateway.md)

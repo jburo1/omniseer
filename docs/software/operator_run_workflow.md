@@ -2,10 +2,9 @@
 
 _Status: local GUI refactor in progress; target-hardware verification pending_
 
-This document explains the operator monitor run workflow after the first refactor
-slices. It is meant to make future experiment work obvious: the GUI should collect
-operator input and display state; small run modules should own command building,
-process control, artifact handling, and validation.
+This document explains the operator monitor run workflow. The GUI collects operator
+input and displays state; small run modules own command building, process control,
+artifact handling, and validation.
 
 ## Purpose
 

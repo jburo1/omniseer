@@ -2,10 +2,10 @@
 
 _Status: locked unary v1 API implemented_
 
-This document describes the intended external API contract between the operator
+This document describes the external API contract between the operator
 laptop application and the robot gateway.
 
-The selected direction for the first implementation is:
+The transport split is:
 
 - `gRPC` for control and state
 - `SRT` for preview video transport
@@ -43,9 +43,9 @@ What exists today:
 - an additive platform health block for compute, Wi-Fi, LiPo, and onboard
   battery state in the gateway status snapshot
 
-This page now serves two roles:
+This page serves two roles:
 
-- describe the intended long-term direction
+- describe the external control/status boundary
 - document the currently locked minimal v1 control/status contract
 
 ## Major Design Considerations
@@ -65,9 +65,9 @@ This page now serves two roles:
 - Operator safety: teleop operations use bounded commands and explicit enable/disable
   state rather than raw topic passthrough.
 
-## Initial Scope (v1)
+## Scope (v1)
 
-The first API surface should stay narrow.
+The API surface stays narrow.
 
 Implemented unary RPCs:
 
@@ -77,8 +77,8 @@ Implemented unary RPCs:
 - `SendTeleopCommand`
 - `GetOverlaySnapshot`
 
-Streaming events, cloud-facing operations, and experiment export control remain
-deferred until the local recorder contract is stable.
+RunBundle recording and review are handled by launch profiles and `scripts/omni
+runs` rather than by this gRPC API.
 
 ## High-Level API Shape
 
@@ -142,10 +142,9 @@ Completed:
 - local shell-driven status/watch/preview flow with the packaged monitor shell
 - local headless smoke of the packaged Tk GUI against the live C++ gateway
 
-Still deferred:
+Current API boundary:
 
 - stream endpoint metadata in the API
-- a hardware H.265 preview path
 - status sources beyond odometry, vision, teleop, preview, platform health, and
   the current battery topic
 - any streaming or multi-client behavior
@@ -298,7 +297,7 @@ Recommended rules:
 - keep v1 small enough that migration churn stays low
 - avoid leaking implementation-specific command lines or ROS resource names
 
-## Non-Goals (v1)
+## API Boundary (v1)
 
 - generic ROS graph browsing
 - topic tunneling
@@ -322,9 +321,7 @@ SRT endpoint. The gateway still does not publish endpoint metadata through the
 protobuf API.
 
 Local experiment recording and run-bundle review are implemented outside this gRPC
-API through the real launch profile and `scripts/omni runs` front door. Cloud
-synchronization, hosted review, and gateway-mediated recording/export RPCs remain
-planned product work and are not part of the current API.
+API through the real launch profile and `scripts/omni runs` front door.
 
 ## Related Docs
 
