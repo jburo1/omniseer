@@ -401,6 +401,32 @@ without standard devcontainer labels.
 See [Operator Run Workflow](operator_run_workflow.md) for the current GUI
 start/stop/retrieve architecture and module ownership boundaries.
 
+#### `run autonomy`
+
+Starts a bounded real autonomy recording from inside the Radxa devcontainer. The
+target class is passed on the CLI and is used both as the native vision class
+list and as the target-centering autonomy class:
+
+```bash
+scripts/omni run autonomy --target chair
+```
+
+The command runs the operator real profile, writes a run bundle under
+`runs/<run_id>`, creates `classes.txt`, starts
+`omniseer_autonomy/target_centering_node`, and forwards extra launch arguments
+after `--`:
+
+```bash
+scripts/omni run autonomy --target chair --run-id autonomy_chair_001 -- \
+  start_vision:=false
+```
+
+Stop the foreground launch with `Ctrl-C`, then inspect the bundle:
+
+```bash
+scripts/omni runs inspect runs/autonomy_chair_001
+```
+
 ### `runs`
 
 List and retrieve robot-side perception run bundles from the laptop workspace:

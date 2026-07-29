@@ -30,7 +30,7 @@ Commands:
   setup   Environment and dependency helpers.
   build   Local build helpers. Defaults to all available artifacts.
   test    Targeted local verification helpers. Defaults to ROS.
-  run     Operator-facing run commands for sim, real, monitor, and teleop.
+  run     Operator-facing run commands for sim, real, autonomy, monitor, and teleop.
   runtime Build, record, verify, push, and pull robot runtime container checkpoints.
   runs    Inspect, list, and retrieve perception run bundles.
   check   Passive verification helpers.
@@ -47,6 +47,7 @@ Examples:
   scripts/omni build
   scripts/omni run sim headless:=true
   scripts/omni run real
+  scripts/omni run autonomy --target chair
   scripts/omni runs list
   scripts/omni runs pull demo_001
   scripts/omni runs inspect runs/imported/demo_001
@@ -72,6 +73,7 @@ run_usage() {
 Usage:
   scripts/omni run sim [launch args...]
   scripts/omni run real [--profile <name>] [recording flags] [--mode <mode>] [mode] [launch args...]
+  scripts/omni run autonomy --target <class> [autonomy args...] [-- launch args...]
   scripts/omni run monitor [monitor args...]
   scripts/omni run teleop
 
@@ -269,6 +271,9 @@ EOF
         ;;
       real)
         exec "${script_dir}/run/real.sh" "$@"
+        ;;
+      autonomy)
+        exec "${script_dir}/run/autonomy.sh" "$@"
         ;;
       monitor)
         exec "${script_dir}/run/monitor.sh" "$@"
