@@ -87,12 +87,21 @@ def inspect_run(run_dir: Path) -> RunInspection:
     system_scan = _scan_optional_jsonl(path / "system.jsonl", "system")
     pipeline_telemetry_scan = _scan_optional_jsonl(path / "pipeline_telemetry.jsonl", "pipeline_telemetry")
     evidence_scan = _scan_optional_jsonl(path / "evidence" / "evidence.jsonl", "evidence")
+    autonomy_missing = _autonomy_requested(manifest) and not (path / "autonomy.jsonl").exists()
     issues.extend(detections_scan.issues)
     issues.extend(perf_scan.issues)
     issues.extend(system_scan.issues)
     issues.extend(pipeline_telemetry_scan.issues)
     issues.extend(evidence_scan.issues)
     issues.extend(_validate_evidence_records(path, evidence_scan.records))
+    if autonomy_missing:
+        issues.append(
+            InspectionIssue(
+                code="missing_autonomy_jsonl",
+                message="autonomy.jsonl is missing despite start_autonomy:=true",
+                path=str(path / "autonomy.jsonl"),
+            )
+        )
 
     summary = _read_summary(path / "summary.json", issues)
     summary_missing = summary is None and not (path / "summary.json").exists()
@@ -118,6 +127,7 @@ def inspect_run(run_dir: Path) -> RunInspection:
         or system_scan.issues
         or pipeline_telemetry_scan.issues
         or evidence_scan.issues
+        or autonomy_missing
     )
     evidence_has_issues = any(
         issue.code.startswith("invalid_evidence") or issue.code == "missing_evidence_image" for issue in issues
@@ -590,6 +600,21 @@ def _manifest_list(manifest: dict[str, Any], key: str) -> list[str]:
     if not isinstance(value, list):
         return []
     return [item for item in value if isinstance(item, str) and item]
+
+
+def _autonomy_requested(manifest: dict[str, Any]) -> bool:
+    launch = manifest.get("launch")
+    if not isinstance(launch, dict):
+        return False
+
+    args = launch.get("args")
+    if isinstance(args, list):
+        for item in args:
+            if isinstance(item, str) and item == "start_autonomy:=true":
+                return True
+
+    command = launch.get("command")
+    return isinstance(command, str) and "start_autonomy:=true" in command.split()
 
 
 def _summary_string(summary: dict[str, Any], key: str) -> str | None:

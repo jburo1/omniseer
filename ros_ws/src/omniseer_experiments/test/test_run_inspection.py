@@ -28,7 +28,12 @@ STARTED_AT = datetime(2026, 7, 19, 12, 0, 0, tzinfo=timezone.utc)
 ENDED_AT = datetime(2026, 7, 19, 12, 1, 5, tzinfo=timezone.utc)
 
 
-def _config(out_dir: Path, *, run_id: str = "demo_001") -> RunBundleConfig:
+def _config(
+    out_dir: Path,
+    *,
+    run_id: str = "demo_001",
+    launch_args: tuple[str, ...] = (),
+) -> RunBundleConfig:
     return RunBundleConfig(
         run_id=run_id,
         out_dir=out_dir,
@@ -41,6 +46,7 @@ def _config(out_dir: Path, *, run_id: str = "demo_001") -> RunBundleConfig:
         clip_model_path="/models/clip.rknn",
         clip_vocab_path="/models/clip_vocab.bpe",
         classes_path="/models/classes.txt",
+        launch_args=launch_args,
     )
 
 
@@ -201,6 +207,22 @@ class RunInspectionTests(unittest.TestCase):
         self.assertEqual(inspection.duration_sec, 65.0)
         self.assertEqual(inspection.message_counts, {"detections": 1, "perf": 1, "system": 0})
         self.assertEqual(inspection.detections_by_class, {"backpack": 1, "chair": 1})
+
+    def test_missing_autonomy_jsonl_after_autonomy_launch_is_incomplete(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "demo_001"
+            writer = RunBundleWriter(
+                _config(run_dir, launch_args=("start_autonomy:=true", "autonomy_target_class:=chair")),
+                started_at=STARTED_AT,
+            )
+            writer.write_detection_record(_detection_record())
+            writer.write_perf_record(_perf_record())
+            writer.finalize(ended_at=ENDED_AT)
+
+            inspection = inspect_run(run_dir)
+
+        self.assertEqual(inspection.state, STATE_INCOMPLETE)
+        self.assertIn("missing_autonomy_jsonl", {issue.code for issue in inspection.issues})
 
     def test_ended_at_null_and_missing_summary_is_in_progress(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

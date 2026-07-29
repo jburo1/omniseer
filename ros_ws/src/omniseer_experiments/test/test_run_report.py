@@ -26,7 +26,11 @@ STARTED_AT = datetime(2026, 7, 19, 12, 0, 0, tzinfo=timezone.utc)
 ENDED_AT = datetime(2026, 7, 19, 12, 1, 5, tzinfo=timezone.utc)
 
 
-def _config(out_dir: Path) -> RunBundleConfig:
+def _config(
+    out_dir: Path,
+    *,
+    launch_args: tuple[str, ...] = ("start_gateway:=true", "camera_device:=/dev/video11"),
+) -> RunBundleConfig:
     return RunBundleConfig(
         run_id="demo_001",
         out_dir=out_dir,
@@ -37,7 +41,7 @@ def _config(out_dir: Path) -> RunBundleConfig:
         launch_command="run real --profile operator bringup",
         launch_profile="operator",
         launch_mode="bringup",
-        launch_args=("start_gateway:=true", "camera_device:=/dev/video11"),
+        launch_args=launch_args,
         container_image_ref="ghcr.io/acme/omniseer:robot-v2",
         container_image_digest="ghcr.io/acme/omniseer@sha256:0123456789abcdef",
         experiment_config="runtime-container-full",
@@ -469,6 +473,27 @@ class RunReportTests(unittest.TestCase):
             self.assertIn("<th>Final error</th><td>0.02</td>", output)
             self.assertIn("<th>Final confidence</th><td>0.87</td>", output)
             self.assertIn("<th>Target-loss count</th><td>1</td>", output)
+
+    def test_report_flags_missing_autonomy_jsonl_for_autonomy_launch(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "demo_001"
+            writer = RunBundleWriter(
+                _config(run_dir, launch_args=("start_autonomy:=true", "autonomy_target_class:=chair")),
+                started_at=STARTED_AT,
+            )
+            writer.write_detection_record(_detection_record())
+            writer.write_perf_record(_perf_record())
+            writer.finalize(ended_at=ENDED_AT)
+
+            summary = write_run_report(run_dir)
+
+            output = summary.output_path.read_text(encoding="utf-8")
+            self.assertEqual(
+                summary.issues,
+                ("missing_autonomy_jsonl: autonomy.jsonl is missing despite start_autonomy:=true",),
+            )
+            self.assertIn("Run state: incomplete", output)
+            self.assertIn("missing_autonomy_jsonl", output)
 
     def test_system_platform_tables_summarize_entire_run(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
