@@ -134,6 +134,7 @@ class RunCommandsTests(unittest.TestCase):
         self.assertIn("docker exec omniseer-dev bash -lc", command[3])
         self.assertIn("cd /omniseer && scripts/omni run real --profile operator", command[3])
         self.assertIn("--record-out /omniseer/runs/operator_001", command[3])
+        self.assertIn("experiment_overwrite:=true", command[3])
         class_path = remote_class_list_path_for("/omniseer", "operator_001")
         self.assertIn(f"classes_path:={class_path}", command[3])
 
@@ -153,6 +154,7 @@ class RunCommandsTests(unittest.TestCase):
         self.assertIn('docker exec -it "$container" bash -lc', command[3])
         self.assertIn("cd /omniseer && scripts/omni run real --profile operator", command[3])
         self.assertIn("--record-out /omniseer/runs/operator_001", command[3])
+        self.assertIn("experiment_overwrite:=true", command[3])
         self.assertIn("classes_path:=/omniseer/runs/operator_001/classes.txt", command[3])
         self.assertNotIn("devcontainer exec", command[3])
 
