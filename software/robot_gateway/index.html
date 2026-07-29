@@ -559,6 +559,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../operator_run_workflow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operator run workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../ros_packages/" class="md-nav__link">
         
   
@@ -931,10 +959,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#non-goals-v1" class="md-nav__link">
+  <a href="#api-boundary" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Non-Goals (v1)
+        API Boundary
       
     </span>
   </a>
@@ -1426,10 +1454,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#non-goals-v1" class="md-nav__link">
+  <a href="#api-boundary" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Non-Goals (v1)
+        API Boundary
       
     </span>
   </a>
@@ -1616,15 +1644,13 @@
 <p>This document describes the operator-facing gateway between the robot's internal
 ROS 2 graph and the external operator laptop application. The first C++ gateway,
 typed gRPC API, preview lifecycle manager, bounded teleop path, and Python operator
-tools are implemented. Experiment export control and cloud integration remain planned.</p>
+tools are implemented.</p>
 <h2 id="purpose">Purpose<a class="headerlink" href="#purpose" title="Permanent link">&para;</a></h2>
 <p>Provide one explicit integration boundary for operator-facing features:</p>
 <ul>
 <li>gRPC control and state access</li>
 <li>preview session management</li>
 <li>bounded teleop control</li>
-<li>later recording/export triggers</li>
-<li>later cloud-bridge integration</li>
 </ul>
 <p>The gateway keeps the internal ROS 2 graph private and prevents the laptop app
 from becoming a generic DDS client that is tightly coupled to internal topics
@@ -1651,18 +1677,16 @@ and services.</p>
 <li>a first packaged Tk monitor GUI for desktop status, preview, and teleop bring-up</li>
 <li>local verification against those packaged Python tools</li>
 </ul>
-<p>What does <strong>not</strong> exist yet:</p>
+<p>Current API boundary:</p>
 <ul>
 <li>stream endpoint metadata in the API</li>
-<li>the intended low-overhead hardware H.265 preview path</li>
-<li>an embedded preview panel inside the host-side GUI</li>
-<li>experiment recording or cloud synchronization RPCs</li>
+<li>preview transport uses the implemented software x264/MPEG-TS/SRT path</li>
+<li>experiment recording is owned by launch profiles and <code>scripts/omni runs</code></li>
 </ul>
-<p>Near-term direction:</p>
+<p>Operating model:</p>
 <ul>
 <li>keep <code>robot_diag_control_cpp</code> inside <code>robot-core</code></li>
 <li>use the gateway for optional status, preview control, and bounded operator teleop</li>
-<li>add experiment export control only after the local recorder contract is stable</li>
 </ul>
 <h2 id="implementation-shape">Implementation Shape<a class="headerlink" href="#implementation-shape" title="Permanent link">&para;</a></h2>
 <p>The current C++ implementation stays deliberately simple:</p>
@@ -1677,15 +1701,13 @@ and services.</p>
 <ol>
 <li>add a standalone C++ gRPC service/server layer with tests</li>
 <li>wire that layer into the existing ROS-backed node</li>
-<li>replace the original stubbed preview toggle with a gateway-owned subprocess lifecycle</li>
+<li>replace the original preview toggle with a gateway-owned subprocess lifecycle</li>
 <li>wire the first real preview export command into that lifecycle</li>
 <li>add bounded teleop enable/disable and command forwarding through the gateway</li>
 <li>surface live platform diagnostics in system status and overlay snapshots</li>
 </ol>
 <p>This keeps the control/status boundary small while avoiding premature async
 gRPC complexity.</p>
-<p>The next portfolio-facing slice is experiment observability and review integration,
-not more gateway transport abstraction.</p>
 <h2 id="major-design-considerations">Major Design Considerations<a class="headerlink" href="#major-design-considerations" title="Permanent link">&para;</a></h2>
 <ul>
 <li>
@@ -1707,9 +1729,8 @@ not more gateway transport abstraction.</p>
   internal ROS topics/services/actions.</p>
 </li>
 <li>
-<p>Growth path: the same gateway boundary should later support teleop, logging
-  triggers, and possibly a cloud bridge without needing to expose the full ROS
-  graph.</p>
+<p>Ownership: experiment recording and RunBundle review stay outside the gRPC
+  gateway API.</p>
 </li>
 </ul>
 <h2 id="high-level-shape">High-Level Shape<a class="headerlink" href="#high-level-shape" title="Permanent link">&para;</a></h2>
@@ -1729,7 +1750,7 @@ not more gateway transport abstraction.</p>
                                |
                          [ ROS 2 graph ]
 </code></pre></div>
-<p>The first implementation can be simpler than this diagram:</p>
+<p>The implemented process model is:</p>
 <ul>
 <li>one process inside <code>robot-core</code></li>
 <li>one gRPC server</li>
@@ -1745,7 +1766,6 @@ not more gateway transport abstraction.</p>
 <li>preview enable/disable</li>
 <li>preview session status</li>
 <li>bounded teleop session control</li>
-<li>later recording/export control</li>
 </ul>
 <h3 id="state-aggregation">State aggregation<a class="headerlink" href="#state-aggregation" title="Permanent link">&para;</a></h3>
 <p>Collect and normalize data from the internal ROS graph:</p>
@@ -1776,7 +1796,7 @@ not more gateway transport abstraction.</p>
 <li>translate ROS status into gateway status</li>
 <li>publish internal commands requested by the operator app</li>
 </ul>
-<h2 id="non-goals-v1">Non-Goals (v1)<a class="headerlink" href="#non-goals-v1" title="Permanent link">&para;</a></h2>
+<h2 id="api-boundary">API Boundary<a class="headerlink" href="#api-boundary" title="Permanent link">&para;</a></h2>
 <ul>
 <li>browser-native delivery</li>
 <li>remote internet-facing access</li>
@@ -1811,7 +1831,6 @@ not more gateway transport abstraction.</p>
 <li>return SRT endpoint metadata</li>
 </ul>
 <h3 id="teleop-adapter">Teleop adapter<a class="headerlink" href="#teleop-adapter" title="Permanent link">&para;</a></h3>
-<p>Later addition.</p>
 <p>Likely responsibilities:</p>
 <ul>
 <li>explicit teleop command validation</li>
@@ -1849,20 +1868,16 @@ not more gateway transport abstraction.</p>
 <li>External client disconnect must not affect the ROS runtime.</li>
 <li>Repeated preview failures should be visible through counters and state.</li>
 </ul>
-<p>The first implementation should prefer fail-open behavior for the mission path
-and fail-closed behavior for optional diagnostics.</p>
+<p>The gateway prefers fail-open behavior for the mission path and fail-closed behavior
+for optional diagnostics.</p>
 <h2 id="observability">Observability<a class="headerlink" href="#observability" title="Permanent link">&para;</a></h2>
-<p>The gateway should eventually emit:</p>
+<p>The gateway status surface includes:</p>
 <ul>
-<li>request counters</li>
-<li>preview session counters</li>
 <li>preview restart/fault counters</li>
 <li>current preview state</li>
-<li>current connected client count</li>
 <li>selected transport/profile information</li>
 </ul>
-<p>This does not need a full metrics system on day one, but the component should
-be structured so that basic telemetry is easy to add.</p>
+<p>The gateway keeps status aggregation bounded and cache-backed.</p>
 <h2 id="rollout-status">Rollout Status<a class="headerlink" href="#rollout-status" title="Permanent link">&para;</a></h2>
 <p><strong>Implemented:</strong></p>
 <ul>
@@ -1871,13 +1886,6 @@ be structured so that basic telemetry is easy to add.</p>
 <li>bounded preview profiles and subprocess lifecycle management</li>
 <li>bounded teleop enable/disable plus bounded velocity commands</li>
 <li>CLI, monitor shell, Tk monitor, SRT preview helper, and overlay viewer</li>
-</ul>
-<p><strong>Planned:</strong></p>
-<ul>
-<li>experiment recording/export control after the recorder contract is proven</li>
-<li>stream endpoint metadata and an embedded preview panel</li>
-<li>hardware H.265 encode</li>
-<li>any cloud-facing gateway behavior</li>
 </ul>
 <h2 id="related-docs">Related Docs<a class="headerlink" href="#related-docs" title="Permanent link">&para;</a></h2>
 <ul>
@@ -1905,7 +1913,7 @@ be structured so that basic telemetry is easy to add.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 19, 2026 04:46:42 UTC">July 19, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 29, 2026 19:18:43 UTC">July 29, 2026</span>
   </span>
 
     

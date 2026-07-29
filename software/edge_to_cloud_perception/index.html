@@ -462,10 +462,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#active-deliverable" class="md-nav__link">
+  <a href="#runtime-flow" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Active Deliverable
+        Runtime Flow
       
     </span>
   </a>
@@ -545,32 +545,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#remaining-product-loop" class="md-nav__link">
+  <a href="#review-path" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Remaining Product Loop
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#portfolio-success-criteria" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Portfolio Success Criteria
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#non-goals" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Non-Goals
+        Review Path
       
     </span>
   </a>
@@ -724,6 +702,34 @@
     
   
     Operator-integrated real demo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../operator_run_workflow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operator run workflow
   
 
     
@@ -1177,10 +1183,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#active-deliverable" class="md-nav__link">
+  <a href="#runtime-flow" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Active Deliverable
+        Runtime Flow
       
     </span>
   </a>
@@ -1260,32 +1266,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#remaining-product-loop" class="md-nav__link">
+  <a href="#review-path" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Remaining Product Loop
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#portfolio-success-criteria" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Portfolio Success Criteria
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#non-goals" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Non-Goals
+        Review Path
       
     </span>
   </a>
@@ -1324,45 +1308,40 @@
 
 
 <h1 id="edge-to-cloud-perception">Edge-to-Cloud Perception<a class="headerlink" href="#edge-to-cloud-perception" title="Permanent link">&para;</a></h1>
-<p><em>Status: active portfolio direction</em></p>
 <h2 id="purpose">Purpose<a class="headerlink" href="#purpose" title="Permanent link">&para;</a></h2>
-<p>Define a focused edge-to-cloud ML artifact around the perception system already
-implemented on the robot.</p>
-<p>The goal is not autonomous object search. The goal is to demonstrate that an
-open-vocabulary model can be deployed on constrained edge hardware, integrated with
-ROS 2, measured under real operating conditions, and reviewed through a reproducible
-offboard experiment workflow.</p>
-<h2 id="active-deliverable">Active Deliverable<a class="headerlink" href="#active-deliverable" title="Permanent link">&para;</a></h2>
-<p>An operator selects semantic classes, teleoperates the robot through a scene, and
-records a perception experiment. YOLO-World runs on the ROCK 5B+ NPU. The resulting
-detections, stage timings, performance summaries, and selected visual evidence form a
-run bundle that can be reviewed on a laptop and later synchronized to a cloud-hosted
-report.</p>
+<p>Document the implemented edge perception and review loop used by Omniseer robot
+runs.</p>
+<p>Omniseer deploys an open-vocabulary model on constrained edge hardware, integrates
+it with ROS 2, measures it under robot operating conditions, and preserves the
+result in a reproducible offboard experiment workflow.</p>
+<h2 id="runtime-flow">Runtime Flow<a class="headerlink" href="#runtime-flow" title="Permanent link">&para;</a></h2>
+<p>An operator selects semantic classes, runs the robot through a scene or starts the
+bounded target-centering behavior, and records an experiment. YOLO-World runs on the
+ROCK 5B+ NPU. The resulting detections, stage timings, performance summaries,
+autonomy events, and selected visual evidence form a RunBundle that can be reviewed
+on a laptop.</p>
 <div class="highlight"><pre><span></span><code>camera
   -&gt; native V4L2/RGA/RKNN runtime
   -&gt; /yolo/detections + /vision/perf
+  -&gt; target-centering autonomy when enabled
   -&gt; experiment recorder
-  -&gt; local run bundle
+  -&gt; RunBundle
   -&gt; laptop review
-  -&gt; planned cloud sync and hosted report
 </code></pre></div>
-<p>Autonomous navigation, semantic search, viewpoint planning, and object capture are not
-required for this deliverable.</p>
 <h2 id="current-implementation">Current Implementation<a class="headerlink" href="#current-implementation" title="Permanent link">&para;</a></h2>
 <h3 id="edge-inference">Edge inference<a class="headerlink" href="#edge-inference" title="Permanent link">&para;</a></h3>
-<p><strong>Implemented with target-hardware run evidence:</strong> the native runtime captures
+<p>The native runtime captures
 NV12 frames, preprocesses them with RGA, prepares YOLO-World text embeddings, runs
 RKNN detector inference, maps detections back to source coordinates, and publishes
 bounded results. The local <code>runs/pipeline_001</code> bundle records detections,
 performance summaries, system telemetry, and native pipeline telemetry from a
-Phase 3 target run. The integrated real teleop plus operator preview verification
-record is still pending.</p>
+target-hardware run.</p>
 <p>The native bridge currently receives classes from <code>classes.path</code> during startup.
 Changing classes requires restarting the bridge with a different class list. The
 Python <code>yolo_ros</code> integration has a <code>SetClasses</code> service, but that service does not
 reconfigure the native RKNN bridge.</p>
 <h3 id="ros-contracts">ROS contracts<a class="headerlink" href="#ros-contracts" title="Permanent link">&para;</a></h3>
-<p><strong>Implemented:</strong> the native bridge publishes:</p>
+<p>The native bridge publishes:</p>
 <ul>
 <li><code>/yolo/detections</code> as <code>yolo_msgs/msg/DetectionArray</code></li>
 <li><code>/vision/perf</code> as <code>omniseer_msgs/msg/VisionPerfSummary</code></li>
@@ -1372,39 +1351,24 @@ source age, processed counts, and pipeline error counters. It intentionally stay
 focused on vision pipeline metrics; live CPU, memory, temperature, network, and power
 diagnostics are surfaced separately through the robot gateway status snapshot.</p>
 <h3 id="local-observability">Local observability<a class="headerlink" href="#local-observability" title="Permanent link">&para;</a></h3>
-<p><strong>Implemented:</strong> the native harness supports an annotated OpenCV preview, JSONL stage
+<p>The native harness supports an annotated OpenCV preview, JSONL stage
 telemetry, rolling statistics, and offline telemetry analysis. The ROS bridge is
 headless and publishes detections and performance summaries rather than an annotated
 image topic. The experiment workflow can record local run bundles containing
 manifest metadata, detections, performance summaries, system telemetry, native
 pipeline telemetry, evidence frames, and generated summaries.</p>
 <h3 id="operator-connectivity">Operator connectivity<a class="headerlink" href="#operator-connectivity" title="Permanent link">&para;</a></h3>
-<p><strong>Implemented:</strong> the robot gateway exposes system status, platform diagnostics,
+<p>The robot gateway exposes system status, platform diagnostics,
 preview control, overlay snapshots, and bounded teleop over gRPC. A managed GStreamer
 process exports an on-demand SRT video stream, and packaged Python tools receive it
-on the laptop. This preview is a diagnostic camera stream; it is not yet a
-frame-exact detection review surface.</p>
+on the laptop. This preview is a diagnostic camera stream.</p>
 <h3 id="offboard-review">Offboard review<a class="headerlink" href="#offboard-review" title="Permanent link">&para;</a></h3>
-<p><strong>Implemented:</strong> <code>scripts/omni runs</code> can inspect local bundles, list and pull
+<p><code>scripts/omni runs</code> can inspect local bundles, list and pull
 robot-side bundles onto a laptop, annotate recorded evidence frames, and generate a
 simple static HTML report. Retrieval preserves additive files inside the bundle so
 new telemetry or evidence streams do not require a transport redesign.</p>
-<h2 id="remaining-product-loop">Remaining Product Loop<a class="headerlink" href="#remaining-product-loop" title="Permanent link">&para;</a></h2>
-<p>The next implementation work should focus on:</p>
-<ol>
-<li>Native runtime class updates with explicit lifecycle and failure semantics.</li>
-<li>Completed target-hardware verification records for the full operator-integrated
-   slice: preview, gateway status, bounded teleop, detections, and stop behavior.</li>
-<li>Curated hardware evidence packs with run notes, representative successes, false
-   positives, misses, and limitations.</li>
-<li>Provider-neutral synchronization of completed run bundles or generated reports to
-   a hosted static review path.</li>
-</ol>
-<p>The local run-bundle contract is intentionally file-based and additive. The cloud
-provider and hosted publication path remain unspecified until selected reports are
-ready to publish.</p>
-<h2 id="portfolio-success-criteria">Portfolio Success Criteria<a class="headerlink" href="#portfolio-success-criteria" title="Permanent link">&para;</a></h2>
-<p>The artifact is complete when a reviewer can:</p>
+<h2 id="review-path">Review Path<a class="headerlink" href="#review-path" title="Permanent link">&para;</a></h2>
+<p>A reviewer can:</p>
 <ul>
 <li>select classes without retraining the detector</li>
 <li>run the model on the robot NPU</li>
@@ -1414,23 +1378,13 @@ ready to publish.</p>
 <li>inspect detections by class and confidence</li>
 <li>review representative successes, false positives, and missed detections</li>
 <li>fetch or open the same completed run through the offboard review workflow</li>
-<li>view at least one selected report from the hosted documentation path</li>
 </ul>
 <p>Claims should be supported by measured output, captured evidence, and a documented
 hardware/software configuration.</p>
-<h2 id="non-goals">Non-Goals<a class="headerlink" href="#non-goals" title="Permanent link">&para;</a></h2>
-<ul>
-<li>autonomous frontier exploration</li>
-<li>autonomous semantic search</li>
-<li>visual servoing or grasp/capture behavior</li>
-<li>production fleet management</li>
-<li>browser-based live robot control</li>
-<li>choosing a cloud provider before the selected static-report workflow is ready</li>
-</ul>
 <h2 id="related-documentation">Related Documentation<a class="headerlink" href="#related-documentation" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../../architecture/">System Architecture</a></li>
-<li><a href="../../evidence/">Evidence and Verification Boundary</a></li>
+<li><a href="../../evidence/">Verification Evidence</a></li>
 <li><a href="../vision_pipeline/">Vision Pipeline</a></li>
 <li><a href="../vision_telemetry_spec/">Vision Telemetry</a></li>
 <li><a href="../robot_gateway/">Robot Gateway</a></li>
@@ -1456,7 +1410,7 @@ hardware/software configuration.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 24, 2026 00:14:03 UTC">July 24, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 29, 2026 19:18:43 UTC">July 29, 2026</span>
   </span>
 
     

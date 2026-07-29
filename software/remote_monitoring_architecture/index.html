@@ -559,6 +559,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../operator_run_workflow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operator run workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../ros_packages/" class="md-nav__link">
         
   
@@ -809,10 +837,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-non-goals-v0" class="md-nav__link">
+  <a href="#3-scope-boundary-v0" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3) Non-Goals (v0)
+        3) Scope Boundary (v0)
       
     </span>
   </a>
@@ -1436,10 +1464,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#16-recommended-first-implementation-slices" class="md-nav__link">
+  <a href="#16-implemented-slices" class="md-nav__link">
     <span class="md-ellipsis">
       
-        16) Recommended First Implementation Slices
+        16) Implemented Slices
       
     </span>
   </a>
@@ -1447,10 +1475,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#17-open-questions" class="md-nav__link">
+  <a href="#17-integration-questions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        17) Open Questions
+        17) Integration Questions
       
     </span>
   </a>
@@ -1721,10 +1749,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-non-goals-v0" class="md-nav__link">
+  <a href="#3-scope-boundary-v0" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3) Non-Goals (v0)
+        3) Scope Boundary (v0)
       
     </span>
   </a>
@@ -2348,10 +2376,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#16-recommended-first-implementation-slices" class="md-nav__link">
+  <a href="#16-implemented-slices" class="md-nav__link">
     <span class="md-ellipsis">
       
-        16) Recommended First Implementation Slices
+        16) Implemented Slices
       
     </span>
   </a>
@@ -2359,10 +2387,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#17-open-questions" class="md-nav__link">
+  <a href="#17-integration-questions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        17) Open Questions
+        17) Integration Questions
       
     </span>
   </a>
@@ -2390,7 +2418,6 @@
 
 
 <h1 id="remote-monitoring-architecture-spec">Remote Monitoring Architecture Spec<a class="headerlink" href="#remote-monitoring-architecture-spec" title="Permanent link">&para;</a></h1>
-<p><em>Status: v1 diagnostics baseline implemented; experiment/cloud review integration planned</em></p>
 <p><em>Last updated: 2026-07-06</em></p>
 <h2 id="1-purpose">1) Purpose<a class="headerlink" href="#1-purpose" title="Permanent link">&para;</a></h2>
 <p>Define a concrete architecture for:</p>
@@ -2401,10 +2428,9 @@
 </ul>
 <p>The gRPC status/control boundary, managed x264/SRT preview worker, and laptop tools
 described by the initial slices are now implemented. This specification remains the
-design reference for isolation and future evolution. The active portfolio direction
-uses these capabilities to support open-vocabulary perception experiments; structured
-local recording, run retrieval, evidence annotation, and static laptop reports are
-implemented. Cloud synchronization and hosted review remain planned.</p>
+design reference for isolation and system evolution. These capabilities support
+open-vocabulary perception experiments; structured local recording, run retrieval,
+evidence annotation, and static laptop reports are implemented.</p>
 <p>The key constraint is that the SBC should spend nearly all steady-state compute on robot-critical work. Preview and diagnostics should be optional, explicitly budgeted, and easy to disable.</p>
 <h2 id="2-goals">2) Goals<a class="headerlink" href="#2-goals" title="Permanent link">&para;</a></h2>
 <ol>
@@ -2412,9 +2438,9 @@ implemented. Cloud synchronization and hosted review remain planned.</p>
 <li>Make preview streaming opt-in and remotely controllable from the laptop.</li>
 <li>Keep ROS 2 internal to the robot runtime and use explicit external protocols for operator connectivity.</li>
 <li>Run RViz2, overlays, plots, bagging, and higher-cost analysis on the host.</li>
-<li>Preserve a path to a more isolated split deployment later without reworking the whole system.</li>
+<li>Preserve a path to a more isolated split deployment without reworking the whole system.</li>
 </ol>
-<h2 id="3-non-goals-v0">3) Non-Goals (v0)<a class="headerlink" href="#3-non-goals-v0" title="Permanent link">&para;</a></h2>
+<h2 id="3-scope-boundary-v0">3) Scope Boundary (v0)<a class="headerlink" href="#3-scope-boundary-v0" title="Permanent link">&para;</a></h2>
 <ul>
 <li>full cloud telemetry platform</li>
 <li>browser-first remote operations stack</li>
@@ -2939,7 +2965,7 @@ local helper process.</p>
 <li><code>robot-diag-control</code> launches and supervises the preview pipeline only while preview is enabled</li>
 </ul>
 <p>This means preview has a strict lifecycle and no steady-state cost when disabled.</p>
-<h2 id="16-recommended-first-implementation-slices">16) Recommended First Implementation Slices<a class="headerlink" href="#16-recommended-first-implementation-slices" title="Permanent link">&para;</a></h2>
+<h2 id="16-implemented-slices">16) Implemented Slices<a class="headerlink" href="#16-implemented-slices" title="Permanent link">&para;</a></h2>
 <p>Completed:</p>
 <ol>
 <li>Added <code>robot_diag_control_cpp</code> with cache-backed status and preview state.</li>
@@ -2948,21 +2974,13 @@ local helper process.</p>
 <li>Added bounded teleop control, overlay snapshots, and live platform diagnostics.</li>
 <li>Added packaged host CLI, shell, Tk monitor, preview-viewer, and overlay-viewer tools.</li>
 </ol>
-<p>Planned:</p>
-<ol>
-<li>Add gateway/cloud export integration without placing it on the mission-critical
-   hot path.</li>
-<li>Add hardware H.265 when the SBC userspace path is available.</li>
-<li>Revisit exact-sync preview or a separate video container only if measured needs
-   justify the complexity.</li>
-</ol>
-<h2 id="17-open-questions">17) Open Questions<a class="headerlink" href="#17-open-questions" title="Permanent link">&para;</a></h2>
+<h2 id="17-integration-questions">17) Integration Questions<a class="headerlink" href="#17-integration-questions" title="Permanent link">&para;</a></h2>
 <ol>
 <li>What hardware H.265 userspace path should be installed or enabled on the SBC image.</li>
 <li>How the offboard review workflow should correlate preview evidence with detections
    and performance samples.</li>
-<li>Whether the first hosted review should consume uploaded static run bundles or a
-   later gateway-mediated transport.</li>
+<li>How selected static RunBundle reports should be packaged with the documentation
+   site.</li>
 </ol>
 
 
@@ -2984,7 +3002,7 @@ local helper process.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 24, 2026 00:14:03 UTC">July 24, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 29, 2026 19:18:43 UTC">July 29, 2026</span>
   </span>
 
     

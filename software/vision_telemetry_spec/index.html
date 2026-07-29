@@ -559,6 +559,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../operator_run_workflow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operator run workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../ros_packages/" class="md-nav__link">
         
   
@@ -792,10 +820,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-non-goals-v1" class="md-nav__link">
+  <a href="#3-scope-boundary-v1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3) Non-Goals (v1)
+        3) Scope Boundary (v1)
       
     </span>
   </a>
@@ -1448,10 +1476,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-non-goals-v1" class="md-nav__link">
+  <a href="#3-scope-boundary-v1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3) Non-Goals (v1)
+        3) Scope Boundary (v1)
       
     </span>
   </a>
@@ -1879,7 +1907,7 @@
 <li>fixed-shape samples on hot path (no <code>std::optional</code>, no formatting)</li>
 <li>one top-level timing gate per tick, then scoped stage timing inside that branch</li>
 </ol>
-<h2 id="3-non-goals-v1">3) Non-Goals (v1)<a class="headerlink" href="#3-non-goals-v1" title="Permanent link">&para;</a></h2>
+<h2 id="3-scope-boundary-v1">3) Scope Boundary (v1)<a class="headerlink" href="#3-scope-boundary-v1" title="Permanent link">&para;</a></h2>
 <ul>
 <li>perfect reliability of telemetry delivery</li>
 <li>dynamic attach/detach of telemetry while running</li>
@@ -2108,7 +2136,7 @@
 <p>Shutdown:</p>
 </li>
 <li>stop producer and consumer loops</li>
-<li>drain remaining telemetry queues</li>
+<li>drain queued telemetry samples</li>
 <li>flush sink</li>
 <li>stop telemetry thread and join</li>
 </ol>
@@ -2175,11 +2203,11 @@
 <li>Producer and consumer stage timing with scoped timers.</li>
 <li>Portable JSONL and rolling-summary tests plus target pipeline tests.</li>
 </ol>
-<p>Planned product integration:</p>
+<p>RunBundle integration:</p>
 <ul>
 <li>correlate telemetry with typed detections in a structured experiment bundle</li>
 <li>persist resource samples such as CPU, memory, temperature, network, and power outside the hot path</li>
-<li>publish measured portfolio results and failure analysis</li>
+<li>publish measured results and failure analysis</li>
 </ul>
 <h2 id="16-open-questions-for-v2">16) Open Questions for v2+<a class="headerlink" href="#16-open-questions-for-v2" title="Permanent link">&para;</a></h2>
 <ul>
@@ -2208,7 +2236,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 19, 2026 04:46:42 UTC">July 19, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 29, 2026 19:18:43 UTC">July 29, 2026</span>
   </span>
 
     

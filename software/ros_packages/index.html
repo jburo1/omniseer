@@ -9,7 +9,7 @@
       
       
       
-        <link rel="prev" href="../operator_integrated_demo/">
+        <link rel="prev" href="../operator_run_workflow/">
       
       
         <link rel="next" href="../code_documentation/">
@@ -556,6 +556,34 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../operator_run_workflow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operator run workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -1019,10 +1047,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#remaining-parity-work" class="md-nav__link">
+  <a href="#parity-work" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Remaining Parity Work
+        Parity Work
       
     </span>
   </a>
@@ -1057,10 +1085,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#recommended-immediate-next-slice" class="md-nav__link">
+  <a href="#boundary-change-rule" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Recommended Immediate Next Slice
+        Boundary Change Rule
       
     </span>
   </a>
@@ -1877,10 +1905,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#remaining-parity-work" class="md-nav__link">
+  <a href="#parity-work" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Remaining Parity Work
+        Parity Work
       
     </span>
   </a>
@@ -1915,10 +1943,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#recommended-immediate-next-slice" class="md-nav__link">
+  <a href="#boundary-change-rule" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Recommended Immediate Next Slice
+        Boundary Change Rule
       
     </span>
   </a>
@@ -1946,10 +1974,9 @@
 
 
 <h1 id="ros-packages-and-simreal-boundary">ROS Packages and Sim/Real Boundary<a class="headerlink" href="#ros-packages-and-simreal-boundary" title="Permanent link">&para;</a></h1>
-<p><em>Status: phase-1 sim/real boundary implemented; remaining parity work planned</em></p>
 <p><em>Last updated: 2026-07-06</em></p>
-<p><em>Active portfolio scope: the sim/real boundary supports teleoperated perception data
-collection and evaluation. Autonomous semantic search and capture are deferred.</em></p>
+<p>The sim/real boundary supports teleoperated perception data collection,
+target-centering autonomy, and evaluation.</p>
 <h2 id="purpose">Purpose<a class="headerlink" href="#purpose" title="Permanent link">&para;</a></h2>
 <p>Define a concrete package and launch structure so that:</p>
 <ul>
@@ -1959,10 +1986,10 @@ collection and evaluation. Autonomous semantic search and capture are deferred.<
 <li>hardware-specific code stays below the boundary</li>
 </ul>
 <p>The shared detection and performance contracts now support the edge-to-cloud
-perception direction. Structured run recording, native runtime class updates, and
-cloud review remain planned and must stay outside mission-critical robot behavior.</p>
-<p>This page is intentionally practical. It is the working plan for the next
-bringup refactor, not just a general architecture description.</p>
+perception direction. Structured run recording stays outside mission-critical robot
+behavior.</p>
+<p>This page is intentionally practical: it documents the package and launch boundary
+that keeps simulation, real hardware, and common robot behavior separated.</p>
 <h2 id="core-decision">Core Decision<a class="headerlink" href="#core-decision" title="Permanent link">&para;</a></h2>
 <p>The recommended near-term boundary is:</p>
 <ul>
@@ -2036,7 +2063,7 @@ bringup refactor, not just a general architecture description.</p>
 <li><code>ros_ws/src/robot_diag_control_cpp/src/robot_diag_control_cpp_node.cpp</code></li>
 </ul>
 <h3 id="main-mismatches">Main Mismatches<a class="headerlink" href="#main-mismatches" title="Permanent link">&para;</a></h3>
-<p>The key remaining mismatches are:</p>
+<p>The key parity differences are:</p>
 <ul>
 <li>wheel odom derivation mismatch:</li>
 <li>sim publishes <code>/mecanum_drive_controller/odometry</code> directly</li>
@@ -2123,7 +2150,7 @@ of no-op relays and gets us to sim/real parity faster.</p>
 <td><code>/vision/perf</code></td>
 <td><code>omniseer_msgs/msg/VisionPerfSummary</code></td>
 <td>normalized vision health/perf</td>
-<td>real vision bridge, optional sim stub</td>
+<td>real vision bridge, optional sim adapter</td>
 <td>gateway/diagnostics</td>
 </tr>
 <tr>
@@ -2476,10 +2503,10 @@ the simulated RF2O input and fuses only wheel odometry plus IMU.</p>
 <li><code>/yolo/detections</code> and <code>/vision/perf</code> are the real perception contracts</li>
 <li>CI verifies five sim boundary topics and message types in headless Gazebo</li>
 </ul>
-<h3 id="remaining-parity-work">Remaining Parity Work<a class="headerlink" href="#remaining-parity-work" title="Permanent link">&para;</a></h3>
+<h3 id="parity-work">Parity Work<a class="headerlink" href="#parity-work" title="Permanent link">&para;</a></h3>
 <ul>
 <li>move provider-specific perception launch ownership fully below the sim/real boundary</li>
-<li>decide whether simulation needs a <code>/vision/perf</code> stub</li>
+<li>decide whether simulation needs a <code>/vision/perf</code> adapter</li>
 <li>expand contract checks to frame identifiers, timestamps, rates, and stale behavior</li>
 <li>add a mocked real-launch smoke path</li>
 <li>add replay support for the normalized boundary and implemented experiment workflow</li>
@@ -2525,17 +2552,9 @@ the simulated RF2O input and fuses only wheel odometry plus IMU.</p>
 <p>That is expected. The goal is not to make sim prove everything. The goal is to
 make sim prove the software architecture and contracts above a thin,
 well-defined hardware boundary.</p>
-<h2 id="recommended-immediate-next-slice">Recommended Immediate Next Slice<a class="headerlink" href="#recommended-immediate-next-slice" title="Permanent link">&para;</a></h2>
-<p>The active portfolio slice is now perception evaluation rather than additional
-autonomy integration:</p>
-<ol>
-<li>add safe native runtime class updates</li>
-<li>record detections and performance summaries into a reproducible run bundle</li>
-<li>capture selected evidence and failure cases</li>
-<li>build laptop-side review before selecting a cloud provider</li>
-</ol>
-<p>Boundary refactors should proceed only when they directly improve that workflow or
-correct a verified sim/real contract problem.</p>
+<h2 id="boundary-change-rule">Boundary Change Rule<a class="headerlink" href="#boundary-change-rule" title="Permanent link">&para;</a></h2>
+<p>Boundary refactors should proceed only when they directly improve robot operation,
+recording, review, or correct a verified sim/real contract problem.</p>
 
 
 
@@ -2556,7 +2575,7 @@ correct a verified sim/real contract problem.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 24, 2026 00:14:03 UTC">July 24, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 29, 2026 19:18:43 UTC">July 29, 2026</span>
   </span>
 
     

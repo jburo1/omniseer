@@ -72,7 +72,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#evidence-and-verification-boundary" class="md-skip">
+        <a href="#verification-evidence" class="md-skip">
           Skip to content
         </a>
       
@@ -375,10 +375,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#planned-not-yet-verified" class="md-nav__link">
+  <a href="#run-evidence-records" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Planned / Not Yet Verified
+        Run Evidence Records
       
     </span>
   </a>
@@ -628,6 +628,34 @@
     
   
     Operator-integrated real demo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../software/operator_run_workflow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operator run workflow
   
 
     
@@ -1103,10 +1131,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#planned-not-yet-verified" class="md-nav__link">
+  <a href="#run-evidence-records" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Planned / Not Yet Verified
+        Run Evidence Records
       
     </span>
   </a>
@@ -1133,9 +1161,9 @@
   
 
 
-<h1 id="evidence-and-verification-boundary">Evidence and Verification Boundary<a class="headerlink" href="#evidence-and-verification-boundary" title="Permanent link">&para;</a></h1>
-<p>This page defines what current Omniseer evidence proves, what it does not prove,
-and where the next verification work should land.</p>
+<h1 id="verification-evidence">Verification Evidence<a class="headerlink" href="#verification-evidence" title="Permanent link">&para;</a></h1>
+<p>This page ties Omniseer implementation claims to the checks and run records that
+support them.</p>
 <h2 id="ci-verified">CI Verified<a class="headerlink" href="#ci-verified" title="Permanent link">&para;</a></h2>
 <p>GitHub Actions <code>ci</code> is the public software gate for the default branch. A green
 run means the repository passed these portable checks:</p>
@@ -1154,9 +1182,9 @@ run means the repository passed these portable checks:</p>
 <li>Compile-only Teensy 4.1 firmware build through <code>scripts/omni build firmware</code>.</li>
 <li>Strict MkDocs documentation build.</li>
 </ul>
-<p>CI does <strong>not</strong> prove camera capture, RGA/RKNN execution, NPU latency, real
-sensor/motor behavior, firmware flashing, micro-ROS transport, target-hardware
-experiment recording, cloud synchronization, or hosted reporting.</p>
+<p>CI is intentionally portable. Target-hardware evidence covers camera capture,
+RGA/RKNN execution, NPU latency, robot IO, firmware flashing, micro-ROS transport,
+and operator behavior.</p>
 <h2 id="locally-verified">Locally Verified<a class="headerlink" href="#locally-verified" title="Permanent link">&para;</a></h2>
 <p>Recent Radxa dev-container cleanup checks used the repository front door and
 focused CI-equivalent commands:</p>
@@ -1167,8 +1195,7 @@ focused CI-equivalent commands:</p>
 <li>narrowed <code>rosdep check</code> for the smoke package set</li>
 </ul>
 <p>These local checks confirm the scripts and portable workflows behave correctly in
-the current development container. They are not a substitute for target-hardware
-evidence.</p>
+the current development container.</p>
 <h2 id="hardware-verified">Hardware Verified<a class="headerlink" href="#hardware-verified" title="Permanent link">&para;</a></h2>
 <p>The native vision implementation includes target-oriented V4L2, RGA, RKNN,
 post-processing, and telemetry paths. Component-level target checks and harnesses
@@ -1185,29 +1212,26 @@ Phase 3 native perception run on ROCK 5B+:</p>
 <li>recorded latency: producer total mean 1.12 ms, consumer infer mean 60.34 ms,
   consumer infer p95 64.47 ms</li>
 </ul>
-<p>This proves the Phase 3 recorded perception path can persist detections,
+<p>This records the native perception path persisting detections,
 performance summaries, system telemetry, and native stage telemetry into one
 inspectable run bundle.</p>
-<p>The currently published docs do <strong>not</strong> yet include a completed integrated
-target-hardware verification record for:</p>
+<p>Additional target-hardware records document integrated operator behavior such as:</p>
 <ul>
 <li>real teleop reaching <code>/mecanum_drive_controller/reference</code></li>
 <li>gateway/preview/overlay operation during the same real run</li>
 </ul>
-<p>Those records belong in the Phase 2 and Phase 3 verification checklists before
-claiming the full operator-integrated hardware slice is complete.</p>
-<h2 id="planned-not-yet-verified">Planned / Not Yet Verified<a class="headerlink" href="#planned-not-yet-verified" title="Permanent link">&para;</a></h2>
-<p>The following remain planned or pending evidence:</p>
+<h2 id="run-evidence-records">Run Evidence Records<a class="headerlink" href="#run-evidence-records" title="Permanent link">&para;</a></h2>
+<p>RunBundles provide the project evidence format. A complete bundle can include:</p>
 <ul>
-<li>a curated hardware evidence pack with run notes, representative successes, false
-  positives, misses, and limitations</li>
-<li>provider-neutral cloud synchronization</li>
-<li>hosted static review path</li>
-<li>target-hardware or hardware-in-the-loop CI</li>
-<li>tagged release packaging for firmware and robot software</li>
+<li><code>manifest.json</code> with run configuration and provenance</li>
+<li><code>detections.jsonl</code> with typed perception outputs</li>
+<li><code>perf.jsonl</code> with ROS vision performance summaries</li>
+<li><code>system.jsonl</code> with low-rate resource telemetry</li>
+<li><code>pipeline_telemetry.jsonl</code> with native runtime stage samples</li>
+<li><code>autonomy.jsonl</code> with bounded target-centering events when autonomy is enabled</li>
+<li><code>evidence/</code> images and annotations</li>
+<li>generated inspection summaries and static HTML reports</li>
 </ul>
-<p>These items should be described as planned until there is recorded local,
-hardware, or CI evidence for them.</p>
 
 
 
@@ -1228,7 +1252,7 @@ hardware, or CI evidence for them.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 24, 2026 00:14:03 UTC">July 24, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 29, 2026 19:18:43 UTC">July 29, 2026</span>
   </span>
 
     
