@@ -121,9 +121,10 @@ class, and write `autonomy.jsonl` into the run bundle.
 
 The v1 autonomy behavior is yaw-only: it publishes `TwistStamped` commands to
 `/cmd_vel_autonomy`, relies on `twist_mux` arbitration, and records terminal
-state into the bundle for the HTML report. Translation, navigation, SLAM,
-tracking packages, and camera servo control remain out of scope for this run
-type.
+state into the bundle for the HTML report. During scan, the target-centering node
+subscribes to `/odometry/filtered` and stops with `scan_complete_no_target` after
+one observed revolution by default. Translation, navigation, SLAM, tracking
+packages, and camera servo control remain out of scope for this run type.
 
 ## Verification
 

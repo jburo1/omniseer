@@ -27,7 +27,7 @@ struct TargetCenteringConfig
   double      center_deadband{0.05};
   int         stable_center_frames{10};
   double      detection_stale_sec{0.5};
-  double      scan_timeout_sec{12.0};
+  double      scan_limit_revolutions{1.0};
   double      target_lost_timeout_sec{0.5};
 };
 
@@ -68,6 +68,7 @@ public:
 
   TargetCenteringOutput update_detections(
     const std::vector<TargetDetection> & detections, double now_sec);
+  void update_heading(double heading_rad);
   TargetCenteringOutput tick(double now_sec);
 
   CenteringState state() const noexcept;
@@ -93,6 +94,7 @@ private:
     const std::vector<TargetDetection> & detections) const;
   void push_target_seen(bool seen);
   bool target_consistent() const;
+  bool scan_complete() const;
   double normalized_error(double center_x_px) const;
   double clamp_yaw(double yaw_rad_s) const;
   bool terminal() const noexcept;
@@ -111,9 +113,11 @@ private:
   std::optional<double> _first_detection_at_sec{};
   std::optional<double> _centered_at_sec{};
   std::optional<double> _last_target_seen_at_sec{};
+  std::optional<double> _last_scan_heading_rad{};
   std::optional<TargetDetection> _last_target{};
   std::optional<double> _final_error{};
   std::optional<double> _final_confidence{};
+  double                _scan_yaw_travel_rad{0.0};
   std::deque<bool> _recent_target_seen{};
   int                   _stable_frames{0};
   int                   _target_loss_count{0};

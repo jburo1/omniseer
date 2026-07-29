@@ -11,6 +11,7 @@ namespace
 {
 constexpr std::size_t kConsistencyWindow = 5;
 constexpr int         kConsistencyRequired = 3;
+constexpr double      kTwoPi = 6.28318530717958647692;
 
 double abs_or_max(std::optional<TargetDetection> previous, const TargetDetection & candidate)
 {
@@ -70,6 +71,9 @@ TargetCenteringOutput TargetCenteringController::update_detections(
       transition(CenteringState::Center, now_sec, output, "centering_started", "", target);
       return append_output(output, command_for_target(*target, now_sec));
     }
+    if (scan_complete()) {
+      return append_output(output, fail(now_sec, "scan_complete_no_target"));
+    }
     return append_output(output, command_scan(now_sec));
   }
 
@@ -83,6 +87,25 @@ TargetCenteringOutput TargetCenteringController::update_detections(
   return append_output(output, command_zero(now_sec));
 }
 
+void TargetCenteringController::update_heading(double heading_rad)
+{
+  if (terminal() || _state != CenteringState::Scan || !_last_detection_msg_at_sec.has_value()) {
+    _last_scan_heading_rad = std::nullopt;
+    return;
+  }
+
+  if (!_last_scan_heading_rad.has_value()) {
+    _last_scan_heading_rad = heading_rad;
+    return;
+  }
+
+  const auto delta = std::atan2(
+    std::sin(heading_rad - *_last_scan_heading_rad),
+    std::cos(heading_rad - *_last_scan_heading_rad));
+  _scan_yaw_travel_rad += std::abs(delta);
+  _last_scan_heading_rad = heading_rad;
+}
+
 TargetCenteringOutput TargetCenteringController::tick(double now_sec)
 {
   TargetCenteringOutput output{};
@@ -94,9 +117,6 @@ TargetCenteringOutput TargetCenteringController::tick(double now_sec)
   }
 
   if (!_last_detection_msg_at_sec.has_value()) {
-    if ((now_sec - _started_at_sec) > _config.detection_stale_sec) {
-      return append_output(output, fail(now_sec, "stale_detections"));
-    }
     return append_output(output, command_zero(now_sec));
   }
 
@@ -105,8 +125,8 @@ TargetCenteringOutput TargetCenteringController::tick(double now_sec)
   }
 
   if (_state == CenteringState::Scan) {
-    if ((now_sec - _started_at_sec) > _config.scan_timeout_sec) {
-      return append_output(output, fail(now_sec, "scan_timeout"));
+    if (scan_complete()) {
+      return append_output(output, fail(now_sec, "scan_complete_no_target"));
     }
     return append_output(output, command_scan(now_sec));
   }
@@ -196,8 +216,8 @@ void TargetCenteringController::validate_config() const
   if (_config.detection_stale_sec <= 0.0) {
     throw std::invalid_argument("detection_stale_sec must be positive");
   }
-  if (_config.scan_timeout_sec <= 0.0) {
-    throw std::invalid_argument("scan_timeout_sec must be positive");
+  if (_config.scan_limit_revolutions <= 0.0) {
+    throw std::invalid_argument("scan_limit_revolutions must be positive");
   }
   if (_config.target_lost_timeout_sec <= 0.0) {
     throw std::invalid_argument("target_lost_timeout_sec must be positive");
@@ -327,6 +347,11 @@ bool TargetCenteringController::target_consistent() const
 {
   return std::count(_recent_target_seen.begin(), _recent_target_seen.end(), true) >=
          kConsistencyRequired;
+}
+
+bool TargetCenteringController::scan_complete() const
+{
+  return _scan_yaw_travel_rad >= (_config.scan_limit_revolutions * kTwoPi);
 }
 
 double TargetCenteringController::normalized_error(double center_x_px) const

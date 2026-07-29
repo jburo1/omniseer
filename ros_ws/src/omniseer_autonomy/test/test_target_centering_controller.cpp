@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <cmath>
 #include <vector>
 
 #include "omniseer_autonomy/target_centering_controller.hpp"
@@ -8,6 +9,8 @@ namespace omniseer_autonomy
 {
 namespace
 {
+constexpr double kPi = 3.14159265358979323846;
+
 TargetCenteringConfig config()
 {
   TargetCenteringConfig out{};
@@ -20,7 +23,7 @@ TargetCenteringConfig config()
   out.center_deadband = 0.05;
   out.stable_center_frames = 3;
   out.detection_stale_sec = 0.5;
-  out.scan_timeout_sec = 12.0;
+  out.scan_limit_revolutions = 1.0;
   out.target_lost_timeout_sec = 0.5;
   return out;
 }
@@ -45,6 +48,18 @@ TEST(TargetCenteringController, ScansOnlyAfterFreshDetectionMessages)
   const auto with_empty_frame = controller.update_detections({}, 0.2);
   EXPECT_TRUE(with_empty_frame.publish_command);
   EXPECT_DOUBLE_EQ(with_empty_frame.angular_z_rad_s, 0.2);
+}
+
+TEST(TargetCenteringController, WaitsForFirstDetectionMessageBeyondStaleThreshold)
+{
+  TargetCenteringController controller(config());
+
+  const auto before_perception = controller.tick(0.6);
+
+  EXPECT_EQ(controller.state(), CenteringState::Scan);
+  EXPECT_TRUE(before_perception.publish_command);
+  EXPECT_DOUBLE_EQ(before_perception.angular_z_rad_s, 0.0);
+  EXPECT_TRUE(controller.terminal_reason().empty());
 }
 
 TEST(TargetCenteringController, RequiresThreeOfFiveFramesBeforeAcquisition)
@@ -119,18 +134,21 @@ TEST(TargetCenteringController, FailsOnStaleDetectionsAndCommandsZero)
   EXPECT_DOUBLE_EQ(output.angular_z_rad_s, 0.0);
 }
 
-TEST(TargetCenteringController, FailsOnScanTimeout)
+TEST(TargetCenteringController, FailsAfterOneScanRevolution)
 {
   auto cfg = config();
-  cfg.scan_timeout_sec = 1.0;
+  cfg.scan_limit_revolutions = 1.0;
   cfg.detection_stale_sec = 2.0;
   TargetCenteringController controller(cfg);
   controller.update_detections({}, 0.0);
+  controller.update_heading(0.0);
+  controller.update_heading(kPi);
+  controller.update_heading(0.0);
 
-  const auto output = controller.tick(1.1);
+  const auto output = controller.tick(0.2);
 
   EXPECT_EQ(controller.state(), CenteringState::Failed);
-  EXPECT_EQ(controller.terminal_reason(), "scan_timeout");
+  EXPECT_EQ(controller.terminal_reason(), "scan_complete_no_target");
   EXPECT_DOUBLE_EQ(output.angular_z_rad_s, 0.0);
 }
 

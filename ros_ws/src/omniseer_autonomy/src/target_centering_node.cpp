@@ -1,4 +1,5 @@
 #include <chrono>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <memory>
@@ -8,6 +9,7 @@
 #include <vector>
 
 #include "geometry_msgs/msg/twist_stamped.hpp"
+#include "nav_msgs/msg/odometry.hpp"
 #include "omniseer_autonomy/target_centering_controller.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "yolo_msgs/msg/detection_array.hpp"
@@ -56,6 +58,15 @@ std::string optional_json_number(std::optional<double> value)
   stream << *value;
   return stream.str();
 }
+
+double yaw_from_quaternion(const geometry_msgs::msg::Quaternion & orientation)
+{
+  const auto siny_cosp =
+    2.0 * ((orientation.w * orientation.z) + (orientation.x * orientation.y));
+  const auto cosy_cosp =
+    1.0 - (2.0 * ((orientation.y * orientation.y) + (orientation.z * orientation.z)));
+  return std::atan2(siny_cosp, cosy_cosp);
+}
 } // namespace
 
 class TargetCenteringNode : public rclcpp::Node
@@ -83,6 +94,8 @@ public:
 
     const auto detections_topic = declare_parameter<std::string>("detections_topic",
         "/yolo/detections");
+    const auto odometry_topic = declare_parameter<std::string>("odometry_topic",
+        "/odometry/filtered");
     const auto command_topic = declare_parameter<std::string>("command_topic", "/cmd_vel_autonomy");
     _publisher = create_publisher<geometry_msgs::msg::TwistStamped>(command_topic, 10);
     _subscription = create_subscription<yolo_msgs::msg::DetectionArray>(
@@ -104,6 +117,12 @@ public:
         }
         apply_output(_controller.update_detections(detections, elapsed_sec()));
       });
+    _odometry_subscription = create_subscription<nav_msgs::msg::Odometry>(
+      odometry_topic, 10,
+      [this](const nav_msgs::msg::Odometry & msg)
+      {
+        _controller.update_heading(yaw_from_quaternion(msg.pose.pose.orientation));
+      });
     _timer = create_wall_timer(
       50ms,
       [this]()
@@ -113,8 +132,10 @@ public:
 
     RCLCPP_INFO(
       get_logger(),
-        "target centering autonomy started; target_class=%s command_topic=%s detections_topic=%s",
-      _target_class.c_str(), command_topic.c_str(), detections_topic.c_str());
+        "target centering autonomy started; target_class=%s command_topic=%s detections_topic=%s "
+        "odometry_topic=%s",
+      _target_class.c_str(), command_topic.c_str(), detections_topic.c_str(),
+      odometry_topic.c_str());
   }
 
   ~TargetCenteringNode() override
@@ -140,7 +161,7 @@ private:
     config.stable_center_frames = declare_parameter<int>("stable_center_frames", 10);
     const auto detection_stale_ms = declare_parameter<int>("detection_stale_ms", 500);
     config.detection_stale_sec = static_cast<double>(detection_stale_ms) / 1000.0;
-    config.scan_timeout_sec = declare_parameter<double>("scan_timeout_sec", 12.0);
+    config.scan_limit_revolutions = declare_parameter<double>("scan_limit_revolutions", 1.0);
     config.target_lost_timeout_sec = declare_parameter<double>("target_lost_timeout_sec", 0.5);
     _target_class = config.target_class;
     return config;
@@ -217,6 +238,7 @@ private:
   TargetCenteringController             _controller;
   rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr _publisher{};
   rclcpp::Subscription<yolo_msgs::msg::DetectionArray>::SharedPtr _subscription{};
+  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr _odometry_subscription{};
   rclcpp::TimerBase::SharedPtr _timer{};
   std::ofstream                _events{};
   bool                         _terminal_logged{false};
