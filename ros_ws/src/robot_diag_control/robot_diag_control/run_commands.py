@@ -182,6 +182,7 @@ def _build_devcontainer_record_inner_command(
     if notes.strip():
         command.extend(["--record-notes", notes.strip()])
     command.append("bringup")
+    command.append("experiment_overwrite:=true")
     if classes:
         command.append(f"classes_path:={remote_class_list_path_for(container_repo_root, run_id)}")
     command.extend(_autonomy_launch_args(classes=classes, run_type=run_type, run_dir=container_run_dir))

@@ -75,7 +75,7 @@ class RuntimeScriptRecordingTests(unittest.TestCase):
 
             args = docker_args_path.read_text(encoding="utf-8").splitlines()
             self.assertIn("run", args)
-            self.assertNotIn("experiment_overwrite:=true", args)
+            self.assertIn("--record-overwrite", args)
             self.assertIn("classes_path:=/runs/autonomy_v2/classes.txt", args)
             self.assertEqual((run_root / "autonomy_v2" / "classes.txt").read_text(encoding="utf-8"), "plant\n")
 
