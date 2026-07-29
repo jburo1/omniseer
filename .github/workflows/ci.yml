@@ -60,6 +60,7 @@ jobs:
             ros_ws/src/omniseer_gz_assets \
             ros_ws/src/omniseer_msgs \
             ros_ws/src/yolo_ros/yolo_msgs \
+            ros_ws/src/omniseer_autonomy \
             ros_ws/src/omniseer_description \
             ros_ws/src/analysis \
             ros_ws/src/omniseer_experiments \
@@ -82,6 +83,7 @@ jobs:
               omniseer_gz_assets \
               omniseer_msgs \
               yolo_msgs \
+              omniseer_autonomy \
               omniseer_description \
               analysis \
               omniseer_experiments \
@@ -125,6 +127,7 @@ jobs:
             colcon test --merge-install \
             --packages-ignore rf2o_laser_odometry yolo_bringup yolo_ros \
             --packages-select \
+              omniseer_autonomy \
               omniseer_description \
               analysis \
               omniseer_experiments \

@@ -50,6 +50,7 @@ Runs inside the ROS Kilted desktop-full image.
 - builds the portable ROS package set
 - excludes `rf2o_laser_odometry`, `yolo_bringup`, and `yolo_ros` from this graph
 - runs package, unit, XML, CMake, and C++ lint tests
+- includes the bounded autonomy package and its controller unit tests
 - conditionally builds `omniseer_vision_bridge` only when RKNN and RGA SDKs exist
 
 Validated build packages:
@@ -57,6 +58,7 @@ Validated build packages:
 - `omniseer_gz_assets`
 - `omniseer_msgs`
 - `yolo_msgs`
+- `omniseer_autonomy`
 - `omniseer_description`
 - `analysis`
 - `bringup`
@@ -158,6 +160,7 @@ bash scripts/ci/install_ros_workspace_deps.sh \
   ros_ws/src/omniseer_gz_assets \
   ros_ws/src/omniseer_msgs \
   ros_ws/src/yolo_ros/yolo_msgs \
+  ros_ws/src/omniseer_autonomy \
   ros_ws/src/omniseer_description \
   ros_ws/src/analysis \
   ros_ws/src/bringup \
@@ -173,7 +176,8 @@ colcon build --merge-install \
   --packages-ignore rf2o_laser_odometry yolo_bringup yolo_ros \
   --packages-select \
     omniseer_gz_assets omniseer_msgs yolo_msgs omniseer_description \
-    analysis bringup robot_io_adapters robot_diag_control robot_diag_control_cpp
+    omniseer_autonomy analysis bringup robot_io_adapters \
+    robot_diag_control robot_diag_control_cpp
 
 set +u
 source install/setup.bash
@@ -181,7 +185,7 @@ set -u
 colcon test --merge-install \
   --packages-ignore rf2o_laser_odometry yolo_bringup yolo_ros \
   --packages-select \
-    omniseer_description analysis bringup robot_io_adapters \
+    omniseer_autonomy omniseer_description analysis bringup robot_io_adapters \
     robot_diag_control robot_diag_control_cpp
 colcon test-result --all --verbose
 ```
