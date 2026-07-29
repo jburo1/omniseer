@@ -165,6 +165,7 @@ jobs:
             ros_ws/src/omniseer_gz_assets \
             ros_ws/src/omniseer_msgs \
             ros_ws/src/yolo_ros/yolo_msgs \
+            ros_ws/src/omniseer_autonomy \
             ros_ws/src/omniseer_description \
             ros_ws/src/omniseer_experiments \
             ros_ws/src/bringup \
@@ -189,6 +190,7 @@ jobs:
               omniseer_gz_assets \
               omniseer_msgs \
               yolo_msgs \
+              omniseer_autonomy \
               omniseer_description \
               omniseer_experiments \
               bringup \
