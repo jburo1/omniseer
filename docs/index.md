@@ -1,5 +1,7 @@
 # Omniseer
 
+<object data="assets/diagrams/explorer/system-explorer.svg" type="image/svg+xml" aria-label="Omniseer system explorer" width="100%"></object>
+
 Omniseer is an embodied AI system for open-vocabulary perception, bounded
 target-centering behavior, operator diagnostics, and reproducible robot-run
 evidence on a ROCK 5B+ mobile robot.
