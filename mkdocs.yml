@@ -8,7 +8,6 @@ theme:
     scheme: default
     primary: indigo
   features:
-    - navigation.sections
     - navigation.instant
 markdown_extensions:
   - toc:
