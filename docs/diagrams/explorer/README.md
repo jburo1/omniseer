@@ -3,7 +3,7 @@
 Create the top-level architecture explorer here:
 
 ```text
-diagrams/explorer/system-explorer.d2
+docs/diagrams/explorer/system-explorer.d2
 ```
 
 Start the file by importing the shared classes:

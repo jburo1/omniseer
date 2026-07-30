@@ -1,8 +1,8 @@
 # Omniseer Architecture Diagrams
 
 This directory contains source diagrams for the Omniseer documentation. D2 source
-files live outside the MkDocs `docs/` tree so authoring files are not published as
-site assets by default.
+files live under `docs/diagrams/`; rendered SVGs live under `docs/assets/diagrams/`.
+MkDocs excludes the D2 sources from published site output.
 
 Rendered diagram artifacts belong under `docs/assets/diagrams/`.
 
@@ -20,8 +20,8 @@ or implementation-level details.
 ## Source And Artifact Mapping
 
 ```text
-diagrams/shared/classes.d2
-diagrams/explorer/system-explorer.d2
+docs/diagrams/shared/classes.d2
+docs/diagrams/explorer/system-explorer.d2
   -> docs/assets/diagrams/explorer/system-explorer.svg
 ```
 
@@ -39,7 +39,7 @@ Expected render shape:
 
 ```bash
 d2 --layout elk --theme 0 \
-  diagrams/explorer/system-explorer.d2 \
+  docs/diagrams/explorer/system-explorer.d2 \
   docs/assets/diagrams/explorer/system-explorer.svg
 ```
 
@@ -127,8 +127,8 @@ built-site-relative paths such as:
 ../../../software/operator_run_workflow/
 ```
 
-The docs build should eventually validate SVG links after a clean MkDocs build so
-stale `site/` output cannot hide broken diagram navigation.
+The docs build validates SVG links after a clean MkDocs build so stale `site/`
+output cannot hide broken diagram navigation.
 
 ## Verification Target
 
@@ -137,7 +137,7 @@ The completed explorer milestone should satisfy:
 - the explorer communicates the operating and evidence loop without surrounding
   prose;
 - every clickable node resolves to an authoritative documentation page;
-- D2 source is not published into `site/`;
+- D2 source is kept under `docs/diagrams/` and excluded from `site/`;
 - the committed SVG is reproducible with the pinned D2 version and explicit
   layout;
 - `scripts/omni docs diagrams --check` detects stale, missing, and orphaned
