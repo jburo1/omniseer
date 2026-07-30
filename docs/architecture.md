@@ -6,6 +6,8 @@ experiment-review path.
 
 ## System Loop
 
+<object data="assets/diagrams/explorer/system-explorer.svg" type="image/svg+xml" aria-label="Omniseer system explorer" width="100%"></object>
+
 Omniseer connects onboard perception, bounded robot behavior, and reviewable
 experiment evidence:
 

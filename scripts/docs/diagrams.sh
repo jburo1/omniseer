@@ -13,7 +13,7 @@ d2_layout="elk"
 d2_theme="0"
 
 sources=(
-  "diagrams/explorer/system-explorer.d2"
+  "docs/diagrams/explorer/system-explorer.d2"
 )
 
 outputs=(

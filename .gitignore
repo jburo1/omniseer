@@ -58,6 +58,7 @@ srv_gen/
 **/Testing/
 *.o
 *.obj
+!ros_ws/src/omniseer_gz_assets/models/**/*.obj
 *.a
 *.so
 *.so.*
@@ -101,7 +102,8 @@ msg/_*.py
 *.wikidoc
 # MkDocs build output
 site/
-# Local-only retrospective notes (not published/tracked)
+# Local-only notes and retrospective docs (not published/tracked)
+notes/
 docs/software/project_journey.md
 
 # --- Backups ---

@@ -1,5 +1,7 @@
 site_name: omniseer
 repo_url: https://github.com/jburo1/omniseer
+exclude_docs: |
+  diagrams/**/*.d2
 theme:
   name: material
   palette:
@@ -21,6 +23,9 @@ nav:
   - Home: index.md
   - Architecture: architecture.md
   - Evidence: evidence.md
+  - Diagrams:
+    - Overview: diagrams/README.md
+    - Explorer: diagrams/explorer/README.md
   - Software:
     - Scripts front door: software/scripts_frontdoor.md
     - Edge-to-cloud perception: software/edge_to_cloud_perception.md
