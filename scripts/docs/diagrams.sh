@@ -63,7 +63,41 @@ render_one() {
 
   mkdir -p "$(dirname "${output}")"
   env -u DEBUG "${d2_bin}" --layout "${d2_layout}" --theme "${d2_theme}" "${source}" "${output}"
+  normalize_svg_links "${output}"
   chmod 0644 "${output}"
+}
+
+normalize_svg_links() {
+  local output="$1"
+
+  python3 - "${output}" <<'PY'
+from pathlib import Path
+import re
+import sys
+from urllib.parse import urlparse
+
+
+def should_target_top(href: str) -> bool:
+    parsed = urlparse(href)
+    return bool(href) and not href.startswith("#") and not parsed.scheme and not parsed.netloc
+
+
+path = Path(sys.argv[1])
+text = path.read_text(encoding="utf-8")
+anchor = re.compile(r'<a href="([^"]+)" xlink:href="\1">')
+
+
+def add_target(match: re.Match[str]) -> str:
+    href = match.group(1)
+    if not should_target_top(href):
+        return match.group(0)
+    return f'<a href="{href}" xlink:href="{href}" target="_top">'
+
+
+updated = anchor.sub(add_target, text)
+if updated != text:
+    path.write_text(updated, encoding="utf-8")
+PY
 }
 
 render_all() {
