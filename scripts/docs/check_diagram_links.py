@@ -25,16 +25,32 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def iter_svg_hrefs(svg_path: Path) -> set[str]:
+def element_href(element: ET.Element) -> str | None:
+    for key, value in element.attrib.items():
+        if key == "href" or key.endswith("}href"):
+            return value
+    return None
+
+
+def is_anchor(element: ET.Element) -> bool:
+    return element.tag == "a" or element.tag.endswith("}a")
+
+
+def iter_svg_hrefs(svg_path: Path) -> tuple[set[str], list[tuple[str, str | None]]]:
     tree = ET.parse(svg_path)
     hrefs: set[str] = set()
+    anchor_links: list[tuple[str, str | None]] = []
 
     for element in tree.iter():
         for key, value in element.attrib.items():
             if key == "href" or key.endswith("}href"):
                 hrefs.add(value)
+        if is_anchor(element):
+            href = element_href(element)
+            if href is not None:
+                anchor_links.append((href, element.attrib.get("target")))
 
-    return hrefs
+    return hrefs, anchor_links
 
 
 def should_ignore_href(href: str) -> bool:
@@ -98,7 +114,7 @@ def main() -> int:
 
     for svg_path in svg_paths:
         try:
-            hrefs = iter_svg_hrefs(svg_path)
+            hrefs, anchor_links = iter_svg_hrefs(svg_path)
         except ET.ParseError as exc:
             failures.append(f"{svg_path}: invalid SVG XML: {exc}")
             continue
@@ -109,6 +125,9 @@ def main() -> int:
                 failures.append(failure)
             elif not should_ignore_href(href) and urlparse(href).path:
                 checked_hrefs += 1
+        for href, target in anchor_links:
+            if not should_ignore_href(href) and urlparse(href).path and target != "_top":
+                failures.append(f"{svg_path}: internal SVG link must target _top: {href}")
 
     if failures:
         for failure in failures:

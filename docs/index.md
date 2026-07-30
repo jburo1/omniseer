@@ -1,6 +1,8 @@
 # Omniseer
 
-<object data="assets/diagrams/explorer/system-explorer.svg" type="image/svg+xml" aria-label="Omniseer system explorer" width="100%"></object>
+<div style="max-height: 620px; overflow: auto; margin: 0 auto 1.5rem;">
+  <object data="assets/diagrams/explorer/system-explorer.svg" type="image/svg+xml" aria-label="Omniseer system explorer" width="830" height="1747" style="display: block; width: 100%; max-width: 830px; height: auto; margin: 0 auto;"></object>
+</div>
 
 Omniseer is an embodied AI system for open-vocabulary perception, bounded
 target-centering behavior, operator diagnostics, and reproducible robot-run
