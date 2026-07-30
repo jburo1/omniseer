@@ -64,6 +64,8 @@ Examples:
   scripts/omni check real-perception
   scripts/omni flash teensy
   scripts/omni docs build
+  scripts/omni docs diagrams
+  scripts/omni docs check-diagram-links
   scripts/omni clean ros
 EOF
 }
@@ -388,10 +390,18 @@ EOF
       build)
         exec "${script_dir}/docs/build.sh" "$@"
         ;;
+      diagrams)
+        exec "${script_dir}/docs/diagrams.sh" "$@"
+        ;;
+      check-diagram-links)
+        exec "${script_dir}/docs/check_diagram_links.py" "$@"
+        ;;
       help|-h|--help)
         cat <<'EOF'
 Usage:
   scripts/omni docs build
+  scripts/omni docs diagrams [--check]
+  scripts/omni docs check-diagram-links [--site-dir site]
 EOF
         ;;
       *)
