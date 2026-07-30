@@ -199,7 +199,7 @@ If you want the API docs to be published together with the MkDocs site:
 
 1. Generate Doxygen HTML during the workflow (install `doxygen` + `graphviz`).
 2. Copy the generated HTML into the MkDocs build input (or into `site/` before deploy).
-3. Add a link from a MkDocs page (e.g., `docs/software/code_documentation.md`) to the generated `api/cpp/index.html`.
+3. Add a link from a MkDocs page (e.g., `docs/verification/code-documentation.md`) to the generated `api/cpp/index.html`.
 
 Avoid committing generated HTML to `main`—generate it in CI instead.
 

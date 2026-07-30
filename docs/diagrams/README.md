@@ -63,13 +63,13 @@ and validates internal links embedded in built SVG diagrams.
 
 | Node | Meaning at this level | Initial destination |
 | --- | --- | --- |
-| Operator | Human initiating runs and reviewing results. | `../../../software/operator_run_workflow/` |
-| Laptop tooling | Off-robot control, diagnostics, preview, retrieval, and report workflow. | `../../../software/operator_run_workflow/` |
-| Robot mission runtime | Native perception plus ROS 2 autonomy, recording, and integration. | `../../../architecture/` |
-| Firmware | Teensy-owned low-level motor and sensor integration over micro-ROS. | `../../../architecture/` |
+| Operator | Human initiating runs and reviewing results. | `../../../operations/operator-run-workflow/` |
+| Laptop tooling | Off-robot control, diagnostics, preview, retrieval, and report workflow. | `../../../operations/operator-run-workflow/` |
+| Robot mission runtime | Native perception plus ROS 2 autonomy, recording, and integration. | `../../../architecture/overview/` |
+| Firmware | Teensy-owned low-level motor and sensor integration over micro-ROS. | `../../../architecture/overview/` |
 | Physical hardware | Electrical and physical sensors, actuators, compute, and power system. | `../../../hardware/circuit/` |
-| RunBundle | Durable robot-run evidence artifact. | `../../../evidence/` |
-| Static report | Human-readable derived review artifact. | `../../../evidence/` |
+| RunBundle | Durable robot-run evidence artifact. | `../../../verification/evidence/` |
+| Static report | Human-readable derived review artifact. | `../../../verification/evidence/` |
 
 Use "Robot mission runtime" at the top level rather than "ROS 2 mission runtime"
 because the mission software includes native V4L2/RGA/RKNN perception as well as
@@ -122,9 +122,9 @@ relative to the Markdown page embedding it. Internal D2 links should therefore u
 built-site-relative paths such as:
 
 ```text
-../../../evidence/
+../../../verification/evidence/
 ../../../hardware/circuit/
-../../../software/operator_run_workflow/
+../../../operations/operator-run-workflow/
 ```
 
 The docs build validates SVG links after a clean MkDocs build so stale `site/`

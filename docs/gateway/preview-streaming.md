@@ -238,6 +238,6 @@ only assume general-purpose CPU/GPU resources and likely hardware video decode.
 
 ## Related Docs
 
-- [Remote monitoring architecture](remote_monitoring_architecture.md)
-- [Robot gateway](robot_gateway.md)
-- [Gateway API](gateway_api.md)
+- [Remote monitoring architecture](remote-monitoring-architecture.md)
+- [Robot gateway](robot-gateway.md)
+- [Gateway API](gateway-api.md)

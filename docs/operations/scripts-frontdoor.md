@@ -192,7 +192,7 @@ SSH automation, and other non-interactive launch paths. For direct `runtime run`
 and manual `runtime record` commands, Docker TTY allocation defaults to `auto`;
 set `OMNISEER_RUNTIME_DOCKER_TTY=always` or `never` to override it.
 
-See [Robot Runtime Container](robot_runtime_container.md#checkpoint-and-promotion)
+See [Robot Runtime Container](../robot-runtime/robot-runtime-container.md#checkpoint-and-promotion)
 for the full pre-registry workflow, including runbundle inspection and report
 generation.
 
@@ -398,7 +398,7 @@ command inside the devcontainer uses the container-visible workspace path
 `OMNISEER_DEVCONTAINER_EXEC_TEMPLATE` when the robot devcontainer is launched
 without standard devcontainer labels.
 
-See [Operator Run Workflow](operator_run_workflow.md) for the current GUI
+See [Operator Run Workflow](operator-run-workflow.md) for the current GUI
 start/stop/retrieve architecture and module ownership boundaries.
 
 #### `run autonomy`
@@ -616,7 +616,7 @@ OMNISEER_REQUIRE_DETECTIONS=1 scripts/omni run real verify
 ```
 
 Use this for the integrated gateway status, preview, perception, and bounded
-teleop acceptance run described in `operator_integrated_demo.md`.
+teleop acceptance run described in [Operator-Integrated Real Demo](operator-integrated-demo.md).
 
 ### Native vision iteration
 

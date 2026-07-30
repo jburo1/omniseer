@@ -6,7 +6,7 @@ experiment-review path.
 
 ## System Loop
 
-<object data="assets/diagrams/explorer/system-explorer.svg" type="image/svg+xml" aria-label="Omniseer system explorer" width="100%"></object>
+<object data="../assets/diagrams/explorer/system-explorer.svg" type="image/svg+xml" aria-label="Omniseer system explorer" width="100%"></object>
 
 Omniseer connects onboard perception, bounded robot behavior, and reviewable
 experiment evidence:
@@ -53,7 +53,7 @@ Optional diagnostics must not become dependencies of the vision or control path.
 
 The Teensy firmware owns low-level motor and sensor integration through micro-ROS.
 Real and simulated producers converge on the normalized boundary topics documented in
-[ROS Packages and Sim/Real Boundary](software/ros_packages.md).
+[ROS Packages and Sim/Real Boundary](../robot-runtime/ros-packages.md).
 
 ### Operator Laptop
 
@@ -136,10 +136,10 @@ hardware validation responsibility.
 
 ## Related Documentation
 
-- [Edge-to-Cloud Perception](software/edge_to_cloud_perception.md)
-- [Verification Evidence](evidence.md)
-- [Vision Pipeline](software/vision_pipeline.md)
-- [Vision Telemetry](software/vision_telemetry_spec.md)
-- [Robot Gateway](software/robot_gateway.md)
-- [Preview Streaming](software/preview_streaming.md)
-- [CI/CD Overview](software/ci_cd.md)
+- [Edge-to-Cloud Perception](../perception/edge-to-cloud.md)
+- [Verification Evidence](../verification/evidence.md)
+- [Vision Pipeline](../perception/vision-pipeline.md)
+- [Vision Telemetry](../perception/vision-telemetry.md)
+- [Robot Gateway](../gateway/robot-gateway.md)
+- [Preview Streaming](../gateway/preview-streaming.md)
+- [CI/CD Overview](../verification/ci-cd.md)

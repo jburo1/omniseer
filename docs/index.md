@@ -26,12 +26,12 @@ The documentation has three connected layers:
 Start with the architecture and evidence pages, then drill into the subsystem or
 operator workflow that matches the task at hand:
 
-- [Scripts Front Door](software/scripts_frontdoor.md) for the supported local command surface
-- [Edge-to-Cloud Perception](software/edge_to_cloud_perception.md) for the implemented perception and evidence loop
-- [System Architecture](architecture.md) for runtime boundaries and implementation status
-- [Verification Evidence](evidence.md) for CI, local, and target-hardware coverage
-- [Vision Pipeline](software/vision_pipeline.md) for the native hot path
-- [CI/CD Overview](software/ci_cd.md) for automated verification and its limits
-- [Robot Runtime Container](software/robot_runtime_container.md) for the v2 robot image workflow
-- [Robot Gateway](software/robot_gateway.md) and [Preview Streaming](software/preview_streaming.md) for operator diagnostics
-- [Operator Run Workflow](software/operator_run_workflow.md) for the monitor run/start/stop/retrieve path
+- [Scripts Front Door](operations/scripts-frontdoor.md) for the supported local command surface
+- [Edge-to-Cloud Perception](perception/edge-to-cloud.md) for the implemented perception and evidence loop
+- [System Architecture](architecture/overview.md) for runtime boundaries and implementation status
+- [Verification Evidence](verification/evidence.md) for CI, local, and target-hardware coverage
+- [Vision Pipeline](perception/vision-pipeline.md) for the native hot path
+- [CI/CD Overview](verification/ci-cd.md) for automated verification and its limits
+- [Robot Runtime Container](robot-runtime/robot-runtime-container.md) for the v2 robot image workflow
+- [Robot Gateway](gateway/robot-gateway.md) and [Preview Streaming](gateway/preview-streaming.md) for operator diagnostics
+- [Operator Run Workflow](operations/operator-run-workflow.md) for the monitor run/start/stop/retrieve path
