@@ -9,10 +9,10 @@
       
       
       
-        <link rel="prev" href="../../verification/code-documentation/">
+        <link rel="prev" href="../ros-packages/">
       
       
-        <link rel="next" href="../wiring/">
+        <link rel="next" href="../../perception/edge-to-cloud/">
       
       
         
@@ -23,7 +23,7 @@
     
     
       
-        <title>Circuit - omniseer</title>
+        <title>Robot runtime container - omniseer</title>
       
     
     
@@ -72,7 +72,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#circuit" class="md-skip">
+        <a href="#robot-runtime-container" class="md-skip">
           Skip to content
         </a>
       
@@ -108,7 +108,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Circuit
+              Robot runtime container
             
           </span>
         </div>
@@ -566,8 +566,10 @@
       
   
   
+    
   
   
+  
     
     
     
@@ -578,11 +580,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
           <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
@@ -603,7 +605,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
@@ -621,7 +623,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../robot-runtime/ros-packages/" class="md-nav__link">
+      <a href="../ros-packages/" class="md-nav__link">
         
   
   
@@ -646,10 +648,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../robot-runtime/robot-runtime-container/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Robot runtime container
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -665,6 +694,81 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#build" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Build
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checkpoint-and-promotion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Checkpoint and Promotion
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verification Boundary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#size-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Size Boundary
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1222,8 +1326,6 @@
       
   
   
-    
-  
   
   
     
@@ -1236,11 +1338,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
         
           
           <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
@@ -1261,7 +1363,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_8">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1276,19 +1378,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../hardware/circuit/" class="md-nav__link">
         
   
   
@@ -1304,7 +1397,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -1317,7 +1409,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../wiring/" class="md-nav__link">
+      <a href="../../hardware/wiring/" class="md-nav__link">
         
   
   
@@ -1365,6 +1457,69 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#build" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Build
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checkpoint-and-promotion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Checkpoint and Promotion
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verification Boundary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#size-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Size Boundary
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1383,10 +1538,214 @@
   
 
 
-<h1 id="circuit">Circuit<a class="headerlink" href="#circuit" title="Permanent link">&para;</a></h1>
-<p>This page records the electrical integration references for the current Omniseer
-robot hardware. The repository keeps source hardware material under
-<code>hardware/electrical/</code> and firmware-facing IO configuration under <code>firmware/include/</code>.</p>
+<h1 id="robot-runtime-container">Robot Runtime Container<a class="headerlink" href="#robot-runtime-container" title="Permanent link">&para;</a></h1>
+<p><em>Status: v2 build path implemented; target hardware validation still required</em></p>
+<p>The robot runtime container packages the supported real-hardware ROS workspace into
+an image that starts through the same <code>scripts/omni run real</code> surface used on the
+host. The v2 target is robot-side only: it carries the real operator profile, native
+RKNN vision bridge, gateway process, telemetry recording tools, and hardware IO
+launch wiring. It does not include simulation, firmware flashing, docs, or
+laptop-only development tooling.</p>
+<p>V2 makes the runtime boundary stricter than v1. The final image is based on
+<code>ros:kilted-ros-core-noble</code>, builds the workspace in a separate stage, and copies
+only the merged ROS install tree, source-built micro-ROS agent, runtime scripts,
+RKNN runtime library, and direct runtime apt dependencies into the final image.
+Build-only tools such as <code>gcc</code>, <code>g++</code>, <code>colcon</code>, and <code>protoc</code> are absent from the
+final v2 image. <code>cmake</code> remains installed because the Kilted ROS runtime packages
+currently depend on it.</p>
+<h2 id="build">Build<a class="headerlink" href="#build" title="Permanent link">&para;</a></h2>
+<p>On the ROCK 5B+ image, build the robot target:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>build<span class="w"> </span>runtime-container
+</code></pre></div>
+<p>For checkpointed robot-local publishing, prefer the runtime workflow wrapper:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>build
+</code></pre></div>
+<p>This builds
+<code>ghcr.io/jburo1/omniseer-robot-runtime:robot-candidate-&lt;UTC&gt;-g&lt;shortsha&gt;</code> by
+default and records local build metadata under <code>.omniseer/runtime/</code>. The
+<code>g&lt;shortsha&gt;</code> suffix is the first 12 characters of the source git commit. Override
+the image base with <code>--image &lt;base&gt;</code> or <code>OMNISEER_RUNTIME_IMAGE</code>; pass <code>--tag</code>
+only when you need an explicit custom checkpoint tag.</p>
+<p>The robot target requires RKNN SDK files on the build host:</p>
+<ul>
+<li><code>rknn_api.h</code>, default <code>/usr/include/rknn_api.h</code></li>
+<li><code>librknnrt.so</code>, auto-detected through <code>ldconfig</code></li>
+</ul>
+<p>The build wrapper enables Docker BuildKit so those files can be passed as temporary
+named build contexts. They are copied into the image, but they are not added to the
+repository build context.</p>
+<p>As of the current Kilted apt repositories used on the ROCK 5B+ image,
+<code>ros-kilted-micro-ros-agent</code> is not published. V2 builds the upstream
+<code>micro-ROS-Agent</code> Kilted source package instead, pinned by default to commit
+<code>f0d809138de19a61fe1a640d5c5a3076cd648360</code>. The source build installs the
+<code>micro_ros_agent</code> ROS package and Micro XRCE-DDS Agent runtime library into the
+merged <code>/ros_ws/install</code> tree.</p>
+<p>Override those paths when the SDK is installed elsewhere:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>build<span class="w"> </span>runtime-container<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--rknn-include<span class="w"> </span>/path/to/rknn_api.h<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--rknn-lib<span class="w"> </span>/path/to/librknnrt.so
+</code></pre></div>
+<p>Override the source commit only when intentionally testing a newer upstream agent:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>build<span class="w"> </span>runtime-container<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--micro-ros-agent-ref<span class="w"> </span>&lt;git-ref&gt;
+</code></pre></div>
+<p>For non-robot validation, build the portable target. It excludes
+<code>omniseer_vision_bridge</code>, so it can prove the container build and entrypoint without
+RKNN/RGA hardware SDK files:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>build<span class="w"> </span>runtime-container<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--target<span class="w"> </span>portable-runtime<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--image<span class="w"> </span>omniseer/robot-runtime:portable
+</code></pre></div>
+<h2 id="run">Run<a class="headerlink" href="#run" title="Permanent link">&para;</a></h2>
+<p>The container needs host networking and direct hardware access for ROS discovery,
+serial devices, camera nodes, DMA heaps, RGA, and RKNN runtime paths:</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--privileged<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--network<span class="o">=</span>host<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--pid<span class="o">=</span>host<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--ipc<span class="o">=</span>host<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-v<span class="w"> </span>/dev:/dev<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-v<span class="w"> </span>/run/udev:/run/udev:ro<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">/runs:/runs&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>omniseer/robot-runtime:v2
+</code></pre></div>
+<p>Additional launch arguments pass through to <code>scripts/omni</code>:</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>--privileged<span class="w"> </span>--network<span class="o">=</span>host<span class="w"> </span>-v<span class="w"> </span>/dev:/dev<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">/runs:/runs&quot;</span><span class="w"> </span>omniseer/robot-runtime:v2<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>run<span class="w"> </span>real<span class="w"> </span>--profile<span class="w"> </span>operator<span class="w"> </span>--record-run<span class="w"> </span>container_smoke<span class="w"> </span>--record-out<span class="w"> </span>/runs/container_smoke<span class="w"> </span>bringup
+</code></pre></div>
+<p>Runtime builds embed the source revision in <code>OMNISEER_GIT_SHA</code> and the
+<code>org.opencontainers.image.revision</code> label. For traceable container experiments,
+also pass image and experiment metadata through environment variables or matching
+<code>scripts/omni run real</code> record flags:</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>--privileged<span class="w"> </span>--network<span class="o">=</span>host<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-e<span class="w"> </span><span class="nv">OMNISEER_CONTAINER_IMAGE_REF</span><span class="o">=</span>omniseer/robot-runtime:v2<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-e<span class="w"> </span><span class="nv">OMNISEER_CONTAINER_IMAGE_DIGEST</span><span class="o">=</span>sha256:&lt;digest&gt;<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-e<span class="w"> </span><span class="nv">OMNISEER_EXPERIMENT_CONFIG</span><span class="o">=</span>experiments/container-smoke.yaml<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-e<span class="w"> </span><span class="nv">OMNISEER_EXPERIMENT_PARAMETERS</span><span class="o">=</span><span class="nv">profile</span><span class="o">=</span>operator,scenario<span class="o">=</span>container_smoke<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-v<span class="w"> </span>/dev:/dev<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">/runs:/runs&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>omniseer/robot-runtime:v2<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>run<span class="w"> </span>real<span class="w"> </span>--profile<span class="w"> </span>operator<span class="w"> </span>--record-run<span class="w"> </span>container_smoke<span class="w"> </span>--record-out<span class="w"> </span>/runs/container_smoke<span class="w"> </span>bringup
+</code></pre></div>
+<p>The generated run report surfaces the recorded source revision, image reference,
+image digest, launch command/profile/arguments, experiment config, experiment
+parameters, and the latest platform snapshots from <code>manifest.yaml</code> and
+<code>system.jsonl</code>.</p>
+<p>Use the portable image only for launch and entrypoint checks; it defaults to
+<code>start_vision:=false</code> and is not a full robot runtime.</p>
+<h2 id="checkpoint-and-promotion">Checkpoint and Promotion<a class="headerlink" href="#checkpoint-and-promotion" title="Permanent link">&para;</a></h2>
+<p>The robot-local promotion loop is:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>build
+scripts/omni<span class="w"> </span>runtime<span class="w"> </span>record
+scripts/omni<span class="w"> </span>runtime<span class="w"> </span>verify
+scripts/omni<span class="w"> </span>runtime<span class="w"> </span>verify<span class="w"> </span>--stage<span class="w"> </span>full
+scripts/omni<span class="w"> </span>runtime<span class="w"> </span>push
+</code></pre></div>
+<p>For a full pre-registry verification pass on the robot:</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>build
+sudo<span class="w"> </span>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>record
+
+<span class="nv">RUN_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>ls<span class="w"> </span>-dt<span class="w"> </span>runs/operator_*<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-n<span class="w"> </span><span class="m">1</span><span class="k">)</span><span class="s2">&quot;</span>
+scripts/omni<span class="w"> </span>runs<span class="w"> </span>inspect<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">RUN_DIR</span><span class="si">}</span><span class="s2">&quot;</span>
+scripts/omni<span class="w"> </span>runs<span class="w"> </span>report<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">RUN_DIR</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span>--overwrite
+
+sudo<span class="w"> </span>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>verify
+sudo<span class="w"> </span>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>verify<span class="w"> </span>--stage<span class="w"> </span>full
+sudo<span class="w"> </span>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>push
+</code></pre></div>
+<p>Review the generated run report before <code>runtime push</code>. The push step is the
+promotion boundary: it publishes the locally verified candidate image and moves
+the verified tags.</p>
+<p><code>runtime record</code> is the manual operator evidence-capture path. It uses the latest
+local runtime build by default, starts <code>run real --profile operator ... bringup</code>
+with automatic Docker TTY detection, writes the runbundle to <code>runs/operator_&lt;UTC&gt;</code>
+on the host, and samples system telemetry every second. Stop the run with Ctrl-C
+or the monitor GUI Stop Run button when the experiment is complete; the recorder
+needs that graceful interrupt to finalize <code>manifest.yaml</code> and <code>summary.json</code>.
+The monitor GUI also issues <code>scripts/omni runtime stop --run-id &lt;id&gt;</code> immediately
+for runtime-backed runs; that command targets the named runtime record container
+for the run id, confirms it is stopped or already absent, and lets the GUI become
+ready for the next run without waiting on a stale SSH session.</p>
+<p>When launched from a devcontainer, the runtime wrapper resolves the host-side
+workspace bind path before starting Docker so the runtime container writes back
+into this checkout's <code>runs/</code> directory instead of a separate <code>/omniseer/runs</code>
+directory on the Docker host. Override that detection with
+<code>OMNISEER_RUNTIME_RUNS_HOST_ROOT=/host/path/to/omniseer/runs</code> if needed.</p>
+<p><code>runtime verify</code> defaults to a safe smoke stage. It starts the container with
+vision, Teensy, LiDAR, boundary-topic waits, and pre-launch cleanup disabled; a
+launch that survives until the smoke timeout is treated as a pass. Full
+verification runs the container's existing real operator smoke path with run
+recording enabled. Verification runs Docker without an interactive TTY so it can
+be used under <code>sudo</code>, SSH automation, and other non-interactive launch paths.
+Direct <code>runtime run</code> and manual <code>runtime record</code> commands allocate a TTY only
+when attached to one by default; override that with
+<code>OMNISEER_RUNTIME_DOCKER_TTY=always</code> or <code>never</code>.</p>
+<p><code>runtime push</code> refuses to publish unless a passed full verification exists for the
+same local image ID. It pushes the candidate tag first, then automatically
+promotes the same image to immutable <code>robot-verified-&lt;UTC&gt;-g&lt;shortsha&gt;</code> and
+moving <code>robot-verified</code> tags.</p>
+<p>Pull the latest verified image on the robot with:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>pull
+</code></pre></div>
+<p>Use an immutable tag for rollback or pinning:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>pull<span class="w"> </span>--tag<span class="w"> </span>robot-verified-20260723T052827Z-g437c10907531
+</code></pre></div>
+<h2 id="verification-boundary">Verification Boundary<a class="headerlink" href="#verification-boundary" title="Permanent link">&para;</a></h2>
+<p>Local image builds verify that the ROS install tree is baked into the image and that
+the entrypoint sources <code>/opt/ros/$ROS_DISTRO</code> and <code>/ros_ws/install</code>. Full validation
+still requires the robot: camera capture, DMA heap access, RGA preprocessing, RKNN
+inference, Teensy/micro-ROS, LiDAR, and preview streaming all cross hardware or
+kernel-driver boundaries.</p>
+<h2 id="size-boundary">Size Boundary<a class="headerlink" href="#size-boundary" title="Permanent link">&para;</a></h2>
+<p>Measured locally on the ROCK 5B+ build host:</p>
+<table>
+<thead>
+<tr>
+<th>Image</th>
+<th style="text-align: right;">Size</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>omniseer/robot-runtime:v2</code></td>
+<td style="text-align: right;">2.84 GB</td>
+<td>Current runtime target with source-built micro-ROS Agent</td>
+</tr>
+<tr>
+<td><code>omniseer/robot-runtime:v1</code></td>
+<td style="text-align: right;">3.5 GB</td>
+<td>Initial bringup image</td>
+</tr>
+<tr>
+<td>devcontainer image</td>
+<td style="text-align: right;">4.99 GB</td>
+<td>Full development environment</td>
+</tr>
+<tr>
+<td><code>ros:kilted-ros-core-noble</code></td>
+<td style="text-align: right;">768 MB</td>
+<td>V2 base image</td>
+</tr>
+<tr>
+<td><code>ros:kilted-ros-base-noble</code></td>
+<td style="text-align: right;">1.33 GB</td>
+<td>V1 base image</td>
+</tr>
+</tbody>
+</table>
+<p>V2 is acceptable as a bringup/runtime artifact because it is smaller than the
+devcontainer and no longer carries the compiler, colcon, or protobuf compiler in
+the final image. The image size is mostly from the Python OpenCV stack,
+FFmpeg/GStreamer plugins, controller-manager and control message dependencies,
+source-built micro-ROS Agent dependencies, and broad ROS runtime dependencies
+pulled in by Kilted packages. Some large
+development-labeled packages still arrive transitively through runtime package
+dependencies rather than from the explicit builder stage.</p>
+<p>Do not remove runtime packages only to shrink the image. First measure image
+history and package ownership, then remove a dependency only when the robot
+runtime verification path still passes and the removed package is not part of the
+operator, hardware IO, native vision, gateway, or recording surface.</p>
 
 
 

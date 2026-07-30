@@ -9,10 +9,10 @@
       
       
       
-        <link rel="prev" href="../../verification/code-documentation/">
+        <link rel="prev" href="../../robot-runtime/robot-runtime-container/">
       
       
-        <link rel="next" href="../wiring/">
+        <link rel="next" href="../vision-pipeline/">
       
       
         
@@ -23,7 +23,7 @@
     
     
       
-        <title>Circuit - omniseer</title>
+        <title>Edge-to-cloud perception - omniseer</title>
       
     
     
@@ -72,7 +72,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#circuit" class="md-skip">
+        <a href="#edge-to-cloud-perception" class="md-skip">
           Skip to content
         </a>
       
@@ -108,7 +108,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Circuit
+              Edge-to-cloud perception
             
           </span>
         </div>
@@ -681,8 +681,10 @@
       
   
   
+    
   
   
+  
     
     
     
@@ -693,11 +695,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
         
           
           <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
@@ -718,7 +720,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
@@ -733,10 +735,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../perception/edge-to-cloud/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Edge-to-cloud perception
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -752,6 +781,142 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#purpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Purpose
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#runtime-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Runtime Flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Implementation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Current Implementation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#edge-inference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Edge inference
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ros-contracts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ROS contracts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#local-observability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Local observability
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operator-connectivity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Operator connectivity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#offboard-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Offboard review
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#review-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Review Path
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Documentation
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -764,7 +929,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../perception/vision-pipeline/" class="md-nav__link">
+      <a href="../vision-pipeline/" class="md-nav__link">
         
   
   
@@ -792,7 +957,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../perception/producer-pipeline/" class="md-nav__link">
+      <a href="../producer-pipeline/" class="md-nav__link">
         
   
   
@@ -820,7 +985,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../perception/consumer-pipeline/" class="md-nav__link">
+      <a href="../consumer-pipeline/" class="md-nav__link">
         
   
   
@@ -848,7 +1013,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../perception/vision-telemetry/" class="md-nav__link">
+      <a href="../vision-telemetry/" class="md-nav__link">
         
   
   
@@ -1222,8 +1387,6 @@
       
   
   
-    
-  
   
   
     
@@ -1236,11 +1399,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
         
           
           <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
@@ -1261,7 +1424,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_8">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1276,19 +1439,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../hardware/circuit/" class="md-nav__link">
         
   
   
@@ -1304,7 +1458,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -1317,7 +1470,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../wiring/" class="md-nav__link">
+      <a href="../../hardware/wiring/" class="md-nav__link">
         
   
   
@@ -1365,6 +1518,130 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#purpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Purpose
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#runtime-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Runtime Flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Implementation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Current Implementation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#edge-inference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Edge inference
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ros-contracts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ROS contracts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#local-observability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Local observability
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#operator-connectivity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Operator connectivity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#offboard-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Offboard review
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#review-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Review Path
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Documentation
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1383,10 +1660,89 @@
   
 
 
-<h1 id="circuit">Circuit<a class="headerlink" href="#circuit" title="Permanent link">&para;</a></h1>
-<p>This page records the electrical integration references for the current Omniseer
-robot hardware. The repository keeps source hardware material under
-<code>hardware/electrical/</code> and firmware-facing IO configuration under <code>firmware/include/</code>.</p>
+<h1 id="edge-to-cloud-perception">Edge-to-Cloud Perception<a class="headerlink" href="#edge-to-cloud-perception" title="Permanent link">&para;</a></h1>
+<h2 id="purpose">Purpose<a class="headerlink" href="#purpose" title="Permanent link">&para;</a></h2>
+<p>Document the implemented edge perception and review loop used by Omniseer robot
+runs.</p>
+<p>Omniseer deploys an open-vocabulary model on constrained edge hardware, integrates
+it with ROS 2, measures it under robot operating conditions, and preserves the
+result in a reproducible offboard experiment workflow.</p>
+<h2 id="runtime-flow">Runtime Flow<a class="headerlink" href="#runtime-flow" title="Permanent link">&para;</a></h2>
+<p>An operator selects semantic classes, runs the robot through a scene or starts the
+bounded target-centering behavior, and records an experiment. YOLO-World runs on the
+ROCK 5B+ NPU. The resulting detections, stage timings, performance summaries,
+autonomy events, and selected visual evidence form a RunBundle that can be reviewed
+on a laptop.</p>
+<div class="highlight"><pre><span></span><code>camera
+  -&gt; native V4L2/RGA/RKNN runtime
+  -&gt; /yolo/detections + /vision/perf
+  -&gt; target-centering autonomy when enabled
+  -&gt; experiment recorder
+  -&gt; RunBundle
+  -&gt; laptop review
+</code></pre></div>
+<h2 id="current-implementation">Current Implementation<a class="headerlink" href="#current-implementation" title="Permanent link">&para;</a></h2>
+<h3 id="edge-inference">Edge inference<a class="headerlink" href="#edge-inference" title="Permanent link">&para;</a></h3>
+<p>The native runtime captures
+NV12 frames, preprocesses them with RGA, prepares YOLO-World text embeddings, runs
+RKNN detector inference, maps detections back to source coordinates, and publishes
+bounded results. The local <code>runs/pipeline_001</code> bundle records detections,
+performance summaries, system telemetry, and native pipeline telemetry from a
+target-hardware run.</p>
+<p>The native bridge currently receives classes from <code>classes.path</code> during startup.
+Changing classes requires restarting the bridge with a different class list. The
+Python <code>yolo_ros</code> integration has a <code>SetClasses</code> service, but that service does not
+reconfigure the native RKNN bridge.</p>
+<h3 id="ros-contracts">ROS contracts<a class="headerlink" href="#ros-contracts" title="Permanent link">&para;</a></h3>
+<p>The native bridge publishes:</p>
+<ul>
+<li><code>/yolo/detections</code> as <code>yolo_msgs/msg/DetectionArray</code></li>
+<li><code>/vision/perf</code> as <code>omniseer_msgs/msg/VisionPerfSummary</code></li>
+</ul>
+<p>The performance message reports producer and consumer rates, recent stage timings,
+source age, processed counts, and pipeline error counters. It intentionally stays
+focused on vision pipeline metrics; live CPU, memory, temperature, network, and power
+diagnostics are surfaced separately through the robot gateway status snapshot.</p>
+<h3 id="local-observability">Local observability<a class="headerlink" href="#local-observability" title="Permanent link">&para;</a></h3>
+<p>The native harness supports an annotated OpenCV preview, JSONL stage
+telemetry, rolling statistics, and offline telemetry analysis. The ROS bridge is
+headless and publishes detections and performance summaries rather than an annotated
+image topic. The experiment workflow can record local run bundles containing
+manifest metadata, detections, performance summaries, system telemetry, native
+pipeline telemetry, evidence frames, and generated summaries.</p>
+<h3 id="operator-connectivity">Operator connectivity<a class="headerlink" href="#operator-connectivity" title="Permanent link">&para;</a></h3>
+<p>The robot gateway exposes system status, platform diagnostics,
+preview control, overlay snapshots, and bounded teleop over gRPC. A managed GStreamer
+process exports an on-demand SRT video stream, and packaged Python tools receive it
+on the laptop. This preview is a diagnostic camera stream.</p>
+<h3 id="offboard-review">Offboard review<a class="headerlink" href="#offboard-review" title="Permanent link">&para;</a></h3>
+<p><code>scripts/omni runs</code> can inspect local bundles, list and pull
+robot-side bundles onto a laptop, annotate recorded evidence frames, and generate a
+simple static HTML report. Retrieval preserves additive files inside the bundle so
+new telemetry or evidence streams do not require a transport redesign.</p>
+<h2 id="review-path">Review Path<a class="headerlink" href="#review-path" title="Permanent link">&para;</a></h2>
+<p>A reviewer can:</p>
+<ul>
+<li>select classes without retraining the detector</li>
+<li>run the model on the robot NPU</li>
+<li>observe typed detections and performance summaries</li>
+<li>reproduce a recorded experiment from documented commands</li>
+<li>inspect latency and throughput over time</li>
+<li>inspect detections by class and confidence</li>
+<li>review representative successes, false positives, and missed detections</li>
+<li>fetch or open the same completed run through the offboard review workflow</li>
+</ul>
+<p>Claims should be supported by measured output, captured evidence, and a documented
+hardware/software configuration.</p>
+<h2 id="related-documentation">Related Documentation<a class="headerlink" href="#related-documentation" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../../architecture/overview/">System Architecture</a></li>
+<li><a href="../../verification/evidence/">Verification Evidence</a></li>
+<li><a href="../vision-pipeline/">Vision Pipeline</a></li>
+<li><a href="../vision-telemetry/">Vision Telemetry</a></li>
+<li><a href="../../gateway/robot-gateway/">Robot Gateway</a></li>
+<li><a href="../../verification/ci-cd/">CI/CD Overview</a></li>
+</ul>
 
 
 

@@ -9,10 +9,10 @@
       
       
       
-        <link rel="prev" href="../../verification/code-documentation/">
+        <link rel="prev" href="../../gateway/remote-monitoring-architecture/">
       
       
-        <link rel="next" href="../wiring/">
+        <link rel="next" href="../build-pipeline/">
       
       
         
@@ -23,7 +23,7 @@
     
     
       
-        <title>Circuit - omniseer</title>
+        <title>Evidence - omniseer</title>
       
     
     
@@ -72,7 +72,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#circuit" class="md-skip">
+        <a href="#verification-evidence" class="md-skip">
           Skip to content
         </a>
       
@@ -108,7 +108,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Circuit
+              Evidence
             
           </span>
         </div>
@@ -1051,8 +1051,10 @@
       
   
   
+    
   
   
+  
     
     
     
@@ -1063,11 +1065,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
         
           
           <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
@@ -1088,7 +1090,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1103,10 +1105,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../verification/evidence/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1122,6 +1151,70 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#ci-verified" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CI Verified
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#locally-verified" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Locally Verified
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hardware-verified" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hardware Verified
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-evidence-records" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run Evidence Records
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1134,7 +1227,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../verification/build-pipeline/" class="md-nav__link">
+      <a href="../build-pipeline/" class="md-nav__link">
         
   
   
@@ -1162,7 +1255,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../verification/ci-cd/" class="md-nav__link">
+      <a href="../ci-cd/" class="md-nav__link">
         
   
   
@@ -1190,7 +1283,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../verification/code-documentation/" class="md-nav__link">
+      <a href="../code-documentation/" class="md-nav__link">
         
   
   
@@ -1222,8 +1315,6 @@
       
   
   
-    
-  
   
   
     
@@ -1236,11 +1327,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
         
           
           <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
@@ -1261,7 +1352,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_8">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1276,19 +1367,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../hardware/circuit/" class="md-nav__link">
         
   
   
@@ -1304,7 +1386,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -1317,7 +1398,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../wiring/" class="md-nav__link">
+      <a href="../../hardware/wiring/" class="md-nav__link">
         
   
   
@@ -1365,6 +1446,58 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#ci-verified" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CI Verified
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#locally-verified" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Locally Verified
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hardware-verified" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hardware Verified
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-evidence-records" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run Evidence Records
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1383,10 +1516,77 @@
   
 
 
-<h1 id="circuit">Circuit<a class="headerlink" href="#circuit" title="Permanent link">&para;</a></h1>
-<p>This page records the electrical integration references for the current Omniseer
-robot hardware. The repository keeps source hardware material under
-<code>hardware/electrical/</code> and firmware-facing IO configuration under <code>firmware/include/</code>.</p>
+<h1 id="verification-evidence">Verification Evidence<a class="headerlink" href="#verification-evidence" title="Permanent link">&para;</a></h1>
+<p>This page ties Omniseer implementation claims to the checks and run records that
+support them.</p>
+<h2 id="ci-verified">CI Verified<a class="headerlink" href="#ci-verified" title="Permanent link">&para;</a></h2>
+<p>GitHub Actions <code>ci</code> is the public software gate for the default branch. A green
+run means the repository passed these portable checks:</p>
+<ul>
+<li>Ruff lint for the Python ROS/operator packages.</li>
+<li>ROS Kilted package dependency install, build, and tests for the portable core
+  package set.</li>
+<li>Headless Gazebo smoke launch with CI-safe geometry and five boundary topics:
+  <code>/clock</code>, <code>/imu</code>, <code>/scan</code>, <code>/range</code>, and
+  <code>/mecanum_drive_controller/odometry</code>.</li>
+<li>Portable host vision tests for buffer pooling, JSONL telemetry, and rolling
+  telemetry.</li>
+<li>Portable run-bundle tests for manifest/summary handling, recording helpers,
+  inspection, retrieval edge cases, system telemetry parsing, evidence annotation,
+  and static report generation.</li>
+<li>Compile-only Teensy 4.1 firmware build through <code>scripts/omni build firmware</code>.</li>
+<li>Strict MkDocs documentation build.</li>
+</ul>
+<p>CI is intentionally portable. Target-hardware evidence covers camera capture,
+RGA/RKNN execution, NPU latency, robot IO, firmware flashing, micro-ROS transport,
+and operator behavior.</p>
+<h2 id="locally-verified">Locally Verified<a class="headerlink" href="#locally-verified" title="Permanent link">&para;</a></h2>
+<p>Recent Radxa dev-container cleanup checks used the repository front door and
+focused CI-equivalent commands:</p>
+<ul>
+<li><code>scripts/omni test smoke-sim</code></li>
+<li><code>scripts/omni build firmware</code></li>
+<li><code>scripts/omni docs build</code></li>
+<li>narrowed <code>rosdep check</code> for the smoke package set</li>
+</ul>
+<p>These local checks confirm the scripts and portable workflows behave correctly in
+the current development container.</p>
+<h2 id="hardware-verified">Hardware Verified<a class="headerlink" href="#hardware-verified" title="Permanent link">&para;</a></h2>
+<p>The native vision implementation includes target-oriented V4L2, RGA, RKNN,
+post-processing, and telemetry paths. Component-level target checks and harnesses
+support those implementation claims.</p>
+<p>The local run bundle <code>runs/pipeline_001</code> records a completed target-hardware
+Phase 3 native perception run on ROCK 5B+:</p>
+<ul>
+<li>duration: 15.5 s</li>
+<li>detections: 230 records, 235 observed <code>person</code> detections</li>
+<li>performance: 27 <code>/vision/perf</code> records</li>
+<li>resource telemetry: 16 <code>system.jsonl</code> records</li>
+<li>native pipeline telemetry: 1,067 <code>pipeline_telemetry.jsonl</code> records</li>
+<li>native telemetry status: 836 producer and 231 consumer samples, all <code>ok</code></li>
+<li>recorded latency: producer total mean 1.12 ms, consumer infer mean 60.34 ms,
+  consumer infer p95 64.47 ms</li>
+</ul>
+<p>This records the native perception path persisting detections,
+performance summaries, system telemetry, and native stage telemetry into one
+inspectable run bundle.</p>
+<p>Additional target-hardware records document integrated operator behavior such as:</p>
+<ul>
+<li>real teleop reaching <code>/mecanum_drive_controller/reference</code></li>
+<li>gateway/preview/overlay operation during the same real run</li>
+</ul>
+<h2 id="run-evidence-records">Run Evidence Records<a class="headerlink" href="#run-evidence-records" title="Permanent link">&para;</a></h2>
+<p>RunBundles provide the project evidence format. A complete bundle can include:</p>
+<ul>
+<li><code>manifest.json</code> with run configuration and provenance</li>
+<li><code>detections.jsonl</code> with typed perception outputs</li>
+<li><code>perf.jsonl</code> with ROS vision performance summaries</li>
+<li><code>system.jsonl</code> with low-rate resource telemetry</li>
+<li><code>pipeline_telemetry.jsonl</code> with native runtime stage samples</li>
+<li><code>autonomy.jsonl</code> with bounded target-centering events when autonomy is enabled</li>
+<li><code>evidence/</code> images and annotations</li>
+<li>generated inspection summaries and static HTML reports</li>
+</ul>
 
 
 

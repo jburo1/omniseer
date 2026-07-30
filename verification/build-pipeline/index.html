@@ -9,10 +9,10 @@
       
       
       
-        <link rel="prev" href="../../verification/code-documentation/">
+        <link rel="prev" href="../evidence/">
       
       
-        <link rel="next" href="../wiring/">
+        <link rel="next" href="../ci-cd/">
       
       
         
@@ -23,7 +23,7 @@
     
     
       
-        <title>Circuit - omniseer</title>
+        <title>Build pipeline - omniseer</title>
       
     
     
@@ -72,7 +72,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#circuit" class="md-skip">
+        <a href="#build-pipeline" class="md-skip">
           Skip to content
         </a>
       
@@ -108,7 +108,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Circuit
+              Build pipeline
             
           </span>
         </div>
@@ -1051,8 +1051,10 @@
       
   
   
+    
   
   
+  
     
     
     
@@ -1063,11 +1065,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
         
           
           <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
@@ -1088,7 +1090,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1106,7 +1108,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../verification/evidence/" class="md-nav__link">
+      <a href="../evidence/" class="md-nav__link">
         
   
   
@@ -1131,10 +1133,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../verification/build-pipeline/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Build pipeline
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1150,6 +1179,70 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#current-pipeline-layers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Pipeline Layers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#local-development-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Local Development Flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#shared-validation-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Shared Validation Flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pipeline-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pipeline Scope
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1162,7 +1255,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../verification/ci-cd/" class="md-nav__link">
+      <a href="../ci-cd/" class="md-nav__link">
         
   
   
@@ -1190,7 +1283,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../verification/code-documentation/" class="md-nav__link">
+      <a href="../code-documentation/" class="md-nav__link">
         
   
   
@@ -1222,8 +1315,6 @@
       
   
   
-    
-  
   
   
     
@@ -1236,11 +1327,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
         
           
           <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
@@ -1261,7 +1352,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_8">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1276,19 +1367,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../hardware/circuit/" class="md-nav__link">
         
   
   
@@ -1304,7 +1386,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -1317,7 +1398,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../wiring/" class="md-nav__link">
+      <a href="../../hardware/wiring/" class="md-nav__link">
         
   
   
@@ -1365,6 +1446,58 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#current-pipeline-layers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Pipeline Layers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#local-development-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Local Development Flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#shared-validation-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Shared Validation Flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pipeline-scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pipeline Scope
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1383,10 +1516,56 @@
   
 
 
-<h1 id="circuit">Circuit<a class="headerlink" href="#circuit" title="Permanent link">&para;</a></h1>
-<p>This page records the electrical integration references for the current Omniseer
-robot hardware. The repository keeps source hardware material under
-<code>hardware/electrical/</code> and firmware-facing IO configuration under <code>firmware/include/</code>.</p>
+<h1 id="build-pipeline">Build Pipeline<a class="headerlink" href="#build-pipeline" title="Permanent link">&para;</a></h1>
+<p>This page gives the high-level view of how software changes move through the
+repository.</p>
+<h2 id="current-pipeline-layers">Current Pipeline Layers<a class="headerlink" href="#current-pipeline-layers" title="Permanent link">&para;</a></h2>
+<p>Omniseer currently has two main build/validation layers:</p>
+<ul>
+<li>local developer workflows used during active development</li>
+<li>GitHub Actions workflows used for shared validation and docs publishing</li>
+</ul>
+<h2 id="local-development-flow">Local Development Flow<a class="headerlink" href="#local-development-flow" title="Permanent link">&para;</a></h2>
+<p>Most code changes are still validated locally first.</p>
+<p>Typical examples:</p>
+<ul>
+<li><code>colcon build</code> and <code>colcon test</code> for the ROS workspace</li>
+<li>targeted CMake builds for native vision components</li>
+<li>local linting such as Ruff</li>
+</ul>
+<p>This keeps iteration fast and makes it easier to debug issues close to the
+change.</p>
+<h2 id="shared-validation-flow">Shared Validation Flow<a class="headerlink" href="#shared-validation-flow" title="Permanent link">&para;</a></h2>
+<p>After code is pushed or opened in a pull request, GitHub Actions runs the
+repository's CI workflow in several focused lanes:</p>
+<ul>
+<li><code>lint</code></li>
+<li><code>ros-core</code></li>
+<li><code>bringup-smoke</code></li>
+<li><code>vision-host</code></li>
+<li><code>firmware-build</code></li>
+<li><code>docs-build</code></li>
+</ul>
+<p>This keeps the default PR gate broad enough to catch interface drift while
+keeping the slower checks isolated instead of hiding inside one large job.</p>
+<p>See <a href="../ci-cd/">CI/CD Overview</a> for:</p>
+<ul>
+<li>workflow triggers</li>
+<li>exact checks that run in CI</li>
+<li>what is currently deployed automatically</li>
+<li>coverage boundaries</li>
+</ul>
+<h2 id="pipeline-scope">Pipeline Scope<a class="headerlink" href="#pipeline-scope" title="Permanent link">&para;</a></h2>
+<p>This page is the umbrella view for:</p>
+<ul>
+<li>local build workflows</li>
+<li>CI validation stages</li>
+<li>release packaging</li>
+<li>artifact publishing</li>
+<li>hardware-in-the-loop execution</li>
+</ul>
+<p>The detailed operational reference lives in <a href="../ci-cd/">CI/CD Overview</a>. Robot-run
+artifacts are produced by the RunBundle workflow rather than by CI.</p>
 
 
 

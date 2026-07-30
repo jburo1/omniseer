@@ -9,10 +9,10 @@
       
       
       
-        <link rel="prev" href="../../verification/code-documentation/">
+        <link rel="prev" href="../gateway-api/">
       
       
-        <link rel="next" href="../wiring/">
+        <link rel="next" href="../remote-monitoring-architecture/">
       
       
         
@@ -23,7 +23,7 @@
     
     
       
-        <title>Circuit - omniseer</title>
+        <title>Preview streaming - omniseer</title>
       
     
     
@@ -72,7 +72,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#circuit" class="md-skip">
+        <a href="#preview-streaming" class="md-skip">
           Skip to content
         </a>
       
@@ -108,7 +108,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Circuit
+              Preview streaming
             
           </span>
         </div>
@@ -880,8 +880,10 @@
       
   
   
+    
   
   
+  
     
     
     
@@ -892,11 +894,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
         
           
           <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
@@ -917,7 +919,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             
@@ -935,7 +937,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../gateway/robot-gateway/" class="md-nav__link">
+      <a href="../robot-gateway/" class="md-nav__link">
         
   
   
@@ -963,7 +965,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../gateway/gateway-api/" class="md-nav__link">
+      <a href="../gateway-api/" class="md-nav__link">
         
   
   
@@ -988,10 +990,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../gateway/preview-streaming/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preview streaming
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1007,6 +1036,236 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#purpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Purpose
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current State
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#major-design-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Major Design Considerations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-and-target-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current and Target Pipeline
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-mainpath-for-preview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why mainpath for Preview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#transport-choice-srt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Transport Choice: SRT
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#preview-profiles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preview Profiles
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sync-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sync Model
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Sync Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#default-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Default mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exact-sync-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exact-sync mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#worker-lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Worker Lifecycle
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-encoder-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Encoder Options
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Current Encoder Options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#desired-production-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Desired production path
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#current-implemented-bring-up-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current implemented bring-up path
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#currently-unattractive-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Currently unattractive path
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#host-side-expectations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Host-Side Expectations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#open-integration-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Open Integration Questions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-docs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Docs
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1019,7 +1278,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../gateway/remote-monitoring-architecture/" class="md-nav__link">
+      <a href="../remote-monitoring-architecture/" class="md-nav__link">
         
   
   
@@ -1222,8 +1481,6 @@
       
   
   
-    
-  
   
   
     
@@ -1236,11 +1493,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
         
           
           <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
@@ -1261,7 +1518,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_8">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1276,19 +1533,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../hardware/circuit/" class="md-nav__link">
         
   
   
@@ -1304,7 +1552,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -1317,7 +1564,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../wiring/" class="md-nav__link">
+      <a href="../../hardware/wiring/" class="md-nav__link">
         
   
   
@@ -1365,6 +1612,224 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#purpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Purpose
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current State
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#major-design-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Major Design Considerations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-and-target-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current and Target Pipeline
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-mainpath-for-preview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why mainpath for Preview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#transport-choice-srt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Transport Choice: SRT
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#preview-profiles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preview Profiles
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sync-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sync Model
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Sync Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#default-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Default mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exact-sync-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exact-sync mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#worker-lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Worker Lifecycle
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-encoder-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Encoder Options
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Current Encoder Options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#desired-production-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Desired production path
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#current-implemented-bring-up-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current implemented bring-up path
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#currently-unattractive-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Currently unattractive path
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#host-side-expectations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Host-Side Expectations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#open-integration-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Open Integration Questions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-docs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Docs
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1383,10 +1848,226 @@
   
 
 
-<h1 id="circuit">Circuit<a class="headerlink" href="#circuit" title="Permanent link">&para;</a></h1>
-<p>This page records the electrical integration references for the current Omniseer
-robot hardware. The repository keeps source hardware material under
-<code>hardware/electrical/</code> and firmware-facing IO configuration under <code>firmware/include/</code>.</p>
+<h1 id="preview-streaming">Preview Streaming<a class="headerlink" href="#preview-streaming" title="Permanent link">&para;</a></h1>
+<p><em>Status: software x264/SRT bringup path implemented; hardware H.265 planned</em></p>
+<p>This page describes the operator preview export path from the robot SBC to the
+operator laptop.</p>
+<p>The key design goal is to keep the preview path optional and low-impact while
+still being useful for diagnosis, evaluation, and visual verification of the
+vision stack.</p>
+<h2 id="purpose">Purpose<a class="headerlink" href="#purpose" title="Permanent link">&para;</a></h2>
+<p>Provide an on-demand, remotely controlled preview stream that:</p>
+<ul>
+<li>does not burden the mission-critical inference path when disabled</li>
+<li>uses a separate camera path where possible</li>
+<li>exports video to the laptop over Wi-Fi</li>
+<li>keeps higher-cost decode/visualization work offboard</li>
+</ul>
+<h2 id="current-state">Current State<a class="headerlink" href="#current-state" title="Permanent link">&para;</a></h2>
+<p>What is already known from the current ROCK 5B Plus target:</p>
+<ul>
+<li><code>/dev/video11</code> is <code>rkisp_mainpath</code></li>
+<li><code>/dev/video12</code> is <code>rkisp_selfpath</code></li>
+<li>both can stream concurrently at <code>1280x720 NV12 60 fps</code></li>
+<li>neither path currently advertises direct <code>BGR24</code>/<code>RGB24</code></li>
+<li><code>mainpath</code> and <code>selfpath</code> are the right split for preview vs inference</li>
+</ul>
+<p>Transport/runtime checks already completed on this SBC:</p>
+<ul>
+<li>GStreamer <code>v4l2src</code> can capture from <code>rkisp_mainpath</code></li>
+<li>GStreamer SRT plugins are installed</li>
+<li>local <code>mainpath -&gt; x264 -&gt; MPEG-TS -&gt; SRT -&gt; decode</code> loopback has been
+  validated</li>
+<li>the current C++ gateway can now launch that <code>x264 -&gt; MPEG-TS -&gt; SRT</code> path as
+  its built-in preview worker</li>
+<li>the packaged Python host tools can now request preview over gRPC and consume
+  that SRT stream using <code>gst-launch-1.0</code></li>
+</ul>
+<p>Current blocker for the intended production path:</p>
+<ul>
+<li>hardware H.265 encode is not currently exposed through the installed
+  userspace stack on this image</li>
+<li>FFmpeg exposes <code>hevc_v4l2m2m</code>, but encode failed with <code>Could not find a valid
+  device</code></li>
+<li>no Rockchip-specific GStreamer H.265 encoder plugin appears to be installed</li>
+</ul>
+<p>Implication:</p>
+<ul>
+<li>SRT transport is feasible now</li>
+<li>preview export is feasible now</li>
+<li>low-overhead production H.265 still needs encoder integration work</li>
+</ul>
+<h2 id="major-design-considerations">Major Design Considerations<a class="headerlink" href="#major-design-considerations" title="Permanent link">&para;</a></h2>
+<ul>
+<li>
+<p>Keep preview off by default.</p>
+</li>
+<li>
+<p>Use <code>rkisp_mainpath</code> for preview and <code>rkisp_selfpath</code> for inference by
+  default.</p>
+</li>
+<li>
+<p>Keep preview in <code>NV12</code> into the encoder when possible; do not convert to BGR
+  on the robot in the default path.</p>
+</li>
+<li>
+<p>Use SRT as the first preview transport over Wi-Fi.</p>
+</li>
+<li>
+<p>Decode and render on the host laptop.</p>
+</li>
+<li>
+<p>Reserve exact-frame debug paths for later targeted debugging, not the default
+  operator preview flow.</p>
+</li>
+</ul>
+<h2 id="current-and-target-pipeline">Current and Target Pipeline<a class="headerlink" href="#current-and-target-pipeline" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>rkisp_mainpath (/dev/video11, NV12)
+            |
+            v
+     managed preview worker
+            |
+            +--&gt; encode (target: H.265, current fallback: x264 for bring-up)
+            |
+            v
+        MPEG-TS / SRT
+            |
+            v
+     operator laptop decode
+            |
+     +--&gt; current external viewer process
+     +--&gt; monitor app preview viewer
+            +--&gt; optional local ROS Image bridge
+            +--&gt; optional host-side overlays / RViz2
+</code></pre></div>
+<h2 id="why-mainpath-for-preview">Why <code>mainpath</code> for Preview<a class="headerlink" href="#why-mainpath-for-preview" title="Permanent link">&para;</a></h2>
+<p>The mission-critical vision pipeline already uses a producer/consumer hot path
+on the SBC and is optimized around low-latency inference. The preview path
+should not add avoidable work to that path.</p>
+<p>Using <code>mainpath</code> for preview gives:</p>
+<ul>
+<li>better isolation from inference</li>
+<li>no need to add a same-frame conversion branch in the default case</li>
+<li>a natural on/off switch for operator diagnostics</li>
+</ul>
+<p>The tradeoff is that preview frames and detection frames are close in time but
+not guaranteed to be the exact same frame. That is acceptable for normal
+operator monitoring.</p>
+<h2 id="transport-choice-srt">Transport Choice: SRT<a class="headerlink" href="#transport-choice-srt" title="Permanent link">&para;</a></h2>
+<p>The implemented preview transport is SRT.</p>
+<p>Why:</p>
+<ul>
+<li>better fit for variable Wi-Fi than plain RTP/UDP</li>
+<li>built-in recovery/latency tuning</li>
+<li>good support in the installed GStreamer stack</li>
+<li>simpler than WebRTC for the current scope</li>
+</ul>
+<p>This is a diagnostics-oriented link, not a browser-delivery problem.</p>
+<h2 id="preview-profiles">Preview Profiles<a class="headerlink" href="#preview-profiles" title="Permanent link">&para;</a></h2>
+<p>The preview path exposes bounded named profiles, not raw encoder knobs.</p>
+<p>Implemented profiles:</p>
+<ul>
+<li><code>off</code></li>
+<li><code>low_bw</code></li>
+<li><code>balanced</code></li>
+<li><code>high_quality</code></li>
+</ul>
+<p>Current x264 meanings:</p>
+<ul>
+<li><code>off</code>: no preview worker running</li>
+<li><code>low_bw</code>: 720p, 15 fps, 1000 kbit/s</li>
+<li><code>balanced</code>: 720p, 30 fps, 2500 kbit/s</li>
+<li><code>high_quality</code>: 720p, 60 fps, 4500 kbit/s</li>
+</ul>
+<p>The exact numbers can be tuned later after integration and Wi-Fi testing.</p>
+<h2 id="sync-model">Sync Model<a class="headerlink" href="#sync-model" title="Permanent link">&para;</a></h2>
+<h3 id="default-mode">Default mode<a class="headerlink" href="#default-mode" title="Permanent link">&para;</a></h3>
+<ul>
+<li>inference on <code>selfpath</code></li>
+<li>preview on <code>mainpath</code></li>
+<li>approximate temporal alignment</li>
+</ul>
+<p>This is the recommended operator mode.</p>
+<h3 id="exact-sync-mode">Exact-sync mode<a class="headerlink" href="#exact-sync-mode" title="Permanent link">&para;</a></h3>
+<p>Later optional mode:</p>
+<ul>
+<li>preview derived from the same frame path as inference</li>
+<li>more expensive on the SBC</li>
+<li>only used when exact overlay verification matters</li>
+</ul>
+<p>This should not be the default always-on path.</p>
+<h2 id="worker-lifecycle">Worker Lifecycle<a class="headerlink" href="#worker-lifecycle" title="Permanent link">&para;</a></h2>
+<p>The preview worker is managed by the <code>robot_diag_control_cpp</code> gateway process.</p>
+<p>Basic lifecycle:</p>
+<ol>
+<li>preview disabled</li>
+<li>operator requests preview</li>
+<li>gateway spawns preview worker</li>
+<li>worker binds SRT endpoint and begins export</li>
+<li>operator disables preview</li>
+<li>gateway terminates preview worker</li>
+</ol>
+<p>The worker is disposable. Its process state is polled by the gateway, and worker
+failure does not terminate the mission-critical runtime.</p>
+<h2 id="current-encoder-options">Current Encoder Options<a class="headerlink" href="#current-encoder-options" title="Permanent link">&para;</a></h2>
+<h3 id="desired-production-path">Desired production path<a class="headerlink" href="#desired-production-path" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>NV12 mainpath -&gt; hardware H.265 encode -&gt; SRT</code></li>
+</ul>
+<p>This is the desired low-overhead end state.</p>
+<h3 id="current-implemented-bring-up-path">Current implemented bring-up path<a class="headerlink" href="#current-implemented-bring-up-path" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>NV12 mainpath -&gt; software x264 -&gt; SRT</code></li>
+</ul>
+<p>This path is now the implemented robot-side preview export path for early
+integration and proof-of-life, but it is not the desired long-term robot-side
+budget.</p>
+<h3 id="currently-unattractive-path">Currently unattractive path<a class="headerlink" href="#currently-unattractive-path" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>NV12 mainpath -&gt; software x265 -&gt; SRT</code></li>
+</ul>
+<p>This is too CPU-expensive for the intended mission-critical budget on the SBC.</p>
+<h2 id="host-side-expectations">Host-Side Expectations<a class="headerlink" href="#host-side-expectations" title="Permanent link">&para;</a></h2>
+<p>The operator laptop is expected to:</p>
+<ul>
+<li>receive SRT</li>
+<li>decode the stream</li>
+<li>render it in the operator app</li>
+<li>optionally feed decoded frames into local analysis/overlay pipelines</li>
+</ul>
+<p>Current implemented host slice:</p>
+<ul>
+<li><code>robot_preview_viewer</code> can enable preview over gRPC and consume the fixed or
+  configured SRT endpoint</li>
+<li><code>robot_overlay_viewer</code> can enable preview, decode SRT into an OpenCV window,
+  poll gateway overlay snapshots, and draw detections plus telemetry over the
+  live video</li>
+<li><code>robot_monitor_shell</code> can poll gateway status, run short watch loops, and
+  launch <code>robot_preview_viewer</code> from one integrated tool</li>
+<li><code>robot_monitor_gui</code> can refresh status, toggle preview, and launch
+  <code>robot_preview_viewer</code> from a desktop GUI</li>
+<li>it currently shells out to <code>gst-launch-1.0</code>, so host-side GStreamer tooling
+  is required</li>
+<li>the GUI currently launches preview in a separate helper process; it does not
+  yet embed decoded video in its own window</li>
+<li>these are minimal bring-up tools, not the final operator UI</li>
+</ul>
+<p>The architecture should <strong>not</strong> assume the laptop has Rockchip RGA. It should
+only assume general-purpose CPU/GPU resources and likely hardware video decode.</p>
+<h2 id="open-integration-questions">Open Integration Questions<a class="headerlink" href="#open-integration-questions" title="Permanent link">&para;</a></h2>
+<ul>
+<li>what exact hardware H.265 userspace path should be installed on the SBC image</li>
+<li>what preview profile defaults should be used over the current Wi-Fi setup</li>
+<li>whether decoded preview should be bridged into ROS on the host in the first
+  UI slices or kept as a plain video panel initially</li>
+<li>how recorded preview evidence correlates with the RunBundle evidence format</li>
+</ul>
+<h2 id="related-docs">Related Docs<a class="headerlink" href="#related-docs" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../remote-monitoring-architecture/">Remote monitoring architecture</a></li>
+<li><a href="../robot-gateway/">Robot gateway</a></li>
+<li><a href="../gateway-api/">Gateway API</a></li>
+</ul>
 
 
 

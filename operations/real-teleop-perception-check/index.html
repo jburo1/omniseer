@@ -9,10 +9,10 @@
       
       
       
-        <link rel="prev" href="../../verification/code-documentation/">
+        <link rel="prev" href="../operator-run-workflow/">
       
       
-        <link rel="next" href="../wiring/">
+        <link rel="next" href="../operator-integrated-demo/">
       
       
         
@@ -23,7 +23,7 @@
     
     
       
-        <title>Circuit - omniseer</title>
+        <title>Real teleop + native perception check - omniseer</title>
       
     
     
@@ -72,7 +72,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#circuit" class="md-skip">
+        <a href="#real-teleop-native-perception-check" class="md-skip">
           Skip to content
         </a>
       
@@ -108,7 +108,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Circuit
+              Real teleop + native perception check
             
           </span>
         </div>
@@ -395,8 +395,10 @@
       
   
   
+    
   
   
+  
     
     
     
@@ -407,11 +409,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
           <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
@@ -432,7 +434,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -450,7 +452,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../operations/scripts-frontdoor/" class="md-nav__link">
+      <a href="../scripts-frontdoor/" class="md-nav__link">
         
   
   
@@ -478,7 +480,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../operations/operator-run-workflow/" class="md-nav__link">
+      <a href="../operator-run-workflow/" class="md-nav__link">
         
   
   
@@ -503,10 +505,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../operations/real-teleop-perception-check/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Real teleop + native perception check
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -522,6 +551,125 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#preconditions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preconditions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-native-vision-asset-overrides" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example Native Vision Asset Overrides
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bringup-command" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bringup Command
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#single-entry-helper" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Single-Entry Helper
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#teleop-command" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Teleop Command
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verification Commands
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#optional-passive-smoke-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optional Passive Smoke Check
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification-record" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verification Record
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -534,7 +682,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../operations/operator-integrated-demo/" class="md-nav__link">
+      <a href="../operator-integrated-demo/" class="md-nav__link">
         
   
   
@@ -1222,8 +1370,6 @@
       
   
   
-    
-  
   
   
     
@@ -1236,11 +1382,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
         
           
           <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
@@ -1261,7 +1407,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_8">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1276,19 +1422,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../hardware/circuit/" class="md-nav__link">
         
   
   
@@ -1304,7 +1441,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -1317,7 +1453,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../wiring/" class="md-nav__link">
+      <a href="../../hardware/wiring/" class="md-nav__link">
         
   
   
@@ -1365,6 +1501,113 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#preconditions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preconditions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-native-vision-asset-overrides" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example Native Vision Asset Overrides
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bringup-command" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bringup Command
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#single-entry-helper" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Single-Entry Helper
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#teleop-command" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Teleop Command
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verification Commands
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#optional-passive-smoke-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optional Passive Smoke Check
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification-record" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verification Record
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1383,10 +1626,176 @@
   
 
 
-<h1 id="circuit">Circuit<a class="headerlink" href="#circuit" title="Permanent link">&para;</a></h1>
-<p>This page records the electrical integration references for the current Omniseer
-robot hardware. The repository keeps source hardware material under
-<code>hardware/electrical/</code> and firmware-facing IO configuration under <code>firmware/include/</code>.</p>
+<h1 id="real-teleop-native-perception-check">Real Teleop + Native Perception Check<a class="headerlink" href="#real-teleop-native-perception-check" title="Permanent link">&para;</a></h1>
+<p>This checklist verifies the minimum integrated real-robot slice kept as the
+<code>legacy-teleop</code> profile:</p>
+<ul>
+<li>keyboard teleop reaches <code>/mecanum_drive_controller/reference</code></li>
+<li>the native vision bridge publishes <code>/yolo/detections</code></li>
+<li>the native vision bridge publishes <code>/vision/perf</code></li>
+<li>teleop and perception run at the same time</li>
+</ul>
+<p>Use the verification record at the end of this document to capture target-hardware
+run evidence for this slice.</p>
+<h2 id="preconditions">Preconditions<a class="headerlink" href="#preconditions" title="Permanent link">&para;</a></h2>
+<ul>
+<li>ROS 2 workspace built and sourced.</li>
+<li>Real robot connected with MCU and LiDAR available as expected by
+  <code>real.launch.py</code>.</li>
+<li>Camera available at the configured <code>camera.device</code>.</li>
+<li>RKNN, RGA, and V4L2 runtime dependencies installed on the target robot.</li>
+</ul>
+<h2 id="example-native-vision-asset-overrides">Example Native Vision Asset Overrides<a class="headerlink" href="#example-native-vision-asset-overrides" title="Permanent link">&para;</a></h2>
+<p>The committed <code>vision_bridge.real.yaml</code> intentionally leaves required native
+vision asset paths empty. The bridge will fail fast until valid paths are
+supplied.</p>
+<p>Example using repo-shipped test assets:</p>
+<div class="highlight"><pre><span></span><code><span class="nv">REPO_ROOT</span><span class="o">=</span>/home/radxa/apps/omniseer
+
+<span class="nv">DETECTOR_MODEL_PATH</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">REPO_ROOT</span><span class="si">}</span><span class="s2">/vision/testdata/rknn_runner/yolo_world_v2s_i8.rknn&quot;</span>
+<span class="nv">CLIP_MODEL_PATH</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">REPO_ROOT</span><span class="si">}</span><span class="s2">/vision/testdata/text_embeddings/clip_text_fp16.rknn&quot;</span>
+<span class="nv">CLIP_VOCAB_PATH</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">REPO_ROOT</span><span class="si">}</span><span class="s2">/vision/testdata/text_embeddings/clip_vocab.bpe&quot;</span>
+<span class="nv">CLASSES_PATH</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">REPO_ROOT</span><span class="si">}</span><span class="s2">/vision/testdata/text_embeddings/classes_person_bus.txt&quot;</span>
+</code></pre></div>
+<p>If the target robot uses different assets or a different checkout path, replace
+those values with the real local paths before launch.</p>
+<h2 id="bringup-command">Bringup Command<a class="headerlink" href="#bringup-command" title="Permanent link">&para;</a></h2>
+<p>Launch the minimum real stack with navigation, SLAM, RF2O, and gateway disabled:</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>bringup<span class="w"> </span>real.launch.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>start_nav:<span class="o">=</span><span class="nb">false</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>start_slam:<span class="o">=</span><span class="nb">false</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>start_rf2o:<span class="o">=</span><span class="nb">false</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>start_gateway:<span class="o">=</span><span class="nb">false</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>start_vision:<span class="o">=</span><span class="nb">true</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>wait_for_boundary_topics:<span class="o">=</span><span class="nb">false</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>detector_model_path:<span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">DETECTOR_MODEL_PATH</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>clip_model_path:<span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">CLIP_MODEL_PATH</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>clip_vocab_path:<span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">CLIP_VOCAB_PATH</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>classes_path:<span class="o">=</span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">CLASSES_PATH</span><span class="si">}</span><span class="s2">&quot;</span>
+</code></pre></div>
+<p>Expected launch behavior:</p>
+<ul>
+<li><code>vision_bridge</code> starts or fails immediately with a clear parameter/runtime
+  error.</li>
+<li><code>twist_mux</code> remains available even with nav disabled.</li>
+<li>No navigation stack processes are required for this check.</li>
+</ul>
+<h2 id="single-entry-helper">Single-Entry Helper<a class="headerlink" href="#single-entry-helper" title="Permanent link">&para;</a></h2>
+<p>For the supported repo-local entrypoint, use:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--profile<span class="w"> </span>legacy-teleop
+</code></pre></div>
+<p>Other useful modes:</p>
+<ul>
+<li><code>scripts/omni run real --profile legacy-teleop smoke</code></li>
+<li>start the legacy teleop bringup, run the passive verifier, then stop</li>
+<li><code>scripts/omni run real --profile legacy-teleop bringup</code></li>
+<li>run only the legacy teleop bringup</li>
+<li><code>scripts/omni run teleop</code></li>
+<li>run only the stamped keyboard teleop publisher</li>
+<li><code>scripts/omni check real-perception</code></li>
+<li>run only the passive verifier against an existing ROS graph</li>
+</ul>
+<p>The legacy <code>scripts/phase2_real.sh</code> helper still delegates to the same
+<code>legacy-teleop</code> implementation for compatibility.</p>
+<h2 id="teleop-command">Teleop Command<a class="headerlink" href="#teleop-command" title="Permanent link">&para;</a></h2>
+<p>In another terminal:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>teleop
+</code></pre></div>
+<p>This script publishes <code>geometry_msgs/msg/TwistStamped</code> to
+<code>/cmd_vel_keyboard</code>.</p>
+<h2 id="verification-commands">Verification Commands<a class="headerlink" href="#verification-commands" title="Permanent link">&para;</a></h2>
+<p>Run these while the real stack and teleop are active:</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>topic<span class="w"> </span>list
+
+ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">type</span><span class="w"> </span>/cmd_vel_keyboard
+ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">type</span><span class="w"> </span>/mecanum_drive_controller/reference
+ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>--once<span class="w"> </span>/mecanum_drive_controller/reference
+
+ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">type</span><span class="w"> </span>/yolo/detections
+ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>--once<span class="w"> </span>/yolo/detections
+ros2<span class="w"> </span>topic<span class="w"> </span>hz<span class="w"> </span>/yolo/detections
+
+ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">type</span><span class="w"> </span>/vision/perf
+ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>--once<span class="w"> </span>/vision/perf
+ros2<span class="w"> </span>topic<span class="w"> </span>hz<span class="w"> </span>/vision/perf
+</code></pre></div>
+<p>Expected observations:</p>
+<ul>
+<li><code>/cmd_vel_keyboard</code> reports <code>geometry_msgs/msg/TwistStamped</code></li>
+<li><code>/mecanum_drive_controller/reference</code> reports
+  <code>geometry_msgs/msg/TwistStamped</code></li>
+<li><code>/mecanum_drive_controller/reference</code> receives teleop commands while keys are
+  pressed</li>
+<li><code>/vision/perf</code> publishes repeatedly</li>
+<li><code>/yolo/detections</code> publishes while the camera sees configured classes</li>
+</ul>
+<h2 id="optional-passive-smoke-check">Optional Passive Smoke Check<a class="headerlink" href="#optional-passive-smoke-check" title="Permanent link">&para;</a></h2>
+<p>This helper does not publish motion commands:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>check<span class="w"> </span>real-perception
+</code></pre></div>
+<p>To require at least one detection message as well:</p>
+<div class="highlight"><pre><span></span><code><span class="nv">OMNISEER_REQUIRE_DETECTIONS</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>scripts/omni<span class="w"> </span>check<span class="w"> </span>real-perception
+</code></pre></div>
+<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Likely cause</th>
+<th>Check</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vision_bridge</code> exits immediately with <code>camera.device</code> errors</td>
+<td>Wrong V4L2 device path or camera unavailable</td>
+<td>Check <code>/dev/video*</code>, confirm <code>camera.device</code>, test device permissions</td>
+</tr>
+<tr>
+<td><code>vision_bridge</code> exits with RKNN or RGA loader/runtime errors</td>
+<td>Missing target-hardware acceleration libraries</td>
+<td>Verify RKNN/RGA runtime install on the robot</td>
+</tr>
+<tr>
+<td><code>vision_bridge</code> exits with <code>models.* must not be empty</code> or <code>classes.path must not be empty</code></td>
+<td>Required asset overrides missing</td>
+<td>Re-run launch with concrete asset paths</td>
+</tr>
+<tr>
+<td><code>/vision/perf</code> publishes but <code>/yolo/detections</code> stays empty</td>
+<td>Scene does not contain configured classes, model/classes mismatch, or postprocess threshold too strict</td>
+<td>Verify class list matches expected scene objects; temporarily lower score threshold if needed</td>
+</tr>
+<tr>
+<td><code>/cmd_vel_keyboard</code> type is <code>geometry_msgs/msg/Twist</code></td>
+<td>Teleop script not using stamped mode</td>
+<td>Re-run <code>scripts/omni run teleop</code> and inspect the teleop wrapper contents</td>
+</tr>
+<tr>
+<td><code>/mecanum_drive_controller/reference</code> type does not match teleop input</td>
+<td>Twist mux/controller path mismatch</td>
+<td>Check <code>twist_mux.yaml</code>, confirm teleop topic type, inspect launch remap to <code>/mecanum_drive_controller/reference</code></td>
+</tr>
+<tr>
+<td><code>vision_bridge</code> logs a fatal runtime stop after startup</td>
+<td>Capture, preprocess, or inference pipeline failure</td>
+<td>Read the <code>vision_bridge</code> error line for <code>producer</code> or <code>consumer</code> failure stage and errno</td>
+</tr>
+</tbody>
+</table>
+<h2 id="verification-record">Verification Record<a class="headerlink" href="#verification-record" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Date:</li>
+<li>Operator:</li>
+<li>Robot / SBC:</li>
+<li>Launch command used:</li>
+<li>Asset paths used:</li>
+<li><code>/cmd_vel_keyboard</code> type:</li>
+<li><code>/mecanum_drive_controller/reference</code> type:</li>
+<li><code>/vision/perf</code> observed:</li>
+<li><code>/yolo/detections</code> observed:</li>
+<li>Notes:</li>
+</ul>
 
 
 
