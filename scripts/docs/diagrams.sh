@@ -9,7 +9,7 @@ source "${script_dir}/../lib/log.sh"
 source "${script_dir}/../lib/common.sh"
 
 expected_d2_version="v0.7.1"
-d2_layout="elk"
+d2_layout="dagre"
 d2_theme="0"
 
 sources=(
