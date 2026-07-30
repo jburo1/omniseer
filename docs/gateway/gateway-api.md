@@ -325,6 +325,6 @@ API through the real launch profile and `scripts/omni runs` front door.
 
 ## Related Docs
 
-- [Robot gateway](robot_gateway.md)
-- [Preview streaming](preview_streaming.md)
-- [Remote monitoring architecture](remote_monitoring_architecture.md)
+- [Robot gateway](robot-gateway.md)
+- [Preview streaming](preview-streaming.md)
+- [Remote monitoring architecture](remote-monitoring-architecture.md)

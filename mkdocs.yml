@@ -21,30 +21,34 @@ plugins:
   - git-revision-date-localized
 nav:
   - Home: index.md
-  - Architecture: architecture.md
-  - Evidence: evidence.md
-  - Diagrams:
-    - Overview: diagrams/README.md
+  - Architecture:
+    - Overview: architecture/overview.md
+    - Diagrams: diagrams/README.md
     - Explorer: diagrams/explorer/README.md
-  - Software:
-    - Scripts front door: software/scripts_frontdoor.md
-    - Edge-to-cloud perception: software/edge_to_cloud_perception.md
-    - Build pipeline: software/build_pipeline.md
-    - Robot runtime container: software/robot_runtime_container.md
-    - CI/CD overview: software/ci_cd.md
-    - Real teleop + native perception check: software/real_teleop_perception_check.md
-    - Operator-integrated real demo: software/operator_integrated_demo.md
-    - Operator run workflow: software/operator_run_workflow.md
-    - ROS packages: software/ros_packages.md
-    - Code documentation: software/code_documentation.md
-    - Vision pipeline: software/vision_pipeline.md
-    - Producer pipeline: software/producer_pipeline.md
-    - Consumer pipeline: software/consumer_pipeline.md
-    - Vision telemetry: software/vision_telemetry_spec.md
-    - Remote monitoring architecture: software/remote_monitoring_architecture.md
-    - Robot gateway: software/robot_gateway.md
-    - Preview streaming: software/preview_streaming.md
-    - Gateway API: software/gateway_api.md
+  - Operations:
+    - Scripts front door: operations/scripts-frontdoor.md
+    - Operator run workflow: operations/operator-run-workflow.md
+    - Real teleop + native perception check: operations/real-teleop-perception-check.md
+    - Operator-integrated real demo: operations/operator-integrated-demo.md
+  - Robot Runtime:
+    - ROS packages: robot-runtime/ros-packages.md
+    - Robot runtime container: robot-runtime/robot-runtime-container.md
+  - Perception:
+    - Edge-to-cloud perception: perception/edge-to-cloud.md
+    - Vision pipeline: perception/vision-pipeline.md
+    - Producer pipeline: perception/producer-pipeline.md
+    - Consumer pipeline: perception/consumer-pipeline.md
+    - Vision telemetry: perception/vision-telemetry.md
+  - Gateway:
+    - Robot gateway: gateway/robot-gateway.md
+    - Gateway API: gateway/gateway-api.md
+    - Preview streaming: gateway/preview-streaming.md
+    - Remote monitoring architecture: gateway/remote-monitoring-architecture.md
+  - Verification:
+    - Evidence: verification/evidence.md
+    - Build pipeline: verification/build-pipeline.md
+    - CI/CD overview: verification/ci-cd.md
+    - Code documentation: verification/code-documentation.md
   - Hardware:
     - Circuit: hardware/circuit.md
     - Wiring guide: hardware/wiring.md

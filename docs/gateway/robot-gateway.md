@@ -273,6 +273,6 @@ The gateway keeps status aggregation bounded and cache-backed.
 
 ## Related Docs
 
-- [Remote monitoring architecture](remote_monitoring_architecture.md)
-- [Gateway API](gateway_api.md)
-- [Preview streaming](preview_streaming.md)
+- [Remote monitoring architecture](remote-monitoring-architecture.md)
+- [Gateway API](gateway-api.md)
+- [Preview streaming](preview-streaming.md)

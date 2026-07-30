@@ -38,7 +38,7 @@ repository's CI workflow in several focused lanes:
 This keeps the default PR gate broad enough to catch interface drift while
 keeping the slower checks isolated instead of hiding inside one large job.
 
-See [CI/CD Overview](ci_cd.md) for:
+See [CI/CD Overview](ci-cd.md) for:
 
 - workflow triggers
 - exact checks that run in CI
@@ -55,5 +55,5 @@ This page is the umbrella view for:
 - artifact publishing
 - hardware-in-the-loop execution
 
-The detailed operational reference lives in [CI/CD Overview](ci_cd.md). Robot-run
+The detailed operational reference lives in [CI/CD Overview](ci-cd.md). Robot-run
 artifacts are produced by the RunBundle workflow rather than by CI.

@@ -50,9 +50,9 @@ docs/assets/diagrams/explorer/system-explorer.svg
 Example link targets:
 
 ```d2
-link: "../../../evidence/"
+link: "../../../verification/evidence/"
 link: "../../../hardware/circuit/"
-link: "../../../software/operator_run_workflow/"
+link: "../../../operations/operator-run-workflow/"
 ```
 
 Render target:

@@ -51,10 +51,10 @@ The documentation is organized as three connected layers:
 </p>
 
 - [Project documentation](https://jburo1.github.io/omniseer/)
-- [System architecture](docs/architecture.md)
-- [Verification evidence](docs/evidence.md)
-- [Edge-to-cloud perception](docs/software/edge_to_cloud_perception.md)
-- [CI/CD overview](docs/software/ci_cd.md)
+- [System architecture](docs/architecture/overview.md)
+- [Verification evidence](docs/verification/evidence.md)
+- [Edge-to-cloud perception](docs/perception/edge-to-cloud.md)
+- [CI/CD overview](docs/verification/ci-cd.md)
 
 ## Common Commands
 

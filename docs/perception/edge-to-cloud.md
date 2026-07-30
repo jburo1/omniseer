@@ -96,9 +96,9 @@ hardware/software configuration.
 
 ## Related Documentation
 
-- [System Architecture](../architecture.md)
-- [Verification Evidence](../evidence.md)
-- [Vision Pipeline](vision_pipeline.md)
-- [Vision Telemetry](vision_telemetry_spec.md)
-- [Robot Gateway](robot_gateway.md)
-- [CI/CD Overview](ci_cd.md)
+- [System Architecture](../architecture/overview.md)
+- [Verification Evidence](../verification/evidence.md)
+- [Vision Pipeline](vision-pipeline.md)
+- [Vision Telemetry](vision-telemetry.md)
+- [Robot Gateway](../gateway/robot-gateway.md)
+- [CI/CD Overview](../verification/ci-cd.md)

@@ -18,14 +18,14 @@ robot: {
     label: "Robot runtime"
     class: robot_runtime
     tooltip: "Onboard perception, autonomy, recording, and ROS 2 integration."
-    link: "../../../architecture/"
+    link: "../../../architecture/overview/"
   }
 
   firmware: {
     label: "Firmware"
     class: firmware
     tooltip: "Teensy-owned low-level control and sensor integration."
-    link: "../../../architecture/"
+    link: "../../../architecture/overview/"
   }
 
   hardware: {
@@ -39,7 +39,7 @@ robot: {
     label: "Local RunBundle storage"
     class: evidence
     tooltip: "Structured evidence recorded locally during a robot run."
-    link: "../../../evidence/"
+    link: "../../../verification/evidence/"
   }
 }
 
@@ -51,14 +51,14 @@ workstation: {
     label: "Operator application"
     class: laptop
     tooltip: "Off-robot tools for control, diagnostics, evidence retrieval, and review."
-    link: "../../../software/operator_run_workflow/"
+    link: "../../../operations/operator-run-workflow/"
   }
 
   run_bundle_archive: {
     label: "RunBundle archive"
     class: evidence
     tooltip: "RunBundles retrieved from the robot and retained for analysis."
-    link: "../../../evidence/"
+    link: "../../../verification/evidence/"
   }
 
   report: {
@@ -66,7 +66,7 @@ workstation: {
     class: evidence
     shape: document
     tooltip: "Human-readable report generated from an archived RunBundle."
-    link: "../../../evidence/"
+    link: "../../../verification/evidence/"
   }
 }
 
