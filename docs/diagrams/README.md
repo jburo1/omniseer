@@ -31,14 +31,14 @@ Use a pinned D2 renderer and explicit layout so SVG diffs are intentional.
 
 ```text
 Supported D2 version: v0.7.1
-Layout engine: elk
+Layout engine: dagre
 Theme: 0
 ```
 
 Expected render shape:
 
 ```bash
-d2 --layout elk --theme 0 \
+d2 --layout dagre --theme 0 \
   docs/diagrams/explorer/system-explorer.d2 \
   docs/assets/diagrams/explorer/system-explorer.svg
 ```
