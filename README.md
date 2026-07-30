@@ -18,16 +18,6 @@ camera -> V4L2/RGA/RKNN YOLO-World -> ROS detections + telemetry
                                     -> laptop inspection and static report
 ```
 
-The documentation is organized as three connected layers:
-
-- **Architecture** describes the runtime components, boundaries, and data/control
-  flows.
-- **MkDocs pages** explain the engineering rationale, subsystem contracts, commands,
-  and verification workflow.
-- **RunBundles** preserve robot-run evidence: manifest data, detections, performance
-  summaries, system telemetry, native pipeline telemetry, selected frames,
-  annotations, inspection results, and static HTML reports.
-
 ## Current Capabilities
 
 - Hardware-accelerated V4L2 -> RGA -> RKNN producer/consumer vision runtime.
@@ -55,28 +45,6 @@ The documentation is organized as three connected layers:
 - [Verification evidence](docs/verification/evidence.md)
 - [Edge-to-cloud perception](docs/perception/edge-to-cloud.md)
 - [CI/CD overview](docs/verification/ci-cd.md)
-
-## Common Commands
-
-The root `scripts/omni` entrypoint is the supported front door for common local
-workflows:
-
-```bash
-scripts/omni build ros
-scripts/omni test ros
-scripts/omni run sim
-scripts/omni run real
-scripts/omni run real --record-run demo_001
-scripts/omni runs inspect runs/demo_001
-scripts/omni runs report runs/demo_001
-scripts/omni check real-perception
-scripts/omni flash teensy
-scripts/omni docs build
-```
-
-For headless Teensy 4.1 flashing in Docker or over SSH, `scripts/omni flash teensy`
-wraps the existing firmware helper.
-
 
 ## Current Boundary
 
