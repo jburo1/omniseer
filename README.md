@@ -44,6 +44,12 @@ The documentation is organized as three connected layers:
 
 ## Documentation
 
+<p>
+  <a href="https://jburo1.github.io/omniseer/" aria-label="Open the Omniseer documentation">
+    <img src="docs/assets/diagrams/explorer/system-explorer.svg" alt="Omniseer system explorer" width="100%">
+  </a>
+</p>
+
 - [Project documentation](https://jburo1.github.io/omniseer/)
 - [System architecture](docs/architecture.md)
 - [Verification evidence](docs/evidence.md)
