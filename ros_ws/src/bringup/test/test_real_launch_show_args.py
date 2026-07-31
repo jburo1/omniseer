@@ -38,7 +38,6 @@ class RealLaunchShowArgsTests(unittest.TestCase):
         self.assertIn("start_experiment_recording", result.stdout)
         self.assertIn("experiment_run_id", result.stdout)
         self.assertIn("experiment_out_dir", result.stdout)
-        self.assertIn("experiment_duration_sec", result.stdout)
         self.assertIn("experiment_system_interval_sec", result.stdout)
         self.assertIn("experiment_launch_command", result.stdout)
         self.assertIn("experiment_launch_profile", result.stdout)

@@ -188,7 +188,7 @@ def _render_report(
             evidence_items=evidence_items,
             issues=issues,
         ),
-        _summary_section(inspection),
+        _summary_section(inspection, manifest=manifest),
         _configuration_section(manifest),
         _health_section(inspection, evidence_items=evidence_items, pipeline=pipeline, issues=issues),
         _autonomy_section(autonomy),
@@ -251,9 +251,10 @@ def _evidence_summary_section(
     return _section("Evidence Summary", f'<ul class="summary-list">{items}</ul>')
 
 
-def _summary_section(inspection: RunInspection) -> str:
+def _summary_section(inspection: RunInspection, *, manifest: dict[str, Any]) -> str:
     rows = [
         ("Run ID", inspection.run_id),
+        ("Experiment config", _display(_manifest_nested_string(manifest, "experiment", "config"))),
         ("State", inspection.state),
         ("Path", str(inspection.path)),
         ("Started", _display(inspection.started_at)),

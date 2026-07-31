@@ -40,7 +40,6 @@ Recording flags:
   --record                         Record a timestamped perception run bundle.
   --record-run <run_id>            Record a named perception run bundle.
   --record-out <path>              Override output directory; defaults to runs/<run_id>.
-  --record-duration-sec <seconds>  Stop recorder after a duration; 0 records until launch shutdown.
   --record-system-interval-sec <s> Sample system/platform telemetry every s seconds. Default: 1.0.
   --record-notes <text>            Store notes in manifest.yaml.
   --record-classes <text>          Store configured class names in manifest.yaml.
@@ -210,7 +209,6 @@ append_recording_launch_args() {
     "start_experiment_recording:=true"
     "experiment_run_id:=${record_run_id}"
     "experiment_out_dir:=${record_out_dir}"
-    "experiment_duration_sec:=${record_duration_sec}"
     "experiment_system_interval_sec:=${record_system_interval_sec}"
     "experiment_overwrite:=${record_overwrite}"
     "pipeline_telemetry_path:=${record_out_dir}/pipeline_telemetry.jsonl"
@@ -507,7 +505,6 @@ mode=""
 record_enabled=false
 record_run_id=""
 record_out_dir=""
-record_duration_sec="0"
 record_system_interval_sec="1.0"
 record_notes=""
 record_classes=""
@@ -560,12 +557,6 @@ while [[ $# -gt 0 ]]; do
       [[ $# -ge 2 ]] || omni_die "--record-out requires a path"
       record_enabled=true
       record_out_dir="$2"
-      shift 2
-      ;;
-    --record-duration-sec)
-      [[ $# -ge 2 ]] || omni_die "--record-duration-sec requires a numeric argument"
-      record_enabled=true
-      record_duration_sec="$2"
       shift 2
       ;;
     --record-system-interval-sec)

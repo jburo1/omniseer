@@ -22,7 +22,6 @@ Options:
   --run-id <id>                    Run bundle id. Defaults to autonomy_<class>_<UTC timestamp>.
   --out <path>                     Run bundle directory. Defaults to runs/<run_id>.
   --notes <text>                   Store notes in manifest.yaml.
-  --duration-sec <seconds>         Stop recorder after a duration; 0 records until shutdown. Default: 0.
   --system-interval-sec <seconds>  Sample system telemetry interval. Default: 1.0.
   --evidence-interval-sec <s>      Evidence frame interval. Default: 0.25.
   --no-overwrite                   Do not replace an existing output directory.
@@ -40,7 +39,6 @@ target_class=""
 run_id=""
 run_out=""
 notes=""
-duration_sec="0"
 system_interval_sec="1.0"
 evidence_interval_sec="0.25"
 overwrite="true"
@@ -66,11 +64,6 @@ while [[ $# -gt 0 ]]; do
     --notes)
       [[ $# -ge 2 ]] || omni_die "--notes requires text"
       notes="$2"
-      shift 2
-      ;;
-    --duration-sec)
-      [[ $# -ge 2 ]] || omni_die "--duration-sec requires a numeric argument"
-      duration_sec="$2"
       shift 2
       ;;
     --system-interval-sec)
@@ -126,7 +119,6 @@ real_args=(
   "--profile" "operator"
   "--record-run" "${run_id}"
   "--record-out" "${run_out}"
-  "--record-duration-sec" "${duration_sec}"
   "--record-system-interval-sec" "${system_interval_sec}"
   "--record-classes" "${target_class}"
 )

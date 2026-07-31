@@ -60,8 +60,8 @@ runs/demo_001/
 ```
 
 Use `--record` instead of `--record-run <run_id>` for a timestamped run id. Use
-`--record-out <path>`, `--record-duration-sec <seconds>`, and
-`--record-notes <text>` when the run needs explicit metadata. The recorder reads
+`--record-out <path>` and `--record-notes <text>` when the run needs explicit
+metadata. The recorder reads
 the active vision parameter file to store detector, CLIP, vocab, class-list path,
 and configured classes in `manifest.yaml`; `--record-classes <text>` remains
 available as an explicit override. `system.jsonl` is sampled automatically at

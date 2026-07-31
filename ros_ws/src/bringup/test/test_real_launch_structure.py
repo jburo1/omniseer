@@ -133,7 +133,6 @@ class RealLaunchStructureTests(unittest.TestCase):
         self.assertIn("--launch-args", recorder_text)
         self.assertIn("--experiment-config", recorder_text)
         self.assertIn("--experiment-parameters", recorder_text)
-        self.assertIn("--duration-sec", recorder_text)
         self.assertIn("--system-interval-sec", recorder_text)
 
     def test_real_launch_includes_optional_autonomy_node(self) -> None:
@@ -167,6 +166,8 @@ class RealLaunchStructureTests(unittest.TestCase):
         self.assertTrue(autonomy_nodes, "expected optional omniseer_autonomy target_centering_node")
 
         launch_text = (Path(__file__).resolve().parents[1] / "launch" / "real.launch.py").read_text(encoding="utf-8")
+        self.assertIn("autonomy_completion_shutdown = RegisterEventHandler", launch_text)
+        self.assertIn('Shutdown(reason="target centering autonomy completed")', launch_text)
         self.assertIn('"target_class": config["autonomy_target_class"]', launch_text)
         self.assertIn('"run_dir": config["autonomy_run_dir"]', launch_text)
         self.assertIn('"bbox_area_min_ratio": config["autonomy_bbox_area_min_ratio"]', launch_text)

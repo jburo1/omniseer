@@ -104,6 +104,7 @@ TEST_F(TargetCenteringNodeTest, WritesEventsAndRequestsCaptureOnSuccess)
       rclcpp::Parameter("bbox_area_min_ratio", 0.05),
       rclcpp::Parameter("bbox_area_max_ratio", 0.20),
       rclcpp::Parameter("detection_stale_ms", 2000),
+      rclcpp::Parameter("shutdown_on_terminal", false),
     });
 
   auto node = std::make_shared<TargetCenteringNode>(options);

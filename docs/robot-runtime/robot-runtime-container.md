@@ -162,10 +162,11 @@ the verified tags.
 `runtime record` is the manual operator evidence-capture path. It uses the latest
 local runtime build by default, starts `run real --profile operator ... bringup`
 with automatic Docker TTY detection, writes the runbundle to `runs/operator_<UTC>`
-on the host, and samples system telemetry every second. Stop the run with Ctrl-C
-or the monitor GUI Stop Run button when the experiment is complete; the recorder
-needs that graceful interrupt to finalize `manifest.yaml` and `summary.json`.
-The monitor GUI also issues `scripts/omni runtime stop --run-id <id>` immediately
+on the host, and samples system telemetry every second. Stop manual runs with
+Ctrl-C or the monitor GUI Stop Run button when the experiment is complete;
+autonomy runs exit when target centering reaches a terminal state. Graceful
+shutdown lets the recorder finalize `manifest.yaml` and `summary.json`. The
+monitor GUI also issues `scripts/omni runtime stop --run-id <id>` immediately
 for runtime-backed runs; that command targets the named runtime record container
 for the run id, confirms it is stopped or already absent, and lets the GUI become
 ready for the next run without waiting on a stale SSH session.

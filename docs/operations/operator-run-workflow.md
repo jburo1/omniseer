@@ -110,13 +110,30 @@ Use this rule of thumb:
 Prefer additive changes to `RunConfig` and command builders. Do not make the GUI
 assemble shell strings directly.
 
+## Detector Tuning
+
+The Run form exposes the detector controls that are useful to adjust between
+experiments without changing hardware or model assumptions:
+
+- `Score Threshold` -> `postprocess.score_threshold`
+- `NMS IoU` -> `postprocess.nms_iou_threshold`
+- `Max Detections` -> `postprocess.max_detections`
+
+The command builder passes these as launch arguments and also records them as
+experiment parameters in the run manifest. Keep model paths, camera device,
+capture size, model input size, class padding, and runner warmup in launch/config
+files unless an experiment explicitly needs those lower-level controls.
+
 ## Autonomy Run Type
 
 The monitor can launch either a perception-only recording or the first bounded
 autonomy experiment, `Autonomy: center first class`. The autonomy mode still uses
 the runtime-container recording path, but appends launch arguments that start
 `omniseer_autonomy/target_centering_node`, set the target to the first configured
-class, and write `autonomy.jsonl` into the run bundle.
+class, and write `autonomy.jsonl` into the run bundle. When target centering
+reaches success or failure, the autonomy node stops commanding motion, completes
+terminal logging and capture handling, and exits cleanly; real launch then shuts
+down so the recorder can finalize the run bundle without an operator Stop Run.
 
 The v1 autonomy behavior is yaw-only: it publishes `TwistStamped` commands to
 `/cmd_vel_autonomy`, relies on `twist_mux` arbitration, and records terminal

@@ -99,7 +99,6 @@ _REAL_ARGUMENT_DEFAULTS = [
     ("experiment_launch_args", ""),
     ("experiment_config", ""),
     ("experiment_parameters", ""),
-    ("experiment_duration_sec", "0"),
     ("experiment_system_interval_sec", "1.0"),
     ("experiment_overwrite", "false"),
     ("experiment_queue_size", "256"),
@@ -242,8 +241,6 @@ def _build_real_bringup_actions(*, pkg_bringup, config):
             config["experiment_config"],
             "--experiment-parameters",
             config["experiment_parameters"],
-            "--duration-sec",
-            config["experiment_duration_sec"],
             "--system-interval-sec",
             config["experiment_system_interval_sec"],
             "--overwrite",
@@ -280,6 +277,17 @@ def _build_real_bringup_actions(*, pkg_bringup, config):
                 "target_lost_timeout_sec": config["autonomy_target_lost_timeout_sec"],
             }
         ],
+        condition=IfCondition(config["start_autonomy"]),
+    )
+
+    autonomy_completion_shutdown = RegisterEventHandler(
+        OnProcessExit(
+            target_action=autonomy_node,
+            on_exit=[
+                LogInfo(msg="target centering autonomy completed; shutting down real launch"),
+                EmitEvent(event=Shutdown(reason="target centering autonomy completed")),
+            ],
+        ),
         condition=IfCondition(config["start_autonomy"]),
     )
 
@@ -366,6 +374,7 @@ def _build_real_bringup_actions(*, pkg_bringup, config):
         real_vision_launch,
         experiment_recorder_node,
         autonomy_node,
+        autonomy_completion_shutdown,
         baseline_twist_mux_node,
         wait_boundary_topics,
         launch_common_after_wait,

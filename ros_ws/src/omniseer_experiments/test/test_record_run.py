@@ -283,7 +283,7 @@ class RecordRunConversionTests(unittest.TestCase):
             os.environ["OMNISEER_CONTAINER_IMAGE_REF"] = "ghcr.io/acme/omniseer:env"
             os.environ["OMNISEER_CONTAINER_IMAGE_DIGEST"] = "sha256:envdigest"
             os.environ["OMNISEER_EXPERIMENT_CONFIG"] = "experiments/env.yaml"
-            os.environ["OMNISEER_EXPERIMENT_PARAMETERS"] = '{"profile":"operator","duration_sec":5}'
+            os.environ["OMNISEER_EXPERIMENT_PARAMETERS"] = '{"profile":"operator","stage":"smoke"}'
 
             options = options_from_args(["record_run", "--run-id", "demo_001"])
         finally:
@@ -296,7 +296,7 @@ class RecordRunConversionTests(unittest.TestCase):
         self.assertEqual(options.container_image_ref, "ghcr.io/acme/omniseer:env")
         self.assertEqual(options.container_image_digest, "sha256:envdigest")
         self.assertEqual(options.experiment_config, "experiments/env.yaml")
-        self.assertEqual(options.experiment_parameters, {"duration_sec": "5", "profile": "operator"})
+        self.assertEqual(options.experiment_parameters, {"profile": "operator", "stage": "smoke"})
 
 
 class AsyncBundleWriterTests(unittest.TestCase):

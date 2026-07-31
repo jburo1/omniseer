@@ -47,7 +47,6 @@ class RecorderOptions:
     out_dir: Path
     classes: tuple[str, ...] = ()
     notes: str = ""
-    duration_sec: float = 0.0
     system_interval_sec: float = DEFAULT_SYSTEM_SAMPLE_INTERVAL_SEC
     overwrite: bool = False
     detections_topic: str = DEFAULT_DETECTIONS_TOPIC
@@ -244,9 +243,6 @@ class PerceptionRunRecorder(Node):
         self.create_subscription(VisionPerfSummary, options.perf_topic, self._on_perf, qos)
         self.create_subscription(BatteryState, options.battery_topic, self._on_battery, qos)
 
-        if options.duration_sec > 0.0:
-            self.create_timer(options.duration_sec, self._finish_duration)
-
         self.get_logger().info(f"recording perception run bundle: run_id={options.run_id} out_dir={options.out_dir}")
 
     def close(self) -> dict[str, Any]:
@@ -280,10 +276,6 @@ class PerceptionRunRecorder(Node):
             if self._latest_lipo_battery is None:
                 return {"lipo_battery": unavailable_lipo_battery_snapshot(self._options.battery_topic)}
             return {"lipo_battery": dict(self._latest_lipo_battery)}
-
-    def _finish_duration(self) -> None:
-        self.get_logger().info("recording duration elapsed; shutting down recorder")
-        rclpy.shutdown()
 
 
 def detection_array_to_record(message: DetectionArray, *, topic: str = DEFAULT_DETECTIONS_TOPIC) -> dict[str, Any]:
@@ -395,7 +387,6 @@ def options_from_args(argv: list[str] | None = None) -> RecorderOptions:
         out_dir=out_dir,
         classes=tuple(classes),
         notes=args.notes,
-        duration_sec=args.duration_sec,
         system_interval_sec=args.system_interval_sec,
         overwrite=_as_bool(args.overwrite),
         detections_topic=args.detections_topic,
@@ -425,12 +416,6 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--out", default="", help="output run directory; defaults to runs/<run-id>")
     parser.add_argument("--classes", nargs="*", default=[], help="semantic classes configured for this run")
     parser.add_argument("--notes", default="", help="free-form run notes")
-    parser.add_argument(
-        "--duration-sec",
-        type=float,
-        default=0.0,
-        help="stop after this duration; 0 records until shutdown",
-    )
     parser.add_argument(
         "--system-interval-sec",
         type=float,

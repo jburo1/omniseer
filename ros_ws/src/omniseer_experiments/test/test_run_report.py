@@ -416,6 +416,7 @@ class RunReportTests(unittest.TestCase):
             self.assertEqual(summary.issues, ())
             self.assertIn("Omniseer Run Report: demo_001", output)
             self.assertIn("<h2>Run Summary</h2>", output)
+            self.assertIn("<th>Experiment config</th><td>runtime-container-full</td>", output)
             self.assertIn("<h2>Evidence Summary</h2>", output)
             self.assertIn("<h2>Configuration</h2>", output)
             self.assertIn("run real --profile operator bringup", output)

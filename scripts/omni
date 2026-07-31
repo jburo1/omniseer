@@ -95,7 +95,6 @@ Recording flags:
   --record
   --record-run <run_id>
   --record-out <path>
-  --record-duration-sec <seconds>
   --record-notes <text>
   --record-classes <text>
   --record-overwrite
