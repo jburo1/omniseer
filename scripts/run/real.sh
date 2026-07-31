@@ -20,7 +20,6 @@ Profiles:
   current        Default alias for the current supported real robot runtime.
   operator       Gateway, native vision, preview, bounded teleop, and recording.
   perception     Native vision and recording without the gateway operator surface.
-  legacy-teleop  Older keyboard teleop path kept for hardware diagnostics.
 
 Modes:
   bringup  Start the selected real profile in the foreground.
@@ -35,7 +34,7 @@ Examples:
   scripts/omni run real verify
   scripts/omni run real --record-run demo_001
   scripts/omni run real --profile perception --record-run demo_001
-  scripts/omni run real --profile legacy-teleop operator micro_ros_serial_device:=/dev/serial/by-id/usb-Teensyduino_USB_Serial_16634450-if00
+  scripts/omni run real --profile operator micro_ros_serial_device:=/dev/serial/by-id/usb-Teensyduino_USB_Serial_16634450-if00
 
 Recording flags:
   --record                         Record a timestamped perception run bundle.
@@ -56,6 +55,16 @@ Recording flags:
   --record-experiment-parameter <key=value>
                                    Store one experiment parameter; may be repeated.
   --record-overwrite               Replace an existing output directory.
+EOF
+}
+
+legacy_usage() {
+  cat <<'EOF'
+Legacy diagnostic profile:
+  scripts/omni run real --profile legacy-teleop [operator|bringup|smoke]
+
+This profile is retained only for older keyboard teleop hardware diagnostics.
+Prefer --profile operator or --profile perception for current real robot work.
 EOF
 }
 
@@ -371,6 +380,7 @@ run_real_profile_legacy_teleop() {
       ;;
     help|-h|--help)
       usage
+      legacy_usage
       ;;
     *)
       omni_die "unknown real mode: ${mode}"

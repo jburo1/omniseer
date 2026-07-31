@@ -16,7 +16,7 @@ window rather than embedding in the Tk window.
 
 ## Preconditions
 
-- The legacy teleop profile has been run successfully on target hardware.
+- The current operator or perception profile has been run successfully on target hardware.
 - The robot and laptop workspaces have been built with `scripts/omni build ros`.
 - The laptop can reach the robot gateway gRPC port.
 - The laptop has GStreamer tools and SRT/H.264 decode plugins installed for

@@ -1,15 +1,15 @@
-# Real Teleop + Native Perception Check
+# Legacy Real Teleop + Native Perception Check
 
-This checklist verifies the minimum integrated real-robot slice kept as the
-`legacy-teleop` profile:
+This legacy checklist verifies the older minimum integrated real-robot slice
+kept as the `legacy-teleop` profile:
 
 - keyboard teleop reaches `/mecanum_drive_controller/reference`
 - the native vision bridge publishes `/yolo/detections`
 - the native vision bridge publishes `/vision/perf`
 - teleop and perception run at the same time
 
-Use the verification record at the end of this document to capture target-hardware
-run evidence for this slice.
+Use the current `operator` or `perception` profile for normal real robot work.
+Use this page only when validating the older keyboard teleop diagnostic path.
 
 ## Preconditions
 
@@ -66,7 +66,7 @@ Expected launch behavior:
 
 ## Single-Entry Helper
 
-For the supported repo-local entrypoint, use:
+For the compatibility entrypoint, use:
 
 ```bash
 scripts/omni run real --profile legacy-teleop

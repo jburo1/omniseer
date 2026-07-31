@@ -269,7 +269,6 @@ Current supported profiles:
 - `current`: default alias for the current supported real robot runtime
 - `operator`: gateway, native vision, preview, bounded teleop, and recording
 - `perception`: native vision and recording without the gateway operator surface
-- `legacy-teleop`: older keyboard teleop path kept for hardware diagnostics
 
 Examples:
 
@@ -279,7 +278,6 @@ scripts/omni run real smoke
 scripts/omni run real verify
 scripts/omni run real --record-run demo_001
 scripts/omni run real --profile perception --record-run demo_001
-scripts/omni run real --profile legacy-teleop operator camera_device:=/dev/video11
 ```
 
 If `--profile` is omitted, the command selects `current`. Today `current`
@@ -287,8 +285,13 @@ resolves to `operator`; that alias can move as the supported real runtime
 changes.
 
 The `operator` and `perception` profiles default to foreground `bringup`.
-`legacy-teleop` defaults to its older background bringup plus keyboard teleop
-mode.
+
+The older `legacy-teleop` profile is retained only for hardware diagnostics and
+compatibility with older runbooks:
+
+```bash
+scripts/omni run real --profile legacy-teleop operator camera_device:=/dev/video11
+```
 
 Recording flags can be used with modes that launch real bringup:
 
@@ -331,13 +334,12 @@ comma/space-separated `key=value` pairs.
 
 `operator`
 
-- starts the `legacy-teleop` bringup in the background
-- opens keyboard teleop in the current terminal
+- starts the current operator real profile in the foreground
 
 `smoke`
 
-- starts the same bringup
-- runs the passive teleop/perception verifier
+- starts the selected profile
+- runs its passive verifier
 - shuts the bringup down afterward
 
 `bringup`
@@ -357,7 +359,6 @@ Suggestions:
 - run `scripts/omni build ros` before `run` when code or launch wiring changed
 - use `run real` on the robot for the current supported real runtime
 - use `run real smoke` for a quick integrated health check
-- use `run real --profile legacy-teleop operator` for the old keyboard teleop path
 - add `--record-run <run_id>` when the run should produce a local perception bundle
 
 #### `run monitor`

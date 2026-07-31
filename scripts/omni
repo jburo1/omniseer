@@ -83,7 +83,6 @@ Real profiles:
   current        Default alias for the current supported real robot runtime.
   operator       Gateway, native vision, preview, bounded teleop, and recording.
   perception     Native vision and recording without the gateway operator surface.
-  legacy-teleop  Older keyboard teleop path kept for hardware diagnostics.
 
 Real modes:
   bringup   Start the selected real profile in the foreground.
@@ -100,6 +99,9 @@ Recording flags:
   --record-notes <text>
   --record-classes <text>
   --record-overwrite
+
+Legacy diagnostic profile:
+  scripts/omni run real --profile legacy-teleop [operator|bringup|smoke]
 EOF
 }
 
