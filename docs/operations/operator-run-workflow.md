@@ -125,6 +125,12 @@ subscribes to `/odometry/filtered` and stops with `scan_complete_no_target` afte
 one observed revolution by default. Translation, navigation, SLAM, tracking
 packages, and camera servo control remain out of scope for this run type.
 
+The robot-side console log, retained in recorded bundles as `logs/bringup.log`,
+includes each newly reached autonomy state and a terminal summary with the final
+state, reason, states reached, target-loss count, timing milestones, final
+centering error, and final confidence. The structured `autonomy.jsonl` stream
+remains the canonical machine-readable event record.
+
 ## Verification
 
 Current local coverage focuses on behavior that does not require robot hardware:

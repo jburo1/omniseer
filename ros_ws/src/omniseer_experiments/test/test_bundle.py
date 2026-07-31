@@ -232,6 +232,8 @@ class RunBundleWriterTests(unittest.TestCase):
             run_dir.mkdir()
             (run_dir / "pipeline_telemetry.jsonl").write_text('{"source":"producer"}\n', encoding="utf-8")
             (run_dir / "evidence").mkdir()
+            (run_dir / "logs").mkdir()
+            (run_dir / "logs" / "bringup.log").write_text("[INFO] launch started\n", encoding="utf-8")
 
             writer = RunBundleWriter(_config(run_dir), started_at=STARTED_AT)
             try:
@@ -241,6 +243,10 @@ class RunBundleWriterTests(unittest.TestCase):
                     '{"source":"producer"}\n',
                 )
                 self.assertTrue((run_dir / "evidence").is_dir())
+                self.assertEqual(
+                    (run_dir / "logs" / "bringup.log").read_text(encoding="utf-8"),
+                    "[INFO] launch started\n",
+                )
             finally:
                 writer.close()
 
@@ -251,6 +257,8 @@ class RunBundleWriterTests(unittest.TestCase):
             (run_dir / "pipeline_telemetry.jsonl").write_text('{"source":"producer"}\n', encoding="utf-8")
             (run_dir / "autonomy.jsonl").write_text('{"event":"started"}\n', encoding="utf-8")
             (run_dir / "evidence").mkdir()
+            (run_dir / "logs").mkdir()
+            (run_dir / "logs" / "bringup.log").write_text("[INFO] launch started\n", encoding="utf-8")
 
             writer = RunBundleWriter(_config(run_dir, overwrite=True), started_at=STARTED_AT)
             try:
@@ -260,6 +268,10 @@ class RunBundleWriterTests(unittest.TestCase):
                     '{"source":"producer"}\n',
                 )
                 self.assertEqual((run_dir / "autonomy.jsonl").read_text(encoding="utf-8"), '{"event":"started"}\n')
+                self.assertEqual(
+                    (run_dir / "logs" / "bringup.log").read_text(encoding="utf-8"),
+                    "[INFO] launch started\n",
+                )
             finally:
                 writer.close()
 

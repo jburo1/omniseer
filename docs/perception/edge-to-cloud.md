@@ -62,7 +62,8 @@ telemetry, rolling statistics, and offline telemetry analysis. The ROS bridge is
 headless and publishes detections and performance summaries rather than an annotated
 image topic. The experiment workflow can record local run bundles containing
 manifest metadata, detections, performance summaries, system telemetry, native
-pipeline telemetry, evidence frames, and generated summaries.
+pipeline telemetry, evidence frames, ROS launch stdout/stderr logs, and generated
+summaries.
 
 ### Operator connectivity
 

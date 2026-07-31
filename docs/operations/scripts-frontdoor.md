@@ -310,19 +310,25 @@ The recorder is an optional sidecar. It writes a local bundle containing
 `manifest.yaml`, `detections.jsonl`, `perf.jsonl`, optional automatic
 `system.jsonl` resource telemetry, optional native
 `pipeline_telemetry.jsonl`, representative native JPEG evidence frames under
-`evidence/`, and `summary.json`. The first slice stores bundles on the robot;
-laptop download, inspection, evidence annotation, and a simple local HTML report
-are available through `scripts/omni runs`. Rich hosted review and cloud
-synchronization remain later work.
+`evidence/`, the ROS launch stdout/stderr transcript at `logs/bringup.log`, and
+`summary.json`. The first slice stores bundles on the robot; laptop download,
+inspection, evidence annotation, and a simple local HTML report are available
+through `scripts/omni runs`. Rich hosted review and cloud synchronization remain
+later work.
 
 `manifest.yaml` records the resolved real profile, mode, command, and launch
 arguments. `system.jsonl` records low-rate CPU, memory, thermal, WiFi/network,
 onboard battery, and `/battery` LiPo snapshots when those sources are available.
+During recorded runs, `OMNISEER_BRINGUP_LOG` is replaced by the bundle-local
+`logs/bringup.log` path so the run artifact retains the console stream. For
+non-recording runs, `OMNISEER_BRINGUP_LOG` still overrides the temporary bringup
+log path.
 
 `--record-overwrite` removes and recreates the selected run directory before
 launching ROS. The recorder then accepts an empty precreated directory, or one
-where the native vision node has already opened `pipeline_telemetry.jsonl` or
-`evidence/`, so startup ordering does not drop pipeline telemetry.
+where the native vision node has already opened `pipeline_telemetry.jsonl`,
+`evidence/`, or `logs/bringup.log`, so startup ordering does not drop pipeline
+telemetry or launch logs.
 
 Containerized runs can provide the same provenance through
 `OMNISEER_CONTAINER_IMAGE_REF`, `OMNISEER_CONTAINER_IMAGE_DIGEST`,

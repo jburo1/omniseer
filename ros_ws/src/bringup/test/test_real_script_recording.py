@@ -23,6 +23,7 @@ class RealScriptRecordingTests(unittest.TestCase):
                     [
                         "#!/usr/bin/env bash",
                         'if [[ "$1" == "pkg" && "$2" == "prefix" ]]; then exit 1; fi',
+                        'printf "%s\\n" "fake launch output"',
                         f'printf "%s\\n" "$@" >"{ros_args_path}"',
                         "exit 0",
                     ]
@@ -66,6 +67,7 @@ class RealScriptRecordingTests(unittest.TestCase):
             args = ros_args_path.read_text(encoding="utf-8").splitlines()
             self.assertIn("experiment_overwrite:=true", args)
             self.assertEqual((run_dir / "classes.txt").read_text(encoding="utf-8"), "plant\n")
+            self.assertEqual((run_dir / "logs" / "bringup.log").read_text(encoding="utf-8"), "fake launch output\n")
 
     def test_record_without_overwrite_preserves_existing_launch_default(self) -> None:
         repo_root = Path(__file__).resolve().parents[4]
@@ -84,6 +86,7 @@ class RealScriptRecordingTests(unittest.TestCase):
                     [
                         "#!/usr/bin/env bash",
                         'if [[ "$1" == "pkg" && "$2" == "prefix" ]]; then exit 1; fi',
+                        'printf "%s\\n" "fake launch output"',
                         f'printf "%s\\n" "$@" >"{ros_args_path}"',
                         "exit 0",
                     ]
@@ -121,6 +124,7 @@ class RealScriptRecordingTests(unittest.TestCase):
 
             args = ros_args_path.read_text(encoding="utf-8").splitlines()
             self.assertIn("experiment_overwrite:=false", args)
+            self.assertEqual((run_dir / "logs" / "bringup.log").read_text(encoding="utf-8"), "fake launch output\n")
 
 
 if __name__ == "__main__":

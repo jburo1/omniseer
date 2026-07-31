@@ -165,6 +165,27 @@ prepare_recording_run_dir() {
   fi
 }
 
+recording_bringup_log_path() {
+  resolve_recording_defaults
+  printf '%s/logs/bringup.log\n' "${record_out_dir}"
+}
+
+bringup_log_path() {
+  local profile_name="$1"
+  if recording_requested; then
+    recording_bringup_log_path
+    return
+  fi
+
+  printf '%s\n' "${OMNISEER_BRINGUP_LOG:-/tmp/omniseer-${profile_name}-bringup-$(date -u +%Y%m%dT%H%M%SZ).log}"
+}
+
+prepare_bringup_log_file() {
+  local bringup_log="$1"
+  mkdir -p -- "$(dirname "${bringup_log}")"
+  touch -- "${bringup_log}"
+}
+
 require_no_recording() {
   if recording_requested; then
     omni_die "recording flags require a mode that launches real bringup"
@@ -285,6 +306,15 @@ run_profile_bringup() {
   append_recording_launch_args launch_args "${extra_args[@]}"
   omni_source_ros_workspace
   require_vision_bridge_package "${launch_args[@]}" "${extra_args[@]}"
+  if recording_requested; then
+    local bringup_log
+    bringup_log="$(recording_bringup_log_path)"
+    prepare_bringup_log_file "${bringup_log}"
+    omni_info "bringup log: ${bringup_log}"
+    ros2 launch bringup real.launch.py "${launch_args[@]}" "${extra_args[@]}" 2>&1 | tee -a "${bringup_log}"
+    return "${PIPESTATUS[0]}"
+  fi
+
   exec ros2 launch bringup real.launch.py "${launch_args[@]}" "${extra_args[@]}"
 }
 
@@ -301,9 +331,11 @@ run_background_profile_bringup() {
   require_vision_bridge_package "${launch_args[@]}" "${extra_args[@]}"
 
   local bringup_delay_sec="${OMNISEER_BRINGUP_DELAY_SEC:-5}"
-  local bringup_log="${OMNISEER_BRINGUP_LOG:-/tmp/omniseer-${profile_name}-bringup-$(date -u +%Y%m%dT%H%M%SZ).log}"
+  local bringup_log
+  bringup_log="$(bringup_log_path "${profile_name}")"
+  prepare_bringup_log_file "${bringup_log}"
 
-  ros2 launch bringup real.launch.py "${launch_args[@]}" "${extra_args[@]}" >"${bringup_log}" 2>&1 &
+  ros2 launch bringup real.launch.py "${launch_args[@]}" "${extra_args[@]}" >>"${bringup_log}" 2>&1 &
   bringup_pid=$!
 
   sleep "${bringup_delay_sec}"

@@ -55,6 +55,8 @@ runs/demo_001/
   evidence/
     evidence.jsonl
     frames/
+  logs/
+    bringup.log
 ```
 
 Use `--record` instead of `--record-run <run_id>` for a timestamped run id. Use
@@ -69,7 +71,8 @@ roughly 1 Hz under `evidence/frames/`, with `evidence/evidence.jsonl` tying each
 image to native frame metadata and detections. The clean JPEGs are the canonical
 record; generate review overlays later with `scripts/omni runs annotate <run_dir>`,
 which writes derived images under `evidence/annotated/`. Bundles are stored
-locally on the robot first.
+locally on the robot first. The ROS launch console stream is retained at
+`logs/bringup.log`.
 From the laptop, list and retrieve robot-side bundles with:
 
 ```bash

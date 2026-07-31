@@ -296,7 +296,7 @@ class RunBundleWriter:
             return False
         if not children:
             return True
-        allowed_names = {"classes.txt", "pipeline_telemetry.jsonl", "autonomy.jsonl", "evidence"}
+        allowed_names = {"classes.txt", "pipeline_telemetry.jsonl", "autonomy.jsonl", "evidence", "logs"}
         for child in children:
             if child.name not in allowed_names:
                 return False
@@ -307,6 +307,8 @@ class RunBundleWriter:
             if child.name == "autonomy.jsonl" and not child.is_file():
                 return False
             if child.name == "evidence" and not child.is_dir():
+                return False
+            if child.name == "logs" and not child.is_dir():
                 return False
         return True
 
