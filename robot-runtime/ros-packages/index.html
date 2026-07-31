@@ -1017,17 +1017,6 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#robot_io_adaptersscan_to_rangecpp" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        robot_io_adapters/scan_to_range.cpp
-      
-    </span>
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
@@ -2172,17 +2161,6 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#robot_io_adaptersscan_to_rangecpp" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        robot_io_adapters/scan_to_range.cpp
-      
-    </span>
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
@@ -2343,7 +2321,7 @@ that keeps simulation, real hardware, and common robot behavior separated.</p>
 <li>odometry via <code>/mecanum_drive_controller/odometry</code></li>
 <li>IMU via <code>/imu</code></li>
 <li>LiDAR via <code>/scan</code></li>
-<li>sonar as <code>LaserScan</code> on <code>/sonar</code>, then converted to <code>/range</code></li>
+<li>sonar as <code>LaserScan</code> on <code>/sonar</code></li>
 <li>camera image via <code>/front_camera/image</code></li>
 <li>simulated YOLO provider inside <code>perception.launch.py</code></li>
 </ul>
@@ -2353,7 +2331,6 @@ that keeps simulation, real hardware, and common robot behavior separated.</p>
 <li><code>ros_ws/src/bringup/launch/controllers.launch.py</code></li>
 <li><code>ros_ws/src/bringup/config/bridge_config.yaml</code></li>
 <li><code>ros_ws/src/bringup/config/ekf_fusion.yaml</code></li>
-<li><code>ros_ws/src/robot_io_adapters/src/scan_to_range.cpp</code></li>
 <li><code>ros_ws/src/omniseer_description/urdf/xacro/omniseer.urdf.xacro</code></li>
 </ul>
 <h3 id="real-hardware-side">Real Hardware Side<a class="headerlink" href="#real-hardware-side" title="Permanent link">&para;</a></h3>
@@ -2387,7 +2364,7 @@ that keeps simulation, real hardware, and common robot behavior separated.</p>
 <li>sim publishes <code>/mecanum_drive_controller/odometry</code> directly</li>
 <li>real still derives that contract from raw <code>/encoder_counts</code></li>
 <li>sonar implementation mismatch:</li>
-<li>sim produces <code>/sonar</code> as <code>LaserScan</code> and adapts it to <code>/range</code></li>
+<li>sim produces <code>/sonar</code> as <code>LaserScan</code></li>
 <li>real publishes <code>/range</code> directly</li>
 <li>description mismatch:</li>
 <li>the shared xacro currently embeds Gazebo-only sensors and Gazebo-only
@@ -2454,8 +2431,8 @@ of no-op relays and gets us to sim/real parity faster.</p>
 <td><code>/range</code></td>
 <td><code>sensor_msgs/msg/Range</code></td>
 <td>forward range at <code>sonar_link</code></td>
-<td>sim sonar adapter or MCU renamed to publish directly</td>
-<td>costmaps</td>
+<td>MCU direct</td>
+<td>costmaps, autonomy</td>
 </tr>
 <tr>
 <td><code>/yolo/detections</code></td>
@@ -2620,7 +2597,6 @@ behavior into the real path.</p>
 <li>robot spawn into Gazebo</li>
 <li>Gazebo ROS bridges</li>
 <li>Gazebo-side control path</li>
-<li>sim-only compute adapters such as <code>scan_to_range</code></li>
 </ul>
 <h3 id="real_iolaunchpy"><code>real_io.launch.py</code><a class="headerlink" href="#real_iolaunchpy" title="Permanent link">&para;</a></h3>
 <p>Real-hardware-only producers and compute adapters below the boundary.</p>
@@ -2758,7 +2734,6 @@ the simulated RF2O input and fuses only wheel odometry plus IMU.</p>
 <p>Current issue:</p>
 <ul>
 <li>it mixes shared perception consumers with sim-only detection provider</li>
-<li>it also starts sim sonar conversion</li>
 </ul>
 <p>Target:</p>
 <ul>
@@ -2767,7 +2742,7 @@ the simulated RF2O input and fuses only wheel odometry plus IMU.</p>
 <li>SLAM</li>
 <li>any detection consumers that consume <code>/yolo/detections</code></li>
 <li>move sim-only YOLO provider to <code>sim_io.launch.py</code></li>
-<li>move sim-only sonar conversion below the boundary</li>
+<li>keep sim sonar below the boundary until it has a direct <code>Range</code> producer</li>
 </ul>
 <h3 id="controllerslaunchpy"><code>controllers.launch.py</code><a class="headerlink" href="#controllerslaunchpy" title="Permanent link">&para;</a></h3>
 <p>Current issue:</p>
@@ -2778,15 +2753,6 @@ the simulated RF2O input and fuses only wheel odometry plus IMU.</p>
 <ul>
 <li>treat it as sim-only below the boundary for now</li>
 <li>only <code>sim_io.launch.py</code> should include it</li>
-</ul>
-<h3 id="robot_io_adaptersscan_to_rangecpp"><code>robot_io_adapters/scan_to_range.cpp</code><a class="headerlink" href="#robot_io_adaptersscan_to_rangecpp" title="Permanent link">&para;</a></h3>
-<p>Current issue:</p>
-<ul>
-<li>it is a sim-only adapter but is launched from shared runtime paths</li>
-</ul>
-<p>Target:</p>
-<ul>
-<li>keep the node, but launch it only from <code>sim_io.launch.py</code></li>
 </ul>
 <h2 id="current-common-graph-after-refactor">Current Common Graph After Refactor<a class="headerlink" href="#current-common-graph-after-refactor" title="Permanent link">&para;</a></h2>
 <p>The target common graph is:</p>
@@ -2802,11 +2768,12 @@ the simulated RF2O input and fuses only wheel odometry plus IMU.</p>
                             |
              consumes canonical robot-IO boundary only
                             |
- /mecanum_drive_controller/odometry  /imu  /scan  /range  /yolo/detections
+ /mecanum_drive_controller/odometry  /imu  /scan  /yolo/detections  [/range on real hardware]
 </code></pre></div>
 <p>Below that line:</p>
 <ul>
-<li>sim provides those topics through Gazebo + bridges + compute adapters</li>
+<li>sim provides those topics through Gazebo + bridges + compute adapters, except
+  <code>/range</code> now remains real-hardware only</li>
 <li>real provides those topics through MCU/driver/runtime + direct naming
   standardization plus compute adapters</li>
 </ul>
@@ -2893,7 +2860,7 @@ recording, review, or correct a verified sim/real contract problem.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 29, 2026 19:18:43 UTC">July 29, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 31, 2026 04:46:59 UTC">July 31, 2026</span>
   </span>
 
     
