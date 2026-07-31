@@ -28,7 +28,6 @@ def generate_launch_description():
         DeclareLaunchArgument("start_yolo", default_value="true"),
         DeclareLaunchArgument("start_slam", default_value="true"),
         DeclareLaunchArgument("start_rf2o", default_value="true"),
-        DeclareLaunchArgument("start_scan_to_range", default_value="true"),
     ]
 
     log_level = LaunchConfiguration("log_level")
@@ -37,7 +36,6 @@ def generate_launch_description():
     start_yolo = LaunchConfiguration("start_yolo")
     start_slam = LaunchConfiguration("start_slam")
     start_rf2o = LaunchConfiguration("start_rf2o")
-    start_scan_to_range = LaunchConfiguration("start_scan_to_range")
 
     slam_toolbox_node = Node(
         package="slam_toolbox",
@@ -103,16 +101,6 @@ def generate_launch_description():
         condition=IfCondition(start_rf2o),
     )
 
-    sonar_to_range_node = Node(
-        package="robot_io_adapters",
-        executable="scan_to_range",
-        name="scan_to_range",
-        arguments=["--ros-args", "--log-level", "error"],
-        parameters=[{"use_sim_time": use_sim_time}],
-        output="screen",
-        condition=IfCondition(start_scan_to_range),
-    )
-
     return LaunchDescription(
         [
             *declared_arguments,
@@ -126,6 +114,5 @@ def generate_launch_description():
             ),
             yolo_group,
             rf2o_laser_odom_node,
-            sonar_to_range_node,
         ]
     )

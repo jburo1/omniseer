@@ -11,6 +11,7 @@
 #include <fstream>
 #include <limits>
 #include <mutex>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <sys/ioctl.h>
@@ -188,8 +189,27 @@ struct EvidenceFrameSink::Impl
     int remap_pad_y{0};
     int remap_resized_w{0};
     int remap_resized_h{0};
+    std::string capture_reason{"periodic"};
+    bool has_target_capture{false};
+    TargetCaptureMetadata target_capture{};
     std::vector<uint8_t> rgb{};
     std::vector<DetectionRecord> detections{};
+    std::shared_ptr<struct CaptureWaiter> capture_waiter{};
+  };
+
+  struct CaptureWaiter
+  {
+    explicit CaptureWaiter(TargetCaptureMetadata metadata_in)
+    : metadata(std::move(metadata_in))
+    {
+    }
+
+    TargetCaptureMetadata metadata{};
+    std::mutex mutex{};
+    std::condition_variable cv{};
+    bool done{false};
+    bool claimed{false};
+    TargetCaptureResult result{};
   };
 
   explicit Impl(EvidenceFrameSinkConfig config_in)
@@ -238,10 +258,18 @@ struct EvidenceFrameSink::Impl
     const omniseer::vision::DetectionsFrame & detections,
     const omniseer::vision::PipelineRemapConfig & remap) noexcept
   {
-    if (stop_requested.load(std::memory_order_acquire) || stopped.load(std::memory_order_acquire)) {
+    if (stop_requested.load(std::memory_order_acquire)) {
       return;
     }
-    if (!should_sample(detections.capture_ts_real_ns)) {
+
+    auto capture_waiter = claim_capture();
+    if (stopped.load(std::memory_order_acquire)) {
+      complete_capture(capture_waiter, false, current_stopped_reason(), {});
+      return;
+    }
+
+    const bool periodic_sample = !capture_waiter && should_sample(detections.capture_ts_real_ns);
+    if (!capture_waiter && !periodic_sample) {
       return;
     }
 
@@ -249,16 +277,26 @@ struct EvidenceFrameSink::Impl
       auto item = copy_item(image, detections, remap);
       if (!item.has_value) {
         dropped_count.fetch_add(1, std::memory_order_relaxed);
+        complete_capture(capture_waiter, false, "copy_failed", {});
         return;
+      }
+      if (capture_waiter) {
+        item.value.capture_reason = capture_waiter->metadata.capture_reason.empty() ?
+          std::string("target_framed") : capture_waiter->metadata.capture_reason;
+        item.value.has_target_capture = true;
+        item.value.target_capture = capture_waiter->metadata;
+        item.value.capture_waiter = capture_waiter;
       }
 
       std::unique_lock<std::mutex> lock(queue_mutex, std::try_to_lock);
       if (!lock.owns_lock()) {
         dropped_count.fetch_add(1, std::memory_order_relaxed);
+        complete_capture(capture_waiter, false, "queue_busy", item.value);
         return;
       }
       if (queue.size() >= config.queue_capacity) {
         dropped_count.fetch_add(1, std::memory_order_relaxed);
+        complete_capture(capture_waiter, false, "queue_full", item.value);
         return;
       }
       queue.emplace_back(std::move(item.value));
@@ -267,7 +305,50 @@ struct EvidenceFrameSink::Impl
       queue_cv.notify_one();
     } catch (...) {
       dropped_count.fetch_add(1, std::memory_order_relaxed);
+      complete_capture(capture_waiter, false, "exception", {});
     }
+  }
+
+  TargetCaptureResult capture_next(
+    TargetCaptureMetadata metadata,
+    std::chrono::milliseconds timeout)
+  {
+    if (timeout <= std::chrono::milliseconds::zero()) {
+      return TargetCaptureResult{false, "invalid_timeout"};
+    }
+    if (stop_requested.load(std::memory_order_acquire)) {
+      return TargetCaptureResult{false, "stopped"};
+    }
+    if (stopped.load(std::memory_order_acquire)) {
+      return TargetCaptureResult{false, current_stopped_reason()};
+    }
+
+    auto waiter = std::make_shared<CaptureWaiter>(std::move(metadata));
+    {
+      std::lock_guard<std::mutex> lock(capture_mutex);
+      pending_captures.emplace_back(waiter);
+    }
+
+    std::unique_lock<std::mutex> lock(waiter->mutex);
+    if (!waiter->cv.wait_for(lock, timeout, [&]() {return waiter->done;})) {
+      lock.unlock();
+      bool remove_pending = false;
+      {
+        std::lock_guard<std::mutex> capture_lock(capture_mutex);
+        if (!waiter->claimed) {
+          auto it = std::find(pending_captures.begin(), pending_captures.end(), waiter);
+          if (it != pending_captures.end()) {
+            pending_captures.erase(it);
+            remove_pending = true;
+          }
+        }
+      }
+      lock.lock();
+      if (remove_pending || !waiter->done) {
+        return TargetCaptureResult{false, "timeout"};
+      }
+    }
+    return waiter->result;
   }
 
   EvidenceFrameSinkSnapshot snapshot() const
@@ -299,6 +380,18 @@ struct EvidenceFrameSink::Impl
       return true;
     }
     return false;
+  }
+
+  std::shared_ptr<CaptureWaiter> claim_capture()
+  {
+    std::lock_guard<std::mutex> lock(capture_mutex);
+    if (pending_captures.empty()) {
+      return {};
+    }
+    auto waiter = pending_captures.front();
+    pending_captures.pop_front();
+    waiter->claimed = true;
+    return waiter;
   }
 
   CopyResult copy_item(
@@ -411,13 +504,16 @@ struct EvidenceFrameSink::Impl
   {
     if (!storage_available()) {
       dropped_count.fetch_add(1, std::memory_order_relaxed);
+      complete_capture(item.capture_waiter, false, current_stopped_reason(), item);
       return;
     }
 
-    const std::string filename = "frame_" + std::to_string(item.frame_id) + ".jpg";
+    const std::string prefix = item.has_target_capture ? "capture_frame_" : "frame_";
+    const std::string filename = prefix + std::to_string(item.frame_id) + ".jpg";
     const std::filesystem::path image_path = frames_dir / filename;
     if (!write_jpeg(image_path, item.rgb, item.model_width, item.model_height, jpeg_quality)) {
       dropped_count.fetch_add(1, std::memory_order_relaxed);
+      complete_capture(item.capture_waiter, false, "write_failed", item);
       return;
     }
 
@@ -426,8 +522,10 @@ struct EvidenceFrameSink::Impl
     if (!ec) {
       written_bytes.fetch_add(size, std::memory_order_relaxed);
     }
-    write_metadata(item, relative_frames_dir + "/" + filename);
+    const auto relative_image_path = relative_frames_dir + "/" + filename;
+    write_metadata(item, relative_image_path);
     written_count.fetch_add(1, std::memory_order_relaxed);
+    complete_capture(item.capture_waiter, true, "captured", item, relative_image_path);
   }
 
   bool storage_available() noexcept
@@ -464,13 +562,49 @@ struct EvidenceFrameSink::Impl
     metadata.flush();
   }
 
+  std::string current_stopped_reason() const
+  {
+    std::lock_guard<std::mutex> lock(stopped_reason_mutex);
+    return stopped_reason.empty() ? std::string("stopped") : stopped_reason;
+  }
+
+  void complete_capture(
+    const std::shared_ptr<CaptureWaiter> & waiter,
+    bool success,
+    std::string reason,
+    const Item & item,
+    const std::string & image_path = {}) noexcept
+  {
+    if (!waiter) {
+      return;
+    }
+
+    TargetCaptureResult result{};
+    result.success = success;
+    result.reason = std::move(reason);
+    result.image_path = image_path;
+    result.capture_ts_real_ns = item.capture_ts_real_ns;
+    result.frame_id = item.frame_id;
+    result.sequence = item.sequence;
+
+    {
+      std::lock_guard<std::mutex> lock(waiter->mutex);
+      if (waiter->done) {
+        return;
+      }
+      waiter->result = std::move(result);
+      waiter->done = true;
+    }
+    waiter->cv.notify_one();
+  }
+
   void write_metadata(const Item & item, const std::string & image_path)
   {
     metadata << "{\"schema_version\":" << kEvidenceSchemaVersion
              << ",\"artifact_type\":\"sampled_frame\""
              << ",\"image_path\":\"" << json_escape(image_path) << "\""
              << ",\"jpeg_quality\":" << jpeg_quality
-             << ",\"capture_reason\":\"periodic\""
+             << ",\"capture_reason\":\"" << json_escape(item.capture_reason) << "\""
              << ",\"frame_id\":" << item.frame_id
              << ",\"sequence\":" << item.sequence
              << ",\"capture_ts_real_ns\":" << item.capture_ts_real_ns
@@ -482,7 +616,19 @@ struct EvidenceFrameSink::Impl
              << ",\"pad_x\":" << item.remap_pad_x
              << ",\"pad_y\":" << item.remap_pad_y
              << ",\"resized_w\":" << item.remap_resized_w
-             << ",\"resized_h\":" << item.remap_resized_h << "}"
+             << ",\"resized_h\":" << item.remap_resized_h << "}";
+    if (item.has_target_capture) {
+      metadata << ",\"target_capture\":{\"target_class\":\""
+               << json_escape(item.target_capture.target_class) << "\""
+               << ",\"confidence\":" << item.target_capture.confidence
+               << ",\"bbox\":{\"center_x\":" << item.target_capture.bbox_center_x_px
+               << ",\"center_y\":" << item.target_capture.bbox_center_y_px
+               << ",\"size_x\":" << item.target_capture.bbox_size_x_px
+               << ",\"size_y\":" << item.target_capture.bbox_size_y_px << "}"
+               << ",\"normalized_error\":" << item.target_capture.normalized_error
+               << ",\"bbox_area_ratio\":" << item.target_capture.bbox_area_ratio << "}";
+    }
+    metadata
              << ",\"detections\":[";
 
     for (std::size_t i = 0; i < item.detections.size(); ++i) {
@@ -516,6 +662,8 @@ struct EvidenceFrameSink::Impl
   mutable std::mutex queue_mutex{};
   std::condition_variable queue_cv{};
   std::deque<Item> queue{};
+  mutable std::mutex capture_mutex{};
+  std::deque<std::shared_ptr<CaptureWaiter>> pending_captures{};
   std::thread worker{};
   std::atomic<bool> stop_requested{false};
   std::atomic<bool> stopped{false};
@@ -540,6 +688,13 @@ void EvidenceFrameSink::publish(
   const omniseer::vision::PipelineRemapConfig & remap) noexcept
 {
   _impl->publish(image, detections, remap);
+}
+
+TargetCaptureResult EvidenceFrameSink::capture_next(
+  TargetCaptureMetadata metadata,
+  std::chrono::milliseconds timeout)
+{
+  return _impl->capture_next(std::move(metadata), timeout);
 }
 
 EvidenceFrameSinkSnapshot EvidenceFrameSink::snapshot() const

@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <fstream>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -11,7 +12,9 @@
 #include "geometry_msgs/msg/twist_stamped.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 #include "omniseer_autonomy/target_centering_controller.hpp"
+#include "omniseer_msgs/srv/capture_frame.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include "sensor_msgs/msg/range.hpp"
 #include "yolo_msgs/msg/detection_array.hpp"
 
 namespace omniseer_autonomy
@@ -96,8 +99,13 @@ public:
         "/yolo/detections");
     const auto odometry_topic = declare_parameter<std::string>("odometry_topic",
         "/odometry/filtered");
+    const auto range_topic = declare_parameter<std::string>("range_topic", "/range");
     const auto command_topic = declare_parameter<std::string>("command_topic", "/cmd_vel_autonomy");
+    const auto capture_service =
+      declare_parameter<std::string>("capture_service", "/vision/capture_frame");
+    _capture_timeout_sec = declare_parameter<double>("capture_timeout_sec", 2.0);
     _publisher = create_publisher<geometry_msgs::msg::TwistStamped>(command_topic, 10);
+    _capture_client = create_client<omniseer_msgs::srv::CaptureFrame>(capture_service);
     _subscription = create_subscription<yolo_msgs::msg::DetectionArray>(
       detections_topic, 10,
       [this](const yolo_msgs::msg::DetectionArray & msg)
@@ -123,6 +131,16 @@ public:
       {
         _controller.update_heading(yaw_from_quaternion(msg.pose.pose.orientation));
       });
+    _range_subscription = create_subscription<sensor_msgs::msg::Range>(
+      range_topic, rclcpp::SensorDataQoS(),
+      [this](const sensor_msgs::msg::Range & msg)
+      {
+        if (std::isfinite(msg.range)) {
+          _controller.update_proximity_range(static_cast<double>(msg.range));
+        } else {
+          _controller.update_proximity_range(std::nullopt);
+        }
+      });
     _timer = create_wall_timer(
       50ms,
       [this]()
@@ -133,14 +151,14 @@ public:
     RCLCPP_INFO(
       get_logger(),
         "target centering autonomy started; target_class=%s command_topic=%s detections_topic=%s "
-        "odometry_topic=%s",
+        "odometry_topic=%s range_topic=%s capture_service=%s",
       _target_class.c_str(), command_topic.c_str(), detections_topic.c_str(),
-      odometry_topic.c_str());
+      odometry_topic.c_str(), range_topic.c_str(), capture_service.c_str());
   }
 
   ~TargetCenteringNode() override
   {
-    publish_command(0.0);
+    publish_command(0.0, 0.0);
     if (_events.is_open()) {
       _events.flush();
       _events.close();
@@ -153,12 +171,18 @@ private:
     TargetCenteringConfig config{};
     config.target_class = declare_parameter<std::string>("target_class", "");
     config.image_width_px = declare_parameter<double>("image_width_px", 1280.0);
+    config.image_height_px = declare_parameter<double>("image_height_px", 720.0);
     config.scan_yaw_rate_rad_s = declare_parameter<double>("scan_yaw_rate_rad_s", 0.20);
     config.max_yaw_rate_rad_s = declare_parameter<double>("max_yaw_rate_rad_s", 0.30);
     config.min_yaw_rate_rad_s = declare_parameter<double>("min_yaw_rate_rad_s", 0.08);
     config.kp = declare_parameter<double>("kp", 0.30);
     config.center_deadband = declare_parameter<double>("center_deadband", 0.05);
-    config.stable_center_frames = declare_parameter<int>("stable_center_frames", 10);
+    config.bbox_area_min_ratio = declare_parameter<double>("bbox_area_min_ratio", 0.08);
+    config.bbox_area_max_ratio = declare_parameter<double>("bbox_area_max_ratio", 0.35);
+    config.forward_speed_m_s = declare_parameter<double>("forward_speed_m_s", 0.05);
+    config.reverse_speed_m_s = declare_parameter<double>("reverse_speed_m_s", 0.04);
+    config.stable_framed_frames = declare_parameter<int>("stable_framed_frames", 10);
+    config.proximity_stop_m = declare_parameter<double>("proximity_stop_m", 0.30);
     const auto detection_stale_ms = declare_parameter<int>("detection_stale_ms", 500);
     config.detection_stale_sec = static_cast<double>(detection_stale_ms) / 1000.0;
     config.scan_limit_revolutions = declare_parameter<double>("scan_limit_revolutions", 1.0);
@@ -179,11 +203,12 @@ private:
       write_event(event);
     }
     if (output.publish_command) {
-      publish_command(output.angular_z_rad_s);
+      publish_command(output.linear_x_m_s, output.angular_z_rad_s);
     }
     if (!_terminal_logged && _controller.state() == CenteringState::Success) {
       _terminal_logged = true;
       RCLCPP_INFO(get_logger(), "target centering succeeded");
+      request_capture(output);
     } else if (!_terminal_logged && _controller.state() == CenteringState::Failed) {
       _terminal_logged = true;
       RCLCPP_WARN(get_logger(), "target centering failed: %s",
@@ -191,7 +216,7 @@ private:
     }
   }
 
-  void publish_command(double angular_z_rad_s)
+  void publish_command(double linear_x_m_s, double angular_z_rad_s)
   {
     if (!_publisher) {
       return;
@@ -199,6 +224,7 @@ private:
     geometry_msgs::msg::TwistStamped msg{};
     msg.header.stamp = now();
     msg.header.frame_id = _frame_id;
+    msg.twist.linear.x = linear_x_m_s;
     msg.twist.angular.z = angular_z_rad_s;
     _publisher->publish(msg);
   }
@@ -215,8 +241,11 @@ private:
             << ",\"reason\":\"" << json_escape(event.reason) << "\""
             << ",\"target_class\":\"" << json_escape(_target_class) << "\""
             << ",\"normalized_error\":" << optional_json_number(event.normalized_error)
+            << ",\"bbox_area_ratio\":" << optional_json_number(event.bbox_area_ratio)
+            << ",\"proximity_range_m\":" << optional_json_number(event.proximity_range_m)
+            << ",\"linear_x_m_s\":" << event.linear_x_m_s
             << ",\"angular_z_rad_s\":" << event.angular_z_rad_s
-            << ",\"stable_center_frames\":" << event.stable_center_frames
+            << ",\"stable_framed_frames\":" << event.stable_framed_frames
             << ",\"target_loss_count\":" << event.target_loss_count;
     if (event.target.has_value()) {
       _events << ",\"target\":{\"class_name\":\"" << json_escape(event.target->class_name)
@@ -232,16 +261,107 @@ private:
     _events.flush();
   }
 
+  void request_capture(const TargetCenteringOutput & output)
+  {
+    if (_capture_requested) {
+      return;
+    }
+    _capture_requested = true;
+    if (!_capture_client) {
+      write_capture_result(false, "capture_client_unavailable", "", 0, 0);
+      return;
+    }
+    if (!_capture_client->service_is_ready() &&
+      !_capture_client->wait_for_service(std::chrono::milliseconds(100)))
+    {
+      write_capture_result(false, "capture_service_unavailable", "", 0, 0);
+      return;
+    }
+
+    auto request = make_capture_request(output);
+    if (!request.has_value()) {
+      write_capture_result(false, "capture_target_unavailable", "", 0, 0);
+      return;
+    }
+
+    using ServiceResponseFuture =
+      rclcpp::Client<omniseer_msgs::srv::CaptureFrame>::SharedFuture;
+    _capture_client->async_send_request(
+      std::make_shared<omniseer_msgs::srv::CaptureFrame::Request>(std::move(*request)),
+      [this](ServiceResponseFuture future)
+      {
+        const auto response = future.get();
+        write_capture_result(
+          response->success, response->reason, response->image_path,
+          response->frame_id, response->sequence);
+        if (response->success) {
+          RCLCPP_INFO(get_logger(), "target capture saved: %s", response->image_path.c_str());
+        } else {
+          RCLCPP_WARN(get_logger(), "target capture failed: %s", response->reason.c_str());
+        }
+      });
+  }
+
+  std::optional<omniseer_msgs::srv::CaptureFrame::Request> make_capture_request(
+    const TargetCenteringOutput & output) const
+  {
+    for (auto it = output.events.rbegin(); it != output.events.rend(); ++it) {
+      if (!it->target.has_value() || !it->normalized_error.has_value() ||
+        !it->bbox_area_ratio.has_value())
+      {
+        continue;
+      }
+
+      omniseer_msgs::srv::CaptureFrame::Request request{};
+      request.capture_reason = "target_framed";
+      request.target_class = _target_class;
+      request.confidence = it->target->confidence;
+      request.bbox_center_x_px = it->target->center_x_px;
+      request.bbox_center_y_px = it->target->center_y_px;
+      request.bbox_size_x_px = it->target->size_x_px;
+      request.bbox_size_y_px = it->target->size_y_px;
+      request.normalized_error = *it->normalized_error;
+      request.bbox_area_ratio = *it->bbox_area_ratio;
+      request.timeout_sec = _capture_timeout_sec;
+      return request;
+    }
+    return std::nullopt;
+  }
+
+  void write_capture_result(
+    bool success, const std::string & reason, const std::string & image_path,
+    uint64_t frame_id, uint64_t sequence)
+  {
+    if (!_events.is_open()) {
+      return;
+    }
+    _events << "{\"schema_version\":1"
+            << ",\"time_sec\":" << elapsed_sec()
+            << ",\"state\":\"" << state_name(_controller.state()) << "\""
+            << ",\"event\":\"capture_result\""
+            << ",\"reason\":\"" << json_escape(reason) << "\""
+            << ",\"target_class\":\"" << json_escape(_target_class) << "\""
+            << ",\"success\":" << (success ? "true" : "false")
+            << ",\"image_path\":\"" << json_escape(image_path) << "\""
+            << ",\"frame_id\":" << frame_id
+            << ",\"sequence\":" << sequence << "}\n";
+    _events.flush();
+  }
+
   std::chrono::steady_clock::time_point _started_at{};
   std::string                           _target_class{};
   std::string                           _frame_id{"base_link"};
+  double                                _capture_timeout_sec{2.0};
   TargetCenteringController             _controller;
   rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr _publisher{};
+  rclcpp::Client<omniseer_msgs::srv::CaptureFrame>::SharedPtr _capture_client{};
   rclcpp::Subscription<yolo_msgs::msg::DetectionArray>::SharedPtr _subscription{};
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr _odometry_subscription{};
+  rclcpp::Subscription<sensor_msgs::msg::Range>::SharedPtr _range_subscription{};
   rclcpp::TimerBase::SharedPtr _timer{};
   std::ofstream                _events{};
   bool                         _terminal_logged{false};
+  bool                         _capture_requested{false};
 };
 } // namespace omniseer_autonomy
 

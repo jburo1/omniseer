@@ -38,6 +38,14 @@ def _values(**overrides: str) -> RunFormValues:
         "classes_text": "person, cup\nperson",
         "notes": "  trial notes  ",
         "devcontainer_exec_template": "",
+        "autonomy_bbox_area_min_ratio": " 0.10 ",
+        "autonomy_bbox_area_max_ratio": " 0.28 ",
+        "autonomy_forward_speed_m_s": " 0.06 ",
+        "autonomy_reverse_speed_m_s": " 0.03 ",
+        "autonomy_stable_framed_frames": " 7 ",
+        "autonomy_proximity_stop_m": " 0.42 ",
+        "autonomy_capture_timeout_sec": " 3.5 ",
+        "autonomy_evidence_interval_sec": " 0.20 ",
     }
     values.update(overrides)
     return RunFormValues(**values)
@@ -92,6 +100,14 @@ class RunSettingsTests(unittest.TestCase):
         self.assertEqual(selection.run_config.notes, "trial notes")
         self.assertEqual(selection.run_config.run_type, RUN_TYPE_PERCEPTION)
         self.assertEqual(selection.run_config.devcontainer_exec_template, DEFAULT_DEVCONTAINER_EXEC_TEMPLATE)
+        self.assertEqual(selection.run_config.autonomy_bbox_area_min_ratio, "0.10")
+        self.assertEqual(selection.run_config.autonomy_bbox_area_max_ratio, "0.28")
+        self.assertEqual(selection.run_config.autonomy_forward_speed_m_s, "0.06")
+        self.assertEqual(selection.run_config.autonomy_reverse_speed_m_s, "0.03")
+        self.assertEqual(selection.run_config.autonomy_stable_framed_frames, "7")
+        self.assertEqual(selection.run_config.autonomy_proximity_stop_m, "0.42")
+        self.assertEqual(selection.run_config.autonomy_capture_timeout_sec, "3.5")
+        self.assertEqual(selection.run_config.autonomy_evidence_interval_sec, "0.20")
         self.assertEqual(selection.artifact_context.repo_root, Path("/repo"))
         self.assertEqual(selection.artifact_context.connection, selection.connection)
         self.assertEqual(selection.artifact_context.local_import_root, Path("/repo/runs/imported"))

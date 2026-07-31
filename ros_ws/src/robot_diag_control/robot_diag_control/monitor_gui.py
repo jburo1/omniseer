@@ -71,6 +71,7 @@ from robot_diag_control.run_settings import (
     default_remote_runs_root,
     resolve_run_form,
     selected_run_backend,
+    selected_run_type,
 )
 
 _TK_IMPORT_ERROR: ModuleNotFoundError | None = None
@@ -344,7 +345,16 @@ class RobotMonitorGui:
         self._devcontainer_exec_template_var = tk.StringVar(value=parsed.devcontainer_exec_template)
         self._run_id_var = tk.StringVar(value=_default_run_id())
         self._run_classes_var = tk.StringVar(value="person")
+        self._autonomy_bbox_area_min_ratio_var = tk.StringVar(value="0.08")
+        self._autonomy_bbox_area_max_ratio_var = tk.StringVar(value="0.35")
+        self._autonomy_forward_speed_var = tk.StringVar(value="0.05")
+        self._autonomy_reverse_speed_var = tk.StringVar(value="0.04")
+        self._autonomy_stable_frames_var = tk.StringVar(value="10")
+        self._autonomy_proximity_stop_var = tk.StringVar(value="0.30")
+        self._autonomy_capture_timeout_var = tk.StringVar(value="2.0")
+        self._autonomy_evidence_interval_var = tk.StringVar(value="0.25")
         self._run_notes_text: Any | None = None
+        self._run_experiment_frames: dict[str, Any] = {}
         self._mode_var = tk.StringVar(value=self._format_run_mode(self._run_state))
 
         self._root.title("Robot Monitor")
@@ -352,6 +362,7 @@ class RobotMonitorGui:
         self._root.minsize(820, 640)
         self._configure_style()
         self._build_layout()
+        self._sync_run_experiment_fields()
         self._update_run_controls()
 
         if parsed.refresh_on_start:
@@ -506,6 +517,7 @@ class RobotMonitorGui:
     def _build_run_controls(self, parent: Any) -> None:
         form = ttk.Frame(parent)
         form.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 14))
+
         ttk.Label(form, text="Backend").grid(row=0, column=0, sticky=tk.W, pady=(8, 0))
         backend_box = ttk.Combobox(
             form,
@@ -519,19 +531,54 @@ class RobotMonitorGui:
         self._add_labeled_entry(form, "Remote Runs", self._remote_runs_root_var, 1, 2)
         self._add_labeled_entry(form, "Local Import", self._local_import_root_var, 2, 0)
         self._add_labeled_entry(form, "Devcontainer Exec", self._devcontainer_exec_template_var, 2, 2)
-        ttk.Label(form, text="Run Type").grid(row=3, column=0, sticky=tk.W, pady=(8, 0))
+
+        ttk.Separator(form).grid(row=3, column=0, columnspan=4, sticky=tk.EW, pady=(8, 0))
+        experiment_holder = ttk.Frame(form)
+        experiment_holder.grid(row=4, column=0, columnspan=4, sticky=tk.EW, pady=(8, 0))
+        ttk.Label(experiment_holder, text="Experiment").grid(row=0, column=0, sticky=tk.W)
         run_type_box = ttk.Combobox(
-            form,
+            experiment_holder,
             textvariable=self._run_type_var,
             values=tuple(RUN_TYPE_LABELS.values()),
             state="readonly",
         )
-        run_type_box.grid(row=3, column=1, sticky=tk.EW, padx=(8, 0), pady=(8, 0))
-        self._add_labeled_entry(form, "Run ID", self._run_id_var, 4, 0)
-        self._add_labeled_entry(form, "Classes", self._run_classes_var, 4, 2)
-        ttk.Label(form, text="Notes").grid(row=5, column=0, sticky=tk.NW, pady=(8, 0))
+        run_type_box.grid(row=0, column=1, columnspan=3, sticky=tk.EW, padx=(8, 0))
+        run_type_box.bind("<<ComboboxSelected>>", lambda _event: self._sync_run_experiment_fields())
+
+        experiment_fields = ttk.Frame(experiment_holder)
+        experiment_fields.grid(row=1, column=0, columnspan=4, sticky=tk.EW)
+        perception_frame = ttk.Frame(experiment_fields)
+        self._add_labeled_entry(perception_frame, "Classes", self._run_classes_var, 0, 0)
+        perception_frame.columnconfigure(1, weight=1)
+        self._run_experiment_frames[RUN_TYPE_PERCEPTION] = perception_frame
+
+        autonomy_frame = ttk.Frame(experiment_fields)
+        self._add_labeled_entry(autonomy_frame, "Target Class", self._run_classes_var, 0, 0)
+        self._add_labeled_entry(autonomy_frame, "BBox Min Area", self._autonomy_bbox_area_min_ratio_var, 1, 0, width=8)
+        self._add_labeled_entry(autonomy_frame, "BBox Max Area", self._autonomy_bbox_area_max_ratio_var, 1, 2, width=8)
+        self._add_labeled_entry(autonomy_frame, "Forward m/s", self._autonomy_forward_speed_var, 2, 0, width=8)
+        self._add_labeled_entry(autonomy_frame, "Reverse m/s", self._autonomy_reverse_speed_var, 2, 2, width=8)
+        self._add_labeled_entry(autonomy_frame, "Stable Frames", self._autonomy_stable_frames_var, 3, 0, width=8)
+        self._add_labeled_entry(autonomy_frame, "Proximity Stop m", self._autonomy_proximity_stop_var, 3, 2, width=8)
+        self._add_labeled_entry(autonomy_frame, "Capture Timeout s", self._autonomy_capture_timeout_var, 4, 0, width=8)
+        self._add_labeled_entry(
+            autonomy_frame,
+            "Evidence Interval s",
+            self._autonomy_evidence_interval_var,
+            4,
+            2,
+            width=8,
+        )
+        for column in range(4):
+            autonomy_frame.columnconfigure(column, weight=1 if column in {1, 3} else 0)
+        self._run_experiment_frames[RUN_TYPE_AUTONOMY_CENTER] = autonomy_frame
+        for column in range(4):
+            experiment_holder.columnconfigure(column, weight=1 if column in {1, 3} else 0)
+
+        self._add_labeled_entry(form, "Run ID", self._run_id_var, 5, 0)
+        ttk.Label(form, text="Notes").grid(row=6, column=0, sticky=tk.NW, pady=(8, 0))
         self._run_notes_text = tk.Text(form, height=3, width=40, wrap=tk.WORD)
-        self._run_notes_text.grid(row=5, column=1, columnspan=3, sticky=tk.EW, padx=(8, 0), pady=(8, 0))
+        self._run_notes_text.grid(row=6, column=1, columnspan=3, sticky=tk.EW, padx=(8, 0), pady=(8, 0))
         for column in range(4):
             form.columnconfigure(column, weight=1 if column in {1, 3} else 0)
 
@@ -547,6 +594,17 @@ class RobotMonitorGui:
         self._run_buttons["retrieve"].pack(fill=tk.X, pady=(18, 0))
         self._run_buttons["open_report"] = ttk.Button(actions, text="Open Report", command=self.open_report)
         self._run_buttons["open_report"].pack(fill=tk.X, pady=(8, 0))
+
+    def _sync_run_experiment_fields(self) -> None:
+        try:
+            selected = selected_run_type(self._run_type_var.get())
+        except ValueError:
+            selected = RUN_TYPE_PERCEPTION
+        for run_type, frame in self._run_experiment_frames.items():
+            if run_type == selected:
+                frame.pack(fill=tk.X)
+            else:
+                frame.pack_forget()
 
     def _add_labeled_entry(
         self,
@@ -601,6 +659,14 @@ class RobotMonitorGui:
             classes_text=self._run_classes_var.get(),
             notes=self._run_notes(),
             devcontainer_exec_template=self._devcontainer_exec_template_var.get(),
+            autonomy_bbox_area_min_ratio=self._autonomy_bbox_area_min_ratio_var.get(),
+            autonomy_bbox_area_max_ratio=self._autonomy_bbox_area_max_ratio_var.get(),
+            autonomy_forward_speed_m_s=self._autonomy_forward_speed_var.get(),
+            autonomy_reverse_speed_m_s=self._autonomy_reverse_speed_var.get(),
+            autonomy_stable_framed_frames=self._autonomy_stable_frames_var.get(),
+            autonomy_proximity_stop_m=self._autonomy_proximity_stop_var.get(),
+            autonomy_capture_timeout_sec=self._autonomy_capture_timeout_var.get(),
+            autonomy_evidence_interval_sec=self._autonomy_evidence_interval_var.get(),
         )
 
     def _run_form_selection(self, run_id: str | None = None) -> RunFormSelection:

@@ -100,13 +100,28 @@ class RunCommandsTests(unittest.TestCase):
                 backend=RUN_BACKEND_RUNTIME,
                 classes=("backpack", "chair"),
                 run_type=RUN_TYPE_AUTONOMY_CENTER,
+                autonomy_bbox_area_min_ratio="0.10",
+                autonomy_bbox_area_max_ratio="0.28",
+                autonomy_forward_speed_m_s="0.06",
+                autonomy_reverse_speed_m_s="0.03",
+                autonomy_stable_framed_frames="7",
+                autonomy_proximity_stop_m="0.42",
+                autonomy_capture_timeout_sec="3.5",
+                autonomy_evidence_interval_sec="0.20",
             ),
         )
 
         self.assertIn("start_autonomy:=true", command[3])
         self.assertIn("autonomy_target_class:=backpack", command[3])
         self.assertIn("autonomy_run_dir:=/runs/operator_001", command[3])
-        self.assertIn("evidence_interval_sec:=0.25", command[3])
+        self.assertIn("autonomy_bbox_area_min_ratio:=0.10", command[3])
+        self.assertIn("autonomy_bbox_area_max_ratio:=0.28", command[3])
+        self.assertIn("autonomy_forward_speed_m_s:=0.06", command[3])
+        self.assertIn("autonomy_reverse_speed_m_s:=0.03", command[3])
+        self.assertIn("autonomy_stable_framed_frames:=7", command[3])
+        self.assertIn("autonomy_proximity_stop_m:=0.42", command[3])
+        self.assertIn("autonomy_capture_timeout_sec:=3.5", command[3])
+        self.assertIn("evidence_interval_sec:=0.20", command[3])
 
     def test_autonomy_run_requires_a_class(self):
         with self.assertRaisesRegex(ValueError, "requires at least one target class"):

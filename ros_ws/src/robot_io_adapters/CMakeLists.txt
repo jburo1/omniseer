@@ -11,7 +11,6 @@ find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(omniseer_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(sensor_msgs REQUIRED)
 
 add_library(robot_io_adapters_math STATIC
   src/odometry_math.cpp
@@ -47,33 +46,10 @@ target_link_libraries(encoder_counts_to_odometry PRIVATE
   robot_io_adapters_node
 )
 
-add_library(robot_io_adapters_scan STATIC
-  src/scan_to_range.cpp
-)
-target_compile_features(robot_io_adapters_scan PUBLIC cxx_std_17)
-target_include_directories(robot_io_adapters_scan PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-)
-target_link_libraries(robot_io_adapters_scan PUBLIC
-  rclcpp::rclcpp
-  ${sensor_msgs_TARGETS}
-)
-
-add_executable(scan_to_range
-  src/scan_to_range_main.cpp
-)
-target_compile_features(scan_to_range PUBLIC cxx_std_17)
-target_link_libraries(scan_to_range PRIVATE
-  robot_io_adapters_scan
-)
-
 install(TARGETS
   robot_io_adapters_math
   robot_io_adapters_node
-  robot_io_adapters_scan
   encoder_counts_to_odometry
-  scan_to_range
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}
@@ -105,16 +81,6 @@ if(BUILD_TESTING)
     ${CMAKE_CURRENT_SOURCE_DIR}/include
   )
 
-  ament_add_gtest(test_scan_to_range
-    test/test_scan_to_range.cpp
-  )
-  target_compile_features(test_scan_to_range PUBLIC cxx_std_17)
-  target_link_libraries(test_scan_to_range
-    robot_io_adapters_scan
-  )
-  target_include_directories(test_scan_to_range PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-  )
 endif()
 
 ament_package()

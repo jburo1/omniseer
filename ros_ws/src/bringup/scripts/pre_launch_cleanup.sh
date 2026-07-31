@@ -48,7 +48,6 @@ declare -A runtime_executables=(
   [collision_monitor]=1
   [waypoint_follower]=1
   [docking_server]=1
-  [scan_to_range]=1
   [ros2_control_node]=1
   [controller_manager]=1
   [spawner]=1

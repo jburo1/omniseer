@@ -23,7 +23,7 @@ RUN_TYPE_PERCEPTION = "perception_recording"
 RUN_TYPE_AUTONOMY_CENTER = "autonomy_center_first_class"
 RUN_TYPE_LABELS = {
     RUN_TYPE_PERCEPTION: "Perception recording",
-    RUN_TYPE_AUTONOMY_CENTER: "Autonomy: center first class",
+    RUN_TYPE_AUTONOMY_CENTER: "Autonomy: frame and capture target",
 }
 
 
@@ -43,6 +43,14 @@ class RunConfig:
     notes: str = ""
     devcontainer_exec_template: str = ""
     run_type: str = RUN_TYPE_PERCEPTION
+    autonomy_bbox_area_min_ratio: str = "0.08"
+    autonomy_bbox_area_max_ratio: str = "0.35"
+    autonomy_forward_speed_m_s: str = "0.05"
+    autonomy_reverse_speed_m_s: str = "0.04"
+    autonomy_stable_framed_frames: str = "10"
+    autonomy_proximity_stop_m: str = "0.30"
+    autonomy_capture_timeout_sec: str = "2.0"
+    autonomy_evidence_interval_sec: str = "0.25"
 
 
 def sanitize_run_id(run_id: str) -> str:
@@ -128,7 +136,7 @@ def _build_runtime_record_inner_command(
     run_id: str,
     classes: Sequence[str],
     notes: str,
-    run_type: str,
+    run_config: RunConfig,
 ) -> list[str]:
     command = [
         "scripts/omni",
@@ -148,10 +156,11 @@ def _build_runtime_record_inner_command(
     command.extend(
         _autonomy_launch_args(
             classes=classes,
-            run_type=run_type,
+            run_type=run_config.run_type,
             run_dir=_runtime_container_run_dir(run_id),
         )
     )
+    command.extend(_autonomy_parameter_launch_args(run_config))
     return command
 
 
@@ -161,7 +170,7 @@ def _build_devcontainer_record_inner_command(
     run_id: str,
     classes: Sequence[str],
     notes: str,
-    run_type: str,
+    run_config: RunConfig,
 ) -> list[str]:
     container_repo_root = devcontainer_workspace_root_for(remote_repo_root)
     container_run_dir = remote_run_dir_for(container_repo_root, run_id)
@@ -185,7 +194,8 @@ def _build_devcontainer_record_inner_command(
     command.append("experiment_overwrite:=true")
     if classes:
         command.append(f"classes_path:={remote_class_list_path_for(container_repo_root, run_id)}")
-    command.extend(_autonomy_launch_args(classes=classes, run_type=run_type, run_dir=container_run_dir))
+    command.extend(_autonomy_launch_args(classes=classes, run_type=run_config.run_type, run_dir=container_run_dir))
+    command.extend(_autonomy_parameter_launch_args(run_config))
     return command
 
 
@@ -201,7 +211,23 @@ def _autonomy_launch_args(*, classes: Sequence[str], run_type: str, run_dir: str
         "start_autonomy:=true",
         f"autonomy_target_class:={target_class}",
         f"autonomy_run_dir:={run_dir}",
-        "evidence_interval_sec:=0.25",
+    ]
+
+
+def _autonomy_parameter_launch_args(run_config: RunConfig) -> list[str]:
+    if run_config.run_type == RUN_TYPE_PERCEPTION:
+        return []
+    if run_config.run_type != RUN_TYPE_AUTONOMY_CENTER:
+        raise ValueError(f"unsupported run type: {run_config.run_type}")
+    return [
+        f"autonomy_bbox_area_min_ratio:={run_config.autonomy_bbox_area_min_ratio}",
+        f"autonomy_bbox_area_max_ratio:={run_config.autonomy_bbox_area_max_ratio}",
+        f"autonomy_forward_speed_m_s:={run_config.autonomy_forward_speed_m_s}",
+        f"autonomy_reverse_speed_m_s:={run_config.autonomy_reverse_speed_m_s}",
+        f"autonomy_stable_framed_frames:={run_config.autonomy_stable_framed_frames}",
+        f"autonomy_proximity_stop_m:={run_config.autonomy_proximity_stop_m}",
+        f"autonomy_capture_timeout_sec:={run_config.autonomy_capture_timeout_sec}",
+        f"evidence_interval_sec:={run_config.autonomy_evidence_interval_sec}",
     ]
 
 
@@ -234,7 +260,7 @@ def build_remote_start_command(
             run_id=run_config.run_id,
             classes=run_config.classes,
             notes=run_config.notes,
-            run_type=run_config.run_type,
+            run_config=run_config,
         )
         remote_command = f"cd {shlex.quote(connection.remote_repo_root)} && {shell_join(inner)}"
     elif run_config.backend == RUN_BACKEND_DEVCONTAINER:
@@ -244,7 +270,7 @@ def build_remote_start_command(
             run_id=run_config.run_id,
             classes=run_config.classes,
             notes=run_config.notes,
-            run_type=run_config.run_type,
+            run_config=run_config,
         )
         inner_shell = f"cd {shlex.quote(container_repo_root)} && {shell_join(inner)}"
         remote_command = _format_devcontainer_exec_template(

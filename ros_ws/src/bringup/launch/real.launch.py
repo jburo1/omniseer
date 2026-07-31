@@ -64,6 +64,13 @@ def _build_real_bringup_actions(
     start_autonomy,
     autonomy_target_class,
     autonomy_run_dir,
+    autonomy_bbox_area_min_ratio,
+    autonomy_bbox_area_max_ratio,
+    autonomy_forward_speed_m_s,
+    autonomy_reverse_speed_m_s,
+    autonomy_stable_framed_frames,
+    autonomy_proximity_stop_m,
+    autonomy_capture_timeout_sec,
     start_vision,
     vision_params_file,
     camera_device,
@@ -228,6 +235,13 @@ def _build_real_bringup_actions(
                 "use_sim_time": use_sim_time,
                 "target_class": autonomy_target_class,
                 "run_dir": autonomy_run_dir,
+                "bbox_area_min_ratio": autonomy_bbox_area_min_ratio,
+                "bbox_area_max_ratio": autonomy_bbox_area_max_ratio,
+                "forward_speed_m_s": autonomy_forward_speed_m_s,
+                "reverse_speed_m_s": autonomy_reverse_speed_m_s,
+                "stable_framed_frames": autonomy_stable_framed_frames,
+                "proximity_stop_m": autonomy_proximity_stop_m,
+                "capture_timeout_sec": autonomy_capture_timeout_sec,
             }
         ],
         condition=IfCondition(start_autonomy),
@@ -382,6 +396,13 @@ def generate_launch_description():
         DeclareLaunchArgument("start_autonomy", default_value="false"),
         DeclareLaunchArgument("autonomy_target_class", default_value=""),
         DeclareLaunchArgument("autonomy_run_dir", default_value=""),
+        DeclareLaunchArgument("autonomy_bbox_area_min_ratio", default_value="0.08"),
+        DeclareLaunchArgument("autonomy_bbox_area_max_ratio", default_value="0.35"),
+        DeclareLaunchArgument("autonomy_forward_speed_m_s", default_value="0.05"),
+        DeclareLaunchArgument("autonomy_reverse_speed_m_s", default_value="0.04"),
+        DeclareLaunchArgument("autonomy_stable_framed_frames", default_value="10"),
+        DeclareLaunchArgument("autonomy_proximity_stop_m", default_value="0.30"),
+        DeclareLaunchArgument("autonomy_capture_timeout_sec", default_value="2.0"),
         DeclareLaunchArgument("start_vision", default_value="true"),
         DeclareLaunchArgument("vision_params_file", default_value="vision_bridge.real.yaml"),
         DeclareLaunchArgument("camera_device", default_value="__from_config__"),
@@ -457,6 +478,13 @@ def generate_launch_description():
     start_autonomy = LaunchConfiguration("start_autonomy")
     autonomy_target_class = LaunchConfiguration("autonomy_target_class")
     autonomy_run_dir = LaunchConfiguration("autonomy_run_dir")
+    autonomy_bbox_area_min_ratio = LaunchConfiguration("autonomy_bbox_area_min_ratio")
+    autonomy_bbox_area_max_ratio = LaunchConfiguration("autonomy_bbox_area_max_ratio")
+    autonomy_forward_speed_m_s = LaunchConfiguration("autonomy_forward_speed_m_s")
+    autonomy_reverse_speed_m_s = LaunchConfiguration("autonomy_reverse_speed_m_s")
+    autonomy_stable_framed_frames = LaunchConfiguration("autonomy_stable_framed_frames")
+    autonomy_proximity_stop_m = LaunchConfiguration("autonomy_proximity_stop_m")
+    autonomy_capture_timeout_sec = LaunchConfiguration("autonomy_capture_timeout_sec")
     start_vision = LaunchConfiguration("start_vision")
     vision_params_file = LaunchConfiguration("vision_params_file")
     camera_device = LaunchConfiguration("camera_device")
@@ -534,6 +562,13 @@ def generate_launch_description():
             start_autonomy=start_autonomy,
             autonomy_target_class=autonomy_target_class,
             autonomy_run_dir=autonomy_run_dir,
+            autonomy_bbox_area_min_ratio=autonomy_bbox_area_min_ratio,
+            autonomy_bbox_area_max_ratio=autonomy_bbox_area_max_ratio,
+            autonomy_forward_speed_m_s=autonomy_forward_speed_m_s,
+            autonomy_reverse_speed_m_s=autonomy_reverse_speed_m_s,
+            autonomy_stable_framed_frames=autonomy_stable_framed_frames,
+            autonomy_proximity_stop_m=autonomy_proximity_stop_m,
+            autonomy_capture_timeout_sec=autonomy_capture_timeout_sec,
             start_vision=start_vision,
             vision_params_file=vision_params_file,
             camera_device=camera_device,
@@ -621,6 +656,13 @@ def generate_launch_description():
             start_autonomy=start_autonomy,
             autonomy_target_class=autonomy_target_class,
             autonomy_run_dir=autonomy_run_dir,
+            autonomy_bbox_area_min_ratio=autonomy_bbox_area_min_ratio,
+            autonomy_bbox_area_max_ratio=autonomy_bbox_area_max_ratio,
+            autonomy_forward_speed_m_s=autonomy_forward_speed_m_s,
+            autonomy_reverse_speed_m_s=autonomy_reverse_speed_m_s,
+            autonomy_stable_framed_frames=autonomy_stable_framed_frames,
+            autonomy_proximity_stop_m=autonomy_proximity_stop_m,
+            autonomy_capture_timeout_sec=autonomy_capture_timeout_sec,
             start_vision=start_vision,
             vision_params_file=vision_params_file,
             camera_device=camera_device,

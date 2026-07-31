@@ -61,7 +61,7 @@ Simulation currently provides:
 - odometry via `/mecanum_drive_controller/odometry`
 - IMU via `/imu`
 - LiDAR via `/scan`
-- sonar as `LaserScan` on `/sonar`, then converted to `/range`
+- sonar as `LaserScan` on `/sonar`
 - camera image via `/front_camera/image`
 - simulated YOLO provider inside `perception.launch.py`
 
@@ -71,7 +71,6 @@ Relevant files:
 - `ros_ws/src/bringup/launch/controllers.launch.py`
 - `ros_ws/src/bringup/config/bridge_config.yaml`
 - `ros_ws/src/bringup/config/ekf_fusion.yaml`
-- `ros_ws/src/robot_io_adapters/src/scan_to_range.cpp`
 - `ros_ws/src/omniseer_description/urdf/xacro/omniseer.urdf.xacro`
 
 ### Real Hardware Side
@@ -107,7 +106,7 @@ The key parity differences are:
   - sim publishes `/mecanum_drive_controller/odometry` directly
   - real still derives that contract from raw `/encoder_counts`
 - sonar implementation mismatch:
-  - sim produces `/sonar` as `LaserScan` and adapts it to `/range`
+  - sim produces `/sonar` as `LaserScan`
   - real publishes `/range` directly
 - description mismatch:
   - the shared xacro currently embeds Gazebo-only sensors and Gazebo-only
@@ -142,7 +141,7 @@ of no-op relays and gets us to sim/real parity faster.
 | `/mecanum_drive_controller/odometry` | `nav_msgs/msg/Odometry` | wheel/base odom, `odom -> base_link`, no global correction | sim controller direct or real encoder odom adapter | EKF, diagnostics |
 | `/imu` | `sensor_msgs/msg/Imu` | IMU at `imu_link` | Gazebo bridge or MCU renamed to publish directly | EKF |
 | `/scan` | `sensor_msgs/msg/LaserScan` | planar LiDAR at `lidar_frame` | Gazebo bridge or real LiDAR driver | RF2O, SLAM, costmaps |
-| `/range` | `sensor_msgs/msg/Range` | forward range at `sonar_link` | sim sonar adapter or MCU renamed to publish directly | costmaps |
+| `/range` | `sensor_msgs/msg/Range` | forward range at `sonar_link` | MCU direct | costmaps, autonomy |
 | `/yolo/detections` | `yolo_msgs/msg/DetectionArray` | source-space detections | sim YOLO provider or real vision bridge | shared policy/consumers |
 | `/vision/perf` | `omniseer_msgs/msg/VisionPerfSummary` | normalized vision health/perf | real vision bridge, optional sim adapter | gateway/diagnostics |
 | `/battery` | `sensor_msgs/msg/BatteryState` | robot battery state | MCU direct | optional UI/diagnostics |
@@ -309,7 +308,6 @@ Starts:
 - robot spawn into Gazebo
 - Gazebo ROS bridges
 - Gazebo-side control path
-- sim-only compute adapters such as `scan_to_range`
 
 ### `real_io.launch.py`
 
@@ -466,7 +464,6 @@ Why this shape is still correct:
 Current issue:
 
 - it mixes shared perception consumers with sim-only detection provider
-- it also starts sim sonar conversion
 
 Target:
 
@@ -475,7 +472,7 @@ Target:
   - SLAM
   - any detection consumers that consume `/yolo/detections`
 - move sim-only YOLO provider to `sim_io.launch.py`
-- move sim-only sonar conversion below the boundary
+- keep sim sonar below the boundary until it has a direct `Range` producer
 
 ### `controllers.launch.py`
 
@@ -487,16 +484,6 @@ Target:
 
 - treat it as sim-only below the boundary for now
 - only `sim_io.launch.py` should include it
-
-### `robot_io_adapters/scan_to_range.cpp`
-
-Current issue:
-
-- it is a sim-only adapter but is launched from shared runtime paths
-
-Target:
-
-- keep the node, but launch it only from `sim_io.launch.py`
 
 ## Current Common Graph After Refactor
 
@@ -515,12 +502,13 @@ The target common graph is:
                             |
              consumes canonical robot-IO boundary only
                             |
- /mecanum_drive_controller/odometry  /imu  /scan  /range  /yolo/detections
+ /mecanum_drive_controller/odometry  /imu  /scan  /yolo/detections  [/range on real hardware]
 ```
 
 Below that line:
 
-- sim provides those topics through Gazebo + bridges + compute adapters
+- sim provides those topics through Gazebo + bridges + compute adapters, except
+  `/range` now remains real-hardware only
 - real provides those topics through MCU/driver/runtime + direct naming
   standardization plus compute adapters
 

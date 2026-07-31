@@ -16,12 +16,18 @@ TargetCenteringConfig config()
   TargetCenteringConfig out{};
   out.target_class = "backpack";
   out.image_width_px = 100.0;
+  out.image_height_px = 100.0;
   out.scan_yaw_rate_rad_s = 0.2;
   out.max_yaw_rate_rad_s = 0.3;
   out.min_yaw_rate_rad_s = 0.08;
   out.kp = 0.3;
   out.center_deadband = 0.05;
-  out.stable_center_frames = 3;
+  out.bbox_area_min_ratio = 0.08;
+  out.bbox_area_max_ratio = 0.35;
+  out.forward_speed_m_s = 0.05;
+  out.reverse_speed_m_s = 0.04;
+  out.stable_framed_frames = 3;
+  out.proximity_stop_m = 0.3;
   out.detection_stale_sec = 0.5;
   out.scan_limit_revolutions = 1.0;
   out.target_lost_timeout_sec = 0.5;
@@ -30,9 +36,10 @@ TargetCenteringConfig config()
 
 TargetDetection detection(
   double center_x, double confidence = 0.8,
-  std::string class_name = "backpack")
+  std::string class_name = "backpack", double size_x = 30.0, double size_y = 30.0,
+  double center_y = 50.0)
 {
-  return TargetDetection{class_name, confidence, center_x, 20.0, 10.0, 10.0};
+  return TargetDetection{class_name, confidence, center_x, center_y, size_x, size_y};
 }
 } // namespace
 
@@ -77,6 +84,7 @@ TEST(TargetCenteringController, RequiresThreeOfFiveFramesBeforeAcquisition)
   EXPECT_TRUE(acquired.publish_command);
   EXPECT_GT(acquired.events.size(), 1U);
   EXPECT_GT(acquired.angular_z_rad_s, 0.0);
+  EXPECT_DOUBLE_EQ(acquired.linear_x_m_s, 0.0);
 }
 
 TEST(TargetCenteringController, UsesNegativeYawForTargetRightOfImageCenter)
@@ -104,7 +112,7 @@ TEST(TargetCenteringController, AppliesMinimumUsefulYawOutsideDeadband)
   EXPECT_DOUBLE_EQ(output.angular_z_rad_s, -cfg.min_yaw_rate_rad_s);
 }
 
-TEST(TargetCenteringController, SucceedsAfterStableCenteredFrames)
+TEST(TargetCenteringController, SucceedsAfterStableFramedFrames)
 {
   TargetCenteringController controller(config());
   controller.update_detections({detection(50.0)}, 0.1);
@@ -115,10 +123,82 @@ TEST(TargetCenteringController, SucceedsAfterStableCenteredFrames)
   const auto output = controller.update_detections({detection(50.0)}, 0.5);
 
   EXPECT_EQ(controller.state(), CenteringState::Success);
+  EXPECT_EQ(controller.terminal_reason(), "framed");
+  EXPECT_DOUBLE_EQ(output.linear_x_m_s, 0.0);
   EXPECT_DOUBLE_EQ(output.angular_z_rad_s, 0.0);
   ASSERT_TRUE(controller.time_to_centered_sec().has_value());
   EXPECT_DOUBLE_EQ(*controller.final_error(), 0.0);
   EXPECT_DOUBLE_EQ(*controller.final_confidence(), 0.8);
+}
+
+TEST(TargetCenteringController, TooSmallTargetCommandsForward)
+{
+  TargetCenteringController controller(config());
+  controller.update_detections({detection(50.0, 0.8, "backpack", 10.0, 10.0)}, 0.1);
+  controller.update_detections({detection(50.0, 0.8, "backpack", 10.0, 10.0)}, 0.2);
+
+  const auto output =
+    controller.update_detections({detection(50.0, 0.8, "backpack", 10.0, 10.0)}, 0.3);
+
+  EXPECT_EQ(controller.state(), CenteringState::Frame);
+  EXPECT_DOUBLE_EQ(output.linear_x_m_s, config().forward_speed_m_s);
+  EXPECT_DOUBLE_EQ(output.angular_z_rad_s, 0.0);
+}
+
+TEST(TargetCenteringController, TooLargeTargetCommandsBackward)
+{
+  TargetCenteringController controller(config());
+  controller.update_detections({detection(50.0, 0.8, "backpack", 70.0, 70.0)}, 0.1);
+  controller.update_detections({detection(50.0, 0.8, "backpack", 70.0, 70.0)}, 0.2);
+
+  const auto output =
+    controller.update_detections({detection(50.0, 0.8, "backpack", 70.0, 70.0)}, 0.3);
+
+  EXPECT_EQ(controller.state(), CenteringState::Frame);
+  EXPECT_DOUBLE_EQ(output.linear_x_m_s, -config().reverse_speed_m_s);
+  EXPECT_DOUBLE_EQ(output.angular_z_rad_s, 0.0);
+}
+
+TEST(TargetCenteringController, YawCorrectionContinuesWhileMovingForward)
+{
+  TargetCenteringController controller(config());
+  controller.update_detections({detection(80.0, 0.8, "backpack", 10.0, 10.0)}, 0.1);
+  controller.update_detections({detection(80.0, 0.8, "backpack", 10.0, 10.0)}, 0.2);
+
+  const auto output =
+    controller.update_detections({detection(80.0, 0.8, "backpack", 10.0, 10.0)}, 0.3);
+
+  EXPECT_GT(output.linear_x_m_s, 0.0);
+  EXPECT_LT(output.angular_z_rad_s, 0.0);
+}
+
+TEST(TargetCenteringController, YawCorrectionContinuesWhileMovingBackward)
+{
+  TargetCenteringController controller(config());
+  controller.update_detections({detection(20.0, 0.8, "backpack", 70.0, 70.0)}, 0.1);
+  controller.update_detections({detection(20.0, 0.8, "backpack", 70.0, 70.0)}, 0.2);
+
+  const auto output =
+    controller.update_detections({detection(20.0, 0.8, "backpack", 70.0, 70.0)}, 0.3);
+
+  EXPECT_LT(output.linear_x_m_s, 0.0);
+  EXPECT_GT(output.angular_z_rad_s, 0.0);
+}
+
+TEST(TargetCenteringController, FailsStoppedWhenProximityBlocksRequiredForwardMotion)
+{
+  TargetCenteringController controller(config());
+  controller.update_proximity_range(0.2);
+  controller.update_detections({detection(50.0, 0.8, "backpack", 10.0, 10.0)}, 0.1);
+  controller.update_detections({detection(50.0, 0.8, "backpack", 10.0, 10.0)}, 0.2);
+
+  const auto output =
+    controller.update_detections({detection(50.0, 0.8, "backpack", 10.0, 10.0)}, 0.3);
+
+  EXPECT_EQ(controller.state(), CenteringState::Failed);
+  EXPECT_EQ(controller.terminal_reason(), "proximity_blocked");
+  EXPECT_DOUBLE_EQ(output.linear_x_m_s, 0.0);
+  EXPECT_DOUBLE_EQ(output.angular_z_rad_s, 0.0);
 }
 
 TEST(TargetCenteringController, FailsOnStaleDetectionsAndCommandsZero)

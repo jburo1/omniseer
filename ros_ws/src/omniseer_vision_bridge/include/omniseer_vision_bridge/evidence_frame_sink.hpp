@@ -1,9 +1,11 @@
 #pragma once
 
 #include <atomic>
+#include <chrono>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -31,6 +33,29 @@ struct EvidenceFrameSinkSnapshot
   std::string stopped_reason{};
 };
 
+struct TargetCaptureMetadata
+{
+  std::string capture_reason{"target_framed"};
+  std::string target_class{};
+  double      confidence{0.0};
+  double      bbox_center_x_px{0.0};
+  double      bbox_center_y_px{0.0};
+  double      bbox_size_x_px{0.0};
+  double      bbox_size_y_px{0.0};
+  double      normalized_error{0.0};
+  double      bbox_area_ratio{0.0};
+};
+
+struct TargetCaptureResult
+{
+  bool        success{false};
+  std::string reason{};
+  std::string image_path{};
+  uint64_t    capture_ts_real_ns{0};
+  uint64_t    frame_id{0};
+  uint64_t    sequence{0};
+};
+
 class EvidenceFrameSink final : public omniseer::vision::IFramePreviewSink
 {
 public:
@@ -46,6 +71,10 @@ public:
     const omniseer::vision::ImageBuffer & image,
     const omniseer::vision::DetectionsFrame & detections,
     const omniseer::vision::PipelineRemapConfig & remap) noexcept override;
+
+  TargetCaptureResult capture_next(
+    TargetCaptureMetadata metadata,
+    std::chrono::milliseconds timeout);
 
   EvidenceFrameSinkSnapshot snapshot() const;
 

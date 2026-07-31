@@ -1,0 +1,17 @@
+string capture_reason
+string target_class
+float64 confidence
+float64 bbox_center_x_px
+float64 bbox_center_y_px
+float64 bbox_size_x_px
+float64 bbox_size_y_px
+float64 normalized_error
+float64 bbox_area_ratio
+float64 timeout_sec
+---
+bool success
+string reason
+string image_path
+builtin_interfaces/Time stamp
+uint64 frame_id
+uint64 sequence
