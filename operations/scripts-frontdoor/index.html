@@ -2180,7 +2180,6 @@ scripts/omni<span class="w"> </span>run<span class="w"> </span>teleop
 <li><code>current</code>: default alias for the current supported real robot runtime</li>
 <li><code>operator</code>: gateway, native vision, preview, bounded teleop, and recording</li>
 <li><code>perception</code>: native vision and recording without the gateway operator surface</li>
-<li><code>legacy-teleop</code>: older keyboard teleop path kept for hardware diagnostics</li>
 </ul>
 <p>Examples:</p>
 <div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>real
@@ -2188,14 +2187,15 @@ scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="
 scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>verify
 scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--record-run<span class="w"> </span>demo_001
 scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--profile<span class="w"> </span>perception<span class="w"> </span>--record-run<span class="w"> </span>demo_001
-scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--profile<span class="w"> </span>legacy-teleop<span class="w"> </span>operator<span class="w"> </span>camera_device:<span class="o">=</span>/dev/video11
 </code></pre></div>
 <p>If <code>--profile</code> is omitted, the command selects <code>current</code>. Today <code>current</code>
 resolves to <code>operator</code>; that alias can move as the supported real runtime
 changes.</p>
-<p>The <code>operator</code> and <code>perception</code> profiles default to foreground <code>bringup</code>.
-<code>legacy-teleop</code> defaults to its older background bringup plus keyboard teleop
-mode.</p>
+<p>The <code>operator</code> and <code>perception</code> profiles default to foreground <code>bringup</code>.</p>
+<p>The older <code>legacy-teleop</code> profile is retained only for hardware diagnostics and
+compatibility with older runbooks:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--profile<span class="w"> </span>legacy-teleop<span class="w"> </span>operator<span class="w"> </span>camera_device:<span class="o">=</span>/dev/video11
+</code></pre></div>
 <p>Recording flags can be used with modes that launch real bringup:</p>
 <div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--record
 scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>--record-run<span class="w"> </span>demo_001
@@ -2229,13 +2229,12 @@ comma/space-separated <code>key=value</code> pairs.</p>
 <h4 id="real-run-modes">Real run modes<a class="headerlink" href="#real-run-modes" title="Permanent link">&para;</a></h4>
 <p><code>operator</code></p>
 <ul>
-<li>starts the <code>legacy-teleop</code> bringup in the background</li>
-<li>opens keyboard teleop in the current terminal</li>
+<li>starts the current operator real profile in the foreground</li>
 </ul>
 <p><code>smoke</code></p>
 <ul>
-<li>starts the same bringup</li>
-<li>runs the passive teleop/perception verifier</li>
+<li>starts the selected profile</li>
+<li>runs its passive verifier</li>
 <li>shuts the bringup down afterward</li>
 </ul>
 <p><code>bringup</code></p>
@@ -2255,7 +2254,6 @@ comma/space-separated <code>key=value</code> pairs.</p>
 <li>run <code>scripts/omni build ros</code> before <code>run</code> when code or launch wiring changed</li>
 <li>use <code>run real</code> on the robot for the current supported real runtime</li>
 <li>use <code>run real smoke</code> for a quick integrated health check</li>
-<li>use <code>run real --profile legacy-teleop operator</code> for the old keyboard teleop path</li>
 <li>add <code>--record-run &lt;run_id&gt;</code> when the run should produce a local perception bundle</li>
 </ul>
 <h4 id="run-monitor"><code>run monitor</code><a class="headerlink" href="#run-monitor" title="Permanent link">&para;</a></h4>
@@ -2505,7 +2503,7 @@ machine.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 29, 2026 00:17:51 UTC">July 29, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 31, 2026 06:18:34 UTC">July 31, 2026</span>
   </span>
 
     
