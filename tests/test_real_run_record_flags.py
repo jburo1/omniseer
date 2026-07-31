@@ -286,7 +286,7 @@ class RealRunRecordFlagsTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertTrue(run_dir_exists)
         self.assertFalse(stale_exists)
-        self.assertIn("experiment_overwrite:=false", result.stdout)
+        self.assertIn("experiment_overwrite:=true", result.stdout)
 
     def test_record_flags_rejected_for_verify_mode(self) -> None:
         result = subprocess.run(

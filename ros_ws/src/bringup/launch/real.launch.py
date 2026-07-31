@@ -19,6 +19,163 @@ from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
+_REAL_ARGUMENT_DEFAULTS = [
+    ("use_sim_time", "false"),
+    ("log_level", "info"),
+    ("pre_launch_cleanup", "true"),
+    ("start_micro_ros_agent", "true"),
+    ("micro_ros_serial_device", "/dev/serial/by-id/usb-Teensyduino_USB_Serial_16634450-if00"),
+    ("micro_ros_baud", "115200"),
+    ("require_teensy", "true"),
+    ("teensy_preflight_timeout_sec", "20"),
+    ("allow_teensy_power_cycle", "false"),
+    ("start_lidar", "true"),
+    (
+        "lidar_serial_device",
+        "/dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0",
+    ),
+    ("lidar_baudrate", "115200"),
+    ("lidar_frame_id", "lidar_frame"),
+    ("lidar_inverted", "false"),
+    ("lidar_angle_compensate", "true"),
+    ("encoder_odometry_params_file", "encoder_odometry.yaml"),
+    ("ekf_params_file", "ekf_fusion_real.yaml"),
+    ("slam_tb_config_file", "slam_toolbox_async_online.yaml"),
+    ("nav2_params_file", "nav2_params.yaml"),
+    ("start_slam", "true"),
+    ("start_rf2o", "true"),
+    ("start_nav", "true"),
+    ("wait_for_boundary_topics", "true"),
+    ("boundary_topics_timeout_sec", "20"),
+    ("start_gateway", "false"),
+    ("gateway_preview_source_kind", "camera"),
+    ("gateway_preview_device", "/dev/video11"),
+    ("start_autonomy", "false"),
+    ("autonomy_target_class", ""),
+    ("autonomy_run_dir", ""),
+    ("autonomy_bbox_area_min_ratio", "0.08"),
+    ("autonomy_bbox_area_max_ratio", "0.35"),
+    ("autonomy_forward_speed_m_s", "0.05"),
+    ("autonomy_reverse_speed_m_s", "0.04"),
+    ("autonomy_stable_framed_frames", "10"),
+    ("autonomy_proximity_stop_m", "0.30"),
+    ("autonomy_capture_timeout_sec", "2.0"),
+    ("start_vision", "true"),
+    ("vision_params_file", "vision_bridge.real.yaml"),
+    ("camera_device", "__from_config__"),
+    ("camera_width", "__from_config__"),
+    ("camera_height", "__from_config__"),
+    ("camera_buffer_count", "__from_config__"),
+    ("pipeline_dst_width", "__from_config__"),
+    ("pipeline_dst_height", "__from_config__"),
+    ("detector_model_path", "__from_config__"),
+    ("clip_model_path", "__from_config__"),
+    ("clip_vocab_path", "__from_config__"),
+    ("classes_path", "__from_config__"),
+    ("classes_pad_token", "__from_config__"),
+    ("producer_preflight_capture_wait_ms", "__from_config__"),
+    ("runner_warmup_runs", "__from_config__"),
+    ("postprocess_score_threshold", "__from_config__"),
+    ("postprocess_nms_iou_threshold", "__from_config__"),
+    ("postprocess_max_detections", "__from_config__"),
+    ("camera_frame_id", "__from_config__"),
+    ("pipeline_telemetry_path", ""),
+    ("evidence_dir", ""),
+    ("evidence_interval_sec", "1.0"),
+    ("evidence_jpeg_quality", "85"),
+    ("evidence_storage_budget_mb", "1024"),
+    ("evidence_min_free_mb", "256"),
+    ("start_experiment_recording", "false"),
+    ("experiment_run_id", ""),
+    ("experiment_out_dir", ""),
+    ("experiment_classes", ""),
+    ("experiment_notes", ""),
+    ("experiment_container_image_ref", ""),
+    ("experiment_container_image_digest", ""),
+    ("experiment_launch_command", ""),
+    ("experiment_launch_profile", ""),
+    ("experiment_launch_mode", ""),
+    ("experiment_launch_args", ""),
+    ("experiment_config", ""),
+    ("experiment_parameters", ""),
+    ("experiment_duration_sec", "0"),
+    ("experiment_system_interval_sec", "1.0"),
+    ("experiment_overwrite", "false"),
+    ("experiment_queue_size", "256"),
+    ("experiment_flush_interval_sec", "1.0"),
+]
+
+_REAL_IO_ARGS = [
+    "log_level",
+    "start_micro_ros_agent",
+    "micro_ros_serial_device",
+    "micro_ros_baud",
+    "require_teensy",
+    "teensy_preflight_timeout_sec",
+    "allow_teensy_power_cycle",
+    "start_lidar",
+    "lidar_serial_device",
+    "lidar_baudrate",
+    "lidar_frame_id",
+    "lidar_inverted",
+    "lidar_angle_compensate",
+    "encoder_odometry_params_file",
+]
+
+_REAL_VISION_ARGS = [
+    "log_level",
+    "vision_params_file",
+    "camera_device",
+    "camera_width",
+    "camera_height",
+    "camera_buffer_count",
+    "pipeline_dst_width",
+    "pipeline_dst_height",
+    "detector_model_path",
+    "clip_model_path",
+    "clip_vocab_path",
+    "classes_path",
+    "classes_pad_token",
+    "producer_preflight_capture_wait_ms",
+    "runner_warmup_runs",
+    "postprocess_score_threshold",
+    "postprocess_nms_iou_threshold",
+    "postprocess_max_detections",
+    "camera_frame_id",
+    "pipeline_telemetry_path",
+    "evidence_dir",
+    "evidence_interval_sec",
+    "evidence_jpeg_quality",
+    "evidence_storage_budget_mb",
+    "evidence_min_free_mb",
+]
+
+_COMMON_FORWARD_ARGS = [
+    "use_sim_time",
+    "log_level",
+    "ekf_params_file",
+    "slam_tb_config_file",
+    "nav2_params_file",
+    "start_slam",
+    "start_rf2o",
+    "start_nav",
+    "start_gateway",
+    "gateway_preview_source_kind",
+    "gateway_preview_device",
+]
+
+
+def _declare_real_arguments():
+    return [DeclareLaunchArgument(name, default_value=default) for name, default in _REAL_ARGUMENT_DEFAULTS]
+
+
+def _launch_configurations():
+    return {name: LaunchConfiguration(name) for name, _default in _REAL_ARGUMENT_DEFAULTS}
+
+
+def _selected(config, names):
+    return {name: config[name] for name in names}
+
 
 def _handle_required_process_exit(process_name: str, success_actions, failure_reason: str):
     def _on_exit(event, _context):
@@ -32,139 +189,16 @@ def _handle_required_process_exit(process_name: str, success_actions, failure_re
     return _on_exit
 
 
-def _build_real_bringup_actions(
-    *,
-    pkg_bringup,
-    use_sim_time,
-    log_level,
-    start_micro_ros_agent,
-    micro_ros_serial_device,
-    micro_ros_baud,
-    require_teensy,
-    teensy_preflight_timeout_sec,
-    allow_teensy_power_cycle,
-    start_lidar,
-    lidar_serial_device,
-    lidar_baudrate,
-    lidar_frame_id,
-    lidar_inverted,
-    lidar_angle_compensate,
-    encoder_odometry_params_file,
-    ekf_params_file,
-    slam_tb_config_file,
-    nav2_params_file,
-    start_slam,
-    start_rf2o,
-    start_nav,
-    wait_for_boundary_topics,
-    boundary_topics_timeout_sec,
-    start_gateway,
-    gateway_preview_source_kind,
-    gateway_preview_device,
-    start_autonomy,
-    autonomy_target_class,
-    autonomy_run_dir,
-    autonomy_bbox_area_min_ratio,
-    autonomy_bbox_area_max_ratio,
-    autonomy_forward_speed_m_s,
-    autonomy_reverse_speed_m_s,
-    autonomy_stable_framed_frames,
-    autonomy_proximity_stop_m,
-    autonomy_capture_timeout_sec,
-    start_vision,
-    vision_params_file,
-    camera_device,
-    camera_width,
-    camera_height,
-    camera_buffer_count,
-    pipeline_dst_width,
-    pipeline_dst_height,
-    detector_model_path,
-    clip_model_path,
-    clip_vocab_path,
-    classes_path,
-    classes_pad_token,
-    producer_preflight_capture_wait_ms,
-    runner_warmup_runs,
-    postprocess_score_threshold,
-    postprocess_nms_iou_threshold,
-    postprocess_max_detections,
-    camera_frame_id,
-    pipeline_telemetry_path,
-    evidence_dir,
-    evidence_interval_sec,
-    evidence_jpeg_quality,
-    evidence_storage_budget_mb,
-    evidence_min_free_mb,
-    start_experiment_recording,
-    experiment_run_id,
-    experiment_out_dir,
-    experiment_classes,
-    experiment_notes,
-    experiment_container_image_ref,
-    experiment_container_image_digest,
-    experiment_launch_command,
-    experiment_launch_profile,
-    experiment_launch_mode,
-    experiment_launch_args,
-    experiment_config,
-    experiment_parameters,
-    experiment_duration_sec,
-    experiment_system_interval_sec,
-    experiment_overwrite,
-    experiment_queue_size,
-    experiment_flush_interval_sec,
-):
+def _build_real_bringup_actions(*, pkg_bringup, config):
     real_io_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([PathJoinSubstitution([pkg_bringup, "launch", "real_io.launch.py"])]),
-        launch_arguments={
-            "log_level": log_level,
-            "start_micro_ros_agent": start_micro_ros_agent,
-            "micro_ros_serial_device": micro_ros_serial_device,
-            "micro_ros_baud": micro_ros_baud,
-            "require_teensy": require_teensy,
-            "teensy_preflight_timeout_sec": teensy_preflight_timeout_sec,
-            "allow_teensy_power_cycle": allow_teensy_power_cycle,
-            "start_lidar": start_lidar,
-            "lidar_serial_device": lidar_serial_device,
-            "lidar_baudrate": lidar_baudrate,
-            "lidar_frame_id": lidar_frame_id,
-            "lidar_inverted": lidar_inverted,
-            "lidar_angle_compensate": lidar_angle_compensate,
-            "encoder_odometry_params_file": encoder_odometry_params_file,
-        }.items(),
+        launch_arguments=_selected(config, _REAL_IO_ARGS).items(),
     )
 
     real_vision_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([PathJoinSubstitution([pkg_bringup, "launch", "real_vision.launch.py"])]),
-        launch_arguments={
-            "log_level": log_level,
-            "vision_params_file": vision_params_file,
-            "camera_device": camera_device,
-            "camera_width": camera_width,
-            "camera_height": camera_height,
-            "camera_buffer_count": camera_buffer_count,
-            "pipeline_dst_width": pipeline_dst_width,
-            "pipeline_dst_height": pipeline_dst_height,
-            "detector_model_path": detector_model_path,
-            "clip_model_path": clip_model_path,
-            "clip_vocab_path": clip_vocab_path,
-            "classes_path": classes_path,
-            "classes_pad_token": classes_pad_token,
-            "producer_preflight_capture_wait_ms": producer_preflight_capture_wait_ms,
-            "runner_warmup_runs": runner_warmup_runs,
-            "postprocess_score_threshold": postprocess_score_threshold,
-            "postprocess_nms_iou_threshold": postprocess_nms_iou_threshold,
-            "postprocess_max_detections": postprocess_max_detections,
-            "camera_frame_id": camera_frame_id,
-            "pipeline_telemetry_path": pipeline_telemetry_path,
-            "evidence_dir": evidence_dir,
-            "evidence_interval_sec": evidence_interval_sec,
-            "evidence_jpeg_quality": evidence_jpeg_quality,
-            "evidence_storage_budget_mb": evidence_storage_budget_mb,
-            "evidence_min_free_mb": evidence_min_free_mb,
-        }.items(),
-        condition=IfCondition(start_vision),
+        launch_arguments=_selected(config, _REAL_VISION_ARGS).items(),
+        condition=IfCondition(config["start_vision"]),
     )
 
     experiment_recorder_node = Node(
@@ -174,54 +208,54 @@ def _build_real_bringup_actions(
         output="screen",
         arguments=[
             "--run-id",
-            experiment_run_id,
+            config["experiment_run_id"],
             "--out",
-            experiment_out_dir,
+            config["experiment_out_dir"],
             "--classes",
-            experiment_classes,
+            config["experiment_classes"],
             "--vision-params-file",
-            PathJoinSubstitution([pkg_bringup, "config", vision_params_file]),
+            PathJoinSubstitution([pkg_bringup, "config", config["vision_params_file"]]),
             "--detector-model-path",
-            detector_model_path,
+            config["detector_model_path"],
             "--clip-model-path",
-            clip_model_path,
+            config["clip_model_path"],
             "--clip-vocab-path",
-            clip_vocab_path,
+            config["clip_vocab_path"],
             "--classes-path",
-            classes_path,
+            config["classes_path"],
             "--notes",
-            experiment_notes,
+            config["experiment_notes"],
             "--container-image-ref",
-            experiment_container_image_ref,
+            config["experiment_container_image_ref"],
             "--container-image-digest",
-            experiment_container_image_digest,
+            config["experiment_container_image_digest"],
             "--launch-command",
-            experiment_launch_command,
+            config["experiment_launch_command"],
             "--launch-profile",
-            experiment_launch_profile,
+            config["experiment_launch_profile"],
             "--launch-mode",
-            experiment_launch_mode,
+            config["experiment_launch_mode"],
             "--launch-args",
-            experiment_launch_args,
+            config["experiment_launch_args"],
             "--experiment-config",
-            experiment_config,
+            config["experiment_config"],
             "--experiment-parameters",
-            experiment_parameters,
+            config["experiment_parameters"],
             "--duration-sec",
-            experiment_duration_sec,
+            config["experiment_duration_sec"],
             "--system-interval-sec",
-            experiment_system_interval_sec,
+            config["experiment_system_interval_sec"],
             "--overwrite",
-            experiment_overwrite,
+            config["experiment_overwrite"],
             "--queue-size",
-            experiment_queue_size,
+            config["experiment_queue_size"],
             "--flush-interval-sec",
-            experiment_flush_interval_sec,
+            config["experiment_flush_interval_sec"],
             "--ros-args",
             "--log-level",
-            log_level,
+            config["log_level"],
         ],
-        condition=IfCondition(start_experiment_recording),
+        condition=IfCondition(config["start_experiment_recording"]),
     )
 
     autonomy_node = Node(
@@ -229,22 +263,22 @@ def _build_real_bringup_actions(
         executable="target_centering_node",
         name="target_centering_node",
         output="screen",
-        arguments=["--ros-args", "--log-level", log_level],
+        arguments=["--ros-args", "--log-level", config["log_level"]],
         parameters=[
             {
-                "use_sim_time": use_sim_time,
-                "target_class": autonomy_target_class,
-                "run_dir": autonomy_run_dir,
-                "bbox_area_min_ratio": autonomy_bbox_area_min_ratio,
-                "bbox_area_max_ratio": autonomy_bbox_area_max_ratio,
-                "forward_speed_m_s": autonomy_forward_speed_m_s,
-                "reverse_speed_m_s": autonomy_reverse_speed_m_s,
-                "stable_framed_frames": autonomy_stable_framed_frames,
-                "proximity_stop_m": autonomy_proximity_stop_m,
-                "capture_timeout_sec": autonomy_capture_timeout_sec,
+                "use_sim_time": config["use_sim_time"],
+                "target_class": config["autonomy_target_class"],
+                "run_dir": config["autonomy_run_dir"],
+                "bbox_area_min_ratio": config["autonomy_bbox_area_min_ratio"],
+                "bbox_area_max_ratio": config["autonomy_bbox_area_max_ratio"],
+                "forward_speed_m_s": config["autonomy_forward_speed_m_s"],
+                "reverse_speed_m_s": config["autonomy_reverse_speed_m_s"],
+                "stable_framed_frames": config["autonomy_stable_framed_frames"],
+                "proximity_stop_m": config["autonomy_proximity_stop_m"],
+                "capture_timeout_sec": config["autonomy_capture_timeout_sec"],
             }
         ],
-        condition=IfCondition(start_autonomy),
+        condition=IfCondition(config["start_autonomy"]),
     )
 
     # Keep the teleop command path available even if lidar/nav boundary topics
@@ -254,57 +288,38 @@ def _build_real_bringup_actions(
         executable="twist_mux",
         name="twist_mux",
         output="screen",
-        arguments=["--ros-args", "--log-level", log_level],
+        arguments=["--ros-args", "--log-level", config["log_level"]],
         parameters=[
             PathJoinSubstitution([pkg_bringup, "config", "twist_mux.yaml"]),
-            {"use_sim_time": use_sim_time},
+            {"use_sim_time": config["use_sim_time"]},
         ],
         remappings=[("/cmd_vel_out", "/mecanum_drive_controller/reference")],
-        condition=IfCondition(wait_for_boundary_topics),
+        condition=IfCondition(config["wait_for_boundary_topics"]),
     )
 
+    common_forward_args = _selected(config, _COMMON_FORWARD_ARGS)
     common_launch_after_wait = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([PathJoinSubstitution([pkg_bringup, "launch", "common.launch.py"])]),
         launch_arguments={
-            "use_sim_time": use_sim_time,
-            "log_level": log_level,
-            "ekf_params_file": ekf_params_file,
-            "slam_tb_config_file": slam_tb_config_file,
-            "nav2_params_file": nav2_params_file,
+            **common_forward_args,
             "start_description": "true",
             "start_perception": "true",
             "start_ekf": "true",
             "start_twist_mux": "false",
-            "start_slam": start_slam,
-            "start_rf2o": start_rf2o,
-            "start_nav": start_nav,
-            "start_gateway": start_gateway,
-            "gateway_preview_source_kind": gateway_preview_source_kind,
-            "gateway_preview_device": gateway_preview_device,
         }.items(),
-        condition=IfCondition(wait_for_boundary_topics),
+        condition=IfCondition(config["wait_for_boundary_topics"]),
     )
 
     common_launch_immediate = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([PathJoinSubstitution([pkg_bringup, "launch", "common.launch.py"])]),
         launch_arguments={
-            "use_sim_time": use_sim_time,
-            "log_level": log_level,
-            "ekf_params_file": ekf_params_file,
-            "slam_tb_config_file": slam_tb_config_file,
-            "nav2_params_file": nav2_params_file,
+            **common_forward_args,
             "start_description": "true",
             "start_perception": "true",
             "start_ekf": "true",
             "start_twist_mux": "true",
-            "start_slam": start_slam,
-            "start_rf2o": start_rf2o,
-            "start_nav": start_nav,
-            "start_gateway": start_gateway,
-            "gateway_preview_source_kind": gateway_preview_source_kind,
-            "gateway_preview_device": gateway_preview_device,
         }.items(),
-        condition=UnlessCondition(wait_for_boundary_topics),
+        condition=UnlessCondition(config["wait_for_boundary_topics"]),
     )
 
     wait_boundary_topics = ExecuteProcess(
@@ -327,10 +342,10 @@ def _build_real_bringup_actions(
                 "check_topic /mecanum_drive_controller/odometry\n"
             ),
             "bash",
-            boundary_topics_timeout_sec,
+            config["boundary_topics_timeout_sec"],
         ],
         name="wait_real_boundary_topics",
-        condition=IfCondition(wait_for_boundary_topics),
+        condition=IfCondition(config["wait_for_boundary_topics"]),
     )
 
     launch_common_after_wait = RegisterEventHandler(
@@ -358,262 +373,12 @@ def _build_real_bringup_actions(
 
 def generate_launch_description():
     pkg_bringup = FindPackageShare("bringup")
-
-    declared_arguments = [
-        DeclareLaunchArgument("use_sim_time", default_value="false"),
-        DeclareLaunchArgument("log_level", default_value="info"),
-        DeclareLaunchArgument("pre_launch_cleanup", default_value="true"),
-        DeclareLaunchArgument("start_micro_ros_agent", default_value="true"),
-        DeclareLaunchArgument(
-            "micro_ros_serial_device",
-            default_value="/dev/serial/by-id/usb-Teensyduino_USB_Serial_16634450-if00",
-        ),
-        DeclareLaunchArgument("micro_ros_baud", default_value="115200"),
-        DeclareLaunchArgument("require_teensy", default_value="true"),
-        DeclareLaunchArgument("teensy_preflight_timeout_sec", default_value="20"),
-        DeclareLaunchArgument("allow_teensy_power_cycle", default_value="false"),
-        DeclareLaunchArgument("start_lidar", default_value="true"),
-        DeclareLaunchArgument(
-            "lidar_serial_device",
-            default_value="/dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0",
-        ),
-        DeclareLaunchArgument("lidar_baudrate", default_value="115200"),
-        DeclareLaunchArgument("lidar_frame_id", default_value="lidar_frame"),
-        DeclareLaunchArgument("lidar_inverted", default_value="false"),
-        DeclareLaunchArgument("lidar_angle_compensate", default_value="true"),
-        DeclareLaunchArgument("encoder_odometry_params_file", default_value="encoder_odometry.yaml"),
-        DeclareLaunchArgument("ekf_params_file", default_value="ekf_fusion_real.yaml"),
-        DeclareLaunchArgument("slam_tb_config_file", default_value="slam_toolbox_async_online.yaml"),
-        DeclareLaunchArgument("nav2_params_file", default_value="nav2_params.yaml"),
-        DeclareLaunchArgument("start_slam", default_value="true"),
-        DeclareLaunchArgument("start_rf2o", default_value="true"),
-        DeclareLaunchArgument("start_nav", default_value="true"),
-        DeclareLaunchArgument("wait_for_boundary_topics", default_value="true"),
-        DeclareLaunchArgument("boundary_topics_timeout_sec", default_value="20"),
-        DeclareLaunchArgument("start_gateway", default_value="false"),
-        DeclareLaunchArgument("gateway_preview_source_kind", default_value="camera"),
-        DeclareLaunchArgument("gateway_preview_device", default_value="/dev/video11"),
-        DeclareLaunchArgument("start_autonomy", default_value="false"),
-        DeclareLaunchArgument("autonomy_target_class", default_value=""),
-        DeclareLaunchArgument("autonomy_run_dir", default_value=""),
-        DeclareLaunchArgument("autonomy_bbox_area_min_ratio", default_value="0.08"),
-        DeclareLaunchArgument("autonomy_bbox_area_max_ratio", default_value="0.35"),
-        DeclareLaunchArgument("autonomy_forward_speed_m_s", default_value="0.05"),
-        DeclareLaunchArgument("autonomy_reverse_speed_m_s", default_value="0.04"),
-        DeclareLaunchArgument("autonomy_stable_framed_frames", default_value="10"),
-        DeclareLaunchArgument("autonomy_proximity_stop_m", default_value="0.30"),
-        DeclareLaunchArgument("autonomy_capture_timeout_sec", default_value="2.0"),
-        DeclareLaunchArgument("start_vision", default_value="true"),
-        DeclareLaunchArgument("vision_params_file", default_value="vision_bridge.real.yaml"),
-        DeclareLaunchArgument("camera_device", default_value="__from_config__"),
-        DeclareLaunchArgument("camera_width", default_value="__from_config__"),
-        DeclareLaunchArgument("camera_height", default_value="__from_config__"),
-        DeclareLaunchArgument("camera_buffer_count", default_value="__from_config__"),
-        DeclareLaunchArgument("pipeline_dst_width", default_value="__from_config__"),
-        DeclareLaunchArgument("pipeline_dst_height", default_value="__from_config__"),
-        DeclareLaunchArgument("detector_model_path", default_value="__from_config__"),
-        DeclareLaunchArgument("clip_model_path", default_value="__from_config__"),
-        DeclareLaunchArgument("clip_vocab_path", default_value="__from_config__"),
-        DeclareLaunchArgument("classes_path", default_value="__from_config__"),
-        DeclareLaunchArgument("classes_pad_token", default_value="__from_config__"),
-        DeclareLaunchArgument("producer_preflight_capture_wait_ms", default_value="__from_config__"),
-        DeclareLaunchArgument("runner_warmup_runs", default_value="__from_config__"),
-        DeclareLaunchArgument("postprocess_score_threshold", default_value="__from_config__"),
-        DeclareLaunchArgument("postprocess_nms_iou_threshold", default_value="__from_config__"),
-        DeclareLaunchArgument("postprocess_max_detections", default_value="__from_config__"),
-        DeclareLaunchArgument("camera_frame_id", default_value="__from_config__"),
-        DeclareLaunchArgument("pipeline_telemetry_path", default_value=""),
-        DeclareLaunchArgument("evidence_dir", default_value=""),
-        DeclareLaunchArgument("evidence_interval_sec", default_value="1.0"),
-        DeclareLaunchArgument("evidence_jpeg_quality", default_value="85"),
-        DeclareLaunchArgument("evidence_storage_budget_mb", default_value="1024"),
-        DeclareLaunchArgument("evidence_min_free_mb", default_value="256"),
-        DeclareLaunchArgument("start_experiment_recording", default_value="false"),
-        DeclareLaunchArgument("experiment_run_id", default_value=""),
-        DeclareLaunchArgument("experiment_out_dir", default_value=""),
-        DeclareLaunchArgument("experiment_classes", default_value=""),
-        DeclareLaunchArgument("experiment_notes", default_value=""),
-        DeclareLaunchArgument("experiment_container_image_ref", default_value=""),
-        DeclareLaunchArgument("experiment_container_image_digest", default_value=""),
-        DeclareLaunchArgument("experiment_launch_command", default_value=""),
-        DeclareLaunchArgument("experiment_launch_profile", default_value=""),
-        DeclareLaunchArgument("experiment_launch_mode", default_value=""),
-        DeclareLaunchArgument("experiment_launch_args", default_value=""),
-        DeclareLaunchArgument("experiment_config", default_value=""),
-        DeclareLaunchArgument("experiment_parameters", default_value=""),
-        DeclareLaunchArgument("experiment_duration_sec", default_value="0"),
-        DeclareLaunchArgument("experiment_system_interval_sec", default_value="1.0"),
-        DeclareLaunchArgument("experiment_overwrite", default_value="false"),
-        DeclareLaunchArgument("experiment_queue_size", default_value="256"),
-        DeclareLaunchArgument("experiment_flush_interval_sec", default_value="1.0"),
-    ]
-
-    use_sim_time = LaunchConfiguration("use_sim_time")
-    log_level = LaunchConfiguration("log_level")
-    pre_launch_cleanup = LaunchConfiguration("pre_launch_cleanup")
-    start_micro_ros_agent = LaunchConfiguration("start_micro_ros_agent")
-    micro_ros_serial_device = LaunchConfiguration("micro_ros_serial_device")
-    micro_ros_baud = LaunchConfiguration("micro_ros_baud")
-    require_teensy = LaunchConfiguration("require_teensy")
-    teensy_preflight_timeout_sec = LaunchConfiguration("teensy_preflight_timeout_sec")
-    allow_teensy_power_cycle = LaunchConfiguration("allow_teensy_power_cycle")
-    start_lidar = LaunchConfiguration("start_lidar")
-    lidar_serial_device = LaunchConfiguration("lidar_serial_device")
-    lidar_baudrate = LaunchConfiguration("lidar_baudrate")
-    lidar_frame_id = LaunchConfiguration("lidar_frame_id")
-    lidar_inverted = LaunchConfiguration("lidar_inverted")
-    lidar_angle_compensate = LaunchConfiguration("lidar_angle_compensate")
-    encoder_odometry_params_file = LaunchConfiguration("encoder_odometry_params_file")
-    ekf_params_file = LaunchConfiguration("ekf_params_file")
-    slam_tb_config_file = LaunchConfiguration("slam_tb_config_file")
-    nav2_params_file = LaunchConfiguration("nav2_params_file")
-    start_slam = LaunchConfiguration("start_slam")
-    start_rf2o = LaunchConfiguration("start_rf2o")
-    start_nav = LaunchConfiguration("start_nav")
-    wait_for_boundary_topics = LaunchConfiguration("wait_for_boundary_topics")
-    boundary_topics_timeout_sec = LaunchConfiguration("boundary_topics_timeout_sec")
-    start_gateway = LaunchConfiguration("start_gateway")
-    gateway_preview_source_kind = LaunchConfiguration("gateway_preview_source_kind")
-    gateway_preview_device = LaunchConfiguration("gateway_preview_device")
-    start_autonomy = LaunchConfiguration("start_autonomy")
-    autonomy_target_class = LaunchConfiguration("autonomy_target_class")
-    autonomy_run_dir = LaunchConfiguration("autonomy_run_dir")
-    autonomy_bbox_area_min_ratio = LaunchConfiguration("autonomy_bbox_area_min_ratio")
-    autonomy_bbox_area_max_ratio = LaunchConfiguration("autonomy_bbox_area_max_ratio")
-    autonomy_forward_speed_m_s = LaunchConfiguration("autonomy_forward_speed_m_s")
-    autonomy_reverse_speed_m_s = LaunchConfiguration("autonomy_reverse_speed_m_s")
-    autonomy_stable_framed_frames = LaunchConfiguration("autonomy_stable_framed_frames")
-    autonomy_proximity_stop_m = LaunchConfiguration("autonomy_proximity_stop_m")
-    autonomy_capture_timeout_sec = LaunchConfiguration("autonomy_capture_timeout_sec")
-    start_vision = LaunchConfiguration("start_vision")
-    vision_params_file = LaunchConfiguration("vision_params_file")
-    camera_device = LaunchConfiguration("camera_device")
-    camera_width = LaunchConfiguration("camera_width")
-    camera_height = LaunchConfiguration("camera_height")
-    camera_buffer_count = LaunchConfiguration("camera_buffer_count")
-    pipeline_dst_width = LaunchConfiguration("pipeline_dst_width")
-    pipeline_dst_height = LaunchConfiguration("pipeline_dst_height")
-    detector_model_path = LaunchConfiguration("detector_model_path")
-    clip_model_path = LaunchConfiguration("clip_model_path")
-    clip_vocab_path = LaunchConfiguration("clip_vocab_path")
-    classes_path = LaunchConfiguration("classes_path")
-    classes_pad_token = LaunchConfiguration("classes_pad_token")
-    producer_preflight_capture_wait_ms = LaunchConfiguration("producer_preflight_capture_wait_ms")
-    runner_warmup_runs = LaunchConfiguration("runner_warmup_runs")
-    postprocess_score_threshold = LaunchConfiguration("postprocess_score_threshold")
-    postprocess_nms_iou_threshold = LaunchConfiguration("postprocess_nms_iou_threshold")
-    postprocess_max_detections = LaunchConfiguration("postprocess_max_detections")
-    camera_frame_id = LaunchConfiguration("camera_frame_id")
-    pipeline_telemetry_path = LaunchConfiguration("pipeline_telemetry_path")
-    evidence_dir = LaunchConfiguration("evidence_dir")
-    evidence_interval_sec = LaunchConfiguration("evidence_interval_sec")
-    evidence_jpeg_quality = LaunchConfiguration("evidence_jpeg_quality")
-    evidence_storage_budget_mb = LaunchConfiguration("evidence_storage_budget_mb")
-    evidence_min_free_mb = LaunchConfiguration("evidence_min_free_mb")
-    start_experiment_recording = LaunchConfiguration("start_experiment_recording")
-    experiment_run_id = LaunchConfiguration("experiment_run_id")
-    experiment_out_dir = LaunchConfiguration("experiment_out_dir")
-    experiment_classes = LaunchConfiguration("experiment_classes")
-    experiment_notes = LaunchConfiguration("experiment_notes")
-    experiment_container_image_ref = LaunchConfiguration("experiment_container_image_ref")
-    experiment_container_image_digest = LaunchConfiguration("experiment_container_image_digest")
-    experiment_launch_command = LaunchConfiguration("experiment_launch_command")
-    experiment_launch_profile = LaunchConfiguration("experiment_launch_profile")
-    experiment_launch_mode = LaunchConfiguration("experiment_launch_mode")
-    experiment_launch_args = LaunchConfiguration("experiment_launch_args")
-    experiment_config = LaunchConfiguration("experiment_config")
-    experiment_parameters = LaunchConfiguration("experiment_parameters")
-    experiment_duration_sec = LaunchConfiguration("experiment_duration_sec")
-    experiment_system_interval_sec = LaunchConfiguration("experiment_system_interval_sec")
-    experiment_overwrite = LaunchConfiguration("experiment_overwrite")
-    experiment_queue_size = LaunchConfiguration("experiment_queue_size")
-    experiment_flush_interval_sec = LaunchConfiguration("experiment_flush_interval_sec")
+    declared_arguments = _declare_real_arguments()
+    config = _launch_configurations()
+    pre_launch_cleanup = config["pre_launch_cleanup"]
     cleanup_script = PathJoinSubstitution([pkg_bringup, "scripts", "pre_launch_cleanup.sh"])
 
-    launch_group = GroupAction(
-        actions=_build_real_bringup_actions(
-            pkg_bringup=pkg_bringup,
-            use_sim_time=use_sim_time,
-            log_level=log_level,
-            start_micro_ros_agent=start_micro_ros_agent,
-            micro_ros_serial_device=micro_ros_serial_device,
-            micro_ros_baud=micro_ros_baud,
-            require_teensy=require_teensy,
-            teensy_preflight_timeout_sec=teensy_preflight_timeout_sec,
-            allow_teensy_power_cycle=allow_teensy_power_cycle,
-            start_lidar=start_lidar,
-            lidar_serial_device=lidar_serial_device,
-            lidar_baudrate=lidar_baudrate,
-            lidar_frame_id=lidar_frame_id,
-            lidar_inverted=lidar_inverted,
-            lidar_angle_compensate=lidar_angle_compensate,
-            encoder_odometry_params_file=encoder_odometry_params_file,
-            ekf_params_file=ekf_params_file,
-            slam_tb_config_file=slam_tb_config_file,
-            nav2_params_file=nav2_params_file,
-            start_slam=start_slam,
-            start_rf2o=start_rf2o,
-            start_nav=start_nav,
-            wait_for_boundary_topics=wait_for_boundary_topics,
-            boundary_topics_timeout_sec=boundary_topics_timeout_sec,
-            start_gateway=start_gateway,
-            gateway_preview_source_kind=gateway_preview_source_kind,
-            gateway_preview_device=gateway_preview_device,
-            start_autonomy=start_autonomy,
-            autonomy_target_class=autonomy_target_class,
-            autonomy_run_dir=autonomy_run_dir,
-            autonomy_bbox_area_min_ratio=autonomy_bbox_area_min_ratio,
-            autonomy_bbox_area_max_ratio=autonomy_bbox_area_max_ratio,
-            autonomy_forward_speed_m_s=autonomy_forward_speed_m_s,
-            autonomy_reverse_speed_m_s=autonomy_reverse_speed_m_s,
-            autonomy_stable_framed_frames=autonomy_stable_framed_frames,
-            autonomy_proximity_stop_m=autonomy_proximity_stop_m,
-            autonomy_capture_timeout_sec=autonomy_capture_timeout_sec,
-            start_vision=start_vision,
-            vision_params_file=vision_params_file,
-            camera_device=camera_device,
-            camera_width=camera_width,
-            camera_height=camera_height,
-            camera_buffer_count=camera_buffer_count,
-            pipeline_dst_width=pipeline_dst_width,
-            pipeline_dst_height=pipeline_dst_height,
-            detector_model_path=detector_model_path,
-            clip_model_path=clip_model_path,
-            clip_vocab_path=clip_vocab_path,
-            classes_path=classes_path,
-            classes_pad_token=classes_pad_token,
-            producer_preflight_capture_wait_ms=producer_preflight_capture_wait_ms,
-            runner_warmup_runs=runner_warmup_runs,
-            postprocess_score_threshold=postprocess_score_threshold,
-            postprocess_nms_iou_threshold=postprocess_nms_iou_threshold,
-            postprocess_max_detections=postprocess_max_detections,
-            camera_frame_id=camera_frame_id,
-            pipeline_telemetry_path=pipeline_telemetry_path,
-            evidence_dir=evidence_dir,
-            evidence_interval_sec=evidence_interval_sec,
-            evidence_jpeg_quality=evidence_jpeg_quality,
-            evidence_storage_budget_mb=evidence_storage_budget_mb,
-            evidence_min_free_mb=evidence_min_free_mb,
-            start_experiment_recording=start_experiment_recording,
-            experiment_run_id=experiment_run_id,
-            experiment_out_dir=experiment_out_dir,
-            experiment_classes=experiment_classes,
-            experiment_notes=experiment_notes,
-            experiment_container_image_ref=experiment_container_image_ref,
-            experiment_container_image_digest=experiment_container_image_digest,
-            experiment_launch_command=experiment_launch_command,
-            experiment_launch_profile=experiment_launch_profile,
-            experiment_launch_mode=experiment_launch_mode,
-            experiment_launch_args=experiment_launch_args,
-            experiment_config=experiment_config,
-            experiment_parameters=experiment_parameters,
-            experiment_duration_sec=experiment_duration_sec,
-            experiment_system_interval_sec=experiment_system_interval_sec,
-            experiment_overwrite=experiment_overwrite,
-            experiment_queue_size=experiment_queue_size,
-            experiment_flush_interval_sec=experiment_flush_interval_sec,
-        )
-    )
+    launch_group = GroupAction(actions=_build_real_bringup_actions(pkg_bringup=pkg_bringup, config=config))
 
     cleanup = ExecuteProcess(
         name="pre_launch_cleanup",
@@ -625,88 +390,7 @@ def generate_launch_description():
     after_cleanup = RegisterEventHandler(OnProcessExit(target_action=cleanup, on_exit=[launch_group]))
 
     launch_without_cleanup = GroupAction(
-        actions=_build_real_bringup_actions(
-            pkg_bringup=pkg_bringup,
-            use_sim_time=use_sim_time,
-            log_level=log_level,
-            start_micro_ros_agent=start_micro_ros_agent,
-            micro_ros_serial_device=micro_ros_serial_device,
-            micro_ros_baud=micro_ros_baud,
-            require_teensy=require_teensy,
-            teensy_preflight_timeout_sec=teensy_preflight_timeout_sec,
-            allow_teensy_power_cycle=allow_teensy_power_cycle,
-            start_lidar=start_lidar,
-            lidar_serial_device=lidar_serial_device,
-            lidar_baudrate=lidar_baudrate,
-            lidar_frame_id=lidar_frame_id,
-            lidar_inverted=lidar_inverted,
-            lidar_angle_compensate=lidar_angle_compensate,
-            encoder_odometry_params_file=encoder_odometry_params_file,
-            ekf_params_file=ekf_params_file,
-            slam_tb_config_file=slam_tb_config_file,
-            nav2_params_file=nav2_params_file,
-            start_slam=start_slam,
-            start_rf2o=start_rf2o,
-            start_nav=start_nav,
-            wait_for_boundary_topics=wait_for_boundary_topics,
-            boundary_topics_timeout_sec=boundary_topics_timeout_sec,
-            start_gateway=start_gateway,
-            gateway_preview_source_kind=gateway_preview_source_kind,
-            gateway_preview_device=gateway_preview_device,
-            start_autonomy=start_autonomy,
-            autonomy_target_class=autonomy_target_class,
-            autonomy_run_dir=autonomy_run_dir,
-            autonomy_bbox_area_min_ratio=autonomy_bbox_area_min_ratio,
-            autonomy_bbox_area_max_ratio=autonomy_bbox_area_max_ratio,
-            autonomy_forward_speed_m_s=autonomy_forward_speed_m_s,
-            autonomy_reverse_speed_m_s=autonomy_reverse_speed_m_s,
-            autonomy_stable_framed_frames=autonomy_stable_framed_frames,
-            autonomy_proximity_stop_m=autonomy_proximity_stop_m,
-            autonomy_capture_timeout_sec=autonomy_capture_timeout_sec,
-            start_vision=start_vision,
-            vision_params_file=vision_params_file,
-            camera_device=camera_device,
-            camera_width=camera_width,
-            camera_height=camera_height,
-            camera_buffer_count=camera_buffer_count,
-            pipeline_dst_width=pipeline_dst_width,
-            pipeline_dst_height=pipeline_dst_height,
-            detector_model_path=detector_model_path,
-            clip_model_path=clip_model_path,
-            clip_vocab_path=clip_vocab_path,
-            classes_path=classes_path,
-            classes_pad_token=classes_pad_token,
-            producer_preflight_capture_wait_ms=producer_preflight_capture_wait_ms,
-            runner_warmup_runs=runner_warmup_runs,
-            postprocess_score_threshold=postprocess_score_threshold,
-            postprocess_nms_iou_threshold=postprocess_nms_iou_threshold,
-            postprocess_max_detections=postprocess_max_detections,
-            camera_frame_id=camera_frame_id,
-            pipeline_telemetry_path=pipeline_telemetry_path,
-            evidence_dir=evidence_dir,
-            evidence_interval_sec=evidence_interval_sec,
-            evidence_jpeg_quality=evidence_jpeg_quality,
-            evidence_storage_budget_mb=evidence_storage_budget_mb,
-            evidence_min_free_mb=evidence_min_free_mb,
-            start_experiment_recording=start_experiment_recording,
-            experiment_run_id=experiment_run_id,
-            experiment_out_dir=experiment_out_dir,
-            experiment_classes=experiment_classes,
-            experiment_notes=experiment_notes,
-            experiment_container_image_ref=experiment_container_image_ref,
-            experiment_container_image_digest=experiment_container_image_digest,
-            experiment_launch_command=experiment_launch_command,
-            experiment_launch_profile=experiment_launch_profile,
-            experiment_launch_mode=experiment_launch_mode,
-            experiment_launch_args=experiment_launch_args,
-            experiment_config=experiment_config,
-            experiment_parameters=experiment_parameters,
-            experiment_duration_sec=experiment_duration_sec,
-            experiment_system_interval_sec=experiment_system_interval_sec,
-            experiment_overwrite=experiment_overwrite,
-            experiment_queue_size=experiment_queue_size,
-            experiment_flush_interval_sec=experiment_flush_interval_sec,
-        ),
+        actions=_build_real_bringup_actions(pkg_bringup=pkg_bringup, config=config),
         condition=UnlessCondition(pre_launch_cleanup),
     )
 

@@ -166,15 +166,15 @@ class RealLaunchStructureTests(unittest.TestCase):
         self.assertTrue(autonomy_nodes, "expected optional omniseer_autonomy target_centering_node")
 
         launch_text = (Path(__file__).resolve().parents[1] / "launch" / "real.launch.py").read_text(encoding="utf-8")
-        self.assertIn('"target_class": autonomy_target_class', launch_text)
-        self.assertIn('"run_dir": autonomy_run_dir', launch_text)
-        self.assertIn('"bbox_area_min_ratio": autonomy_bbox_area_min_ratio', launch_text)
-        self.assertIn('"bbox_area_max_ratio": autonomy_bbox_area_max_ratio', launch_text)
-        self.assertIn('"forward_speed_m_s": autonomy_forward_speed_m_s', launch_text)
-        self.assertIn('"reverse_speed_m_s": autonomy_reverse_speed_m_s', launch_text)
-        self.assertIn('"stable_framed_frames": autonomy_stable_framed_frames', launch_text)
-        self.assertIn('"proximity_stop_m": autonomy_proximity_stop_m', launch_text)
-        self.assertIn('"capture_timeout_sec": autonomy_capture_timeout_sec', launch_text)
+        self.assertIn('"target_class": config["autonomy_target_class"]', launch_text)
+        self.assertIn('"run_dir": config["autonomy_run_dir"]', launch_text)
+        self.assertIn('"bbox_area_min_ratio": config["autonomy_bbox_area_min_ratio"]', launch_text)
+        self.assertIn('"bbox_area_max_ratio": config["autonomy_bbox_area_max_ratio"]', launch_text)
+        self.assertIn('"forward_speed_m_s": config["autonomy_forward_speed_m_s"]', launch_text)
+        self.assertIn('"reverse_speed_m_s": config["autonomy_reverse_speed_m_s"]', launch_text)
+        self.assertIn('"stable_framed_frames": config["autonomy_stable_framed_frames"]', launch_text)
+        self.assertIn('"proximity_stop_m": config["autonomy_proximity_stop_m"]', launch_text)
+        self.assertIn('"capture_timeout_sec": config["autonomy_capture_timeout_sec"]', launch_text)
 
     def test_twist_mux_includes_autonomy_below_keyboard_above_nav(self) -> None:
         config_path = Path(__file__).resolve().parents[1] / "config" / "twist_mux.yaml"
