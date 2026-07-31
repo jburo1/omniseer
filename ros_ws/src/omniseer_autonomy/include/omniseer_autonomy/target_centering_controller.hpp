@@ -99,6 +99,7 @@ private:
     std::string event, std::string reason = "",
     std::optional<TargetDetection> target = std::nullopt);
   TargetCenteringOutput fail(double now_sec, std::string reason);
+  TargetCenteringOutput begin_reacquire(double now_sec, std::string reason);
   TargetCenteringOutput command_scan(double now_sec);
   TargetCenteringOutput command_zero(double now_sec);
   TargetCenteringOutput command_for_target(const TargetDetection & target, double now_sec);

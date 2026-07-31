@@ -155,6 +155,7 @@ class RealLaunchStructureTests(unittest.TestCase):
         self.assertIn("autonomy_stable_framed_frames", declared_names)
         self.assertIn("autonomy_proximity_stop_m", declared_names)
         self.assertIn("autonomy_capture_timeout_sec", declared_names)
+        self.assertIn("autonomy_target_lost_timeout_sec", declared_names)
 
         autonomy_nodes = [
             entity
@@ -175,6 +176,7 @@ class RealLaunchStructureTests(unittest.TestCase):
         self.assertIn('"stable_framed_frames": config["autonomy_stable_framed_frames"]', launch_text)
         self.assertIn('"proximity_stop_m": config["autonomy_proximity_stop_m"]', launch_text)
         self.assertIn('"capture_timeout_sec": config["autonomy_capture_timeout_sec"]', launch_text)
+        self.assertIn('"target_lost_timeout_sec": config["autonomy_target_lost_timeout_sec"]', launch_text)
 
     def test_twist_mux_includes_autonomy_below_keyboard_above_nav(self) -> None:
         config_path = Path(__file__).resolve().parents[1] / "config" / "twist_mux.yaml"

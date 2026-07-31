@@ -232,7 +232,7 @@ TEST(TargetCenteringController, FailsAfterOneScanRevolution)
   EXPECT_DOUBLE_EQ(output.angular_z_rad_s, 0.0);
 }
 
-TEST(TargetCenteringController, FailsAfterTargetLostTimeout)
+TEST(TargetCenteringController, ReacquiresAfterTargetLostTimeout)
 {
   TargetCenteringController controller(config());
   controller.update_detections({detection(20.0)}, 0.0);
@@ -242,9 +242,21 @@ TEST(TargetCenteringController, FailsAfterTargetLostTimeout)
 
   const auto output = controller.tick(0.75);
 
-  EXPECT_EQ(controller.state(), CenteringState::Failed);
-  EXPECT_EQ(controller.terminal_reason(), "target_lost_timeout");
+  EXPECT_EQ(controller.state(), CenteringState::Scan);
+  EXPECT_TRUE(controller.terminal_reason().empty());
   EXPECT_EQ(controller.target_loss_count(), 1);
-  EXPECT_DOUBLE_EQ(output.angular_z_rad_s, 0.0);
+  EXPECT_DOUBLE_EQ(output.angular_z_rad_s, config().scan_yaw_rate_rad_s);
+  ASSERT_GE(output.events.size(), 2U);
+  EXPECT_EQ(output.events.front().event, "reacquire_started");
+  EXPECT_EQ(output.events.front().reason, "target_lost_timeout");
+
+  controller.update_detections({detection(50.0)}, 0.8);
+  controller.update_detections({detection(50.0)}, 0.9);
+
+  const auto reacquired = controller.update_detections({detection(50.0)}, 1.0);
+
+  EXPECT_EQ(controller.state(), CenteringState::Frame);
+  EXPECT_EQ(controller.terminal_reason(), "");
+  EXPECT_DOUBLE_EQ(reacquired.angular_z_rad_s, 0.0);
 }
 } // namespace omniseer_autonomy

@@ -147,7 +147,7 @@ TargetCenteringOutput TargetCenteringController::tick(double now_sec)
       _last_target_seen_at_sec.has_value() &&
       (now_sec - *_last_target_seen_at_sec) > _config.target_lost_timeout_sec)
     {
-      return append_output(output, fail(now_sec, "target_lost_timeout"));
+      return append_output(output, begin_reacquire(now_sec, "target_lost_timeout"));
     }
     if (_last_target.has_value()) {
       return append_output(output, command_for_target(*_last_target, now_sec));
@@ -289,6 +289,21 @@ TargetCenteringOutput TargetCenteringController::fail(double now_sec, std::strin
   output.linear_x_m_s = 0.0;
   output.angular_z_rad_s = 0.0;
   return output;
+}
+
+TargetCenteringOutput TargetCenteringController::begin_reacquire(double now_sec, std::string reason)
+{
+  TargetCenteringOutput output{};
+  if (scan_complete()) {
+    return fail(now_sec, "scan_complete_no_target");
+  }
+
+  _stable_frames = 0;
+  _last_target.reset();
+  _target_missing = false;
+  _recent_target_seen.clear();
+  transition(CenteringState::Scan, now_sec, output, "reacquire_started", std::move(reason));
+  return append_output(output, command_scan(now_sec));
 }
 
 TargetCenteringOutput TargetCenteringController::command_scan(double now_sec)
