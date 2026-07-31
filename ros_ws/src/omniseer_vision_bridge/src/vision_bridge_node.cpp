@@ -9,6 +9,7 @@
 
 #include "builtin_interfaces/msg/time.hpp"
 #include "omniseer_msgs/msg/vision_perf_summary.hpp"
+#include "omniseer_msgs/srv/capture_frame.hpp"
 #include "omniseer/vision/class_list.hpp"
 #include "omniseer/vision/detections_sink.hpp"
 #include "omniseer_vision_bridge/vision_bridge_runtime.hpp"
@@ -100,8 +101,17 @@ public:
     _config.detections_sink = _detections_sink.get();
     _runtime = std::make_unique<VisionBridgeRuntime>(_config);
     _runtime->start();
+    _capture_service = create_service<omniseer_msgs::srv::CaptureFrame>(
+      "/vision/capture_frame",
+      [this](
+        const std::shared_ptr<omniseer_msgs::srv::CaptureFrame::Request> request,
+        std::shared_ptr<omniseer_msgs::srv::CaptureFrame::Response> response)
+      {
+        handle_capture_request(*request, *response);
+      });
     RCLCPP_INFO(get_logger(),
-                  "vision runtime started in headless bridge mode and publishing /yolo/detections and /vision/perf");
+                  "vision runtime started in headless bridge mode and publishing "
+                  "/yolo/detections, /vision/perf, and /vision/capture_frame");
 
     _last_perf_time = std::chrono::steady_clock::now();
     _last_perf_snapshot = _runtime->telemetry_snapshot();
@@ -128,6 +138,39 @@ public:
   }
 
 private:
+  void handle_capture_request(
+    const omniseer_msgs::srv::CaptureFrame::Request & request,
+    omniseer_msgs::srv::CaptureFrame::Response & response)
+  {
+    if (!_runtime) {
+      response.success = false;
+      response.reason = "runtime_unavailable";
+      return;
+    }
+
+    TargetCaptureMetadata metadata{};
+    metadata.capture_reason = request.capture_reason.empty() ? "target_framed" :
+      request.capture_reason;
+    metadata.target_class = request.target_class;
+    metadata.confidence = request.confidence;
+    metadata.bbox_center_x_px = request.bbox_center_x_px;
+    metadata.bbox_center_y_px = request.bbox_center_y_px;
+    metadata.bbox_size_x_px = request.bbox_size_x_px;
+    metadata.bbox_size_y_px = request.bbox_size_y_px;
+    metadata.normalized_error = request.normalized_error;
+    metadata.bbox_area_ratio = request.bbox_area_ratio;
+
+    const auto timeout = std::chrono::milliseconds(
+      static_cast<int64_t>((request.timeout_sec > 0.0 ? request.timeout_sec : 2.0) * 1000.0));
+    const auto result = _runtime->capture_next_frame(std::move(metadata), timeout);
+    response.success = result.success;
+    response.reason = result.reason;
+    response.image_path = result.image_path;
+    response.stamp = to_builtin_time(result.capture_ts_real_ns);
+    response.frame_id = result.frame_id;
+    response.sequence = result.sequence;
+  }
+
   void publish_perf_summary()
   {
     if (!_runtime || !_perf_publisher) {
@@ -274,6 +317,7 @@ private:
   std::unique_ptr<VisionBridgeRuntime> _runtime{};
   rclcpp::Publisher<yolo_msgs::msg::DetectionArray>::SharedPtr _detections_publisher{};
   rclcpp::Publisher<omniseer_msgs::msg::VisionPerfSummary>::SharedPtr _perf_publisher{};
+  rclcpp::Service<omniseer_msgs::srv::CaptureFrame>::SharedPtr _capture_service{};
   std::unique_ptr<RosYoloDetectionsSink> _detections_sink{};
   rclcpp::TimerBase::SharedPtr _perf_timer{};
   rclcpp::TimerBase::SharedPtr _health_timer{};

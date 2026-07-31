@@ -10,8 +10,9 @@ namespace omniseer_autonomy
 enum class CenteringState
 {
   Scan,
-  Acquire,
+  Lock,
   Center,
+  Frame,
   Success,
   Failed,
 };
@@ -20,12 +21,18 @@ struct TargetCenteringConfig
 {
   std::string target_class{};
   double      image_width_px{1280.0};
+  double      image_height_px{720.0};
   double      scan_yaw_rate_rad_s{0.20};
   double      max_yaw_rate_rad_s{0.30};
   double      min_yaw_rate_rad_s{0.08};
   double      kp{0.30};
   double      center_deadband{0.05};
-  int         stable_center_frames{10};
+  double      bbox_area_min_ratio{0.08};
+  double      bbox_area_max_ratio{0.35};
+  double      forward_speed_m_s{0.05};
+  double      reverse_speed_m_s{0.04};
+  int         stable_framed_frames{10};
+  double      proximity_stop_m{0.30};
   double      detection_stale_sec{0.5};
   double      scan_limit_revolutions{1.0};
   double      target_lost_timeout_sec{0.5};
@@ -49,14 +56,18 @@ struct TargetCenteringEvent
   std::string    reason{};
   std::optional<TargetDetection> target{};
   std::optional<double> normalized_error{};
+  std::optional<double> bbox_area_ratio{};
+  std::optional<double> proximity_range_m{};
+  double                linear_x_m_s{0.0};
   double                angular_z_rad_s{0.0};
-  int                   stable_center_frames{0};
+  int                   stable_framed_frames{0};
   int                   target_loss_count{0};
 };
 
 struct TargetCenteringOutput
 {
   bool                              publish_command{false};
+  double                            linear_x_m_s{0.0};
   double                            angular_z_rad_s{0.0};
   std::vector<TargetCenteringEvent> events{};
 };
@@ -68,6 +79,7 @@ public:
 
   TargetCenteringOutput update_detections(
     const std::vector<TargetDetection> & detections, double now_sec);
+  void update_proximity_range(std::optional<double> range_m);
   void update_heading(double heading_rad);
   TargetCenteringOutput tick(double now_sec);
 
@@ -96,12 +108,16 @@ private:
   bool target_consistent() const;
   bool scan_complete() const;
   double normalized_error(double center_x_px) const;
+  double bbox_area_ratio(const TargetDetection & target) const;
   double clamp_yaw(double yaw_rad_s) const;
+  bool proximity_blocks_forward() const noexcept;
   bool terminal() const noexcept;
   TargetCenteringEvent make_event(
     double now_sec, std::string event, std::string reason = "",
     std::optional<TargetDetection> target = std::nullopt,
     std::optional<double> normalized_error = std::nullopt,
+    std::optional<double> bbox_area_ratio = std::nullopt,
+    double linear_x_m_s = 0.0,
     double angular_z_rad_s = 0.0) const;
 
   TargetCenteringConfig _config{};
@@ -114,6 +130,7 @@ private:
   std::optional<double> _centered_at_sec{};
   std::optional<double> _last_target_seen_at_sec{};
   std::optional<double> _last_scan_heading_rad{};
+  std::optional<double> _last_proximity_range_m{};
   std::optional<TargetDetection> _last_target{};
   std::optional<double> _final_error{};
   std::optional<double> _final_confidence{};

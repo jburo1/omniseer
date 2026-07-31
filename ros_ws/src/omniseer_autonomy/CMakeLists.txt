@@ -8,7 +8,9 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
+find_package(omniseer_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(sensor_msgs REQUIRED)
 find_package(yolo_msgs REQUIRED)
 
 add_library(omniseer_autonomy_core STATIC
@@ -27,6 +29,8 @@ target_compile_features(target_centering_node PUBLIC cxx_std_17)
 target_link_libraries(target_centering_node PRIVATE
   ${geometry_msgs_TARGETS}
   ${nav_msgs_TARGETS}
+  ${omniseer_msgs_TARGETS}
+  ${sensor_msgs_TARGETS}
   ${yolo_msgs_TARGETS}
   rclcpp::rclcpp
   omniseer_autonomy_core

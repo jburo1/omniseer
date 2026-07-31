@@ -1,10 +1,12 @@
 #pragma once
 
+#include <chrono>
 #include <cstdint>
 #include <memory>
 #include <string>
 
 #include "omniseer/vision/rolling_telemetry.hpp"
+#include "omniseer_vision_bridge/evidence_frame_sink.hpp"
 
 namespace omniseer::vision
 {
@@ -65,6 +67,9 @@ public:
   bool has_fatal_error() const noexcept;
   std::string fatal_error_message() const;
   omniseer::vision::RollingTelemetrySnapshot telemetry_snapshot() const noexcept;
+  TargetCaptureResult capture_next_frame(
+    TargetCaptureMetadata metadata,
+    std::chrono::milliseconds timeout);
 
 private:
   struct Impl;

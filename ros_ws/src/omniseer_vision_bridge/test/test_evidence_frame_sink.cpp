@@ -3,6 +3,7 @@
 #include <cstring>
 #include <filesystem>
 #include <fcntl.h>
+#include <future>
 #include <fstream>
 #include <string>
 #include <sys/mman.h>
@@ -204,6 +205,79 @@ TEST(EvidenceFrameSinkTest, SamplesPeriodicallyAndKeepsEmptyDetectionFrames)
   EXPECT_TRUE(std::filesystem::exists(root / "evidence" / "frames" / "frame_3.jpg"));
   const std::string metadata = read_text(root / "evidence" / "evidence.jsonl");
   EXPECT_NE(metadata.find("\"detections\":[]"), std::string::npos);
+}
+
+TEST(EvidenceFrameSinkTest, CaptureNextWritesTargetFrameAndMetadata)
+{
+  const auto root = make_temp_dir();
+  TempRgbImage rgb(root, 8, 8);
+
+  omniseer_vision_bridge::EvidenceFrameSinkConfig cfg{};
+  cfg.evidence_dir = (root / "evidence").string();
+  cfg.interval_sec = 10.0;
+  cfg.jpeg_quality = 80;
+  cfg.min_free_mb = 0;
+  cfg.storage_budget_mb = 64;
+
+  omniseer_vision_bridge::TargetCaptureMetadata metadata{};
+  metadata.capture_reason = "target_framed";
+  metadata.target_class = "mug";
+  metadata.confidence = 0.91;
+  metadata.bbox_center_x_px = 64.0;
+  metadata.bbox_center_y_px = 72.0;
+  metadata.bbox_size_x_px = 32.0;
+  metadata.bbox_size_y_px = 48.0;
+  metadata.normalized_error = 0.02;
+  metadata.bbox_area_ratio = 0.12;
+
+  omniseer_vision_bridge::TargetCaptureResult result{};
+  {
+    omniseer_vision_bridge::EvidenceFrameSink sink(cfg);
+    auto future = std::async(std::launch::async, [&sink, metadata]()
+        {
+          return sink.capture_next(metadata, std::chrono::milliseconds(500));
+        });
+    sink.publish(rgb.image(), frame(9, kNsPerSec, 1), remap());
+    result = future.get();
+  }
+
+  EXPECT_TRUE(result.success);
+  EXPECT_EQ(result.reason, "captured");
+  EXPECT_EQ(result.image_path, "evidence/frames/capture_frame_9.jpg");
+  EXPECT_EQ(result.frame_id, 9u);
+  EXPECT_EQ(result.sequence, 1009u);
+  EXPECT_EQ(result.capture_ts_real_ns, kNsPerSec);
+
+  const auto jpg = root / "evidence" / "frames" / "capture_frame_9.jpg";
+  ASSERT_TRUE(std::filesystem::exists(jpg));
+  EXPECT_TRUE(has_jpeg_soi(jpg));
+
+  const std::string text = read_text(root / "evidence" / "evidence.jsonl");
+  EXPECT_NE(text.find("\"capture_reason\":\"target_framed\""), std::string::npos);
+  EXPECT_NE(text.find("\"target_capture\":{\"target_class\":\"mug\""), std::string::npos);
+  EXPECT_NE(text.find("\"bbox_area_ratio\":0.12"), std::string::npos);
+}
+
+TEST(EvidenceFrameSinkTest, CaptureNextTimesOutWithoutFrame)
+{
+  const auto root = make_temp_dir();
+
+  omniseer_vision_bridge::EvidenceFrameSinkConfig cfg{};
+  cfg.evidence_dir = (root / "evidence").string();
+  cfg.interval_sec = 1.0;
+  cfg.jpeg_quality = 80;
+  cfg.min_free_mb = 0;
+  cfg.storage_budget_mb = 64;
+
+  omniseer_vision_bridge::TargetCaptureMetadata metadata{};
+  metadata.target_class = "mug";
+
+  {
+    omniseer_vision_bridge::EvidenceFrameSink sink(cfg);
+    const auto result = sink.capture_next(metadata, std::chrono::milliseconds(1));
+    EXPECT_FALSE(result.success);
+    EXPECT_EQ(result.reason, "timeout");
+  }
 }
 
 TEST(EvidenceFrameSinkTest, StopsWhenStorageBudgetIsReached)

@@ -409,4 +409,17 @@ omniseer::vision::RollingTelemetrySnapshot VisionBridgeRuntime::telemetry_snapsh
 {
   return _impl->rolling_stats.snapshot();
 }
+
+TargetCaptureResult VisionBridgeRuntime::capture_next_frame(
+  TargetCaptureMetadata metadata,
+  std::chrono::milliseconds timeout)
+{
+  if (!_impl->evidence_sink) {
+    return TargetCaptureResult{false, "evidence_disabled"};
+  }
+  if (!_impl->running.load(std::memory_order_acquire)) {
+    return TargetCaptureResult{false, "runtime_not_running"};
+  }
+  return _impl->evidence_sink->capture_next(std::move(metadata), timeout);
+}
 } // namespace omniseer_vision_bridge

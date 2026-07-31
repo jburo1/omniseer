@@ -69,7 +69,6 @@ class SimLaunchSmokeTests(unittest.TestCase):
             "/clock": "rosgraph_msgs/msg/Clock",
             "/imu": "sensor_msgs/msg/Imu",
             "/scan": "sensor_msgs/msg/LaserScan",
-            "/range": "sensor_msgs/msg/Range",
             "/mecanum_drive_controller/odometry": "nav_msgs/msg/Odometry",
         }
 

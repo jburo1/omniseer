@@ -76,7 +76,6 @@ def generate_launch_description():
             "start_yolo": "false",
             "start_slam": start_slam,
             "start_rf2o": start_rf2o,
-            "start_scan_to_range": "false",
         }.items(),
         condition=IfCondition(start_perception),
     )

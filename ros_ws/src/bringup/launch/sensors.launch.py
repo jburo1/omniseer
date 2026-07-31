@@ -36,6 +36,5 @@ def generate_launch_description():
         declared_arguments
         + [
             robot_localization_node,
-            # scan_to_range_node,
         ]
     )

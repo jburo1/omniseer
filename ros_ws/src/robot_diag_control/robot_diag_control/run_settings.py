@@ -32,6 +32,14 @@ class RunFormValues:
     classes_text: str
     notes: str
     devcontainer_exec_template: str
+    autonomy_bbox_area_min_ratio: str = "0.08"
+    autonomy_bbox_area_max_ratio: str = "0.35"
+    autonomy_forward_speed_m_s: str = "0.05"
+    autonomy_reverse_speed_m_s: str = "0.04"
+    autonomy_stable_framed_frames: str = "10"
+    autonomy_proximity_stop_m: str = "0.30"
+    autonomy_capture_timeout_sec: str = "2.0"
+    autonomy_evidence_interval_sec: str = "0.25"
 
 
 @dataclass(frozen=True)
@@ -102,6 +110,14 @@ def resolve_run_form(
         notes=values.notes.strip(),
         devcontainer_exec_template=values.devcontainer_exec_template.strip() or DEFAULT_DEVCONTAINER_EXEC_TEMPLATE,
         run_type=selected_run_type(values.run_type_label),
+        autonomy_bbox_area_min_ratio=values.autonomy_bbox_area_min_ratio.strip() or "0.08",
+        autonomy_bbox_area_max_ratio=values.autonomy_bbox_area_max_ratio.strip() or "0.35",
+        autonomy_forward_speed_m_s=values.autonomy_forward_speed_m_s.strip() or "0.05",
+        autonomy_reverse_speed_m_s=values.autonomy_reverse_speed_m_s.strip() or "0.04",
+        autonomy_stable_framed_frames=values.autonomy_stable_framed_frames.strip() or "10",
+        autonomy_proximity_stop_m=values.autonomy_proximity_stop_m.strip() or "0.30",
+        autonomy_capture_timeout_sec=values.autonomy_capture_timeout_sec.strip() or "2.0",
+        autonomy_evidence_interval_sec=values.autonomy_evidence_interval_sec.strip() or "0.25",
     )
     artifact_context = RunArtifactContext(
         repo_root=repo_root,

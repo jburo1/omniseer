@@ -27,6 +27,7 @@ endif()
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/VisionPerfSummary.msg"
   "msg/WheelEncoderCounts.msg"
+  "srv/CaptureFrame.srv"
   DEPENDENCIES builtin_interfaces std_msgs
 )
 

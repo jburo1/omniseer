@@ -270,6 +270,14 @@ class MonitorGuiTests(unittest.TestCase):
                 gui._run_classes_var.set("person, cup\nperson")
                 gui._run_notes_text.delete("1.0", tk.END)
                 gui._run_notes_text.insert("1.0", "  trial notes  ")
+                gui._autonomy_bbox_area_min_ratio_var.set("0.10")
+                gui._autonomy_bbox_area_max_ratio_var.set("0.28")
+                gui._autonomy_forward_speed_var.set("0.06")
+                gui._autonomy_reverse_speed_var.set("0.03")
+                gui._autonomy_stable_frames_var.set("7")
+                gui._autonomy_proximity_stop_var.set("0.42")
+                gui._autonomy_capture_timeout_var.set("3.5")
+                gui._autonomy_evidence_interval_var.set("0.20")
 
                 selection = gui._run_form_selection()
 
@@ -281,6 +289,14 @@ class MonitorGuiTests(unittest.TestCase):
                 self.assertEqual(selection.run_config.classes, ("person", "cup"))
                 self.assertEqual(selection.run_config.run_type, RUN_TYPE_AUTONOMY_CENTER)
                 self.assertEqual(selection.run_config.notes, "trial notes")
+                self.assertEqual(selection.run_config.autonomy_bbox_area_min_ratio, "0.10")
+                self.assertEqual(selection.run_config.autonomy_bbox_area_max_ratio, "0.28")
+                self.assertEqual(selection.run_config.autonomy_forward_speed_m_s, "0.06")
+                self.assertEqual(selection.run_config.autonomy_reverse_speed_m_s, "0.03")
+                self.assertEqual(selection.run_config.autonomy_stable_framed_frames, "7")
+                self.assertEqual(selection.run_config.autonomy_proximity_stop_m, "0.42")
+                self.assertEqual(selection.run_config.autonomy_capture_timeout_sec, "3.5")
+                self.assertEqual(selection.run_config.autonomy_evidence_interval_sec, "0.20")
                 self.assertEqual(selection.artifact_context.repo_root, Path(repo_root).resolve())
                 self.assertEqual(
                     selection.artifact_context.local_import_root,

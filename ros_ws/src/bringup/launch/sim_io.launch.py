@@ -6,7 +6,6 @@ from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchD
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
-from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
 
@@ -55,15 +54,6 @@ def generate_launch_description():
         }.items(),
     )
 
-    scan_to_range_node = Node(
-        package="robot_io_adapters",
-        executable="scan_to_range",
-        name="scan_to_range",
-        output="screen",
-        arguments=["--ros-args", "--log-level", log_level],
-        parameters=[{"use_sim_time": use_sim_time}],
-    )
-
     wait_clock = ExecuteProcess(
         cmd=["bash", "-lc", "until ros2 topic list | grep -qx /clock; do sleep 0.2; done"],
         name="wait_clock",
@@ -81,7 +71,6 @@ def generate_launch_description():
             *declared_arguments,
             gazebo_launch,
             bridge_launch,
-            scan_to_range_node,
             wait_clock,
             on_clock,
         ]
