@@ -1,6 +1,8 @@
 site_name: omniseer
 repo_url: https://github.com/jburo1/omniseer
 exclude_docs: |
+  diagrams/README.md
+  diagrams/explorer/README.md
   diagrams/**/*.d2
 theme:
   name: material
@@ -24,8 +26,6 @@ nav:
   - Home: index.md
   - Architecture:
     - Overview: architecture/overview.md
-    - Diagrams: diagrams/README.md
-    - Explorer: diagrams/explorer/README.md
   - Operations:
     - Scripts front door: operations/scripts-frontdoor.md
     - Operator run workflow: operations/operator-run-workflow.md
