@@ -164,6 +164,8 @@ bool write_jpeg(
 
 struct EvidenceFrameSink::Impl
 {
+  struct CaptureWaiter;
+
   struct DetectionRecord
   {
     uint16_t class_id{0};
@@ -194,7 +196,7 @@ struct EvidenceFrameSink::Impl
     TargetCaptureMetadata target_capture{};
     std::vector<uint8_t> rgb{};
     std::vector<DetectionRecord> detections{};
-    std::shared_ptr<struct CaptureWaiter> capture_waiter{};
+    std::shared_ptr<CaptureWaiter> capture_waiter{};
   };
 
   struct CaptureWaiter
