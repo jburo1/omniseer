@@ -2210,17 +2210,23 @@ scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="
 <code>manifest.yaml</code>, <code>detections.jsonl</code>, <code>perf.jsonl</code>, optional automatic
 <code>system.jsonl</code> resource telemetry, optional native
 <code>pipeline_telemetry.jsonl</code>, representative native JPEG evidence frames under
-<code>evidence/</code>, and <code>summary.json</code>. The first slice stores bundles on the robot;
-laptop download, inspection, evidence annotation, and a simple local HTML report
-are available through <code>scripts/omni runs</code>. Rich hosted review and cloud
-synchronization remain later work.</p>
+<code>evidence/</code>, the ROS launch stdout/stderr transcript at <code>logs/bringup.log</code>, and
+<code>summary.json</code>. The first slice stores bundles on the robot; laptop download,
+inspection, evidence annotation, and a simple local HTML report are available
+through <code>scripts/omni runs</code>. Rich hosted review and cloud synchronization remain
+later work.</p>
 <p><code>manifest.yaml</code> records the resolved real profile, mode, command, and launch
 arguments. <code>system.jsonl</code> records low-rate CPU, memory, thermal, WiFi/network,
-onboard battery, and <code>/battery</code> LiPo snapshots when those sources are available.</p>
+onboard battery, and <code>/battery</code> LiPo snapshots when those sources are available.
+During recorded runs, <code>OMNISEER_BRINGUP_LOG</code> is replaced by the bundle-local
+<code>logs/bringup.log</code> path so the run artifact retains the console stream. For
+non-recording runs, <code>OMNISEER_BRINGUP_LOG</code> still overrides the temporary bringup
+log path.</p>
 <p><code>--record-overwrite</code> removes and recreates the selected run directory before
 launching ROS. The recorder then accepts an empty precreated directory, or one
-where the native vision node has already opened <code>pipeline_telemetry.jsonl</code> or
-<code>evidence/</code>, so startup ordering does not drop pipeline telemetry.</p>
+where the native vision node has already opened <code>pipeline_telemetry.jsonl</code>,
+<code>evidence/</code>, or <code>logs/bringup.log</code>, so startup ordering does not drop pipeline
+telemetry or launch logs.</p>
 <p>Containerized runs can provide the same provenance through
 <code>OMNISEER_CONTAINER_IMAGE_REF</code>, <code>OMNISEER_CONTAINER_IMAGE_DIGEST</code>,
 <code>OMNISEER_GIT_SHA</code>, <code>OMNISEER_EXPERIMENT_CONFIG</code>, and
@@ -2503,7 +2509,7 @@ machine.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 31, 2026 06:18:34 UTC">July 31, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 31, 2026 19:07:02 UTC">July 31, 2026</span>
   </span>
 
     
