@@ -81,6 +81,9 @@ class RunCommandsTests(unittest.TestCase):
                 classes=("person", "fire extinguisher"),
                 notes="lighting changed",
                 devcontainer_exec_template="ignored {command}",
+                detector_score_threshold="0.31",
+                detector_nms_iou_threshold="0.52",
+                detector_max_detections="42",
             ),
         )
 
@@ -88,8 +91,16 @@ class RunCommandsTests(unittest.TestCase):
         self.assertIn("scripts/omni runtime record", command[3])
         self.assertIn("--record-notes 'lighting changed'", command[3])
         self.assertIn("--record-classes 'person,fire extinguisher'", command[3])
+        self.assertIn("--record-experiment-parameter postprocess.score_threshold=0.31", command[3])
+        self.assertIn("--record-experiment-parameter postprocess.nms_iou_threshold=0.52", command[3])
+        self.assertIn("--record-experiment-parameter postprocess.max_detections=42", command[3])
         self.assertIn("experiment_overwrite:=true", command[3])
         self.assertIn("classes_path:=/runs/operator_001/classes.txt", command[3])
+        self.assertIn("postprocess_score_threshold:=0.31", command[3])
+        self.assertIn("postprocess_nms_iou_threshold:=0.52", command[3])
+        self.assertIn("postprocess_max_detections:=42", command[3])
+        self.assertLess(command[3].index("--record-experiment-parameter"), command[3].index(" -- "))
+        self.assertGreater(command[3].index("postprocess_score_threshold:=0.31"), command[3].index(" -- "))
         self.assertNotIn("start_autonomy:=true", command[3])
 
     def test_runtime_backend_adds_autonomy_launch_args_for_centering_run(self):
@@ -142,6 +153,9 @@ class RunCommandsTests(unittest.TestCase):
                 backend=RUN_BACKEND_DEVCONTAINER,
                 classes=("person", "fire extinguisher"),
                 devcontainer_exec_template="docker exec omniseer-dev bash -lc {command}",
+                detector_score_threshold="0.31",
+                detector_nms_iou_threshold="0.52",
+                detector_max_detections="42",
             ),
         )
 
@@ -149,9 +163,15 @@ class RunCommandsTests(unittest.TestCase):
         self.assertIn("docker exec omniseer-dev bash -lc", command[3])
         self.assertIn("cd /omniseer && scripts/omni run real --profile operator", command[3])
         self.assertIn("--record-out /omniseer/runs/operator_001", command[3])
+        self.assertIn("--record-experiment-parameter postprocess.score_threshold=0.31", command[3])
         self.assertIn("experiment_overwrite:=true", command[3])
         class_path = remote_class_list_path_for("/omniseer", "operator_001")
         self.assertIn(f"classes_path:={class_path}", command[3])
+        self.assertIn("postprocess_score_threshold:=0.31", command[3])
+        self.assertIn("postprocess_nms_iou_threshold:=0.52", command[3])
+        self.assertIn("postprocess_max_detections:=42", command[3])
+        self.assertLess(command[3].index("--record-experiment-parameter"), command[3].index(" bringup "))
+        self.assertGreater(command[3].index("postprocess_score_threshold:=0.31"), command[3].index(" bringup "))
 
     def test_devcontainer_backend_default_exec_template_uses_running_container_label(self):
         command = build_remote_start_command(

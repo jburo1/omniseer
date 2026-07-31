@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -40,6 +41,9 @@ class RunFormValues:
     autonomy_proximity_stop_m: str = "0.30"
     autonomy_capture_timeout_sec: str = "2.0"
     autonomy_evidence_interval_sec: str = "0.25"
+    detector_score_threshold: str = "0.25"
+    detector_nms_iou_threshold: str = "0.45"
+    detector_max_detections: str = "100"
 
 
 @dataclass(frozen=True)
@@ -88,6 +92,28 @@ def resolved_run_id(raw_run_id: str, *, default_run_id: Callable[[], str]) -> st
     return run_id or default_run_id()
 
 
+def validated_unit_interval(value: str, *, name: str, default: str) -> str:
+    normalized = value.strip() or default
+    try:
+        parsed = float(normalized)
+    except ValueError as exc:
+        raise ValueError(f"{name} must be a number from 0.0 to 1.0") from exc
+    if not math.isfinite(parsed) or parsed < 0.0 or parsed > 1.0:
+        raise ValueError(f"{name} must be a number from 0.0 to 1.0")
+    return normalized
+
+
+def validated_positive_int(value: str, *, name: str, default: str) -> str:
+    normalized = value.strip() or default
+    try:
+        parsed = int(normalized)
+    except ValueError as exc:
+        raise ValueError(f"{name} must be a positive integer") from exc
+    if parsed <= 0:
+        raise ValueError(f"{name} must be a positive integer")
+    return normalized
+
+
 def resolve_run_form(
     values: RunFormValues,
     *,
@@ -118,6 +144,21 @@ def resolve_run_form(
         autonomy_proximity_stop_m=values.autonomy_proximity_stop_m.strip() or "0.30",
         autonomy_capture_timeout_sec=values.autonomy_capture_timeout_sec.strip() or "2.0",
         autonomy_evidence_interval_sec=values.autonomy_evidence_interval_sec.strip() or "0.25",
+        detector_score_threshold=validated_unit_interval(
+            values.detector_score_threshold,
+            name="score threshold",
+            default="0.25",
+        ),
+        detector_nms_iou_threshold=validated_unit_interval(
+            values.detector_nms_iou_threshold,
+            name="NMS IoU",
+            default="0.45",
+        ),
+        detector_max_detections=validated_positive_int(
+            values.detector_max_detections,
+            name="max detections",
+            default="100",
+        ),
     )
     artifact_context = RunArtifactContext(
         repo_root=repo_root,

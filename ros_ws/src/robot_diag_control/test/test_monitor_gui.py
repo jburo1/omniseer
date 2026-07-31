@@ -291,6 +291,9 @@ class MonitorGuiTests(unittest.TestCase):
                 gui._autonomy_proximity_stop_var.set("0.42")
                 gui._autonomy_capture_timeout_var.set("3.5")
                 gui._autonomy_evidence_interval_var.set("0.20")
+                gui._detector_score_threshold_var.set("0.31")
+                gui._detector_nms_iou_threshold_var.set("0.52")
+                gui._detector_max_detections_var.set("42")
 
                 selection = gui._run_form_selection()
 
@@ -310,6 +313,9 @@ class MonitorGuiTests(unittest.TestCase):
                 self.assertEqual(selection.run_config.autonomy_proximity_stop_m, "0.42")
                 self.assertEqual(selection.run_config.autonomy_capture_timeout_sec, "3.5")
                 self.assertEqual(selection.run_config.autonomy_evidence_interval_sec, "0.20")
+                self.assertEqual(selection.run_config.detector_score_threshold, "0.31")
+                self.assertEqual(selection.run_config.detector_nms_iou_threshold, "0.52")
+                self.assertEqual(selection.run_config.detector_max_detections, "42")
                 self.assertEqual(selection.artifact_context.repo_root, Path(repo_root).resolve())
                 self.assertEqual(
                     selection.artifact_context.local_import_root,

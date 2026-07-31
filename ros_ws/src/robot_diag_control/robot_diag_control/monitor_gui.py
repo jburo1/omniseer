@@ -353,6 +353,9 @@ class RobotMonitorGui:
         self._autonomy_proximity_stop_var = tk.StringVar(value="0.30")
         self._autonomy_capture_timeout_var = tk.StringVar(value="2.0")
         self._autonomy_evidence_interval_var = tk.StringVar(value="0.25")
+        self._detector_score_threshold_var = tk.StringVar(value="0.25")
+        self._detector_nms_iou_threshold_var = tk.StringVar(value="0.45")
+        self._detector_max_detections_var = tk.StringVar(value="100")
         self._run_notes_text: Any | None = None
         self._run_experiment_frames: dict[str, Any] = {}
         self._mode_var = tk.StringVar(value=self._format_run_mode(self._run_state))
@@ -546,9 +549,33 @@ class RobotMonitorGui:
         run_type_box.bind("<<ComboboxSelected>>", lambda _event: self._sync_run_experiment_fields())
 
         self._add_labeled_entry(experiment_holder, "Object to Search For", self._run_classes_var, 1, 0)
+        self._add_labeled_entry(
+            experiment_holder,
+            "Score Threshold",
+            self._detector_score_threshold_var,
+            2,
+            0,
+            width=8,
+        )
+        self._add_labeled_entry(
+            experiment_holder,
+            "NMS IoU",
+            self._detector_nms_iou_threshold_var,
+            2,
+            2,
+            width=8,
+        )
+        self._add_labeled_entry(
+            experiment_holder,
+            "Max Detections",
+            self._detector_max_detections_var,
+            3,
+            0,
+            width=8,
+        )
 
         experiment_fields = ttk.Frame(experiment_holder)
-        experiment_fields.grid(row=2, column=0, columnspan=4, sticky=tk.EW)
+        experiment_fields.grid(row=4, column=0, columnspan=4, sticky=tk.EW)
         perception_frame = ttk.Frame(experiment_fields)
         perception_frame.columnconfigure(1, weight=1)
         self._run_experiment_frames[RUN_TYPE_PERCEPTION] = perception_frame
@@ -667,6 +694,9 @@ class RobotMonitorGui:
             autonomy_proximity_stop_m=self._autonomy_proximity_stop_var.get(),
             autonomy_capture_timeout_sec=self._autonomy_capture_timeout_var.get(),
             autonomy_evidence_interval_sec=self._autonomy_evidence_interval_var.get(),
+            detector_score_threshold=self._detector_score_threshold_var.get(),
+            detector_nms_iou_threshold=self._detector_nms_iou_threshold_var.get(),
+            detector_max_detections=self._detector_max_detections_var.get(),
         )
 
     def _run_form_selection(self, run_id: str | None = None) -> RunFormSelection:
@@ -813,7 +843,10 @@ class RobotMonitorGui:
         self._append_log(
             f"run started remotely: {run_config.run_id}; "
             f"backend={RUN_BACKEND_LABELS[run_config.backend]}; classes={class_text}; "
-            f"autonomy={str(autonomy_enabled).lower()}; target={target_text}"
+            f"autonomy={str(autonomy_enabled).lower()}; target={target_text}; "
+            f"score_threshold={run_config.detector_score_threshold}; "
+            f"nms_iou={run_config.detector_nms_iou_threshold}; "
+            f"max_detections={run_config.detector_max_detections}"
         )
         self._append_log("$ " + shell_join(start_result.command))
         self._start_run_log_reader()

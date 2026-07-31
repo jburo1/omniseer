@@ -51,6 +51,9 @@ class RunConfig:
     autonomy_proximity_stop_m: str = "0.30"
     autonomy_capture_timeout_sec: str = "2.0"
     autonomy_evidence_interval_sec: str = "0.25"
+    detector_score_threshold: str = "0.25"
+    detector_nms_iou_threshold: str = "0.45"
+    detector_max_detections: str = "100"
 
 
 def sanitize_run_id(run_id: str) -> str:
@@ -149,10 +152,12 @@ def _build_runtime_record_inner_command(
         command.extend(["--record-classes", ",".join(classes)])
     if notes.strip():
         command.extend(["--record-notes", notes.strip()])
+    command.extend(_detector_experiment_parameters(run_config))
     command.append("--")
     command.append("experiment_overwrite:=true")
     if classes:
         command.append(f"classes_path:={_runtime_container_class_list_path(run_id)}")
+    command.extend(_detector_parameter_launch_args(run_config))
     command.extend(
         _autonomy_launch_args(
             classes=classes,
@@ -190,13 +195,34 @@ def _build_devcontainer_record_inner_command(
         command.extend(["--record-classes", ",".join(classes)])
     if notes.strip():
         command.extend(["--record-notes", notes.strip()])
+    command.extend(_detector_experiment_parameters(run_config))
     command.append("bringup")
     command.append("experiment_overwrite:=true")
     if classes:
         command.append(f"classes_path:={remote_class_list_path_for(container_repo_root, run_id)}")
+    command.extend(_detector_parameter_launch_args(run_config))
     command.extend(_autonomy_launch_args(classes=classes, run_type=run_config.run_type, run_dir=container_run_dir))
     command.extend(_autonomy_parameter_launch_args(run_config))
     return command
+
+
+def _detector_parameter_launch_args(run_config: RunConfig) -> list[str]:
+    return [
+        f"postprocess_score_threshold:={run_config.detector_score_threshold}",
+        f"postprocess_nms_iou_threshold:={run_config.detector_nms_iou_threshold}",
+        f"postprocess_max_detections:={run_config.detector_max_detections}",
+    ]
+
+
+def _detector_experiment_parameters(run_config: RunConfig) -> list[str]:
+    return [
+        "--record-experiment-parameter",
+        f"postprocess.score_threshold={run_config.detector_score_threshold}",
+        "--record-experiment-parameter",
+        f"postprocess.nms_iou_threshold={run_config.detector_nms_iou_threshold}",
+        "--record-experiment-parameter",
+        f"postprocess.max_detections={run_config.detector_max_detections}",
+    ]
 
 
 def _autonomy_launch_args(*, classes: Sequence[str], run_type: str, run_dir: str) -> list[str]:

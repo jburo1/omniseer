@@ -46,6 +46,9 @@ def _values(**overrides: str) -> RunFormValues:
         "autonomy_proximity_stop_m": " 0.42 ",
         "autonomy_capture_timeout_sec": " 3.5 ",
         "autonomy_evidence_interval_sec": " 0.20 ",
+        "detector_score_threshold": " 0.31 ",
+        "detector_nms_iou_threshold": " 0.52 ",
+        "detector_max_detections": " 42 ",
     }
     values.update(overrides)
     return RunFormValues(**values)
@@ -108,6 +111,47 @@ class RunSettingsTests(unittest.TestCase):
         self.assertEqual(selection.run_config.autonomy_proximity_stop_m, "0.42")
         self.assertEqual(selection.run_config.autonomy_capture_timeout_sec, "3.5")
         self.assertEqual(selection.run_config.autonomy_evidence_interval_sec, "0.20")
+        self.assertEqual(selection.run_config.detector_score_threshold, "0.31")
+        self.assertEqual(selection.run_config.detector_nms_iou_threshold, "0.52")
+        self.assertEqual(selection.run_config.detector_max_detections, "42")
         self.assertEqual(selection.artifact_context.repo_root, Path("/repo"))
         self.assertEqual(selection.artifact_context.connection, selection.connection)
         self.assertEqual(selection.artifact_context.local_import_root, Path("/repo/runs/imported"))
+
+    def test_resolve_run_form_defaults_blank_detector_parameters(self):
+        selection = resolve_run_form(
+            _values(
+                detector_score_threshold=" ",
+                detector_nms_iou_threshold=" ",
+                detector_max_detections=" ",
+            ),
+            repo_root=Path("/repo"),
+            default_run_id=lambda: "operator_default",
+        )
+
+        self.assertEqual(selection.run_config.detector_score_threshold, "0.25")
+        self.assertEqual(selection.run_config.detector_nms_iou_threshold, "0.45")
+        self.assertEqual(selection.run_config.detector_max_detections, "100")
+
+    def test_resolve_run_form_rejects_invalid_detector_thresholds(self):
+        with self.assertRaisesRegex(ValueError, "score threshold must be a number from 0.0 to 1.0"):
+            resolve_run_form(
+                _values(detector_score_threshold="1.5"),
+                repo_root=Path("/repo"),
+                default_run_id=lambda: "operator_default",
+            )
+
+        with self.assertRaisesRegex(ValueError, "NMS IoU must be a number from 0.0 to 1.0"):
+            resolve_run_form(
+                _values(detector_nms_iou_threshold="nan"),
+                repo_root=Path("/repo"),
+                default_run_id=lambda: "operator_default",
+            )
+
+    def test_resolve_run_form_rejects_invalid_max_detections(self):
+        with self.assertRaisesRegex(ValueError, "max detections must be a positive integer"):
+            resolve_run_form(
+                _values(detector_max_detections="0"),
+                repo_root=Path("/repo"),
+                default_run_id=lambda: "operator_default",
+            )
