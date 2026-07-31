@@ -62,6 +62,16 @@ std::string optional_json_number(std::optional<double> value)
   return stream.str();
 }
 
+std::string optional_log_number(std::optional<double> value)
+{
+  if (!value.has_value()) {
+    return "-";
+  }
+  std::ostringstream stream;
+  stream << *value;
+  return stream.str();
+}
+
 double yaw_from_quaternion(const geometry_msgs::msg::Quaternion & orientation)
 {
   const auto siny_cosp =
@@ -201,6 +211,7 @@ private:
   {
     for (const auto & event : output.events) {
       write_event(event);
+      log_state_transition(event);
     }
     if (output.publish_command) {
       publish_command(output.linear_x_m_s, output.angular_z_rad_s);
@@ -208,11 +219,13 @@ private:
     if (!_terminal_logged && _controller.state() == CenteringState::Success) {
       _terminal_logged = true;
       RCLCPP_INFO(get_logger(), "target centering succeeded");
+      log_terminal_summary();
       request_capture(output);
     } else if (!_terminal_logged && _controller.state() == CenteringState::Failed) {
       _terminal_logged = true;
       RCLCPP_WARN(get_logger(), "target centering failed: %s",
           _controller.terminal_reason().c_str());
+      log_terminal_summary();
     }
   }
 
@@ -259,6 +272,76 @@ private:
     }
     _events << "}\n";
     _events.flush();
+  }
+
+  void log_state_transition(const TargetCenteringEvent & event)
+  {
+    remember_state(event.state);
+    if (_last_logged_state.has_value() && *_last_logged_state == event.state) {
+      return;
+    }
+
+    std::ostringstream message;
+    message << "autonomy state reached: " << state_name(event.state)
+            << " event=" << event.event;
+    if (_last_logged_state.has_value()) {
+      message << " previous_state=" << state_name(*_last_logged_state);
+    }
+    if (!event.reason.empty()) {
+      message << " reason=" << event.reason;
+    }
+    if (event.target.has_value()) {
+      message << " target=" << event.target->class_name
+              << " confidence=" << event.target->confidence;
+    }
+    message << " normalized_error=" << optional_log_number(event.normalized_error)
+            << " bbox_area_ratio=" << optional_log_number(event.bbox_area_ratio)
+            << " stable_framed_frames=" << event.stable_framed_frames
+            << " target_loss_count=" << event.target_loss_count;
+
+    const auto text = message.str();
+    RCLCPP_INFO(get_logger(), "%s", text.c_str());
+    _last_logged_state = event.state;
+  }
+
+  void remember_state(CenteringState state)
+  {
+    for (const auto reached : _states_reached) {
+      if (reached == state) {
+        return;
+      }
+    }
+    _states_reached.push_back(state);
+  }
+
+  std::string states_reached_text() const
+  {
+    std::ostringstream stream;
+    for (std::size_t i = 0; i < _states_reached.size(); ++i) {
+      if (i > 0) {
+        stream << ",";
+      }
+      stream << state_name(_states_reached[i]);
+    }
+    return stream.str();
+  }
+
+  void log_terminal_summary()
+  {
+    remember_state(_controller.state());
+    const auto reason = _controller.terminal_reason();
+    std::ostringstream message;
+    message << "autonomy summary: terminal_state=" << state_name(_controller.state())
+            << " reason=" << (reason.empty() ? "-" : reason)
+            << " states_reached=" << states_reached_text()
+            << " target_loss_count=" << _controller.target_loss_count()
+            << " time_to_first_detection_sec="
+            << optional_log_number(_controller.time_to_first_detection_sec())
+            << " time_to_centered_sec=" << optional_log_number(_controller.time_to_centered_sec())
+            << " final_error=" << optional_log_number(_controller.final_error())
+            << " final_confidence=" << optional_log_number(_controller.final_confidence());
+    const auto text = message.str();
+    RCLCPP_INFO(get_logger(), "%s", text.c_str());
   }
 
   void request_capture(const TargetCenteringOutput & output)
@@ -360,6 +443,8 @@ private:
   rclcpp::Subscription<sensor_msgs::msg::Range>::SharedPtr _range_subscription{};
   rclcpp::TimerBase::SharedPtr _timer{};
   std::ofstream                _events{};
+  std::optional<CenteringState> _last_logged_state{};
+  std::vector<CenteringState> _states_reached{};
   bool                         _terminal_logged{false};
   bool                         _capture_requested{false};
 };
