@@ -441,7 +441,7 @@ class RobotMonitorGui:
         self._build_teleop_controls(teleop_section.body)
         teleop_section.pack(fill=tk.X)
 
-        run_section = CollapsibleSection(control_column, "Perception Run", padding=8)
+        run_section = CollapsibleSection(control_column, "Run", padding=8)
         self._sections["run"] = run_section
         self._build_run_controls(run_section.body)
         run_section.pack(fill=tk.BOTH, expand=True, pady=(8, 0))
@@ -545,27 +545,27 @@ class RobotMonitorGui:
         run_type_box.grid(row=0, column=1, columnspan=3, sticky=tk.EW, padx=(8, 0))
         run_type_box.bind("<<ComboboxSelected>>", lambda _event: self._sync_run_experiment_fields())
 
+        self._add_labeled_entry(experiment_holder, "Object to Search For", self._run_classes_var, 1, 0)
+
         experiment_fields = ttk.Frame(experiment_holder)
-        experiment_fields.grid(row=1, column=0, columnspan=4, sticky=tk.EW)
+        experiment_fields.grid(row=2, column=0, columnspan=4, sticky=tk.EW)
         perception_frame = ttk.Frame(experiment_fields)
-        self._add_labeled_entry(perception_frame, "Classes", self._run_classes_var, 0, 0)
         perception_frame.columnconfigure(1, weight=1)
         self._run_experiment_frames[RUN_TYPE_PERCEPTION] = perception_frame
 
         autonomy_frame = ttk.Frame(experiment_fields)
-        self._add_labeled_entry(autonomy_frame, "Target Class", self._run_classes_var, 0, 0)
-        self._add_labeled_entry(autonomy_frame, "BBox Min Area", self._autonomy_bbox_area_min_ratio_var, 1, 0, width=8)
-        self._add_labeled_entry(autonomy_frame, "BBox Max Area", self._autonomy_bbox_area_max_ratio_var, 1, 2, width=8)
-        self._add_labeled_entry(autonomy_frame, "Forward m/s", self._autonomy_forward_speed_var, 2, 0, width=8)
-        self._add_labeled_entry(autonomy_frame, "Reverse m/s", self._autonomy_reverse_speed_var, 2, 2, width=8)
-        self._add_labeled_entry(autonomy_frame, "Stable Frames", self._autonomy_stable_frames_var, 3, 0, width=8)
-        self._add_labeled_entry(autonomy_frame, "Proximity Stop m", self._autonomy_proximity_stop_var, 3, 2, width=8)
-        self._add_labeled_entry(autonomy_frame, "Capture Timeout s", self._autonomy_capture_timeout_var, 4, 0, width=8)
+        self._add_labeled_entry(autonomy_frame, "BBox Min Area", self._autonomy_bbox_area_min_ratio_var, 0, 0, width=8)
+        self._add_labeled_entry(autonomy_frame, "BBox Max Area", self._autonomy_bbox_area_max_ratio_var, 0, 2, width=8)
+        self._add_labeled_entry(autonomy_frame, "Forward m/s", self._autonomy_forward_speed_var, 1, 0, width=8)
+        self._add_labeled_entry(autonomy_frame, "Reverse m/s", self._autonomy_reverse_speed_var, 1, 2, width=8)
+        self._add_labeled_entry(autonomy_frame, "Stable Frames", self._autonomy_stable_frames_var, 2, 0, width=8)
+        self._add_labeled_entry(autonomy_frame, "Proximity Stop m", self._autonomy_proximity_stop_var, 2, 2, width=8)
+        self._add_labeled_entry(autonomy_frame, "Capture Timeout s", self._autonomy_capture_timeout_var, 3, 0, width=8)
         self._add_labeled_entry(
             autonomy_frame,
             "Evidence Interval s",
             self._autonomy_evidence_interval_var,
-            4,
+            3,
             2,
             width=8,
         )

@@ -71,6 +71,19 @@ class _FakeProcess:
         return None
 
 
+def _widget_texts(widget) -> list[str]:
+    texts: list[str] = []
+    for child in widget.winfo_children():
+        try:
+            text = child.cget("text")
+        except tk.TclError:
+            text = ""
+        if text:
+            texts.append(text)
+        texts.extend(_widget_texts(child))
+    return texts
+
+
 class _RuntimeStopCompletesManager:
     def __init__(self) -> None:
         self.runtime_stop_commands = 0
@@ -319,6 +332,21 @@ class MonitorGuiTests(unittest.TestCase):
 
             self.assertEqual(selection.run_id, "operator_default")
             self.assertEqual(gui._run_id_var.get(), "operator_default")
+        finally:
+            root.destroy()
+
+    @unittest.skipIf(tk is None, "tkinter is unavailable")
+    def test_gui_run_form_exposes_object_search_input(self):
+        assert tk is not None
+        root = tk.Tk()
+        root.withdraw()
+        try:
+            RobotMonitorGui(root, _build_parser().parse_args([]))
+
+            texts = _widget_texts(root)
+
+            self.assertIn("Object to Search For", texts)
+            self.assertNotIn("Target Class", texts)
         finally:
             root.destroy()
 
