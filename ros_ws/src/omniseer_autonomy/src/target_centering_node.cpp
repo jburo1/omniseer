@@ -75,8 +75,8 @@ double yaw_from_quaternion(const geometry_msgs::msg::Quaternion & orientation)
 class TargetCenteringNode : public rclcpp::Node
 {
 public:
-  TargetCenteringNode()
-  : rclcpp::Node("target_centering_node"),
+  explicit TargetCenteringNode(const rclcpp::NodeOptions & options = rclcpp::NodeOptions())
+  : rclcpp::Node("target_centering_node", options),
     _started_at(std::chrono::steady_clock::now()),
     _controller(make_config())
   {
@@ -365,6 +365,7 @@ private:
 };
 } // namespace omniseer_autonomy
 
+#ifndef OMNISEER_AUTONOMY_TESTING
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
@@ -379,3 +380,4 @@ int main(int argc, char * argv[])
   rclcpp::shutdown();
   return 0;
 }
+#endif

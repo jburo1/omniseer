@@ -69,6 +69,23 @@ if(BUILD_TESTING)
   target_include_directories(test_target_centering_controller PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
   )
+
+  ament_add_gtest(test_target_centering_node
+    test/test_target_centering_node.cpp
+  )
+  target_compile_features(test_target_centering_node PUBLIC cxx_std_17)
+  target_link_libraries(test_target_centering_node
+    ${geometry_msgs_TARGETS}
+    ${nav_msgs_TARGETS}
+    ${omniseer_msgs_TARGETS}
+    ${sensor_msgs_TARGETS}
+    ${yolo_msgs_TARGETS}
+    rclcpp::rclcpp
+    omniseer_autonomy_core
+  )
+  target_include_directories(test_target_centering_node PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+  )
 endif()
 
 ament_package()
