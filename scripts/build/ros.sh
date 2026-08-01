@@ -13,7 +13,7 @@ source "${script_dir}/../lib/ros.sh"
 usage() {
   cat <<'EOF'
 Usage:
-  scripts/omni build ros [--with-vision|--without-vision] [colcon args...]
+  scripts/omni build ros [--with-vision|--without-vision] [--with-yolo] [colcon args...]
 
 Builds the default ROS package set documented in CI. If RKNN/RGA development files
 are available, the real-hardware omniseer_vision_bridge package is included.
@@ -22,10 +22,12 @@ Options:
   --with-vision     Force building the real-hardware omniseer_vision_bridge package.
                  Requires RKNN and RGA SDK/runtime development files.
   --without-vision  Build only the portable ROS package set.
+  --with-yolo       Also build the optional Python yolo_ros sim provider packages.
 EOF
 }
 
 vision_mode=auto
+with_yolo=false
 declare -a colcon_args
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -35,6 +37,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --without-vision)
       vision_mode=skip
+      shift
+      ;;
+    --with-yolo)
+      with_yolo=true
       shift
       ;;
     help|-h|--help)
@@ -56,6 +62,21 @@ declare -a packages
 declare -a ignored_packages
 omni_read_lines_into_array packages omni_ros_core_packages
 omni_read_lines_into_array ignored_packages omni_ros_core_ignore_packages
+
+if [[ "${with_yolo}" == true ]]; then
+  packages+=(yolo_ros yolo_bringup)
+  declare -a filtered_ignored_packages=()
+  for ignored_package in "${ignored_packages[@]}"; do
+    case "${ignored_package}" in
+      yolo_ros|yolo_bringup)
+        ;;
+      *)
+        filtered_ignored_packages+=("${ignored_package}")
+        ;;
+    esac
+  done
+  ignored_packages=("${filtered_ignored_packages[@]}")
+fi
 
 case "${vision_mode}" in
   force)

@@ -18,10 +18,12 @@ def generate_launch_description():
                     "tracker": LaunchConfiguration("tracker", default="bytetrack.yaml"),
                     "device": LaunchConfiguration("device", default="cuda:0"),
                     "enable": LaunchConfiguration("enable", default="True"),
+                    "classes": LaunchConfiguration("classes", default="chair"),
                     "threshold": LaunchConfiguration("threshold", default="0.5"),
                     "input_image_topic": LaunchConfiguration("input_image_topic", default="/front_camera/image"),
                     "image_reliability": LaunchConfiguration("image_reliability", default="1"),
                     "namespace": LaunchConfiguration("namespace", default="yolo"),
+                    "use_tracking": LaunchConfiguration("use_tracking", default="False"),
                 }.items(),
             )
         ]

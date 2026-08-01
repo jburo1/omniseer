@@ -259,3 +259,36 @@ class RealLaunchStructureTests(unittest.TestCase):
             and getattr(entity.event_handler, "_OnActionEventBase__action_matcher", None) is cleanup_action
         ]
         self.assertTrue(matching_handlers, "expected sim launch to wait for cleanup before bringup")
+
+    def test_sim_launch_exposes_optional_yolo_provider(self) -> None:
+        module = _load_launch_module("sim.launch.py")
+        launch_description = module.generate_launch_description()
+
+        declared_names = {
+            _flatten_launch_value(entity.name)
+            for entity in launch_description.entities
+            if isinstance(entity, DeclareLaunchArgument)
+        }
+        self.assertIn("start_yolo", declared_names)
+        self.assertIn("yolo_model", declared_names)
+        self.assertIn("yolo_device", declared_names)
+        self.assertIn("yolo_threshold", declared_names)
+        self.assertIn("yolo_image_reliability", declared_names)
+
+        sim_source = (Path(__file__).resolve().parents[1] / "launch" / "sim.launch.py").read_text(encoding="utf-8")
+        common_source = (Path(__file__).resolve().parents[1] / "launch" / "common.launch.py").read_text(
+            encoding="utf-8"
+        )
+        perception_source = (Path(__file__).resolve().parents[1] / "launch" / "perception.launch.py").read_text(
+            encoding="utf-8"
+        )
+        yolo_source = (Path(__file__).resolve().parents[1] / "launch" / "yolo-world.launch.py").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn('"start_yolo": start_yolo', sim_source)
+        self.assertIn('"start_yolo": start_yolo', common_source)
+        self.assertIn('"image_reliability": yolo_image_reliability', perception_source)
+        self.assertIn('"input_image_topic": "/front_camera/image"', perception_source)
+        self.assertIn('"classes": LaunchConfiguration("classes", default="chair")', yolo_source)
+        self.assertIn('"use_tracking": LaunchConfiguration("use_tracking", default="False")', yolo_source)

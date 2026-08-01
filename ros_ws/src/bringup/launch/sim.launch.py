@@ -32,6 +32,11 @@ def generate_launch_description():
         DeclareLaunchArgument("start_rf2o", default_value="true"),
         DeclareLaunchArgument("start_nav", default_value="true"),
         DeclareLaunchArgument("start_rviz", default_value="true"),
+        DeclareLaunchArgument("start_yolo", default_value="false"),
+        DeclareLaunchArgument("yolo_model", default_value="yolov8s-worldv2.pt"),
+        DeclareLaunchArgument("yolo_device", default_value="cuda:0"),
+        DeclareLaunchArgument("yolo_threshold", default_value="0.5"),
+        DeclareLaunchArgument("yolo_image_reliability", default_value="2"),
         DeclareLaunchArgument("start_gateway", default_value="false"),
     ]
 
@@ -47,6 +52,11 @@ def generate_launch_description():
     start_rf2o = LaunchConfiguration("start_rf2o")
     start_nav = LaunchConfiguration("start_nav")
     start_rviz = LaunchConfiguration("start_rviz")
+    start_yolo = LaunchConfiguration("start_yolo")
+    yolo_model = LaunchConfiguration("yolo_model")
+    yolo_device = LaunchConfiguration("yolo_device")
+    yolo_threshold = LaunchConfiguration("yolo_threshold")
+    yolo_image_reliability = LaunchConfiguration("yolo_image_reliability")
     start_gateway = LaunchConfiguration("start_gateway")
     cleanup_script = PathJoinSubstitution([pkg_bringup, "scripts", "pre_launch_cleanup.sh"])
 
@@ -73,6 +83,11 @@ def generate_launch_description():
             "start_slam": start_slam,
             "start_rf2o": start_rf2o,
             "start_nav": start_nav,
+            "start_yolo": start_yolo,
+            "yolo_model": yolo_model,
+            "yolo_device": yolo_device,
+            "yolo_threshold": yolo_threshold,
+            "yolo_image_reliability": yolo_image_reliability,
             "start_gateway": start_gateway,
             "gateway_preview_source_kind": "videotest",
             "gateway_preview_device": "/dev/video11",

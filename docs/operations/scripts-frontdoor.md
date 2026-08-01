@@ -86,6 +86,7 @@ scripts/omni build all
 scripts/omni build strict
 scripts/omni build ros --with-vision
 scripts/omni build ros --without-vision
+scripts/omni build ros --with-yolo
 scripts/omni build vision
 scripts/omni build firmware
 ```
@@ -118,6 +119,11 @@ Use `build ros --without-vision` when:
 
 - you are on a robot image but intentionally want the portable ROS package set
 - you are checking launch/package changes without rebuilding the native bridge
+
+Use `build ros --with-yolo` when:
+
+- you want the optional Python `yolo_ros` sim provider installed for `run sim --yolo`
+- you already have the Python YOLO runtime dependencies, including `ultralytics`, available in the environment
 
 Use `build vision` when:
 
@@ -239,6 +245,7 @@ Commands:
 
 ```bash
 scripts/omni run sim
+scripts/omni run sim --yolo
 scripts/omni run real
 scripts/omni run real --profile perception --record-run demo_001
 scripts/omni run real --profile legacy-teleop smoke
@@ -254,12 +261,23 @@ Use this when:
 
 - you want the normal local simulation entrypoint
 - you want the bringup-owned cleanup behavior before launch
+- you want optional Python YOLO detections overlaid on `/yolo/dbg_image` with `--yolo`
 
 Example:
 
 ```bash
 scripts/omni run sim headless:=true
+scripts/omni run sim --yolo --yolo-device cpu
 ```
+
+`--yolo` starts the Python/Ultralytics sim provider, not the native RKNN/RGA
+vision bridge used on the robot. Build the optional ROS packages first with
+`scripts/omni build ros --with-yolo`; the command also requires the Python
+`torch` and `ultralytics` packages at runtime. The sim YOLO-World class list
+defaults to `chair`; when `ros_ws/yolov8s-worldv2.pt` is present, `--yolo` uses
+that workspace model unless `--yolo-model <path>` or `yolo_model:=...` overrides
+it. The YOLO debug node publishes annotated frames on `/yolo/dbg_image`, which
+is enabled in the sim RViz Displays panel.
 
 #### `run real`
 

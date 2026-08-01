@@ -26,6 +26,10 @@ def generate_launch_description():
         DeclareLaunchArgument("log_level", default_value="info"),
         DeclareLaunchArgument("slam_tb_config_file", default_value="slam_toolbox_async_online.yaml"),
         DeclareLaunchArgument("start_yolo", default_value="true"),
+        DeclareLaunchArgument("yolo_model", default_value="yolov8s-worldv2.pt"),
+        DeclareLaunchArgument("yolo_device", default_value="cuda:0"),
+        DeclareLaunchArgument("yolo_threshold", default_value="0.5"),
+        DeclareLaunchArgument("yolo_image_reliability", default_value="2"),
         DeclareLaunchArgument("start_slam", default_value="true"),
         DeclareLaunchArgument("start_rf2o", default_value="true"),
     ]
@@ -34,6 +38,10 @@ def generate_launch_description():
     use_sim_time = LaunchConfiguration("use_sim_time")
     slam_tb_config_file = LaunchConfiguration("slam_tb_config_file")
     start_yolo = LaunchConfiguration("start_yolo")
+    yolo_model = LaunchConfiguration("yolo_model")
+    yolo_device = LaunchConfiguration("yolo_device")
+    yolo_threshold = LaunchConfiguration("yolo_threshold")
+    yolo_image_reliability = LaunchConfiguration("yolo_image_reliability")
     start_slam = LaunchConfiguration("start_slam")
     start_rf2o = LaunchConfiguration("start_rf2o")
 
@@ -74,6 +82,13 @@ def generate_launch_description():
 
     yolo_include = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([PathJoinSubstitution([pkg_bringup, "launch", "yolo-world.launch.py"])]),
+        launch_arguments={
+            "model": yolo_model,
+            "device": yolo_device,
+            "threshold": yolo_threshold,
+            "input_image_topic": "/front_camera/image",
+            "image_reliability": yolo_image_reliability,
+        }.items(),
     )
 
     yolo_group = GroupAction(
