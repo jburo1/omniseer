@@ -29,6 +29,7 @@ setup(
     license="Apache-2.0",
     entry_points={
         "console_scripts": [
+            "rviz_resource_server = bringup.rviz_resource_server:main",
             # eg. 'teleop=bringup.scripts.teleop:main',
             # 'wait_for_tf = bringup.wait_for_tf:main'
         ],

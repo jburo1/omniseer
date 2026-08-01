@@ -30,6 +30,13 @@ def generate_launch_description():
         arguments=["-d", rviz_config_path],
     )
 
+    rviz_resource_server = Node(
+        package="bringup",
+        executable="rviz_resource_server",
+        name="rviz_resource_server",
+        output="screen",
+    )
+
     Node(
         package="analysis",
         executable="path_recorder",
@@ -41,6 +48,7 @@ def generate_launch_description():
     return LaunchDescription(
         declared_arguments
         + [
+            rviz_resource_server,
             rviz_node,
             # path_recorder_node,
         ]
