@@ -7,14 +7,14 @@
             <visual name="visual">
                 <geometry>
                     <mesh>
-                        <uri>https://fuel.gazebosim.org/1.0/will0993/models/woodenchair/1/files/meshes/WoodenChair.obj</uri>
+                        <uri>model://woodenchair/meshes/WoodenChair.obj</uri>
                     </mesh>
                 </geometry>
             </visual>
             <collision name="collision">
                 <geometry>
                     <mesh>
-                        <uri>https://fuel.gazebosim.org/1.0/will0993/models/woodenchair/1/files/meshes/WoodenChair_Col.obj</uri>
+                        <uri>model://woodenchair/meshes/WoodenChair_Col.obj</uri>
                     </mesh>
                 </geometry>
             </collision>

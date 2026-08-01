@@ -7,14 +7,14 @@
             <visual name="visual">
                 <geometry>
                     <mesh>
-                        <uri>https://fuel.gazebosim.org/1.0/openrobotics/models/suitcase1/2/files/meshes/Suitcase1.obj</uri>
+                        <uri>model://suitcase/meshes/Suitcase1.obj</uri>
                     </mesh>
                 </geometry>
             </visual>
             <collision name="collision">
                 <geometry>
                     <mesh>
-                        <uri>https://fuel.gazebosim.org/1.0/openrobotics/models/suitcase1/2/files/meshes/Suitcase1_Col.obj</uri>
+                        <uri>model://suitcase/meshes/Suitcase1_Col.obj</uri>
                     </mesh>
                 </geometry>
             </collision>

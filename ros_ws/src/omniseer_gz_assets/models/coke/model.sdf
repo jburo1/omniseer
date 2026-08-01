@@ -7,14 +7,14 @@
             <visual name="visual">
                 <geometry>
                     <mesh>
-                        <uri>https://fuel.gazebosim.org/1.0/openrobotics/models/coke/6/files/meshes/coke.obj</uri>
+                        <uri>model://coke/meshes/coke.obj</uri>
                     </mesh>
                 </geometry>
             </visual>
             <collision name="collision">
                 <geometry>
                     <mesh>
-                        <uri>https://fuel.gazebosim.org/1.0/openrobotics/models/coke/6/files/meshes/coke.obj</uri>
+                        <uri>model://coke/meshes/coke.obj</uri>
                     </mesh>
                 </geometry>
             </collision>

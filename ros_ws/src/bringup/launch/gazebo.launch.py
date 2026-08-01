@@ -12,7 +12,6 @@ from launch.actions import (
     AppendEnvironmentVariable,
     DeclareLaunchArgument,
     IncludeLaunchDescription,
-    SetEnvironmentVariable,
     TimerAction,
 )
 from launch.conditions import IfCondition, UnlessCondition
@@ -46,14 +45,14 @@ def generate_launch_description():
         value=TextSubstitution(text="/opt/ros/kilted/lib:/opt/ros/kilted/opt/gz_sim_vendor/lib/gz-sim-9/plugins"),
     )
 
-    set_res_old = SetEnvironmentVariable(
+    set_res_old = AppendEnvironmentVariable(
         name="IGN_GAZEBO_RESOURCE_PATH",
         value=PathJoinSubstitution([FindPackageShare("omniseer_gz_assets"), "models"]),
     )
 
-    set_gz_assets = SetEnvironmentVariable(
+    set_gz_assets = AppendEnvironmentVariable(
         name="GZ_SIM_RESOURCE_PATH",
-        value=PathJoinSubstitution([FindPackageShare("omniseer_gz_assets"), "models/"]),
+        value=PathJoinSubstitution([FindPackageShare("omniseer_gz_assets"), "models"]),
     )
 
     set_desc_res = AppendEnvironmentVariable(

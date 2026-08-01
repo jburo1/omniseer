@@ -27,7 +27,7 @@
                 <geometry>
                     <mesh>
                         <scale>0.04 0.04 0.04</scale>
-                        <uri>https://fuel.gazebosim.org/1.0/openrobotics/models/robocup%203d%20simulation%20ball/3/files/meshes/ball.dae</uri>
+                        <uri>model://ball/meshes/ball.dae</uri>
                     </mesh>
                 </geometry>
             </visual>

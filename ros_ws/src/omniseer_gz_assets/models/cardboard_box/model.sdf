@@ -41,7 +41,7 @@
                 <pose>0 0 -0.15 0 0 0</pose>
                 <geometry>
                     <mesh>
-                        <uri>https://fuel.gazebosim.org/1.0/openrobotics/models/cardboard%20box/3/files/meshes/cardboard_box.dae</uri>
+                        <uri>model://cardboard_box/meshes/cardboard_box.dae</uri>
                         <scale>1.25931896 1.007455168 0.755591376</scale>
                     </mesh>
                 </geometry>

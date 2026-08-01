@@ -26,11 +26,5 @@ fi
 
 omni_source_ros_workspace
 
-cleanup_script="$(ros2 pkg prefix bringup)/share/bringup/scripts/pre_launch_cleanup.sh"
-if [[ -f "${cleanup_script}" ]]; then
-  omni_info "Running simulation pre-launch cleanup"
-  bash "${cleanup_script}" sim
-fi
-
 omni_info "Launching simulation bringup"
-exec ros2 launch bringup orchestrate_sim.launch.py "$@"
+exec ros2 launch bringup sim.launch.py "$@"

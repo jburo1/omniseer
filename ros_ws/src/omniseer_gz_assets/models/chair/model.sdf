@@ -6,7 +6,7 @@
             <visual name="visual">
                 <geometry>
                     <mesh>
-                        <uri>https://fuel.gazebosim.org/1.0/openrobotics/models/chair/3/files/meshes/Chair.obj</uri>
+                        <uri>model://chair/meshes/Chair.obj</uri>
                         <scale>0.00817 0.00817 0.00817</scale>
                     </mesh>
                 </geometry>
@@ -14,7 +14,7 @@
             <collision name="collision">
                 <geometry>
                     <mesh>
-                        <uri>https://fuel.gazebosim.org/1.0/openrobotics/models/chair/3/files/meshes/Chair.obj</uri>
+                        <uri>model://chair/meshes/Chair.obj</uri>
                         <scale>0.00817 0.00817 0.00817</scale>
                     </mesh>
                 </geometry>

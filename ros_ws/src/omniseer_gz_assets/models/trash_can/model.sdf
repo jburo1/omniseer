@@ -17,14 +17,14 @@
             <visual name="visual">
                 <geometry>
                     <mesh>
-                        <uri>https://fuel.gazebosim.org/1.0/openrobotics/models/first%202015%20trash%20can/3/files/meshes/trash_can.dae</uri>
+                        <uri>model://trash_can/meshes/trash_can.dae</uri>
                     </mesh>
                 </geometry>
             </visual>
             <collision name="collision">
                 <geometry>
                     <mesh>
-                        <uri>https://fuel.gazebosim.org/1.0/openrobotics/models/first%202015%20trash%20can/3/files/meshes/trash_can.dae</uri>
+                        <uri>model://trash_can/meshes/trash_can.dae</uri>
                     </mesh>
                 </geometry>
             </collision>

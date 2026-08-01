@@ -34,7 +34,7 @@
                     <!-- PBR for Ignition, material scripts for gazebo classic-->
                     <pbr>
                         <metal>
-                            <albedo_map>https://fuel.gazebosim.org/1.0/openrobotics/models/table/4/files/Table_Diffuse.jpg</albedo_map>
+                            <albedo_map>model://table/Table_Diffuse.jpg</albedo_map>
                         </metal>
                     </pbr>
                 </material>
