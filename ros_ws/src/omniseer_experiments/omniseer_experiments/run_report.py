@@ -64,6 +64,13 @@ class _ChartSeries:
     unit: str
 
 
+@dataclass(frozen=True)
+class _ReportSection:
+    title: str
+    section_id: str
+    html_text: str
+
+
 def write_run_report(run_dir: Path, *, overwrite: bool = False) -> ReportSummary:
     inspection = inspect_run(run_dir)
     manifest = _read_manifest(run_dir / "manifest.yaml")
@@ -200,7 +207,8 @@ def _render_report(
         _evidence_section(evidence_items),
         _issues_section(issues),
     ]
-    body = "\n".join(section for section in sections if section)
+    rendered_sections = tuple(section for section in sections if isinstance(section, _ReportSection))
+    body = _table_of_contents(rendered_sections) + "\n" + "\n".join(section.html_text for section in rendered_sections)
     return (
         "<!doctype html>\n"
         '<html lang="en">\n'
@@ -342,7 +350,15 @@ def _autonomy_section(records: Sequence[dict[str, Any]]) -> str:
         ("Target-loss count", str(target_loss_count)),
         ("Event records", str(len(records))),
     ]
-    return _section("Autonomy", _key_value_table(rows))
+    body = (
+        _key_value_table(rows)
+        + _autonomy_charts(records)
+        + _autonomy_command_summary(records)
+        + _autonomy_state_timeline(records)
+        + _autonomy_target_loss_table(records)
+        + _autonomy_event_timeline(records)
+    )
+    return _section("Autonomy", body)
 
 
 def _detections_section(records: Sequence[dict[str, Any]], *, configured_classes: Sequence[str]) -> str:
@@ -369,7 +385,7 @@ def _detections_section(records: Sequence[dict[str, Any]], *, configured_classes
         else:
             messages_without_detections += 1
 
-    chart = _detections_chart(records)
+    chart = _detection_charts(records)
     if not counts:
         summary = _key_value_table(
             [
@@ -906,7 +922,7 @@ def _class_name(detection: dict[str, Any], *, index: int = 0) -> str:
     return f"detection_{index}"
 
 
-def _detections_chart(records: Sequence[dict[str, Any]]) -> str:
+def _detection_charts(records: Sequence[dict[str, Any]]) -> str:
     base_ts = _first_valid_timestamp(records, ("recv_ts_ns",))
     if base_ts is None:
         return ""
@@ -930,14 +946,242 @@ def _detections_chart(records: Sequence[dict[str, Any]]) -> str:
         score_points.append((x_value, max(scores) if scores else 0.0))
 
     return _line_chart(
-        "Detection Activity Over Time",
-        (
-            _ChartSeries("detections per message", tuple(count_points), "count"),
-            _ChartSeries("top detection score", tuple(score_points), "score"),
-        ),
-        "count / score",
+        "Detection Count Over Time",
+        (_ChartSeries("detections per message", tuple(count_points), "count"),),
+        "detections/message",
+        zero_floor=True,
+    ) + _line_chart(
+        "Top Detection Score Over Time",
+        (_ChartSeries("top detection score", tuple(score_points), "score"),),
+        "score",
         zero_floor=True,
     )
+
+
+def _autonomy_charts(records: Sequence[dict[str, Any]]) -> str:
+    return (
+        _line_chart(
+            "Autonomy Error Over Time",
+            (_autonomy_series(records, "normalized_error", name="normalized_error"),),
+            "normalized error",
+        )
+        + _line_chart(
+            "Target Confidence Over Time",
+            (_autonomy_target_confidence_series(records),),
+            "confidence",
+            zero_floor=True,
+        )
+        + _line_chart(
+            "Target Loss Count Over Time",
+            (_autonomy_series(records, "target_loss_count", name="target loss count", unit="count"),),
+            "loss count",
+            zero_floor=True,
+        )
+        + _line_chart(
+            "Linear Command Over Time",
+            (_autonomy_series(records, "linear_x_m_s", name="linear_x_m_s", unit="m/s"),),
+            "m/s",
+        )
+        + _line_chart(
+            "Angular Command Over Time",
+            (_autonomy_series(records, "angular_z_rad_s", name="angular_z_rad_s", unit="rad/s"),),
+            "rad/s",
+        )
+    )
+
+
+def _autonomy_command_summary(records: Sequence[dict[str, Any]]) -> str:
+    command_records = [
+        record
+        for record in records
+        if _as_float(record.get("linear_x_m_s")) is not None or _as_float(record.get("angular_z_rad_s")) is not None
+    ]
+    if not command_records:
+        return ""
+
+    epsilon = 1e-6
+    linear_values = [_as_float(record.get("linear_x_m_s")) or 0.0 for record in command_records]
+    angular_values = [_as_float(record.get("angular_z_rad_s")) or 0.0 for record in command_records]
+    rows = [
+        ("Command samples", str(len(command_records))),
+        ("Forward samples", str(sum(1 for value in linear_values if value > epsilon))),
+        ("Reverse samples", str(sum(1 for value in linear_values if value < -epsilon))),
+        ("Turn-left samples", str(sum(1 for value in angular_values if value > epsilon))),
+        ("Turn-right samples", str(sum(1 for value in angular_values if value < -epsilon))),
+        (
+            "Stopped samples",
+            str(
+                sum(
+                    1
+                    for linear, angular in zip(linear_values, angular_values, strict=True)
+                    if abs(linear) <= epsilon and abs(angular) <= epsilon
+                )
+            ),
+        ),
+        ("Max forward command", _format_optional_float(max(linear_values) if linear_values else None)),
+        ("Max reverse command", _format_optional_float(min(linear_values) if linear_values else None)),
+        (
+            "Max absolute turn command",
+            _format_optional_float(max((abs(value) for value in angular_values), default=0.0)),
+        ),
+    ]
+    return "<h3>Command Summary</h3>" + _key_value_table(rows)
+
+
+def _autonomy_state_timeline(records: Sequence[dict[str, Any]]) -> str:
+    segments: list[tuple[str, float | None, float | None, int]] = []
+    current_state = ""
+    start_time: float | None = None
+    last_time: float | None = None
+    samples = 0
+    for record in records:
+        state = record.get("state")
+        if not isinstance(state, str) or not state:
+            continue
+        time_sec = _as_float(record.get("time_sec"))
+        if state != current_state and current_state:
+            segments.append((current_state, start_time, last_time, samples))
+            start_time = time_sec
+            samples = 0
+        elif not current_state:
+            start_time = time_sec
+        current_state = state
+        last_time = time_sec
+        samples += 1
+    if current_state:
+        segments.append((current_state, start_time, last_time, samples))
+    if not segments:
+        return ""
+
+    rows = [
+        [
+            state,
+            _format_duration(start),
+            _format_duration(end),
+            _format_duration(_duration_between(start, end)),
+            str(count),
+        ]
+        for state, start, end, count in segments
+    ]
+    return "<h3>State Timeline</h3>" + _table(["State", "Start", "End", "Duration", "Samples"], rows)
+
+
+def _autonomy_target_loss_table(records: Sequence[dict[str, Any]]) -> str:
+    loss_rows = []
+    recovery_events = {
+        "target_locked",
+        "centering_started",
+        "centering_resumed",
+        "framing_started",
+        "first_detection",
+        "centered_first_frame",
+        "succeeded",
+    }
+    for index, record in enumerate(records):
+        if record.get("event") != "target_lost":
+            continue
+        start_time = _as_float(record.get("time_sec"))
+        recovery = _first_matching_record(records[index + 1 :], lambda item: item.get("event") in recovery_events)
+        recovery_time = _as_float(recovery.get("time_sec")) if recovery else None
+        loss_rows.append(
+            [
+                _format_duration(start_time),
+                _format_duration(recovery_time),
+                _format_duration(_duration_between(start_time, recovery_time)),
+                _display(record.get("state")),
+                _display(record.get("reason")),
+                str(_as_int(record.get("target_loss_count")) or 0),
+            ]
+        )
+    if not loss_rows:
+        return ""
+    return "<h3>Target Loss Events</h3>" + _table(
+        ["Lost At", "Recovered At", "Duration", "State", "Reason", "Loss Count"],
+        loss_rows,
+    )
+
+
+def _autonomy_event_timeline(records: Sequence[dict[str, Any]]) -> str:
+    rows = []
+    previous_state = ""
+    for record in records:
+        state = record.get("state") if isinstance(record.get("state"), str) else ""
+        event = record.get("event") if isinstance(record.get("event"), str) else ""
+        state_changed = bool(state and state != previous_state)
+        previous_state = state or previous_state
+        if event == "command" and not state_changed:
+            continue
+        if not event and not state_changed:
+            continue
+        event_label = event if event and event != "command" else "state_change"
+        rows.append(
+            [
+                _format_duration(_as_float(record.get("time_sec"))),
+                _display(state),
+                event_label,
+                _display(record.get("reason")),
+                _autonomy_target_label(record),
+                _format_optional_float(_target_confidence(record)),
+                _format_optional_float(_as_float(record.get("normalized_error"))),
+                _format_optional_float(_as_float(record.get("linear_x_m_s"))),
+                _format_optional_float(_as_float(record.get("angular_z_rad_s"))),
+                str(_as_int(record.get("target_loss_count")) or 0),
+            ]
+        )
+
+    if not rows:
+        return ""
+    max_rows = 80
+    note = ""
+    if len(rows) > max_rows:
+        rows = rows[:max_rows]
+        note = f'<p class="table-note">Showing first {max_rows} autonomy events and state changes.</p>'
+    return (
+        note
+        + "<h3>Event Timeline</h3>"
+        + _table(
+            ["Time", "State", "Event", "Reason", "Target", "Confidence", "Error", "Linear", "Angular", "Losses"],
+            rows,
+        )
+    )
+
+
+def _autonomy_series(
+    records: Sequence[dict[str, Any]],
+    value_field: str,
+    *,
+    name: str,
+    unit: str = "",
+) -> _ChartSeries:
+    points = []
+    for record in records:
+        time_sec = _as_float(record.get("time_sec"))
+        value = _as_float(record.get(value_field))
+        if time_sec is None or value is None:
+            continue
+        points.append((time_sec, value))
+    return _ChartSeries(name, _finite_points(points), unit)
+
+
+def _autonomy_target_confidence_series(records: Sequence[dict[str, Any]]) -> _ChartSeries:
+    points = []
+    for record in records:
+        time_sec = _as_float(record.get("time_sec"))
+        value = _target_confidence(record)
+        if time_sec is None or value is None:
+            continue
+        points.append((time_sec, value))
+    return _ChartSeries("target confidence", _finite_points(points), "confidence")
+
+
+def _autonomy_target_label(record: dict[str, Any]) -> str:
+    target = record.get("target")
+    if isinstance(target, dict):
+        class_name = target.get("class_name")
+        if isinstance(class_name, str) and class_name:
+            return class_name
+    target_class = record.get("target_class")
+    return target_class if isinstance(target_class, str) and target_class else "-"
 
 
 def _performance_charts(records: Sequence[dict[str, Any]]) -> str:
@@ -1473,12 +1717,17 @@ def _last_numeric_field(records: Sequence[dict[str, Any]], field_name: str) -> f
 
 def _last_target_confidence(records: Sequence[dict[str, Any]]) -> float | None:
     for record in reversed(records):
-        target = record.get("target")
-        if isinstance(target, dict):
-            value = _as_float(target.get("confidence"))
-            if value is not None:
-                return value
+        value = _target_confidence(record)
+        if value is not None:
+            return value
     return None
+
+
+def _target_confidence(record: dict[str, Any]) -> float | None:
+    target = record.get("target")
+    if not isinstance(target, dict):
+        return None
+    return _as_float(target.get("confidence"))
 
 
 def _record_recv_ts(record: dict[str, Any]) -> int | None:
@@ -1532,6 +1781,12 @@ def _format_duration(value: float | None) -> str:
     return f"{value:.1f}s"
 
 
+def _duration_between(start: float | None, end: float | None) -> float | None:
+    if start is None or end is None:
+        return None
+    return max(0.0, end - start)
+
+
 def _display(value: object) -> str:
     if value is None or value == "":
         return "-"
@@ -1546,8 +1801,35 @@ def _relative_href(from_dir: Path, target: Path) -> str:
     return Path(os.path.relpath(target, start=from_dir)).as_posix()
 
 
-def _section(title: str, body: str) -> str:
-    return f"    <section>\n      <h2>{_esc(title)}</h2>\n      {body}\n    </section>"
+def _table_of_contents(sections: Sequence[_ReportSection]) -> str:
+    items = "".join(
+        f'<li><a href="#{_attr(section.section_id)}">{_esc(section.title)}</a></li>' for section in sections
+    )
+    return (
+        '    <nav class="toc" aria-labelledby="toc-heading">\n'
+        '      <h2 id="toc-heading">Contents</h2>\n'
+        f"      <ol>{items}</ol>\n"
+        "    </nav>"
+    )
+
+
+def _section(title: str, body: str) -> _ReportSection:
+    section_id = _section_id(title)
+    html_text = f'    <section id="{_attr(section_id)}">\n      <h2>{_esc(title)}</h2>\n      {body}\n    </section>'
+    return _ReportSection(title=title, section_id=section_id, html_text=html_text)
+
+
+def _section_id(title: str) -> str:
+    normalized = []
+    previous_dash = False
+    for char in title.lower():
+        if char.isalnum():
+            normalized.append(char)
+            previous_dash = False
+        elif not previous_dash:
+            normalized.append("-")
+            previous_dash = True
+    return "".join(normalized).strip("-") or "section"
 
 
 def _key_value_table(rows: Sequence[tuple[str, str]]) -> str:
@@ -1578,7 +1860,26 @@ h1 { margin: 0 0 22px; font-size: 28px; font-weight: 700; }
 h2 { margin: 0 0 12px; font-size: 19px; font-weight: 700; }
 h3 { margin: 16px 0 8px; font-size: 15px; font-weight: 700; color: #3d4a5c; }
 h2 + h3 { margin-top: 0; }
-section { margin: 0 0 18px; padding: 16px; background: #ffffff; border: 1px solid #d8dee6; border-radius: 6px; }
+section {
+  scroll-margin-top: 16px;
+  margin: 0 0 18px;
+  padding: 16px;
+  background: #ffffff;
+  border: 1px solid #d8dee6;
+  border-radius: 6px;
+}
+.toc { margin: 0 0 18px; padding: 14px 16px; background: #ffffff; border: 1px solid #d8dee6; border-radius: 6px; }
+.toc h2 { margin-bottom: 10px; }
+.toc ol {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 7px 16px;
+  margin: 0;
+  padding-left: 20px;
+  font-size: 14px;
+}
+.toc a { color: #185abc; text-decoration: none; }
+.toc a:hover { text-decoration: underline; }
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
 th, td { padding: 8px 10px; border-bottom: 1px solid #e6eaf0; text-align: left; vertical-align: top; }
 th { color: #3d4a5c; font-weight: 700; background: #f1f4f8; }
@@ -1586,6 +1887,7 @@ tbody tr:last-child th, tbody tr:last-child td { border-bottom: 0; }
 .kv th { width: 220px; }
 p, ul { margin: 0; font-size: 14px; }
 ul { padding-left: 20px; }
+.table-note { margin: 12px 0 8px; color: #6b7280; font-style: italic; }
 .chart { margin: 0 0 14px; padding: 12px; border: 1px solid #e1e6ee; border-radius: 6px; background: #fbfcfe; }
 .chart + .chart { margin-top: -4px; }
 .chart figcaption { margin: 0 0 8px; font-size: 14px; font-weight: 700; color: #3d4a5c; }

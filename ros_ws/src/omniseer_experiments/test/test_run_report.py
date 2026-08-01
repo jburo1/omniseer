@@ -367,14 +367,44 @@ def _write_pipeline_telemetry(run_dir: Path) -> None:
 
 def _write_autonomy(run_dir: Path) -> None:
     records = [
-        {"schema_version": 1, "time_sec": 0.0, "state": "scan", "event": "started", "target_loss_count": 0},
+        {
+            "schema_version": 1,
+            "time_sec": 0.0,
+            "state": "scan",
+            "event": "started",
+            "target_loss_count": 0,
+            "linear_x_m_s": 0.0,
+            "angular_z_rad_s": 0.2,
+        },
         {
             "schema_version": 1,
             "time_sec": 0.4,
             "state": "scan",
             "event": "first_detection",
             "target_loss_count": 0,
+            "linear_x_m_s": 0.0,
+            "angular_z_rad_s": 0.1,
             "target": {"class_name": "backpack", "confidence": 0.73},
+        },
+        {
+            "schema_version": 1,
+            "time_sec": 0.8,
+            "state": "scan",
+            "event": "target_lost",
+            "reason": "no_target",
+            "target_loss_count": 1,
+            "linear_x_m_s": 0.0,
+            "angular_z_rad_s": 0.0,
+        },
+        {
+            "schema_version": 1,
+            "time_sec": 1.0,
+            "state": "center",
+            "event": "centering_started",
+            "target_loss_count": 1,
+            "linear_x_m_s": 0.0,
+            "angular_z_rad_s": -0.1,
+            "target": {"class_name": "backpack", "confidence": 0.80},
         },
         {
             "schema_version": 1,
@@ -383,6 +413,8 @@ def _write_autonomy(run_dir: Path) -> None:
             "event": "centered_first_frame",
             "normalized_error": 0.03,
             "target_loss_count": 1,
+            "linear_x_m_s": 0.05,
+            "angular_z_rad_s": 0.0,
             "target": {"class_name": "backpack", "confidence": 0.82},
         },
         {
@@ -393,6 +425,8 @@ def _write_autonomy(run_dir: Path) -> None:
             "reason": "centered",
             "normalized_error": 0.02,
             "target_loss_count": 1,
+            "linear_x_m_s": 0.0,
+            "angular_z_rad_s": 0.0,
             "target": {"class_name": "backpack", "confidence": 0.87},
         },
     ]
@@ -415,6 +449,9 @@ class RunReportTests(unittest.TestCase):
             self.assertEqual(summary.evidence_items, 1)
             self.assertEqual(summary.issues, ())
             self.assertIn("Omniseer Run Report: demo_001", output)
+            self.assertIn('<nav class="toc"', output)
+            self.assertIn('<a href="#run-summary">Run Summary</a>', output)
+            self.assertIn('<section id="run-summary">', output)
             self.assertIn("<h2>Run Summary</h2>", output)
             self.assertIn("<th>Experiment config</th><td>runtime-container-full</td>", output)
             self.assertIn("<h2>Evidence Summary</h2>", output)
@@ -442,7 +479,9 @@ class RunReportTests(unittest.TestCase):
             self.assertIn("chair", output)
             self.assertIn('class="chart"', output)
             self.assertIn("<svg", output)
-            self.assertIn("Detection Activity Over Time", output)
+            self.assertIn("Detection Count Over Time", output)
+            self.assertIn("Top Detection Score Over Time", output)
+            self.assertNotIn("Detection Activity Over Time", output)
             self.assertIn("Vision FPS Over Time", output)
             self.assertIn("Vision Latency Over Time", output)
             self.assertIn("System CPU Over Time", output)
@@ -474,6 +513,16 @@ class RunReportTests(unittest.TestCase):
             self.assertIn("<th>Final error</th><td>0.02</td>", output)
             self.assertIn("<th>Final confidence</th><td>0.87</td>", output)
             self.assertIn("<th>Target-loss count</th><td>1</td>", output)
+            self.assertIn("Autonomy Error Over Time", output)
+            self.assertIn("Target Confidence Over Time", output)
+            self.assertIn("Target Loss Count Over Time", output)
+            self.assertIn("Linear Command Over Time", output)
+            self.assertIn("Angular Command Over Time", output)
+            self.assertIn("Command Summary", output)
+            self.assertIn("State Timeline", output)
+            self.assertIn("Target Loss Events", output)
+            self.assertIn("Event Timeline", output)
+            self.assertIn("target_lost", output)
 
     def test_report_flags_missing_autonomy_jsonl_for_autonomy_launch(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
