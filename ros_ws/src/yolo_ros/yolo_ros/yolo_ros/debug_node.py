@@ -17,11 +17,11 @@
 import random
 
 import cv2
-import message_filters
 import numpy as np
 import rclpy
 from cv_bridge import CvBridge
 from rclpy.duration import Duration
+from rclpy.executors import ExternalShutdownException
 from rclpy.lifecycle import LifecycleNode, LifecycleState, TransitionCallbackReturn
 from rclpy.qos import QoSDurabilityPolicy, QoSHistoryPolicy, QoSProfile, QoSReliabilityPolicy
 from sensor_msgs.msg import Image
@@ -51,9 +51,15 @@ class DebugNode(LifecycleNode):
         )
 
         # pubs
-        self._dbg_pub = self.create_publisher(Image, "dbg_image", 10)
-        self._bb_markers_pub = self.create_publisher(MarkerArray, "dgb_bb_markers", 10)
-        self._kp_markers_pub = self.create_publisher(MarkerArray, "dgb_kp_markers", 10)
+        latest_only_qos = QoSProfile(
+            reliability=QoSReliabilityPolicy.RELIABLE,
+            history=QoSHistoryPolicy.KEEP_LAST,
+            durability=QoSDurabilityPolicy.VOLATILE,
+            depth=1,
+        )
+        self._dbg_pub = self.create_publisher(Image, "dbg_image", latest_only_qos)
+        self._bb_markers_pub = self.create_publisher(MarkerArray, "dgb_bb_markers", latest_only_qos)
+        self._kp_markers_pub = self.create_publisher(MarkerArray, "dgb_kp_markers", latest_only_qos)
 
         super().on_configure(state)
         self.get_logger().info(f"[{self.get_name()}] Configured")
@@ -64,11 +70,9 @@ class DebugNode(LifecycleNode):
         self.get_logger().info(f"[{self.get_name()}] Activating...")
 
         # subs
-        self.image_sub = message_filters.Subscriber(self, Image, "image_raw", qos_profile=self.image_qos_profile)
-        self.detections_sub = message_filters.Subscriber(self, DetectionArray, "detections", qos_profile=10)
-
-        self._synchronizer = message_filters.ApproximateTimeSynchronizer((self.image_sub, self.detections_sub), 10, 0.5)
-        self._synchronizer.registerCallback(self.detections_cb)
+        self._latest_detections = None
+        self.image_sub = self.create_subscription(Image, "image_raw", self.image_cb, self.image_qos_profile)
+        self.detections_sub = self.create_subscription(DetectionArray, "detections", self.detections_cb, 10)
 
         super().on_activate(state)
         self.get_logger().info(f"[{self.get_name()}] Activated")
@@ -78,10 +82,10 @@ class DebugNode(LifecycleNode):
     def on_deactivate(self, state: LifecycleState) -> TransitionCallbackReturn:
         self.get_logger().info(f"[{self.get_name()}] Deactivating...")
 
-        self.destroy_subscription(self.image_sub.sub)
-        self.destroy_subscription(self.detections_sub.sub)
+        self.destroy_subscription(self.image_sub)
+        self.destroy_subscription(self.detections_sub)
 
-        del self._synchronizer
+        self._latest_detections = None
 
         super().on_deactivate(state)
         self.get_logger().info(f"[{self.get_name()}] Deactivated")
@@ -299,13 +303,20 @@ class DebugNode(LifecycleNode):
 
         return marker
 
-    def detections_cb(self, img_msg: Image, detection_msg: DetectionArray) -> None:
+    def image_cb(self, img_msg: Image) -> None:
+        self._publish_debug_image(img_msg, self._latest_detections)
+
+    def detections_cb(self, detection_msg: DetectionArray) -> None:
+        self._latest_detections = detection_msg
+
+    def _publish_debug_image(self, img_msg: Image, detection_msg: DetectionArray) -> None:
         cv_image = self.cv_bridge.imgmsg_to_cv2(img_msg, desired_encoding="bgr8")
         bb_marker_array = MarkerArray()
         kp_marker_array = MarkerArray()
 
         detection: Detection
-        for detection in detection_msg.detections:
+        detections = detection_msg.detections if detection_msg is not None else []
+        for detection in detections:
             # random color
             class_name = detection.class_name
 
@@ -349,5 +360,5 @@ def main():
 
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, ExternalShutdownException):
         pass

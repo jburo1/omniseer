@@ -69,6 +69,15 @@ def generate_launch_description():
             description="Whether to start YOLO enabled",
         )
 
+        classes = LaunchConfiguration("classes")
+        classes_cmd = DeclareLaunchArgument(
+            "classes",
+            default_value="",
+            description="Comma-separated startup classes for YOLO-World models",
+        )
+        classes_value = context.perform_substitution(classes)
+        classes_list = [item.strip() for item in classes_value.split(",") if item.strip()]
+
         threshold = LaunchConfiguration("threshold")
         threshold_cmd = DeclareLaunchArgument(
             "threshold",
@@ -236,6 +245,7 @@ def generate_launch_description():
                     "device": device,
                     "yolo_encoding": yolo_encoding,
                     "enable": enable,
+                    "classes": classes_list,
                     "threshold": threshold,
                     "iou": iou,
                     "imgsz_height": imgsz_height,
@@ -303,6 +313,7 @@ def generate_launch_description():
             device_cmd,
             yolo_encoding_cmd,
             enable_cmd,
+            classes_cmd,
             threshold_cmd,
             iou_cmd,
             imgsz_height_cmd,

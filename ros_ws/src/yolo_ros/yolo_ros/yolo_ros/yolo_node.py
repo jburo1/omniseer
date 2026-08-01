@@ -17,6 +17,7 @@
 import rclpy
 import torch
 from cv_bridge import CvBridge
+from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 from rclpy.lifecycle import LifecycleNode, LifecycleState, TransitionCallbackReturn
 from rclpy.qos import QoSDurabilityPolicy, QoSHistoryPolicy, QoSProfile, QoSReliabilityPolicy
 from sensor_msgs.msg import Image
@@ -45,6 +46,11 @@ class YoloNode(LifecycleNode):
         self.declare_parameter("device", "cuda:0")
         self.declare_parameter("yolo_encoding", "bgr8")
         self.declare_parameter("enable", True)
+        self.declare_parameter(
+            "classes",
+            [""],
+            ParameterDescriptor(type=ParameterType.PARAMETER_STRING_ARRAY),
+        )
         self.declare_parameter("image_reliability", QoSReliabilityPolicy.BEST_EFFORT)
 
         self.declare_parameter("threshold", 0.5)
@@ -67,6 +73,11 @@ class YoloNode(LifecycleNode):
         self.model = self.get_parameter("model").get_parameter_value().string_value
         self.device = self.get_parameter("device").get_parameter_value().string_value
         self.yolo_encoding = self.get_parameter("yolo_encoding").get_parameter_value().string_value
+        self.classes = [
+            class_name.strip()
+            for class_name in self.get_parameter("classes").get_parameter_value().string_array_value
+            if class_name.strip()
+        ]
 
         # inference params
         self.threshold = self.get_parameter("threshold").get_parameter_value().double_value
@@ -119,6 +130,10 @@ class YoloNode(LifecycleNode):
         self._enable_srv = self.create_service(SetBool, "enable", self.enable_cb)
 
         if isinstance(self.yolo, YOLOWorld):
+            if self.classes:
+                self.get_logger().info(f"Setting startup classes: {list(self.classes)}")
+                self.yolo.set_classes(list(self.classes))
+                self.get_logger().info(f"Startup classes: {self.yolo.names}")
             self._set_classes_srv = self.create_service(SetClasses, "set_classes", self.set_classes_cb)
 
         self._sub = self.create_subscription(Image, "image_raw", self.image_cb, self.image_qos_profile)
