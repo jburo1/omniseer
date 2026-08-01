@@ -23,6 +23,9 @@ ENV LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 \
 RUN if id -u $USER_UID ; then userdel `id -un $USER_UID` ; fi
 
 RUN set -eux; \
+  getent group dialout || groupadd -r dialout; \
+  getent group video || groupadd -r video; \
+  getent group render || groupadd -r render; \
   getent group "${USER_GID}" || groupadd -g "${USER_GID}" "${USERNAME}"; \
   id -u "${USERNAME}" >/dev/null 2>&1 || useradd -m -s /bin/bash -u "${USER_UID}" -g "${USER_GID}" "${USERNAME}"
 
@@ -51,18 +54,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   gstreamer1.0-libav \
     && rm -rf /var/lib/apt/lists/*
 
-# RGA libs
+# ROS extras plus target-only RGA development files.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    software-properties-common libv4l-0 \
- && add-apt-repository ppa:jjriek/rockchip-multimedia \
- && apt-get update && apt-get install -y --no-install-recommends \
-    librga2 librga-dev libdrm-dev \
+    software-properties-common libv4l-0 libdrm-dev \
     ros-${ROS_DISTRO}-behaviortree-cpp \
     ros-${ROS_DISTRO}-cv-bridge \
     ros-${ROS_DISTRO}-image-transport \
     ros-${ROS_DISTRO}-robot-state-publisher \
     ros-${ROS_DISTRO}-rviz2 \
     ros-${ROS_DISTRO}-xacro \
+ && if [ "$(dpkg --print-architecture)" = "arm64" ]; then \
+      add-apt-repository -y ppa:jjriek/rockchip-multimedia; \
+      apt-get update; \
+      apt-get install -y --no-install-recommends librga2 librga-dev; \
+    else \
+      echo "Skipping Rockchip RGA packages on $(dpkg --print-architecture)"; \
+    fi \
  && rm -rf /var/lib/apt/lists/*
 
 # Diagramming CLI
@@ -121,14 +128,7 @@ RUN bash -lc 'source /opt/venv/bin/activate && cd /tmp/app && \
   ~/.local/bin/uv pip install -U pip && \
   ~/.local/bin/uv pip install --no-deps -r /tmp/req.txt && \
   ~/.local/bin/uv pip uninstall opencv-python opencv-python-headless || true && \
-  python - <<'"'"'PY'"'"'
-import cv2
-
-print(cv2.__file__)
-gstreamer_lines = [line for line in cv2.getBuildInformation().splitlines() if "GStreamer" in line]
-print(gstreamer_lines)
-assert gstreamer_lines and "YES" in gstreamer_lines[0], "OpenCV must come from python3-opencv with GStreamer enabled"
-PY'
+  python -c '"'"'import cv2; print(cv2.__file__); gstreamer_lines = [line for line in cv2.getBuildInformation().splitlines() if "GStreamer" in line]; print(gstreamer_lines); assert gstreamer_lines and "YES" in gstreamer_lines[0], "OpenCV must come from python3-opencv with GStreamer enabled"'"'"''
 
 ARG TORCH_MODE=cpu   # cpu | cuda
 # PyTorch CUDA wheels (CUDA 12.8 channel)
