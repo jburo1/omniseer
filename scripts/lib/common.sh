@@ -102,6 +102,7 @@ ros_ws/src/omniseer_description
 ros_ws/src/analysis
 ros_ws/src/omniseer_autonomy
 ros_ws/src/omniseer_experiments
+ros_ws/src/rf2o_laser_odometry
 ros_ws/src/bringup
 ros_ws/src/robot_io_adapters
 ros_ws/src/robot_diag_control
@@ -129,6 +130,7 @@ omniseer_description
 analysis
 omniseer_autonomy
 omniseer_experiments
+rf2o_laser_odometry
 bringup
 robot_io_adapters
 robot_diag_control
@@ -138,7 +140,6 @@ EOF
 
 omni_ros_core_ignore_packages() {
   cat <<'EOF'
-rf2o_laser_odometry
 yolo_bringup
 yolo_ros
 EOF
