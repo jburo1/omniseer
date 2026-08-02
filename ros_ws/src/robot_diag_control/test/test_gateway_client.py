@@ -93,7 +93,7 @@ class GatewayClientFormattingTests(unittest.TestCase):
 
         self.assertIn("health: state=ok ready=true summary=robot healthy", formatted)
         self.assertIn("mobility: odom=fresh odom_age_ms=18", formatted)
-        self.assertIn("teleop: state=enabled enabled=true timed_out=false", formatted)
+        self.assertIn("teleop: state=enabled enabled=true", formatted)
         self.assertIn("last_command=(0.12,0.00,-0.20)", formatted)
         self.assertIn("vision: producer_fps=22.00", formatted)
         self.assertIn("compute: fresh", formatted)
@@ -125,9 +125,8 @@ class GatewayClientFormattingTests(unittest.TestCase):
                 infer_error_count=2,
             ),
             teleop=robot_gateway_pb2.TeleopStatus(
-                state=robot_gateway_pb2.TELEOP_TIMED_OUT,
+                state=robot_gateway_pb2.TELEOP_ENABLED,
                 enabled=True,
-                timed_out=True,
                 last_command_age_ms=740,
                 max_linear_mps=0.35,
                 max_angular_rad_s=0.8,
@@ -140,7 +139,7 @@ class GatewayClientFormattingTests(unittest.TestCase):
 
         formatted = format_operator_status(response)
 
-        self.assertIn("TELEOP TIMED_OUT | NOT READY | ODOM STALE 740 ms | VISION STALE", formatted)
+        self.assertIn("TELEOP ENABLED | NOT READY | ODOM STALE 740 ms | VISION STALE", formatted)
         self.assertIn("CAM 29.8 FPS | DET 8.4 FPS | LAT 116 ms", formatted)
         self.assertIn("CMD vx +0.20 vy +0.00 wz -0.30", formatted)
         self.assertIn("MEAS vx +0.18 vy +0.01 wz -0.27", formatted)
@@ -162,9 +161,9 @@ class GatewayClientFormattingTests(unittest.TestCase):
             ),
             vision=robot_gateway_pb2.VisionStatus(available=False),
             teleop=robot_gateway_pb2.TeleopStatus(
-                state=robot_gateway_pb2.TELEOP_TIMED_OUT,
-                timed_out=True,
-                last_error="teleop deadman timeout",
+                state=robot_gateway_pb2.TELEOP_ENABLED,
+                enabled=True,
+                last_error="teleop command rejected",
             ),
             platform=_healthy_platform(),
         )
@@ -174,8 +173,8 @@ class GatewayClientFormattingTests(unittest.TestCase):
         self.assertIn("health=degraded ready=false odom=unavailable", formatted)
         self.assertIn("health_summary=waiting for odometry", formatted)
         self.assertIn("preview=running/low_bw", formatted)
-        self.assertIn("teleop=timed_out", formatted)
-        self.assertIn("teleop_error=teleop deadman timeout", formatted)
+        self.assertIn("teleop=enabled", formatted)
+        self.assertIn("teleop_error=teleop command rejected", formatted)
         self.assertIn("vision=unavailable", formatted)
 
     def test_format_teleop_response_includes_state(self):

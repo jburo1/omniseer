@@ -55,10 +55,11 @@ enum RobotHealthState {
 }
 
 enum TeleopState {
+  reserved 3;
+
   TELEOP_STATE_UNSPECIFIED = 0;
   TELEOP_DISABLED = 1;
   TELEOP_ENABLED = 2;
-  TELEOP_TIMED_OUT = 3;
 }
 
 message VisionStatus {
@@ -121,9 +122,10 @@ message SetPreviewModeResponse {
 }
 
 message TeleopStatus {
+  reserved 3;
+
   TeleopState state = 1;
   bool enabled = 2;
-  bool timed_out = 3;
   uint64 last_command_age_ms = 4;
   float max_linear_mps = 5;
   float max_angular_rad_s = 6;

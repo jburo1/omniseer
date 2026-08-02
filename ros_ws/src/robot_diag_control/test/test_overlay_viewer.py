@@ -120,9 +120,8 @@ class OverlayViewerTests(unittest.TestCase):
                     last_infer_ms=104.0,
                 ),
                 teleop=robot_gateway_pb2.TeleopStatus(
-                    state=robot_gateway_pb2.TELEOP_TIMED_OUT,
+                    state=robot_gateway_pb2.TELEOP_ENABLED,
                     enabled=True,
-                    timed_out=True,
                     last_command_age_ms=380,
                     last_command_vx_mps=0.2,
                     last_command_vy_mps=0.0,
@@ -174,7 +173,7 @@ class OverlayViewerTests(unittest.TestCase):
         lines = _hud_lines(snapshot, layers=OverlayLayers(), min_score=0.25)
 
         self.assertEqual(lines[0], "FAULT waiting for odometry | ODOM STALE")
-        self.assertIn("TELEOP TIMED_OUT | ODOM STALE 740 ms | VISION OK", lines)
+        self.assertIn("TELEOP ENABLED | ODOM STALE 740 ms | VISION OK", lines)
         self.assertIn("CAM 30.0 FPS | DET 9.0 FPS | LAT 104 ms | OBJ 3 | AGE 42 ms", lines)
         self.assertIn("CMD vx +0.20 vy +0.00 wz -0.30", "\n".join(lines))
         self.assertIn("MEAS vx +0.18 vy +0.01 wz -0.27", "\n".join(lines))

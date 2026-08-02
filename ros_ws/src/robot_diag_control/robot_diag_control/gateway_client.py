@@ -33,7 +33,6 @@ TELEOP_STATE_NAMES = {
     robot_gateway_pb2.TELEOP_STATE_UNSPECIFIED: "unspecified",
     robot_gateway_pb2.TELEOP_DISABLED: "disabled",
     robot_gateway_pb2.TELEOP_ENABLED: "enabled",
-    robot_gateway_pb2.TELEOP_TIMED_OUT: "timed_out",
 }
 
 
@@ -264,7 +263,6 @@ def format_system_status(response: robot_gateway_pb2.SystemStatus) -> str:
         "teleop:"
         f" state={TELEOP_STATE_NAMES.get(teleop.state, 'unknown')}"
         f" enabled={str(teleop.enabled).lower()}"
-        f" timed_out={str(teleop.timed_out).lower()}"
         f" last_command_age_ms={teleop.last_command_age_ms}"
         f" last_command=({teleop.last_command_vx_mps:.2f},{teleop.last_command_vy_mps:.2f},"
         f"{teleop.last_command_wz_rad_s:.2f})"

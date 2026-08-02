@@ -72,14 +72,12 @@ enum class TeleopState
 {
   Disabled,
   Enabled,
-  TimedOut,
 };
 
 struct TeleopStatusSnapshot
 {
   TeleopState state{TeleopState::Disabled};
   bool        enabled{false};
-  bool        timed_out{false};
   uint64_t    last_command_age_ms{0};
   double      max_linear_mps{0.35};
   double      max_angular_rad_s{0.8};

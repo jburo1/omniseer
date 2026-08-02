@@ -53,8 +53,6 @@ gateway_proto::TeleopState to_proto(TeleopState state)
       return gateway_proto::TELEOP_DISABLED;
     case TeleopState::Enabled:
       return gateway_proto::TELEOP_ENABLED;
-    case TeleopState::TimedOut:
-      return gateway_proto::TELEOP_TIMED_OUT;
   }
 
   return gateway_proto::TELEOP_STATE_UNSPECIFIED;
@@ -120,7 +118,6 @@ gateway_proto::TeleopStatus to_proto(const TeleopStatusSnapshot & snapshot)
   gateway_proto::TeleopStatus response;
   response.set_state(to_proto(snapshot.state));
   response.set_enabled(snapshot.enabled);
-  response.set_timed_out(snapshot.timed_out);
   response.set_last_command_age_ms(snapshot.last_command_age_ms);
   response.set_max_linear_mps(static_cast<float>(snapshot.max_linear_mps));
   response.set_max_angular_rad_s(static_cast<float>(snapshot.max_angular_rad_s));

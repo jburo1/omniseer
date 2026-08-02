@@ -124,7 +124,6 @@ TeleopStatusSnapshot TeleopManager::status_locked(std::string last_error) const
   return TeleopStatusSnapshot{
     _enabled ? TeleopState::Enabled : TeleopState::Disabled,
     _enabled,
-    false,
     age_ms_or_zero(_has_command, now, _last_command_at),
     _config.max_linear_mps,
     _config.max_angular_rad_s,

@@ -156,7 +156,6 @@ TEST(TeleopManagerTest, PollKeepsTeleopEnabledAfterCommandAges)
   const auto status = store.get_system_status().teleop;
   EXPECT_EQ(status.state, TeleopState::Enabled);
   EXPECT_TRUE(status.enabled);
-  EXPECT_FALSE(status.timed_out);
   EXPECT_EQ(published.size(), 1U);
   EXPECT_EQ(status.last_error, "");
 }
