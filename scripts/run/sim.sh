@@ -18,7 +18,7 @@ Usage:
 Launches the existing simulation bringup helper path.
 
 Options:
-  --autonomy             Start visual sim target-centering autonomy with the sim YOLO provider.
+  --autonomy             Start slim visual target-centering autonomy with the sim YOLO provider.
   --yolo                 Start the sim YOLO provider and /yolo/dbg_image overlay.
   --yolo-device <device> Override the YOLO inference device, for example cpu or cuda:0.
   --yolo-model <path>    Override the YOLO-World model path.
@@ -39,6 +39,10 @@ has_start_autonomy_arg=false
 has_start_yolo_arg=false
 has_yolo_model_arg=false
 has_yolo_image_reliability_arg=false
+has_start_slam_arg=false
+has_start_rf2o_arg=false
+has_start_nav_arg=false
+has_start_rviz_arg=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -110,6 +114,26 @@ while [[ $# -gt 0 ]]; do
       launch_args+=("$1")
       shift
       ;;
+    start_slam:=*)
+      has_start_slam_arg=true
+      launch_args+=("$1")
+      shift
+      ;;
+    start_rf2o:=*)
+      has_start_rf2o_arg=true
+      launch_args+=("$1")
+      shift
+      ;;
+    start_nav:=*)
+      has_start_nav_arg=true
+      launch_args+=("$1")
+      shift
+      ;;
+    start_rviz:=*)
+      has_start_rviz_arg=true
+      launch_args+=("$1")
+      shift
+      ;;
     yolo_model:=*)
       has_yolo_model_arg=true
       launch_args+=("$1")
@@ -165,6 +189,21 @@ fi
 
 if [[ "${start_autonomy}" == true && "${has_start_autonomy_arg}" == false ]]; then
   launch_args+=("start_autonomy:=true")
+fi
+
+if [[ "${start_autonomy}" == true ]]; then
+  if [[ "${has_start_slam_arg}" == false ]]; then
+    launch_args+=("start_slam:=false")
+  fi
+  if [[ "${has_start_rf2o_arg}" == false ]]; then
+    launch_args+=("start_rf2o:=false")
+  fi
+  if [[ "${has_start_nav_arg}" == false ]]; then
+    launch_args+=("start_nav:=false")
+  fi
+  if [[ "${has_start_rviz_arg}" == false ]]; then
+    launch_args+=("start_rviz:=false")
+  fi
 fi
 
 omni_info "Launching simulation bringup"
