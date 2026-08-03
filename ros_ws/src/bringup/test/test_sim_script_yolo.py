@@ -67,9 +67,9 @@ class SimScriptYoloTests(unittest.TestCase):
             self.assertIn("start_slam:=false", args)
             self.assertIn("start_rf2o:=false", args)
             self.assertIn("start_nav:=false", args)
-            self.assertIn("start_rviz:=false", args)
+            self.assertNotIn("start_rviz:=false", args)
 
-    def test_autonomy_flag_preserves_explicit_full_stack_overrides(self) -> None:
+    def test_autonomy_flag_preserves_explicit_stack_overrides(self) -> None:
         repo_root = Path(__file__).resolve().parents[4]
 
         with tempfile.TemporaryDirectory() as tmp:
@@ -113,7 +113,7 @@ class SimScriptYoloTests(unittest.TestCase):
                     "start_slam:=true",
                     "start_rf2o:=true",
                     "start_nav:=true",
-                    "start_rviz:=true",
+                    "start_rviz:=false",
                 ],
                 cwd=repo_root,
                 env=env,
@@ -126,11 +126,10 @@ class SimScriptYoloTests(unittest.TestCase):
             self.assertIn("start_slam:=true", args)
             self.assertIn("start_rf2o:=true", args)
             self.assertIn("start_nav:=true", args)
-            self.assertIn("start_rviz:=true", args)
+            self.assertIn("start_rviz:=false", args)
             self.assertNotIn("start_slam:=false", args)
             self.assertNotIn("start_rf2o:=false", args)
             self.assertNotIn("start_nav:=false", args)
-            self.assertNotIn("start_rviz:=false", args)
 
     def test_yolo_flag_forwards_sim_launch_arguments(self) -> None:
         repo_root = Path(__file__).resolve().parents[4]

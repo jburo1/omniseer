@@ -42,7 +42,6 @@ has_yolo_image_reliability_arg=false
 has_start_slam_arg=false
 has_start_rf2o_arg=false
 has_start_nav_arg=false
-has_start_rviz_arg=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -129,11 +128,6 @@ while [[ $# -gt 0 ]]; do
       launch_args+=("$1")
       shift
       ;;
-    start_rviz:=*)
-      has_start_rviz_arg=true
-      launch_args+=("$1")
-      shift
-      ;;
     yolo_model:=*)
       has_yolo_model_arg=true
       launch_args+=("$1")
@@ -200,9 +194,6 @@ if [[ "${start_autonomy}" == true ]]; then
   fi
   if [[ "${has_start_nav_arg}" == false ]]; then
     launch_args+=("start_nav:=false")
-  fi
-  if [[ "${has_start_rviz_arg}" == false ]]; then
-    launch_args+=("start_rviz:=false")
   fi
 fi
 
