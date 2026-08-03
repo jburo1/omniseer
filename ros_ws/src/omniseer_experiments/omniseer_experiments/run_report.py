@@ -196,6 +196,7 @@ def _render_report(
             issues=issues,
         ),
         _summary_section(inspection, manifest=manifest),
+        _artifacts_section(inspection.path, inspection.path / "report"),
         _configuration_section(manifest),
         _health_section(inspection, evidence_items=evidence_items, pipeline=pipeline, issues=issues),
         _autonomy_section(autonomy),
@@ -280,6 +281,28 @@ def _summary_section(inspection: RunInspection, *, manifest: dict[str, Any]) -> 
         ("Configured classes", _join_or_dash(inspection.configured_classes)),
     ]
     return _section("Run Summary", _key_value_table(rows), open_by_default=True)
+
+
+def _artifacts_section(run_dir: Path, report_dir: Path) -> str:
+    artifact_rows = []
+    for label, relative_path in (
+        ("Manifest", "manifest.yaml"),
+        ("Summary", "summary.json"),
+        ("Detections", "detections.jsonl"),
+        ("Performance", "perf.jsonl"),
+        ("System", "system.jsonl"),
+        ("Pipeline telemetry", "pipeline_telemetry.jsonl"),
+        ("Autonomy", "autonomy.jsonl"),
+        ("Evidence index", "evidence/evidence.jsonl"),
+        ("Bringup log", "logs/bringup.log"),
+    ):
+        href = _run_artifact_href(run_dir, report_dir, relative_path)
+        if href is None:
+            continue
+        artifact_rows.append((label, relative_path, href))
+    if not artifact_rows:
+        return ""
+    return _section("Run Artifacts", _artifact_links_table(artifact_rows), open_by_default=True)
 
 
 def _configuration_section(manifest: dict[str, Any]) -> str:
@@ -765,7 +788,7 @@ def _evidence_section(items: Sequence[_EvidenceItem]) -> str:
             f"<span>t+{_esc(item.relative_time)} &middot; detections {item.detection_count} "
             f"&middot; top score {_esc(item.top_score)}</span>"
             f"<span>{_esc(label_text)}</span>"
-            f'<a href="{_attr(item.source_href)}">clean frame</a>'
+            f'<a href="{_attr(item.source_href)}">Open clean frame</a>'
             "</div>"
             "</article>"
         )
@@ -1813,6 +1836,16 @@ def _relative_href(from_dir: Path, target: Path) -> str:
     return Path(os.path.relpath(target, start=from_dir)).as_posix()
 
 
+def _run_artifact_href(run_dir: Path, report_dir: Path, relative_path: str) -> str | None:
+    artifact_path = Path(relative_path)
+    if artifact_path.is_absolute() or ".." in artifact_path.parts:
+        return None
+    target = run_dir / artifact_path
+    if not target.is_file():
+        return None
+    return _relative_href(report_dir, target)
+
+
 def _table_of_contents(
     sections: Sequence[_ReportSection],
     *,
@@ -1877,6 +1910,14 @@ def _table(headers: Sequence[str], rows: Sequence[Sequence[str]]) -> str:
     header_html = "".join(f"<th>{_esc(header)}</th>" for header in headers)
     row_html = "".join("<tr>" + "".join(f"<td>{_esc(value)}</td>" for value in row) + "</tr>" for row in rows)
     return f"<table><thead><tr>{header_html}</tr></thead><tbody>{row_html}</tbody></table>"
+
+
+def _artifact_links_table(rows: Sequence[tuple[str, str, str]]) -> str:
+    row_html = "".join(
+        f'<tr><td>{_esc(label)}</td><td><a href="{_attr(href)}">{_esc(relative_path)}</a></td></tr>'
+        for label, relative_path, href in rows
+    )
+    return f"<table><thead><tr><th>Artifact</th><th>Path</th></tr></thead><tbody>{row_html}</tbody></table>"
 
 
 def _display_launch_args(launch_args: Sequence[str], *, manifest: dict[str, Any]) -> tuple[str, ...]:

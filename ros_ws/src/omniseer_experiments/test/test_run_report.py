@@ -470,6 +470,16 @@ class RunReportTests(unittest.TestCase):
             self.assertNotIn('<details id="issues" open>', output)
             self.assertIn("<h2>Run Summary</h2>", output)
             self.assertIn("<th>Experiment config</th><td>runtime-container-full</td>", output)
+            self.assertIn("<h2>Run Artifacts</h2>", output)
+            self.assertIn('<a href="../manifest.yaml">manifest.yaml</a>', output)
+            self.assertIn('<a href="../summary.json">summary.json</a>', output)
+            self.assertIn('<a href="../detections.jsonl">detections.jsonl</a>', output)
+            self.assertIn('<a href="../perf.jsonl">perf.jsonl</a>', output)
+            self.assertIn('<a href="../system.jsonl">system.jsonl</a>', output)
+            self.assertIn('<a href="../evidence/evidence.jsonl">evidence/evidence.jsonl</a>', output)
+            self.assertNotIn('href="../pipeline_telemetry.jsonl"', output)
+            self.assertNotIn('href="../autonomy.jsonl"', output)
+            self.assertNotIn('href="../logs/bringup.log"', output)
             self.assertIn("<h2>Evidence Summary</h2>", output)
             self.assertIn("<h2>Configuration</h2>", output)
             self.assertIn("run real --profile operator bringup", output)
@@ -510,6 +520,7 @@ class RunReportTests(unittest.TestCase):
             self.assertIn("last_infer_ms", output)
             self.assertIn("../evidence/annotated/frame_1.jpg", output)
             self.assertIn("../evidence/frames/frame_1.jpg", output)
+            self.assertIn("Open clean frame", output)
 
     def test_collapsible_sections_open_issues_when_present(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -558,6 +569,23 @@ class RunReportTests(unittest.TestCase):
             self.assertIn("clip_vocab_path:=/models/clip_vocab.bpe (from config)", output)
             self.assertIn("classes_path:=/models/classes.txt (from config)", output)
             self.assertNotIn("__from_config__", output)
+
+    def test_run_artifact_links_include_optional_existing_files(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "demo_001"
+            _write_completed_bundle(run_dir)
+            _write_pipeline_telemetry(run_dir)
+            _write_autonomy(run_dir)
+            logs_dir = run_dir / "logs"
+            logs_dir.mkdir()
+            (logs_dir / "bringup.log").write_text("bringup fixture\n", encoding="utf-8")
+
+            summary = write_run_report(run_dir)
+
+            output = summary.output_path.read_text(encoding="utf-8")
+            self.assertIn('<a href="../pipeline_telemetry.jsonl">pipeline_telemetry.jsonl</a>', output)
+            self.assertIn('<a href="../autonomy.jsonl">autonomy.jsonl</a>', output)
+            self.assertIn('<a href="../logs/bringup.log">logs/bringup.log</a>', output)
 
     def test_writes_autonomy_summary_when_autonomy_jsonl_exists(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
