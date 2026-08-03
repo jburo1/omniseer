@@ -40,54 +40,6 @@ has_start_yolo_arg=false
 has_yolo_model_arg=false
 has_yolo_image_reliability_arg=false
 
-append_python_site_paths() {
-  local python_bin
-  local site_paths
-  local site_path
-  local -a python_candidates=()
-
-  if [[ -n "${VIRTUAL_ENV:-}" && -x "${VIRTUAL_ENV}/bin/python3" ]]; then
-    python_candidates+=("${VIRTUAL_ENV}/bin/python3")
-  fi
-  if [[ -x "/opt/venv/bin/python3" ]]; then
-    python_candidates+=("/opt/venv/bin/python3")
-  fi
-  if command -v python3 >/dev/null 2>&1; then
-    python_candidates+=("$(command -v python3)")
-  fi
-
-  for python_bin in "${python_candidates[@]}"; do
-    site_paths="$(
-      "${python_bin}" - <<'PY' 2>/dev/null || true
-import site
-import sysconfig
-
-paths = []
-for path in site.getsitepackages():
-    paths.append(path)
-for key in ("purelib", "platlib"):
-    path = sysconfig.get_paths().get(key)
-    if path:
-        paths.append(path)
-
-seen = set()
-for path in paths:
-    if path and path not in seen:
-        seen.add(path)
-        print(path)
-PY
-    )"
-    while IFS= read -r site_path; do
-      if [[ -n "${site_path}" && -d "${site_path}" ]]; then
-        case ":${PYTHONPATH:-}:" in
-          *":${site_path}:"*) ;;
-          *) export PYTHONPATH="${site_path}${PYTHONPATH:+:${PYTHONPATH}}" ;;
-        esac
-      fi
-    done <<<"${site_paths}"
-  done
-}
-
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --autonomy)
@@ -192,7 +144,17 @@ if [[ "${start_yolo}" == true ]]; then
   read -r -a yolo_runtime_python_cmd <<<"${yolo_runtime_python}"
 
   if ! "${yolo_runtime_python_cmd[@]}" -c "import torch; import ultralytics" >/dev/null 2>&1; then
-    append_python_site_paths
+    active_python_site="$(
+      python3 - <<'PY'
+import site
+
+paths = site.getsitepackages()
+print(paths[0] if paths else "")
+PY
+    )"
+    if [[ -n "${active_python_site}" && -d "${active_python_site}" ]]; then
+      export PYTHONPATH="${active_python_site}${PYTHONPATH:+:${PYTHONPATH}}"
+    fi
   fi
   if ! "${yolo_runtime_python_cmd[@]}" -c "import torch; import ultralytics" >/dev/null 2>&1; then
     omni_die "YOLO sim support needs Python 'torch' and 'ultralytics' available to the ROS runtime interpreter (${yolo_runtime_python})"
