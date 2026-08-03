@@ -13,6 +13,7 @@ from launch.conditions import IfCondition
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
 
@@ -34,6 +35,16 @@ def generate_launch_description():
         DeclareLaunchArgument("start_rviz", default_value="true"),
         DeclareLaunchArgument("start_yolo", default_value="false"),
         DeclareLaunchArgument("start_range_adapter", default_value="true"),
+        DeclareLaunchArgument("start_autonomy", default_value="false"),
+        DeclareLaunchArgument("autonomy_target_class", default_value="chair"),
+        DeclareLaunchArgument("autonomy_bbox_area_min_ratio", default_value="0.08"),
+        DeclareLaunchArgument("autonomy_bbox_area_max_ratio", default_value="0.35"),
+        DeclareLaunchArgument("autonomy_forward_speed_m_s", default_value="0.05"),
+        DeclareLaunchArgument("autonomy_reverse_speed_m_s", default_value="0.04"),
+        DeclareLaunchArgument("autonomy_stable_framed_frames", default_value="10"),
+        DeclareLaunchArgument("autonomy_proximity_stop_m", default_value="0.30"),
+        DeclareLaunchArgument("autonomy_capture_timeout_sec", default_value="2.0"),
+        DeclareLaunchArgument("autonomy_target_lost_timeout_sec", default_value="0.5"),
         DeclareLaunchArgument("yolo_model", default_value="yolov8s-worldv2.pt"),
         DeclareLaunchArgument("yolo_device", default_value="cuda:0"),
         DeclareLaunchArgument("yolo_threshold", default_value="0.5"),
@@ -55,6 +66,16 @@ def generate_launch_description():
     start_rviz = LaunchConfiguration("start_rviz")
     start_yolo = LaunchConfiguration("start_yolo")
     start_range_adapter = LaunchConfiguration("start_range_adapter")
+    start_autonomy = LaunchConfiguration("start_autonomy")
+    autonomy_target_class = LaunchConfiguration("autonomy_target_class")
+    autonomy_bbox_area_min_ratio = LaunchConfiguration("autonomy_bbox_area_min_ratio")
+    autonomy_bbox_area_max_ratio = LaunchConfiguration("autonomy_bbox_area_max_ratio")
+    autonomy_forward_speed_m_s = LaunchConfiguration("autonomy_forward_speed_m_s")
+    autonomy_reverse_speed_m_s = LaunchConfiguration("autonomy_reverse_speed_m_s")
+    autonomy_stable_framed_frames = LaunchConfiguration("autonomy_stable_framed_frames")
+    autonomy_proximity_stop_m = LaunchConfiguration("autonomy_proximity_stop_m")
+    autonomy_capture_timeout_sec = LaunchConfiguration("autonomy_capture_timeout_sec")
+    autonomy_target_lost_timeout_sec = LaunchConfiguration("autonomy_target_lost_timeout_sec")
     yolo_model = LaunchConfiguration("yolo_model")
     yolo_device = LaunchConfiguration("yolo_device")
     yolo_threshold = LaunchConfiguration("yolo_threshold")
@@ -103,13 +124,42 @@ def generate_launch_description():
         condition=IfCondition(start_rviz),
     )
 
+    autonomy_node = Node(
+        package="omniseer_autonomy",
+        executable="target_centering_node",
+        name="target_centering_node",
+        output="screen",
+        arguments=["--ros-args", "--log-level", log_level],
+        parameters=[
+            {
+                "use_sim_time": use_sim_time,
+                "target_class": autonomy_target_class,
+                "run_dir": "",
+                "detections_topic": "/yolo/detections",
+                "odometry_topic": "/odometry/filtered",
+                "range_topic": "/range",
+                "command_topic": "/cmd_vel_autonomy",
+                "capture_service": "/vision/capture_frame",
+                "bbox_area_min_ratio": autonomy_bbox_area_min_ratio,
+                "bbox_area_max_ratio": autonomy_bbox_area_max_ratio,
+                "forward_speed_m_s": autonomy_forward_speed_m_s,
+                "reverse_speed_m_s": autonomy_reverse_speed_m_s,
+                "stable_framed_frames": autonomy_stable_framed_frames,
+                "proximity_stop_m": autonomy_proximity_stop_m,
+                "capture_timeout_sec": autonomy_capture_timeout_sec,
+                "target_lost_timeout_sec": autonomy_target_lost_timeout_sec,
+            }
+        ],
+        condition=IfCondition(start_autonomy),
+    )
+
     cleanup = ExecuteProcess(
         name="pre_flight_cleanup",
         cmd=["bash", cleanup_script, "sim"],
         output="screen",
     )
 
-    launch_group = GroupAction(actions=[sim_io_launch, common_launch, rviz_launch])
+    launch_group = GroupAction(actions=[sim_io_launch, common_launch, rviz_launch, autonomy_node])
     after_cleanup = RegisterEventHandler(OnProcessExit(target_action=cleanup, on_exit=[launch_group]))
 
     return LaunchDescription([*declared_arguments, cleanup, after_cleanup])

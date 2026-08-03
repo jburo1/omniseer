@@ -49,6 +49,22 @@ class RealLaunchShowArgsTests(unittest.TestCase):
         self.assertIn("autonomy_run_dir", result.stdout)
 
     @unittest.skipUnless(shutil.which("ros2"), "ros2 is required for launch argument checks")
+    def test_sim_launch_show_args_lists_visual_autonomy_arguments(self) -> None:
+        result = subprocess.run(
+            ["ros2", "launch", str(_launch_file("sim.launch.py")), "--show-args"],
+            cwd=_repo_root(),
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=30.0,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("start_autonomy", result.stdout)
+        self.assertIn("autonomy_target_class", result.stdout)
+        self.assertIn("autonomy_proximity_stop_m", result.stdout)
+
+    @unittest.skipUnless(shutil.which("ros2"), "ros2 is required for launch argument checks")
     def test_real_io_launch_show_args_lists_teensy_gating_arguments(self) -> None:
         result = subprocess.run(
             ["ros2", "launch", str(_launch_file("real_io.launch.py")), "--show-args"],

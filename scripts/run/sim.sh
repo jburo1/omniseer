@@ -13,11 +13,12 @@ source "${script_dir}/../lib/ros.sh"
 usage() {
   cat <<'EOF'
 Usage:
-  scripts/omni run sim [--yolo] [--yolo-device <device>] [--yolo-model <path>] [launch args...]
+  scripts/omni run sim [--autonomy] [--yolo] [--yolo-device <device>] [--yolo-model <path>] [launch args...]
 
 Launches the existing simulation bringup helper path.
 
 Options:
+  --autonomy             Start visual sim target-centering autonomy with the sim YOLO provider.
   --yolo                 Start the sim YOLO provider and /yolo/dbg_image overlay.
   --yolo-device <device> Override the YOLO inference device, for example cpu or cuda:0.
   --yolo-model <path>    Override the YOLO-World model path.
@@ -32,13 +33,20 @@ fi
 omni_source_ros_workspace
 
 declare -a launch_args=()
+start_autonomy=false
 start_yolo=false
+has_start_autonomy_arg=false
 has_start_yolo_arg=false
 has_yolo_model_arg=false
 has_yolo_image_reliability_arg=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --autonomy)
+      start_autonomy=true
+      start_yolo=true
+      shift
+      ;;
     --yolo)
       start_yolo=true
       shift
@@ -84,6 +92,19 @@ while [[ $# -gt 0 ]]; do
           ;;
         *)
           start_yolo=false
+          ;;
+      esac
+      launch_args+=("$1")
+      shift
+      ;;
+    start_autonomy:=*)
+      has_start_autonomy_arg=true
+      case "${1#start_autonomy:=}" in
+        true|True|TRUE|1)
+          start_autonomy=true
+          ;;
+        *)
+          start_autonomy=false
           ;;
       esac
       launch_args+=("$1")
@@ -148,6 +169,10 @@ PY
   if [[ "${has_yolo_image_reliability_arg}" == false ]]; then
     launch_args+=("yolo_image_reliability:=2")
   fi
+fi
+
+if [[ "${start_autonomy}" == true && "${has_start_autonomy_arg}" == false ]]; then
+  launch_args+=("start_autonomy:=true")
 fi
 
 omni_info "Launching simulation bringup"

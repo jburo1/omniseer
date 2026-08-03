@@ -307,6 +307,37 @@ class RealLaunchStructureTests(unittest.TestCase):
         sim_source = (Path(__file__).resolve().parents[1] / "launch" / "sim.launch.py").read_text(encoding="utf-8")
         self.assertIn('"start_range_adapter": start_range_adapter', sim_source)
 
+    def test_sim_launch_includes_optional_visual_autonomy_node_without_runbundle_recording(self) -> None:
+        module = _load_launch_module("sim.launch.py")
+        launch_description = module.generate_launch_description()
+
+        declared_names = {
+            _flatten_launch_value(entity.name)
+            for entity in launch_description.entities
+            if isinstance(entity, DeclareLaunchArgument)
+        }
+        self.assertIn("start_autonomy", declared_names)
+        self.assertIn("autonomy_target_class", declared_names)
+        self.assertIn("autonomy_bbox_area_min_ratio", declared_names)
+        self.assertIn("autonomy_bbox_area_max_ratio", declared_names)
+        self.assertIn("autonomy_forward_speed_m_s", declared_names)
+        self.assertIn("autonomy_reverse_speed_m_s", declared_names)
+        self.assertIn("autonomy_stable_framed_frames", declared_names)
+        self.assertIn("autonomy_proximity_stop_m", declared_names)
+        self.assertIn("autonomy_capture_timeout_sec", declared_names)
+        self.assertIn("autonomy_target_lost_timeout_sec", declared_names)
+
+        sim_source = (Path(__file__).resolve().parents[1] / "launch" / "sim.launch.py").read_text(encoding="utf-8")
+        self.assertIn('package="omniseer_autonomy"', sim_source)
+        self.assertIn('executable="target_centering_node"', sim_source)
+        self.assertNotIn('package="omniseer_experiments"', sim_source)
+        self.assertIn("condition=IfCondition(start_autonomy)", sim_source)
+        self.assertIn('"target_class": autonomy_target_class', sim_source)
+        self.assertIn('"run_dir": ""', sim_source)
+        self.assertIn('"detections_topic": "/yolo/detections"', sim_source)
+        self.assertIn('"range_topic": "/range"', sim_source)
+        self.assertIn('"command_topic": "/cmd_vel_autonomy"', sim_source)
+
     def test_sim_io_launch_includes_optional_range_adapter(self) -> None:
         module = _load_launch_module("sim_io.launch.py")
         launch_description = module.generate_launch_description()
