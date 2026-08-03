@@ -451,7 +451,11 @@ class RunReportTests(unittest.TestCase):
             self.assertIn("Omniseer Run Report: demo_001", output)
             self.assertIn('<nav class="toc"', output)
             self.assertIn('<a href="#run-summary">Run Summary</a>', output)
-            self.assertIn('<section id="run-summary">', output)
+            self.assertIn('<details id="run-summary" open>', output)
+            self.assertIn('<details id="configuration">', output)
+            self.assertIn('<details id="evidence" open>', output)
+            self.assertIn('<details id="issues">', output)
+            self.assertNotIn('<details id="issues" open>', output)
             self.assertIn("<h2>Run Summary</h2>", output)
             self.assertIn("<th>Experiment config</th><td>runtime-container-full</td>", output)
             self.assertIn("<h2>Evidence Summary</h2>", output)
@@ -494,6 +498,22 @@ class RunReportTests(unittest.TestCase):
             self.assertIn("last_infer_ms", output)
             self.assertIn("../evidence/annotated/frame_1.jpg", output)
             self.assertIn("../evidence/frames/frame_1.jpg", output)
+
+    def test_collapsible_sections_open_issues_when_present(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "demo_001"
+            writer = RunBundleWriter(
+                _config(run_dir, launch_args=("start_autonomy:=true", "autonomy_target_class:=chair")),
+                started_at=STARTED_AT,
+            )
+            writer.write_detection_record(_detection_record())
+            writer.write_perf_record(_perf_record())
+            writer.finalize(ended_at=ENDED_AT)
+
+            summary = write_run_report(run_dir)
+
+            output = summary.output_path.read_text(encoding="utf-8")
+            self.assertIn('<details id="issues" open>', output)
 
     def test_writes_autonomy_summary_when_autonomy_jsonl_exists(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

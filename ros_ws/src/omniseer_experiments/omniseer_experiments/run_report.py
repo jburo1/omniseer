@@ -256,7 +256,7 @@ def _evidence_summary_section(
         f"{sum(1 for item in evidence_items if item.uses_annotation)} annotated.",
     ]
     items = "".join(f"<li>{_esc(claim)}</li>" for claim in claims)
-    return _section("Evidence Summary", f'<ul class="summary-list">{items}</ul>')
+    return _section("Evidence Summary", f'<ul class="summary-list">{items}</ul>', open_by_default=True)
 
 
 def _summary_section(inspection: RunInspection, *, manifest: dict[str, Any]) -> str:
@@ -270,7 +270,7 @@ def _summary_section(inspection: RunInspection, *, manifest: dict[str, Any]) -> 
         ("Duration", _format_duration(inspection.duration_sec)),
         ("Configured classes", _join_or_dash(inspection.configured_classes)),
     ]
-    return _section("Run Summary", _key_value_table(rows))
+    return _section("Run Summary", _key_value_table(rows), open_by_default=True)
 
 
 def _configuration_section(manifest: dict[str, Any]) -> str:
@@ -319,7 +319,7 @@ def _health_section(
         ("Annotated evidence items", str(annotated_count)),
         ("Issues", str(len(issues))),
     ]
-    return _section("Health", _key_value_table(rows))
+    return _section("Health", _key_value_table(rows), open_by_default=True)
 
 
 def _autonomy_section(records: Sequence[dict[str, Any]]) -> str:
@@ -358,7 +358,7 @@ def _autonomy_section(records: Sequence[dict[str, Any]]) -> str:
         + _autonomy_target_loss_table(records)
         + _autonomy_event_timeline(records)
     )
-    return _section("Autonomy", body)
+    return _section("Autonomy", body, open_by_default=True)
 
 
 def _detections_section(records: Sequence[dict[str, Any]], *, configured_classes: Sequence[str]) -> str:
@@ -722,6 +722,9 @@ def _battery_summary_table(records: Sequence[dict[str, Any]]) -> str:
 def _errors_section(inspection: RunInspection) -> str:
     error_rows = [[name, str(count)] for name, count in sorted(inspection.errors.items())]
     drop_rows = [[name, str(count)] for name, count in sorted(inspection.dropped_records.items())]
+    has_errors_or_drops = any(count > 0 for count in inspection.errors.values()) or any(
+        count > 0 for count in inspection.dropped_records.values()
+    )
     if not error_rows:
         error_rows = [["-", "0"]]
     if not drop_rows:
@@ -732,7 +735,7 @@ def _errors_section(inspection: RunInspection) -> str:
         + "<h3>Dropped Records</h3>"
         + _table(["Stream", "Count"], drop_rows)
     )
-    return _section("Errors And Drops", body)
+    return _section("Errors And Drops", body, open_by_default=has_errors_or_drops)
 
 
 def _evidence_section(items: Sequence[_EvidenceItem]) -> str:
@@ -761,14 +764,14 @@ def _evidence_section(items: Sequence[_EvidenceItem]) -> str:
         "<p>Annotated images are derived review artifacts. Clean frames are the canonical captured evidence; "
         "boxes are projected back into source image coordinates.</p>"
     )
-    return _section("Evidence", f'{intro}<div class="evidence-grid">{"".join(cards)}</div>')
+    return _section("Evidence", f'{intro}<div class="evidence-grid">{"".join(cards)}</div>', open_by_default=True)
 
 
 def _issues_section(issues: Sequence[str]) -> str:
     if not issues:
         return _section("Issues", "<p>No issues found by local report inputs.</p>")
     items = "".join(f"<li>{_esc(issue)}</li>" for issue in issues)
-    return _section("Issues", f"<ul>{items}</ul>")
+    return _section("Issues", f"<ul>{items}</ul>", open_by_default=True)
 
 
 def _evidence_items(run_dir: Path, report_dir: Path, records: Sequence[dict[str, Any]]) -> tuple[_EvidenceItem, ...]:
@@ -1813,9 +1816,17 @@ def _table_of_contents(sections: Sequence[_ReportSection]) -> str:
     )
 
 
-def _section(title: str, body: str) -> _ReportSection:
+def _section(title: str, body: str, *, open_by_default: bool = False) -> _ReportSection:
     section_id = _section_id(title)
-    html_text = f'    <section id="{_attr(section_id)}">\n      <h2>{_esc(title)}</h2>\n      {body}\n    </section>'
+    open_attr = " open" if open_by_default else ""
+    html_text = (
+        f'    <details id="{_attr(section_id)}"{open_attr}>\n'
+        "      <summary>\n"
+        f"        <h2>{_esc(title)}</h2>\n"
+        "      </summary>\n"
+        f'      <div class="section-body">{body}</div>\n'
+        "    </details>"
+    )
     return _ReportSection(title=title, section_id=section_id, html_text=html_text)
 
 
@@ -1857,17 +1868,28 @@ def _css() -> str:
 body { margin: 0; }
 main { max-width: 1120px; margin: 0 auto; padding: 28px 20px 48px; }
 h1 { margin: 0 0 22px; font-size: 28px; font-weight: 700; }
-h2 { margin: 0 0 12px; font-size: 19px; font-weight: 700; }
+h2 { margin: 0; font-size: 19px; font-weight: 700; }
 h3 { margin: 16px 0 8px; font-size: 15px; font-weight: 700; color: #3d4a5c; }
 h2 + h3 { margin-top: 0; }
-section {
+details {
   scroll-margin-top: 16px;
   margin: 0 0 18px;
-  padding: 16px;
   background: #ffffff;
   border: 1px solid #d8dee6;
   border-radius: 6px;
 }
+summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  cursor: pointer;
+  color: #1f2933;
+}
+summary::before { content: ">"; color: #526173; font-size: 13px; }
+details[open] summary { border-bottom: 1px solid #e6eaf0; }
+details[open] summary::before { content: "v"; }
+.section-body { padding: 16px; overflow-x: auto; }
 .toc { margin: 0 0 18px; padding: 14px 16px; background: #ffffff; border: 1px solid #d8dee6; border-radius: 6px; }
 .toc h2 { margin-bottom: 10px; }
 .toc ol {
