@@ -33,6 +33,7 @@ def generate_launch_description():
         DeclareLaunchArgument("start_nav", default_value="true"),
         DeclareLaunchArgument("start_rviz", default_value="true"),
         DeclareLaunchArgument("start_yolo", default_value="false"),
+        DeclareLaunchArgument("start_range_adapter", default_value="true"),
         DeclareLaunchArgument("yolo_model", default_value="yolov8s-worldv2.pt"),
         DeclareLaunchArgument("yolo_device", default_value="cuda:0"),
         DeclareLaunchArgument("yolo_threshold", default_value="0.5"),
@@ -53,6 +54,7 @@ def generate_launch_description():
     start_nav = LaunchConfiguration("start_nav")
     start_rviz = LaunchConfiguration("start_rviz")
     start_yolo = LaunchConfiguration("start_yolo")
+    start_range_adapter = LaunchConfiguration("start_range_adapter")
     yolo_model = LaunchConfiguration("yolo_model")
     yolo_device = LaunchConfiguration("yolo_device")
     yolo_threshold = LaunchConfiguration("yolo_threshold")
@@ -68,6 +70,7 @@ def generate_launch_description():
             "headless": headless,
             "log_level": log_level,
             "use_ci_geometry": use_ci_geometry,
+            "start_range_adapter": start_range_adapter,
         }.items(),
     )
 

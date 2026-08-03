@@ -292,3 +292,44 @@ class RealLaunchStructureTests(unittest.TestCase):
         self.assertIn('"input_image_topic": "/front_camera/image"', perception_source)
         self.assertIn('"classes": LaunchConfiguration("classes", default="chair")', yolo_source)
         self.assertIn('"use_tracking": LaunchConfiguration("use_tracking", default="False")', yolo_source)
+
+    def test_sim_launch_exposes_optional_range_adapter(self) -> None:
+        module = _load_launch_module("sim.launch.py")
+        launch_description = module.generate_launch_description()
+
+        declared_names = {
+            _flatten_launch_value(entity.name)
+            for entity in launch_description.entities
+            if isinstance(entity, DeclareLaunchArgument)
+        }
+        self.assertIn("start_range_adapter", declared_names)
+
+        sim_source = (Path(__file__).resolve().parents[1] / "launch" / "sim.launch.py").read_text(encoding="utf-8")
+        self.assertIn('"start_range_adapter": start_range_adapter', sim_source)
+
+    def test_sim_io_launch_includes_optional_range_adapter(self) -> None:
+        module = _load_launch_module("sim_io.launch.py")
+        launch_description = module.generate_launch_description()
+
+        declared_names = {
+            _flatten_launch_value(entity.name)
+            for entity in launch_description.entities
+            if isinstance(entity, DeclareLaunchArgument)
+        }
+        self.assertIn("start_range_adapter", declared_names)
+
+        range_adapter_nodes = [
+            entity
+            for entity in _walk_entities(launch_description.entities)
+            if isinstance(entity, Node)
+            and "robot_io_adapters" in _flatten_launch_value(entity.node_package)
+            and "scan_to_range" in _flatten_launch_value(entity.node_executable)
+        ]
+        self.assertTrue(range_adapter_nodes, "expected optional robot_io_adapters scan_to_range node")
+
+        sim_io_source = (Path(__file__).resolve().parents[1] / "launch" / "sim_io.launch.py").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn('"scan_topic": "/sonar"', sim_io_source)
+        self.assertIn('"range_topic": "/range"', sim_io_source)
+        self.assertIn("condition=IfCondition(start_range_adapter)", sim_io_source)

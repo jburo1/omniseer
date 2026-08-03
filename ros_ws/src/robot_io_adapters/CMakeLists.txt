@@ -11,6 +11,7 @@ find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(omniseer_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(sensor_msgs REQUIRED)
 
 add_library(robot_io_adapters_math STATIC
   src/odometry_math.cpp
@@ -38,6 +39,32 @@ target_link_libraries(robot_io_adapters_node PUBLIC
   robot_io_adapters_math
 )
 
+add_library(robot_io_adapters_scan_range STATIC
+  src/scan_range_conversion.cpp
+)
+target_compile_features(robot_io_adapters_scan_range PUBLIC cxx_std_17)
+target_include_directories(robot_io_adapters_scan_range PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(robot_io_adapters_scan_range PUBLIC
+  ${sensor_msgs_TARGETS}
+)
+
+add_library(robot_io_adapters_scan_to_range_node STATIC
+  src/scan_to_range_node.cpp
+)
+target_compile_features(robot_io_adapters_scan_to_range_node PUBLIC cxx_std_17)
+target_include_directories(robot_io_adapters_scan_to_range_node PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(robot_io_adapters_scan_to_range_node PUBLIC
+  rclcpp::rclcpp
+  robot_io_adapters_scan_range
+  ${sensor_msgs_TARGETS}
+)
+
 add_executable(encoder_counts_to_odometry
   src/encoder_counts_to_odometry_main.cpp
 )
@@ -46,10 +73,21 @@ target_link_libraries(encoder_counts_to_odometry PRIVATE
   robot_io_adapters_node
 )
 
+add_executable(scan_to_range
+  src/scan_to_range_main.cpp
+)
+target_compile_features(scan_to_range PUBLIC cxx_std_17)
+target_link_libraries(scan_to_range PRIVATE
+  robot_io_adapters_scan_to_range_node
+)
+
 install(TARGETS
   robot_io_adapters_math
   robot_io_adapters_node
+  robot_io_adapters_scan_range
+  robot_io_adapters_scan_to_range_node
   encoder_counts_to_odometry
+  scan_to_range
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}
@@ -78,6 +116,17 @@ if(BUILD_TESTING)
     robot_io_adapters_math
   )
   target_include_directories(test_odometry_math PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+  )
+
+  ament_add_gtest(test_scan_range_conversion
+    test/test_scan_range_conversion.cpp
+  )
+  target_compile_features(test_scan_range_conversion PUBLIC cxx_std_17)
+  target_link_libraries(test_scan_range_conversion
+    robot_io_adapters_scan_range
+  )
+  target_include_directories(test_scan_range_conversion PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
   )
 
