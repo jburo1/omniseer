@@ -65,6 +65,14 @@ class _ChartSeries:
 
 
 @dataclass(frozen=True)
+class _MetricBarRow:
+    label: str
+    samples: int
+    value: float
+    max_value: float
+
+
+@dataclass(frozen=True)
 class _ReportSection:
     title: str
     section_id: str
@@ -533,7 +541,16 @@ def _pipeline_stage_table(records: Sequence[dict[str, Any]], *, source: str) -> 
             )
     if not rows:
         return ""
-    return f"<h3>{source.title()} Stage Timings</h3>" + _table(["Stage", "Samples", "p50 ms", "p95 ms", "Max ms"], rows)
+    return (
+        f"<h3>{source.title()} Stage Timings</h3>"
+        + _metric_bar_table(
+            "Stage timing p95 visual summary",
+            _pipeline_stage_bar_rows(subset, fields),
+            value_label="p95 ms",
+            max_label="Max ms",
+        )
+        + _table(["Stage", "Samples", "p50 ms", "p95 ms", "Max ms"], rows)
+    )
 
 
 def _pipeline_age_table(records: Sequence[dict[str, Any]]) -> str:
@@ -562,7 +579,16 @@ def _pipeline_age_table(records: Sequence[dict[str, Any]]) -> str:
             )
     if not rows:
         return ""
-    return "<h3>Source Age</h3>" + _table(["Metric", "Samples", "p50 ms", "p95 ms", "Max ms"], rows)
+    return (
+        "<h3>Source Age</h3>"
+        + _metric_bar_table(
+            "Source age p95 visual summary",
+            _pipeline_age_bar_rows(records, fields),
+            value_label="p95 ms",
+            max_label="Max ms",
+        )
+        + _table(["Metric", "Samples", "p50 ms", "p95 ms", "Max ms"], rows)
+    )
 
 
 def _perf_section(title: str, records: Sequence[dict[str, Any]]) -> str:
@@ -585,7 +611,140 @@ def _perf_section(title: str, records: Sequence[dict[str, Any]]) -> str:
                 _format_float(max(samples)),
             ]
         )
-    return _section(title, _performance_charts(records) + _table(["Metric", "Samples", "p50", "p95", "Max"], rows))
+    return _section(
+        title,
+        _performance_charts(records)
+        + _performance_bar_tables(records, fields)
+        + _table(["Metric", "Samples", "p50", "p95", "Max"], rows),
+    )
+
+
+def _performance_bar_tables(records: Sequence[dict[str, Any]], fields: Sequence[str]) -> str:
+    fps_rows = _field_bar_rows(
+        records,
+        [(field_name, field_name) for field_name in fields if field_name.endswith("_fps")],
+    )
+    latency_rows = _field_bar_rows(
+        records,
+        [(field_name, field_name) for field_name in fields if field_name.endswith("_ms")],
+    )
+    return _metric_bar_table(
+        "Frame rate p95 visual summary",
+        fps_rows,
+        value_label="p95 fps",
+        max_label="Max fps",
+    ) + _metric_bar_table(
+        "Latency p95 visual summary",
+        latency_rows,
+        value_label="p95 ms",
+        max_label="Max ms",
+    )
+
+
+def _pipeline_stage_bar_rows(
+    records: Sequence[dict[str, Any]],
+    fields: Sequence[tuple[str, str]],
+) -> tuple[_MetricBarRow, ...]:
+    rows = []
+    for field_name, label in fields:
+        samples = []
+        for record in records:
+            dur_ns = record.get("dur_ns")
+            if not isinstance(dur_ns, dict):
+                continue
+            value = _as_float(dur_ns.get(field_name))
+            if value is not None:
+                samples.append(value / 1_000_000.0)
+        row = _metric_bar_row(label, samples)
+        if row is not None:
+            rows.append(row)
+    return tuple(rows)
+
+
+def _pipeline_age_bar_rows(
+    records: Sequence[dict[str, Any]],
+    fields: Sequence[tuple[str, str]],
+) -> tuple[_MetricBarRow, ...]:
+    rows = []
+    for field_name, label in fields:
+        samples = [
+            value / 1_000_000.0
+            for value in (_as_float(record.get(field_name)) for record in records)
+            if value is not None
+        ]
+        row = _metric_bar_row(label, samples)
+        if row is not None:
+            rows.append(row)
+    return tuple(rows)
+
+
+def _field_bar_rows(
+    records: Sequence[dict[str, Any]],
+    fields: Sequence[tuple[str, str]],
+) -> tuple[_MetricBarRow, ...]:
+    rows = []
+    for field_name, label in fields:
+        values = [_as_float(record.get(field_name)) for record in records]
+        row = _metric_bar_row(label, [value for value in values if value is not None])
+        if row is not None:
+            rows.append(row)
+    return tuple(rows)
+
+
+def _metric_bar_row(label: str, samples: Sequence[float]) -> _MetricBarRow | None:
+    finite_samples = [value for value in samples if math.isfinite(value)]
+    if not finite_samples:
+        return None
+    return _MetricBarRow(
+        label=label,
+        samples=len(finite_samples),
+        value=_percentile(finite_samples, 95),
+        max_value=max(finite_samples),
+    )
+
+
+def _metric_bar_table(
+    title: str,
+    rows: Sequence[_MetricBarRow],
+    *,
+    value_label: str,
+    max_label: str,
+) -> str:
+    if not rows:
+        return ""
+    scale = max((max(row.value, 0.0) for row in rows), default=0.0)
+    if scale <= 0.0:
+        scale = 1.0
+    row_html = []
+    for row in rows:
+        percent = _clamp((row.value / scale) * 100.0, 0.0, 100.0)
+        row_html.append(
+            "<tr>"
+            f"<td>{_esc(row.label)}</td>"
+            f"<td>{row.samples}</td>"
+            f"<td>{_esc(_format_float(row.value))}</td>"
+            "<td>"
+            f'<div class="metric-bar" aria-label="{_attr(row.label)} {_attr(value_label)} '
+            f'{_attr(_format_float(row.value))}">'
+            f'<span class="metric-bar-fill" style="width: {percent:.1f}%"></span>'
+            "</div>"
+            "</td>"
+            f"<td>{_esc(_format_float(row.max_value))}</td>"
+            "</tr>"
+        )
+    return (
+        '<table class="metric-bars">'
+        f"<caption>{_esc(title)}</caption>"
+        "<thead><tr>"
+        "<th>Metric</th>"
+        "<th>Samples</th>"
+        f"<th>{_esc(value_label)}</th>"
+        "<th>Visual</th>"
+        f"<th>{_esc(max_label)}</th>"
+        "</tr></thead>"
+        f"<tbody>{''.join(row_html)}</tbody>"
+        "</table>"
+    )
 
 
 def _system_section(records: Sequence[dict[str, Any]], *, manifest: dict[str, Any]) -> str:
@@ -2005,6 +2164,29 @@ th, td { padding: 8px 10px; border-bottom: 1px solid #e6eaf0; text-align: left; 
 th { color: #3d4a5c; font-weight: 700; background: #f1f4f8; }
 tbody tr:last-child th, tbody tr:last-child td { border-bottom: 0; }
 .kv th { width: 220px; }
+.metric-bars { margin: 0 0 12px; }
+.metric-bars caption {
+  padding: 0 0 8px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 700;
+  color: #526173;
+}
+.metric-bars td:nth-child(4) { min-width: 170px; }
+.metric-bar {
+  position: relative;
+  height: 12px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: #e6eaf0;
+}
+.metric-bar-fill {
+  display: block;
+  height: 100%;
+  min-width: 2px;
+  border-radius: inherit;
+  background: #3b6ea8;
+}
 p, ul { margin: 0; font-size: 14px; }
 ul { padding-left: 20px; }
 .table-note { margin: 12px 0 8px; color: #6b7280; font-style: italic; }

@@ -510,6 +510,10 @@ class RunReportTests(unittest.TestCase):
             self.assertNotIn("Detection Activity Over Time", output)
             self.assertIn("Vision FPS Over Time", output)
             self.assertIn("Vision Latency Over Time", output)
+            self.assertIn('class="metric-bars"', output)
+            self.assertIn("Frame rate p95 visual summary", output)
+            self.assertIn("Latency p95 visual summary", output)
+            self.assertIn('class="metric-bar-fill"', output)
             self.assertIn("System CPU Over Time", output)
             self.assertIn("System Memory Over Time", output)
             self.assertIn("System Temperature Over Time", output)
@@ -706,6 +710,9 @@ class RunReportTests(unittest.TestCase):
             self.assertIn("Pipeline Source Age Over Time", output)
             self.assertIn("source age at producer dequeue", output)
             self.assertIn('class="chart"', output)
+            self.assertIn('class="metric-bars"', output)
+            self.assertIn("Stage timing p95 visual summary", output)
+            self.assertIn("Source age p95 visual summary", output)
             self.assertIn("<svg", output)
 
     def test_sparse_or_missing_streams_do_not_render_empty_charts(self) -> None:
