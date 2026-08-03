@@ -27,6 +27,7 @@
   <exec_depend>ros_gz_image</exec_depend>
   <exec_depend>twist_mux</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
   <exec_depend>nav2_msgs</exec_depend>
   <exec_depend>nav2_planner</exec_depend>
   <exec_depend>nav2_route</exec_depend>
@@ -35,6 +36,7 @@
   <exec_depend>nav2_waypoint_follower</exec_depend>
   <exec_depend>twist_mux_msgs</exec_depend>
   <exec_depend>teleop_twist_keyboard</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>joint_state_broadcaster</exec_depend>
   <exec_depend>mecanum_drive_controller</exec_depend>
   <exec_depend>gz_ros2_control</exec_depend>
@@ -60,6 +62,7 @@
   <exec_depend>nav2_bringup</exec_depend>
   <exec_depend>micro_ros_agent</exec_depend>
   <exec_depend>yolo_bringup</exec_depend>
+  <exec_depend>yolo_msgs</exec_depend>
   <exec_depend>robot_io_adapters</exec_depend>
   <exec_depend>robot_diag_control_cpp</exec_depend>
 

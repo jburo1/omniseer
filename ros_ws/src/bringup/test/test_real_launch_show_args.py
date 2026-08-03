@@ -63,6 +63,8 @@ class RealLaunchShowArgsTests(unittest.TestCase):
         self.assertIn("start_autonomy", result.stdout)
         self.assertIn("autonomy_target_class", result.stdout)
         self.assertIn("autonomy_proximity_stop_m", result.stdout)
+        self.assertNotIn("autonomy_wait_for_inputs", result.stdout)
+        self.assertNotIn("autonomy_inputs_timeout_sec", result.stdout)
 
     @unittest.skipUnless(shutil.which("ros2"), "ros2 is required for launch argument checks")
     def test_real_io_launch_show_args_lists_teensy_gating_arguments(self) -> None:

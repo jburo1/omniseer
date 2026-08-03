@@ -4,17 +4,39 @@
 from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
+    EmitEvent,
     ExecuteProcess,
     GroupAction,
     IncludeLaunchDescription,
+    LogInfo,
     RegisterEventHandler,
 )
 from launch.conditions import IfCondition
 from launch.event_handlers import OnProcessExit
+from launch.events import Shutdown
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
+
+_SIM_AUTONOMY_INPUTS_TIMEOUT_SEC = "60"
+_SIM_AUTONOMY_REQUIRED_TOPICS = [
+    "/yolo/detections:yolo_msgs/msg/DetectionArray",
+    "/range:sensor_msgs/msg/Range",
+    "/odometry/filtered:nav_msgs/msg/Odometry",
+]
+
+
+def _handle_required_process_exit(process_name: str, success_actions, failure_reason: str):
+    def _on_exit(event, _context):
+        if event.returncode == 0:
+            return success_actions
+        return [
+            LogInfo(msg=f"{process_name} failed with exit code {event.returncode}"),
+            EmitEvent(event=Shutdown(reason=failure_reason)),
+        ]
+
+    return _on_exit
 
 
 def generate_launch_description():
@@ -159,7 +181,36 @@ def generate_launch_description():
         output="screen",
     )
 
-    launch_group = GroupAction(actions=[sim_io_launch, common_launch, rviz_launch, autonomy_node])
+    wait_autonomy_inputs = ExecuteProcess(
+        name="wait_sim_autonomy_inputs",
+        cmd=[
+            "ros2",
+            "run",
+            "bringup",
+            "wait_for_topics",
+            "--timeout-sec",
+            _SIM_AUTONOMY_INPUTS_TIMEOUT_SEC,
+            *[item for topic_spec in _SIM_AUTONOMY_REQUIRED_TOPICS for item in ("--topic", topic_spec)],
+        ],
+        output="screen",
+        condition=IfCondition(start_autonomy),
+    )
+
+    launch_autonomy_after_inputs = RegisterEventHandler(
+        OnProcessExit(
+            target_action=wait_autonomy_inputs,
+            on_exit=_handle_required_process_exit(
+                process_name="wait_sim_autonomy_inputs",
+                success_actions=[autonomy_node],
+                failure_reason="Timed out waiting for sim autonomy input topics",
+            ),
+        ),
+        condition=IfCondition(start_autonomy),
+    )
+
+    launch_group = GroupAction(
+        actions=[sim_io_launch, common_launch, rviz_launch, wait_autonomy_inputs, launch_autonomy_after_inputs]
+    )
     after_cleanup = RegisterEventHandler(OnProcessExit(target_action=cleanup, on_exit=[launch_group]))
 
     return LaunchDescription([*declared_arguments, cleanup, after_cleanup])

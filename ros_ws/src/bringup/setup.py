@@ -30,6 +30,7 @@ setup(
     entry_points={
         "console_scripts": [
             "rviz_resource_server = bringup.rviz_resource_server:main",
+            "wait_for_topics = bringup.wait_for_topics:main",
             # eg. 'teleop=bringup.scripts.teleop:main',
             # 'wait_for_tf = bringup.wait_for_tf:main'
         ],

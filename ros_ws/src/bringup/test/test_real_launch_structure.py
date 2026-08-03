@@ -326,12 +326,27 @@ class RealLaunchStructureTests(unittest.TestCase):
         self.assertIn("autonomy_proximity_stop_m", declared_names)
         self.assertIn("autonomy_capture_timeout_sec", declared_names)
         self.assertIn("autonomy_target_lost_timeout_sec", declared_names)
+        self.assertNotIn("autonomy_wait_for_inputs", declared_names)
+        self.assertNotIn("autonomy_inputs_timeout_sec", declared_names)
 
         sim_source = (Path(__file__).resolve().parents[1] / "launch" / "sim.launch.py").read_text(encoding="utf-8")
         self.assertIn('package="omniseer_autonomy"', sim_source)
         self.assertIn('executable="target_centering_node"', sim_source)
         self.assertNotIn('package="omniseer_experiments"', sim_source)
         self.assertIn("condition=IfCondition(start_autonomy)", sim_source)
+        self.assertIn('_SIM_AUTONOMY_INPUTS_TIMEOUT_SEC = "60"', sim_source)
+        self.assertIn("wait_sim_autonomy_inputs", sim_source)
+        self.assertIn("wait_for_topics", sim_source)
+        self.assertIn("/yolo/detections:yolo_msgs/msg/DetectionArray", sim_source)
+        self.assertIn("/range:sensor_msgs/msg/Range", sim_source)
+        self.assertIn("/odometry/filtered:nav_msgs/msg/Odometry", sim_source)
+        self.assertIn("target_action=wait_autonomy_inputs", sim_source)
+        self.assertIn("success_actions=[autonomy_node]", sim_source)
+        self.assertIn('failure_reason="Timed out waiting for sim autonomy input topics"', sim_source)
+        self.assertIn(
+            "actions=[sim_io_launch, common_launch, rviz_launch, wait_autonomy_inputs, launch_autonomy_after_inputs]",
+            sim_source,
+        )
         self.assertIn('"target_class": autonomy_target_class', sim_source)
         self.assertIn('"run_dir": ""', sim_source)
         self.assertIn('"detections_topic": "/yolo/detections"', sim_source)
