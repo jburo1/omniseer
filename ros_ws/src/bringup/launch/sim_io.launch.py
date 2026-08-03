@@ -21,6 +21,9 @@ def generate_launch_description():
         DeclareLaunchArgument("log_level", default_value="info"),
         DeclareLaunchArgument("use_ci_geometry", default_value="false"),
         DeclareLaunchArgument("start_range_adapter", default_value="true"),
+        DeclareLaunchArgument("sim_camera_width", default_value="1920"),
+        DeclareLaunchArgument("sim_camera_height", default_value="1080"),
+        DeclareLaunchArgument("sim_camera_update_rate", default_value="30"),
     ]
 
     world = LaunchConfiguration("world")
@@ -29,6 +32,9 @@ def generate_launch_description():
     log_level = LaunchConfiguration("log_level")
     use_ci_geometry = LaunchConfiguration("use_ci_geometry")
     start_range_adapter = LaunchConfiguration("start_range_adapter")
+    sim_camera_width = LaunchConfiguration("sim_camera_width")
+    sim_camera_height = LaunchConfiguration("sim_camera_height")
+    sim_camera_update_rate = LaunchConfiguration("sim_camera_update_rate")
 
     gazebo_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([PathJoinSubstitution([pkg_bringup, "launch", "gazebo.launch.py"])]),
@@ -46,6 +52,9 @@ def generate_launch_description():
             "use_sim_time": use_sim_time,
             "log_level": log_level,
             "use_ci_geometry": use_ci_geometry,
+            "sim_camera_width": sim_camera_width,
+            "sim_camera_height": sim_camera_height,
+            "sim_camera_update_rate": sim_camera_update_rate,
         }.items(),
     )
 

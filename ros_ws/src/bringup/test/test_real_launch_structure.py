@@ -325,11 +325,21 @@ class RealLaunchStructureTests(unittest.TestCase):
         self.assertIn("autonomy_stable_framed_frames", declared_names)
         self.assertIn("autonomy_proximity_stop_m", declared_names)
         self.assertIn("autonomy_capture_timeout_sec", declared_names)
+        self.assertIn("autonomy_detection_stale_ms", declared_names)
         self.assertIn("autonomy_target_lost_timeout_sec", declared_names)
+        self.assertIn("sim_camera_width", declared_names)
+        self.assertIn("sim_camera_height", declared_names)
+        self.assertIn("sim_camera_update_rate", declared_names)
         self.assertNotIn("autonomy_wait_for_inputs", declared_names)
         self.assertNotIn("autonomy_inputs_timeout_sec", declared_names)
 
         sim_source = (Path(__file__).resolve().parents[1] / "launch" / "sim.launch.py").read_text(encoding="utf-8")
+        common_source = (Path(__file__).resolve().parents[1] / "launch" / "common.launch.py").read_text(
+            encoding="utf-8"
+        )
+        sim_io_source = (Path(__file__).resolve().parents[1] / "launch" / "sim_io.launch.py").read_text(
+            encoding="utf-8"
+        )
         self.assertIn('package="omniseer_autonomy"', sim_source)
         self.assertIn('executable="target_centering_node"', sim_source)
         self.assertNotIn('package="omniseer_experiments"', sim_source)
@@ -349,9 +359,21 @@ class RealLaunchStructureTests(unittest.TestCase):
         )
         self.assertIn('"target_class": autonomy_target_class', sim_source)
         self.assertIn('"run_dir": ""', sim_source)
+        self.assertIn('"image_width_px": sim_camera_width', sim_source)
+        self.assertIn('"image_height_px": sim_camera_height', sim_source)
         self.assertIn('"detections_topic": "/yolo/detections"', sim_source)
         self.assertIn('"range_topic": "/range"', sim_source)
         self.assertIn('"command_topic": "/cmd_vel_autonomy"', sim_source)
+        self.assertIn('"detection_stale_ms": autonomy_detection_stale_ms', sim_source)
+        self.assertIn('"sim_camera_width": sim_camera_width', sim_source)
+        self.assertIn('"sim_camera_height": sim_camera_height', sim_source)
+        self.assertIn('"sim_camera_update_rate": sim_camera_update_rate', sim_source)
+        self.assertIn('"sim_camera_width": sim_camera_width', common_source)
+        self.assertIn('"sim_camera_height": sim_camera_height', common_source)
+        self.assertIn('"sim_camera_update_rate": sim_camera_update_rate', common_source)
+        self.assertIn('"sim_camera_width": sim_camera_width', sim_io_source)
+        self.assertIn('"sim_camera_height": sim_camera_height', sim_io_source)
+        self.assertIn('"sim_camera_update_rate": sim_camera_update_rate', sim_io_source)
 
     def test_sim_io_launch_includes_optional_range_adapter(self) -> None:
         module = _load_launch_module("sim_io.launch.py")

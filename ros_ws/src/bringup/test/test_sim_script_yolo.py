@@ -68,6 +68,10 @@ class SimScriptYoloTests(unittest.TestCase):
             self.assertIn("start_rf2o:=false", args)
             self.assertIn("start_nav:=false", args)
             self.assertNotIn("start_rviz:=false", args)
+            self.assertIn("sim_camera_width:=640", args)
+            self.assertIn("sim_camera_height:=480", args)
+            self.assertIn("sim_camera_update_rate:=10", args)
+            self.assertIn("autonomy_detection_stale_ms:=3000", args)
 
     def test_autonomy_flag_preserves_explicit_stack_overrides(self) -> None:
         repo_root = Path(__file__).resolve().parents[4]
@@ -114,6 +118,10 @@ class SimScriptYoloTests(unittest.TestCase):
                     "start_rf2o:=true",
                     "start_nav:=true",
                     "start_rviz:=false",
+                    "sim_camera_width:=1280",
+                    "sim_camera_height:=720",
+                    "sim_camera_update_rate:=15",
+                    "autonomy_detection_stale_ms:=1500",
                 ],
                 cwd=repo_root,
                 env=env,
@@ -127,9 +135,17 @@ class SimScriptYoloTests(unittest.TestCase):
             self.assertIn("start_rf2o:=true", args)
             self.assertIn("start_nav:=true", args)
             self.assertIn("start_rviz:=false", args)
+            self.assertIn("sim_camera_width:=1280", args)
+            self.assertIn("sim_camera_height:=720", args)
+            self.assertIn("sim_camera_update_rate:=15", args)
+            self.assertIn("autonomy_detection_stale_ms:=1500", args)
             self.assertNotIn("start_slam:=false", args)
             self.assertNotIn("start_rf2o:=false", args)
             self.assertNotIn("start_nav:=false", args)
+            self.assertNotIn("sim_camera_width:=640", args)
+            self.assertNotIn("sim_camera_height:=480", args)
+            self.assertNotIn("sim_camera_update_rate:=10", args)
+            self.assertNotIn("autonomy_detection_stale_ms:=3000", args)
 
     def test_yolo_flag_forwards_sim_launch_arguments(self) -> None:
         repo_root = Path(__file__).resolve().parents[4]

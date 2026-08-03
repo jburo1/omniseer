@@ -48,6 +48,9 @@ def generate_launch_description():
         DeclareLaunchArgument("headless", default_value="false"),
         DeclareLaunchArgument("log_level", default_value="info"),
         DeclareLaunchArgument("use_ci_geometry", default_value="false"),
+        DeclareLaunchArgument("sim_camera_width", default_value="1920"),
+        DeclareLaunchArgument("sim_camera_height", default_value="1080"),
+        DeclareLaunchArgument("sim_camera_update_rate", default_value="30"),
         DeclareLaunchArgument("ekf_params_file", default_value="ekf_fusion.yaml"),
         DeclareLaunchArgument("slam_tb_config_file", default_value="slam_toolbox_async_online.yaml"),
         DeclareLaunchArgument("nav2_params_file", default_value="nav2_params.yaml"),
@@ -66,6 +69,7 @@ def generate_launch_description():
         DeclareLaunchArgument("autonomy_stable_framed_frames", default_value="10"),
         DeclareLaunchArgument("autonomy_proximity_stop_m", default_value="0.30"),
         DeclareLaunchArgument("autonomy_capture_timeout_sec", default_value="2.0"),
+        DeclareLaunchArgument("autonomy_detection_stale_ms", default_value="500"),
         DeclareLaunchArgument("autonomy_target_lost_timeout_sec", default_value="0.5"),
         DeclareLaunchArgument("yolo_model", default_value="yolov8s-worldv2.pt"),
         DeclareLaunchArgument("yolo_device", default_value="cuda:0"),
@@ -79,6 +83,9 @@ def generate_launch_description():
     headless = LaunchConfiguration("headless")
     log_level = LaunchConfiguration("log_level")
     use_ci_geometry = LaunchConfiguration("use_ci_geometry")
+    sim_camera_width = LaunchConfiguration("sim_camera_width")
+    sim_camera_height = LaunchConfiguration("sim_camera_height")
+    sim_camera_update_rate = LaunchConfiguration("sim_camera_update_rate")
     ekf_params_file = LaunchConfiguration("ekf_params_file")
     slam_tb_config_file = LaunchConfiguration("slam_tb_config_file")
     nav2_params_file = LaunchConfiguration("nav2_params_file")
@@ -97,6 +104,7 @@ def generate_launch_description():
     autonomy_stable_framed_frames = LaunchConfiguration("autonomy_stable_framed_frames")
     autonomy_proximity_stop_m = LaunchConfiguration("autonomy_proximity_stop_m")
     autonomy_capture_timeout_sec = LaunchConfiguration("autonomy_capture_timeout_sec")
+    autonomy_detection_stale_ms = LaunchConfiguration("autonomy_detection_stale_ms")
     autonomy_target_lost_timeout_sec = LaunchConfiguration("autonomy_target_lost_timeout_sec")
     yolo_model = LaunchConfiguration("yolo_model")
     yolo_device = LaunchConfiguration("yolo_device")
@@ -114,6 +122,9 @@ def generate_launch_description():
             "log_level": log_level,
             "use_ci_geometry": use_ci_geometry,
             "start_range_adapter": start_range_adapter,
+            "sim_camera_width": sim_camera_width,
+            "sim_camera_height": sim_camera_height,
+            "sim_camera_update_rate": sim_camera_update_rate,
         }.items(),
     )
 
@@ -123,6 +134,9 @@ def generate_launch_description():
             "use_sim_time": use_sim_time,
             "log_level": log_level,
             "use_ci_geometry": use_ci_geometry,
+            "sim_camera_width": sim_camera_width,
+            "sim_camera_height": sim_camera_height,
+            "sim_camera_update_rate": sim_camera_update_rate,
             "ekf_params_file": ekf_params_file,
             "slam_tb_config_file": slam_tb_config_file,
             "nav2_params_file": nav2_params_file,
@@ -157,6 +171,8 @@ def generate_launch_description():
                 "use_sim_time": use_sim_time,
                 "target_class": autonomy_target_class,
                 "run_dir": "",
+                "image_width_px": sim_camera_width,
+                "image_height_px": sim_camera_height,
                 "detections_topic": "/yolo/detections",
                 "odometry_topic": "/odometry/filtered",
                 "range_topic": "/range",
@@ -169,6 +185,7 @@ def generate_launch_description():
                 "stable_framed_frames": autonomy_stable_framed_frames,
                 "proximity_stop_m": autonomy_proximity_stop_m,
                 "capture_timeout_sec": autonomy_capture_timeout_sec,
+                "detection_stale_ms": autonomy_detection_stale_ms,
                 "target_lost_timeout_sec": autonomy_target_lost_timeout_sec,
             }
         ],

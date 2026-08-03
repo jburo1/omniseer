@@ -25,6 +25,9 @@ def generate_launch_description():
         DeclareLaunchArgument("use_sim_time", default_value="false"),
         DeclareLaunchArgument("log_level", default_value="info"),
         DeclareLaunchArgument("use_ci_geometry", default_value="false"),
+        DeclareLaunchArgument("sim_camera_width", default_value="1920"),
+        DeclareLaunchArgument("sim_camera_height", default_value="1080"),
+        DeclareLaunchArgument("sim_camera_update_rate", default_value="30"),
         DeclareLaunchArgument("ekf_params_file", default_value="ekf_fusion.yaml"),
         DeclareLaunchArgument("slam_tb_config_file", default_value="slam_toolbox_async_online.yaml"),
         DeclareLaunchArgument("nav2_params_file", default_value="nav2_params.yaml"),
@@ -48,6 +51,9 @@ def generate_launch_description():
     use_sim_time = LaunchConfiguration("use_sim_time")
     log_level = LaunchConfiguration("log_level")
     use_ci_geometry = LaunchConfiguration("use_ci_geometry")
+    sim_camera_width = LaunchConfiguration("sim_camera_width")
+    sim_camera_height = LaunchConfiguration("sim_camera_height")
+    sim_camera_update_rate = LaunchConfiguration("sim_camera_update_rate")
     ekf_params_file = LaunchConfiguration("ekf_params_file")
     slam_tb_config_file = LaunchConfiguration("slam_tb_config_file")
     nav2_params_file = LaunchConfiguration("nav2_params_file")
@@ -73,6 +79,9 @@ def generate_launch_description():
             "use_sim_time": use_sim_time,
             "log_level": log_level,
             "use_ci_geometry": use_ci_geometry,
+            "sim_camera_width": sim_camera_width,
+            "sim_camera_height": sim_camera_height,
+            "sim_camera_update_rate": sim_camera_update_rate,
         }.items(),
         condition=IfCondition(start_description),
     )

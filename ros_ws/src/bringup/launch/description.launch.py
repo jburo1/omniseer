@@ -13,15 +13,34 @@ def generate_launch_description():
         DeclareLaunchArgument("use_sim_time", default_value="false"),
         DeclareLaunchArgument("log_level", default_value="info"),
         DeclareLaunchArgument("use_ci_geometry", default_value="false"),
+        DeclareLaunchArgument("sim_camera_width", default_value="1920"),
+        DeclareLaunchArgument("sim_camera_height", default_value="1080"),
+        DeclareLaunchArgument("sim_camera_update_rate", default_value="30"),
     ]
 
     use_sim_time = LaunchConfiguration("use_sim_time")
     log_level = LaunchConfiguration("log_level")
     use_ci_geometry = LaunchConfiguration("use_ci_geometry")
+    sim_camera_width = LaunchConfiguration("sim_camera_width")
+    sim_camera_height = LaunchConfiguration("sim_camera_height")
+    sim_camera_update_rate = LaunchConfiguration("sim_camera_update_rate")
 
     pkg_omniseer = FindPackageShare("omniseer_description")
     xacro_file = PathJoinSubstitution([pkg_omniseer, "urdf", "xacro", "omniseer.urdf.xacro"])
-    robot_description_urdf = Command(["xacro ", xacro_file, " use_ci_geometry:=", use_ci_geometry])
+    robot_description_urdf = Command(
+        [
+            "xacro ",
+            xacro_file,
+            " use_ci_geometry:=",
+            use_ci_geometry,
+            " sim_camera_width:=",
+            sim_camera_width,
+            " sim_camera_height:=",
+            sim_camera_height,
+            " sim_camera_update_rate:=",
+            sim_camera_update_rate,
+        ]
+    )
 
     robot_state_publisher_node = Node(
         package="robot_state_publisher",

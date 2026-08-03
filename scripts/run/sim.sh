@@ -42,6 +42,10 @@ has_yolo_image_reliability_arg=false
 has_start_slam_arg=false
 has_start_rf2o_arg=false
 has_start_nav_arg=false
+has_sim_camera_width_arg=false
+has_sim_camera_height_arg=false
+has_sim_camera_update_rate_arg=false
+has_autonomy_detection_stale_ms_arg=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -128,6 +132,26 @@ while [[ $# -gt 0 ]]; do
       launch_args+=("$1")
       shift
       ;;
+    sim_camera_width:=*)
+      has_sim_camera_width_arg=true
+      launch_args+=("$1")
+      shift
+      ;;
+    sim_camera_height:=*)
+      has_sim_camera_height_arg=true
+      launch_args+=("$1")
+      shift
+      ;;
+    sim_camera_update_rate:=*)
+      has_sim_camera_update_rate_arg=true
+      launch_args+=("$1")
+      shift
+      ;;
+    autonomy_detection_stale_ms:=*)
+      has_autonomy_detection_stale_ms_arg=true
+      launch_args+=("$1")
+      shift
+      ;;
     yolo_model:=*)
       has_yolo_model_arg=true
       launch_args+=("$1")
@@ -194,6 +218,18 @@ if [[ "${start_autonomy}" == true ]]; then
   fi
   if [[ "${has_start_nav_arg}" == false ]]; then
     launch_args+=("start_nav:=false")
+  fi
+  if [[ "${has_sim_camera_width_arg}" == false ]]; then
+    launch_args+=("sim_camera_width:=640")
+  fi
+  if [[ "${has_sim_camera_height_arg}" == false ]]; then
+    launch_args+=("sim_camera_height:=480")
+  fi
+  if [[ "${has_sim_camera_update_rate_arg}" == false ]]; then
+    launch_args+=("sim_camera_update_rate:=10")
+  fi
+  if [[ "${has_autonomy_detection_stale_ms_arg}" == false ]]; then
+    launch_args+=("autonomy_detection_stale_ms:=3000")
   fi
 fi
 

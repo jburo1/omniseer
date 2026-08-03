@@ -62,7 +62,11 @@ class RealLaunchShowArgsTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("start_autonomy", result.stdout)
         self.assertIn("autonomy_target_class", result.stdout)
+        self.assertIn("autonomy_detection_stale_ms", result.stdout)
         self.assertIn("autonomy_proximity_stop_m", result.stdout)
+        self.assertIn("sim_camera_width", result.stdout)
+        self.assertIn("sim_camera_height", result.stdout)
+        self.assertIn("sim_camera_update_rate", result.stdout)
         self.assertNotIn("autonomy_wait_for_inputs", result.stdout)
         self.assertNotIn("autonomy_inputs_timeout_sec", result.stdout)
 
