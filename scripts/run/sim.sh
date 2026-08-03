@@ -129,7 +129,9 @@ done
 
 if [[ "${start_yolo}" == true ]]; then
   if ! ros2 pkg prefix yolo_bringup >/dev/null 2>&1 || ! ros2 pkg prefix yolo_ros >/dev/null 2>&1; then
-    omni_die "YOLO sim support is not installed in the sourced workspace; run 'scripts/omni build ros --with-yolo' first"
+    omni_die \
+      "YOLO sim support is not installed in the sourced workspace;" \
+      "run 'scripts/omni build ros --with-yolo' first"
   fi
 
   yolo_runtime_python="python3"
@@ -144,20 +146,10 @@ if [[ "${start_yolo}" == true ]]; then
   read -r -a yolo_runtime_python_cmd <<<"${yolo_runtime_python}"
 
   if ! "${yolo_runtime_python_cmd[@]}" -c "import torch; import ultralytics" >/dev/null 2>&1; then
-    active_python_site="$(
-      python3 - <<'PY'
-import site
-
-paths = site.getsitepackages()
-print(paths[0] if paths else "")
-PY
-    )"
-    if [[ -n "${active_python_site}" && -d "${active_python_site}" ]]; then
-      export PYTHONPATH="${active_python_site}${PYTHONPATH:+:${PYTHONPATH}}"
-    fi
-  fi
-  if ! "${yolo_runtime_python_cmd[@]}" -c "import torch; import ultralytics" >/dev/null 2>&1; then
-    omni_die "YOLO sim support needs Python 'torch' and 'ultralytics' available to the ROS runtime interpreter (${yolo_runtime_python})"
+    omni_die \
+      "YOLO sim support needs Python 'torch' and 'ultralytics' available to" \
+      "the installed yolo_ros runtime interpreter (${yolo_runtime_python});" \
+      "rebuild it with 'scripts/omni build ros --with-yolo'"
   fi
   if [[ "${has_start_yolo_arg}" == false ]]; then
     launch_args+=("start_yolo:=true")

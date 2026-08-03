@@ -166,6 +166,66 @@ class SimScriptYoloTests(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("scripts/omni build ros --with-yolo", result.stderr)
 
+    def test_yolo_flag_rejects_entrypoint_runtime_without_yolo_dependencies(self) -> None:
+        repo_root = Path(__file__).resolve().parents[4]
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            bin_dir = tmp_path / "bin"
+            install_dir = tmp_path / "install"
+            setup_path = tmp_path / "setup.bash"
+            yolo_lib_dir = install_dir / "lib" / "yolo_ros"
+            bin_dir.mkdir()
+            yolo_lib_dir.mkdir(parents=True)
+            setup_path.write_text("# test setup\n", encoding="utf-8")
+
+            runtime_python = bin_dir / "python_ros_runtime"
+            runtime_python.write_text("#!/usr/bin/env bash\nexit 1\n", encoding="utf-8")
+            runtime_python.chmod(0o755)
+
+            yolo_node = yolo_lib_dir / "yolo_node"
+            yolo_node.write_text(f"#!{runtime_python}\n", encoding="utf-8")
+            yolo_node.chmod(0o755)
+
+            ros2_stub = bin_dir / "ros2"
+            ros2_stub.write_text(
+                "\n".join(
+                    [
+                        "#!/usr/bin/env bash",
+                        'if [[ "$1" == "pkg" && "$2" == "prefix" ]]; then',
+                        f'  printf "%s\\n" "{install_dir}"',
+                        "  exit 0",
+                        "fi",
+                        "exit 0",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            ros2_stub.chmod(0o755)
+
+            python_stub = bin_dir / "python3"
+            python_stub.write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
+            python_stub.chmod(0o755)
+
+            env = os.environ.copy()
+            env["PATH"] = f"{bin_dir}{os.pathsep}{env['PATH']}"
+            env["OMNISEER_ROS_SETUP"] = str(setup_path)
+            env["OMNISEER_WS_SETUP"] = str(setup_path)
+
+            result = subprocess.run(
+                [str(repo_root / "scripts" / "omni"), "run", "sim", "--yolo"],
+                cwd=repo_root,
+                env=env,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("installed yolo_ros runtime interpreter", result.stderr)
+            self.assertIn("scripts/omni build ros --with-yolo", result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()
