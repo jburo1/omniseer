@@ -30,6 +30,10 @@ def _config(
     out_dir: Path,
     *,
     launch_args: tuple[str, ...] = ("start_gateway:=true", "camera_device:=/dev/video11"),
+    detector_model_path: str = "",
+    clip_model_path: str = "",
+    clip_vocab_path: str = "",
+    classes_path: str = "",
 ) -> RunBundleConfig:
     return RunBundleConfig(
         run_id="demo_001",
@@ -42,6 +46,10 @@ def _config(
         launch_profile="operator",
         launch_mode="bringup",
         launch_args=launch_args,
+        detector_model_path=detector_model_path,
+        clip_model_path=clip_model_path,
+        clip_vocab_path=clip_vocab_path,
+        classes_path=classes_path,
         container_image_ref="ghcr.io/acme/omniseer:robot-v2",
         container_image_digest="ghcr.io/acme/omniseer@sha256:0123456789abcdef",
         experiment_config="runtime-container-full",
@@ -514,6 +522,38 @@ class RunReportTests(unittest.TestCase):
 
             output = summary.output_path.read_text(encoding="utf-8")
             self.assertIn('<details id="issues" open>', output)
+
+    def test_configuration_expands_known_from_config_launch_args(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "demo_001"
+            writer = RunBundleWriter(
+                _config(
+                    run_dir,
+                    launch_args=(
+                        "detector_model_path:=__from_config__",
+                        "clip_model_path:=__from_config__",
+                        "clip_vocab_path:=__from_config__",
+                        "classes_path:=__from_config__",
+                    ),
+                    detector_model_path="/models/detector.rknn",
+                    clip_model_path="/models/clip.rknn",
+                    clip_vocab_path="/models/clip_vocab.bpe",
+                    classes_path="/models/classes.txt",
+                ),
+                started_at=STARTED_AT,
+            )
+            writer.write_detection_record(_detection_record())
+            writer.write_perf_record(_perf_record())
+            writer.finalize(ended_at=ENDED_AT)
+
+            summary = write_run_report(run_dir)
+
+            output = summary.output_path.read_text(encoding="utf-8")
+            self.assertIn("detector_model_path:=/models/detector.rknn (from config)", output)
+            self.assertIn("clip_model_path:=/models/clip.rknn (from config)", output)
+            self.assertIn("clip_vocab_path:=/models/clip_vocab.bpe (from config)", output)
+            self.assertIn("classes_path:=/models/classes.txt (from config)", output)
+            self.assertNotIn("__from_config__", output)
 
     def test_writes_autonomy_summary_when_autonomy_jsonl_exists(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

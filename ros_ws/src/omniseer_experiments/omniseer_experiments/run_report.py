@@ -284,7 +284,7 @@ def _configuration_section(manifest: dict[str, Any]) -> str:
         ("Launch command", _manifest_nested_string(manifest, "launch", "command")),
         ("Launch profile", _manifest_nested_string(manifest, "launch", "profile")),
         ("Launch mode", _manifest_nested_string(manifest, "launch", "mode")),
-        ("Launch args", _join_or_dash(launch_args)),
+        ("Launch args", _join_or_dash(_display_launch_args(launch_args, manifest=manifest))),
         ("Runtime image ref", _manifest_nested_string(manifest, "container", "image_ref")),
         ("Runtime image digest", _manifest_nested_string(manifest, "container", "image_digest")),
         ("Experiment config", _manifest_nested_string(manifest, "experiment", "config")),
@@ -1852,6 +1852,25 @@ def _table(headers: Sequence[str], rows: Sequence[Sequence[str]]) -> str:
     header_html = "".join(f"<th>{_esc(header)}</th>" for header in headers)
     row_html = "".join("<tr>" + "".join(f"<td>{_esc(value)}</td>" for value in row) + "</tr>" for row in rows)
     return f"<table><thead><tr>{header_html}</tr></thead><tbody>{row_html}</tbody></table>"
+
+
+def _display_launch_args(launch_args: Sequence[str], *, manifest: dict[str, Any]) -> tuple[str, ...]:
+    resolved_values = {
+        "detector_model_path": _manifest_model_value(manifest, "detector_model_path"),
+        "clip_model_path": _manifest_model_value(manifest, "clip_model_path"),
+        "clip_vocab_path": _manifest_model_value(manifest, "clip_vocab_path"),
+        "classes_path": _manifest_string(manifest, "classes_path"),
+    }
+    display_args = []
+    for item in launch_args:
+        name, separator, value = item.partition(":=")
+        if separator and value == "__from_config__":
+            resolved = resolved_values.get(name)
+            if resolved:
+                display_args.append(f"{name}:={resolved} (from config)")
+                continue
+        display_args.append(item)
+    return tuple(display_args)
 
 
 def _esc(value: object) -> str:
