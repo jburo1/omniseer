@@ -304,6 +304,7 @@ class MonitorGuiTests(unittest.TestCase):
                 self.assertEqual(selection.connection.remote_runs_root, "/robot/repo/runs")
                 self.assertEqual(selection.run_config.classes, ("person", "cup"))
                 self.assertEqual(selection.run_config.run_type, RUN_TYPE_AUTONOMY_CENTER)
+                self.assertEqual(selection.run_config.experiment_config, "Autonomy: frame and capture target")
                 self.assertEqual(selection.run_config.notes, "trial notes")
                 self.assertEqual(selection.run_config.autonomy_bbox_area_min_ratio, "0.10")
                 self.assertEqual(selection.run_config.autonomy_bbox_area_max_ratio, "0.28")

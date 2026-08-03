@@ -102,6 +102,7 @@ class RunSettingsTests(unittest.TestCase):
         self.assertEqual(selection.run_config.classes, ("person", "cup"))
         self.assertEqual(selection.run_config.notes, "trial notes")
         self.assertEqual(selection.run_config.run_type, RUN_TYPE_PERCEPTION)
+        self.assertEqual(selection.run_config.experiment_config, "Perception recording")
         self.assertEqual(selection.run_config.devcontainer_exec_template, DEFAULT_DEVCONTAINER_EXEC_TEMPLATE)
         self.assertEqual(selection.run_config.autonomy_bbox_area_min_ratio, "0.10")
         self.assertEqual(selection.run_config.autonomy_bbox_area_max_ratio, "0.28")

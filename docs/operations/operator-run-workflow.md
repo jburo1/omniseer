@@ -120,9 +120,13 @@ experiments without changing hardware or model assumptions:
 - `Max Detections` -> `postprocess.max_detections`
 
 The command builder passes these as launch arguments and also records them as
-experiment parameters in the run manifest. Keep model paths, camera device,
-capture size, model input size, class padding, and runner warmup in launch/config
-files unless an experiment explicitly needs those lower-level controls.
+experiment parameters in the run manifest. Operator-started runs also record the
+selected `Experiment` dropdown label, such as `Perception recording` or
+`Autonomy: frame and capture target`, so the HTML report has a clear provenance
+label even when no external experiment config file is used. Keep model paths,
+camera device, capture size, model input size, class padding, and runner warmup
+in launch/config files unless an experiment explicitly needs those lower-level
+controls.
 
 ## Autonomy Run Type
 

@@ -43,6 +43,7 @@ class RunConfig:
     notes: str = ""
     devcontainer_exec_template: str = ""
     run_type: str = RUN_TYPE_PERCEPTION
+    experiment_config: str = ""
     autonomy_bbox_area_min_ratio: str = "0.08"
     autonomy_bbox_area_max_ratio: str = "0.35"
     autonomy_forward_speed_m_s: str = "0.05"
@@ -152,6 +153,7 @@ def _build_runtime_record_inner_command(
         command.extend(["--record-classes", ",".join(classes)])
     if notes.strip():
         command.extend(["--record-notes", notes.strip()])
+    command.extend(_record_experiment_config_args(run_config))
     command.extend(_detector_experiment_parameters(run_config))
     command.append("--")
     command.append("experiment_overwrite:=true")
@@ -195,6 +197,7 @@ def _build_devcontainer_record_inner_command(
         command.extend(["--record-classes", ",".join(classes)])
     if notes.strip():
         command.extend(["--record-notes", notes.strip()])
+    command.extend(_record_experiment_config_args(run_config))
     command.extend(_detector_experiment_parameters(run_config))
     command.append("bringup")
     command.append("experiment_overwrite:=true")
@@ -223,6 +226,11 @@ def _detector_experiment_parameters(run_config: RunConfig) -> list[str]:
         "--record-experiment-parameter",
         f"postprocess.max_detections={run_config.detector_max_detections}",
     ]
+
+
+def _record_experiment_config_args(run_config: RunConfig) -> list[str]:
+    config = run_config.experiment_config.strip() or RUN_TYPE_LABELS.get(run_config.run_type, run_config.run_type)
+    return ["--record-experiment-config", config]
 
 
 def _autonomy_launch_args(*, classes: Sequence[str], run_type: str, run_dir: str) -> list[str]:

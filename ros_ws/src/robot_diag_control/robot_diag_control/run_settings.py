@@ -121,6 +121,7 @@ def resolve_run_form(
     default_run_id: Callable[[], str],
 ) -> RunFormSelection:
     run_id = resolved_run_id(values.run_id, default_run_id=default_run_id)
+    run_type = selected_run_type(values.run_type_label)
     remote_repo_root = normalized_remote_repo_root(values.remote_repo_root)
     remote_runs_root = normalized_remote_runs_root(values.remote_runs_root, remote_repo_root=remote_repo_root)
     connection = RobotConnection(
@@ -135,7 +136,8 @@ def resolve_run_form(
         classes=tuple(parse_run_classes(values.classes_text)),
         notes=values.notes.strip(),
         devcontainer_exec_template=values.devcontainer_exec_template.strip() or DEFAULT_DEVCONTAINER_EXEC_TEMPLATE,
-        run_type=selected_run_type(values.run_type_label),
+        run_type=run_type,
+        experiment_config=RUN_TYPE_LABELS[run_type],
         autonomy_bbox_area_min_ratio=values.autonomy_bbox_area_min_ratio.strip() or "0.08",
         autonomy_bbox_area_max_ratio=values.autonomy_bbox_area_max_ratio.strip() or "0.35",
         autonomy_forward_speed_m_s=values.autonomy_forward_speed_m_s.strip() or "0.05",
