@@ -208,7 +208,16 @@ def _render_report(
         _issues_section(issues),
     ]
     rendered_sections = tuple(section for section in sections if isinstance(section, _ReportSection))
-    body = _table_of_contents(rendered_sections) + "\n" + "\n".join(section.html_text for section in rendered_sections)
+    body = (
+        _table_of_contents(
+            rendered_sections,
+            inspection=inspection,
+            evidence_items=evidence_items,
+            issues=issues,
+        )
+        + "\n"
+        + "\n".join(section.html_text for section in rendered_sections)
+    )
     return (
         "<!doctype html>\n"
         '<html lang="en">\n'
@@ -1804,13 +1813,29 @@ def _relative_href(from_dir: Path, target: Path) -> str:
     return Path(os.path.relpath(target, start=from_dir)).as_posix()
 
 
-def _table_of_contents(sections: Sequence[_ReportSection]) -> str:
+def _table_of_contents(
+    sections: Sequence[_ReportSection],
+    *,
+    inspection: RunInspection,
+    evidence_items: Sequence[_EvidenceItem],
+    issues: Sequence[str],
+) -> str:
     items = "".join(
         f'<li><a href="#{_attr(section.section_id)}">{_esc(section.title)}</a></li>' for section in sections
+    )
+    status_items = "".join(
+        f'<span class="toc-chip"><strong>{_esc(label)}</strong>{_esc(value)}</span>'
+        for label, value in (
+            ("State", inspection.state),
+            ("Issues", str(len(issues))),
+            ("Evidence", str(len(evidence_items))),
+            ("Duration", _format_duration(inspection.duration_sec)),
+        )
     )
     return (
         '    <nav class="toc" aria-labelledby="toc-heading">\n'
         '      <h2 id="toc-heading">Contents</h2>\n'
+        f'      <div class="toc-status">{status_items}</div>\n'
         f"      <ol>{items}</ol>\n"
         "    </nav>"
     )
@@ -1911,6 +1936,19 @@ details[open] summary::before { content: "v"; }
 .section-body { padding: 16px; overflow-x: auto; }
 .toc { margin: 0 0 18px; padding: 14px 16px; background: #ffffff; border: 1px solid #d8dee6; border-radius: 6px; }
 .toc h2 { margin-bottom: 10px; }
+.toc-status { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
+.toc-chip {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  padding: 4px 8px;
+  border: 1px solid #d8dee6;
+  border-radius: 999px;
+  background: #f6f7f9;
+  font-size: 13px;
+  color: #526173;
+}
+.toc-chip strong { color: #3d4a5c; }
 .toc ol {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
