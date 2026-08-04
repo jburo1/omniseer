@@ -216,8 +216,6 @@ gateway_proto::DetectionOverlayStatus to_proto(const DetectionOverlaySnapshot & 
   response.set_available(snapshot.available);
   response.set_stale(snapshot.stale);
   response.set_age_ms(snapshot.age_ms);
-  response.set_native_frame_id(snapshot.native_frame_id);
-  response.set_native_sequence(snapshot.native_sequence);
   response.set_source_width_px(snapshot.source_width_px);
   response.set_source_height_px(snapshot.source_height_px);
   response.set_detection_count(static_cast<uint32_t>(snapshot.detections.size()));

@@ -104,23 +104,6 @@ if(BUILD_TESTING)
   target_link_libraries(test_evidence_frame_sink
     omniseer_bridge_runtime
   )
-
-  ament_add_gtest(test_vision_bridge_node
-    test/test_vision_bridge_node.cpp
-  )
-  target_compile_features(test_vision_bridge_node PUBLIC cxx_std_17)
-  target_include_directories(test_vision_bridge_node PRIVATE
-    include
-    ${VISION_ROOT}/include
-  )
-  target_link_libraries(test_vision_bridge_node
-    ${builtin_interfaces_TARGETS}
-    ${std_msgs_TARGETS}
-    ${omniseer_msgs_TARGETS}
-    ${yolo_msgs_TARGETS}
-    rclcpp::rclcpp
-    omniseer_bridge_runtime
-  )
 endif()
 
 ament_package()

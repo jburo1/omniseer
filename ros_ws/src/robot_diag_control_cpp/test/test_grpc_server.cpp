@@ -50,8 +50,6 @@ TEST(RobotGatewayGrpcTest, ServesSystemStatusAndPreviewUpdatesOverGrpc)
   odom.twist.twist.angular.z = 0.2;
   store.update_odometry(odom);
   yolo_msgs::msg::DetectionArray detections_msg{};
-  detections_msg.native_frame_id = 101;
-  detections_msg.native_sequence = 9001;
   yolo_msgs::msg::Detection detection{};
   detection.class_id = 1;
   detection.class_name = "person";
@@ -110,8 +108,6 @@ TEST(RobotGatewayGrpcTest, ServesSystemStatusAndPreviewUpdatesOverGrpc)
   EXPECT_FALSE(overlay_snapshot.detections().stale());
   EXPECT_EQ(overlay_snapshot.detections().source_width_px(), 1280U);
   EXPECT_EQ(overlay_snapshot.detections().source_height_px(), 720U);
-  EXPECT_EQ(overlay_snapshot.detections().native_frame_id(), 101U);
-  EXPECT_EQ(overlay_snapshot.detections().native_sequence(), 9001U);
   EXPECT_EQ(overlay_snapshot.detections().detection_count(), 1U);
   ASSERT_EQ(overlay_snapshot.detections().detections_size(), 1);
   EXPECT_EQ(overlay_snapshot.detections().detections(0).class_name(), "person");

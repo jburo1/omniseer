@@ -443,8 +443,6 @@ def format_overlay_snapshot(response: robot_gateway_pb2.OverlaySnapshot) -> str:
         "detections:"
         f" {freshness}"
         f" age_ms={detections.age_ms}"
-        f" native_frame_id={detections.native_frame_id}"
-        f" native_sequence={detections.native_sequence}"
         f" count={detections.detection_count}"
         f" source={detections.source_width_px}x{detections.source_height_px}"
     )

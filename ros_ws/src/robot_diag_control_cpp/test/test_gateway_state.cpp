@@ -141,8 +141,6 @@ TEST(GatewayStateStoreTest, DetectionOverlaySnapshotTracksLatestDetectionsAndFre
   EXPECT_EQ(initial.source_height_px, 720U);
 
   yolo_msgs::msg::DetectionArray msg{};
-  msg.native_frame_id = 101;
-  msg.native_sequence = 9001;
   yolo_msgs::msg::Detection detection{};
   detection.class_id = 7;
   detection.class_name = "person";
@@ -159,8 +157,6 @@ TEST(GatewayStateStoreTest, DetectionOverlaySnapshotTracksLatestDetectionsAndFre
   ASSERT_TRUE(fresh.available);
   EXPECT_FALSE(fresh.stale);
   EXPECT_EQ(fresh.age_ms, 0U);
-  EXPECT_EQ(fresh.native_frame_id, 101U);
-  EXPECT_EQ(fresh.native_sequence, 9001U);
   ASSERT_EQ(fresh.detections.size(), 1U);
   EXPECT_EQ(fresh.detections.front().class_id, 7);
   EXPECT_EQ(fresh.detections.front().class_name, "person");

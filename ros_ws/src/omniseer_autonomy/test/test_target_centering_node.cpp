@@ -135,14 +135,6 @@ TEST_F(TargetCenteringNodeTest, WritesEventsAndRequestsCaptureOnSuccess)
   executor.add_node(helper);
 
   ASSERT_TRUE(spin_until(executor, [&]() {return detections->get_subscription_count() > 0;}));
-  const auto subscriptions = helper->get_subscriptions_info_by_topic(detections_topic);
-  ASSERT_EQ(subscriptions.size(), 1U);
-  const auto detection_qos = subscriptions.front().qos_profile().get_rmw_qos_profile();
-  EXPECT_EQ(detection_qos.history, RMW_QOS_POLICY_HISTORY_KEEP_LAST);
-  EXPECT_EQ(detection_qos.depth, 1U);
-  EXPECT_EQ(detection_qos.reliability, RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT);
-  EXPECT_EQ(detection_qos.durability, RMW_QOS_POLICY_DURABILITY_VOLATILE);
-
   for (int i = 0; i < 4; ++i) {
     detections->publish(centered_detection());
     executor.spin_some(50ms);

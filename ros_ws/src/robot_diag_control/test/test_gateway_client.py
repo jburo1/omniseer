@@ -209,8 +209,6 @@ class GatewayClientFormattingTests(unittest.TestCase):
                 available=True,
                 stale=False,
                 age_ms=42,
-                native_frame_id=101,
-                native_sequence=9001,
                 source_width_px=1280,
                 source_height_px=720,
                 detection_count=1,
@@ -234,10 +232,7 @@ class GatewayClientFormattingTests(unittest.TestCase):
         formatted = format_overlay_snapshot(response)
 
         self.assertIn("preview=running/balanced", formatted)
-        self.assertIn(
-            "detections: fresh age_ms=42 native_frame_id=101 native_sequence=9001 count=1 source=1280x720",
-            formatted,
-        )
+        self.assertIn("detections: fresh age_ms=42 count=1 source=1280x720", formatted)
         self.assertIn("class=person score=0.88 bbox=(270.0,140.0,100.0,80.0)", formatted)
         self.assertIn("event: seq=4 age_ms=35 message=odometry recovered", formatted)
 

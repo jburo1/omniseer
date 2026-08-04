@@ -183,8 +183,6 @@ message DetectionOverlayStatus {
   uint32 source_height_px = 5;
   uint32 detection_count = 6;
   repeated OverlayDetection detections = 7;
-  uint64 native_frame_id = 8;
-  uint64 native_sequence = 9;
 }
 
 message OperatorEvent {
