@@ -80,6 +80,14 @@ double yaw_from_quaternion(const geometry_msgs::msg::Quaternion & orientation)
     1.0 - (2.0 * ((orientation.y * orientation.y) + (orientation.z * orientation.z)));
   return std::atan2(siny_cosp, cosy_cosp);
 }
+
+rclcpp::QoS latest_only_detection_qos()
+{
+  auto qos = rclcpp::QoS(rclcpp::KeepLast(1));
+  qos.best_effort();
+  qos.durability_volatile();
+  return qos;
+}
 } // namespace
 
 class TargetCenteringNode : public rclcpp::Node
@@ -118,7 +126,7 @@ public:
     _publisher = create_publisher<geometry_msgs::msg::TwistStamped>(command_topic, 10);
     _capture_client = create_client<omniseer_msgs::srv::CaptureFrame>(capture_service);
     _subscription = create_subscription<yolo_msgs::msg::DetectionArray>(
-      detections_topic, 10,
+      detections_topic, latest_only_detection_qos(),
       [this](const yolo_msgs::msg::DetectionArray & msg)
       {
         std::vector<TargetDetection> detections;

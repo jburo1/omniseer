@@ -104,6 +104,8 @@ struct DetectionOverlaySnapshot
   bool                              available{false};
   bool                              stale{false};
   uint64_t                          age_ms{0};
+  uint64_t                          native_frame_id{0};
+  uint64_t                          native_sequence{0};
   uint32_t                          source_width_px{1280};
   uint32_t                          source_height_px{720};
   std::vector<DetectionOverlayItem> detections{};
@@ -242,6 +244,8 @@ private:
   struct StoredDetectionOverlay
   {
     std::vector<DetectionOverlayItem> detections{};
+    uint64_t                          native_frame_id{0};
+    uint64_t                          native_sequence{0};
     SteadyTimePoint                   updated_at{};
   };
 

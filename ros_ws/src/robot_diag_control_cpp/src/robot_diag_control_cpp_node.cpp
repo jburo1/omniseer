@@ -17,6 +17,17 @@
 
 namespace robot_diag_control_cpp
 {
+namespace
+{
+rclcpp::QoS latest_only_detection_qos()
+{
+  auto qos = rclcpp::QoS(rclcpp::KeepLast(1));
+  qos.best_effort();
+  qos.durability_volatile();
+  return qos;
+}
+} // namespace
+
 class RobotDiagControlCppNode : public rclcpp::Node
 {
 public:
@@ -145,7 +156,7 @@ public:
         _state_store->update_odometry(msg);
       });
     _detections_subscription = create_subscription<yolo_msgs::msg::DetectionArray>(
-      detections_topic, 10,
+      detections_topic, latest_only_detection_qos(),
       [this](const yolo_msgs::msg::DetectionArray & msg)
       {
         _state_store->update_detections(msg);

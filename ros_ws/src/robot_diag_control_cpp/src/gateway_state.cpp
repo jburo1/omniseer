@@ -142,6 +142,8 @@ void GatewayStateStore::update_detections(const yolo_msgs::msg::DetectionArray &
   _has_detections = true;
   _detections.detections.clear();
   _detections.detections.reserve(msg.detections.size());
+  _detections.native_frame_id = msg.native_frame_id;
+  _detections.native_sequence = msg.native_sequence;
 
   for (const auto & detection : msg.detections) {
     _detections.detections.push_back(
@@ -314,6 +316,8 @@ DetectionOverlaySnapshot GatewayStateStore::detection_overlay_snapshot_locked() 
       false,
       false,
       0,
+      0,
+      0,
       _detection_source_width_px,
       _detection_source_height_px,
       {},
@@ -326,6 +330,8 @@ DetectionOverlaySnapshot GatewayStateStore::detection_overlay_snapshot_locked() 
     age > _detections_stale_after,
     static_cast<uint64_t>(
       std::chrono::duration_cast<std::chrono::milliseconds>(age).count()),
+    _detections.native_frame_id,
+    _detections.native_sequence,
     _detection_source_width_px,
     _detection_source_height_px,
     _detections.detections,

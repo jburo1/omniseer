@@ -1,7 +1,7 @@
 #include <array>
 #include <chrono>
-#include <exception>
 #include <cstdint>
+#include <exception>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -33,6 +33,14 @@ builtin_interfaces::msg::Time to_builtin_time(uint64_t real_ns) noexcept
   out.nanosec = static_cast<uint32_t>(real_ns % 1000000000ULL);
   return out;
 }
+
+rclcpp::QoS latest_only_detection_qos()
+{
+  auto qos = rclcpp::QoS(rclcpp::KeepLast(1));
+  qos.best_effort();
+  qos.durability_volatile();
+  return qos;
+}
 }   // namespace
 
 class RosYoloDetectionsSink final : public omniseer::vision::IDetectionsSink
@@ -55,6 +63,8 @@ public:
     yolo_msgs::msg::DetectionArray msg{};
     msg.header.stamp = to_builtin_time(frame.capture_ts_real_ns);
     msg.header.frame_id = _camera_frame_id;
+    msg.native_frame_id = frame.frame_id;
+    msg.native_sequence = frame.sequence;
     msg.detections.reserve(frame.count);
 
     for (uint32_t i = 0; i < frame.count; ++i) {
@@ -91,7 +101,8 @@ public:
     _config = declare_bridge_parameters();
     log_config(_config);
     _detections_publisher =
-      create_publisher<yolo_msgs::msg::DetectionArray>("/yolo/detections", 10);
+      create_publisher<yolo_msgs::msg::DetectionArray>(
+        "/yolo/detections", latest_only_detection_qos());
     _detections_sink = std::make_unique<RosYoloDetectionsSink>(
           _detections_publisher,
           omniseer::vision::load_class_list_file(_config.class_list_path),
@@ -326,6 +337,7 @@ private:
 };
 } // namespace omniseer_vision_bridge
 
+#ifndef OMNISEER_VISION_BRIDGE_TESTING
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
@@ -342,3 +354,4 @@ int main(int argc, char ** argv)
   rclcpp::shutdown();
   return 0;
 }
+#endif
