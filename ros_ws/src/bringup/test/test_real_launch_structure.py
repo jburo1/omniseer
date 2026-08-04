@@ -307,7 +307,7 @@ class RealLaunchStructureTests(unittest.TestCase):
         sim_source = (Path(__file__).resolve().parents[1] / "launch" / "sim.launch.py").read_text(encoding="utf-8")
         self.assertIn('"start_range_adapter": start_range_adapter', sim_source)
 
-    def test_sim_launch_includes_optional_visual_autonomy_node_without_runbundle_recording(self) -> None:
+    def test_sim_launch_does_not_include_visual_autonomy_node(self) -> None:
         module = _load_launch_module("sim.launch.py")
         launch_description = module.generate_launch_description()
 
@@ -316,22 +316,20 @@ class RealLaunchStructureTests(unittest.TestCase):
             for entity in launch_description.entities
             if isinstance(entity, DeclareLaunchArgument)
         }
-        self.assertIn("start_autonomy", declared_names)
-        self.assertIn("autonomy_target_class", declared_names)
-        self.assertIn("autonomy_bbox_area_min_ratio", declared_names)
-        self.assertIn("autonomy_bbox_area_max_ratio", declared_names)
-        self.assertIn("autonomy_forward_speed_m_s", declared_names)
-        self.assertIn("autonomy_reverse_speed_m_s", declared_names)
-        self.assertIn("autonomy_stable_framed_frames", declared_names)
-        self.assertIn("autonomy_proximity_stop_m", declared_names)
-        self.assertIn("autonomy_capture_timeout_sec", declared_names)
-        self.assertIn("autonomy_detection_stale_ms", declared_names)
-        self.assertIn("autonomy_target_lost_timeout_sec", declared_names)
+        self.assertNotIn("start_autonomy", declared_names)
+        self.assertNotIn("autonomy_target_class", declared_names)
+        self.assertNotIn("autonomy_bbox_area_min_ratio", declared_names)
+        self.assertNotIn("autonomy_bbox_area_max_ratio", declared_names)
+        self.assertNotIn("autonomy_forward_speed_m_s", declared_names)
+        self.assertNotIn("autonomy_reverse_speed_m_s", declared_names)
+        self.assertNotIn("autonomy_stable_framed_frames", declared_names)
+        self.assertNotIn("autonomy_proximity_stop_m", declared_names)
+        self.assertNotIn("autonomy_capture_timeout_sec", declared_names)
+        self.assertNotIn("autonomy_detection_stale_ms", declared_names)
+        self.assertNotIn("autonomy_target_lost_timeout_sec", declared_names)
         self.assertIn("sim_camera_width", declared_names)
         self.assertIn("sim_camera_height", declared_names)
         self.assertIn("sim_camera_update_rate", declared_names)
-        self.assertNotIn("autonomy_wait_for_inputs", declared_names)
-        self.assertNotIn("autonomy_inputs_timeout_sec", declared_names)
 
         sim_source = (Path(__file__).resolve().parents[1] / "launch" / "sim.launch.py").read_text(encoding="utf-8")
         common_source = (Path(__file__).resolve().parents[1] / "launch" / "common.launch.py").read_text(
@@ -340,31 +338,16 @@ class RealLaunchStructureTests(unittest.TestCase):
         sim_io_source = (Path(__file__).resolve().parents[1] / "launch" / "sim_io.launch.py").read_text(
             encoding="utf-8"
         )
-        self.assertIn('package="omniseer_autonomy"', sim_source)
-        self.assertIn('executable="target_centering_node"', sim_source)
+        self.assertNotIn('package="omniseer_autonomy"', sim_source)
+        self.assertNotIn('executable="target_centering_node"', sim_source)
         self.assertNotIn('package="omniseer_experiments"', sim_source)
-        self.assertIn("condition=IfCondition(start_autonomy)", sim_source)
-        self.assertIn('_SIM_AUTONOMY_INPUTS_TIMEOUT_SEC = "60"', sim_source)
-        self.assertIn("wait_sim_autonomy_inputs", sim_source)
-        self.assertIn("wait_for_topics", sim_source)
-        self.assertIn("/yolo/detections:yolo_msgs/msg/DetectionArray", sim_source)
-        self.assertIn("/range:sensor_msgs/msg/Range", sim_source)
-        self.assertIn("/odometry/filtered:nav_msgs/msg/Odometry", sim_source)
-        self.assertIn("target_action=wait_autonomy_inputs", sim_source)
-        self.assertIn("success_actions=[autonomy_node]", sim_source)
-        self.assertIn('failure_reason="Timed out waiting for sim autonomy input topics"', sim_source)
-        self.assertIn(
-            "actions=[sim_io_launch, common_launch, rviz_launch, wait_autonomy_inputs, launch_autonomy_after_inputs]",
-            sim_source,
-        )
-        self.assertIn('"target_class": autonomy_target_class', sim_source)
-        self.assertIn('"run_dir": ""', sim_source)
-        self.assertIn('"image_width_px": sim_camera_width', sim_source)
-        self.assertIn('"image_height_px": sim_camera_height', sim_source)
-        self.assertIn('"detections_topic": "/yolo/detections"', sim_source)
-        self.assertIn('"range_topic": "/range"', sim_source)
-        self.assertIn('"command_topic": "/cmd_vel_autonomy"', sim_source)
-        self.assertIn('"detection_stale_ms": autonomy_detection_stale_ms', sim_source)
+        self.assertNotIn("condition=IfCondition(start_autonomy)", sim_source)
+        self.assertNotIn("_SIM_AUTONOMY_INPUTS_TIMEOUT_SEC", sim_source)
+        self.assertNotIn("wait_sim_autonomy_inputs", sim_source)
+        self.assertNotIn("wait_for_topics", sim_source)
+        self.assertNotIn("/yolo/detections:yolo_msgs/msg/DetectionArray", sim_source)
+        self.assertNotIn("/odometry/filtered:nav_msgs/msg/Odometry", sim_source)
+        self.assertNotIn("cmd_vel_autonomy", sim_source)
         self.assertIn('"sim_camera_width": sim_camera_width', sim_source)
         self.assertIn('"sim_camera_height": sim_camera_height', sim_source)
         self.assertIn('"sim_camera_update_rate": sim_camera_update_rate', sim_source)

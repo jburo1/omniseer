@@ -13,12 +13,11 @@ source "${script_dir}/../lib/ros.sh"
 usage() {
   cat <<'EOF'
 Usage:
-  scripts/omni run sim [--autonomy] [--yolo] [--yolo-device <device>] [--yolo-model <path>] [launch args...]
+  scripts/omni run sim [--yolo] [--yolo-device <device>] [--yolo-model <path>] [launch args...]
 
 Launches the existing simulation bringup helper path.
 
 Options:
-  --autonomy             Start slim visual target-centering autonomy with the sim YOLO provider.
   --yolo                 Start the sim YOLO provider and /yolo/dbg_image overlay.
   --yolo-device <device> Override the YOLO inference device, for example cpu or cuda:0.
   --yolo-model <path>    Override the YOLO-World model path.
@@ -33,25 +32,17 @@ fi
 omni_source_ros_workspace
 
 declare -a launch_args=()
-start_autonomy=false
 start_yolo=false
-has_start_autonomy_arg=false
 has_start_yolo_arg=false
 has_yolo_model_arg=false
 has_yolo_image_reliability_arg=false
-has_start_slam_arg=false
-has_start_rf2o_arg=false
-has_start_nav_arg=false
-has_sim_camera_width_arg=false
-has_sim_camera_height_arg=false
-has_sim_camera_update_rate_arg=false
-has_autonomy_detection_stale_ms_arg=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --autonomy)
-      start_autonomy=true
-      start_yolo=true
+      omni_die \
+        "'scripts/omni run sim --autonomy' is no longer supported;" \
+        "use 'scripts/omni run autonomy --target <class>' for robot autonomy runs"
       shift
       ;;
     --yolo)
@@ -101,54 +92,6 @@ while [[ $# -gt 0 ]]; do
           start_yolo=false
           ;;
       esac
-      launch_args+=("$1")
-      shift
-      ;;
-    start_autonomy:=*)
-      has_start_autonomy_arg=true
-      case "${1#start_autonomy:=}" in
-        true|True|TRUE|1)
-          start_autonomy=true
-          ;;
-        *)
-          start_autonomy=false
-          ;;
-      esac
-      launch_args+=("$1")
-      shift
-      ;;
-    start_slam:=*)
-      has_start_slam_arg=true
-      launch_args+=("$1")
-      shift
-      ;;
-    start_rf2o:=*)
-      has_start_rf2o_arg=true
-      launch_args+=("$1")
-      shift
-      ;;
-    start_nav:=*)
-      has_start_nav_arg=true
-      launch_args+=("$1")
-      shift
-      ;;
-    sim_camera_width:=*)
-      has_sim_camera_width_arg=true
-      launch_args+=("$1")
-      shift
-      ;;
-    sim_camera_height:=*)
-      has_sim_camera_height_arg=true
-      launch_args+=("$1")
-      shift
-      ;;
-    sim_camera_update_rate:=*)
-      has_sim_camera_update_rate_arg=true
-      launch_args+=("$1")
-      shift
-      ;;
-    autonomy_detection_stale_ms:=*)
-      has_autonomy_detection_stale_ms_arg=true
       launch_args+=("$1")
       shift
       ;;
@@ -202,34 +145,6 @@ if [[ "${start_yolo}" == true ]]; then
   fi
   if [[ "${has_yolo_image_reliability_arg}" == false ]]; then
     launch_args+=("yolo_image_reliability:=2")
-  fi
-fi
-
-if [[ "${start_autonomy}" == true && "${has_start_autonomy_arg}" == false ]]; then
-  launch_args+=("start_autonomy:=true")
-fi
-
-if [[ "${start_autonomy}" == true ]]; then
-  if [[ "${has_start_slam_arg}" == false ]]; then
-    launch_args+=("start_slam:=false")
-  fi
-  if [[ "${has_start_rf2o_arg}" == false ]]; then
-    launch_args+=("start_rf2o:=false")
-  fi
-  if [[ "${has_start_nav_arg}" == false ]]; then
-    launch_args+=("start_nav:=false")
-  fi
-  if [[ "${has_sim_camera_width_arg}" == false ]]; then
-    launch_args+=("sim_camera_width:=640")
-  fi
-  if [[ "${has_sim_camera_height_arg}" == false ]]; then
-    launch_args+=("sim_camera_height:=480")
-  fi
-  if [[ "${has_sim_camera_update_rate_arg}" == false ]]; then
-    launch_args+=("sim_camera_update_rate:=10")
-  fi
-  if [[ "${has_autonomy_detection_stale_ms_arg}" == false ]]; then
-    launch_args+=("autonomy_detection_stale_ms:=3000")
   fi
 fi
 

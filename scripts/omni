@@ -46,7 +46,6 @@ Examples:
   scripts/omni doctor
   scripts/omni build
   scripts/omni run sim headless:=true
-  scripts/omni run sim --autonomy --yolo-device cpu
   scripts/omni run sim --yolo
   scripts/omni run real
   scripts/omni run autonomy --target chair
@@ -75,7 +74,7 @@ EOF
 run_usage() {
   cat <<'EOF'
 Usage:
-  scripts/omni run sim [--autonomy] [--yolo] [launch args...]
+  scripts/omni run sim [--yolo] [launch args...]
   scripts/omni run real [--profile <name>] [recording flags] [--mode <mode>] [mode] [launch args...]
   scripts/omni run autonomy --target <class> [autonomy args...] [-- launch args...]
   scripts/omni run monitor [monitor args...]
