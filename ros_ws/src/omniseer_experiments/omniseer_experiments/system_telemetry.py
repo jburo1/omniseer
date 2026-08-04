@@ -59,13 +59,13 @@ def parse_proc_stat_cpu(text: str) -> CpuSample | None:
     return None
 
 
-def cpu_percent(previous: CpuSample | None, current: CpuSample | None) -> float:
+def cpu_percent(previous: CpuSample | None, current: CpuSample | None) -> float | None:
     if previous is None or current is None:
-        return 0.0
+        return None
     total_delta = current.total - previous.total
     idle_delta = current.idle - previous.idle
     if total_delta <= 0 or idle_delta < 0:
-        return 0.0
+        return None
     busy_delta = max(0, total_delta - idle_delta)
     return busy_delta * 100.0 / total_delta
 
@@ -319,8 +319,8 @@ class SystemTelemetrySampler:
         return make_system_record(
             recv_ts_ns=self._time_ns(),
             cpu_percent=cpu,
-            memory_used_mb=memory.used_mb if memory is not None else 0.0,
-            memory_available_mb=memory.available_mb if memory is not None else 0.0,
+            memory_used_mb=memory.used_mb if memory is not None else None,
+            memory_available_mb=memory.available_mb if memory is not None else None,
             soc_temp_c=soc_temp_c,
             thermal=thermal,
             network=read_network_snapshot(

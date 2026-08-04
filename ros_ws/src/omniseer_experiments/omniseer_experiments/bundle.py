@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import shutil
@@ -16,6 +17,7 @@ from typing import Any
 SCHEMA_VERSION = 1
 DEFAULT_DETECTIONS_TOPIC = "/yolo/detections"
 DEFAULT_PERF_TOPIC = "/vision/perf"
+PROVENANCE_COPY_MAX_BYTES = 1024 * 1024
 
 ERROR_FIELDS = (
     "no_writable_buffer",
@@ -177,6 +179,8 @@ class RunBundleWriter:
 
         self._prepare_run_dir()
         self.evidence_dir.mkdir(exist_ok=True)
+        self.provenance_dir.mkdir(exist_ok=True)
+        self._provenance = self._build_provenance_manifest()
         self._write_manifest()
         self._detections_handle = self.detections_path.open("a", encoding="utf-8")
         self._perf_handle = self.perf_path.open("a", encoding="utf-8")
@@ -221,6 +225,10 @@ class RunBundleWriter:
     @property
     def evidence_frames_dir(self) -> Path:
         return self.evidence_dir / "frames"
+
+    @property
+    def provenance_dir(self) -> Path:
+        return self.run_dir / "provenance"
 
     def write_detection_record(self, record: dict[str, Any]) -> None:
         self._write_jsonl(self._detections_handle, record)
@@ -296,7 +304,14 @@ class RunBundleWriter:
             return False
         if not children:
             return True
-        allowed_names = {"classes.txt", "pipeline_telemetry.jsonl", "autonomy.jsonl", "evidence", "logs"}
+        allowed_names = {
+            "classes.txt",
+            "pipeline_telemetry.jsonl",
+            "autonomy.jsonl",
+            "evidence",
+            "logs",
+            "provenance",
+        }
         for child in children:
             if child.name not in allowed_names:
                 return False
@@ -309,6 +324,8 @@ class RunBundleWriter:
             if child.name == "evidence" and not child.is_dir():
                 return False
             if child.name == "logs" and not child.is_dir():
+                return False
+            if child.name == "provenance" and not child.is_dir():
                 return False
         return True
 
@@ -346,6 +363,7 @@ class RunBundleWriter:
                 "config": self.config.experiment_config,
                 "parameters": dict(sorted(self.config.experiment_parameters.items())),
             },
+            "provenance": self._provenance,
             "topics": {
                 "detections": self.config.detections_topic,
                 "perf": self.config.perf_topic,
@@ -355,6 +373,80 @@ class RunBundleWriter:
 
     def _write_manifest(self) -> None:
         self.manifest_path.write_text(_to_yaml(self._manifest()), encoding="utf-8")
+
+    def _build_provenance_manifest(self) -> dict[str, Any]:
+        return {
+            "detector_model": self._provenance_entry(
+                source_path=self.config.detector_model_path,
+                copy_name="",
+            ),
+            "clip_model": self._provenance_entry(
+                source_path=self.config.clip_model_path,
+                copy_name="",
+            ),
+            "vocabulary": self._provenance_entry(
+                source_path=self.config.clip_vocab_path,
+                copy_name=_copy_name("vocabulary", self.config.clip_vocab_path),
+            ),
+            "classes": self._provenance_entry(
+                source_path=self.config.classes_path,
+                copy_name=_copy_name("classes", self.config.classes_path),
+            ),
+            "vision_config": self._provenance_entry(
+                source_path=self.config.vision_params_file,
+                copy_name=_copy_name("vision_config", self.config.vision_params_file),
+            ),
+            "experiment_config": self._provenance_entry(
+                source_path=self.config.experiment_config,
+                copy_name=_copy_name("experiment_config", self.config.experiment_config),
+            ),
+        }
+
+    def _provenance_entry(self, *, source_path: str, copy_name: str) -> dict[str, Any]:
+        entry: dict[str, Any] = {
+            "path": source_path,
+            "available": False,
+            "sha256": "",
+            "size_bytes": None,
+            "bundle_copy": "",
+        }
+        if not source_path:
+            entry["error"] = "not_configured"
+            return entry
+
+        path = Path(source_path)
+        try:
+            stat = path.stat()
+        except OSError as exc:
+            entry["error"] = f"stat_failed: {exc}"
+            return entry
+        if not path.is_file():
+            entry["error"] = "not_a_file"
+            return entry
+
+        try:
+            entry["sha256"] = _sha256_file(path)
+        except OSError as exc:
+            entry["error"] = f"hash_failed: {exc}"
+            entry["size_bytes"] = stat.st_size
+            return entry
+
+        entry["available"] = True
+        entry["size_bytes"] = stat.st_size
+        if copy_name:
+            entry.update(self._copy_provenance_file(path, copy_name=copy_name, size_bytes=stat.st_size))
+        return entry
+
+    def _copy_provenance_file(self, path: Path, *, copy_name: str, size_bytes: int) -> dict[str, Any]:
+        if size_bytes > PROVENANCE_COPY_MAX_BYTES:
+            return {"copy_status": "skipped_too_large"}
+
+        destination = self.provenance_dir / copy_name
+        try:
+            shutil.copyfile(path, destination)
+        except OSError as exc:
+            return {"copy_status": f"copy_failed: {exc}"}
+        return {"bundle_copy": str(destination.relative_to(self.run_dir)), "copy_status": "copied"}
 
     @staticmethod
     def _write_jsonl(handle: Any, record: dict[str, Any]) -> None:
@@ -420,9 +512,9 @@ def make_perf_record(
 def make_system_record(
     *,
     recv_ts_ns: int,
-    cpu_percent: float,
-    memory_used_mb: float,
-    memory_available_mb: float,
+    cpu_percent: float | None,
+    memory_used_mb: float | None,
+    memory_available_mb: float | None,
     soc_temp_c: float | None,
     thermal: dict[str, Any] | None = None,
     network: dict[str, Any] | None = None,
@@ -493,6 +585,21 @@ def _describe_float(values: list[float]) -> dict[str, float]:
         "mean": float(statistics.fmean(values)),
         "max": max(values),
     }
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _copy_name(role: str, source_path: str) -> str:
+    if not source_path:
+        return ""
+    suffix = Path(source_path).suffix
+    return f"{role}{suffix}"
 
 
 def _to_yaml(value: dict[str, Any]) -> str:

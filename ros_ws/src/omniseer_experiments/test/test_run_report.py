@@ -675,6 +675,43 @@ class RunReportTests(unittest.TestCase):
             self.assertNotIn("Network Snapshot", output)
             self.assertNotIn("Battery Snapshot", output)
 
+    def test_system_summary_excludes_unavailable_samples(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "demo_001"
+            writer = RunBundleWriter(_config(run_dir), started_at=STARTED_AT)
+            writer.write_detection_record(_detection_record())
+            writer.write_perf_record(_perf_record())
+            writer.write_system_record(
+                make_system_record(
+                    recv_ts_ns=300,
+                    cpu_percent=None,
+                    memory_used_mb=None,
+                    memory_available_mb=None,
+                    soc_temp_c=None,
+                    thermal={"available": False, "soc_temp_c": None, "throttled": None, "zones": []},
+                    onboard_battery={
+                        "available": False,
+                        "source": "",
+                        "present": False,
+                        "voltage": None,
+                        "percentage": None,
+                        "charging": None,
+                    },
+                )
+            )
+            writer.write_system_record(_later_system_record())
+            writer.finalize(ended_at=ENDED_AT)
+
+            summary = write_run_report(run_dir)
+
+            output = summary.output_path.read_text(encoding="utf-8")
+            self.assertIn("<td>cpu_percent</td><td>1</td><td>42.00</td><td>42.00</td><td>42.00</td>", output)
+            self.assertIn(
+                "<td>memory_used_mb</td><td>1</td><td>900.00</td><td>900.00</td><td>900.00</td>",
+                output,
+            )
+            self.assertIn("<th>Available samples</th><td>false=1, true=1</td>", output)
+
     @unittest.skipIf(cv2 is None or np is None, "OpenCV and NumPy are required for auto-annotation checks")
     def test_report_generates_missing_annotations_before_rendering(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

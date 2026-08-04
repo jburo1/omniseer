@@ -1,3 +1,4 @@
+import hashlib
 import json
 import os
 import tempfile
@@ -134,6 +135,98 @@ class RunBundleWriterTests(unittest.TestCase):
                 self.assertIn('profile: "operator"', manifest)
                 self.assertIn('- "chair"', manifest)
                 self.assertNotIn("verified_prerequisite", manifest)
+            finally:
+                writer.close()
+
+    def test_records_file_provenance_and_copies_small_inputs(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            inputs = root / "inputs"
+            inputs.mkdir()
+            detector_model = inputs / "detector.rknn"
+            clip_model = inputs / "clip.rknn"
+            vocabulary = inputs / "clip_vocab.bpe"
+            classes = inputs / "classes.txt"
+            vision_config = inputs / "vision.yaml"
+            experiment_config = inputs / "experiment.yaml"
+            detector_model.write_bytes(b"detector-model")
+            clip_model.write_bytes(b"clip-model")
+            vocabulary.write_text("token-a\ntoken-b\n", encoding="utf-8")
+            classes.write_text("chair\nbackpack\n", encoding="utf-8")
+            vision_config.write_text("omniseer_vision_bridge:\n  ros__parameters: {}\n", encoding="utf-8")
+            experiment_config.write_text("profile: operator\n", encoding="utf-8")
+
+            run_dir = root / "runs" / "demo_001"
+            config = RunBundleConfig(
+                run_id="demo_001",
+                out_dir=run_dir,
+                classes=("chair", "backpack"),
+                ros_distro="kilted",
+                git_sha="abc123",
+                vision_params_file=str(vision_config),
+                detector_model_path=str(detector_model),
+                clip_model_path=str(clip_model),
+                clip_vocab_path=str(vocabulary),
+                classes_path=str(classes),
+                experiment_config=str(experiment_config),
+            )
+            writer = RunBundleWriter(config, started_at=STARTED_AT)
+            try:
+                manifest = (run_dir / "manifest.yaml").read_text(encoding="utf-8")
+                self.assertIn("provenance:", manifest)
+                self.assertIn("detector_model:", manifest)
+                self.assertIn(f'sha256: "{_sha256(detector_model)}"', manifest)
+                self.assertIn(f"size_bytes: {detector_model.stat().st_size}", manifest)
+                self.assertIn("clip_model:", manifest)
+                self.assertIn(f'sha256: "{_sha256(clip_model)}"', manifest)
+                self.assertIn("vocabulary:", manifest)
+                self.assertIn('bundle_copy: "provenance/vocabulary.bpe"', manifest)
+                self.assertIn("classes:", manifest)
+                self.assertIn('bundle_copy: "provenance/classes.txt"', manifest)
+                self.assertIn("vision_config:", manifest)
+                self.assertIn('bundle_copy: "provenance/vision_config.yaml"', manifest)
+                self.assertIn("experiment_config:", manifest)
+                self.assertIn('bundle_copy: "provenance/experiment_config.yaml"', manifest)
+                self.assertEqual(
+                    (run_dir / "provenance" / "vocabulary.bpe").read_text(encoding="utf-8"),
+                    "token-a\ntoken-b\n",
+                )
+                self.assertEqual(
+                    (run_dir / "provenance" / "classes.txt").read_text(encoding="utf-8"),
+                    "chair\nbackpack\n",
+                )
+                self.assertEqual(
+                    (run_dir / "provenance" / "vision_config.yaml").read_text(encoding="utf-8"),
+                    "omniseer_vision_bridge:\n  ros__parameters: {}\n",
+                )
+                self.assertEqual(
+                    (run_dir / "provenance" / "experiment_config.yaml").read_text(encoding="utf-8"),
+                    "profile: operator\n",
+                )
+                self.assertFalse((run_dir / "provenance" / "detector_model.rknn").exists())
+                self.assertFalse((run_dir / "provenance" / "clip_model.rknn").exists())
+            finally:
+                writer.close()
+
+    def test_missing_provenance_input_is_recorded_without_failing_bundle(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "missing_inputs"
+            writer = RunBundleWriter(
+                RunBundleConfig(
+                    run_id="missing_inputs",
+                    out_dir=run_dir,
+                    git_sha="abc123",
+                    ros_distro="kilted",
+                    detector_model_path=str(Path(tmp) / "missing.rknn"),
+                ),
+                started_at=STARTED_AT,
+            )
+            try:
+                manifest = (run_dir / "manifest.yaml").read_text(encoding="utf-8")
+                self.assertIn("provenance:", manifest)
+                self.assertIn('path: "', manifest)
+                self.assertIn("available: false", manifest)
+                self.assertIn('error: "stat_failed:', manifest)
             finally:
                 writer.close()
 
@@ -318,3 +411,7 @@ class SummaryAccumulatorTests(unittest.TestCase):
 def _load_jsonl(path: Path) -> list[dict]:
     with path.open("r", encoding="utf-8") as handle:
         return [json.loads(line) for line in handle if line.strip()]
+
+
+def _sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()

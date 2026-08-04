@@ -329,15 +329,21 @@ The recorder is an optional sidecar. It writes a local bundle containing
 `manifest.yaml`, `detections.jsonl`, `perf.jsonl`, optional automatic
 `system.jsonl` resource telemetry, optional native
 `pipeline_telemetry.jsonl`, representative native JPEG evidence frames under
-`evidence/`, the ROS launch stdout/stderr transcript at `logs/bringup.log`, and
-`summary.json`. The first slice stores bundles on the robot; laptop download,
-inspection, evidence annotation, and a simple local HTML report are available
-through `scripts/omni runs`. Rich hosted review and cloud synchronization remain
-later work.
+`evidence/`, small provenance input copies under `provenance/`, the ROS launch
+stdout/stderr transcript at `logs/bringup.log`, and `summary.json`.
+`manifest.yaml` records SHA-256 hashes and byte sizes for the configured
+detector model, CLIP model, vocabulary, classes, vision config, and experiment
+config inputs when they are available. The first slice stores bundles on the
+robot; laptop download, inspection, evidence annotation, and a simple local HTML
+report are available through `scripts/omni runs`. Rich hosted review and cloud
+synchronization remain later work.
 
 `manifest.yaml` records the resolved real profile, mode, command, and launch
 arguments. `system.jsonl` records low-rate CPU, memory, thermal, WiFi/network,
 onboard battery, and `/battery` LiPo snapshots when those sources are available.
+Unavailable numeric CPU, memory, temperature, and battery values are recorded as
+JSON `null`; report statistics exclude unavailable values and the initial CPU
+sample.
 During recorded runs, `OMNISEER_BRINGUP_LOG` is replaced by the bundle-local
 `logs/bringup.log` path so the run artifact retains the console stream. For
 non-recording runs, `OMNISEER_BRINGUP_LOG` still overrides the temporary bringup

@@ -71,6 +71,8 @@ Additional target-hardware records document integrated operator behavior such as
 RunBundles provide the project evidence format. A complete bundle can include:
 
 - `manifest.yaml` with run configuration and provenance
+- `provenance/` copies of small vocabulary, class, vision config, and experiment
+  config inputs when available
 - `detections.jsonl` with typed perception outputs
 - `perf.jsonl` with ROS vision performance summaries
 - `system.jsonl` with low-rate resource telemetry

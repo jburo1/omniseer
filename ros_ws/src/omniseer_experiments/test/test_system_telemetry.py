@@ -22,11 +22,11 @@ class SystemTelemetryTests(unittest.TestCase):
 
         self.assertAlmostEqual(cpu_percent(previous, current), 70.0)
 
-    def test_cpu_delta_zero_total_falls_back_to_zero(self) -> None:
+    def test_cpu_delta_zero_total_is_unavailable(self) -> None:
         sample = CpuSample(idle=10, total=20)
 
-        self.assertEqual(cpu_percent(sample, sample), 0.0)
-        self.assertEqual(cpu_percent(None, sample), 0.0)
+        self.assertIsNone(cpu_percent(sample, sample))
+        self.assertIsNone(cpu_percent(None, sample))
 
     def test_meminfo_uses_memavailable(self) -> None:
         sample = parse_proc_meminfo(
@@ -117,7 +117,7 @@ class SystemTelemetryTests(unittest.TestCase):
         self.assertEqual(record["schema_version"], 1)
         self.assertEqual(record["source"], "system")
         self.assertEqual(record["recv_ts_ns"], 123)
-        self.assertEqual(record["cpu_percent"], 0.0)
+        self.assertIsNone(record["cpu_percent"])
         self.assertEqual(record["memory_used_mb"], 1000.0)
         self.assertEqual(record["memory_available_mb"], 1000.0)
         self.assertEqual(record["soc_temp_c"], 42.0)
@@ -136,6 +136,28 @@ class SystemTelemetryTests(unittest.TestCase):
             self.assertEqual(read_network_snapshot(sys_root=root)["available"], False)
             self.assertEqual(read_onboard_battery_snapshot(root)["available"], False)
             self.assertEqual(read_thermal_snapshot(root / "thermal", sys_root=root)["available"], False)
+
+    def test_sampler_stores_unavailable_resource_values_as_none(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            proc_stat = root / "missing_stat"
+            proc_meminfo = root / "missing_meminfo"
+            sampler = SystemTelemetrySampler(
+                proc_stat_path=proc_stat,
+                proc_meminfo_path=proc_meminfo,
+                sys_root=root / "sys",
+                temperature_paths=[root / "missing_temp"],
+                time_ns=lambda: 123,
+            )
+
+            record = sampler.sample()
+
+        self.assertIsNone(record["cpu_percent"])
+        self.assertIsNone(record["memory_used_mb"])
+        self.assertIsNone(record["memory_available_mb"])
+        self.assertIsNone(record["soc_temp_c"])
+        self.assertIsNone(record["onboard_battery"]["voltage"])
+        self.assertIsNone(record["onboard_battery"]["percentage"])
 
 
 if __name__ == "__main__":
