@@ -2315,13 +2315,8 @@ that keeps simulation, real hardware, and common robot behavior separated.</p>
     control plugins</li>
 <li>launch-topology mismatch:</li>
 <li>sim has a staged orchestration path</li>
-<li>real bringup currently covers only the phase-1 MCU/encoder-odometry slice</li>
-</ul>
-<p>The earlier topic-only naming mismatches and the firmware/sim kinematics drift
-have been addressed in the phase-1 slice:</p>
-<ul>
-<li>the MCU now uses the sim/common command, IMU, and range topic names directly</li>
-<li>the firmware kinematics constants now match the current sim/controller values</li>
+<li>real bringup composes the hardware I/O, native vision, shared robot graph,
+    and optional operator, autonomy, and experiment-recording components</li>
 </ul>
 <p>Wheel odometry still remains a compute boundary, because the MCU publishes raw
 encoder counts rather than odometry.</p>
@@ -2655,7 +2650,7 @@ consumer instead.</p>
 <p>For the real-only baseline, use a dedicated <code>ekf_fusion_real.yaml</code> that drops
 the simulated RF2O input and fuses only wheel odometry plus IMU.</p>
 <h3 id="firmwareincludemicro_ros_confighpp-and-firmwaresrcmicro_ros_nodecpp"><code>firmware/include/micro_ros_config.hpp</code> and <code>firmware/src/micro_ros_node.cpp</code><a class="headerlink" href="#firmwareincludemicro_ros_confighpp-and-firmwaresrcmicro_ros_nodecpp" title="Permanent link">&para;</a></h3>
-<p>Phase-1 implementation:</p>
+<p>Current firmware boundary:</p>
 <ul>
 <li>MCU topic constants use <code>/mecanum_drive_controller/reference</code>, <code>/imu</code>, and <code>/range</code></li>
 <li>MCU command subscriber expects <code>geometry_msgs/msg/TwistStamped</code></li>
@@ -2804,7 +2799,7 @@ recording, review, or correct a verified sim/real contract problem.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 31, 2026 04:46:59 UTC">July 31, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 5, 2026 21:05:44 UTC">August 5, 2026</span>
   </span>
 
     
