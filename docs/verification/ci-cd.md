@@ -1,81 +1,62 @@
 # CI/CD Overview
 
-This page documents the automation currently implemented in Omniseer, when it runs,
-and what it does not prove.
+This page documents the automation currently implemented in Omniseer, when it
+runs, and what it does not prove.
 
 ## Current Automation
 
-There are two GitHub Actions workflows:
+GitHub Actions is split into four small workflows with built-in path filters:
 
-| Workflow | Purpose |
-| --- | --- |
-| `ci` | Lint, ROS build/tests, Gazebo smoke, portable vision tests, firmware compile, and strict docs build |
-| `docs` | Build and publish MkDocs to the `gh-pages` branch |
+| Workflow | Triggered by | Purpose |
+| --- | --- | --- |
+| `ci` | `ros_ws/**`, `vision/**`, `tests/**`, `scripts/**`, `pyproject.toml`, `pytest.ini` | Normal portable software CI |
+| `runtime` | `docker/runtime/**`, runtime scripts, `pyproject.toml`, `uv.lock`, ROS package manifests, or manual dispatch | Portable runtime container validation |
+| `firmware` | `firmware/**`, `uros_ws/**` | Compile-only firmware check |
+| `docs` | `docs/**`, `mkdocs.yml`, `scripts/docs/**` | Strict documentation build and `gh-pages` publish |
 
-Documentation publishing is the only current deployment flow. The repository does
-not automatically publish containers, firmware releases, robot images, experiment
+Each workflow runs only for pushes to `master`, except `runtime`, which also
+supports manual dispatch before a robot release. Concurrency control cancels older
+runs of the same workflow when a newer commit is pushed.
+
+Documentation publishing is the only automatic deployment flow. GitHub Actions
+does not publish runtime containers, firmware releases, robot images, experiment
 bundles, or cloud dashboards.
 
-## CI Triggers
+## `ci`
 
-The `ci` workflow runs on:
-
-- every push to `master`
-- every push to the configured feature-branch pattern
-- pull requests when opened, updated, or reopened
-- manual workflow dispatch
-
-All six jobs run for every eligible event; the workflow currently has no path-based
-job filtering. Jobs run independently in parallel. Concurrency control cancels an
-older run when a newer commit is pushed to the same branch or pull request.
-
-## CI Jobs
+The normal software workflow runs when portable software paths change. It does not
+contain custom path-classification logic.
 
 ### `lint`
 
-Runs inside `osrf/ros:kilted-desktop-full-noble`.
+Runs on Ubuntu 24.04:
 
-- creates an isolated Python virtual environment
-- installs Ruff `0.13.3`, matching `pyproject.toml`
-- checks `analysis`, `bringup`, and `robot_diag_control`
+- existing pre-commit hooks over tracked files, including Ruff and Ruff format
+- Shellcheck over tracked shell scripts
 
-Ruff is not installed through the ROS dependency script. Package-level Ruff tests
-skip when the binary is unavailable because the dedicated lint lane owns that check.
+### `python-tests`
 
-### `ros-core`
+Runs root repository tests with:
 
-Runs inside the ROS Kilted desktop-full image.
+```bash
+python3 -m pytest -q tests
+```
 
-- installs dependencies from selected package manifests with rosdep
+This covers script front doors, runtime workflow helpers, and other host-side unit
+tests that are not part of the ROS workspace test graph.
+
+### `ros`
+
+Runs inside the ROS Kilted desktop-full image:
+
+- installs dependencies from the selected portable package manifests with rosdep
 - builds the portable ROS package set
-- excludes `rf2o_laser_odometry`, `yolo_bringup`, and `yolo_ros` from this graph
+- excludes `rf2o_laser_odometry`, `yolo_bringup`, and `yolo_ros`
 - runs package, unit, XML, CMake, and C++ lint tests
-- includes the bounded autonomy package and its controller unit tests
-- includes the RunBundle recording and inspection package
-- conditionally builds `omniseer_vision_bridge` only when RKNN and RGA SDKs exist
+- runs the headless Gazebo bringup smoke test
 
-Validated build packages:
-
-- `omniseer_gz_assets`
-- `omniseer_msgs`
-- `yolo_msgs`
-- `omniseer_autonomy`
-- `omniseer_description`
-- `analysis`
-- `omniseer_experiments`
-- `bringup`
-- `robot_io_adapters`
-- `robot_diag_control`
-- `robot_diag_control_cpp`
-
-The default GitHub image does not provide RKNN/RGA, so the native bridge conditional
-normally skips there. This lane does not prove NPU execution.
-
-### `bringup-smoke`
-
-Builds a deliberately minimal package set and launches headless Gazebo with CI-safe
-geometry. It verifies that the launch remains alive and that these boundary topics
-appear with the expected types:
+The smoke test launches CI-safe geometry and positively verifies that boundary
+topics appear with expected types:
 
 | Topic | Type |
 | --- | --- |
@@ -85,151 +66,101 @@ appear with the expected types:
 | `/range` | `sensor_msgs/msg/Range` |
 | `/mecanum_drive_controller/odometry` | `nav_msgs/msg/Odometry` |
 
-Rosdep discovers local runtime packages so it does not search for nonexistent binary
-packages. Optional runtime packages that are not needed by the smoke launch are then
-explicitly excluded from the colcon build graph.
+The RKNN/RGA `omniseer_vision_bridge` is not compiled in GitHub Actions. That
+hardware-specific bridge is compiled and verified by the ROCK 5B+
+`robot-runtime` release process.
 
 ### `vision-host`
 
-Runs directly on Ubuntu 24.04 and explicitly installs CMake, a C++ compiler, Make, and
-GTest. It builds and runs only portable tests:
+Runs directly on Ubuntu 24.04 and builds/runs portable native vision tests:
 
 - `image_buffer_pool_test`
 - `jsonl_telemetry_test`
 - `rolling_telemetry_test`
 
-RKNN, RGA, V4L2 camera, post-processing, text-embedding, and full pipeline tests stay
-outside this lane because they require target SDKs, devices, or hardware.
+RKNN, RGA, V4L2 camera, post-processing, text-embedding, and full pipeline tests
+stay outside this lane because they require target SDKs, devices, or hardware.
 
-### `firmware-build`
+## `runtime`
 
-Performs a compile-only Teensy 4.1 build using:
+The runtime workflow validates portable container packaging. It runs on
+packaging/dependency changes and can be manually dispatched before a robot
+release.
 
-- PlatformIO `6.1.19` in `${HOME}/.platformio/penv`
-- Teensy platform `5.1.0`
-- micro-ROS PlatformIO pinned to commit
-  `cfee17faffaa532363b7151dd13af6a85c69d3c1`
+It builds the hardware-independent runtime image:
 
-The job uploads firmware build outputs. It does not flash a board or validate motor,
-sensor, transport, timing, or watchdog behavior.
+```bash
+scripts/omni build runtime-container \
+  --target portable-runtime \
+  --image omniseer/robot-runtime:portable-ci
+```
 
-### `docs-build`
+The job checks that the image can source the ROS workspace and resolve expected
+packages, then starts the image with camera, RKNN/RGA, LiDAR, Teensy,
+boundary-topic waits, and pre-launch cleanup disabled. The smoke step requires a
+positive ROS node readiness signal from `/twist_mux` before it passes; timeout
+alone is not accepted.
 
-Uses Python 3.12 and runs `mkdocs build --strict` on every CI event. This catches
-navigation, Markdown, and plugin-level documentation build failures before merge.
+This workflow does not authenticate to GHCR and does not push an image.
 
-## Documentation Deployment
+## `firmware`
 
-The separate `docs` workflow runs when:
+The firmware workflow performs a compile-only Teensy 4.1 build through:
 
-- `docs/**` changes on `master`
-- `mkdocs.yml` changes on `master`
-- it is manually dispatched
+```bash
+scripts/omni build firmware
+```
 
-It checks out full history, builds the site strictly, and deploys with
-`mkdocs gh-deploy` to `gh-pages`. Pull requests validate documentation through the CI
-job but do not deploy it.
+It does not flash a board or validate motor, sensor, transport, timing, or
+watchdog behavior.
+
+## `docs`
+
+The docs workflow installs the MkDocs dependencies and runs:
+
+```bash
+mkdocs build --strict
+```
+
+This catches navigation, Markdown, and plugin-level documentation build failures.
+After the strict build passes, it deploys the site to `gh-pages` with:
+
+```bash
+mkdocs gh-deploy --clean --force --verbose
+```
+
+## Robot Runtime Releases
+
+Hardware-specific `robot-runtime` images are built and published manually on the
+ROCK 5B+:
+
+```bash
+git checkout <passed-master-commit>
+scripts/omni runtime build
+scripts/omni runtime verify
+scripts/omni runtime verify --stage full
+scripts/omni runtime push
+```
+
+`runtime push` requires a clean working tree, passed full verification, a matching
+verified image ID, and matching verification/current git commits. It promotes the
+verified local image to `robot-verified-g<full-commit-sha>`, optional
+`--release-tag <tag>`, and moving `robot-verified`, then records release metadata
+under `.omniseer/runtime/`.
 
 ## Local Equivalents
 
-Use the workflow as the authoritative command source. The representative local flow is:
-
-For the common happy path, the root scripts layer now wraps the main local flows:
+Use focused repository commands for local checks:
 
 ```bash
-scripts/omni setup ros-deps
+python3 -m pytest -q tests
 scripts/omni build ros
 scripts/omni test ros
 scripts/omni test smoke-sim
 scripts/omni test vision
+scripts/omni build runtime-container --target portable-runtime --image omniseer/robot-runtime:portable
 scripts/omni build firmware
 scripts/omni docs build
-```
-
-The exact underlying commands remain:
-
-```bash
-python3 -m venv /tmp/omniseer-ruff
-/tmp/omniseer-ruff/bin/python -m pip install ruff==0.13.3
-/tmp/omniseer-ruff/bin/ruff check \
-  ros_ws/src/analysis \
-  ros_ws/src/bringup \
-  ros_ws/src/robot_diag_control
-```
-
-```bash
-bash scripts/ci/install_ros_workspace_deps.sh \
-  ros_ws/src/omniseer_gz_assets \
-  ros_ws/src/omniseer_msgs \
-  ros_ws/src/yolo_ros/yolo_msgs \
-  ros_ws/src/omniseer_autonomy \
-  ros_ws/src/omniseer_description \
-  ros_ws/src/analysis \
-  ros_ws/src/omniseer_experiments \
-  ros_ws/src/bringup \
-  ros_ws/src/robot_io_adapters \
-  ros_ws/src/robot_diag_control \
-  ros_ws/src/robot_diag_control_cpp
-
-set +u
-source /opt/ros/kilted/setup.bash
-set -u
-cd ros_ws
-colcon build --merge-install \
-  --packages-ignore rf2o_laser_odometry yolo_bringup yolo_ros \
-  --packages-select \
-    omniseer_gz_assets omniseer_msgs yolo_msgs omniseer_description \
-    omniseer_autonomy analysis omniseer_experiments bringup robot_io_adapters \
-    robot_diag_control robot_diag_control_cpp
-
-set +u
-source install/setup.bash
-set -u
-colcon test --merge-install \
-  --packages-ignore rf2o_laser_odometry yolo_bringup yolo_ros \
-  --packages-select \
-    omniseer_autonomy omniseer_description analysis omniseer_experiments bringup robot_io_adapters \
-    robot_diag_control robot_diag_control_cpp
-colcon test-result --all --verbose
-```
-
-The headless smoke equivalent uses a narrower build:
-
-```bash
-bash scripts/ci/install_ros_workspace_deps.sh \
-  ros_ws/src/omniseer_gz_assets \
-  ros_ws/src/omniseer_msgs \
-  ros_ws/src/omniseer_description \
-  ros_ws/src/bringup \
-  ros_ws/src/robot_io_adapters
-
-set +u
-source /opt/ros/kilted/setup.bash
-set -u
-cd ros_ws
-colcon build --merge-install \
-  --packages-ignore \
-    analysis rf2o_laser_odometry robot_diag_control_cpp yolo_bringup yolo_ros \
-  --packages-select \
-    omniseer_gz_assets omniseer_msgs omniseer_description bringup robot_io_adapters
-
-set +u
-source install/setup.bash
-set -u
-OMNISEER_RUN_SIM_SMOKE=1 \
-  python3 -m pytest -vv -s src/bringup/test/test_sim_launch_smoke.py
-```
-
-```bash
-cmake -S vision -B vision/build-verify -DVISION_BUILD_HARNESS=OFF
-cmake --build vision/build-verify \
-  --target image_buffer_pool_test jsonl_telemetry_test rolling_telemetry_test
-ctest --test-dir vision/build-verify \
-  -R 'image_buffer_pool_test|jsonl_telemetry_test|rolling_telemetry_test' \
-  --output-on-failure
-
-scripts/omni build firmware
-mkdocs build --strict
 ```
 
 ## Verification Boundary
@@ -242,16 +173,10 @@ CI currently does not guarantee:
 - real LiDAR, IMU, sonar, encoder, battery, or motor behavior
 - firmware flashing or micro-ROS transport behavior
 - long-duration simulation or robot soak behavior
-- target-hardware experiment recording, cloud synchronization, or hosted review
-- release packaging or deployment
+- target-hardware experiment recording
+- RKNN/RGA `omniseer_vision_bridge` compilation on generic runners
+- hardware-specific runtime image build or release publishing
 
-Those checks require target hardware, a self-hosted runner, or later delivery
-infrastructure. CI evidence should not be presented as real-hardware evidence.
-
-## Planned Extensions
-
-- target-hardware or hardware-in-the-loop validation
-- broader run-bundle schema and recorder compatibility tests
-- provider-neutral cloud synchronization checks
-- hosted report build/deployment
-- tagged release packaging for firmware and robot software
+Those checks require the ROCK 5B+, target SDKs, devices, or later
+hardware-in-the-loop infrastructure. CI evidence should not be presented as
+real-hardware evidence.

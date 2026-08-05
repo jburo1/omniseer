@@ -1,0 +1,98 @@
+name: runtime
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "docker/runtime/**"
+      - "scripts/build/runtime_container.sh"
+      - "scripts/runtime.sh"
+      - "scripts/omni"
+      - "pyproject.toml"
+      - "uv.lock"
+      - "ros_ws/src/**/package.xml"
+  workflow_dispatch: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  ROS_DISTRO: kilted
+
+jobs:
+  portable-runtime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build portable runtime image
+        shell: bash
+        run: |
+          set -eux
+          scripts/omni build runtime-container \
+            --target portable-runtime \
+            --image omniseer/robot-runtime:portable-ci
+
+      - name: Inspect portable runtime image
+        shell: bash
+        run: |
+          set -eux
+          docker run --rm omniseer/robot-runtime:portable-ci bash -lc '
+            source /opt/ros/${ROS_DISTRO}/setup.bash
+            source /ros_ws/install/setup.bash
+            for pkg in bringup robot_diag_control_cpp micro_ros_agent; do
+              ros2 pkg prefix "${pkg}"
+            done
+          '
+
+      - name: Smoke-run portable runtime image
+        shell: bash
+        run: |
+          set -eux
+          mkdir -p runtime-ci-logs
+          # shellcheck disable=SC2016
+          timeout 45 docker run --rm \
+            --network=host \
+            -v "${PWD}/runtime-ci-logs:/runs" \
+            omniseer/robot-runtime:portable-ci \
+            bash -lc '
+              source /opt/ros/${ROS_DISTRO}/setup.bash
+              source /ros_ws/install/setup.bash
+              timeout 30 /opt/omniseer/scripts/omni run real --profile operator bringup \
+                start_vision:=false \
+                start_micro_ros_agent:=false \
+                require_teensy:=false \
+                start_lidar:=false \
+                start_gateway:=false \
+                wait_for_boundary_topics:=false \
+                pre_launch_cleanup:=false \
+                > /runs/portable-runtime.log 2>&1 &
+              launch_pid=$!
+              for _ in $(seq 1 30); do
+                if ros2 node list | grep -qx /twist_mux; then
+                  kill -INT "${launch_pid}"
+                  wait "${launch_pid}" || true
+                  exit 0
+                fi
+                if ! kill -0 "${launch_pid}" 2>/dev/null; then
+                  wait "${launch_pid}"
+                fi
+                sleep 1
+              done
+              kill -INT "${launch_pid}" || true
+              wait "${launch_pid}" || true
+              echo "portable runtime did not expose /twist_mux" >&2
+              exit 1
+            '
+
+      - name: Upload portable runtime logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: portable-runtime-logs
+          if-no-files-found: ignore
+          path: |
+            runtime-ci-logs

@@ -25,18 +25,17 @@ change.
 
 ## Shared Validation Flow
 
-After code is pushed or opened in a pull request, GitHub Actions runs the
-repository's CI workflow in several focused lanes:
+After code is pushed to `master`, GitHub Actions runs one or more focused
+path-filtered workflows:
 
-- `lint`
-- `ros-core`
-- `bringup-smoke`
-- `vision-host`
-- `firmware-build`
-- `docs-build`
+- `ci` for normal portable software changes
+- `runtime` for portable runtime container packaging changes
+- `firmware` for firmware and micro-ROS workspace changes
+- `docs` for documentation changes and `gh-pages` publishing
 
-This keeps the default PR gate broad enough to catch interface drift while
-keeping the slower checks isolated instead of hiding inside one large job.
+This keeps the default branch checks easy to reason about: software changes test
+software, packaging changes test the container, firmware changes test firmware,
+and documentation changes build and publish documentation.
 
 See [CI/CD Overview](ci-cd.md) for:
 
@@ -52,7 +51,7 @@ This page is the umbrella view for:
 - local build workflows
 - CI validation stages
 - release packaging
-- artifact publishing
+- documentation publishing
 - hardware-in-the-loop execution
 
 The detailed operational reference lives in [CI/CD Overview](ci-cd.md). Robot-run

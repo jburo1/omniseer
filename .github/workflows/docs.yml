@@ -1,14 +1,15 @@
 name: docs
+
 on:
   push:
     branches: [master]
     paths:
       - "docs/**"
       - "mkdocs.yml"
-  workflow_dispatch: {}
+      - "scripts/docs/**"
 
 concurrency:
-  group: docs-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -18,28 +19,35 @@ jobs:
     permissions:
       contents: write
       pages: write
+
     steps:
-      # 1. Checkout full history so mkdocs can create gh-pages
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # 2. Install Python + MkDocs + theme
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: |
+
+      - name: Build docs
+        shell: bash
+        run: |
+          set -eux
           python3 -m pip install --upgrade pip
           python3 -m pip install \
             mkdocs-material \
             mkdocs-git-revision-date-localized-plugin
+          mkdocs build --strict
 
-      - run: mkdocs build --strict
-
-      # 3. Configure git user (required for gh-deploy in CI)
-      - run: |
+      - name: Configure git
+        shell: bash
+        run: |
+          set -eux
           git config --global user.email "actions@github.com"
-          git config --global user.name  "GitHub Actions"
+          git config --global user.name "GitHub Actions"
 
-      # 4. Build & push to gh-pages (force overwrite)
-      - run: mkdocs gh-deploy --clean --force --verbose
+      - name: Deploy docs
+        shell: bash
+        run: |
+          set -eux
+          mkdocs gh-deploy --clean --force --verbose

@@ -1,4 +1,5 @@
- # Visual inspection of select_component_goals
+#!/usr/bin/env bash
+# Visual inspection of select_component_goals
  montage \
   -label 'Goal Component' goals_by_component.ppm \
   -label 'Overlay'  goals_overlay.ppm \

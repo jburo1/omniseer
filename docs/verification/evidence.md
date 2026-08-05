@@ -5,8 +5,8 @@ support them.
 
 ## CI Verified
 
-GitHub Actions `ci` is the public software gate for the default branch. A green
-run means the repository passed these portable checks:
+GitHub Actions is the public portable verification gate for the default branch.
+Path-filtered workflows cover the relevant changed area:
 
 - Ruff lint for the Python ROS/operator packages.
 - ROS Kilted package dependency install, build, and tests for the portable core
@@ -19,12 +19,16 @@ run means the repository passed these portable checks:
 - Portable run-bundle tests for manifest/summary handling, recording helpers,
   inspection, retrieval edge cases, system telemetry parsing, evidence annotation,
   and static report generation.
-- Compile-only Teensy 4.1 firmware build through `scripts/omni build firmware`.
-- Strict MkDocs documentation build.
+- Compile-only Teensy 4.1 firmware build through `scripts/omni build firmware`
+  when firmware paths change.
+- Strict MkDocs documentation build when docs paths change.
+- Hardware-independent portable runtime image build and smoke check when runtime
+  packaging or dependency paths change, without camera, RKNN/RGA, LiDAR, or
+  Teensy requirements.
 
 CI is intentionally portable. Target-hardware evidence covers camera capture,
 RGA/RKNN execution, NPU latency, robot IO, firmware flashing, micro-ROS transport,
-and operator behavior.
+operator behavior, and verified robot-runtime image publishing.
 
 ## Locally Verified
 

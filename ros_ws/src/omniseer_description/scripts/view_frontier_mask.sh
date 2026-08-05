@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Visual inspection of /frontier.cpp's compute_frontier_mask output
  montage \
   -label 'Free'     free_mask.pgm \

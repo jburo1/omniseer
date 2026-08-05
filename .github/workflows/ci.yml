@@ -2,14 +2,17 @@ name: ci
 
 on:
   push:
-    branches:
-      - master
-      - "portfolio/**"
-  pull_request:
-  workflow_dispatch: {}
+    branches: [master]
+    paths:
+      - "ros_ws/**"
+      - "vision/**"
+      - "tests/**"
+      - "scripts/**"
+      - "pyproject.toml"
+      - "pytest.ini"
 
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -18,9 +21,7 @@ env:
 jobs:
   lint:
     runs-on: ubuntu-24.04
-    container:
-      image: osrf/ros:kilted-desktop-full-noble
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - uses: actions/checkout@v4
@@ -29,25 +30,49 @@ jobs:
         shell: bash
         run: |
           set -eux
-          apt-get update
-          apt-get install -y --no-install-recommends python3-venv
-          python3 -m venv /opt/ruff-venv
-          /opt/ruff-venv/bin/python -m pip install --no-cache-dir ruff==0.13.3
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends shellcheck
+          python3 -m venv /opt/lint-venv
+          /opt/lint-venv/bin/python -m pip install --upgrade pip
+          /opt/lint-venv/bin/python -m pip install --no-cache-dir pre-commit==4.3.0
 
-      - name: Ruff
+      - name: Pre-commit hooks
         shell: bash
         run: |
           set -eux
-          /opt/ruff-venv/bin/ruff check \
-            ros_ws/src/analysis \
-            ros_ws/src/bringup \
-            ros_ws/src/robot_diag_control
+          /opt/lint-venv/bin/pre-commit run --all-files --show-diff-on-failure
 
-  ros-core:
+      - name: Shellcheck
+        shell: bash
+        run: |
+          set -eux
+          mapfile -t shell_files < <(git ls-files '*.sh' scripts/omni)
+          shellcheck -S error -x "${shell_files[@]}"
+
+  python-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run repository tests
+        shell: bash
+        run: |
+          set -eux
+          python3 -m pip install --upgrade pip
+          python3 -m pip install pytest==7.4.4
+          python3 -m pytest -q tests
+
+  ros:
     runs-on: ubuntu-24.04
     container:
       image: osrf/ros:kilted-desktop-full-noble
-    timeout-minutes: 50
+    timeout-minutes: 65
 
     steps:
       - uses: actions/checkout@v4
@@ -74,7 +99,8 @@ jobs:
         run: |
           set -eux
           set +u
-          source /opt/ros/${ROS_DISTRO}/setup.bash
+          # shellcheck disable=SC1090
+          source "/opt/ros/${ROS_DISTRO}/setup.bash"
           set -u
           cd ros_ws
           colcon build --merge-install \
@@ -92,35 +118,17 @@ jobs:
               robot_diag_control \
               robot_diag_control_cpp
 
-      - name: Build vision bridge when SDKs are present
-        shell: bash
-        run: |
-          set -eux
-          if command -v pkg-config >/dev/null \
-            && pkg-config --exists librga \
-            && [ -f /usr/include/rknn_api.h ] \
-            && find /usr/lib /usr/local/lib -name 'librknnrt.so' -print -quit | grep -q .; then
-            set +u
-            source /opt/ros/${ROS_DISTRO}/setup.bash
-            set -u
-            cd ros_ws
-            set +u
-            source install/setup.bash
-            set -u
-            colcon build --merge-install --packages-select omniseer_vision_bridge
-          else
-            echo "Skipping omniseer_vision_bridge: librga/RKNN SDK not available in CI image"
-          fi
-
       - name: Test ROS packages
         shell: bash
         run: |
           set -eux
           set +u
-          source /opt/ros/${ROS_DISTRO}/setup.bash
+          # shellcheck disable=SC1090
+          source "/opt/ros/${ROS_DISTRO}/setup.bash"
           set -u
           cd ros_ws
           set +u
+          # shellcheck disable=SC1091
           source install/setup.bash
           set -u
           xvfb-run -a --server-args="-screen 0 1280x1024x24" \
@@ -137,66 +145,7 @@ jobs:
               robot_diag_control_cpp
           colcon test-result --all --verbose
 
-      - name: Upload ROS logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ros-core-logs
-          if-no-files-found: ignore
-          path: |
-            ros_ws/log
-            ros_ws/build/*/test_results
-            ros_ws/build/*/Testing/Temporary
-
-  bringup-smoke:
-    runs-on: ubuntu-24.04
-    container:
-      image: osrf/ros:kilted-desktop-full-noble
-    timeout-minutes: 45
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install ROS workspace deps
-        shell: bash
-        run: |
-          set -eux
-          bash scripts/ci/install_ros_workspace_deps.sh \
-            ros_ws/src/omniseer_gz_assets \
-            ros_ws/src/omniseer_msgs \
-            ros_ws/src/yolo_ros/yolo_msgs \
-            ros_ws/src/omniseer_autonomy \
-            ros_ws/src/omniseer_description \
-            ros_ws/src/omniseer_experiments \
-            ros_ws/src/bringup \
-            ros_ws/src/robot_io_adapters
-
-      - name: Build bringup smoke package set
-        shell: bash
-        run: |
-          set -eux
-          set +u
-          source /opt/ros/${ROS_DISTRO}/setup.bash
-          set -u
-          cd ros_ws
-          colcon build --merge-install \
-            --packages-ignore \
-              analysis \
-              rf2o_laser_odometry \
-              robot_diag_control_cpp \
-              yolo_bringup \
-              yolo_ros \
-            --packages-select \
-              omniseer_gz_assets \
-              omniseer_msgs \
-              yolo_msgs \
-              omniseer_autonomy \
-              omniseer_description \
-              omniseer_experiments \
-              bringup \
-              robot_io_adapters
-
-      - name: Run headless bringup smoke test
+      - name: Run simulation bringup smoke test
         shell: bash
         env:
           OMNISEER_RUN_SIM_SMOKE: "1"
@@ -205,19 +154,21 @@ jobs:
           set -eux
           mkdir -p "$(dirname "${OMNISEER_SMOKE_LOG_PATH}")"
           set +u
-          source /opt/ros/${ROS_DISTRO}/setup.bash
+          # shellcheck disable=SC1090
+          source "/opt/ros/${ROS_DISTRO}/setup.bash"
           set -u
           cd ros_ws
           set +u
+          # shellcheck disable=SC1091
           source install/setup.bash
           set -u
           python3 -m pytest -vv -s src/bringup/test/test_sim_launch_smoke.py
 
-      - name: Upload bringup smoke logs
+      - name: Upload ROS logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: bringup-smoke-logs
+          name: ros-logs
           if-no-files-found: ignore
           path: |
             ros_ws/log
@@ -268,65 +219,3 @@ jobs:
             vision/build-ci/Testing/Temporary
             vision/build-ci/CMakeFiles/CMakeOutput.log
             vision/build-ci/CMakeFiles/CMakeError.log
-
-  firmware-build:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install PlatformIO
-        shell: bash
-        run: |
-          set -eux
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            cmake \
-            g++ \
-            git \
-            make
-          python3 -m venv "${HOME}/.platformio/penv"
-          "${HOME}/.platformio/penv/bin/python" -m pip install --upgrade pip
-          "${HOME}/.platformio/penv/bin/python" -m pip install platformio==6.1.19
-          echo "${HOME}/.platformio/penv/bin" >> "${GITHUB_PATH}"
-
-      - name: Build firmware
-        shell: bash
-        run: |
-          set -eux
-          scripts/omni build firmware
-
-      - name: Upload firmware build outputs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: firmware-build-artifacts
-          if-no-files-found: ignore
-          path: |
-            firmware/.pio/build/teensy41
-
-  docs-build:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Build docs
-        shell: bash
-        run: |
-          set -eux
-          python3 -m pip install --upgrade pip
-          python3 -m pip install \
-            mkdocs-material \
-            mkdocs-git-revision-date-localized-plugin
-          mkdocs build --strict

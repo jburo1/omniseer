@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Visual inspection of the frontier_e2e pipeline artifacts with dilated goal markers
 tmp_work_dir=$(mktemp -d)
 trap 'rm -rf "$tmp_work_dir"' EXIT

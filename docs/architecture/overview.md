@@ -118,7 +118,7 @@ hardware validation responsibility.
 | YOLO-World post-processing and text embeddings | **Implemented; target-hardware run evidence** | RKNN tests, native runtime, and `runs/pipeline_001` recorded detections |
 | ROS detection and performance publication | **Implemented** | `omniseer_vision_bridge` |
 | Bounded target-centering autonomy | **Implemented** | `omniseer_autonomy`, `scripts/omni run autonomy`, controller tests, and RunBundle `autonomy.jsonl` support |
-| Portable ROS, vision, firmware, simulation, and docs checks | **CI-verified** | GitHub Actions six-job workflow |
+| Portable ROS, vision, firmware, simulation, docs, and portable runtime checks | **CI-verified** | GitHub Actions master-push workflows |
 | gRPC gateway, platform diagnostics, and managed SRT preview | **Implemented** | C++ and Python tests plus local integration |
 | Structured experiment recorder and run bundle | **Implemented; target-hardware run evidence** | `runs/pipeline_001` records detections, perf, system telemetry, and native pipeline telemetry |
 | Recorded resource telemetry in experiment bundles | **Implemented; target-hardware run evidence** | `runs/pipeline_001` includes `system.jsonl`; gateway live status remains separate |

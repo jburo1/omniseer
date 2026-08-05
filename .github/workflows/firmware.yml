@@ -1,0 +1,54 @@
+name: firmware
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "firmware/**"
+      - "uros_ws/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  firmware-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install PlatformIO
+        shell: bash
+        run: |
+          set -eux
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            cmake \
+            g++ \
+            git \
+            make
+          python3 -m venv "${HOME}/.platformio/penv"
+          "${HOME}/.platformio/penv/bin/python" -m pip install --upgrade pip
+          "${HOME}/.platformio/penv/bin/python" -m pip install platformio==6.1.19
+          echo "${HOME}/.platformio/penv/bin" >> "${GITHUB_PATH}"
+
+      - name: Build firmware
+        shell: bash
+        run: |
+          set -eux
+          scripts/omni build firmware
+
+      - name: Upload firmware build outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-build-artifacts
+          if-no-files-found: ignore
+          path: |
+            firmware/.pio/build/teensy41
