@@ -24,32 +24,20 @@ plugins:
   - git-revision-date-localized
 nav:
   - Home: index.md
-  - Architecture:
-    - Overview: architecture/overview.md
-  - Operations:
-    - Scripts front door: operations/scripts-frontdoor.md
-    - Operator run workflow: operations/operator-run-workflow.md
-    - Real teleop + native perception check: operations/real-teleop-perception-check.md
-    - Operator-integrated real demo: operations/operator-integrated-demo.md
-  - Robot Runtime:
-    - ROS packages: robot-runtime/ros-packages.md
-    - Robot runtime container: robot-runtime/robot-runtime-container.md
-  - Perception:
-    - Edge-to-cloud perception: perception/edge-to-cloud.md
-    - Vision pipeline: perception/vision-pipeline.md
-    - Producer pipeline: perception/producer-pipeline.md
-    - Consumer pipeline: perception/consumer-pipeline.md
-    - Vision telemetry: perception/vision-telemetry.md
-  - Gateway:
-    - Robot gateway: gateway/robot-gateway.md
+  - Project:
+    - System Architecture: architecture/overview.md
+    - Edge-to-Cloud Perception: perception/edge-to-cloud.md
+    - Verification Evidence: verification/evidence.md
+  - Operate:
+    - Scripts Front Door: operations/scripts-frontdoor.md
+    - Operator Run Workflow: operations/operator-run-workflow.md
+    - Robot Runtime Container: robot-runtime/robot-runtime-container.md
+  - Subsystems:
+    - ROS Packages and Sim/Real Boundary: robot-runtime/ros-packages.md
+    - Vision Pipeline: perception/vision-pipeline.md
+    - Vision Telemetry: perception/vision-telemetry.md
+    - Robot Gateway: gateway/robot-gateway.md
     - Gateway API: gateway/gateway-api.md
-    - Preview streaming: gateway/preview-streaming.md
-    - Remote monitoring architecture: gateway/remote-monitoring-architecture.md
+    - Preview Streaming: gateway/preview-streaming.md
   - Verification:
-    - Evidence: verification/evidence.md
-    - Build pipeline: verification/build-pipeline.md
-    - CI/CD overview: verification/ci-cd.md
-    - Code documentation: verification/code-documentation.md
-  - Hardware:
-    - Circuit: hardware/circuit.md
-    - Wiring guide: hardware/wiring.md
+    - CI/CD Overview: verification/ci-cd.md

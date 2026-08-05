@@ -67,7 +67,7 @@ and validates internal links embedded in built SVG diagrams.
 | Laptop tooling | Off-robot control, diagnostics, preview, retrieval, and report workflow. | `../../../operations/operator-run-workflow/` |
 | Robot mission runtime | Native perception plus ROS 2 autonomy, recording, and integration. | `../../../architecture/overview/` |
 | Firmware | Teensy-owned low-level motor and sensor integration over micro-ROS. | `../../../architecture/overview/` |
-| Physical hardware | Electrical and physical sensors, actuators, compute, and power system. | `../../../hardware/circuit/` |
+| Physical hardware | Electrical and physical sensors, actuators, compute, and power system. | `../../../architecture/overview/` |
 | RunBundle | Durable robot-run evidence artifact. | `../../../verification/evidence/` |
 | Static report | Human-readable derived review artifact. | `../../../verification/evidence/` |
 
@@ -123,7 +123,7 @@ built-site-relative paths such as:
 
 ```text
 ../../../verification/evidence/
-../../../hardware/circuit/
+../../../architecture/overview/
 ../../../operations/operator-run-workflow/
 ```
 
