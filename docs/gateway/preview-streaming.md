@@ -60,6 +60,9 @@ Implication:
 - Use `rkisp_mainpath` for preview and `rkisp_selfpath` for inference by
   default.
 
+- Keep preview and overlay work optional. Preview startup, shutdown, or failure
+  must not disrupt the mission-critical inference or robot behavior path.
+
 - Keep preview in `NV12` into the encoder when possible; do not convert to BGR
   on the robot in the default path.
 
@@ -238,6 +241,5 @@ only assume general-purpose CPU/GPU resources and likely hardware video decode.
 
 ## Related Docs
 
-- [Remote monitoring architecture](remote-monitoring-architecture.md)
 - [Robot gateway](robot-gateway.md)
 - [Gateway API](gateway-api.md)

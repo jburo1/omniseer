@@ -497,15 +497,19 @@ The target common graph is:
                             |
              consumes canonical robot-IO boundary only
                             |
- /mecanum_drive_controller/odometry  /imu  /scan  /yolo/detections  [/range on real hardware]
+ /mecanum_drive_controller/odometry  /imu  /scan  /range  /yolo/detections
 ```
 
 Below that line:
 
-- sim provides those topics through Gazebo + bridges + compute adapters, except
-  `/range` now remains real-hardware only
+- sim provides those topics through Gazebo + bridges + compute adapters. Normal
+  simulation can publish the canonical `/range` contract through the
+  scan-to-range adapter when `start_range_adapter` is enabled; it is enabled by
+  default in `sim.launch.py`, but CI does not currently assert `/range`.
 - real provides those topics through MCU/driver/runtime + direct naming
-  standardization plus compute adapters
+  standardization plus compute adapters. Real hardware publishes `/range` from
+  the MCU, so simulated `/range` should not be treated as identical-fidelity
+  physical sensor evidence.
 
 ## Boundary Rollout Status
 
@@ -517,7 +521,8 @@ Below that line:
   `real_io.launch.py` define the shared and provider-specific layers
 - top-level sim and real launch files compose those layers
 - `/yolo/detections` and `/vision/perf` are the real perception contracts
-- CI verifies five sim boundary topics and message types in headless Gazebo
+- CI verifies four sim boundary topics and message types in headless Gazebo:
+  `/clock`, `/imu`, `/scan`, and `/mecanum_drive_controller/odometry`
 
 ### Parity Work
 

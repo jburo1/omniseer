@@ -11,8 +11,8 @@ Path-filtered workflows cover the relevant changed area:
 - Ruff lint for the Python ROS/operator packages.
 - ROS Kilted package dependency install, build, and tests for the portable core
   package set.
-- Headless Gazebo smoke launch with CI-safe geometry and five boundary topics:
-  `/clock`, `/imu`, `/scan`, `/range`, and
+- Headless Gazebo smoke launch with CI-safe geometry and four asserted boundary
+  topics: `/clock`, `/imu`, `/scan`, and
   `/mecanum_drive_controller/odometry`.
 - Portable host vision tests for buffer pooling, JSONL telemetry, and rolling
   telemetry.
@@ -49,8 +49,10 @@ The native vision implementation includes target-oriented V4L2, RGA, RKNN,
 post-processing, and telemetry paths. Component-level target checks and harnesses
 support those implementation claims.
 
-The local run bundle `runs/pipeline_001` records a completed target-hardware
-Phase 3 native perception run on ROCK 5B+:
+A local target-hardware RunBundle named `runs/pipeline_001` was used to record a
+completed Phase 3 native perception run on ROCK 5B+. The raw bundle is not
+currently included in the public repository. The documented measurements from
+that run are:
 
 - duration: 15.5 s
 - detections: 230 records, 235 observed `person` detections
@@ -61,9 +63,9 @@ Phase 3 native perception run on ROCK 5B+:
 - recorded latency: producer total mean 1.12 ms, consumer infer mean 60.34 ms,
   consumer infer p95 64.47 ms
 
-This records the native perception path persisting detections,
-performance summaries, system telemetry, and native stage telemetry into one
-inspectable run bundle.
+This documented local evidence records the native perception path persisting
+detections, performance summaries, system telemetry, and native stage telemetry
+into one run bundle.
 
 Additional target-hardware records document integrated operator behavior such as:
 

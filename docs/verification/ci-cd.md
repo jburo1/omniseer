@@ -55,16 +55,19 @@ Runs inside the ROS Kilted desktop-full image:
 - runs package, unit, XML, CMake, and C++ lint tests
 - runs the headless Gazebo bringup smoke test
 
-The smoke test launches CI-safe geometry and positively verifies that boundary
-topics appear with expected types:
+The smoke test launches CI-safe geometry and positively verifies that these
+boundary topics appear with expected types:
 
 | Topic | Type |
 | --- | --- |
 | `/clock` | `rosgraph_msgs/msg/Clock` |
 | `/imu` | `sensor_msgs/msg/Imu` |
 | `/scan` | `sensor_msgs/msg/LaserScan` |
-| `/range` | `sensor_msgs/msg/Range` |
 | `/mecanum_drive_controller/odometry` | `nav_msgs/msg/Odometry` |
+
+Normal simulation can publish `/range` through the scan-to-range adapter when
+`start_range_adapter` is enabled; that topic is not currently asserted by the CI
+smoke test.
 
 The RKNN/RGA `omniseer_vision_bridge` is not compiled in GitHub Actions. That
 hardware-specific bridge is compiled and verified by the ROCK 5B+

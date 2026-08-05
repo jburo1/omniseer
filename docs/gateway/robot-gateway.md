@@ -27,7 +27,6 @@ What exists today:
 - native vision runtime
 - `omniseer_vision_bridge` publishing detections into ROS 2
 - RViz and debug tooling on the ROS side
-- a remote monitoring architecture spec
 - a `robot_diag_control_cpp` package with:
   - a shared generated C++ gRPC/protobuf library from the locked `.proto`
   - an in-memory gateway state store
@@ -80,7 +79,9 @@ gRPC complexity.
 - Narrow external contract: expose stable RPCs, not internal ROS topic names.
 
 - Mission isolation: preview, UI, and diagnostics must not interfere with
-  navigation/control runtime.
+  navigation/control runtime. Gateway failure, preview failure, or laptop
+  disconnect must not terminate mission-critical perception, command
+  arbitration, or robot behavior.
 
 - Process-level containment: preview transport should run as an on-demand child
   process or equivalent supervised worker.
@@ -273,6 +274,5 @@ The gateway keeps status aggregation bounded and cache-backed.
 
 ## Related Docs
 
-- [Remote monitoring architecture](remote-monitoring-architecture.md)
 - [Gateway API](gateway-api.md)
 - [Preview streaming](preview-streaming.md)

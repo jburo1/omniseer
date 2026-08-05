@@ -1,11 +1,11 @@
 # Vision Pipeline
 
-_Status: implemented; target-hardware run evidence recorded in `runs/pipeline_001`_
+_Status: implemented; documented local target-hardware run evidence from `runs/pipeline_001`; raw bundle not included in the public repository_
 
 This document describes the multi-stage, low-latency, zero-copy-oriented vision
 pipeline that transforms camera frames into open-vocabulary object detections. The
 implemented robot workflow uses those detections for measured perception experiments
-and bounded target-centering behavior.
+and bounded visual target acquisition and framing.
 
 The producer, consumer, YOLO-World post-processing, text-embedding preparation,
 rolling telemetry, JSONL telemetry, native harness, and ROS bridge are implemented.

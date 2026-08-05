@@ -4,13 +4,13 @@
   <object data="assets/diagrams/explorer/system-explorer.svg" type="image/svg+xml" aria-label="Omniseer system explorer" width="1237" height="1133" style="display: block; width: 100%; max-width: 1000px; height: auto; margin: 0 auto;"></object>
 </div>
 
-Omniseer is an embodied AI system for open-vocabulary perception, bounded
-target-centering behavior, operator diagnostics, and reproducible robot-run
+Omniseer is an embodied AI system for open-vocabulary perception, bounded visual
+target acquisition and framing, operator diagnostics, and reproducible robot-run
 evidence on a ROCK 5B+ mobile robot.
 
 The robot-side path captures camera frames, preprocesses them with RGA, runs
 YOLO-World on the Rockchip NPU, publishes typed detections and performance telemetry
-through ROS 2, and can run a bounded target-centering controller. Operator tools
+through ROS 2, and can run bounded visual target acquisition and framing. Operator tools
 provide gRPC status/control, on-demand SRT preview, RunBundle retrieval, inspection,
 annotation, and static report generation.
 

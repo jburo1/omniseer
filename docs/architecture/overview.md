@@ -19,15 +19,20 @@ experiment evidence:
           /yolo/detections              /vision/perf
                  |                             |
                  v                             v
-     [ Target-Centering Autonomy ]      [ RunBundle Recorder ]
+ [ Target Acquisition + Framing ]      [ RunBundle Recorder ]
                  |                             |
                  v                             v
           /cmd_vel_autonomy          [ Laptop Inspection ]
 ```
 
 The robot performs inference locally. ROS 2 carries normalized detections and
-performance summaries. The target-centering controller consumes detections and emits
-bounded velocity commands through the same arbitration path as other robot commands.
+performance summaries. The target-centering controller performs a bounded in-place
+visual scan for a configured target class, acquires a stable detection, centers the
+target horizontally with yaw, and uses small bounded forward or reverse motion to
+bring the target's bounding-box area into the configured framing range. Forward
+motion is blocked when proximity range crosses the configured safety threshold.
+This is bounded visual target acquisition and framing, not navigation-based object
+search, global exploration, mapping, or semantic planning.
 The experiment workflow records robot-created RunBundles, retrieves them onto the
 laptop, annotates selected evidence, and generates static HTML reports.
 
@@ -48,6 +53,10 @@ The ROCK 5B+ hosts the mission-critical runtime:
 - optional gateway and preview subprocesses
 
 Optional diagnostics must not become dependencies of the vision or control path.
+The robot-side compute budget prioritizes mission-critical perception, bounded
+robot behavior, command arbitration, and robot IO. Preview, dashboards, plotting,
+hosted review, and high-cost analysis are optional diagnostic work and belong off
+the robot where practical.
 
 ### Firmware and Robot IO
 
@@ -66,6 +75,8 @@ The laptop supports:
 - RViz, telemetry analysis, and other development tools
 
 The laptop keeps dashboard, plotting, and evidence inspection work off the robot.
+Operator connectivity can be disconnected or disabled without changing the local
+mission-critical perception and robot behavior contracts.
 
 ## Implemented Data Paths
 
@@ -107,21 +118,22 @@ MPEG-TS/SRT.
 
 Simulation and real bringup share a common graph above explicit command, odometry,
 IMU, LiDAR, range, detection, performance, and battery contracts. GitHub CI launches
-headless Gazebo and verifies five core boundary topics. Real device behavior remains a
-hardware validation responsibility.
+headless Gazebo and currently verifies `/clock`, `/imu`, `/scan`, and
+`/mecanum_drive_controller/odometry`. Real device behavior remains a hardware
+validation responsibility.
 
 ## Capability Status
 
 | Capability | Status | Evidence boundary |
 | --- | --- | --- |
-| Native producer and consumer vision pipeline | **Implemented; target-hardware run evidence** | V4L2, RGA, RKNN target tests and `runs/pipeline_001` recorded native pipeline telemetry |
-| YOLO-World post-processing and text embeddings | **Implemented; target-hardware run evidence** | RKNN tests, native runtime, and `runs/pipeline_001` recorded detections |
+| Native producer and consumer vision pipeline | **Implemented; documented local target-hardware run evidence** | V4L2, RGA, RKNN target tests and local `runs/pipeline_001` measurements; raw bundle not included in the public repository |
+| YOLO-World post-processing and text embeddings | **Implemented; documented local target-hardware run evidence** | RKNN tests, native runtime, and local `runs/pipeline_001` measurements; raw bundle not included in the public repository |
 | ROS detection and performance publication | **Implemented** | `omniseer_vision_bridge` |
-| Bounded target-centering autonomy | **Implemented** | `omniseer_autonomy`, `scripts/omni run autonomy`, controller tests, and RunBundle `autonomy.jsonl` support |
+| Bounded visual target acquisition and framing | **Implemented** | `omniseer_autonomy`, `scripts/omni run autonomy`, controller tests, and RunBundle `autonomy.jsonl` support |
 | Portable ROS, vision, firmware, simulation, docs, and portable runtime checks | **CI-verified** | GitHub Actions master-push workflows |
 | gRPC gateway, platform diagnostics, and managed SRT preview | **Implemented** | C++ and Python tests plus local integration |
-| Structured experiment recorder and run bundle | **Implemented; target-hardware run evidence** | `runs/pipeline_001` records detections, perf, system telemetry, and native pipeline telemetry |
-| Recorded resource telemetry in experiment bundles | **Implemented; target-hardware run evidence** | `runs/pipeline_001` includes `system.jsonl`; gateway live status remains separate |
+| Structured experiment recorder and run bundle | **Implemented; documented local target-hardware run evidence** | local `runs/pipeline_001` measurements include detections, perf, system telemetry, and native pipeline telemetry; raw bundle not included in the public repository |
+| Recorded resource telemetry in experiment bundles | **Implemented; documented local target-hardware run evidence** | local `runs/pipeline_001` measurements include `system.jsonl`; gateway live status remains separate |
 
 ## Repository Ownership
 

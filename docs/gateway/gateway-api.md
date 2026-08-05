@@ -26,7 +26,6 @@ Define a typed, explicit, versionable API that:
 What exists today:
 
 - ROS 2 internal topics and services
-- a monitoring architecture draft
 - a minimal protobuf definition in
   `ros_ws/src/robot_diag_control/robot_diag_control/api/robot_gateway.proto`
 - Python client tools for exercising the gateway contract
@@ -327,4 +326,3 @@ API through the real launch profile and `scripts/omni runs` front door.
 
 - [Robot gateway](robot-gateway.md)
 - [Preview streaming](preview-streaming.md)
-- [Remote monitoring architecture](remote-monitoring-architecture.md)

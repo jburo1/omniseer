@@ -618,17 +618,6 @@ Use this for:
 - simulation bringup changes
 - boundary-topic or launch-structure debugging
 
-### Legacy Teleop Check
-
-```bash
-scripts/omni run real --profile legacy-teleop smoke
-```
-
-Use this for:
-
-- the quickest legacy teleop health check
-- validating teleop and perception boundaries before a longer session
-
 ### Current Real Operator Demo
 
 Robot:
@@ -656,7 +645,7 @@ OMNISEER_REQUIRE_DETECTIONS=1 scripts/omni run real verify
 ```
 
 Use this for the integrated gateway status, preview, perception, and bounded
-teleop acceptance run described in [Operator-Integrated Real Demo](operator-integrated-demo.md).
+teleop acceptance check for the current operator profile.
 
 ### Native vision iteration
 

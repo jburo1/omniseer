@@ -11,17 +11,17 @@ result in a reproducible offboard experiment workflow.
 
 ## Runtime Flow
 
-An operator selects semantic classes, runs the robot through a scene or starts the
-bounded target-centering behavior, and records an experiment. YOLO-World runs on the
-ROCK 5B+ NPU. The resulting detections, stage timings, performance summaries,
-autonomy events, and selected visual evidence form a RunBundle that can be reviewed
-on a laptop.
+An operator selects semantic classes, runs the robot through a scene or starts
+bounded visual target acquisition and framing, and records an experiment.
+YOLO-World runs on the ROCK 5B+ NPU. The resulting detections, stage timings,
+performance summaries, autonomy events, and selected visual evidence form a
+RunBundle that can be reviewed on a laptop.
 
 ```text
 camera
   -> native V4L2/RGA/RKNN runtime
   -> /yolo/detections + /vision/perf
-  -> target-centering autonomy when enabled
+  -> bounded target acquisition + framing when enabled
   -> experiment recorder
   -> RunBundle
   -> laptop review
@@ -34,9 +34,10 @@ camera
 The native runtime captures
 NV12 frames, preprocesses them with RGA, prepares YOLO-World text embeddings, runs
 RKNN detector inference, maps detections back to source coordinates, and publishes
-bounded results. The local `runs/pipeline_001` bundle records detections,
-performance summaries, system telemetry, and native pipeline telemetry from a
-target-hardware run.
+bounded results. A local target-hardware RunBundle named `runs/pipeline_001` was
+used to record the documented perception measurements for detections, performance
+summaries, system telemetry, and native pipeline telemetry. The raw bundle is not
+currently included in the public repository.
 
 The native bridge currently receives classes from `classes.path` during startup.
 Changing classes requires restarting the bridge with a different class list. The

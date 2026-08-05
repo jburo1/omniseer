@@ -138,12 +138,20 @@ reaches success or failure, the autonomy node stops commanding motion, completes
 terminal logging and capture handling, and exits cleanly; real launch then shuts
 down so the recorder can finalize the run bundle without an operator Stop Run.
 
-The v1 autonomy behavior is yaw-only: it publishes `TwistStamped` commands to
-`/cmd_vel_autonomy`, relies on `twist_mux` arbitration, and records terminal
-state into the bundle for the HTML report. During scan, the target-centering node
-subscribes to `/odometry/filtered` and stops with `scan_complete_no_target` after
-one observed revolution by default. Translation, navigation, SLAM, tracking
-packages, and camera servo control remain out of scope for this run type.
+The current autonomy behavior performs a bounded in-place visual scan for a
+configured target class, acquires a stable detection, centers the target
+horizontally using yaw, and uses small bounded forward or reverse motion to bring
+the target's bounding-box area into the configured framing range. Forward motion
+is blocked when the proximity range crosses the configured safety threshold. This
+is bounded visual target acquisition and framing, not navigation-based object
+search, global exploration, mapping, or semantic planning.
+
+The node publishes `TwistStamped` commands to `/cmd_vel_autonomy`, relies on
+`twist_mux` arbitration, and records terminal state into the bundle for the HTML
+report. During scan, the target-centering node subscribes to `/odometry/filtered`
+and stops with `scan_complete_no_target` after one observed revolution by default.
+Navigation, SLAM, tracking packages, and camera servo control remain out of scope
+for this run type.
 
 The robot-side console log, retained in recorded bundles as `logs/bringup.log`,
 includes each newly reached autonomy state and a terminal summary with the final
@@ -172,3 +180,18 @@ Hardware verification is still required for the full path:
 4. verify the run bundle finalizes
 5. retrieve it
 6. generate and open the report
+
+For the current operator profile, a robot-side acceptance check can be run
+against an existing graph:
+
+```bash
+OMNISEER_REQUIRE_DETECTIONS=1 scripts/omni run real verify
+```
+
+This check requires live encoder, wheel-odometry, LiDAR, vision, and detection
+messages; healthy gateway status; and zero vision errors. It also starts and
+stops preview, runs a short headless overlay viewer smoke when laptop-side
+dependencies are available, enables teleop, sends only a zero command, verifies
+that the stamped controller reference receives it, and disables teleop. This is
+an acceptance check for the operator profile, not a replacement for target
+hardware run evidence.
