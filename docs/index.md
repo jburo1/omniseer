@@ -1,37 +1,36 @@
 # Omniseer
 
+Omniseer is an edge-to-cloud ROS 2 robotics platform that runs open-vocabulary
+perception on a ROCK 5B+ mobile robot, performs bounded visual target acquisition
+and framing, and records reproducible evidence from real robot runs.
+
+The current autonomy behavior performs an in-place bounded visual scan for a
+configured target class, acquires a stable detection, centers it horizontally,
+uses small bounded distance adjustments to frame it, blocks forward motion at the
+configured proximity threshold, and records terminal evidence. It is not
+navigation-based object search or room-scale semantic exploration.
+
 <div style="max-height: 620px; overflow: auto; margin: 0 auto 1.5rem;">
   <object data="assets/diagrams/explorer/system-explorer.svg" type="image/svg+xml" aria-label="Omniseer system explorer" width="1237" height="1133" style="display: block; width: 100%; max-width: 1000px; height: auto; margin: 0 auto;"></object>
 </div>
 
-Omniseer is an embodied AI system for open-vocabulary perception, bounded visual
-target acquisition and framing, operator diagnostics, and reproducible robot-run
-evidence on a ROCK 5B+ mobile robot.
+## Start Here
 
-The robot-side path captures camera frames, preprocesses them with RGA, runs
-YOLO-World on the Rockchip NPU, publishes typed detections and performance telemetry
-through ROS 2, and can run bounded visual target acquisition and framing. Operator tools
-provide gRPC status/control, on-demand SRT preview, RunBundle retrieval, inspection,
-annotation, and static report generation.
+| Reviewer goal | Start with |
+| --- | --- |
+| Understand the system | [System Architecture](architecture/overview.md) |
+| Inspect implementation-backed evidence | [Verification Evidence](verification/evidence.md) |
+| Understand edge perception | [Edge-to-Cloud Perception](perception/edge-to-cloud.md) and [Vision Pipeline](perception/vision-pipeline.md) |
+| Operate or review a run | [Operator Run Workflow](operations/operator-run-workflow.md) and [Scripts Front Door](operations/scripts-frontdoor.md) |
+| Inspect verification and CI | [CI/CD Overview](verification/ci-cd.md) |
 
-The documentation has three connected layers:
+## Evidence Boundary
 
-- **Architecture** explains the major robot, operator, gateway, firmware, runtime,
-  and evidence components.
-- **MkDocs pages** document subsystem contracts, commands, design rationale, and
-  verification workflows.
-- **RunBundles** preserve executable evidence from robot runs: manifests,
-  detections, telemetry, evidence frames, annotations, and generated reports.
+GitHub CI verifies portable software, documentation, firmware compilation,
+simulation smoke boundaries, portable vision tests, and hardware-independent
+runtime packaging. Target-hardware behavior requires the ROCK 5B+, RKNN/RGA SDKs,
+camera, sensors, Teensy, micro-ROS transport, and robot runtime.
 
-Start with the architecture and evidence pages, then drill into the subsystem or
-operator workflow that matches the task at hand:
-
-- [Scripts Front Door](operations/scripts-frontdoor.md) for the supported local command surface
-- [Edge-to-Cloud Perception](perception/edge-to-cloud.md) for the implemented perception and evidence loop
-- [System Architecture](architecture/overview.md) for runtime boundaries and implementation status
-- [Verification Evidence](verification/evidence.md) for CI, local, and target-hardware coverage
-- [Vision Pipeline](perception/vision-pipeline.md) for the native hot path
-- [CI/CD Overview](verification/ci-cd.md) for automated verification and its limits
-- [Robot Runtime Container](robot-runtime/robot-runtime-container.md) for the v2 robot image workflow
-- [Robot Gateway](gateway/robot-gateway.md) and [Preview Streaming](gateway/preview-streaming.md) for operator diagnostics
-- [Operator Run Workflow](operations/operator-run-workflow.md) for the monitor run/start/stop/retrieve path
+The documented local `runs/pipeline_001` record is target-hardware perception-path
+evidence. Its raw RunBundle is not currently included in the public repository,
+and it should not be read as repeated public autonomy experiment evidence.
