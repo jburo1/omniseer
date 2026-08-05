@@ -235,6 +235,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="." class="md-nav__link md-nav__link--active">
         
   
@@ -251,6 +269,47 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#start-here" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Start Here
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#evidence-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evidence Boundary
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -856,6 +915,36 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#start-here" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Start Here
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#evidence-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evidence Boundary
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -875,40 +964,57 @@
 
 
 <h1 id="omniseer">Omniseer<a class="headerlink" href="#omniseer" title="Permanent link">&para;</a></h1>
+<p>Omniseer is an edge-to-cloud ROS 2 robotics platform that runs open-vocabulary
+perception on a ROCK 5B+ mobile robot, performs bounded visual target acquisition
+and framing, and records reproducible evidence from real robot runs.</p>
+<p>The current autonomy behavior performs an in-place bounded visual scan for a
+configured target class, acquires a stable detection, centers it horizontally,
+uses small bounded distance adjustments to frame it, blocks forward motion at the
+configured proximity threshold, and records terminal evidence. It is not
+navigation-based object search or room-scale semantic exploration.</p>
 <div style="max-height: 620px; overflow: auto; margin: 0 auto 1.5rem;">
   <object data="assets/diagrams/explorer/system-explorer.svg" type="image/svg+xml" aria-label="Omniseer system explorer" width="1237" height="1133" style="display: block; width: 100%; max-width: 1000px; height: auto; margin: 0 auto;"></object>
 </div>
 
-<p>Omniseer is an embodied AI system for open-vocabulary perception, bounded visual
-target acquisition and framing, operator diagnostics, and reproducible robot-run
-evidence on a ROCK 5B+ mobile robot.</p>
-<p>The robot-side path captures camera frames, preprocesses them with RGA, runs
-YOLO-World on the Rockchip NPU, publishes typed detections and performance telemetry
-through ROS 2, and can run bounded visual target acquisition and framing. Operator tools
-provide gRPC status/control, on-demand SRT preview, RunBundle retrieval, inspection,
-annotation, and static report generation.</p>
-<p>The documentation has three connected layers:</p>
-<ul>
-<li><strong>Architecture</strong> explains the major robot, operator, gateway, firmware, runtime,
-  and evidence components.</li>
-<li><strong>MkDocs pages</strong> document subsystem contracts, commands, design rationale, and
-  verification workflows.</li>
-<li><strong>RunBundles</strong> preserve executable evidence from robot runs: manifests,
-  detections, telemetry, evidence frames, annotations, and generated reports.</li>
-</ul>
-<p>Start with the architecture and evidence pages, then drill into the subsystem or
-operator workflow that matches the task at hand:</p>
-<ul>
-<li><a href="operations/scripts-frontdoor/">Scripts Front Door</a> for the supported local command surface</li>
-<li><a href="perception/edge-to-cloud/">Edge-to-Cloud Perception</a> for the implemented perception and evidence loop</li>
-<li><a href="architecture/overview/">System Architecture</a> for runtime boundaries and implementation status</li>
-<li><a href="verification/evidence/">Verification Evidence</a> for CI, local, and target-hardware coverage</li>
-<li><a href="perception/vision-pipeline/">Vision Pipeline</a> for the native hot path</li>
-<li><a href="verification/ci-cd/">CI/CD Overview</a> for automated verification and its limits</li>
-<li><a href="robot-runtime/robot-runtime-container/">Robot Runtime Container</a> for the v2 robot image workflow</li>
-<li><a href="gateway/robot-gateway/">Robot Gateway</a> and <a href="gateway/preview-streaming/">Preview Streaming</a> for operator diagnostics</li>
-<li><a href="operations/operator-run-workflow/">Operator Run Workflow</a> for the monitor run/start/stop/retrieve path</li>
-</ul>
+<h2 id="start-here">Start Here<a class="headerlink" href="#start-here" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Reviewer goal</th>
+<th>Start with</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Understand the system</td>
+<td><a href="architecture/overview/">System Architecture</a></td>
+</tr>
+<tr>
+<td>Inspect implementation-backed evidence</td>
+<td><a href="verification/evidence/">Verification Evidence</a></td>
+</tr>
+<tr>
+<td>Understand edge perception</td>
+<td><a href="perception/edge-to-cloud/">Edge-to-Cloud Perception</a> and <a href="perception/vision-pipeline/">Vision Pipeline</a></td>
+</tr>
+<tr>
+<td>Operate or review a run</td>
+<td><a href="operations/operator-run-workflow/">Operator Run Workflow</a> and <a href="operations/scripts-frontdoor/">Scripts Front Door</a></td>
+</tr>
+<tr>
+<td>Inspect verification and CI</td>
+<td><a href="verification/ci-cd/">CI/CD Overview</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="evidence-boundary">Evidence Boundary<a class="headerlink" href="#evidence-boundary" title="Permanent link">&para;</a></h2>
+<p>GitHub CI verifies portable software, documentation, firmware compilation,
+simulation smoke boundaries, portable vision tests, and hardware-independent
+runtime packaging. Target-hardware behavior requires the ROCK 5B+, RKNN/RGA SDKs,
+camera, sensors, Teensy, micro-ROS transport, and robot runtime.</p>
+<p>The documented local <code>runs/pipeline_001</code> record is target-hardware perception-path
+evidence. Its raw RunBundle is not currently included in the public repository,
+and it should not be read as repeated public autonomy experiment evidence.</p>
 
 
 
@@ -929,7 +1035,7 @@ operator workflow that matches the task at hand:</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 5, 2026 21:49:56 UTC">August 5, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 5, 2026 21:53:56 UTC">August 5, 2026</span>
   </span>
 
     
