@@ -222,6 +222,7 @@ Usage:
   scripts/omni build strict
   scripts/omni build ros --with-vision
   scripts/omni build ros --without-vision
+  scripts/omni build ros --with-yolo
   scripts/omni build vision
   scripts/omni build firmware
   scripts/omni build runtime-container

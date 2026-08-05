@@ -90,8 +90,8 @@ Operator App  -- gRPC -->  Robot Gateway  -- ROS adapter --> internal ROS graph
 
 ## Locked v1 Service Shape
 
-The current `.proto` is now the contract we should carry into the C++ rewrite.
-Keep it small and evolve additively.
+The `.proto` is the locked v1 external contract. Keep it small and evolve
+additively.
 
 ```proto
 service RobotGateway {

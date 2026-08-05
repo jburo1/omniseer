@@ -113,13 +113,8 @@ The key parity differences are:
     control plugins
 - launch-topology mismatch:
   - sim has a staged orchestration path
-  - real bringup currently covers only the phase-1 MCU/encoder-odometry slice
-
-The earlier topic-only naming mismatches and the firmware/sim kinematics drift
-have been addressed in the phase-1 slice:
-
-- the MCU now uses the sim/common command, IMU, and range topic names directly
-- the firmware kinematics constants now match the current sim/controller values
+  - real bringup composes the hardware I/O, native vision, shared robot graph,
+    and optional operator, autonomy, and experiment-recording components
 
 Wheel odometry still remains a compute boundary, because the MCU publishes raw
 encoder counts rather than odometry.
@@ -440,7 +435,7 @@ the simulated RF2O input and fuses only wheel odometry plus IMU.
 
 ### `firmware/include/micro_ros_config.hpp` and `firmware/src/micro_ros_node.cpp`
 
-Phase-1 implementation:
+Current firmware boundary:
 
 - MCU topic constants use `/mecanum_drive_controller/reference`, `/imu`, and `/range`
 - MCU command subscriber expects `geometry_msgs/msg/TwistStamped`

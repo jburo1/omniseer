@@ -1,7 +1,5 @@
 # Operator Run Workflow
 
-_Status: local GUI refactor in progress; target-hardware verification pending_
-
 This document explains the operator monitor run workflow. The GUI collects operator
 input and displays state; small run modules own command building, process control,
 artifact handling, and validation.
