@@ -75,16 +75,16 @@ namespace omniseer::vision
 
   ConsumerTick ConsumerPipeline::run() noexcept
   {
-    ConsumerTick tick{};
-    const bool              telemetry_on            = (_telemetry != nullptr && _telemetry->timing_enabled());
-    const clock::time_point total_start             = telemetry_on ? clock::now() : clock::time_point{};
-    const uint64_t          consumer_start_real_ns  = telemetry_on ? telemetry_timing::now_real_ns() : 0;
-    InferStatus             sample_infer_status     = InferStatus::Ok;
-    uint64_t                sample_acquire_read_ns  = 0;
-    uint64_t                sample_infer_ns         = 0;
-    uint64_t                sample_postprocess_ns   = 0;
-    uint64_t                sample_publish_ns       = 0;
-    uint64_t                sample_release_ns       = 0;
+    ConsumerTick            tick{};
+    const bool              telemetry_on  = (_telemetry != nullptr && _telemetry->timing_enabled());
+    const clock::time_point total_start   = telemetry_on ? clock::now() : clock::time_point{};
+    const uint64_t consumer_start_real_ns = telemetry_on ? telemetry_timing::now_real_ns() : 0;
+    InferStatus    sample_infer_status    = InferStatus::Ok;
+    uint64_t       sample_acquire_read_ns = 0;
+    uint64_t       sample_infer_ns        = 0;
+    uint64_t       sample_postprocess_ns  = 0;
+    uint64_t       sample_publish_ns      = 0;
+    uint64_t       sample_release_ns      = 0;
 
     auto emit_sample = [&]() noexcept
     {
@@ -93,35 +93,34 @@ namespace omniseer::vision
 
       const uint64_t consumer_end_real_ns = telemetry_timing::now_real_ns();
       ConsumerSample sample{};
-      sample.tick_id                  = _next_tick_id++;
-      sample.frame_id                 = tick.frame_id;
-      sample.has_frame_id             = (tick.frame_id != 0) ? 1u : 0u;
-      sample.sequence                 = tick.sequence;
-      sample.has_sequence             = (tick.sequence != 0) ? 1u : 0u;
-      sample.event_ts_real_ns         = tick.capture_ts_real_ns;
+      sample.tick_id                   = _next_tick_id++;
+      sample.frame_id                  = tick.frame_id;
+      sample.has_frame_id              = (tick.frame_id != 0) ? 1u : 0u;
+      sample.sequence                  = tick.sequence;
+      sample.has_sequence              = (tick.sequence != 0) ? 1u : 0u;
+      sample.event_ts_real_ns          = tick.capture_ts_real_ns;
       sample.consumer_start_ts_real_ns = consumer_start_real_ns;
       sample.consumer_end_ts_real_ns   = consumer_end_real_ns;
-      sample.source_age_start_ns       = source_age_ns(tick.capture_ts_real_ns, consumer_start_real_ns);
-      sample.source_age_end_ns         = source_age_ns(tick.capture_ts_real_ns, consumer_end_real_ns);
-      sample.acquire_read_ns           = sample_acquire_read_ns;
-      sample.infer_ns                  = sample_infer_ns;
-      sample.postprocess_ns            = sample_postprocess_ns;
-      sample.publish_ns                = sample_publish_ns;
-      sample.release_ns                = sample_release_ns;
-      sample.total_ns                  = telemetry_timing::elapsed_ns(total_start, clock::now());
-      sample.stage_mask                = tick.stage_mask;
-      sample.infer_errno               = tick.stage_errno;
-      sample.consumer_status           = static_cast<uint8_t>(tick.status);
-      sample.infer_status              = static_cast<uint8_t>(sample_infer_status);
-      sample.postprocess_status = ((tick.stage_mask &
-                                    stage_mask_bit(ConsumerStageMask::Postprocess)) != 0)
-                                     ? static_cast<uint8_t>(PostprocessStatus::Ok)
-                                     : static_cast<uint8_t>(PostprocessStatus::NotRun);
+      sample.source_age_start_ns = source_age_ns(tick.capture_ts_real_ns, consumer_start_real_ns);
+      sample.source_age_end_ns   = source_age_ns(tick.capture_ts_real_ns, consumer_end_real_ns);
+      sample.acquire_read_ns     = sample_acquire_read_ns;
+      sample.infer_ns            = sample_infer_ns;
+      sample.postprocess_ns      = sample_postprocess_ns;
+      sample.publish_ns          = sample_publish_ns;
+      sample.release_ns          = sample_release_ns;
+      sample.total_ns            = telemetry_timing::elapsed_ns(total_start, clock::now());
+      sample.stage_mask          = tick.stage_mask;
+      sample.infer_errno         = tick.stage_errno;
+      sample.consumer_status     = static_cast<uint8_t>(tick.status);
+      sample.infer_status        = static_cast<uint8_t>(sample_infer_status);
+      sample.postprocess_status =
+          ((tick.stage_mask & stage_mask_bit(ConsumerStageMask::Postprocess)) != 0)
+              ? static_cast<uint8_t>(PostprocessStatus::Ok)
+              : static_cast<uint8_t>(PostprocessStatus::NotRun);
       _telemetry->emit_consumer(sample);
     };
 
-    auto finish = [&](ConsumerTickStatus status, ConsumerStage stage,
-                      int stage_errno = 0) noexcept
+    auto finish = [&](ConsumerTickStatus status, ConsumerStage stage, int stage_errno = 0) noexcept
     {
       tick.status      = status;
       tick.stage       = stage;

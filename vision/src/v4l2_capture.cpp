@@ -43,20 +43,20 @@ namespace omniseer::vision
     {
       switch (err)
       {
-        case EAGAIN:
-        case EBUSY:
-        case EIO:
-        case ETIMEDOUT:
-          return CaptureStatus::RetryableError;
-        default:
-          return CaptureStatus::FatalError;
+      case EAGAIN:
+      case EBUSY:
+      case EIO:
+      case ETIMEDOUT:
+        return CaptureStatus::RetryableError;
+      default:
+        return CaptureStatus::FatalError;
       }
     }
 
     void init_capture_mplane_buffer(v4l2_buffer& buf, v4l2_plane& plane) noexcept
     {
-      plane = v4l2_plane{};
-      buf   = v4l2_buffer{};
+      plane        = v4l2_plane{};
+      buf          = v4l2_buffer{};
       buf.type     = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
       buf.memory   = V4L2_MEMORY_MMAP;
       buf.length   = 1;
@@ -92,8 +92,8 @@ namespace omniseer::vision
     if (this == &other)
       return *this;
     _reset();
-    _capture      = other._capture;
-    _frame        = std::move(other._frame);
+    _capture       = other._capture;
+    _frame         = std::move(other._frame);
     other._capture = nullptr;
     other._frame   = FrameDescriptor{};
     return *this;
@@ -312,8 +312,8 @@ namespace omniseer::vision
       return {CaptureStatus::FatalError, ERANGE};
     }
 
-    const Slot& slot = _slots[buf.index];
-    uint64_t capture_ts_real_ns = 0;
+    const Slot& slot               = _slots[buf.index];
+    uint64_t    capture_ts_real_ns = 0;
     if (!make_v4l2_capture_timestamp_real_ns(buf.timestamp, buf.flags, capture_ts_real_ns))
     {
       const CaptureResult rq = requeue(buf.index);
@@ -372,7 +372,7 @@ namespace omniseer::vision
   V4l2Capture::DequeueLeaseResult V4l2Capture::dequeue_lease() noexcept
   {
     DequeueLeaseResult out{};
-    FrameDescriptor frame{};
+    FrameDescriptor    frame{};
     out.capture = dequeue(frame);
     if (!out.capture.ok())
       return out;

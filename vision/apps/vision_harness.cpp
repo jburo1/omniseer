@@ -1,11 +1,15 @@
 #include <algorithm>
 #include <array>
+#include <cerrno>
 #include <chrono>
 #include <csignal>
-#include <cerrno>
 #include <cstdio>
 #include <cstdlib>
+#include <linux/videodev2.h>
 #include <memory>
+#include <opencv2/core.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
 #include <stdexcept>
 #include <string>
 #include <sys/mman.h>
@@ -13,11 +17,6 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
-#include <linux/videodev2.h>
-#include <opencv2/core.hpp>
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgproc.hpp>
 
 #include "omniseer/vision/class_list.hpp"
 #include "omniseer/vision/composite_telemetry.hpp"
@@ -58,10 +57,10 @@ namespace
   {
     switch (mode)
     {
-      case HarnessMode::Single:
-        return "single";
-      case HarnessMode::Threaded:
-        return "threaded";
+    case HarnessMode::Single:
+      return "single";
+    case HarnessMode::Threaded:
+      return "threaded";
     }
     return "unknown";
   }
@@ -131,7 +130,7 @@ namespace
   {
     if (text == nullptr || *text == '\0')
       return false;
-    char* end = nullptr;
+    char*       end   = nullptr;
     const float value = std::strtof(text, &end);
     if (end == nullptr || *end != '\0')
       return false;
@@ -161,8 +160,8 @@ namespace
   {
     for (int i = 1; i < argc; ++i)
     {
-      const std::string arg = argv[i];
-      auto require_value = [&](const char* name) -> const char*
+      const std::string arg           = argv[i];
+      auto              require_value = [&](const char* name) -> const char*
       {
         if (i + 1 >= argc)
           throw std::runtime_error(std::string("missing value for ") + name);
@@ -275,7 +274,7 @@ namespace
     return true;
   }
 
-  void prefill_pool(omniseer::vision::ImageBufferPool& pool,
+  void prefill_pool(omniseer::vision::ImageBufferPool&     pool,
                     const omniseer::vision::RgaPreprocess& preprocess)
   {
     std::vector<omniseer::vision::ImageBufferPool::WriteLease> init_leases{};
@@ -326,9 +325,9 @@ namespace
   class OpenCvPreviewSink final : public omniseer::vision::IFramePreviewSink
   {
   public:
-    explicit OpenCvPreviewSink(std::vector<std::string> class_names,
+    explicit OpenCvPreviewSink(std::vector<std::string>                       class_names,
                                const omniseer::vision::RollingTelemetryStats* stats = nullptr,
-                               std::string              window_name = "Omniseer Vision")
+                               std::string window_name = "Omniseer Vision")
         : _class_names(std::move(class_names)), _stats(stats), _window_name(std::move(window_name))
     {
       cv::namedWindow(_window_name, cv::WINDOW_NORMAL);
@@ -344,8 +343,8 @@ namespace
       cv::destroyWindow(_window_name);
     }
 
-    void publish(const omniseer::vision::ImageBuffer&        image,
-                 const omniseer::vision::DetectionsFrame&    frame,
+    void publish(const omniseer::vision::ImageBuffer&         image,
+                 const omniseer::vision::DetectionsFrame&     frame,
                  const omniseer::vision::PipelineRemapConfig& remap) noexcept override
     {
       if (image.fmt != omniseer::vision::PixelFormat::RGB888 || image.num_planes == 0)
@@ -358,7 +357,7 @@ namespace
       if (mapping == nullptr)
         return;
 
-      auto* base = static_cast<uint8_t*>(mapping->addr);
+      auto*   base = static_cast<uint8_t*>(mapping->addr);
       cv::Mat rgb(image.size.h, image.size.w, CV_8UC3, base + plane.offset, plane.stride);
       cv::Mat bgr{};
       cv::cvtColor(rgb, bgr, cv::COLOR_RGB2BGR);
@@ -384,9 +383,9 @@ namespace
       if (it != _mappings.end())
         return &it->second;
 
-      const size_t map_length =
-          (image.total_alloc_size != 0) ? image.total_alloc_size
-                                        : (image.planes[0].offset + image.planes[0].alloc_size);
+      const size_t map_length = (image.total_alloc_size != 0)
+                                    ? image.total_alloc_size
+                                    : (image.planes[0].offset + image.planes[0].alloc_size);
       if (map_length == 0)
         return nullptr;
 
@@ -405,8 +404,7 @@ namespace
       return ok ? &inserted->second : nullptr;
     }
 
-    void draw_overlay(cv::Mat&                                  image,
-                      const omniseer::vision::DetectionsFrame&  frame,
+    void draw_overlay(cv::Mat& image, const omniseer::vision::DetectionsFrame& frame,
                       const omniseer::vision::PipelineRemapConfig& remap) noexcept
     {
       const auto stats_line = make_stats_lines(frame);
@@ -439,12 +437,11 @@ namespace
           label = _class_names[det.class_id].c_str();
         const std::string text =
             std::string(label) + " " + cv::format("%.2f", static_cast<double>(det.score));
-        int               baseline = 0;
-        const cv::Size    size =
-            cv::getTextSize(text, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseline);
-        const int text_y = std::max(y1, size.height + 4);
-        const int box_y  = std::max(0, text_y - size.height - baseline - 4);
-        const int box_x2 = std::min(x1 + size.width + 6, image.cols);
+        int            baseline = 0;
+        const cv::Size size   = cv::getTextSize(text, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseline);
+        const int      text_y = std::max(y1, size.height + 4);
+        const int      box_y  = std::max(0, text_y - size.height - baseline - 4);
+        const int      box_x2 = std::min(x1 + size.width + 6, image.cols);
         cv::rectangle(image, cv::Point(x1, box_y), cv::Point(box_x2, text_y + baseline),
                       cv::Scalar(64, 220, 64), cv::FILLED);
         cv::putText(image, text, cv::Point(x1 + 3, text_y - 2), cv::FONT_HERSHEY_SIMPLEX, 0.5,
@@ -473,12 +470,12 @@ namespace
         const double dt = std::chrono::duration<double>(now - _last_rate_time).count();
         if (dt >= 0.25)
         {
-          _producer_fps = static_cast<double>(snapshot.produced_count -
-                                              _last_rate_snapshot.produced_count) /
-                          dt;
-          _consumer_fps = static_cast<double>(snapshot.consumed_count -
-                                              _last_rate_snapshot.consumed_count) /
-                          dt;
+          _producer_fps =
+              static_cast<double>(snapshot.produced_count - _last_rate_snapshot.produced_count) /
+              dt;
+          _consumer_fps =
+              static_cast<double>(snapshot.consumed_count - _last_rate_snapshot.consumed_count) /
+              dt;
           _last_rate_time     = now;
           _last_rate_snapshot = snapshot;
         }
@@ -506,15 +503,15 @@ namespace
       return static_cast<double>(ns) / 1.0e6;
     }
 
-    std::vector<std::string>        _class_names{};
+    std::vector<std::string>                       _class_names{};
     const omniseer::vision::RollingTelemetryStats* _stats{nullptr};
-    std::string                     _window_name{};
-    std::unordered_map<int, Mapping> _mappings{};
-    bool                            _logged_map_failure{false};
-    std::chrono::steady_clock::time_point _last_rate_time{};
-    omniseer::vision::RollingTelemetrySnapshot _last_rate_snapshot{};
-    double _producer_fps{0.0};
-    double _consumer_fps{0.0};
+    std::string                                    _window_name{};
+    std::unordered_map<int, Mapping>               _mappings{};
+    bool                                           _logged_map_failure{false};
+    std::chrono::steady_clock::time_point          _last_rate_time{};
+    omniseer::vision::RollingTelemetrySnapshot     _last_rate_snapshot{};
+    double                                         _producer_fps{0.0};
+    double                                         _consumer_fps{0.0};
   };
 
   bool run_producer_loop(omniseer::vision::ProducerPipeline& producer) noexcept
@@ -636,7 +633,8 @@ int main(int argc, char** argv)
     std::fprintf(stdout, "Loaded %zu class names from %s\n", class_names.size(),
                  cfg.class_list_path.c_str());
     std::fprintf(stdout,
-                 "Unused detector text slots will be padded internally with \"%s\" and ignored by postprocess.\n",
+                 "Unused detector text slots will be padded internally with \"%s\" and ignored by "
+                 "postprocess.\n",
                  cfg.pad_token.c_str());
     std::fprintf(stdout, "Preview: %s\n", cfg.preview ? "enabled" : "disabled");
     std::fprintf(stdout, "Mode: %s\n", harness_mode_name(cfg.mode));
@@ -658,7 +656,7 @@ int main(int argc, char** argv)
     });
     capture.start();
 
-    omniseer::vision::ImageBufferPool pool{};
+    omniseer::vision::ImageBufferPool  pool{};
     omniseer::vision::DmaHeapAllocator allocator{};
     pool.allocate_all(allocator, static_cast<int>(cfg.dst_width), static_cast<int>(cfg.dst_height),
                       omniseer::vision::PixelFormat::RGB888);
@@ -672,13 +670,13 @@ int main(int argc, char** argv)
     });
     prefill_pool(pool, preprocess);
 
-    std::unique_ptr<omniseer::vision::JsonlTelemetry> jsonl_telemetry{};
+    std::unique_ptr<omniseer::vision::JsonlTelemetry>     jsonl_telemetry{};
     std::unique_ptr<omniseer::vision::CompositeTelemetry> telemetry{};
     omniseer::vision::RollingTelemetryStats               rolling_stats{};
     if (!cfg.telemetry_jsonl_path.empty())
     {
-      jsonl_telemetry = std::make_unique<omniseer::vision::JsonlTelemetry>(
-          omniseer::vision::JsonlTelemetryConfig{
+      jsonl_telemetry =
+          std::make_unique<omniseer::vision::JsonlTelemetry>(omniseer::vision::JsonlTelemetryConfig{
               .path = cfg.telemetry_jsonl_path,
           });
     }
@@ -698,9 +696,9 @@ int main(int argc, char** argv)
       telemetry_sink = jsonl_telemetry.get();
     }
 
-    omniseer::vision::ProducerPipeline producer(
-        capture, preprocess, pool, telemetry_sink,
-        {.preflight_capture_wait_ms = cfg.preflight_capture_wait_ms});
+    omniseer::vision::ProducerPipeline producer(capture, preprocess, pool, telemetry_sink,
+                                                {.preflight_capture_wait_ms =
+                                                     cfg.preflight_capture_wait_ms});
     producer.preflight();
 
     omniseer::vision::YoloWorldTextEmbeddingsBuilder builder({
@@ -709,20 +707,19 @@ int main(int argc, char** argv)
         .clip_vocab_path         = cfg.clip_vocab_path,
         .pad_token               = cfg.pad_token,
     });
-    const omniseer::vision::PreparedTextEmbeddings prepared = builder.build(class_names);
-    ConsoleDetectionsSink sink(prepared.class_names);
+    const omniseer::vision::PreparedTextEmbeddings   prepared = builder.build(class_names);
+    ConsoleDetectionsSink                            sink(prepared.class_names);
 
-    omniseer::vision::RknnRunner runner({
-        .model_path  = cfg.detector_model_path,
-        .warmup_runs = cfg.warmup_runs,
+    omniseer::vision::RknnRunner       runner({
+              .model_path  = cfg.detector_model_path,
+              .warmup_runs = cfg.warmup_runs,
     });
-    omniseer::vision::ConsumerPipeline consumer(
-        pool, runner, telemetry_sink, &sink,
-        {
-            .score_threshold   = cfg.score_threshold,
-            .nms_iou_threshold = cfg.nms_iou_threshold,
-            .max_detections    = cfg.max_detections,
-        });
+    omniseer::vision::ConsumerPipeline consumer(pool, runner, telemetry_sink, &sink,
+                                                {
+                                                    .score_threshold   = cfg.score_threshold,
+                                                    .nms_iou_threshold = cfg.nms_iou_threshold,
+                                                    .max_detections    = cfg.max_detections,
+                                                });
     std::unique_ptr<OpenCvPreviewSink> preview_sink{};
     if (cfg.preview)
     {

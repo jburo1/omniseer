@@ -165,8 +165,7 @@ namespace omniseer::vision
       write_stage_u64(os, sample.stage_mask, static_cast<uint32_t>(ProducerStageMask::Dequeue),
                       sample.dequeue_ns);
       os << ",\"acquire_write\":";
-      write_stage_u64(os, sample.stage_mask,
-                      static_cast<uint32_t>(ProducerStageMask::AcquireWrite),
+      write_stage_u64(os, sample.stage_mask, static_cast<uint32_t>(ProducerStageMask::AcquireWrite),
                       sample.acquire_write_ns);
       os << ",\"preprocess\":";
       write_stage_u64(os, sample.stage_mask, static_cast<uint32_t>(ProducerStageMask::Preprocess),
@@ -192,8 +191,7 @@ namespace omniseer::vision
       write_optional_u64(os, sample.consumer_start_ts_real_ns,
                          sample.consumer_start_ts_real_ns != 0);
       os << ",\"consumer_end_ts_real_ns\":";
-      write_optional_u64(os, sample.consumer_end_ts_real_ns,
-                         sample.consumer_end_ts_real_ns != 0);
+      write_optional_u64(os, sample.consumer_end_ts_real_ns, sample.consumer_end_ts_real_ns != 0);
       os << ",\"source_age_start_ns\":";
       write_optional_u64(os, sample.source_age_start_ns, sample.event_ts_real_ns != 0);
       os << ",\"source_age_end_ns\":";
@@ -226,12 +224,9 @@ namespace omniseer::vision
   struct JsonlTelemetry::Impl
   {
     explicit Impl(JsonlTelemetryConfig cfg_)
-        : cfg(std::move(cfg_)),
-          producer_slots(cfg.producer_queue_capacity),
-          consumer_slots(cfg.consumer_queue_capacity),
-          producer_free(cfg.producer_queue_capacity),
-          producer_ready(cfg.producer_queue_capacity),
-          consumer_free(cfg.consumer_queue_capacity),
+        : cfg(std::move(cfg_)), producer_slots(cfg.producer_queue_capacity),
+          consumer_slots(cfg.consumer_queue_capacity), producer_free(cfg.producer_queue_capacity),
+          producer_ready(cfg.producer_queue_capacity), consumer_free(cfg.consumer_queue_capacity),
           consumer_ready(cfg.consumer_queue_capacity)
     {
       if (cfg.path.empty())
@@ -360,24 +355,22 @@ namespace omniseer::vision
       return wrote;
     }
 
-    JsonlTelemetryConfig      cfg{};
-    std::ofstream             out{};
-    std::thread               worker{};
-    std::atomic<bool>         enabled{true};
-    std::atomic<bool>         stop{false};
-    std::atomic<uint64_t>     producer_dropped{0};
-    std::atomic<uint64_t>     consumer_dropped{0};
+    JsonlTelemetryConfig        cfg{};
+    std::ofstream               out{};
+    std::thread                 worker{};
+    std::atomic<bool>           enabled{true};
+    std::atomic<bool>           stop{false};
+    std::atomic<uint64_t>       producer_dropped{0};
+    std::atomic<uint64_t>       consumer_dropped{0};
     std::vector<ProducerSample> producer_slots{};
     std::vector<ConsumerSample> consumer_slots{};
-    SpscRing                  producer_free;
-    SpscRing                  producer_ready;
-    SpscRing                  consumer_free;
-    SpscRing                  consumer_ready;
+    SpscRing                    producer_free;
+    SpscRing                    producer_ready;
+    SpscRing                    consumer_free;
+    SpscRing                    consumer_ready;
   };
 
-  JsonlTelemetry::JsonlTelemetry(JsonlTelemetryConfig cfg) : _impl(new Impl(std::move(cfg)))
-  {
-  }
+  JsonlTelemetry::JsonlTelemetry(JsonlTelemetryConfig cfg) : _impl(new Impl(std::move(cfg))) {}
 
   JsonlTelemetry::~JsonlTelemetry()
   {

@@ -13,8 +13,8 @@ namespace omniseer::vision
 {
   namespace
   {
-    using telemetry_timing::ScopedStageTimer;
     using telemetry_timing::clock;
+    using telemetry_timing::ScopedStageTimer;
 
     uint64_t source_age_ns(uint64_t source_ts_real_ns, uint64_t sample_ts_real_ns) noexcept
     {
@@ -48,8 +48,7 @@ namespace omniseer::vision
   ProducerPipeline::ProducerPipeline(V4l2Capture& capture, RgaPreprocess& preprocess,
                                      ImageBufferPool& pool, ITelemetry* telemetry,
                                      ProducerPipelineConfig cfg) noexcept
-      : _capture(capture), _preprocess(preprocess), _pool(pool), _telemetry(telemetry),
-        _cfg(cfg)
+      : _capture(capture), _preprocess(preprocess), _pool(pool), _telemetry(telemetry), _cfg(cfg)
   {
   }
 
@@ -110,17 +109,17 @@ namespace omniseer::vision
   {
     ProducerTick tick{};
 
-    const bool       telemetry_on = (_telemetry != nullptr && _telemetry->timing_enabled());
-    const clock::time_point total_start = telemetry_on ? clock::now() : clock::time_point{};
-    CaptureStatus    sample_capture_status    = CaptureStatus::Ok;
-    PreprocessStatus sample_preprocess_status = PreprocessStatus::Ok;
-    uint64_t         sample_source_age_dequeue_ns       = 0;
-    uint64_t         sample_source_age_publish_ready_ns = 0;
-    uint64_t         sample_dequeue_ns        = 0;
-    uint64_t         sample_acquire_write_ns  = 0;
-    uint64_t         sample_preprocess_ns     = 0;
-    uint64_t         sample_publish_ready_ns  = 0;
-    uint64_t         sample_requeue_ns        = 0;
+    const bool              telemetry_on = (_telemetry != nullptr && _telemetry->timing_enabled());
+    const clock::time_point total_start  = telemetry_on ? clock::now() : clock::time_point{};
+    CaptureStatus           sample_capture_status              = CaptureStatus::Ok;
+    PreprocessStatus        sample_preprocess_status           = PreprocessStatus::Ok;
+    uint64_t                sample_source_age_dequeue_ns       = 0;
+    uint64_t                sample_source_age_publish_ready_ns = 0;
+    uint64_t                sample_dequeue_ns                  = 0;
+    uint64_t                sample_acquire_write_ns            = 0;
+    uint64_t                sample_preprocess_ns               = 0;
+    uint64_t                sample_publish_ready_ns            = 0;
+    uint64_t                sample_requeue_ns                  = 0;
 
     auto emit_sample = [&]() noexcept
     {
@@ -128,25 +127,25 @@ namespace omniseer::vision
         return;
 
       ProducerSample sample{};
-      sample.tick_id           = _next_tick_id++;
-      sample.frame_id          = tick.frame_id;
-      sample.has_frame_id      = (tick.frame_id != 0) ? 1u : 0u;
-      sample.sequence          = tick.sequence;
-      sample.has_sequence      = (tick.sequence != 0) ? 1u : 0u;
-      sample.event_ts_real_ns  = tick.capture_ts_real_ns;
-      sample.source_age_dequeue_ns = sample_source_age_dequeue_ns;
+      sample.tick_id                     = _next_tick_id++;
+      sample.frame_id                    = tick.frame_id;
+      sample.has_frame_id                = (tick.frame_id != 0) ? 1u : 0u;
+      sample.sequence                    = tick.sequence;
+      sample.has_sequence                = (tick.sequence != 0) ? 1u : 0u;
+      sample.event_ts_real_ns            = tick.capture_ts_real_ns;
+      sample.source_age_dequeue_ns       = sample_source_age_dequeue_ns;
       sample.source_age_publish_ready_ns = sample_source_age_publish_ready_ns;
-      sample.dequeue_ns        = sample_dequeue_ns;
-      sample.acquire_write_ns  = sample_acquire_write_ns;
-      sample.preprocess_ns     = sample_preprocess_ns;
-      sample.publish_ready_ns  = sample_publish_ready_ns;
-      sample.requeue_ns        = sample_requeue_ns;
-      sample.total_ns          = telemetry_timing::elapsed_ns(total_start, clock::now());
-      sample.stage_mask        = tick.stage_mask;
-      sample.capture_errno     = tick.stage_errno;
-      sample.producer_status   = static_cast<uint8_t>(tick.status);
-      sample.capture_status    = static_cast<uint8_t>(sample_capture_status);
-      sample.preprocess_status = static_cast<uint8_t>(sample_preprocess_status);
+      sample.dequeue_ns                  = sample_dequeue_ns;
+      sample.acquire_write_ns            = sample_acquire_write_ns;
+      sample.preprocess_ns               = sample_preprocess_ns;
+      sample.publish_ready_ns            = sample_publish_ready_ns;
+      sample.requeue_ns                  = sample_requeue_ns;
+      sample.total_ns                    = telemetry_timing::elapsed_ns(total_start, clock::now());
+      sample.stage_mask                  = tick.stage_mask;
+      sample.capture_errno               = tick.stage_errno;
+      sample.producer_status             = static_cast<uint8_t>(tick.status);
+      sample.capture_status              = static_cast<uint8_t>(sample_capture_status);
+      sample.preprocess_status           = static_cast<uint8_t>(sample_preprocess_status);
       _telemetry->emit_producer(sample);
     };
 
@@ -220,7 +219,7 @@ namespace omniseer::vision
       ScopedStageTimer timer(telemetry_on, sample_requeue_ns);
       return dq.lease->release();
     }();
-    sample_capture_status       = requeue.status;
+    sample_capture_status = requeue.status;
     if (!requeue.ok())
       return finish(map_capture_tick_status(requeue.status), ProducerStage::Requeue,
                     requeue.sys_errno);

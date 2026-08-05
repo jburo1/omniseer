@@ -134,7 +134,7 @@ namespace omniseer::vision
      */
     struct DequeueLeaseResult
     {
-      CaptureResult              capture{};
+      CaptureResult             capture{};
       std::optional<FrameLease> lease{};
 
       bool ok() const noexcept

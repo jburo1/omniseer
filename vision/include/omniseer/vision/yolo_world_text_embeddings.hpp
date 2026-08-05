@@ -18,8 +18,8 @@ namespace omniseer::vision
     PreparedTextEmbeddingsView view() const noexcept
     {
       PreparedTextEmbeddingsView out{};
-      out.data = text_i8.data();
-      out.bytes = text_i8.size();
+      out.data               = text_i8.data();
+      out.bytes              = text_i8.size();
       out.active_class_count = static_cast<uint32_t>(class_names.size());
       return out;
     }

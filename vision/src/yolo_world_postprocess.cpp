@@ -88,7 +88,8 @@ namespace omniseer::vision
           bool     found       = false;
           for (uint32_t class_id = 0; class_id < active_class_count; ++class_id)
           {
-            const int8_t score_q = class_tensor[cell_offset + static_cast<size_t>(class_id) * grid_len];
+            const int8_t score_q =
+                class_tensor[cell_offset + static_cast<size_t>(class_id) * grid_len];
             if (score_q > score_threshold_i8 && (!found || score_q > max_score_q))
             {
               max_score_q = score_q;
@@ -99,14 +100,14 @@ namespace omniseer::vision
           if (!found)
             continue;
 
-          const float left =
-              dequantize_i8(box_tensor[cell_offset + 0u * grid_len], box_desc.zero_point, box_desc.scale);
-          const float top =
-              dequantize_i8(box_tensor[cell_offset + 1u * grid_len], box_desc.zero_point, box_desc.scale);
-          const float right =
-              dequantize_i8(box_tensor[cell_offset + 2u * grid_len], box_desc.zero_point, box_desc.scale);
-          const float bottom =
-              dequantize_i8(box_tensor[cell_offset + 3u * grid_len], box_desc.zero_point, box_desc.scale);
+          const float left   = dequantize_i8(box_tensor[cell_offset + 0u * grid_len],
+                                             box_desc.zero_point, box_desc.scale);
+          const float top    = dequantize_i8(box_tensor[cell_offset + 1u * grid_len],
+                                             box_desc.zero_point, box_desc.scale);
+          const float right  = dequantize_i8(box_tensor[cell_offset + 2u * grid_len],
+                                             box_desc.zero_point, box_desc.scale);
+          const float bottom = dequantize_i8(box_tensor[cell_offset + 3u * grid_len],
+                                             box_desc.zero_point, box_desc.scale);
 
           const float center_x = (static_cast<float>(x) + 0.5F) * stride;
           const float center_y = (static_cast<float>(y) + 0.5F) * stride;
@@ -146,12 +147,13 @@ namespace omniseer::vision
         {
           const size_t cell_offset = static_cast<size_t>(y) * grid_w + x;
 
-          float    max_score = score_threshold;
+          float    max_score  = score_threshold;
           uint32_t best_class = 0;
           bool     found      = false;
           for (uint32_t class_id = 0; class_id < active_class_count; ++class_id)
           {
-            const float score = class_tensor[cell_offset + static_cast<size_t>(class_id) * grid_len];
+            const float score =
+                class_tensor[cell_offset + static_cast<size_t>(class_id) * grid_len];
             if (score > score_threshold && (!found || score > max_score))
             {
               max_score  = score;
@@ -205,10 +207,14 @@ namespace omniseer::vision
       const float src_w   = static_cast<float>(remap.source_size.w);
       const float src_h   = static_cast<float>(remap.source_size.h);
 
-      const float model_x1 = clamp_float(candidate.x1 - static_cast<float>(remap.pad_x), 0.0F, model_w);
-      const float model_y1 = clamp_float(candidate.y1 - static_cast<float>(remap.pad_y), 0.0F, model_h);
-      const float model_x2 = clamp_float(candidate.x2 - static_cast<float>(remap.pad_x), 0.0F, model_w);
-      const float model_y2 = clamp_float(candidate.y2 - static_cast<float>(remap.pad_y), 0.0F, model_h);
+      const float model_x1 =
+          clamp_float(candidate.x1 - static_cast<float>(remap.pad_x), 0.0F, model_w);
+      const float model_y1 =
+          clamp_float(candidate.y1 - static_cast<float>(remap.pad_y), 0.0F, model_h);
+      const float model_x2 =
+          clamp_float(candidate.x2 - static_cast<float>(remap.pad_x), 0.0F, model_w);
+      const float model_y2 =
+          clamp_float(candidate.y2 - static_cast<float>(remap.pad_y), 0.0F, model_h);
 
       out.class_id = candidate.class_id;
       out.score    = candidate.score;
@@ -233,7 +239,8 @@ namespace omniseer::vision
 
       const size_t scale_index = find_grid_scale_index(desc.dims[2]);
       if (scale_index == kExpectedGridSizes.size())
-        throw std::runtime_error("resolve_yolo_world_output_layout: unexpected RKNN output grid size");
+        throw std::runtime_error(
+            "resolve_yolo_world_output_layout: unexpected RKNN output grid size");
 
       if (desc.dims[1] == 4)
       {
@@ -259,7 +266,8 @@ namespace omniseer::vision
 
     for (size_t i = 0; i < kExpectedGridSizes.size(); ++i)
     {
-      if (layout.class_output_indices[i] == UINT32_MAX || layout.box_output_indices[i] == UINT32_MAX)
+      if (layout.class_output_indices[i] == UINT32_MAX ||
+          layout.box_output_indices[i] == UINT32_MAX)
         throw std::runtime_error("resolve_yolo_world_output_layout: incomplete RKNN output layout");
     }
 
@@ -268,10 +276,9 @@ namespace omniseer::vision
 
   void decode_yolo_world_detections(const std::vector<RknnOutputView>& outputs,
                                     const std::vector<RknnOutputDesc>& output_descs,
-                                    const YoloWorldOutputLayout& layout,
-                                    const ConsumerPipelineConfig& cfg,
-                                    const PipelineRemapConfig& remap,
-                                    uint32_t active_class_count,
+                                    const YoloWorldOutputLayout&       layout,
+                                    const ConsumerPipelineConfig&      cfg,
+                                    const PipelineRemapConfig& remap, uint32_t active_class_count,
                                     DetectionsFrame& frame) noexcept
   {
     frame.count = 0;
@@ -293,7 +300,8 @@ namespace omniseer::vision
 
       const RknnOutputDesc& class_desc = output_descs[class_index];
       const RknnOutputDesc& box_desc   = output_descs[box_index];
-      if (class_desc.dims[2] != layout.grid_sizes[scale] || box_desc.dims[2] != layout.grid_sizes[scale])
+      if (class_desc.dims[2] != layout.grid_sizes[scale] ||
+          box_desc.dims[2] != layout.grid_sizes[scale])
         return;
       if (class_desc.dims[1] < active_class_count || box_desc.dims[1] != 4)
         return;
@@ -302,7 +310,8 @@ namespace omniseer::vision
       {
         collect_int8_candidates(static_cast<const int8_t*>(outputs[box_index].data), box_desc,
                                 static_cast<const int8_t*>(outputs[class_index].data), class_desc,
-                                remap.model_input_size.h, active_class_count, cfg.score_threshold, candidates);
+                                remap.model_input_size.h, active_class_count, cfg.score_threshold,
+                                candidates);
         continue;
       }
 
@@ -310,7 +319,8 @@ namespace omniseer::vision
       {
         collect_fp32_candidates(static_cast<const float*>(outputs[box_index].data), box_desc,
                                 static_cast<const float*>(outputs[class_index].data), class_desc,
-                                remap.model_input_size.h, active_class_count, cfg.score_threshold, candidates);
+                                remap.model_input_size.h, active_class_count, cfg.score_threshold,
+                                candidates);
         continue;
       }
 
@@ -320,7 +330,8 @@ namespace omniseer::vision
     std::sort(candidates.begin(), candidates.end(),
               [](const Candidate& lhs, const Candidate& rhs) { return lhs.score > rhs.score; });
 
-    const uint32_t max_detections = std::min<uint32_t>(cfg.max_detections, DetectionsFrame::capacity);
+    const uint32_t max_detections =
+        std::min<uint32_t>(cfg.max_detections, DetectionsFrame::capacity);
     std::vector<Candidate> accepted{};
     accepted.reserve(max_detections);
 

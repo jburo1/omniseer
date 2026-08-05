@@ -23,14 +23,14 @@ namespace
     using omniseer::vision::CaptureStatus;
     switch (status)
     {
-      case CaptureStatus::Ok:
-        return "ok";
-      case CaptureStatus::NoFrame:
-        return "no-frame";
-      case CaptureStatus::RetryableError:
-        return "retryable-error";
-      case CaptureStatus::FatalError:
-        return "fatal-error";
+    case CaptureStatus::Ok:
+      return "ok";
+    case CaptureStatus::NoFrame:
+      return "no-frame";
+    case CaptureStatus::RetryableError:
+      return "retryable-error";
+    case CaptureStatus::FatalError:
+      return "fatal-error";
     }
     return "unknown";
   }
@@ -182,10 +182,10 @@ TEST(RgaPreprocess, LetterboxPaddingIs114_RealV4l2Frame)
   omniseer::vision::DmabufAllocation dst_alloc{};
   try
   {
-    omniseer::vision::DmaHeapAllocator alloc;
+    omniseer::vision::DmaHeapAllocator     alloc;
     omniseer::vision::AllocatedImageBuffer allocated =
         alloc.allocate(dst_w, dst_h, omniseer::vision::PixelFormat::RGB888);
-    dst      = allocated.buf;
+    dst       = allocated.buf;
     dst_alloc = std::move(allocated.alloc);
   }
   catch (const std::exception& e)
@@ -204,7 +204,7 @@ TEST(RgaPreprocess, LetterboxPaddingIs114_RealV4l2Frame)
   ASSERT_NO_THROW(stage.prefill(dst));
 
   omniseer::vision::LetterboxMeta meta{};
-  const auto preflight_result = stage.preflight(src, dst, &meta);
+  const auto                      preflight_result = stage.preflight(src, dst, &meta);
   ASSERT_TRUE(preflight_result.ok());
 
   const auto run_result = stage.run(src, dst);
@@ -241,8 +241,7 @@ TEST(RgaPreprocess, LetterboxPaddingIs114_RealV4l2Frame)
 
   const omniseer::vision::CaptureResult rq = cap.requeue(src.v4l2_index);
   ASSERT_TRUE(rq.ok()) << "requeue failed with status=" << capture_status_name(rq.status)
-                       << " errno=" << rq.sys_errno << " (" << std::strerror(rq.sys_errno)
-                       << ")";
+                       << " errno=" << rq.sys_errno << " (" << std::strerror(rq.sys_errno) << ")";
   ASSERT_NO_THROW(cap.stop());
 }
 

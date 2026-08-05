@@ -110,9 +110,8 @@ namespace omniseer::vision
       if (p.fd < 0 || p.stride == 0)
         throw_prefill_error("destination plane fd/stride are invalid");
 
-      const size_t needed = static_cast<size_t>(p.stride) * static_cast<size_t>(h);
-      const size_t map_size =
-          (p.alloc_size != 0 && p.alloc_size >= needed) ? p.alloc_size : needed;
+      const size_t needed   = static_cast<size_t>(p.stride) * static_cast<size_t>(h);
+      const size_t map_size = (p.alloc_size != 0 && p.alloc_size >= needed) ? p.alloc_size : needed;
 
       dmabuf_sync(p.fd, DMA_BUF_SYNC_START | DMA_BUF_SYNC_WRITE);
       void* map = ::mmap(nullptr, map_size, PROT_WRITE, MAP_SHARED, p.fd, 0);
@@ -240,12 +239,13 @@ namespace omniseer::vision
     const auto& y = src.planes[0];
     const auto& p = dst.planes[0];
 
-    const int src_wstride_px = static_cast<int>(y.stride);
-    const int dst_wstride_px = static_cast<int>(p.stride / 3u);
-    rga_buffer_t src_buf = wrapbuffer_fd(y.fd, src.size.w, src.size.h, rga_format(PixelFormat::NV12),
-                                         src_wstride_px, src.size.h);
-    rga_buffer_t dst_buf = wrapbuffer_fd(p.fd, _cfg.dst_w, _cfg.dst_h, rga_format(PixelFormat::RGB888),
-                                         dst_wstride_px, _cfg.dst_h);
+    const int    src_wstride_px = static_cast<int>(y.stride);
+    const int    dst_wstride_px = static_cast<int>(p.stride / 3u);
+    rga_buffer_t src_buf        = wrapbuffer_fd(y.fd, src.size.w, src.size.h,
+                                                rga_format(PixelFormat::NV12), src_wstride_px, src.size.h);
+    rga_buffer_t dst_buf =
+        wrapbuffer_fd(p.fd, _cfg.dst_w, _cfg.dst_h, rga_format(PixelFormat::RGB888), dst_wstride_px,
+                      _cfg.dst_h);
 
     if (meta)
       *meta = _lb;

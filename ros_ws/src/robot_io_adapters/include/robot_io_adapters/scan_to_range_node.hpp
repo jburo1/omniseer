@@ -1,27 +1,26 @@
 #pragma once
 
-#include <string>
-
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/laser_scan.hpp>
 #include <sensor_msgs/msg/range.hpp>
+#include <string>
 
 namespace robot_io_adapters
 {
 
-class ScanToRangeNode : public rclcpp::Node
-{
-public:
-  ScanToRangeNode();
+  class ScanToRangeNode : public rclcpp::Node
+  {
+  public:
+    ScanToRangeNode();
 
-private:
-  void scan_callback(const sensor_msgs::msg::LaserScan & scan);
+  private:
+    void scan_callback(const sensor_msgs::msg::LaserScan& scan);
 
-  std::string _scan_topic{};
-  std::string _range_topic{};
+    std::string _scan_topic{};
+    std::string _range_topic{};
 
-  rclcpp::Publisher<sensor_msgs::msg::Range>::SharedPtr _publisher{};
-  rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr _subscription{};
-};
+    rclcpp::Publisher<sensor_msgs::msg::Range>::SharedPtr        _publisher{};
+    rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr _subscription{};
+  };
 
 } // namespace robot_io_adapters

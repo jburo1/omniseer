@@ -19,7 +19,7 @@ TEST(RollingTelemetryStats, TracksCountsAndDurations)
   consumer.publish_ns      = 5;
   consumer.source_age_start_ns = 100;
   consumer.source_age_end_ns   = 144;
-  consumer.total_ns        = 44;
+  consumer.total_ns            = 44;
 
   stats.emit_producer(producer);
   stats.emit_consumer(consumer);
@@ -42,9 +42,7 @@ namespace
   class CountingTelemetry final : public omniseer::vision::ITelemetry
   {
   public:
-    explicit CountingTelemetry(bool enabled_) : enabled(enabled_)
-    {
-    }
+    explicit CountingTelemetry(bool enabled_) : enabled(enabled_) {}
 
     bool timing_enabled() const noexcept override
     {
@@ -69,8 +67,8 @@ namespace
 
 TEST(CompositeTelemetry, FansOutToEnabledSinks)
 {
-  CountingTelemetry disabled(false);
-  CountingTelemetry enabled(true);
+  CountingTelemetry                    disabled(false);
+  CountingTelemetry                    enabled(true);
   omniseer::vision::CompositeTelemetry composite({&disabled, &enabled});
 
   EXPECT_TRUE(composite.timing_enabled());

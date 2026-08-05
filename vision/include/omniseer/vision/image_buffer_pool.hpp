@@ -51,7 +51,7 @@ namespace omniseer::vision
       /// @brief Mutable access to the leased image buffer.
       ImageBuffer& buffer() noexcept;
       /// @brief Pool slot index for the leased buffer.
-      int          index() const noexcept;
+      int index() const noexcept;
 
       /// @brief Publish this written slot as the latest ready buffer.
       void publish() noexcept;
@@ -170,7 +170,7 @@ namespace omniseer::vision
     void publish_release(int idx);
 
     /// @brief Access preallocated buffer metadata by pool index.
-    ImageBuffer&       buffer_at(int idx);
+    ImageBuffer& buffer_at(int idx);
     /// @brief Read-only access to preallocated buffer metadata by pool index.
     const ImageBuffer& buffer_at(int idx) const;
 

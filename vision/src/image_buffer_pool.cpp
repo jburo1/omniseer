@@ -139,7 +139,8 @@ namespace omniseer::vision
     if (width <= 0 || height <= 0)
       throw std::invalid_argument("ImageBufferPool::allocate_all: width/height must be > 0");
     if (fmt != PixelFormat::RGB888 && fmt != PixelFormat::BGR888)
-      throw std::invalid_argument("ImageBufferPool::allocate_all: only RGB888/BGR888 are supported");
+      throw std::invalid_argument(
+          "ImageBufferPool::allocate_all: only RGB888/BGR888 are supported");
 
     for (auto& allocation : allocations)
     {
@@ -151,7 +152,7 @@ namespace omniseer::vision
       // Allocate every slot
       for (int i = 0; i < size; ++i)
       {
-        AllocatedImageBuffer allocated = allocator.allocate(width, height, fmt);
+        AllocatedImageBuffer allocated           = allocator.allocate(width, height, fmt);
         pool[static_cast<std::size_t>(i)]        = allocated.buf;
         allocations[static_cast<std::size_t>(i)] = std::move(allocated.alloc);
       }

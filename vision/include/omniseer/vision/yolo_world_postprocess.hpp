@@ -15,7 +15,7 @@ namespace omniseer::vision
    */
   struct YoloWorldOutputLayout
   {
-    uint32_t               class_capacity{0};
+    uint32_t                class_capacity{0};
     std::array<uint32_t, 3> class_output_indices{};
     std::array<uint32_t, 3> box_output_indices{};
     std::array<uint32_t, 3> grid_sizes{};
@@ -40,9 +40,8 @@ namespace omniseer::vision
    */
   void decode_yolo_world_detections(const std::vector<RknnOutputView>& outputs,
                                     const std::vector<RknnOutputDesc>& output_descs,
-                                    const YoloWorldOutputLayout& layout,
-                                    const ConsumerPipelineConfig& cfg,
-                                    const PipelineRemapConfig& remap,
-                                    uint32_t active_class_count,
+                                    const YoloWorldOutputLayout&       layout,
+                                    const ConsumerPipelineConfig&      cfg,
+                                    const PipelineRemapConfig& remap, uint32_t active_class_count,
                                     DetectionsFrame& frame) noexcept;
 } // namespace omniseer::vision

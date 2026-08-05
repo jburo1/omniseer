@@ -19,14 +19,14 @@ namespace
     using omniseer::vision::CaptureStatus;
     switch (status)
     {
-      case CaptureStatus::Ok:
-        return "ok";
-      case CaptureStatus::NoFrame:
-        return "no-frame";
-      case CaptureStatus::RetryableError:
-        return "retryable-error";
-      case CaptureStatus::FatalError:
-        return "fatal-error";
+    case CaptureStatus::Ok:
+      return "ok";
+    case CaptureStatus::NoFrame:
+      return "no-frame";
+    case CaptureStatus::RetryableError:
+      return "retryable-error";
+    case CaptureStatus::FatalError:
+      return "fatal-error";
     }
     return "unknown";
   }
@@ -105,8 +105,8 @@ TEST(V4l2Capture, NegotiatesAndStreamsDmabufNv12_1280x720)
       }
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-    ASSERT_TRUE(got) << "timeout waiting for frame (status="
-                     << capture_status_name(last.status) << ", errno=" << last.sys_errno << ")";
+    ASSERT_TRUE(got) << "timeout waiting for frame (status=" << capture_status_name(last.status)
+                     << ", errno=" << last.sys_errno << ")";
 
     EXPECT_EQ(f.size.w, static_cast<int>(width));
     EXPECT_EQ(f.size.h, static_cast<int>(height));
@@ -121,7 +121,9 @@ TEST(V4l2Capture, NegotiatesAndStreamsDmabufNv12_1280x720)
     {
       slot_fd.emplace(f.v4l2_index, f.planes[0].fd);
 
-      struct stat st{};
+      struct stat st
+      {
+      };
       ASSERT_EQ(::fstat(f.planes[0].fd, &st), 0) << std::strerror(errno);
 
       const std::string link = readlink_fd(f.planes[0].fd);
@@ -141,8 +143,7 @@ TEST(V4l2Capture, NegotiatesAndStreamsDmabufNv12_1280x720)
 
     const omniseer::vision::CaptureResult rq = cap.requeue(f.v4l2_index);
     ASSERT_TRUE(rq.ok()) << "requeue failed with status=" << capture_status_name(rq.status)
-                         << " errno=" << rq.sys_errno << " (" << std::strerror(rq.sys_errno)
-                         << ")";
+                         << " errno=" << rq.sys_errno << " (" << std::strerror(rq.sys_errno) << ")";
   }
 
   ASSERT_NO_THROW(cap.stop());

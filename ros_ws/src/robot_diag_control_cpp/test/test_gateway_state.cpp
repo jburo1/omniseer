@@ -1,8 +1,7 @@
 #include <chrono>
+#include <gtest/gtest.h>
 #include <limits>
 #include <string>
-
-#include <gtest/gtest.h>
 
 #include "nav_msgs/msg/odometry.hpp"
 #include "omniseer_msgs/msg/vision_perf_summary.hpp"
@@ -12,279 +11,258 @@
 
 namespace robot_diag_control_cpp
 {
-namespace
-{
-using Clock = std::chrono::steady_clock;
-using TimePoint = std::chrono::time_point<Clock>;
+  namespace
+  {
+    using Clock     = std::chrono::steady_clock;
+    using TimePoint = std::chrono::time_point<Clock>;
 
-TEST(GatewayStateStoreTest, PreviewStateTransitionsStayPredictable)
-{
-  GatewayStateStore store;
-
-  const auto initial = store.get_system_status().preview;
-  EXPECT_EQ(initial.state, PreviewState::Disabled);
-  EXPECT_EQ(initial.profile, PreviewProfile::Balanced);
-
-  const auto enabled = store.set_preview_running(PreviewProfile::HighQuality);
-  EXPECT_EQ(enabled.state, PreviewState::Running);
-  EXPECT_EQ(enabled.profile, PreviewProfile::HighQuality);
-  EXPECT_TRUE(enabled.last_error.empty());
-
-  const auto disabled = store.set_preview_disabled(PreviewProfile::HighQuality, "worker exited");
-  EXPECT_EQ(disabled.state, PreviewState::Disabled);
-  EXPECT_EQ(disabled.profile, PreviewProfile::HighQuality);
-  EXPECT_EQ(disabled.last_error, "worker exited");
-}
-
-TEST(GatewayStateStoreTest, VisionPerfSnapshotBecomesStaleAfterTimeout)
-{
-  TimePoint now{Clock::duration{std::chrono::seconds(100)}};
-  GatewayStateStore store(
-    "robot_diag_control_cpp", "0.1.0", std::chrono::milliseconds(1500),
-    std::chrono::milliseconds(1000),
-    [&now]()
+    TEST(GatewayStateStoreTest, PreviewStateTransitionsStayPredictable)
     {
-      return now;
-    });
+      GatewayStateStore store;
 
-  omniseer_msgs::msg::VisionPerfSummary msg{};
-  msg.producer_fps = 14.0F;
-  msg.consumer_fps = 12.5F;
-  msg.last_infer_ms = 8.25F;
-  msg.infer_error_count = 3;
-  msg.capture_fatal_error_count = 1;
-  store.update_vision_perf(msg);
+      const auto initial = store.get_system_status().preview;
+      EXPECT_EQ(initial.state, PreviewState::Disabled);
+      EXPECT_EQ(initial.profile, PreviewProfile::Balanced);
 
-  const auto fresh = store.get_system_status();
-  EXPECT_TRUE(fresh.vision.available);
-  EXPECT_FALSE(fresh.vision.stale);
-  EXPECT_DOUBLE_EQ(fresh.vision.last_infer_ms, 8.25);
+      const auto enabled = store.set_preview_running(PreviewProfile::HighQuality);
+      EXPECT_EQ(enabled.state, PreviewState::Running);
+      EXPECT_EQ(enabled.profile, PreviewProfile::HighQuality);
+      EXPECT_TRUE(enabled.last_error.empty());
 
-  now += std::chrono::seconds(2);
-  const auto stale = store.get_system_status();
-  EXPECT_TRUE(stale.vision.available);
-  EXPECT_TRUE(stale.vision.stale);
-}
+      const auto disabled =
+          store.set_preview_disabled(PreviewProfile::HighQuality, "worker exited");
+      EXPECT_EQ(disabled.state, PreviewState::Disabled);
+      EXPECT_EQ(disabled.profile, PreviewProfile::HighQuality);
+      EXPECT_EQ(disabled.last_error, "worker exited");
+    }
 
-TEST(GatewayStateStoreTest, RobotHealthTracksOdometryAndVisionFreshness)
-{
-  TimePoint now{Clock::duration{std::chrono::seconds(100)}};
-  GatewayStateStore store(
-    "robot_diag_control_cpp", "0.1.0", std::chrono::milliseconds(1500),
-    std::chrono::milliseconds(1000),
-    [&now]()
+    TEST(GatewayStateStoreTest, VisionPerfSnapshotBecomesStaleAfterTimeout)
     {
-      return now;
-    });
+      TimePoint         now{Clock::duration{std::chrono::seconds(100)}};
+      GatewayStateStore store("robot_diag_control_cpp", "0.1.0", std::chrono::milliseconds(1500),
+                              std::chrono::milliseconds(1000), [&now]() { return now; });
 
-  const auto initial = store.get_system_status();
-  EXPECT_FALSE(initial.health.ready);
-  EXPECT_EQ(initial.health.state, RobotHealthState::Degraded);
-  EXPECT_EQ(initial.health.summary, "waiting for odometry");
-  EXPECT_EQ(initial.teleop.state, TeleopState::Disabled);
-  EXPECT_FALSE(initial.teleop.enabled);
+      omniseer_msgs::msg::VisionPerfSummary msg{};
+      msg.producer_fps              = 14.0F;
+      msg.consumer_fps              = 12.5F;
+      msg.last_infer_ms             = 8.25F;
+      msg.infer_error_count         = 3;
+      msg.capture_fatal_error_count = 1;
+      store.update_vision_perf(msg);
 
-  nav_msgs::msg::Odometry odom{};
-  odom.twist.twist.linear.x = 0.30;
-  odom.twist.twist.linear.y = 0.40;
-  odom.twist.twist.angular.z = 0.25;
-  store.update_odometry(odom);
+      const auto fresh = store.get_system_status();
+      EXPECT_TRUE(fresh.vision.available);
+      EXPECT_FALSE(fresh.vision.stale);
+      EXPECT_DOUBLE_EQ(fresh.vision.last_infer_ms, 8.25);
 
-  const auto no_vision = store.get_system_status();
-  EXPECT_FALSE(no_vision.health.ready);
-  EXPECT_EQ(no_vision.health.summary, "waiting for vision telemetry");
-  EXPECT_TRUE(no_vision.health.odom_available);
-  EXPECT_FALSE(no_vision.health.odom_stale);
-  EXPECT_EQ(no_vision.health.odom_age_ms, 0U);
-  EXPECT_DOUBLE_EQ(no_vision.health.linear_speed_mps, 0.5);
-  EXPECT_DOUBLE_EQ(no_vision.health.angular_speed_rad_s, 0.25);
-  EXPECT_DOUBLE_EQ(no_vision.health.measured_vx_mps, 0.30);
-  EXPECT_DOUBLE_EQ(no_vision.health.measured_vy_mps, 0.40);
-  EXPECT_DOUBLE_EQ(no_vision.health.measured_wz_rad_s, 0.25);
+      now += std::chrono::seconds(2);
+      const auto stale = store.get_system_status();
+      EXPECT_TRUE(stale.vision.available);
+      EXPECT_TRUE(stale.vision.stale);
+    }
 
-  omniseer_msgs::msg::VisionPerfSummary msg{};
-  msg.producer_fps = 14.0F;
-  msg.consumer_fps = 12.5F;
-  msg.last_infer_ms = 8.25F;
-  store.update_vision_perf(msg);
-
-  const auto healthy = store.get_system_status();
-  EXPECT_TRUE(healthy.health.ready);
-  EXPECT_EQ(healthy.health.state, RobotHealthState::Ok);
-  EXPECT_EQ(healthy.health.summary, "robot healthy");
-
-  now += std::chrono::milliseconds(1100);
-  const auto stale_odom = store.get_system_status();
-  EXPECT_FALSE(stale_odom.health.ready);
-  EXPECT_EQ(stale_odom.health.state, RobotHealthState::Degraded);
-  EXPECT_EQ(stale_odom.health.summary, "odometry stale");
-  EXPECT_TRUE(stale_odom.health.odom_stale);
-  EXPECT_EQ(stale_odom.health.odom_age_ms, 1100U);
-}
-
-TEST(GatewayStateStoreTest, DetectionOverlaySnapshotTracksLatestDetectionsAndFreshness)
-{
-  TimePoint now{Clock::duration{std::chrono::seconds(100)}};
-  GatewayStateStore store(
-    "robot_diag_control_cpp", "0.1.0", std::chrono::milliseconds(1500),
-    std::chrono::milliseconds(1000),
-    [&now]()
+    TEST(GatewayStateStoreTest, RobotHealthTracksOdometryAndVisionFreshness)
     {
-      return now;
-    },
-    std::chrono::milliseconds(400), 1280, 720);
+      TimePoint         now{Clock::duration{std::chrono::seconds(100)}};
+      GatewayStateStore store("robot_diag_control_cpp", "0.1.0", std::chrono::milliseconds(1500),
+                              std::chrono::milliseconds(1000), [&now]() { return now; });
 
-  const auto initial = store.get_detection_overlay();
-  EXPECT_FALSE(initial.available);
-  EXPECT_FALSE(initial.stale);
-  EXPECT_EQ(initial.source_width_px, 1280U);
-  EXPECT_EQ(initial.source_height_px, 720U);
+      const auto initial = store.get_system_status();
+      EXPECT_FALSE(initial.health.ready);
+      EXPECT_EQ(initial.health.state, RobotHealthState::Degraded);
+      EXPECT_EQ(initial.health.summary, "waiting for odometry");
+      EXPECT_EQ(initial.teleop.state, TeleopState::Disabled);
+      EXPECT_FALSE(initial.teleop.enabled);
 
-  yolo_msgs::msg::DetectionArray msg{};
-  yolo_msgs::msg::Detection detection{};
-  detection.class_id = 7;
-  detection.class_name = "person";
-  detection.score = 0.875;
-  detection.id = "track-1";
-  detection.bbox.center.position.x = 320.0;
-  detection.bbox.center.position.y = 180.0;
-  detection.bbox.size.x = 100.0;
-  detection.bbox.size.y = 80.0;
-  msg.detections.push_back(detection);
-  store.update_detections(msg);
+      nav_msgs::msg::Odometry odom{};
+      odom.twist.twist.linear.x  = 0.30;
+      odom.twist.twist.linear.y  = 0.40;
+      odom.twist.twist.angular.z = 0.25;
+      store.update_odometry(odom);
 
-  const auto fresh = store.get_detection_overlay();
-  ASSERT_TRUE(fresh.available);
-  EXPECT_FALSE(fresh.stale);
-  EXPECT_EQ(fresh.age_ms, 0U);
-  ASSERT_EQ(fresh.detections.size(), 1U);
-  EXPECT_EQ(fresh.detections.front().class_id, 7);
-  EXPECT_EQ(fresh.detections.front().class_name, "person");
-  EXPECT_DOUBLE_EQ(fresh.detections.front().score, 0.875);
-  EXPECT_EQ(fresh.detections.front().track_id, "track-1");
-  EXPECT_DOUBLE_EQ(fresh.detections.front().bbox_center_x_px, 320.0);
+      const auto no_vision = store.get_system_status();
+      EXPECT_FALSE(no_vision.health.ready);
+      EXPECT_EQ(no_vision.health.summary, "waiting for vision telemetry");
+      EXPECT_TRUE(no_vision.health.odom_available);
+      EXPECT_FALSE(no_vision.health.odom_stale);
+      EXPECT_EQ(no_vision.health.odom_age_ms, 0U);
+      EXPECT_DOUBLE_EQ(no_vision.health.linear_speed_mps, 0.5);
+      EXPECT_DOUBLE_EQ(no_vision.health.angular_speed_rad_s, 0.25);
+      EXPECT_DOUBLE_EQ(no_vision.health.measured_vx_mps, 0.30);
+      EXPECT_DOUBLE_EQ(no_vision.health.measured_vy_mps, 0.40);
+      EXPECT_DOUBLE_EQ(no_vision.health.measured_wz_rad_s, 0.25);
 
-  now += std::chrono::milliseconds(450);
-  const auto stale = store.get_detection_overlay();
-  EXPECT_TRUE(stale.available);
-  EXPECT_TRUE(stale.stale);
-  EXPECT_EQ(stale.age_ms, 450U);
-}
+      omniseer_msgs::msg::VisionPerfSummary msg{};
+      msg.producer_fps  = 14.0F;
+      msg.consumer_fps  = 12.5F;
+      msg.last_infer_ms = 8.25F;
+      store.update_vision_perf(msg);
 
-TEST(GatewayStateStoreTest, OperatorEventsTrackTransitionsAndRemainCapped)
-{
-  TimePoint now{Clock::duration{std::chrono::seconds(100)}};
-  GatewayStateStore store(
-    "robot_diag_control_cpp", "0.1.0", std::chrono::milliseconds(1500),
-    std::chrono::milliseconds(1000),
-    [&now]()
+      const auto healthy = store.get_system_status();
+      EXPECT_TRUE(healthy.health.ready);
+      EXPECT_EQ(healthy.health.state, RobotHealthState::Ok);
+      EXPECT_EQ(healthy.health.summary, "robot healthy");
+
+      now += std::chrono::milliseconds(1100);
+      const auto stale_odom = store.get_system_status();
+      EXPECT_FALSE(stale_odom.health.ready);
+      EXPECT_EQ(stale_odom.health.state, RobotHealthState::Degraded);
+      EXPECT_EQ(stale_odom.health.summary, "odometry stale");
+      EXPECT_TRUE(stale_odom.health.odom_stale);
+      EXPECT_EQ(stale_odom.health.odom_age_ms, 1100U);
+    }
+
+    TEST(GatewayStateStoreTest, DetectionOverlaySnapshotTracksLatestDetectionsAndFreshness)
     {
-      return now;
-    });
+      TimePoint         now{Clock::duration{std::chrono::seconds(100)}};
+      GatewayStateStore store(
+          "robot_diag_control_cpp", "0.1.0", std::chrono::milliseconds(1500),
+          std::chrono::milliseconds(1000), [&now]() { return now; }, std::chrono::milliseconds(400),
+          1280, 720);
 
-  store.get_system_status();
+      const auto initial = store.get_detection_overlay();
+      EXPECT_FALSE(initial.available);
+      EXPECT_FALSE(initial.stale);
+      EXPECT_EQ(initial.source_width_px, 1280U);
+      EXPECT_EQ(initial.source_height_px, 720U);
 
-  nav_msgs::msg::Odometry odom{};
-  store.update_odometry(odom);
-  auto status = store.get_system_status();
-  auto events = store.get_operator_events();
-  ASSERT_EQ(events.size(), 1U);
-  EXPECT_EQ(events.back().message, "odometry recovered");
+      yolo_msgs::msg::DetectionArray msg{};
+      yolo_msgs::msg::Detection      detection{};
+      detection.class_id               = 7;
+      detection.class_name             = "person";
+      detection.score                  = 0.875;
+      detection.id                     = "track-1";
+      detection.bbox.center.position.x = 320.0;
+      detection.bbox.center.position.y = 180.0;
+      detection.bbox.size.x            = 100.0;
+      detection.bbox.size.y            = 80.0;
+      msg.detections.push_back(detection);
+      store.update_detections(msg);
 
-  now += std::chrono::milliseconds(1100);
-  status = store.get_system_status();
-  EXPECT_TRUE(status.health.odom_stale);
-  events = store.get_operator_events();
-  ASSERT_EQ(events.size(), 2U);
-  EXPECT_EQ(events.back().message, "odometry lost");
-  EXPECT_EQ(events.back().age_ms, 0U);
+      const auto fresh = store.get_detection_overlay();
+      ASSERT_TRUE(fresh.available);
+      EXPECT_FALSE(fresh.stale);
+      EXPECT_EQ(fresh.age_ms, 0U);
+      ASSERT_EQ(fresh.detections.size(), 1U);
+      EXPECT_EQ(fresh.detections.front().class_id, 7);
+      EXPECT_EQ(fresh.detections.front().class_name, "person");
+      EXPECT_DOUBLE_EQ(fresh.detections.front().score, 0.875);
+      EXPECT_EQ(fresh.detections.front().track_id, "track-1");
+      EXPECT_DOUBLE_EQ(fresh.detections.front().bbox_center_x_px, 320.0);
 
-  omniseer_msgs::msg::VisionPerfSummary vision{};
-  store.update_vision_perf(vision);
-  status = store.get_system_status();
-  events = store.get_operator_events();
-  ASSERT_EQ(events.size(), 3U);
-  EXPECT_EQ(events.back().message, "vision recovered");
+      now += std::chrono::milliseconds(450);
+      const auto stale = store.get_detection_overlay();
+      EXPECT_TRUE(stale.available);
+      EXPECT_TRUE(stale.stale);
+      EXPECT_EQ(stale.age_ms, 450U);
+    }
 
-  now += std::chrono::milliseconds(1600);
-  status = store.get_system_status();
-  EXPECT_TRUE(status.vision.stale);
-  events = store.get_operator_events();
-  ASSERT_EQ(events.size(), 4U);
-  EXPECT_EQ(events.back().message, "vision stale");
-
-  for (int index = 0; index < 10; ++index) {
-    store.set_preview_disabled(PreviewProfile::Balanced, "preview failed " + std::to_string(index));
-  }
-
-  events = store.get_operator_events();
-  ASSERT_EQ(events.size(), 8U);
-  EXPECT_EQ(events.front().message, "preview error: preview failed 2");
-  EXPECT_EQ(events.back().message, "preview error: preview failed 9");
-  EXPECT_LT(events.front().sequence, events.back().sequence);
-}
-
-TEST(GatewayStateStoreTest, PlatformStatusTracksSamplesAndFreshness)
-{
-  TimePoint now{Clock::duration{std::chrono::seconds(100)}};
-  GatewayStateStore store(
-    "robot_diag_control_cpp", "0.1.0", std::chrono::milliseconds(1500),
-    std::chrono::milliseconds(1000),
-    [&now]()
+    TEST(GatewayStateStoreTest, OperatorEventsTrackTransitionsAndRemainCapped)
     {
-      return now;
-    });
+      TimePoint         now{Clock::duration{std::chrono::seconds(100)}};
+      GatewayStateStore store("robot_diag_control_cpp", "0.1.0", std::chrono::milliseconds(1500),
+                              std::chrono::milliseconds(1000), [&now]() { return now; });
 
-  ComputeStatusSnapshot compute{};
-  compute.available = true;
-  compute.cpu_percent = 43.0;
-  compute.cpu_temperature_available = true;
-  compute.cpu_temperature_c = 62.0;
-  compute.ram_used_bytes = 5U * 1024U * 1024U * 1024U;
-  compute.ram_total_bytes = 16U * 1024U * 1024U * 1024U;
-  compute.ram_used_percent = 31.25;
-  store.update_compute_status(compute);
+      store.get_system_status();
 
-  NetworkStatusSnapshot network{};
-  network.available = true;
-  network.connected = true;
-  network.interface_name = "wlan0";
-  network.wifi_signal_available = true;
-  network.wifi_signal_dbm = -58;
-  store.update_network_status(network);
+      nav_msgs::msg::Odometry odom{};
+      store.update_odometry(odom);
+      auto status = store.get_system_status();
+      auto events = store.get_operator_events();
+      ASSERT_EQ(events.size(), 1U);
+      EXPECT_EQ(events.back().message, "odometry recovered");
 
-  BatteryStatusSnapshot onboard{};
-  onboard.available = true;
-  onboard.source = "BAT0";
-  onboard.present = true;
-  onboard.percentage_available = true;
-  onboard.percentage = 91.0;
-  store.update_onboard_battery(onboard);
+      now += std::chrono::milliseconds(1100);
+      status = store.get_system_status();
+      EXPECT_TRUE(status.health.odom_stale);
+      events = store.get_operator_events();
+      ASSERT_EQ(events.size(), 2U);
+      EXPECT_EQ(events.back().message, "odometry lost");
+      EXPECT_EQ(events.back().age_ms, 0U);
 
-  sensor_msgs::msg::BatteryState lipo{};
-  lipo.present = true;
-  lipo.voltage = 7.8F;
-  lipo.percentage = std::numeric_limits<float>::quiet_NaN();
-  store.update_lipo_battery(lipo);
+      omniseer_msgs::msg::VisionPerfSummary vision{};
+      store.update_vision_perf(vision);
+      status = store.get_system_status();
+      events = store.get_operator_events();
+      ASSERT_EQ(events.size(), 3U);
+      EXPECT_EQ(events.back().message, "vision recovered");
 
-  auto status = store.get_system_status();
-  EXPECT_TRUE(status.platform.compute.available);
-  EXPECT_FALSE(status.platform.compute.stale);
-  EXPECT_DOUBLE_EQ(status.platform.compute.cpu_percent, 43.0);
-  EXPECT_TRUE(status.platform.network.available);
-  EXPECT_EQ(status.platform.network.interface_name, "wlan0");
-  EXPECT_EQ(status.platform.network.wifi_signal_dbm, -58);
-  EXPECT_TRUE(status.platform.power.lipo_battery.voltage_available);
-  EXPECT_NEAR(status.platform.power.lipo_battery.voltage, 7.8, 0.001);
-  EXPECT_TRUE(status.platform.power.onboard_battery.percentage_available);
-  EXPECT_DOUBLE_EQ(status.platform.power.onboard_battery.percentage, 91.0);
+      now += std::chrono::milliseconds(1600);
+      status = store.get_system_status();
+      EXPECT_TRUE(status.vision.stale);
+      events = store.get_operator_events();
+      ASSERT_EQ(events.size(), 4U);
+      EXPECT_EQ(events.back().message, "vision stale");
 
-  now += std::chrono::milliseconds(2100);
-  status = store.get_system_status();
-  EXPECT_TRUE(status.platform.compute.stale);
-  EXPECT_TRUE(status.platform.network.stale);
-  EXPECT_TRUE(status.platform.power.lipo_battery.stale);
-  EXPECT_EQ(status.platform.compute.age_ms, 2100U);
-}
-} // namespace
+      for (int index = 0; index < 10; ++index)
+      {
+        store.set_preview_disabled(PreviewProfile::Balanced,
+                                   "preview failed " + std::to_string(index));
+      }
+
+      events = store.get_operator_events();
+      ASSERT_EQ(events.size(), 8U);
+      EXPECT_EQ(events.front().message, "preview error: preview failed 2");
+      EXPECT_EQ(events.back().message, "preview error: preview failed 9");
+      EXPECT_LT(events.front().sequence, events.back().sequence);
+    }
+
+    TEST(GatewayStateStoreTest, PlatformStatusTracksSamplesAndFreshness)
+    {
+      TimePoint         now{Clock::duration{std::chrono::seconds(100)}};
+      GatewayStateStore store("robot_diag_control_cpp", "0.1.0", std::chrono::milliseconds(1500),
+                              std::chrono::milliseconds(1000), [&now]() { return now; });
+
+      ComputeStatusSnapshot compute{};
+      compute.available                 = true;
+      compute.cpu_percent               = 43.0;
+      compute.cpu_temperature_available = true;
+      compute.cpu_temperature_c         = 62.0;
+      compute.ram_used_bytes            = 5U * 1024U * 1024U * 1024U;
+      compute.ram_total_bytes           = 16U * 1024U * 1024U * 1024U;
+      compute.ram_used_percent          = 31.25;
+      store.update_compute_status(compute);
+
+      NetworkStatusSnapshot network{};
+      network.available             = true;
+      network.connected             = true;
+      network.interface_name        = "wlan0";
+      network.wifi_signal_available = true;
+      network.wifi_signal_dbm       = -58;
+      store.update_network_status(network);
+
+      BatteryStatusSnapshot onboard{};
+      onboard.available            = true;
+      onboard.source               = "BAT0";
+      onboard.present              = true;
+      onboard.percentage_available = true;
+      onboard.percentage           = 91.0;
+      store.update_onboard_battery(onboard);
+
+      sensor_msgs::msg::BatteryState lipo{};
+      lipo.present    = true;
+      lipo.voltage    = 7.8F;
+      lipo.percentage = std::numeric_limits<float>::quiet_NaN();
+      store.update_lipo_battery(lipo);
+
+      auto status = store.get_system_status();
+      EXPECT_TRUE(status.platform.compute.available);
+      EXPECT_FALSE(status.platform.compute.stale);
+      EXPECT_DOUBLE_EQ(status.platform.compute.cpu_percent, 43.0);
+      EXPECT_TRUE(status.platform.network.available);
+      EXPECT_EQ(status.platform.network.interface_name, "wlan0");
+      EXPECT_EQ(status.platform.network.wifi_signal_dbm, -58);
+      EXPECT_TRUE(status.platform.power.lipo_battery.voltage_available);
+      EXPECT_NEAR(status.platform.power.lipo_battery.voltage, 7.8, 0.001);
+      EXPECT_TRUE(status.platform.power.onboard_battery.percentage_available);
+      EXPECT_DOUBLE_EQ(status.platform.power.onboard_battery.percentage, 91.0);
+
+      now += std::chrono::milliseconds(2100);
+      status = store.get_system_status();
+      EXPECT_TRUE(status.platform.compute.stale);
+      EXPECT_TRUE(status.platform.network.stale);
+      EXPECT_TRUE(status.platform.power.lipo_battery.stale);
+      EXPECT_EQ(status.platform.compute.age_ms, 2100U);
+    }
+  } // namespace
 } // namespace robot_diag_control_cpp

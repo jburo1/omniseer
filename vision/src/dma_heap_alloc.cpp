@@ -3,13 +3,12 @@
 #include <cerrno>
 #include <cstring>
 #include <fcntl.h>
+#include <linux/dma-heap.h>
 #include <stdexcept>
 #include <string>
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <utility>
-
-#include <linux/dma-heap.h>
 
 namespace omniseer::vision
 {
@@ -42,11 +41,11 @@ namespace omniseer::vision
     {
       switch (fmt)
       {
-        case PixelFormat::RGB888:
-        case PixelFormat::BGR888:
-          return 3;
-        case PixelFormat::NV12:
-          return 0;
+      case PixelFormat::RGB888:
+      case PixelFormat::BGR888:
+        return 3;
+      case PixelFormat::NV12:
+        return 0;
       }
       return 0;
     }
@@ -81,7 +80,7 @@ namespace omniseer::vision
     height       = other.height;
     fmt          = other.fmt;
 
-    other.dmabuf_fd = -1;
+    other.dmabuf_fd    = -1;
     other.stride_bytes = 0;
     other.size_bytes   = 0;
     other.width        = 0;
@@ -138,8 +137,7 @@ namespace omniseer::vision
     if (width <= 0 || height <= 0)
       throw std::invalid_argument("DmaHeapAllocator::allocate: width/height must be > 0");
     if (fmt != PixelFormat::RGB888 && fmt != PixelFormat::BGR888)
-      throw std::invalid_argument(
-          "DmaHeapAllocator::allocate: only RGB888/BGR888 are supported");
+      throw std::invalid_argument("DmaHeapAllocator::allocate: only RGB888/BGR888 are supported");
     if (fd_ < 0)
       throw std::runtime_error("DmaHeapAllocator::allocate: allocator is not initialized");
 
@@ -150,12 +148,11 @@ namespace omniseer::vision
 
     const uint32_t wstride_px   = align_up_u32(static_cast<uint32_t>(width), kStrideAlignPixels);
     const uint64_t stride_bytes = static_cast<uint64_t>(wstride_px) * static_cast<uint64_t>(bpp);
-    const uint64_t size_bytes =
-        stride_bytes * static_cast<uint64_t>(static_cast<uint32_t>(height));
+    const uint64_t size_bytes = stride_bytes * static_cast<uint64_t>(static_cast<uint32_t>(height));
 
     dma_heap_allocation_data req{};
-    req.len       = size_bytes;
-    req.fd_flags  = O_RDWR | O_CLOEXEC;
+    req.len        = size_bytes;
+    req.fd_flags   = O_RDWR | O_CLOEXEC;
     req.heap_flags = 0;
 
     if (::ioctl(fd_, DMA_HEAP_IOCTL_ALLOC, &req) != 0 || static_cast<int>(req.fd) < 0)
@@ -169,11 +166,11 @@ namespace omniseer::vision
     out.alloc.stride_bytes = static_cast<uint32_t>(stride_bytes);
     out.alloc.size_bytes   = size_bytes;
 
-    out.buf               = ImageBuffer{};
-    out.buf.size.w        = out.alloc.width;
-    out.buf.size.h        = out.alloc.height;
-    out.buf.fmt           = out.alloc.fmt;
-    out.buf.num_planes    = 1;
+    out.buf                  = ImageBuffer{};
+    out.buf.size.w           = out.alloc.width;
+    out.buf.size.h           = out.alloc.height;
+    out.buf.fmt              = out.alloc.fmt;
+    out.buf.num_planes       = 1;
     out.buf.total_alloc_size = static_cast<size_t>(out.alloc.size_bytes);
 
     out.buf.planes[0].fd         = out.alloc.dmabuf_fd;

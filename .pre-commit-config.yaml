@@ -34,5 +34,21 @@ repos:
     rev: v18.1.8
     hooks:
       - id: clang-format
-        files: ^(include/|src/|ros_ws/src/(analysis|bringup|omniseer_description|omniseer_test|yolo_ros)/).*\.(c|cc|cpp|cxx|h|hh|hpp|hxx|cu|cuh)$
+        files: |
+          (?x)^(
+            (include|src)/|
+            vision/(apps|include|src)/|
+            ros_ws/src/(
+              analysis|
+              bringup|
+              omniseer_autonomy|
+              omniseer_description|
+              omniseer_experiments|
+              omniseer_test|
+              omniseer_vision_bridge|
+              robot_diag_control_cpp|
+              robot_io_adapters|
+              yolo_ros
+            )/
+          ).*\.(c|cc|cpp|cxx|h|hh|hpp|hxx|cu|cuh)$
         exclude: ^(third_party/|external/|vendor/|ros_ws/src/.*/(models|meshes|gazebo|deps|third_party|external)/|build/|install/|log/)

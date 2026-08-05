@@ -22,9 +22,9 @@ namespace omniseer::vision
     /// @brief Allocated width in pixels.
     int width = 0;
     /// @brief Allocated height in pixels.
-    int         height = 0;
+    int height = 0;
     /// @brief Pixel format of this allocation.
-    PixelFormat fmt    = PixelFormat::RGB888;
+    PixelFormat fmt = PixelFormat::RGB888;
 
     DmabufAllocation() = default;
     ~DmabufAllocation();
@@ -53,7 +53,7 @@ namespace omniseer::vision
     /// @brief Owning DMA-BUF allocation.
     DmabufAllocation alloc{};
     /// @brief ImageBuffer descriptor backed by `alloc`.
-    ImageBuffer      buf{};
+    ImageBuffer buf{};
 
     /// @brief True when the backing allocation is valid.
     bool valid() const

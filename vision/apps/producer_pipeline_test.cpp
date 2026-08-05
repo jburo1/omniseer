@@ -91,11 +91,9 @@ namespace
       producer_samples.push_back(sample);
     }
 
-    void emit_consumer(const omniseer::vision::ConsumerSample&) noexcept override
-    {
-    }
+    void emit_consumer(const omniseer::vision::ConsumerSample&) noexcept override {}
 
-    bool                                       enabled{true};
+    bool                                          enabled{true};
     std::vector<omniseer::vision::ProducerSample> producer_samples{};
   };
 } // namespace
@@ -158,7 +156,7 @@ TEST(ProducerPipeline, PreflightThenProducesFrames)
     ASSERT_GT(init_leases.size(), 0u);
   }
 
-  TestTelemetry telemetry;
+  TestTelemetry                      telemetry;
   omniseer::vision::ProducerPipeline producer(capture, preprocess, pool, &telemetry);
 
   ASSERT_NO_THROW(producer.preflight());
@@ -177,11 +175,11 @@ TEST(ProducerPipeline, PreflightThenProducesFrames)
 
   int           produced      = 0;
   uint64_t      last_frame_id = 0;
-  constexpr int max_ticks = 400;
+  constexpr int max_ticks     = 400;
   for (int i = 0; i < max_ticks && produced < 3; ++i)
   {
     const std::size_t emitted_before = telemetry.producer_samples.size();
-    const auto tick = producer.run();
+    const auto        tick           = producer.run();
 
     if (tick.status == omniseer::vision::ProducerTickStatus::NoFrame)
     {
@@ -312,7 +310,7 @@ TEST(ProducerPipeline, TelemetryTracksReachedStagesOnNoWritableBuffer)
     ASSERT_GT(init_leases.size(), 0u);
   }
 
-  TestTelemetry telemetry;
+  TestTelemetry                      telemetry;
   omniseer::vision::ProducerPipeline producer(capture, preprocess, pool, &telemetry);
   ASSERT_NO_THROW(producer.preflight());
 

@@ -254,7 +254,7 @@ TEST_F(RknnRunnerSmokeTest, PreflightArmsRunner)
   ASSERT_NO_THROW(runner.preflight(pool_, text_i8_.data(), text_i8_.size()));
   EXPECT_TRUE(runner.is_armed());
 
-  const auto& descs = runner.output_descs();
+  const auto& descs   = runner.output_descs();
   const auto& outputs = runner.outputs();
   ASSERT_EQ(descs.size(), outputs.size());
   ASSERT_FALSE(outputs.empty());

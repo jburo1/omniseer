@@ -6,7 +6,7 @@
 namespace robot_io_adapters
 {
 
-[[nodiscard]] sensor_msgs::msg::Range laser_scan_to_range(
-  const sensor_msgs::msg::LaserScan & scan);
+  [[nodiscard]] sensor_msgs::msg::Range laser_scan_to_range(
+      const sensor_msgs::msg::LaserScan& scan);
 
 } // namespace robot_io_adapters

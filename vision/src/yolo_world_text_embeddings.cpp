@@ -8,13 +8,12 @@
 #include <locale>
 #include <map>
 #include <regex>
+#include <rknn_api.h>
 #include <set>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
-
-#include <rknn_api.h>
 
 namespace omniseer::vision
 {
@@ -125,8 +124,8 @@ namespace omniseer::vision
       return strip_ascii_whitespace(text);
     }
 
-    std::set<std::pair<std::u32string, std::u32string>>
-    get_pairs(const std::vector<std::u32string>& subwords)
+    std::set<std::pair<std::u32string, std::u32string>> get_pairs(
+        const std::vector<std::u32string>& subwords)
     {
       std::set<std::pair<std::u32string, std::u32string>> pairs{};
       if (subwords.empty())
@@ -174,7 +173,8 @@ namespace omniseer::vision
       void load_from_merges(const std::string& merges_utf8)
       {
         const auto byte_unicode_pairs = bytes_to_unicode();
-        _byte_encoder = std::map<int, std::u32string>(byte_unicode_pairs.begin(), byte_unicode_pairs.end());
+        _byte_encoder =
+            std::map<int, std::u32string>(byte_unicode_pairs.begin(), byte_unicode_pairs.end());
 
         std::vector<std::u32string> merges{};
         const std::u32string        merges_utf32 = utf8_to_utf32(merges_utf8);
@@ -244,8 +244,8 @@ namespace omniseer::vision
           if (best == pairs.end())
             break;
 
-          const std::u32string& first  = best->first;
-          const std::u32string& second = best->second;
+          const std::u32string&       first  = best->first;
+          const std::u32string&       second = best->second;
           std::vector<std::u32string> new_word{};
           int32_t                     i = 0;
           while (i < static_cast<int32_t>(word.size()))
@@ -259,7 +259,8 @@ namespace omniseer::vision
             new_word.insert(new_word.end(), word.begin() + i, it);
             i = static_cast<int32_t>(std::distance(word.begin(), it));
 
-            if (word[i] == first && i < static_cast<int32_t>(word.size()) - 1 && word[i + 1] == second)
+            if (word[i] == first && i < static_cast<int32_t>(word.size()) - 1 &&
+                word[i + 1] == second)
             {
               new_word.push_back(first + second);
               i += 2;
@@ -298,8 +299,8 @@ namespace omniseer::vision
             R"(<\|startoftext\|>|<\|endoftext\|>|'s|'t|'re|'ve|'m|'ll|'d|[[:alpha:]]+|[[:digit:]]|[^[:space:][:alpha:][:digit:]]+)",
             std::regex::icase);
 
-        std::smatch   matches{};
-        std::string   remaining = text;
+        std::smatch matches{};
+        std::string remaining = text;
         while (std::regex_search(remaining, matches, pattern))
         {
           for (const auto& match : matches)
@@ -313,10 +314,10 @@ namespace omniseer::vision
             size_t               start            = 0;
             while (start < bpe_tokens_utf32.size())
             {
-              const size_t end = bpe_tokens_utf32.find(U' ', start);
-              const auto   token =
-                  (end == std::u32string::npos) ? bpe_tokens_utf32.substr(start)
-                                                : bpe_tokens_utf32.substr(start, end - start);
+              const size_t end   = bpe_tokens_utf32.find(U' ', start);
+              const auto   token = (end == std::u32string::npos)
+                                       ? bpe_tokens_utf32.substr(start)
+                                       : bpe_tokens_utf32.substr(start, end - start);
               bpe_tokens.push_back(_encoder.at(token));
               if (end == std::u32string::npos)
                 break;
@@ -328,17 +329,17 @@ namespace omniseer::vision
         return bpe_tokens;
       }
 
-      std::map<int, std::u32string>                                    _byte_encoder{};
-      std::map<std::u32string, int>                                    _encoder{};
-      std::map<std::pair<std::u32string, std::u32string>, int>         _bpe_ranks{};
+      std::map<int, std::u32string>                            _byte_encoder{};
+      std::map<std::u32string, int>                            _encoder{};
+      std::map<std::pair<std::u32string, std::u32string>, int> _bpe_ranks{};
     };
 
     struct RknnModelInfo
     {
-      rknn_context                    ctx{0};
-      rknn_input_output_num           io_num{};
-      std::vector<rknn_tensor_attr>   input_attrs{};
-      std::vector<rknn_tensor_attr>   output_attrs{};
+      rknn_context                  ctx{0};
+      rknn_input_output_num         io_num{};
+      std::vector<rknn_tensor_attr> input_attrs{};
+      std::vector<rknn_tensor_attr> output_attrs{};
 
       explicit RknnModelInfo(const std::string& model_path)
       {
@@ -360,7 +361,8 @@ namespace omniseer::vision
           {
             input_attrs[i]       = rknn_tensor_attr{};
             input_attrs[i].index = i;
-            const int rc = rknn_query(ctx, RKNN_QUERY_INPUT_ATTR, &input_attrs[i], sizeof(rknn_tensor_attr));
+            const int rc =
+                rknn_query(ctx, RKNN_QUERY_INPUT_ATTR, &input_attrs[i], sizeof(rknn_tensor_attr));
             if (rc != RKNN_SUCC)
               throw make_rknn_error("rknn_query(RKNN_QUERY_INPUT_ATTR)", rc);
           }
@@ -370,7 +372,8 @@ namespace omniseer::vision
           {
             output_attrs[i]       = rknn_tensor_attr{};
             output_attrs[i].index = i;
-            const int rc = rknn_query(ctx, RKNN_QUERY_OUTPUT_ATTR, &output_attrs[i], sizeof(rknn_tensor_attr));
+            const int rc =
+                rknn_query(ctx, RKNN_QUERY_OUTPUT_ATTR, &output_attrs[i], sizeof(rknn_tensor_attr));
             if (rc != RKNN_SUCC)
               throw make_rknn_error("rknn_query(RKNN_QUERY_OUTPUT_ATTR)", rc);
           }
@@ -410,8 +413,8 @@ namespace omniseer::vision
   {
   }
 
-  PreparedTextEmbeddings
-  YoloWorldTextEmbeddingsBuilder::build(const std::vector<std::string>& class_names) const
+  PreparedTextEmbeddings YoloWorldTextEmbeddingsBuilder::build(
+      const std::vector<std::string>& class_names) const
   {
     if (class_names.empty())
       throw std::invalid_argument("YoloWorldTextEmbeddingsBuilder::build: class_names is empty");
@@ -422,7 +425,8 @@ namespace omniseer::vision
       throw std::invalid_argument(
           "YoloWorldTextEmbeddingsBuilder::build: detector_model_path is empty");
     if (_cfg.clip_vocab_path.empty())
-      throw std::invalid_argument("YoloWorldTextEmbeddingsBuilder::build: clip_vocab_path is empty");
+      throw std::invalid_argument(
+          "YoloWorldTextEmbeddingsBuilder::build: clip_vocab_path is empty");
     if (_cfg.pad_token.empty())
       throw std::invalid_argument("YoloWorldTextEmbeddingsBuilder::build: pad_token is empty");
 
@@ -461,8 +465,8 @@ namespace omniseer::vision
       throw std::invalid_argument(
           "YoloWorldTextEmbeddingsBuilder::build: class count exceeds detector capacity");
     if (clip_output.n_elems != embedding_width)
-      throw std::runtime_error(
-          "YoloWorldTextEmbeddingsBuilder::build: CLIP output width does not match detector texts width");
+      throw std::runtime_error("YoloWorldTextEmbeddingsBuilder::build: CLIP output width does not "
+                               "match detector texts width");
 
     PreparedTextEmbeddings prepared{};
     prepared.class_names = class_names;
@@ -471,12 +475,14 @@ namespace omniseer::vision
     std::vector<std::string> embedding_rows{};
     embedding_rows.reserve(class_capacity);
     embedding_rows.insert(embedding_rows.end(), class_names.begin(), class_names.end());
-    embedding_rows.insert(embedding_rows.end(), class_capacity - class_names.size(), _cfg.pad_token);
+    embedding_rows.insert(embedding_rows.end(), class_capacity - class_names.size(),
+                          _cfg.pad_token);
 
     std::vector<float> embedding(static_cast<size_t>(embedding_width), 0.0F);
     for (size_t class_index = 0; class_index < embedding_rows.size(); ++class_index)
     {
-      const std::vector<int> tokens = tokenizer.tokenize(embedding_rows[class_index], sequence_len, true);
+      const std::vector<int> tokens =
+          tokenizer.tokenize(embedding_rows[class_index], sequence_len, true);
       if (tokens.size() != sequence_len)
         throw std::runtime_error(
             "YoloWorldTextEmbeddingsBuilder::build: tokenizer produced unexpected sequence length");
@@ -544,7 +550,8 @@ namespace omniseer::vision
       const size_t base = class_index * embedding_width;
       for (size_t i = 0; i < embedding.size(); ++i)
       {
-        prepared.text_i8[base + i] = quantize_affine_i8(embedding[i], text_input.zp, text_input.scale);
+        prepared.text_i8[base + i] =
+            quantize_affine_i8(embedding[i], text_input.zp, text_input.scale);
       }
     }
 

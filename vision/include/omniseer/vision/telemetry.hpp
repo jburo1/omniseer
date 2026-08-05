@@ -63,7 +63,7 @@ namespace omniseer::vision
     /// @brief OR-ed ProducerStageMask flags for stages that executed.
     uint32_t stage_mask{0};
     /// @brief Captured errno associated with capture operations, if any.
-    int32_t  capture_errno{0};
+    int32_t capture_errno{0};
 
     /// @brief Producer status code (domain-specific).
     uint8_t producer_status{0};
@@ -114,7 +114,7 @@ namespace omniseer::vision
     /// @brief OR-ed ConsumerStageMask flags for stages that executed.
     uint32_t stage_mask{0};
     /// @brief Captured errno associated with inference operations, if any.
-    int32_t  infer_errno{0};
+    int32_t infer_errno{0};
 
     /// @brief Consumer status code (domain-specific).
     uint8_t consumer_status{0};

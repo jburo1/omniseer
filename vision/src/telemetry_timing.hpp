@@ -5,7 +5,7 @@
 
 namespace omniseer::vision::telemetry_timing
 {
-  using clock = std::chrono::steady_clock;
+  using clock      = std::chrono::steady_clock;
   using real_clock = std::chrono::system_clock;
 
   inline uint64_t elapsed_ns(clock::time_point start, clock::time_point end) noexcept

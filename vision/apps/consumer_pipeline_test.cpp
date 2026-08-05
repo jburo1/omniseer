@@ -117,16 +117,14 @@ namespace
       return enabled;
     }
 
-    void emit_producer(const omniseer::vision::ProducerSample&) noexcept override
-    {
-    }
+    void emit_producer(const omniseer::vision::ProducerSample&) noexcept override {}
 
     void emit_consumer(const omniseer::vision::ConsumerSample& sample) noexcept override
     {
       consumer_samples.push_back(sample);
     }
 
-    bool                                       enabled{true};
+    bool                                          enabled{true};
     std::vector<omniseer::vision::ConsumerSample> consumer_samples{};
   };
 
@@ -166,12 +164,12 @@ namespace
       ASSERT_NO_THROW(consumer_->preflight(startup));
     }
 
-    std::string                                    model_path_{};
-    omniseer::vision::ImageBufferPool              pool_{};
-    std::vector<int8_t>                            text_i8_{};
-    std::optional<omniseer::vision::RknnRunner>    runner_{};
-    TestTelemetry                                  telemetry_{};
-    TestSink                                       sink_{};
+    std::string                                       model_path_{};
+    omniseer::vision::ImageBufferPool                 pool_{};
+    std::vector<int8_t>                               text_i8_{};
+    std::optional<omniseer::vision::RknnRunner>       runner_{};
+    TestTelemetry                                     telemetry_{};
+    TestSink                                          sink_{};
     std::optional<omniseer::vision::ConsumerPipeline> consumer_{};
   };
 } // namespace
@@ -251,7 +249,8 @@ TEST_F(ConsumerPipelineSmokeTest, RunConsumesReadyBuffer)
   }
 
   EXPECT_EQ(static_cast<int>(free_indices.size()), omniseer::vision::ImageBufferPool::capacity());
-  EXPECT_NE(std::find(free_indices.begin(), free_indices.end(), published_index), free_indices.end());
+  EXPECT_NE(std::find(free_indices.begin(), free_indices.end(), published_index),
+            free_indices.end());
 }
 
 TEST_F(ConsumerPipelineSmokeTest, RunReturnsNoReadyBufferWhenPoolEmpty)
@@ -271,7 +270,7 @@ TEST_F(ConsumerPipelineSmokeTest, PreflightRejectsActiveClassCountAboveModelCapa
   omniseer::vision::RknnRunnerConfig runner_cfg{};
   runner_cfg.model_path  = model_path_;
   runner_cfg.warmup_runs = 0;
-  omniseer::vision::RknnRunner local_runner(runner_cfg);
+  omniseer::vision::RknnRunner       local_runner(runner_cfg);
   omniseer::vision::ConsumerPipeline local_consumer(pool_, local_runner);
 
   omniseer::vision::ConsumerPipelineStartup startup{};

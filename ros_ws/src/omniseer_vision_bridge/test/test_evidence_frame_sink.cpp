@@ -1,17 +1,16 @@
 #include <chrono>
 #include <cstdio>
 #include <cstring>
-#include <filesystem>
 #include <fcntl.h>
-#include <future>
+#include <filesystem>
 #include <fstream>
+#include <future>
+#include <gtest/gtest.h>
 #include <string>
 #include <sys/mman.h>
 #include <thread>
 #include <unistd.h>
 #include <vector>
-
-#include <gtest/gtest.h>
 
 #include "omniseer/vision/config.hpp"
 #include "omniseer/vision/detections.hpp"
@@ -20,145 +19,153 @@
 
 namespace
 {
-constexpr uint64_t kNsPerSec = 1000000000ULL;
+  constexpr uint64_t kNsPerSec = 1000000000ULL;
 
-std::filesystem::path make_temp_dir()
-{
-  auto root = std::filesystem::temp_directory_path() /
-    ("omniseer_evidence_test_" + std::to_string(::getpid()) + "_" +
-    std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
-  std::filesystem::create_directories(root);
-  return root;
-}
-
-struct TempRgbImage
-{
-  std::filesystem::path path{};
-  int fd{-1};
-  int width{0};
-  int height{0};
-  int stride{0};
-  std::size_t bytes{0};
-
-  TempRgbImage(const std::filesystem::path & dir, int w, int h)
-  : path(dir / "rgb.bin"), width(w), height(h), stride(w * 3),
-    bytes(static_cast<std::size_t>(stride) * static_cast<std::size_t>(h))
+  std::filesystem::path make_temp_dir()
   {
-    fd = ::open(path.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0600);
-    if (fd < 0) {
-      throw std::runtime_error("failed to create temporary RGB file");
-    }
-    if (::ftruncate(fd, static_cast<off_t>(bytes)) != 0) {
-      throw std::runtime_error("failed to size temporary RGB file");
-    }
-    void * mapped = ::mmap(nullptr, bytes, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    if (mapped == MAP_FAILED) {
-      throw std::runtime_error("failed to mmap temporary RGB file");
-    }
-    auto * data = static_cast<unsigned char *>(mapped);
-    for (std::size_t i = 0; i < bytes; ++i) {
-      data[i] = static_cast<unsigned char>(i % 251u);
-    }
-    ::munmap(mapped, bytes);
+    auto root = std::filesystem::temp_directory_path() /
+                ("omniseer_evidence_test_" + std::to_string(::getpid()) + "_" +
+                 std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    std::filesystem::create_directories(root);
+    return root;
   }
 
-  ~TempRgbImage()
+  struct TempRgbImage
   {
-    if (fd >= 0) {
-      ::close(fd);
-    }
-  }
+    std::filesystem::path path{};
+    int                   fd{-1};
+    int                   width{0};
+    int                   height{0};
+    int                   stride{0};
+    std::size_t           bytes{0};
 
-  omniseer::vision::ImageBuffer image() const
+    TempRgbImage(const std::filesystem::path& dir, int w, int h)
+        : path(dir / "rgb.bin"), width(w), height(h), stride(w * 3),
+          bytes(static_cast<std::size_t>(stride) * static_cast<std::size_t>(h))
+    {
+      fd = ::open(path.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0600);
+      if (fd < 0)
+      {
+        throw std::runtime_error("failed to create temporary RGB file");
+      }
+      if (::ftruncate(fd, static_cast<off_t>(bytes)) != 0)
+      {
+        throw std::runtime_error("failed to size temporary RGB file");
+      }
+      void* mapped = ::mmap(nullptr, bytes, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+      if (mapped == MAP_FAILED)
+      {
+        throw std::runtime_error("failed to mmap temporary RGB file");
+      }
+      auto* data = static_cast<unsigned char*>(mapped);
+      for (std::size_t i = 0; i < bytes; ++i)
+      {
+        data[i] = static_cast<unsigned char>(i % 251u);
+      }
+      ::munmap(mapped, bytes);
+    }
+
+    ~TempRgbImage()
+    {
+      if (fd >= 0)
+      {
+        ::close(fd);
+      }
+    }
+
+    omniseer::vision::ImageBuffer image() const
+    {
+      omniseer::vision::ImageBuffer out{};
+      out.size.w               = width;
+      out.size.h               = height;
+      out.fmt                  = omniseer::vision::PixelFormat::RGB888;
+      out.num_planes           = 1;
+      out.total_alloc_size     = bytes;
+      out.planes[0].fd         = fd;
+      out.planes[0].stride     = static_cast<uint32_t>(stride);
+      out.planes[0].offset     = 0;
+      out.planes[0].alloc_size = bytes;
+      out.planes[0].bytesused  = bytes;
+      return out;
+    }
+  };
+
+  omniseer::vision::DetectionsFrame frame(uint64_t frame_id, uint64_t ts, uint32_t count)
   {
-    omniseer::vision::ImageBuffer out{};
-    out.size.w = width;
-    out.size.h = height;
-    out.fmt = omniseer::vision::PixelFormat::RGB888;
-    out.num_planes = 1;
-    out.total_alloc_size = bytes;
-    out.planes[0].fd = fd;
-    out.planes[0].stride = static_cast<uint32_t>(stride);
-    out.planes[0].offset = 0;
-    out.planes[0].alloc_size = bytes;
-    out.planes[0].bytesused = bytes;
+    omniseer::vision::DetectionsFrame out{};
+    out.frame_id           = frame_id;
+    out.sequence           = static_cast<uint32_t>(1000 + frame_id);
+    out.capture_ts_real_ns = ts;
+    out.source_size.w      = 1280;
+    out.source_size.h      = 720;
+    out.count              = count;
+    if (count > 0)
+    {
+      out.detections[0].class_id = 0;
+      out.detections[0].score    = 0.92F;
+      out.detections[0].x1       = 10.0F;
+      out.detections[0].y1       = 20.0F;
+      out.detections[0].x2       = 110.0F;
+      out.detections[0].y2       = 220.0F;
+    }
     return out;
   }
-};
 
-omniseer::vision::DetectionsFrame frame(uint64_t frame_id, uint64_t ts, uint32_t count)
-{
-  omniseer::vision::DetectionsFrame out{};
-  out.frame_id = frame_id;
-  out.sequence = static_cast<uint32_t>(1000 + frame_id);
-  out.capture_ts_real_ns = ts;
-  out.source_size.w = 1280;
-  out.source_size.h = 720;
-  out.count = count;
-  if (count > 0) {
-    out.detections[0].class_id = 0;
-    out.detections[0].score = 0.92F;
-    out.detections[0].x1 = 10.0F;
-    out.detections[0].y1 = 20.0F;
-    out.detections[0].x2 = 110.0F;
-    out.detections[0].y2 = 220.0F;
+  omniseer::vision::PipelineRemapConfig remap()
+  {
+    omniseer::vision::PipelineRemapConfig out{};
+    out.source_size.w      = 1280;
+    out.source_size.h      = 720;
+    out.model_input_size.w = 640;
+    out.model_input_size.h = 640;
+    out.scale              = 0.5F;
+    out.pad_x              = 0;
+    out.pad_y              = 140;
+    out.resized_w          = 640;
+    out.resized_h          = 360;
+    return out;
   }
-  return out;
-}
 
-omniseer::vision::PipelineRemapConfig remap()
-{
-  omniseer::vision::PipelineRemapConfig out{};
-  out.source_size.w = 1280;
-  out.source_size.h = 720;
-  out.model_input_size.w = 640;
-  out.model_input_size.h = 640;
-  out.scale = 0.5F;
-  out.pad_x = 0;
-  out.pad_y = 140;
-  out.resized_w = 640;
-  out.resized_h = 360;
-  return out;
-}
-
-bool wait_for_written(const omniseer_vision_bridge::EvidenceFrameSink & sink, uint64_t expected)
-{
-  for (int i = 0; i < 100; ++i) {
-    if (sink.snapshot().written_count >= expected) {
-      return true;
+  bool wait_for_written(const omniseer_vision_bridge::EvidenceFrameSink& sink, uint64_t expected)
+  {
+    for (int i = 0; i < 100; ++i)
+    {
+      if (sink.snapshot().written_count >= expected)
+      {
+        return true;
+      }
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    return false;
   }
-  return false;
-}
 
-std::string read_text(const std::filesystem::path & path)
-{
-  std::ifstream in(path);
-  return std::string(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
-}
+  std::string read_text(const std::filesystem::path& path)
+  {
+    std::ifstream in(path);
+    return std::string(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
+  }
 
-bool has_jpeg_soi(const std::filesystem::path & path)
-{
-  std::ifstream in(path, std::ios::binary);
-  char bytes[2]{};
-  in.read(bytes, sizeof(bytes));
-  return in.gcount() == 2 && static_cast<unsigned char>(bytes[0]) == 0xffu &&
-         static_cast<unsigned char>(bytes[1]) == 0xd8u;
-}
+  bool has_jpeg_soi(const std::filesystem::path& path)
+  {
+    std::ifstream in(path, std::ios::binary);
+    char          bytes[2]{};
+    in.read(bytes, sizeof(bytes));
+    return in.gcount() == 2 && static_cast<unsigned char>(bytes[0]) == 0xffu &&
+           static_cast<unsigned char>(bytes[1]) == 0xd8u;
+  }
 } // namespace
 
 TEST(EvidenceFrameSinkTest, WritesJpegAndMetadataForExactFrame)
 {
-  const auto root = make_temp_dir();
+  const auto   root = make_temp_dir();
   TempRgbImage rgb(root, 16, 12);
 
   omniseer_vision_bridge::EvidenceFrameSinkConfig cfg{};
-  cfg.evidence_dir = (root / "evidence").string();
-  cfg.class_names = {"person"};
-  cfg.interval_sec = 1.0;
-  cfg.jpeg_quality = 85;
-  cfg.min_free_mb = 0;
+  cfg.evidence_dir      = (root / "evidence").string();
+  cfg.class_names       = {"person"};
+  cfg.interval_sec      = 1.0;
+  cfg.jpeg_quality      = 85;
+  cfg.min_free_mb       = 0;
   cfg.storage_budget_mb = 64;
 
   {
@@ -181,14 +188,14 @@ TEST(EvidenceFrameSinkTest, WritesJpegAndMetadataForExactFrame)
 
 TEST(EvidenceFrameSinkTest, SamplesPeriodicallyAndKeepsEmptyDetectionFrames)
 {
-  const auto root = make_temp_dir();
+  const auto   root = make_temp_dir();
   TempRgbImage rgb(root, 8, 8);
 
   omniseer_vision_bridge::EvidenceFrameSinkConfig cfg{};
-  cfg.evidence_dir = (root / "evidence").string();
-  cfg.interval_sec = 1.0;
-  cfg.jpeg_quality = 80;
-  cfg.min_free_mb = 0;
+  cfg.evidence_dir      = (root / "evidence").string();
+  cfg.interval_sec      = 1.0;
+  cfg.jpeg_quality      = 80;
+  cfg.min_free_mb       = 0;
   cfg.storage_budget_mb = 64;
 
   {
@@ -209,34 +216,33 @@ TEST(EvidenceFrameSinkTest, SamplesPeriodicallyAndKeepsEmptyDetectionFrames)
 
 TEST(EvidenceFrameSinkTest, CaptureNextWritesTargetFrameAndMetadata)
 {
-  const auto root = make_temp_dir();
+  const auto   root = make_temp_dir();
   TempRgbImage rgb(root, 8, 8);
 
   omniseer_vision_bridge::EvidenceFrameSinkConfig cfg{};
-  cfg.evidence_dir = (root / "evidence").string();
-  cfg.interval_sec = 10.0;
-  cfg.jpeg_quality = 80;
-  cfg.min_free_mb = 0;
+  cfg.evidence_dir      = (root / "evidence").string();
+  cfg.interval_sec      = 10.0;
+  cfg.jpeg_quality      = 80;
+  cfg.min_free_mb       = 0;
   cfg.storage_budget_mb = 64;
 
   omniseer_vision_bridge::TargetCaptureMetadata metadata{};
-  metadata.capture_reason = "target_framed";
-  metadata.target_class = "mug";
-  metadata.confidence = 0.91;
+  metadata.capture_reason   = "target_framed";
+  metadata.target_class     = "mug";
+  metadata.confidence       = 0.91;
   metadata.bbox_center_x_px = 64.0;
   metadata.bbox_center_y_px = 72.0;
-  metadata.bbox_size_x_px = 32.0;
-  metadata.bbox_size_y_px = 48.0;
+  metadata.bbox_size_x_px   = 32.0;
+  metadata.bbox_size_y_px   = 48.0;
   metadata.normalized_error = 0.02;
-  metadata.bbox_area_ratio = 0.12;
+  metadata.bbox_area_ratio  = 0.12;
 
   omniseer_vision_bridge::TargetCaptureResult result{};
   {
     omniseer_vision_bridge::EvidenceFrameSink sink(cfg);
-    auto future = std::async(std::launch::async, [&sink, metadata]()
-        {
-          return sink.capture_next(metadata, std::chrono::milliseconds(500));
-        });
+    auto                                      future =
+        std::async(std::launch::async, [&sink, metadata]()
+                   { return sink.capture_next(metadata, std::chrono::milliseconds(500)); });
     sink.publish(rgb.image(), frame(9, kNsPerSec, 1), remap());
     result = future.get();
   }
@@ -263,10 +269,10 @@ TEST(EvidenceFrameSinkTest, CaptureNextTimesOutWithoutFrame)
   const auto root = make_temp_dir();
 
   omniseer_vision_bridge::EvidenceFrameSinkConfig cfg{};
-  cfg.evidence_dir = (root / "evidence").string();
-  cfg.interval_sec = 1.0;
-  cfg.jpeg_quality = 80;
-  cfg.min_free_mb = 0;
+  cfg.evidence_dir      = (root / "evidence").string();
+  cfg.interval_sec      = 1.0;
+  cfg.jpeg_quality      = 80;
+  cfg.min_free_mb       = 0;
   cfg.storage_budget_mb = 64;
 
   omniseer_vision_bridge::TargetCaptureMetadata metadata{};
@@ -282,20 +288,21 @@ TEST(EvidenceFrameSinkTest, CaptureNextTimesOutWithoutFrame)
 
 TEST(EvidenceFrameSinkTest, StopsWhenStorageBudgetIsReached)
 {
-  const auto root = make_temp_dir();
+  const auto   root = make_temp_dir();
   TempRgbImage rgb(root, 16, 16);
 
   omniseer_vision_bridge::EvidenceFrameSinkConfig cfg{};
-  cfg.evidence_dir = (root / "evidence").string();
-  cfg.interval_sec = 1.0;
-  cfg.jpeg_quality = 90;
-  cfg.min_free_mb = 0;
+  cfg.evidence_dir      = (root / "evidence").string();
+  cfg.interval_sec      = 1.0;
+  cfg.jpeg_quality      = 90;
+  cfg.min_free_mb       = 0;
   cfg.storage_budget_mb = 0;
 
   {
     omniseer_vision_bridge::EvidenceFrameSink sink(cfg);
     sink.publish(rgb.image(), frame(1, kNsPerSec, 1), remap());
-    for (int i = 0; i < 100 && !sink.snapshot().stopped; ++i) {
+    for (int i = 0; i < 100 && !sink.snapshot().stopped; ++i)
+    {
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     EXPECT_TRUE(sink.snapshot().stopped);

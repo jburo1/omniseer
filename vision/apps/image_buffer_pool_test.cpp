@@ -1,9 +1,8 @@
 #include <atomic>
 #include <chrono>
+#include <gtest/gtest.h>
 #include <thread>
 #include <vector>
-
-#include <gtest/gtest.h>
 
 #include "omniseer/vision/image_buffer_pool.hpp"
 
@@ -46,7 +45,7 @@ TEST(ImageBufferPool, LatestWins)
 TEST(ImageBufferPool, ProducerConsumerLatestWins)
 {
   omniseer::vision::ImageBufferPool pool;
-  constexpr int iterations = 20000;
+  constexpr int                     iterations = 20000;
 
   std::atomic<bool> start{false};
   std::atomic<bool> done{false};
@@ -54,75 +53,79 @@ TEST(ImageBufferPool, ProducerConsumerLatestWins)
   std::atomic<int>  consumed{0};
   std::atomic<int>  last_seen{-1};
 
-  std::thread producer([&]() {
-    while (!start.load(std::memory_order_acquire))
-    {
-      std::this_thread::yield();
-    }
-
-    for (int seq = 0; seq < iterations; ++seq)
-    {
-      int idx = -1;
-      while (!pool.acquire_write(idx))
+  std::thread producer(
+      [&]()
       {
-        std::this_thread::yield();
-      }
-
-      pool.buffer_at(idx).size.w = seq;
-      pool.publish_ready(idx);
-    }
-
-    done.store(true, std::memory_order_release);
-  });
-
-  std::thread consumer([&]() {
-    while (!start.load(std::memory_order_acquire))
-    {
-      std::this_thread::yield();
-    }
-
-    const auto deadline = std::chrono::steady_clock::now() + 5s;
-
-    int seen       = -1;
-    int idle_spins = 0;
-    constexpr int idle_limit = 10000;
-
-    while (true)
-    {
-      int idx = -1;
-      if (pool.acquire_read(idx))
-      {
-        const int value = pool.buffer_at(idx).size.w;
-        if (value < seen)
+        while (!start.load(std::memory_order_acquire))
         {
-          failed.store(true, std::memory_order_relaxed);
+          std::this_thread::yield();
         }
-        seen = value;
-        pool.publish_release(idx);
-        consumed.fetch_add(1, std::memory_order_relaxed);
-        idle_spins = 0;
-        continue;
-      }
 
-      if (std::chrono::steady_clock::now() > deadline)
-      {
-        failed.store(true, std::memory_order_relaxed);
-        break;
-      }
-
-      if (done.load(std::memory_order_acquire))
-      {
-        if (++idle_spins > idle_limit)
+        for (int seq = 0; seq < iterations; ++seq)
         {
-          break;
+          int idx = -1;
+          while (!pool.acquire_write(idx))
+          {
+            std::this_thread::yield();
+          }
+
+          pool.buffer_at(idx).size.w = seq;
+          pool.publish_ready(idx);
         }
-      }
 
-      std::this_thread::yield();
-    }
+        done.store(true, std::memory_order_release);
+      });
 
-    last_seen.store(seen, std::memory_order_relaxed);
-  });
+  std::thread consumer(
+      [&]()
+      {
+        while (!start.load(std::memory_order_acquire))
+        {
+          std::this_thread::yield();
+        }
+
+        const auto deadline = std::chrono::steady_clock::now() + 5s;
+
+        int           seen       = -1;
+        int           idle_spins = 0;
+        constexpr int idle_limit = 10000;
+
+        while (true)
+        {
+          int idx = -1;
+          if (pool.acquire_read(idx))
+          {
+            const int value = pool.buffer_at(idx).size.w;
+            if (value < seen)
+            {
+              failed.store(true, std::memory_order_relaxed);
+            }
+            seen = value;
+            pool.publish_release(idx);
+            consumed.fetch_add(1, std::memory_order_relaxed);
+            idle_spins = 0;
+            continue;
+          }
+
+          if (std::chrono::steady_clock::now() > deadline)
+          {
+            failed.store(true, std::memory_order_relaxed);
+            break;
+          }
+
+          if (done.load(std::memory_order_acquire))
+          {
+            if (++idle_spins > idle_limit)
+            {
+              break;
+            }
+          }
+
+          std::this_thread::yield();
+        }
+
+        last_seen.store(seen, std::memory_order_relaxed);
+      });
 
   start.store(true, std::memory_order_release);
   producer.join();

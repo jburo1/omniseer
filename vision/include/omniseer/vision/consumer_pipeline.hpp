@@ -105,17 +105,17 @@ namespace omniseer::vision
     void set_preview_sink(IFramePreviewSink* sink) noexcept;
 
   private:
-    ImageBufferPool& _pool;
-    RknnRunner&       _runner;
-    ITelemetry*       _telemetry{nullptr};
-    IDetectionsSink*  _sink{nullptr};
-    IFramePreviewSink* _preview_sink{nullptr};
+    ImageBufferPool&       _pool;
+    RknnRunner&            _runner;
+    ITelemetry*            _telemetry{nullptr};
+    IDetectionsSink*       _sink{nullptr};
+    IFramePreviewSink*     _preview_sink{nullptr};
     ConsumerPipelineConfig _cfg{};
 
-    bool                _armed{false};
-    uint64_t            _next_tick_id{1};
-    uint32_t            _active_class_count{0};
+    bool                  _armed{false};
+    uint64_t              _next_tick_id{1};
+    uint32_t              _active_class_count{0};
     YoloWorldOutputLayout _output_layout{};
-    PipelineRemapConfig _remap{};
+    PipelineRemapConfig   _remap{};
   };
 } // namespace omniseer::vision

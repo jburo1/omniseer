@@ -285,9 +285,9 @@ namespace omniseer::vision
         throw std::runtime_error("RknnRunner::preflight: output tensor has zero size");
 
       RknnOutputDesc& desc = _output_descs[static_cast<size_t>(i)];
-      desc.index  = i;
-      desc.name   = out.attr.name;
-      desc.n_dims = (out.attr.n_dims <= RKNN_MAX_DIMS) ? out.attr.n_dims : RKNN_MAX_DIMS;
+      desc.index           = i;
+      desc.name            = out.attr.name;
+      desc.n_dims          = (out.attr.n_dims <= RKNN_MAX_DIMS) ? out.attr.n_dims : RKNN_MAX_DIMS;
       for (uint32_t dim = 0; dim < desc.n_dims; ++dim)
       {
         desc.dims[static_cast<size_t>(dim)] = out.attr.dims[dim];

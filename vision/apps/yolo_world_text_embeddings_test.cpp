@@ -37,8 +37,8 @@ TEST(YoloWorldTextEmbeddingsBuilderTest, BuildsQuantizedEmbeddingsFromClassNames
   cfg.clip_vocab_path         = clip_vocab;
 
   omniseer::vision::YoloWorldTextEmbeddingsBuilder builder(cfg);
-  const auto prepared = builder.build({"person", "bus"});
-  const auto view     = prepared.view();
+  const auto                                       prepared = builder.build({"person", "bus"});
+  const auto                                       view     = prepared.view();
 
   ASSERT_EQ(prepared.class_names.size(), 2u);
   EXPECT_EQ(prepared.class_names[0], "person");
@@ -46,8 +46,9 @@ TEST(YoloWorldTextEmbeddingsBuilderTest, BuildsQuantizedEmbeddingsFromClassNames
   EXPECT_EQ(view.active_class_count, 2u);
   EXPECT_EQ(view.bytes, 80u * 512u);
 
-  const auto row_begin = [&](size_t row) { return prepared.text_i8.begin() + static_cast<std::ptrdiff_t>(row * 512); };
-  const auto row_end   = [&](size_t row) { return row_begin(row) + 512; };
+  const auto row_begin = [&](size_t row)
+  { return prepared.text_i8.begin() + static_cast<std::ptrdiff_t>(row * 512); };
+  const auto row_end = [&](size_t row) { return row_begin(row) + 512; };
 
   EXPECT_FALSE(std::equal(row_begin(0), row_end(0), row_begin(2), row_end(2)));
   EXPECT_FALSE(std::equal(row_begin(1), row_end(1), row_begin(2), row_end(2)));

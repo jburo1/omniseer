@@ -89,24 +89,22 @@ namespace omniseer::vision
     RollingTelemetrySnapshot snapshot() const noexcept
     {
       RollingTelemetrySnapshot out{};
-      out.produced_count = _produced_count.load(std::memory_order_relaxed);
+      out.produced_count           = _produced_count.load(std::memory_order_relaxed);
       out.no_writable_buffer_count = _no_writable_buffer_count.load(std::memory_order_relaxed);
       out.capture_retryable_error_count =
           _capture_retryable_error_count.load(std::memory_order_relaxed);
-      out.capture_fatal_error_count =
-          _capture_fatal_error_count.load(std::memory_order_relaxed);
-      out.preprocess_error_count = _preprocess_error_count.load(std::memory_order_relaxed);
-      out.consumed_count         = _consumed_count.load(std::memory_order_relaxed);
-      out.infer_error_count      = _infer_error_count.load(std::memory_order_relaxed);
-      out.last_producer_total_ns = _last_producer_total_ns.load(std::memory_order_relaxed);
-      out.last_preprocess_ns     = _last_preprocess_ns.load(std::memory_order_relaxed);
-      out.last_consumer_total_ns = _last_consumer_total_ns.load(std::memory_order_relaxed);
-      out.last_infer_ns          = _last_infer_ns.load(std::memory_order_relaxed);
-      out.last_postprocess_ns    = _last_postprocess_ns.load(std::memory_order_relaxed);
-      out.last_publish_ns        = _last_publish_ns.load(std::memory_order_relaxed);
-      out.last_source_age_start_ns =
-          _last_source_age_start_ns.load(std::memory_order_relaxed);
-      out.last_source_age_end_ns = _last_source_age_end_ns.load(std::memory_order_relaxed);
+      out.capture_fatal_error_count = _capture_fatal_error_count.load(std::memory_order_relaxed);
+      out.preprocess_error_count    = _preprocess_error_count.load(std::memory_order_relaxed);
+      out.consumed_count            = _consumed_count.load(std::memory_order_relaxed);
+      out.infer_error_count         = _infer_error_count.load(std::memory_order_relaxed);
+      out.last_producer_total_ns    = _last_producer_total_ns.load(std::memory_order_relaxed);
+      out.last_preprocess_ns        = _last_preprocess_ns.load(std::memory_order_relaxed);
+      out.last_consumer_total_ns    = _last_consumer_total_ns.load(std::memory_order_relaxed);
+      out.last_infer_ns             = _last_infer_ns.load(std::memory_order_relaxed);
+      out.last_postprocess_ns       = _last_postprocess_ns.load(std::memory_order_relaxed);
+      out.last_publish_ns           = _last_publish_ns.load(std::memory_order_relaxed);
+      out.last_source_age_start_ns  = _last_source_age_start_ns.load(std::memory_order_relaxed);
+      out.last_source_age_end_ns    = _last_source_age_end_ns.load(std::memory_order_relaxed);
       return out;
     }
 

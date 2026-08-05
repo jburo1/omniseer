@@ -13,14 +13,9 @@ namespace omniseer::vision
   public:
     CompositeTelemetry() = default;
 
-    explicit CompositeTelemetry(std::initializer_list<ITelemetry*> sinks)
-        : _sinks(sinks)
-    {
-    }
+    explicit CompositeTelemetry(std::initializer_list<ITelemetry*> sinks) : _sinks(sinks) {}
 
-    explicit CompositeTelemetry(std::vector<ITelemetry*> sinks) : _sinks(std::move(sinks))
-    {
-    }
+    explicit CompositeTelemetry(std::vector<ITelemetry*> sinks) : _sinks(std::move(sinks)) {}
 
     bool timing_enabled() const noexcept override
     {

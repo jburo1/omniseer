@@ -19,9 +19,9 @@ namespace
 
   struct FakeTensor
   {
-    RknnOutputDesc       desc{};
+    RknnOutputDesc      desc{};
     std::vector<int8_t> storage{};
-    RknnOutputView       view{};
+    RknnOutputView      view{};
   };
 
   size_t nchw_bytes(uint32_t c, uint32_t h, uint32_t w)
@@ -29,7 +29,8 @@ namespace
     return static_cast<size_t>(c) * h * w;
   }
 
-  FakeTensor make_i8_tensor(uint32_t index, uint32_t channels, uint32_t grid, int32_t zp, float scale)
+  FakeTensor make_i8_tensor(uint32_t index, uint32_t channels, uint32_t grid, int32_t zp,
+                            float scale)
   {
     FakeTensor tensor{};
     tensor.desc.index      = index;
@@ -53,14 +54,16 @@ namespace
   {
     const uint32_t grid     = tensor.desc.dims[2];
     const size_t   grid_len = static_cast<size_t>(grid) * grid;
-    tensor.storage[static_cast<size_t>(y) * grid + x + static_cast<size_t>(class_id) * grid_len] = value;
+    tensor.storage[static_cast<size_t>(y) * grid + x + static_cast<size_t>(class_id) * grid_len] =
+        value;
   }
 
-  void set_box(FakeTensor& tensor, uint32_t y, uint32_t x, int8_t left, int8_t top, int8_t right, int8_t bottom)
+  void set_box(FakeTensor& tensor, uint32_t y, uint32_t x, int8_t left, int8_t top, int8_t right,
+               int8_t bottom)
   {
-    const uint32_t grid     = tensor.desc.dims[2];
-    const size_t   grid_len = static_cast<size_t>(grid) * grid;
-    const size_t   cell     = static_cast<size_t>(y) * grid + x;
+    const uint32_t grid                  = tensor.desc.dims[2];
+    const size_t   grid_len              = static_cast<size_t>(grid) * grid;
+    const size_t   cell                  = static_cast<size_t>(y) * grid + x;
     tensor.storage[cell + 0u * grid_len] = left;
     tensor.storage[cell + 1u * grid_len] = top;
     tensor.storage[cell + 2u * grid_len] = right;
@@ -95,9 +98,9 @@ TEST(YoloWorldPostprocessTest, DecodesOneInt8DetectionIntoSourceSpace)
   const YoloWorldOutputLayout layout = omniseer::vision::resolve_yolo_world_output_layout(descs);
 
   ConsumerPipelineConfig cfg{};
-  cfg.score_threshold = 0.25F;
+  cfg.score_threshold   = 0.25F;
   cfg.nms_iou_threshold = 0.45F;
-  cfg.max_detections = 100;
+  cfg.max_detections    = 100;
 
   PipelineRemapConfig remap{};
   remap.source_size      = {.w = 1280, .h = 720};

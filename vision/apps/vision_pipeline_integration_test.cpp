@@ -140,10 +140,10 @@ TEST(VisionPipelineIntegration, ProducesAndConsumesFramesWithShortClassList)
   ASSERT_EQ(class_names.size(), 2u);
   const omniseer::vision::PreparedTextEmbeddings prepared = builder.build(class_names);
 
-  TestSink sink{};
-  omniseer::vision::RknnRunner runner({
-      .model_path  = yolo_model,
-      .warmup_runs = 0,
+  TestSink                           sink{};
+  omniseer::vision::RknnRunner       runner({
+            .model_path  = yolo_model,
+            .warmup_runs = 0,
   });
   omniseer::vision::ConsumerPipeline consumer(pool, runner, nullptr, &sink);
   ASSERT_NO_THROW(consumer.preflight({
@@ -151,10 +151,10 @@ TEST(VisionPipelineIntegration, ProducesAndConsumesFramesWithShortClassList)
       .text_embeddings = prepared.view(),
   }));
 
-  int      produced      = 0;
-  int      consumed      = 0;
-  uint64_t last_frame_id = 0;
-  constexpr int max_ticks = 400;
+  int           produced      = 0;
+  int           consumed      = 0;
+  uint64_t      last_frame_id = 0;
+  constexpr int max_ticks     = 400;
 
   for (int i = 0; i < max_ticks && (produced == 0 || consumed == 0); ++i)
   {
