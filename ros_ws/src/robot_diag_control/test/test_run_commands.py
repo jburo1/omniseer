@@ -125,7 +125,9 @@ class RunCommandsTests(unittest.TestCase):
         )
 
         self.assertIn("start_autonomy:=true", command[3])
+        self.assertIn("--record-classes backpack,chair", command[3])
         self.assertIn("--record-experiment-config 'Autonomy: frame and capture target'", command[3])
+        self.assertIn("classes_path:=/runs/operator_001/classes.txt", command[3])
         self.assertIn("autonomy_target_class:=backpack", command[3])
         self.assertIn("autonomy_run_dir:=/runs/operator_001", command[3])
         self.assertIn("autonomy_bbox_area_min_ratio:=0.10", command[3])
@@ -166,6 +168,8 @@ class RunCommandsTests(unittest.TestCase):
         self.assertIn("docker exec omniseer-dev bash -lc", command[3])
         self.assertIn("cd /omniseer && scripts/omni run real --profile operator", command[3])
         self.assertIn("--record-out /omniseer/runs/operator_001", command[3])
+        self.assertIn("--record-classes", command[3])
+        self.assertIn("person,fire extinguisher", command[3])
         self.assertIn("--record-experiment-config", command[3])
         self.assertIn("Perception recording", command[3])
         self.assertIn("--record-experiment-parameter postprocess.score_threshold=0.31", command[3])

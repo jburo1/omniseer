@@ -443,11 +443,12 @@ start/stop/retrieve architecture and module ownership boundaries.
 #### `run autonomy`
 
 Starts a bounded real autonomy recording from inside the Radxa devcontainer. The
-target class is passed on the CLI and is used both as the native vision class
-list and as the target-centering autonomy class:
+class list is passed on the CLI. The first class is used as the target-centering
+autonomy class; the full list is used by native vision and recorded as evidence
+candidates:
 
 ```bash
-scripts/omni run autonomy --target chair
+scripts/omni run autonomy --classes chair,backpack,bottle
 ```
 
 The command runs the operator real profile, writes a run bundle under
@@ -456,7 +457,7 @@ The command runs the operator real profile, writes a run bundle under
 after `--`:
 
 ```bash
-scripts/omni run autonomy --target chair --run-id autonomy_chair_001 -- \
+scripts/omni run autonomy --classes chair,backpack,bottle --run-id autonomy_chair_001 -- \
   start_vision:=false
 ```
 

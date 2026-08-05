@@ -48,7 +48,7 @@ Examples:
   scripts/omni run sim headless:=true
   scripts/omni run sim --yolo
   scripts/omni run real
-  scripts/omni run autonomy --target chair
+  scripts/omni run autonomy --classes chair,backpack,bottle
   scripts/omni runs list
   scripts/omni runs pull demo_001
   scripts/omni runs inspect runs/imported/demo_001
@@ -76,7 +76,7 @@ run_usage() {
 Usage:
   scripts/omni run sim [--yolo] [launch args...]
   scripts/omni run real [--profile <name>] [recording flags] [--mode <mode>] [mode] [launch args...]
-  scripts/omni run autonomy --target <class> [autonomy args...] [-- launch args...]
+  scripts/omni run autonomy --classes <classes> [autonomy args...] [-- launch args...]
   scripts/omni run monitor [monitor args...]
   scripts/omni run teleop
 

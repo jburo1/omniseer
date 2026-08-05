@@ -134,7 +134,8 @@ The monitor can launch either a perception-only recording or the first bounded
 autonomy experiment, `Autonomy: center first class`. The autonomy mode still uses
 the runtime-container recording path, but appends launch arguments that start
 `omniseer_autonomy/target_centering_node`, set the target to the first configured
-class, and write `autonomy.jsonl` into the run bundle. When target centering
+class in the operator `Class List`, pass the full class list to native vision and
+run metadata, and write `autonomy.jsonl` into the run bundle. When target centering
 reaches success or failure, the autonomy node stops commanding motion, completes
 terminal logging and capture handling, and exits cleanly; real launch then shuts
 down so the recorder can finalize the run bundle without an operator Stop Run.

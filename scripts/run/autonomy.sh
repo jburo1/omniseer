@@ -11,6 +11,7 @@ source "${script_dir}/../lib/common.sh"
 usage() {
   cat <<'EOF'
 Usage:
+  scripts/omni run autonomy --classes <class[,class...]> [options] [-- launch args...]
   scripts/omni run autonomy --target <class> [options] [-- launch args...]
   scripts/omni run autonomy <class> [options] [-- launch args...]
 
@@ -18,7 +19,8 @@ Runs the real operator profile with bounded target-centering autonomy enabled.
 This command is intended to be run inside the Radxa devcontainer.
 
 Options:
-  --target <class>                 Detection class to center. Required unless provided positionally.
+  --classes <text>                 Detection class list. The first class is centered; all are evidence candidates.
+  --target <class>                 Detection class to center. Backward-compatible alias for a one-class list.
   --run-id <id>                    Run bundle id. Defaults to autonomy_<class>_<UTC timestamp>.
   --out <path>                     Run bundle directory. Defaults to runs/<run_id>.
   --notes <text>                   Store notes in manifest.yaml.
@@ -35,7 +37,15 @@ sanitize_run_fragment() {
     | sed -e 's/[^A-Za-z0-9_.-]/_/g' -e 's/^[._-]*//' -e 's/[._-]*$//'
 }
 
+normalize_classes_text() {
+  local raw="$1"
+  printf '%s\n' "${raw}" \
+    | tr ',' '\n' \
+    | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e '/^$/d'
+}
+
 target_class=""
+classes_text=""
 run_id=""
 run_out=""
 notes=""
@@ -46,8 +56,19 @@ extra_args=()
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --classes)
+      [[ $# -ge 2 ]] || omni_die "--classes requires class text"
+      if [[ -n "${classes_text}" || -n "${target_class}" ]]; then
+        omni_die "specify only one of --classes, --target, or positional target"
+      fi
+      classes_text="$2"
+      shift 2
+      ;;
     --target)
       [[ $# -ge 2 ]] || omni_die "--target requires a class name"
+      if [[ -n "${classes_text}" || -n "${target_class}" ]]; then
+        omni_die "specify only one of --classes, --target, or positional target"
+      fi
       target_class="$2"
       shift 2
       ;;
@@ -93,7 +114,7 @@ while [[ $# -gt 0 ]]; do
       omni_die "unknown autonomy option: $1"
       ;;
     *)
-      if [[ -n "${target_class}" ]]; then
+      if [[ -n "${classes_text}" || -n "${target_class}" ]]; then
         omni_die "unexpected positional argument: $1"
       fi
       target_class="$1"
@@ -102,7 +123,13 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-target_class="$(printf '%s' "${target_class}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+if [[ -n "${target_class}" ]]; then
+  classes_text="${target_class}"
+fi
+
+classes_text="$(normalize_classes_text "${classes_text}")"
+[[ -n "${classes_text}" ]] || omni_die "autonomy class list is required"
+target_class="$(printf '%s\n' "${classes_text}" | sed -n '1p')"
 [[ -n "${target_class}" ]] || omni_die "autonomy target class is required"
 
 if [[ -z "${run_id}" ]]; then
@@ -120,7 +147,7 @@ real_args=(
   "--record-run" "${run_id}"
   "--record-out" "${run_out}"
   "--record-system-interval-sec" "${system_interval_sec}"
-  "--record-classes" "${target_class}"
+  "--record-classes" "${classes_text}"
 )
 
 if [[ "${overwrite}" == "true" ]]; then
@@ -131,7 +158,7 @@ if [[ -n "${notes}" ]]; then
   real_args+=("--record-notes" "${notes}")
 fi
 
-omni_info "Starting autonomy run ${run_id} targeting class '${target_class}'"
+omni_info "Starting autonomy run ${run_id} targeting class '${target_class}' with class list: ${classes_text//$'\n'/, }"
 exec "${script_dir}/real.sh" "${real_args[@]}" \
   bringup \
   "classes_path:=${run_out}/classes.txt" \

@@ -343,7 +343,7 @@ class MonitorGuiTests(unittest.TestCase):
             root.destroy()
 
     @unittest.skipIf(tk is None, "tkinter is unavailable")
-    def test_gui_run_form_exposes_object_search_input(self):
+    def test_gui_run_form_exposes_class_list_input(self):
         assert tk is not None
         root = tk.Tk()
         root.withdraw()
@@ -352,7 +352,8 @@ class MonitorGuiTests(unittest.TestCase):
 
             texts = _widget_texts(root)
 
-            self.assertIn("Object to Search For", texts)
+            self.assertIn("Class List", texts)
+            self.assertNotIn("Object to Search For", texts)
             self.assertNotIn("Target Class", texts)
         finally:
             root.destroy()

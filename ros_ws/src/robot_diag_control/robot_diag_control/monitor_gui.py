@@ -548,7 +548,7 @@ class RobotMonitorGui:
         run_type_box.grid(row=0, column=1, columnspan=3, sticky=tk.EW, padx=(8, 0))
         run_type_box.bind("<<ComboboxSelected>>", lambda _event: self._sync_run_experiment_fields())
 
-        self._add_labeled_entry(experiment_holder, "Object to Search For", self._run_classes_var, 1, 0)
+        self._add_labeled_entry(experiment_holder, "Class List", self._run_classes_var, 1, 0)
         self._add_labeled_entry(
             experiment_holder,
             "Score Threshold",

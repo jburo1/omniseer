@@ -119,6 +119,19 @@ class RunSettingsTests(unittest.TestCase):
         self.assertEqual(selection.artifact_context.connection, selection.connection)
         self.assertEqual(selection.artifact_context.local_import_root, Path("/repo/runs/imported"))
 
+    def test_resolve_autonomy_run_form_uses_ordered_class_list(self):
+        selection = resolve_run_form(
+            _values(
+                run_type_label=RUN_TYPE_LABELS[RUN_TYPE_AUTONOMY_CENTER],
+                classes_text="chair, backpack, bottle",
+            ),
+            repo_root=Path("/repo"),
+            default_run_id=lambda: "operator_default",
+        )
+
+        self.assertEqual(selection.run_config.run_type, RUN_TYPE_AUTONOMY_CENTER)
+        self.assertEqual(selection.run_config.classes, ("chair", "backpack", "bottle"))
+
     def test_resolve_run_form_defaults_blank_detector_parameters(self):
         selection = resolve_run_form(
             _values(
