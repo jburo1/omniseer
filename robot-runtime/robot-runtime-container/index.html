@@ -1544,14 +1544,16 @@ parameters, and the latest platform snapshots from <code>manifest.yaml</code> an
 <code>start_vision:=false</code> and is not a full robot runtime.</p>
 <h2 id="checkpoint-and-promotion">Checkpoint and Promotion<a class="headerlink" href="#checkpoint-and-promotion" title="Permanent link">&para;</a></h2>
 <p>The robot-local promotion loop is:</p>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>build
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>&lt;passed-master-commit&gt;
+scripts/omni<span class="w"> </span>runtime<span class="w"> </span>build
 scripts/omni<span class="w"> </span>runtime<span class="w"> </span>record
 scripts/omni<span class="w"> </span>runtime<span class="w"> </span>verify
 scripts/omni<span class="w"> </span>runtime<span class="w"> </span>verify<span class="w"> </span>--stage<span class="w"> </span>full
 scripts/omni<span class="w"> </span>runtime<span class="w"> </span>push
 </code></pre></div>
 <p>For a full pre-registry verification pass on the robot:</p>
-<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>build
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>&lt;passed-master-commit&gt;
+sudo<span class="w"> </span>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>build
 sudo<span class="w"> </span>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>record
 
 <span class="nv">RUN_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>ls<span class="w"> </span>-dt<span class="w"> </span>runs/operator_*<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-n<span class="w"> </span><span class="m">1</span><span class="k">)</span><span class="s2">&quot;</span>
@@ -1562,9 +1564,11 @@ sudo<span class="w"> </span>scripts/omni<span class="w"> </span>runtime<span cla
 sudo<span class="w"> </span>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>verify<span class="w"> </span>--stage<span class="w"> </span>full
 sudo<span class="w"> </span>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>push
 </code></pre></div>
-<p>Review the generated run report before <code>runtime push</code>. The push step is the
-promotion boundary: it publishes the locally verified candidate image and moves
-the verified tags.</p>
+<p>Use the exact <code>master</code> commit whose GitHub Actions <code>ci</code> run passed. Review the
+generated run report before <code>runtime push</code>. The push step is the promotion boundary:
+it refuses to publish unless the git working tree is clean, full verification passed
+for the same local image ID, and the verification metadata commit matches the
+current checkout.</p>
 <p><code>runtime record</code> is the manual operator evidence-capture path. It uses the latest
 local runtime build by default, starts <code>run real --profile operator ... bringup</code>
 with automatic Docker TTY detection, writes the runbundle to <code>runs/operator_&lt;UTC&gt;</code>
@@ -1590,16 +1594,22 @@ be used under <code>sudo</code>, SSH automation, and other non-interactive launc
 Direct <code>runtime run</code> and manual <code>runtime record</code> commands allocate a TTY only
 when attached to one by default; override that with
 <code>OMNISEER_RUNTIME_DOCKER_TTY=always</code> or <code>never</code>.</p>
-<p><code>runtime push</code> refuses to publish unless a passed full verification exists for the
-same local image ID. It pushes the candidate tag first, then automatically
-promotes the same image to immutable <code>robot-verified-&lt;UTC&gt;-g&lt;shortsha&gt;</code> and
-moving <code>robot-verified</code> tags.</p>
+<p><code>runtime push</code> promotes the verified local image to immutable
+<code>robot-verified-g&lt;full-commit-sha&gt;</code> and moving <code>robot-verified</code> tags. Pass
+<code>--release-tag &lt;tag&gt;</code> to publish one additional release label for the same verified
+image. Candidate build tags remain local unless you explicitly use one as the source
+tag for this promotion flow. The push records release metadata under
+<code>.omniseer/runtime/</code>, including the commit SHA, local image ID, registry digest,
+pushed tags, and full-verification metadata path.</p>
 <p>Pull the latest verified image on the robot with:</p>
 <div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>pull
 </code></pre></div>
 <p>Use an immutable tag for rollback or pinning:</p>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>pull<span class="w"> </span>--tag<span class="w"> </span>robot-verified-20260723T052827Z-g437c10907531
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>pull<span class="w"> </span>--tag<span class="w"> </span>robot-verified-g437c109075310102030405060708090a0b0c0d0e
 </code></pre></div>
+<p>For recorded robot experiments, prefer the registry digest recorded after push. If
+that digest is unavailable, record the full-commit immutable tag. Avoid using only
+the moving <code>robot-verified</code> tag as experiment provenance.</p>
 <h2 id="verification-boundary">Verification Boundary<a class="headerlink" href="#verification-boundary" title="Permanent link">&para;</a></h2>
 <p>Local image builds verify that the ROS install tree is baked into the image and that
 the entrypoint sources <code>/opt/ros/$ROS_DISTRO</code> and <code>/ros_ws/install</code>. Full validation
@@ -1676,7 +1686,7 @@ operator, hardware IO, native vision, gateway, or recording surface.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 31, 2026 23:29:40 UTC">July 31, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 5, 2026 19:33:23 UTC">August 5, 2026</span>
   </span>
 
     

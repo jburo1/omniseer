@@ -1445,18 +1445,17 @@ repository.</p>
 <p>This keeps iteration fast and makes it easier to debug issues close to the
 change.</p>
 <h2 id="shared-validation-flow">Shared Validation Flow<a class="headerlink" href="#shared-validation-flow" title="Permanent link">&para;</a></h2>
-<p>After code is pushed or opened in a pull request, GitHub Actions runs the
-repository's CI workflow in several focused lanes:</p>
+<p>After code is pushed to <code>master</code>, GitHub Actions runs one or more focused
+path-filtered workflows:</p>
 <ul>
-<li><code>lint</code></li>
-<li><code>ros-core</code></li>
-<li><code>bringup-smoke</code></li>
-<li><code>vision-host</code></li>
-<li><code>firmware-build</code></li>
-<li><code>docs-build</code></li>
+<li><code>ci</code> for normal portable software changes</li>
+<li><code>runtime</code> for portable runtime container packaging changes</li>
+<li><code>firmware</code> for firmware and micro-ROS workspace changes</li>
+<li><code>docs</code> for documentation changes and <code>gh-pages</code> publishing</li>
 </ul>
-<p>This keeps the default PR gate broad enough to catch interface drift while
-keeping the slower checks isolated instead of hiding inside one large job.</p>
+<p>This keeps the default branch checks easy to reason about: software changes test
+software, packaging changes test the container, firmware changes test firmware,
+and documentation changes build and publish documentation.</p>
 <p>See <a href="../ci-cd/">CI/CD Overview</a> for:</p>
 <ul>
 <li>workflow triggers</li>
@@ -1470,7 +1469,7 @@ keeping the slower checks isolated instead of hiding inside one large job.</p>
 <li>local build workflows</li>
 <li>CI validation stages</li>
 <li>release packaging</li>
-<li>artifact publishing</li>
+<li>documentation publishing</li>
 <li>hardware-in-the-loop execution</li>
 </ul>
 <p>The detailed operational reference lives in <a href="../ci-cd/">CI/CD Overview</a>. Robot-run
@@ -1495,7 +1494,7 @@ artifacts are produced by the RunBundle workflow rather than by CI.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 30, 2026 20:37:26 UTC">July 30, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 5, 2026 19:33:09 UTC">August 5, 2026</span>
   </span>
 
     
