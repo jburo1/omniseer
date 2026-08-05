@@ -133,6 +133,7 @@ Use the portable image only for launch and entrypoint checks; it defaults to
 The robot-local promotion loop is:
 
 ```bash
+git checkout <passed-master-commit>
 scripts/omni runtime build
 scripts/omni runtime record
 scripts/omni runtime verify
@@ -143,6 +144,7 @@ scripts/omni runtime push
 For a full pre-registry verification pass on the robot:
 
 ```bash
+git checkout <passed-master-commit>
 sudo scripts/omni runtime build
 sudo scripts/omni runtime record
 
@@ -155,9 +157,11 @@ sudo scripts/omni runtime verify --stage full
 sudo scripts/omni runtime push
 ```
 
-Review the generated run report before `runtime push`. The push step is the
-promotion boundary: it publishes the locally verified candidate image and moves
-the verified tags.
+Use the exact `master` commit whose GitHub Actions `ci` run passed. Review the
+generated run report before `runtime push`. The push step is the promotion boundary:
+it refuses to publish unless the git working tree is clean, full verification passed
+for the same local image ID, and the verification metadata commit matches the
+current checkout.
 
 `runtime record` is the manual operator evidence-capture path. It uses the latest
 local runtime build by default, starts `run real --profile operator ... bringup`
@@ -187,10 +191,13 @@ Direct `runtime run` and manual `runtime record` commands allocate a TTY only
 when attached to one by default; override that with
 `OMNISEER_RUNTIME_DOCKER_TTY=always` or `never`.
 
-`runtime push` refuses to publish unless a passed full verification exists for the
-same local image ID. It pushes the candidate tag first, then automatically
-promotes the same image to immutable `robot-verified-<UTC>-g<shortsha>` and
-moving `robot-verified` tags.
+`runtime push` promotes the verified local image to immutable
+`robot-verified-g<full-commit-sha>` and moving `robot-verified` tags. Pass
+`--release-tag <tag>` to publish one additional release label for the same verified
+image. Candidate build tags remain local unless you explicitly use one as the source
+tag for this promotion flow. The push records release metadata under
+`.omniseer/runtime/`, including the commit SHA, local image ID, registry digest,
+pushed tags, and full-verification metadata path.
 
 Pull the latest verified image on the robot with:
 
@@ -201,8 +208,12 @@ scripts/omni runtime pull
 Use an immutable tag for rollback or pinning:
 
 ```bash
-scripts/omni runtime pull --tag robot-verified-20260723T052827Z-g437c10907531
+scripts/omni runtime pull --tag robot-verified-g437c109075310102030405060708090a0b0c0d0e
 ```
+
+For recorded robot experiments, prefer the registry digest recorded after push. If
+that digest is unavailable, record the full-commit immutable tag. Avoid using only
+the moving `robot-verified` tag as experiment provenance.
 
 ## Verification Boundary
 

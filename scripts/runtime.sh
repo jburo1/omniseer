@@ -20,7 +20,7 @@ Usage:
   scripts/omni runtime record [--image <base>] [--tag <tag>] [record args...] [-- launch args...]
   scripts/omni runtime stop --run-id <id> [--time <seconds>]
   scripts/omni runtime verify [--image <base>] [--tag <tag>] [--stage smoke|full]
-  scripts/omni runtime push [--image <base>] [--tag <tag>]
+  scripts/omni runtime push [--image <base>] [--tag <tag>] [--release-tag <tag>]
   scripts/omni runtime pull [--image <base>] [--tag <tag>]
 
 Defaults:
@@ -70,16 +70,8 @@ runtime_image_ref() {
 }
 
 runtime_verified_tag_for() {
-  local tag="$1"
-  if [[ "${tag}" == robot-candidate-* ]]; then
-    printf 'robot-verified-%s\n' "${tag#robot-candidate-}"
-    return
-  fi
-  if [[ "${tag}" == robot-verified-* ]]; then
-    printf '%s\n' "${tag}"
-    return
-  fi
-  printf 'robot-verified-%s\n' "${tag}"
+  local git_sha="$1"
+  printf 'robot-verified-g%s\n' "${git_sha}"
 }
 
 runtime_safe_tag() {
@@ -178,6 +170,35 @@ runtime_image_digest() {
   runtime_image_id "${image_ref}"
 }
 
+runtime_registry_digest() {
+  local image_base="$1"
+  local image_ref="$2"
+  local digest=""
+  if digest="$(docker buildx imagetools inspect --format '{{.Digest}}' "${image_ref}" 2>/dev/null)" \
+    && [[ "${digest}" == sha256:* ]]; then
+    printf '%s@%s\n' "${image_base}" "${digest}"
+    return 0
+  fi
+  runtime_image_digest "${image_ref}"
+}
+
+runtime_require_clean_git_tree() {
+  local repo_root status
+  repo_root="$(omni_repo_root)"
+  status="$(git -C "${repo_root}" status --porcelain 2>/dev/null)" \
+    || omni_die "unable to inspect git working tree before runtime push"
+  [[ -z "${status}" ]] || omni_die "git working tree must be clean before runtime push"
+}
+
+runtime_require_current_git_sha() {
+  local git_sha
+  git_sha="$(git -C "$(omni_repo_root)" rev-parse HEAD 2>/dev/null)" \
+    || omni_die "unable to resolve current git commit before runtime push"
+  [[ -n "${git_sha}" && "${git_sha}" != "unknown" ]] \
+    || omni_die "current git commit is unknown; runtime push requires an exact commit"
+  printf '%s\n' "${git_sha}"
+}
+
 runtime_docker_bind_repo_root() {
   local repo_root source target relative source_path
   repo_root="$(omni_repo_root)"
@@ -193,7 +214,7 @@ runtime_docker_bind_repo_root() {
     if [[ -n "${target}" && -n "${source}" && "${repo_root}" == "${target}"* && "${source}" == *"["*"]" ]]; then
       source_path="${source#*[}"
       source_path="${source_path%]}"
-      relative="${repo_root#${target}}"
+      relative="${repo_root#"${target}"}"
       relative="${relative#/}"
       if [[ -n "${relative}" ]]; then
         printf '%s/%s\n' "${source_path}" "${relative}"
@@ -542,7 +563,8 @@ runtime_write_verify_metadata() {
   local stage="$4"
   local run_id="$5"
   local status="$6"
-  local image_id timestamp verify_file
+  local git_sha image_id timestamp verify_file
+  git_sha="$(runtime_git_sha)"
   image_id="$(runtime_image_id "${image_ref}")"
   timestamp="$(runtime_timestamp)"
   verify_file="$(runtime_metadata_file "verify-${stage}" "${tag}")"
@@ -552,12 +574,41 @@ runtime_write_verify_metadata() {
     "TAG=${tag}" \
     "IMAGE_REF=${image_ref}" \
     "IMAGE_ID=${image_id}" \
+    "GIT_SHA=${git_sha}" \
     "STAGE=${stage}" \
     "STATUS=${status}" \
     "RUN_ID=${run_id}" \
     "RUN_DIR=$(omni_repo_root)/runs/${run_id}" \
     "VERIFIED_AT=${timestamp}"
   omni_info "Verify metadata: ${verify_file}"
+}
+
+runtime_write_release_metadata() {
+  local source_tag="$1"
+  local image_base="$2"
+  local image_ref="$3"
+  local image_id="$4"
+  local git_sha="$5"
+  local registry_digest="$6"
+  local verify_file="$7"
+  shift 7
+  local release_file timestamp pushed_tags
+  timestamp="$(runtime_timestamp)"
+  pushed_tags="$(runtime_shell_join "$@")"
+  release_file="$(runtime_metadata_file release "${source_tag}")"
+  runtime_write_env_file \
+    "${release_file}" \
+    "IMAGE_BASE=${image_base}" \
+    "SOURCE_TAG=${source_tag}" \
+    "SOURCE_IMAGE_REF=${image_ref}" \
+    "IMAGE_ID=${image_id}" \
+    "GIT_SHA=${git_sha}" \
+    "REGISTRY_DIGEST=${registry_digest}" \
+    "PUSHED_TAGS=${pushed_tags}" \
+    "VERIFY_FILE=${verify_file}" \
+    "VERIFY_STAGE=full" \
+    "PUSHED_AT=${timestamp}"
+  omni_info "Release metadata: ${release_file}"
 }
 
 runtime_verify() {
@@ -601,10 +652,28 @@ runtime_verify() {
 }
 
 runtime_push() {
-  local image_base tag image_ref verify_file current_image_id verified_image_id immutable_verified_ref moving_verified_ref
-  local immutable_verified_tag
+  local image_base tag image_ref verify_file current_image_id verified_image_id verified_git_sha current_git_sha
+  local immutable_verified_ref moving_verified_ref registry_digest release_metadata_tag
+  local immutable_verified_tag release_tag="" release_ref=""
+  local pushed_tags=()
   runtime_parse_image_tag_args image_base tag "$@"
-  [[ ${#runtime_remaining_args[@]} -eq 0 ]] || omni_die "unknown runtime push argument: ${runtime_remaining_args[0]}"
+  local remaining=("${runtime_remaining_args[@]}")
+  runtime_remaining_args=()
+  while [[ ${#remaining[@]} -gt 0 ]]; do
+    case "${remaining[0]}" in
+      --release-tag)
+        [[ ${#remaining[@]} -ge 2 ]] || omni_die "--release-tag requires a value"
+        release_tag="${remaining[1]}"
+        remaining=("${remaining[@]:2}")
+        ;;
+      *)
+        omni_die "unknown runtime push argument: ${remaining[0]}"
+        ;;
+    esac
+  done
+
+  runtime_require_clean_git_tree
+  current_git_sha="$(runtime_require_current_git_sha)"
   tag="$(runtime_resolve_existing_tag "${tag}")"
   image_ref="$(runtime_image_ref "${image_base}" "${tag}")"
   verify_file="$(runtime_metadata_file verify-full "${tag}")"
@@ -616,17 +685,42 @@ runtime_push() {
   verified_image_id="${IMAGE_ID:-}"
   [[ -n "${verified_image_id}" && "${current_image_id}" == "${verified_image_id}" ]] \
     || omni_die "local image ID for ${image_ref} does not match verified image ID"
+  verified_git_sha="${GIT_SHA:-}"
+  [[ -n "${verified_git_sha}" && "${verified_git_sha}" == "${current_git_sha}" ]] \
+    || omni_die "verification commit does not match current git commit"
 
-  docker push "${image_ref}"
-  immutable_verified_tag="$(runtime_verified_tag_for "${tag}")"
+  immutable_verified_tag="$(runtime_verified_tag_for "${current_git_sha}")"
   immutable_verified_ref="$(runtime_image_ref "${image_base}" "${immutable_verified_tag}")"
   moving_verified_ref="$(runtime_image_ref "${image_base}" "${verified_tag}")"
   docker tag "${image_ref}" "${immutable_verified_ref}"
   docker push "${immutable_verified_ref}"
+  pushed_tags+=("${immutable_verified_tag}")
+  if [[ -n "${release_tag}" ]]; then
+    release_ref="$(runtime_image_ref "${image_base}" "${release_tag}")"
+    docker tag "${image_ref}" "${release_ref}"
+    docker push "${release_ref}"
+    pushed_tags+=("${release_tag}")
+  fi
   docker tag "${image_ref}" "${moving_verified_ref}"
   docker push "${moving_verified_ref}"
-  omni_info "Pushed ${image_ref}"
+  pushed_tags+=("${verified_tag}")
+
+  registry_digest="$(runtime_registry_digest "${image_base}" "${immutable_verified_ref}")"
+  release_metadata_tag="${immutable_verified_tag}"
+  runtime_write_release_metadata \
+    "${release_metadata_tag}" \
+    "${image_base}" \
+    "${image_ref}" \
+    "${current_image_id}" \
+    "${current_git_sha}" \
+    "${registry_digest}" \
+    "${verify_file}" \
+    "${pushed_tags[@]}"
+
   omni_info "Promoted immutable verified image ${immutable_verified_ref}"
+  if [[ -n "${release_ref}" ]]; then
+    omni_info "Promoted release image ${release_ref}"
+  fi
   omni_info "Promoted moving verified image ${moving_verified_ref}"
 }
 

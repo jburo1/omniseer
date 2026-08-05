@@ -3,6 +3,7 @@ import subprocess
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+FAKE_GIT_SHA = "437c109075310102030405060708090a0b0c0d0e"
 
 
 def _write_fake_docker(path: Path) -> None:
@@ -14,13 +15,49 @@ def _write_fake_docker(path: Path) -> None:
                 'printf "docker" >>"${DOCKER_LOG}"',
                 'for arg in "$@"; do printf " %q" "${arg}" >>"${DOCKER_LOG}"; done',
                 'printf "\\n" >>"${DOCKER_LOG}"',
+                'if [[ "${1:-}" == "buildx" && "${2:-}" == "imagetools" && "${3:-}" == "inspect" ]]; then',
+                '  printf "sha256:registry_digest\\n"',
+                "  exit 0",
+                "fi",
                 'if [[ "${1:-}" == "image" && "${2:-}" == "inspect" ]]; then',
                 '  if [[ "$*" == *RepoDigests* ]]; then',
                 '    printf "%s@sha256:repo_digest\\n" "${@: -1}"',
                 "  else",
-                '    printf "sha256:local_image_id\\n"',
+                '    printf "%s\\n" "${OMNISEER_FAKE_DOCKER_IMAGE_ID:-sha256:local_image_id}"',
                 "  fi",
                 "fi",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    path.chmod(0o755)
+
+
+def _write_fake_git(path: Path) -> None:
+    path.write_text(
+        "\n".join(
+            [
+                "#!/usr/bin/env bash",
+                "set -euo pipefail",
+                'while [[ "${1:-}" == "-C" ]]; do',
+                "  shift 2",
+                "done",
+                'case "${1:-} ${2:-} ${3:-}" in',
+                '  "rev-parse HEAD ")',
+                '    printf "%s\\n" "${OMNISEER_FAKE_GIT_SHA}"',
+                "    ;;",
+                '  "rev-parse --short=12 HEAD")',
+                '    printf "%.12s\\n" "${OMNISEER_FAKE_GIT_SHA}"',
+                "    ;;",
+                '  "status --porcelain ")',
+                '    printf "%s" "${OMNISEER_FAKE_GIT_STATUS:-}"',
+                "    ;;",
+                "  *)",
+                '    printf "unexpected fake git invocation: %q" "$@" >&2',
+                "    exit 2",
+                "    ;;",
+                "esac",
             ]
         )
         + "\n",
@@ -51,6 +88,8 @@ def _write_fake_findmnt(path: Path, *, target: str, source: str) -> None:
 def _runtime_env(tmp_path: Path) -> dict[str, str]:
     docker = tmp_path / "docker"
     _write_fake_docker(docker)
+    git = tmp_path / "git"
+    _write_fake_git(git)
     rknn_include = tmp_path / "rknn_api.h"
     rknn_lib = tmp_path / "librknnrt.so"
     rknn_include.write_text("// fake RKNN header\n", encoding="utf-8")
@@ -59,6 +98,7 @@ def _runtime_env(tmp_path: Path) -> dict[str, str]:
     env = os.environ.copy()
     env["PATH"] = f"{tmp_path}:{env['PATH']}"
     env["DOCKER_LOG"] = str(tmp_path / "docker.log")
+    env["OMNISEER_FAKE_GIT_SHA"] = FAKE_GIT_SHA
     env["OMNISEER_RUNTIME_METADATA_DIR"] = str(tmp_path / "metadata")
     env["OMNISEER_RKNN_INCLUDE"] = str(rknn_include)
     env["OMNISEER_RKNN_LIB"] = str(rknn_lib)
@@ -69,6 +109,34 @@ def _runtime_env(tmp_path: Path) -> dict[str, str]:
 
 def _docker_log(env: dict[str, str]) -> str:
     return Path(env["DOCKER_LOG"]).read_text(encoding="utf-8")
+
+
+def _write_full_verify_metadata(
+    env: dict[str, str],
+    *,
+    tag: str = "runtime-test",
+    image_id: str = "sha256:local_image_id",
+    git_sha: str = FAKE_GIT_SHA,
+) -> Path:
+    metadata_dir = Path(env["OMNISEER_RUNTIME_METADATA_DIR"])
+    metadata_dir.mkdir(parents=True)
+    verify_file = metadata_dir / f"verify-full-{tag}.env"
+    verify_file.write_text(
+        "\n".join(
+            [
+                "IMAGE_BASE=ghcr.io/jburo1/omniseer-robot-runtime",
+                f"TAG={tag}",
+                f"IMAGE_REF=ghcr.io/jburo1/omniseer-robot-runtime:{tag}",
+                f"IMAGE_ID={image_id}",
+                f"GIT_SHA={git_sha}",
+                "STAGE=full",
+                "STATUS=passed",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return verify_file
 
 
 def test_robot_runtime_packages_vision_testdata_at_configured_path() -> None:
@@ -389,6 +457,8 @@ def test_runtime_verify_full_records_run_with_provenance(tmp_path: Path) -> None
     assert "--record-experiment-config runtime-container-full" in log
     assert "--record-experiment-parameter stage=full" in log
     assert (Path(env["OMNISEER_RUNTIME_METADATA_DIR"]) / "verify-full-runtime-test.env").is_file()
+    metadata = (Path(env["OMNISEER_RUNTIME_METADATA_DIR"]) / "verify-full-runtime-test.env").read_text(encoding="utf-8")
+    assert f"GIT_SHA={FAKE_GIT_SHA}" in metadata
 
 
 def test_runtime_push_requires_full_verification_metadata(tmp_path: Path) -> None:
@@ -409,22 +479,7 @@ def test_runtime_push_requires_full_verification_metadata(tmp_path: Path) -> Non
 
 def test_runtime_push_promotes_verified_image(tmp_path: Path) -> None:
     env = _runtime_env(tmp_path)
-    metadata_dir = Path(env["OMNISEER_RUNTIME_METADATA_DIR"])
-    metadata_dir.mkdir(parents=True)
-    (metadata_dir / "verify-full-runtime-test.env").write_text(
-        "\n".join(
-            [
-                "IMAGE_BASE=ghcr.io/jburo1/omniseer-robot-runtime",
-                "TAG=runtime-test",
-                "IMAGE_REF=ghcr.io/jburo1/omniseer-robot-runtime:runtime-test",
-                "IMAGE_ID=sha256:local_image_id",
-                "STAGE=full",
-                "STATUS=passed",
-            ]
-        )
-        + "\n",
-        encoding="utf-8",
-    )
+    _write_full_verify_metadata(env)
 
     result = subprocess.run(
         ["scripts/omni", "runtime", "push", "--tag", "runtime-test"],
@@ -437,38 +492,30 @@ def test_runtime_push_promotes_verified_image(tmp_path: Path) -> None:
 
     assert result.returncode == 0, result.stderr
     log = _docker_log(env)
-    assert "docker push ghcr.io/jburo1/omniseer-robot-runtime:runtime-test" in log
     assert (
         "docker tag ghcr.io/jburo1/omniseer-robot-runtime:runtime-test "
-        "ghcr.io/jburo1/omniseer-robot-runtime:robot-verified-runtime-test"
+        f"ghcr.io/jburo1/omniseer-robot-runtime:robot-verified-g{FAKE_GIT_SHA}"
     ) in log
-    assert "docker push ghcr.io/jburo1/omniseer-robot-runtime:robot-verified-runtime-test" in log
+    assert f"docker push ghcr.io/jburo1/omniseer-robot-runtime:robot-verified-g{FAKE_GIT_SHA}" in log
     assert (
         "docker tag ghcr.io/jburo1/omniseer-robot-runtime:runtime-test "
         "ghcr.io/jburo1/omniseer-robot-runtime:robot-verified"
     ) in log
     assert "docker push ghcr.io/jburo1/omniseer-robot-runtime:robot-verified" in log
+    assert "docker push ghcr.io/jburo1/omniseer-robot-runtime:runtime-test" not in log
+    release_metadata = (
+        Path(env["OMNISEER_RUNTIME_METADATA_DIR"]) / f"release-robot-verified-g{FAKE_GIT_SHA}.env"
+    ).read_text(encoding="utf-8")
+    assert f"GIT_SHA={FAKE_GIT_SHA}" in release_metadata
+    assert "IMAGE_ID=sha256:local_image_id" in release_metadata
+    assert "REGISTRY_DIGEST=ghcr.io/jburo1/omniseer-robot-runtime@sha256:registry_digest" in release_metadata
+    assert f"PUSHED_TAGS=robot-verified-g{FAKE_GIT_SHA}\\ robot-verified" in release_metadata
 
 
-def test_runtime_push_promotes_candidate_to_matching_verified_tag(tmp_path: Path) -> None:
+def test_runtime_push_promotes_candidate_to_full_commit_verified_tag(tmp_path: Path) -> None:
     env = _runtime_env(tmp_path)
-    metadata_dir = Path(env["OMNISEER_RUNTIME_METADATA_DIR"])
-    metadata_dir.mkdir(parents=True)
     tag = "robot-candidate-20260723T052827Z-g437c10907531"
-    (metadata_dir / f"verify-full-{tag}.env").write_text(
-        "\n".join(
-            [
-                "IMAGE_BASE=ghcr.io/jburo1/omniseer-robot-runtime",
-                f"TAG={tag}",
-                f"IMAGE_REF=ghcr.io/jburo1/omniseer-robot-runtime:{tag}",
-                "IMAGE_ID=sha256:local_image_id",
-                "STAGE=full",
-                "STATUS=passed",
-            ]
-        )
-        + "\n",
-        encoding="utf-8",
-    )
+    _write_full_verify_metadata(env, tag=tag)
 
     result = subprocess.run(
         ["scripts/omni", "runtime", "push", "--tag", tag],
@@ -483,9 +530,87 @@ def test_runtime_push_promotes_candidate_to_matching_verified_tag(tmp_path: Path
     log = _docker_log(env)
     assert (
         "docker tag ghcr.io/jburo1/omniseer-robot-runtime:robot-candidate-20260723T052827Z-g437c10907531 "
-        "ghcr.io/jburo1/omniseer-robot-runtime:robot-verified-20260723T052827Z-g437c10907531"
+        f"ghcr.io/jburo1/omniseer-robot-runtime:robot-verified-g{FAKE_GIT_SHA}"
     ) in log
-    assert ("docker push ghcr.io/jburo1/omniseer-robot-runtime:robot-verified-20260723T052827Z-g437c10907531") in log
+    assert f"docker push ghcr.io/jburo1/omniseer-robot-runtime:robot-verified-g{FAKE_GIT_SHA}" in log
+
+
+def test_runtime_push_accepts_optional_release_tag(tmp_path: Path) -> None:
+    env = _runtime_env(tmp_path)
+    _write_full_verify_metadata(env)
+
+    result = subprocess.run(
+        ["scripts/omni", "runtime", "push", "--tag", "runtime-test", "--release-tag", "bench-release"],
+        cwd=REPO_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    log = _docker_log(env)
+    assert (
+        "docker tag ghcr.io/jburo1/omniseer-robot-runtime:runtime-test "
+        "ghcr.io/jburo1/omniseer-robot-runtime:bench-release"
+    ) in log
+    assert "docker push ghcr.io/jburo1/omniseer-robot-runtime:bench-release" in log
+    release_metadata = (
+        Path(env["OMNISEER_RUNTIME_METADATA_DIR"]) / f"release-robot-verified-g{FAKE_GIT_SHA}.env"
+    ).read_text(encoding="utf-8")
+    assert f"PUSHED_TAGS=robot-verified-g{FAKE_GIT_SHA}\\ bench-release\\ robot-verified" in release_metadata
+
+
+def test_runtime_push_requires_clean_git_tree(tmp_path: Path) -> None:
+    env = _runtime_env(tmp_path)
+    env["OMNISEER_FAKE_GIT_STATUS"] = " M scripts/runtime.sh\n"
+    _write_full_verify_metadata(env)
+
+    result = subprocess.run(
+        ["scripts/omni", "runtime", "push", "--tag", "runtime-test"],
+        cwd=REPO_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode != 0
+    assert "git working tree must be clean" in result.stderr
+
+
+def test_runtime_push_rejects_mismatched_verified_image_id(tmp_path: Path) -> None:
+    env = _runtime_env(tmp_path)
+    _write_full_verify_metadata(env, image_id="sha256:different_image_id")
+
+    result = subprocess.run(
+        ["scripts/omni", "runtime", "push", "--tag", "runtime-test"],
+        cwd=REPO_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode != 0
+    assert "does not match verified image ID" in result.stderr
+
+
+def test_runtime_push_rejects_mismatched_verified_commit(tmp_path: Path) -> None:
+    env = _runtime_env(tmp_path)
+    _write_full_verify_metadata(env, git_sha="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+
+    result = subprocess.run(
+        ["scripts/omni", "runtime", "push", "--tag", "runtime-test"],
+        cwd=REPO_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode != 0
+    assert "verification commit does not match current git commit" in result.stderr
 
 
 def test_runtime_pull_defaults_to_robot_verified(tmp_path: Path) -> None:

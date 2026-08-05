@@ -190,10 +190,13 @@ under this checkout's `runs/` directory. Override that detection with
 Use `runtime verify` without `--stage` for a safe container smoke check. Use
 `--stage full` to run the real operator smoke path with run recording and image
 provenance. `runtime push` publishes only after a passed full verification for
-the same local image ID. Default builds are tagged
-`robot-candidate-<UTC>-g<shortsha>`; push automatically promotes the same image
-to immutable `robot-verified-<UTC>-g<shortsha>` and moving `robot-verified`
-tags.
+the same local image ID, a matching verified/current git commit, and a clean
+working tree. Default builds are tagged `robot-candidate-<UTC>-g<shortsha>`;
+push promotes the same image to immutable `robot-verified-g<full-commit-sha>`
+and moving `robot-verified` tags. Pass `--release-tag <tag>` to publish one
+additional release label, and use the recorded registry digest or immutable
+full-commit tag for later RunBundle provenance instead of relying only on
+moving `robot-verified`.
 `runtime verify` runs Docker without an interactive TTY so it works under `sudo`,
 SSH automation, and other non-interactive launch paths. For direct `runtime run`
 and manual `runtime record` commands, Docker TTY allocation defaults to `auto`;
@@ -359,7 +362,11 @@ Containerized runs can provide the same provenance through
 `OMNISEER_CONTAINER_IMAGE_REF`, `OMNISEER_CONTAINER_IMAGE_DIGEST`,
 `OMNISEER_GIT_SHA`, `OMNISEER_EXPERIMENT_CONFIG`, and
 `OMNISEER_EXPERIMENT_PARAMETERS`. Experiment parameters may be a JSON object or
-comma/space-separated `key=value` pairs.
+comma/space-separated `key=value` pairs. For promoted robot-runtime experiments,
+prefer the registry digest recorded by `scripts/omni runtime push`; otherwise use
+the immutable `robot-verified-g<full-commit-sha>` tag. Avoid recording only the
+moving `robot-verified` tag when a run is intended to be reviewable release
+evidence.
 
 #### Real run modes
 
