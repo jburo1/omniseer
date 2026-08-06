@@ -76,12 +76,18 @@ namespace omniseer_autonomy
       output.events.push_back(make_event(now_sec, "target_lost"));
     }
 
+    if (!target.has_value())
+    {
+      _stable_frames = 0;
+    }
+
     if (_state == CenteringState::Scan)
     {
       if (target.has_value() && target_consistent())
       {
         transition(CenteringState::Lock, now_sec, output, "target_locked", "", target);
         transition(CenteringState::Center, now_sec, output, "centering_started", "", target);
+        update_visual_state(*target, now_sec, output);
         return append_output(output, command_for_target(*target, now_sec));
       }
       if (scan_complete())
@@ -96,6 +102,7 @@ namespace omniseer_autonomy
     {
       if (target.has_value())
       {
+        update_visual_state(*target, now_sec, output);
         return append_output(output, command_for_target(*target, now_sec));
       }
       return append_output(output, command_zero(now_sec));
@@ -377,16 +384,7 @@ namespace omniseer_autonomy
         area_ratio >= _config.bbox_area_min_ratio && area_ratio <= _config.bbox_area_max_ratio;
 
     double yaw = 0.0;
-    if (centered)
-    {
-      if (!_centered_at_sec.has_value())
-      {
-        _centered_at_sec = now_sec;
-        output.events.push_back(
-            make_event(now_sec, "centered_first_frame", "", target, error, area_ratio));
-      }
-    }
-    else
+    if (!centered)
     {
       yaw = clamp_yaw(-_config.kp * error);
     }
@@ -405,32 +403,8 @@ namespace omniseer_autonomy
       linear_x = -_config.reverse_speed_m_s;
     }
 
-    if (_state == CenteringState::Center && centered)
+    if (_state == CenteringState::Success)
     {
-      transition(CenteringState::Frame, now_sec, output, "framing_started", "", target);
-    }
-    else if (_state == CenteringState::Frame && !centered)
-    {
-      transition(CenteringState::Center, now_sec, output, "centering_resumed", "", target);
-    }
-
-    if (centered && framed)
-    {
-      ++_stable_frames;
-    }
-    else
-    {
-      _stable_frames = 0;
-    }
-
-    _last_target      = target;
-    _final_error      = error;
-    _final_confidence = target.confidence;
-
-    if (_stable_frames >= _config.stable_framed_frames)
-    {
-      _terminal_reason = "framed";
-      transition(CenteringState::Success, now_sec, output, "succeeded", _terminal_reason);
       linear_x = 0.0;
       yaw      = 0.0;
     }
@@ -441,6 +415,42 @@ namespace omniseer_autonomy
     output.events.push_back(
         make_event(now_sec, "command", "", target, error, area_ratio, linear_x, yaw));
     return output;
+  }
+
+  void TargetCenteringController::update_visual_state(const TargetDetection& target, double now_sec,
+                                                      TargetCenteringOutput& output)
+  {
+    const auto error      = normalized_error(target.center_x_px);
+    const auto area_ratio = bbox_area_ratio(target);
+    const auto centered   = std::abs(error) <= _config.center_deadband;
+    const auto framed =
+        area_ratio >= _config.bbox_area_min_ratio && area_ratio <= _config.bbox_area_max_ratio;
+
+    if (centered && !_centered_at_sec.has_value())
+    {
+      _centered_at_sec = now_sec;
+      output.events.push_back(
+          make_event(now_sec, "centered_first_frame", "", target, error, area_ratio));
+    }
+
+    if (_state == CenteringState::Center && centered)
+    {
+      transition(CenteringState::Frame, now_sec, output, "framing_started", "", target);
+    }
+    else if (_state == CenteringState::Frame && !centered)
+    {
+      transition(CenteringState::Center, now_sec, output, "centering_resumed", "", target);
+    }
+
+    _stable_frames    = centered && framed ? _stable_frames + 1 : 0;
+    _final_error      = error;
+    _final_confidence = target.confidence;
+
+    if (_stable_frames >= _config.stable_framed_frames)
+    {
+      _terminal_reason = "framed";
+      transition(CenteringState::Success, now_sec, output, "succeeded", _terminal_reason);
+    }
   }
 
   std::optional<TargetDetection> TargetCenteringController::select_target(

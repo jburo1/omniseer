@@ -129,6 +129,72 @@ namespace omniseer_autonomy
     EXPECT_DOUBLE_EQ(*controller.final_confidence(), 0.8);
   }
 
+  TEST(TargetCenteringController, TicksDoNotAdvanceStableFramedDetections)
+  {
+    TargetCenteringController controller(config());
+    controller.update_detections({detection(50.0)}, 0.1);
+    controller.update_detections({detection(50.0)}, 0.2);
+    controller.update_detections({detection(50.0)}, 0.3);
+
+    for (double time = 0.31; time < 0.50; time += 0.01)
+    {
+      const auto output = controller.tick(time);
+      EXPECT_TRUE(output.publish_command);
+      EXPECT_DOUBLE_EQ(output.linear_x_m_s, 0.0);
+      EXPECT_DOUBLE_EQ(output.angular_z_rad_s, 0.0);
+      EXPECT_EQ(controller.state(), CenteringState::Frame);
+    }
+
+    controller.update_detections({detection(50.0)}, 0.50);
+    EXPECT_EQ(controller.state(), CenteringState::Frame);
+    controller.update_detections({detection(50.0)}, 0.60);
+    EXPECT_EQ(controller.state(), CenteringState::Success);
+  }
+
+  TEST(TargetCenteringController, RequiresConfiguredFreshFramedDetectionsForSuccess)
+  {
+    TargetCenteringController controller(config());
+    controller.update_detections({detection(50.0)}, 0.1);
+    controller.update_detections({detection(50.0)}, 0.2);
+    controller.update_detections({detection(50.0)}, 0.3);
+    EXPECT_EQ(controller.state(), CenteringState::Frame);
+    controller.update_detections({detection(50.0)}, 0.4);
+    EXPECT_EQ(controller.state(), CenteringState::Frame);
+    controller.update_detections({detection(50.0)}, 0.5);
+    EXPECT_EQ(controller.state(), CenteringState::Success);
+  }
+
+  TEST(TargetCenteringController, FreshMissingOrInvalidTargetResetsFramedStability)
+  {
+    TargetCenteringController controller(config());
+    controller.update_detections({detection(50.0)}, 0.1);
+    controller.update_detections({detection(50.0)}, 0.2);
+    controller.update_detections({detection(50.0)}, 0.3);
+    controller.update_detections({}, 0.4);
+    controller.update_detections({detection(80.0)}, 0.5);
+    controller.update_detections({detection(50.0, 0.8, "backpack", 10.0, 10.0)}, 0.6);
+
+    controller.update_detections({detection(50.0)}, 0.7);
+    controller.update_detections({detection(50.0)}, 0.8);
+    EXPECT_EQ(controller.state(), CenteringState::Frame);
+    controller.update_detections({detection(50.0)}, 0.9);
+    EXPECT_EQ(controller.state(), CenteringState::Success);
+  }
+
+  TEST(TargetCenteringController, TickPublishesCachedTargetCommandWithoutVisualTransition)
+  {
+    TargetCenteringController controller(config());
+    controller.update_detections({detection(80.0)}, 0.1);
+    controller.update_detections({detection(80.0)}, 0.2);
+    controller.update_detections({detection(80.0)}, 0.3);
+
+    const auto output = controller.tick(0.35);
+
+    EXPECT_TRUE(output.publish_command);
+    EXPECT_LT(output.angular_z_rad_s, 0.0);
+    EXPECT_EQ(controller.state(), CenteringState::Center);
+  }
+
   TEST(TargetCenteringController, TooSmallTargetCommandsForward)
   {
     TargetCenteringController controller(config());

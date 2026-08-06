@@ -102,6 +102,8 @@ namespace omniseer_autonomy
     TargetCenteringOutput command_scan(double now_sec);
     TargetCenteringOutput command_zero(double now_sec);
     TargetCenteringOutput command_for_target(const TargetDetection& target, double now_sec);
+    void                  update_visual_state(const TargetDetection& target, double now_sec,
+                                              TargetCenteringOutput& output);
     std::optional<TargetDetection> select_target(
         const std::vector<TargetDetection>& detections) const;
     void                 push_target_seen(bool seen);
