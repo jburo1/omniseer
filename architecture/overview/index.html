@@ -1341,13 +1341,13 @@ validation responsibility.</p>
 <tbody>
 <tr>
 <td>Native producer and consumer vision pipeline</td>
-<td><strong>Implemented; documented local target-hardware run evidence</strong></td>
-<td>V4L2, RGA, RKNN target tests and local <code>runs/pipeline_001</code> measurements; raw bundle not included in the public repository</td>
+<td><strong>Implemented</strong></td>
+<td>V4L2, RGA, RKNN source paths, target-oriented launch/config support, and portable tests for hardware-independent pieces; target-hardware execution claims require a named public artifact</td>
 </tr>
 <tr>
 <td>YOLO-World post-processing and text embeddings</td>
-<td><strong>Implemented; documented local target-hardware run evidence</strong></td>
-<td>RKNN tests, native runtime, and local <code>runs/pipeline_001</code> measurements; raw bundle not included in the public repository</td>
+<td><strong>Implemented</strong></td>
+<td>Native runtime, RKNN/text-embedding source paths, and portable post-processing tests where available; target-hardware timing and accuracy claims require a named public artifact</td>
 </tr>
 <tr>
 <td>ROS detection and performance publication</td>
@@ -1357,7 +1357,7 @@ validation responsibility.</p>
 <tr>
 <td>Bounded visual target acquisition and framing</td>
 <td><strong>Implemented</strong></td>
-<td><code>omniseer_autonomy</code>, <code>scripts/omni run autonomy</code>, controller tests, and RunBundle <code>autonomy.jsonl</code> support</td>
+<td><code>omniseer_autonomy</code>, <code>scripts/omni run autonomy</code>, controller tests, and RunBundle <code>autonomy.jsonl</code> support; no public autonomy execution artifact is linked from the current evidence catalog</td>
 </tr>
 <tr>
 <td>Portable ROS, vision, firmware, simulation, docs, and portable runtime checks</td>
@@ -1371,13 +1371,13 @@ validation responsibility.</p>
 </tr>
 <tr>
 <td>Structured experiment recorder and run bundle</td>
-<td><strong>Implemented; documented local target-hardware run evidence</strong></td>
-<td>local <code>runs/pipeline_001</code> measurements include detections, perf, system telemetry, and native pipeline telemetry; raw bundle not included in the public repository</td>
+<td><strong>Implemented; portable-test covered</strong></td>
+<td><code>omniseer_experiments</code> tests cover manifest, summary, recording helpers, inspection, retrieval, evidence annotation, and static report generation</td>
 </tr>
 <tr>
 <td>Recorded resource telemetry in experiment bundles</td>
-<td><strong>Implemented; documented local target-hardware run evidence</strong></td>
-<td>local <code>runs/pipeline_001</code> measurements include <code>system.jsonl</code>; gateway live status remains separate</td>
+<td><strong>Implemented; portable-test covered</strong></td>
+<td><code>system.jsonl</code> support records low-rate CPU, memory, thermal, network, onboard battery, and <code>/battery</code> LiPo snapshots when sources are available; gateway live status remains separate</td>
 </tr>
 </tbody>
 </table>
@@ -1422,7 +1422,7 @@ validation responsibility.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 5, 2026 21:49:56 UTC">August 5, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 6, 2026 04:01:06 UTC">August 6, 2026</span>
   </span>
 
     

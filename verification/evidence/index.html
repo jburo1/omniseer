@@ -440,10 +440,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#ci-verified" class="md-nav__link">
+  <a href="#evidence-model" class="md-nav__link">
     <span class="md-ellipsis">
       
-        CI Verified
+        Evidence Model
       
     </span>
   </a>
@@ -451,10 +451,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#locally-verified" class="md-nav__link">
+  <a href="#evidence-inventory" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Locally Verified
+        Evidence Inventory
       
     </span>
   </a>
@@ -462,10 +462,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#hardware-verified" class="md-nav__link">
+  <a href="#public-ci-evidence" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Hardware Verified
+        Public CI Evidence
       
     </span>
   </a>
@@ -473,10 +473,43 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#run-evidence-records" class="md-nav__link">
+  <a href="#local-portable-verification" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Run Evidence Records
+        Local Portable Verification
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#target-hardware-evidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Target-Hardware Evidence
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#runbundle-evidence-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RunBundle Evidence Format
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#evidence-boundaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evidence Boundaries
       
     </span>
   </a>
@@ -968,10 +1001,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#ci-verified" class="md-nav__link">
+  <a href="#evidence-model" class="md-nav__link">
     <span class="md-ellipsis">
       
-        CI Verified
+        Evidence Model
       
     </span>
   </a>
@@ -979,10 +1012,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#locally-verified" class="md-nav__link">
+  <a href="#evidence-inventory" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Locally Verified
+        Evidence Inventory
       
     </span>
   </a>
@@ -990,10 +1023,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#hardware-verified" class="md-nav__link">
+  <a href="#public-ci-evidence" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Hardware Verified
+        Public CI Evidence
       
     </span>
   </a>
@@ -1001,10 +1034,43 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#run-evidence-records" class="md-nav__link">
+  <a href="#local-portable-verification" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Run Evidence Records
+        Local Portable Verification
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#target-hardware-evidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Target-Hardware Evidence
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#runbundle-evidence-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RunBundle Evidence Format
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#evidence-boundaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evidence Boundaries
       
     </span>
   </a>
@@ -1032,85 +1098,322 @@
 
 
 <h1 id="verification-evidence">Verification Evidence<a class="headerlink" href="#verification-evidence" title="Permanent link">&para;</a></h1>
-<p>This page ties Omniseer implementation claims to the checks and run records that
-support them.</p>
-<h2 id="ci-verified">CI Verified<a class="headerlink" href="#ci-verified" title="Permanent link">&para;</a></h2>
-<p>GitHub Actions is the public portable verification gate for the default branch.
-Path-filtered workflows cover the relevant changed area:</p>
+<p>This page ties Omniseer claims to inspectable checks, local verification commands,
+and implemented evidence formats. It is an evidence catalog: each record states
+what it supports, where it runs, whether it is public, and what it does not prove.</p>
+<h2 id="evidence-model">Evidence Model<a class="headerlink" href="#evidence-model" title="Permanent link">&para;</a></h2>
+<p>Omniseer uses five evidence categories with different strengths:</p>
 <ul>
-<li>Ruff lint for the Python ROS/operator packages.</li>
-<li>ROS Kilted package dependency install, build, and tests for the portable core
-  package set.</li>
-<li>Headless Gazebo smoke launch with CI-safe geometry and four asserted boundary
-  topics: <code>/clock</code>, <code>/imu</code>, <code>/scan</code>, and
-  <code>/mecanum_drive_controller/odometry</code>.</li>
-<li>Portable host vision tests for buffer pooling, JSONL telemetry, and rolling
-  telemetry.</li>
-<li>Portable run-bundle tests for manifest/summary handling, recording helpers,
-  inspection, retrieval edge cases, system telemetry parsing, evidence annotation,
-  and static report generation.</li>
-<li>Compile-only Teensy 4.1 firmware build through <code>scripts/omni build firmware</code>
-  when firmware paths change.</li>
-<li>Strict MkDocs documentation build when docs paths change.</li>
-<li>Hardware-independent portable runtime image build and smoke check when runtime
-  packaging or dependency paths change, without camera, RKNN/RGA, LiDAR, or
-  Teensy requirements.</li>
+<li>Public CI evidence: GitHub Actions workflow results that anyone can inspect for
+  the pushed commit.</li>
+<li>Local portable verification: repository commands that reproduce CI-equivalent or
+  hardware-independent checks in a developer environment.</li>
+<li>Public target-hardware evidence: named RunBundles, reports, images, videos, or
+  measurements from the ROCK 5B+ robot that are linked from this page.</li>
+<li>Non-public local evidence: local run artifacts or measurements that are useful
+  to an operator but are not public review evidence.</li>
+<li>Implementation-backed capability: source, tests, and launch/configuration support
+  for a capability without a linked execution artifact.</li>
 </ul>
-<p>CI is intentionally portable. Target-hardware evidence covers camera capture,
-RGA/RKNN execution, NPU latency, robot IO, firmware flashing, micro-ROS transport,
-operator behavior, and verified robot-runtime image publishing.</p>
-<h2 id="locally-verified">Locally Verified<a class="headerlink" href="#locally-verified" title="Permanent link">&para;</a></h2>
-<p>Recent Radxa dev-container cleanup checks used the repository front door and
-focused CI-equivalent commands:</p>
+<p>Implementation-backed capability is weaker than execution evidence. A source-level
+claim says the capability is implemented; a target-hardware execution claim needs a
+named run, report, video, annotated frame, or measurement.</p>
+<h2 id="evidence-inventory">Evidence Inventory<a class="headerlink" href="#evidence-inventory" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Evidence record</th>
+<th>System claim</th>
+<th>Supporting artifact or check</th>
+<th>Environment</th>
+<th>Publicly inspectable</th>
+<th>Limits</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/jburo1/omniseer/actions/workflows/ci.yml"><code>ci</code> workflow</a></td>
+<td>Portable software builds and tests pass for the covered paths</td>
+<td>Ruff/pre-commit, Shellcheck, root pytest, portable ROS build/test, Gazebo smoke topics, portable native vision tests</td>
+<td>GitHub Actions Ubuntu 24.04 and ROS Kilted container</td>
+<td>Yes</td>
+<td>Does not compile RKNN/RGA bridge or exercise camera, NPU, LiDAR, Teensy, micro-ROS transport, motor behavior, or target-hardware timing</td>
+</tr>
+<tr>
+<td><a href="https://github.com/jburo1/omniseer/actions/workflows/runtime.yml"><code>runtime</code> workflow</a></td>
+<td>Hardware-independent runtime image packaging can build and expose the portable ROS runtime surface</td>
+<td><code>scripts/omni build runtime-container --target portable-runtime --image omniseer/robot-runtime:portable-ci</code>; container smoke requiring <code>/twist_mux</code> readiness</td>
+<td>GitHub Actions Ubuntu 24.04 Docker runner</td>
+<td>Yes</td>
+<td>Uses disabled camera, RKNN/RGA, LiDAR, Teensy, gateway, boundary-topic waits, and pre-launch cleanup; does not publish a robot runtime image</td>
+</tr>
+<tr>
+<td><a href="https://github.com/jburo1/omniseer/actions/workflows/firmware.yml"><code>firmware</code> workflow</a></td>
+<td>Teensy 4.1 firmware compiles for covered firmware paths</td>
+<td><code>scripts/omni build firmware</code></td>
+<td>GitHub Actions Ubuntu 24.04</td>
+<td>Yes</td>
+<td>Compile-only; does not flash a board or validate motors, sensors, timing, watchdog behavior, or micro-ROS transport</td>
+</tr>
+<tr>
+<td><a href="https://github.com/jburo1/omniseer/actions/workflows/docs.yml"><code>docs</code> workflow</a></td>
+<td>Public documentation builds strictly and deploys to GitHub Pages</td>
+<td><code>mkdocs build --strict</code>; <code>mkdocs gh-deploy --clean --force --verbose</code> after build success</td>
+<td>GitHub Actions Ubuntu 24.04</td>
+<td>Yes</td>
+<td>Documentation evidence only; does not exercise robot runtime behavior</td>
+</tr>
+<tr>
+<td>Local docs build</td>
+<td>Documentation and tracked diagram assets are internally consistent</td>
+<td><code>scripts/omni docs build</code></td>
+<td>Developer checkout</td>
+<td>No</td>
+<td>Local result depends on the developer environment; it is not a public artifact until the docs workflow runs</td>
+</tr>
+<tr>
+<td>Local portable ROS check</td>
+<td>Portable ROS packages, launch structure, and package tests pass locally</td>
+<td><code>scripts/omni test ros</code></td>
+<td>Developer checkout with ROS Kilted dependencies</td>
+<td>No</td>
+<td>Does not prove target-device camera, RKNN/RGA, LiDAR, Teensy, or physical robot behavior</td>
+</tr>
+<tr>
+<td>Local simulation smoke check</td>
+<td>The shared simulation bringup exposes asserted boundary topics</td>
+<td><code>scripts/omni test smoke-sim</code></td>
+<td>Developer checkout with ROS/Gazebo dependencies</td>
+<td>No</td>
+<td>Simulation-only; does not prove real sensor, actuator, or target-hardware timing behavior</td>
+</tr>
+<tr>
+<td>Local portable vision check</td>
+<td>Hardware-independent native vision components preserve their contracts</td>
+<td><code>scripts/omni test vision</code></td>
+<td>Developer checkout with portable native build dependencies</td>
+<td>No</td>
+<td>Does not exercise V4L2 camera capture, RGA preprocessing, RKNN inference, or NPU latency</td>
+</tr>
+<tr>
+<td>Local firmware compile</td>
+<td>Firmware sources compile outside CI</td>
+<td><code>scripts/omni build firmware</code></td>
+<td>Developer checkout with PlatformIO</td>
+<td>No</td>
+<td>Compile-only; no board flash or physical IO validation</td>
+</tr>
+<tr>
+<td>RunBundle tooling</td>
+<td>The implemented recorder, inspection, retrieval, annotation, and report code can create and review structured run evidence</td>
+<td><code>omniseer_experiments</code> tests in <code>scripts/omni test ros</code>; <code>scripts/omni runs inspect</code>, <code>annotate</code>, and <code>report</code></td>
+<td>Source tree and local runs</td>
+<td>Partly: source and tests are public; individual local runs are not public unless linked</td>
+<td>Tool support does not imply that autonomy, perception accuracy, or target hardware has been executed in a public run</td>
+</tr>
+<tr>
+<td>Native target runtime implementation</td>
+<td>The codebase contains the V4L2/RGA/RKNN perception path and ROS bridge integration</td>
+<td><code>vision/</code>, <code>ros_ws/src/omniseer_vision_bridge/</code>, launch/config files, and portable tests for hardware-independent pieces</td>
+<td>Source tree and target runtime code</td>
+<td>Yes for source; no linked execution artifact here</td>
+<td>Implementation-backed capability only unless tied to a target-hardware run or measurement</td>
+</tr>
+<tr>
+<td>Bounded autonomy implementation</td>
+<td>The codebase contains bounded visual target acquisition and framing behavior</td>
+<td><code>ros_ws/src/omniseer_autonomy/</code>, <code>scripts/omni run autonomy</code>, controller/node tests, and RunBundle <code>autonomy.jsonl</code> support</td>
+<td>Source tree and local/target runtime when launched</td>
+<td>Yes for source; no linked execution artifact here</td>
+<td><code>autonomy.jsonl</code> support does not itself prove an autonomy run occurred</td>
+</tr>
+</tbody>
+</table>
+<h2 id="public-ci-evidence">Public CI Evidence<a class="headerlink" href="#public-ci-evidence" title="Permanent link">&para;</a></h2>
+<p>The public workflows are the inspectable CI evidence for the default branch:</p>
 <ul>
-<li><code>scripts/omni test smoke-sim</code></li>
-<li><code>scripts/omni build firmware</code></li>
-<li><code>scripts/omni docs build</code></li>
-<li>narrowed <code>rosdep check</code> for the smoke package set</li>
+<li><a href="https://github.com/jburo1/omniseer/actions/workflows/ci.yml"><code>ci</code></a> covers
+  portable linting, root tests, portable ROS build/test, the Gazebo smoke boundary
+  topics <code>/clock</code>, <code>/imu</code>, <code>/scan</code>, and <code>/mecanum_drive_controller/odometry</code>, and
+  portable native vision tests.</li>
+<li><a href="https://github.com/jburo1/omniseer/actions/workflows/runtime.yml"><code>runtime</code></a>
+  covers hardware-independent runtime packaging and a positive <code>/twist_mux</code>
+  readiness smoke check inside the portable image.</li>
+<li><a href="https://github.com/jburo1/omniseer/actions/workflows/firmware.yml"><code>firmware</code></a>
+  covers compile-only Teensy 4.1 firmware builds.</li>
+<li><a href="https://github.com/jburo1/omniseer/actions/workflows/docs.yml"><code>docs</code></a> covers
+  strict MkDocs build and GitHub Pages deployment.</li>
 </ul>
-<p>These local checks confirm the scripts and portable workflows behave correctly in
-the current development container.</p>
-<h2 id="hardware-verified">Hardware Verified<a class="headerlink" href="#hardware-verified" title="Permanent link">&para;</a></h2>
-<p>The native vision implementation includes target-oriented V4L2, RGA, RKNN,
-post-processing, and telemetry paths. Component-level target checks and harnesses
-support those implementation claims.</p>
-<p>A local target-hardware RunBundle named <code>runs/pipeline_001</code> was used to record a
-completed Phase 3 native perception run on ROCK 5B+. The raw bundle is not
-currently included in the public repository. The documented measurements from
-that run are:</p>
-<ul>
-<li>duration: 15.5 s</li>
-<li>detections: 230 records, 235 observed <code>person</code> detections</li>
-<li>performance: 27 <code>/vision/perf</code> records</li>
-<li>resource telemetry: 16 <code>system.jsonl</code> records</li>
-<li>native pipeline telemetry: 1,067 <code>pipeline_telemetry.jsonl</code> records</li>
-<li>native telemetry status: 836 producer and 231 consumer samples, all <code>ok</code></li>
-<li>recorded latency: producer total mean 1.12 ms, consumer infer mean 60.34 ms,
-  consumer infer p95 64.47 ms</li>
-</ul>
-<p>This documented local evidence records the native perception path persisting
-detections, performance summaries, system telemetry, and native stage telemetry
-into one run bundle.</p>
-<p>Additional target-hardware records document integrated operator behavior such as:</p>
-<ul>
-<li>real teleop reaching <code>/mecanum_drive_controller/reference</code></li>
-<li>gateway/preview/overlay operation during the same real run</li>
-</ul>
-<h2 id="run-evidence-records">Run Evidence Records<a class="headerlink" href="#run-evidence-records" title="Permanent link">&para;</a></h2>
-<p>RunBundles provide the project evidence format. A complete bundle can include:</p>
-<ul>
-<li><code>manifest.yaml</code> with run configuration and provenance</li>
-<li><code>provenance/</code> copies of small vocabulary, class, vision config, and experiment
-  config inputs when available</li>
-<li><code>detections.jsonl</code> with typed perception outputs</li>
-<li><code>perf.jsonl</code> with ROS vision performance summaries</li>
-<li><code>system.jsonl</code> with low-rate resource telemetry</li>
-<li><code>pipeline_telemetry.jsonl</code> with native runtime stage samples</li>
-<li><code>autonomy.jsonl</code> with bounded target-centering events when autonomy is enabled</li>
-<li><code>evidence/</code> images and annotations</li>
-<li><code>logs/bringup.log</code> with ROS launch stdout/stderr from recorded runs</li>
-<li>generated inspection summaries and static HTML reports</li>
-</ul>
+<p>These workflows verify portable contracts. They do not exercise target-device
+camera capture, RKNN/RGA execution, NPU timing, LiDAR/range data, Teensy flashing,
+micro-ROS transport, robot actuation, or public RunBundle recording.</p>
+<h2 id="local-portable-verification">Local Portable Verification<a class="headerlink" href="#local-portable-verification" title="Permanent link">&para;</a></h2>
+<p>The supported local verification surface mirrors the repository front door:</p>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>What it verifies</th>
+<th>Boundary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>scripts/omni test ros</code></td>
+<td>Portable ROS packages, launch tests, message/service integration, package tests, and RunBundle tool tests</td>
+<td>Requires local ROS dependencies; does not prove target hardware</td>
+</tr>
+<tr>
+<td><code>scripts/omni test smoke-sim</code></td>
+<td>Headless simulation bringup and asserted boundary topics</td>
+<td>Simulation-only</td>
+</tr>
+<tr>
+<td><code>scripts/omni test vision</code></td>
+<td>Portable native vision support code, including buffer, telemetry, and rolling-stat behavior</td>
+<td>Hardware-independent only</td>
+</tr>
+<tr>
+<td><code>scripts/omni build firmware</code></td>
+<td>Teensy firmware compilation</td>
+<td>Compile-only</td>
+</tr>
+<tr>
+<td><code>scripts/omni docs build</code></td>
+<td>Diagram freshness, Markdown/navigation validity, and strict MkDocs output</td>
+<td>Documentation only</td>
+</tr>
+<tr>
+<td><code>scripts/omni runtime verify</code></td>
+<td>Local runtime container smoke verification for the selected stage</td>
+<td>Portable smoke is not target-hardware execution; <code>--stage full</code> is meaningful only in the target runtime environment</td>
+</tr>
+</tbody>
+</table>
+<p>Local checks are useful evidence for the operator or developer who ran them. They
+are not public evidence unless the run output is published as an artifact and linked
+from this page.</p>
+<h2 id="target-hardware-evidence">Target-Hardware Evidence<a class="headerlink" href="#target-hardware-evidence" title="Permanent link">&para;</a></h2>
+<p>No public target-hardware RunBundle, static report, annotated frame, video, or
+measurement is linked from this repository state. Target-hardware claims in this
+catalog are therefore limited to implementation-backed capability unless a named
+public artifact is listed in the inventory.</p>
+<p>Non-public local target-hardware artifacts can still be operationally useful, but
+they are not presented here as public review evidence.</p>
+<h2 id="runbundle-evidence-format">RunBundle Evidence Format<a class="headerlink" href="#runbundle-evidence-format" title="Permanent link">&para;</a></h2>
+<p>RunBundles are the implemented evidence format for robot runs. A bundle is a
+directory, normally under <code>runs/&lt;run_id&gt;</code> on the robot or under an imported runs
+directory on the laptop. The format supports additive artifacts, so a bundle may
+contain only the streams that were enabled and available for that run.</p>
+<p>Common bundle files:</p>
+<table>
+<thead>
+<tr>
+<th>Artifact</th>
+<th>Required by format</th>
+<th>What it records</th>
+<th>Evidence use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>manifest.yaml</code></td>
+<td>Yes</td>
+<td>Schema version, run ID, start/end time, configured classes, launch command/profile/mode/arguments, ROS distro, git SHA, container reference/digest, experiment metadata, topic names, and provenance hashes/copies when available</td>
+<td>Provenance, configuration, run identity, and whether autonomy was requested</td>
+</tr>
+<tr>
+<td><code>detections.jsonl</code></td>
+<td>Yes for perception bundles</td>
+<td>Typed <code>/yolo/detections</code> records, classes, scores, boxes, frame IDs, and timestamps</td>
+<td>Perception outputs and class/score summaries</td>
+</tr>
+<tr>
+<td><code>perf.jsonl</code></td>
+<td>Yes for perception bundles</td>
+<td><code>/vision/perf</code> records, producer/consumer rates, stage timing summaries, source age, processed counts, and error counters</td>
+<td>Performance and health claims from ROS vision summaries</td>
+</tr>
+<tr>
+<td><code>summary.json</code></td>
+<td>Expected after finalization</td>
+<td>Final duration, message counts, detections by class, confidence summaries, performance summaries, errors, and dropped-record counts</td>
+<td>Compact run status and inspection index</td>
+</tr>
+<tr>
+<td><code>system.jsonl</code></td>
+<td>Optional</td>
+<td>Low-rate CPU, memory, thermal, network, onboard battery, and <code>/battery</code> LiPo snapshots when sources are available</td>
+<td>Resource and system-state context</td>
+</tr>
+<tr>
+<td><code>pipeline_telemetry.jsonl</code></td>
+<td>Optional</td>
+<td>Native producer/consumer stage telemetry when pipeline JSONL telemetry is enabled</td>
+<td>Detailed native timing, freshness, and stage-status analysis</td>
+</tr>
+<tr>
+<td><code>autonomy.jsonl</code></td>
+<td>Optional</td>
+<td>Target-centering events when autonomy is launched and records events</td>
+<td>Autonomy execution traces; absence must not be read as success or failure unless the manifest shows autonomy was requested</td>
+</tr>
+<tr>
+<td><code>evidence/evidence.jsonl</code></td>
+<td>Optional</td>
+<td>Metadata for captured evidence frames, including frame IDs, capture reasons, timing, and target metadata</td>
+<td>Connects visual evidence to run context</td>
+</tr>
+<tr>
+<td><code>evidence/frames/*.jpg</code></td>
+<td>Optional</td>
+<td>Clean captured evidence frames</td>
+<td>Visual inspection of scene and detections when paired with metadata</td>
+</tr>
+<tr>
+<td><code>evidence/annotated/*.jpg</code></td>
+<td>Derived optional</td>
+<td>Annotated copies generated from clean frames and evidence metadata</td>
+<td>Human review convenience; derived from raw frame evidence</td>
+</tr>
+<tr>
+<td><code>provenance/</code></td>
+<td>Optional</td>
+<td>Small copied inputs such as vocabulary, class list, vision config, and experiment config when available and size-limited</td>
+<td>Reproducibility context; model binaries are hashed but not copied by default</td>
+</tr>
+<tr>
+<td><code>logs/bringup.log</code></td>
+<td>Optional</td>
+<td>ROS launch stdout/stderr for recorded runs</td>
+<td>Startup, shutdown, and runtime diagnostics</td>
+</tr>
+<tr>
+<td><code>report/index.html</code></td>
+<td>Derived optional</td>
+<td>Static report generated from the raw bundle, annotated evidence, summaries, charts, issues, and artifact links</td>
+<td>Human-readable review artifact; raw JSONL and manifest remain the primary evidence</td>
+</tr>
+</tbody>
+</table>
+<p>Conclusions normally require multiple files together. For example, a perception
+claim should pair <code>manifest.yaml</code> with <code>detections.jsonl</code> and <code>perf.jsonl</code>; a
+native timing claim should include <code>pipeline_telemetry.jsonl</code> and the launch/config
+context; an autonomy claim should pair manifest launch arguments with
+<code>autonomy.jsonl</code>, detections, relevant performance data, and terminal evidence
+frames when available. A generated report is a useful review surface, but it should
+be traceable back to the raw bundle artifacts.</p>
+<h2 id="evidence-boundaries">Evidence Boundaries<a class="headerlink" href="#evidence-boundaries" title="Permanent link">&para;</a></h2>
+<p>Public CI evidence establishes portable build, test, packaging, and documentation
+contracts for the covered paths. Local portable verification can reproduce those
+checks in a developer environment. Implementation-backed capability identifies code
+that exists in the repository. Target-hardware execution claims require a named,
+inspectable artifact or measurement from the robot environment.</p>
+<p>The public workflows do not prove the entire robot works end to end. They also do
+not prove detector accuracy, physical safety behavior, real sensor quality, actuator
+response, target-device latency, long-duration stability, or public autonomy
+execution. Those claims need evidence records with explicit artifacts, environments,
+observed results, inspection status, and limitations.</p>
 
 
 
@@ -1131,7 +1434,7 @@ into one run bundle.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 5, 2026 21:49:56 UTC">August 5, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 6, 2026 04:01:06 UTC">August 6, 2026</span>
   </span>
 
     

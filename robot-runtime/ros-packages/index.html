@@ -772,10 +772,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#later-option" class="md-nav__link">
+  <a href="#ros2_control-compatibility" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Later Option
+        ros2_control Compatibility
       
     </span>
   </a>
@@ -799,15 +799,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#target-package-and-launch-layout" class="md-nav__link">
+  <a href="#package-and-launch-layout" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Target Package and Launch Layout
+        Package and Launch Layout
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Target Package and Launch Layout">
+    <nav class="md-nav" aria-label="Package and Launch Layout">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -943,15 +943,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#concrete-refactor-of-existing-files" class="md-nav__link">
+  <a href="#boundary-rules-for-existing-files" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Concrete Refactor of Existing Files
+        Boundary Rules for Existing Files
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Concrete Refactor of Existing Files">
+    <nav class="md-nav" aria-label="Boundary Rules for Existing Files">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1015,10 +1015,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#current-common-graph-after-refactor" class="md-nav__link">
+  <a href="#common-graph" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current Common Graph After Refactor
+        Common Graph
       
     </span>
   </a>
@@ -1026,15 +1026,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#boundary-rollout-status" class="md-nav__link">
+  <a href="#boundary-status" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Boundary Rollout Status
+        Boundary Status
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Boundary Rollout Status">
+    <nav class="md-nav" aria-label="Boundary Status">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1049,10 +1049,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#parity-work" class="md-nav__link">
+  <a href="#parity-limitations" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Parity Work
+        Parity Limitations
       
     </span>
   </a>
@@ -1474,10 +1474,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#later-option" class="md-nav__link">
+  <a href="#ros2_control-compatibility" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Later Option
+        ros2_control Compatibility
       
     </span>
   </a>
@@ -1501,15 +1501,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#target-package-and-launch-layout" class="md-nav__link">
+  <a href="#package-and-launch-layout" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Target Package and Launch Layout
+        Package and Launch Layout
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Target Package and Launch Layout">
+    <nav class="md-nav" aria-label="Package and Launch Layout">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1645,15 +1645,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#concrete-refactor-of-existing-files" class="md-nav__link">
+  <a href="#boundary-rules-for-existing-files" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Concrete Refactor of Existing Files
+        Boundary Rules for Existing Files
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Concrete Refactor of Existing Files">
+    <nav class="md-nav" aria-label="Boundary Rules for Existing Files">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1717,10 +1717,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#current-common-graph-after-refactor" class="md-nav__link">
+  <a href="#common-graph" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current Common Graph After Refactor
+        Common Graph
       
     </span>
   </a>
@@ -1728,15 +1728,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#boundary-rollout-status" class="md-nav__link">
+  <a href="#boundary-status" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Boundary Rollout Status
+        Boundary Status
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Boundary Rollout Status">
+    <nav class="md-nav" aria-label="Boundary Status">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1751,10 +1751,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#parity-work" class="md-nav__link">
+  <a href="#parity-limitations" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Parity Work
+        Parity Limitations
       
     </span>
   </a>
@@ -1845,7 +1845,7 @@ that keeps simulation, real hardware, and common robot behavior separated.</p>
 </ul>
 <p>The boundary should be a canonical ROS contract, not Gazebo internals and not
 <code>ros2_control</code> internals.</p>
-<p>For this refactor, prefer source-side standardization over pure rename relays:</p>
+<p>Source-side standardization is preferred over pure rename relays:</p>
 <ul>
 <li>if a mismatch is only topic naming, fix the producer or subscriber</li>
 <li>if a mismatch is only stamped-vs-unstamped command shape, update the real
@@ -1853,14 +1853,14 @@ that keeps simulation, real hardware, and common robot behavior separated.</p>
 <li>only keep adapter nodes when they derive or transform data semantically, such
   as encoder counts to odometry</li>
 </ul>
-<p>Why this is the right first move:</p>
+<p>Why this shape is used:</p>
 <ul>
 <li>it matches the current firmware shape</li>
 <li>it minimizes churn while still making sim and real converge</li>
 <li>it lets us keep the current MCU motion-control path while still normalizing
   the ROS graph above it</li>
-<li>it preserves a later path to a true <code>ros2_control</code> hardware interface if that
-  later pays for itself</li>
+<li>it keeps a true <code>ros2_control</code> hardware interface compatible with the boundary
+  if that becomes operationally valuable</li>
 </ul>
 <h2 id="current-state">Current State<a class="headerlink" href="#current-state" title="Permanent link">&para;</a></h2>
 <p>Today the boundary is not aligned.</p>
@@ -2005,7 +2005,7 @@ of no-op relays and gets us to sim/real parity faster.</p>
 <h3 id="raw-image-contract">Raw Image Contract<a class="headerlink" href="#raw-image-contract" title="Permanent link">&para;</a></h3>
 <p>The raw camera image does <strong>not</strong> need to be part of the common mission graph
 to get the sim-to-real benefit we want today.</p>
-<p>For current navigation and contract work, the more important shared boundary is:</p>
+<p>For navigation and contract work, the more important shared boundary is:</p>
 <ul>
 <li>command</li>
 <li>wheel odometry</li>
@@ -2021,14 +2021,12 @@ to get the sim-to-real benefit we want today.</p>
 <li>real vision runtime consumes <code>/dev/video12</code> below the boundary</li>
 </ul>
 <p>Both then converge on <code>/yolo/detections</code>.</p>
-<p>That is the right boundary for the current navigation-policy and graph-contract
-goal.</p>
+<p>That is the boundary used for navigation policy and graph contracts.</p>
 <h2 id="why-not-use-ros2_control-as-the-boundary-yet">Why Not Use <code>ros2_control</code> as the Boundary Yet<a class="headerlink" href="#why-not-use-ros2_control-as-the-boundary-yet" title="Permanent link">&para;</a></h2>
-<p>That remains a valid later direction, but it is not the smallest effective move
-right now.</p>
-<h3 id="later-option">Later Option<a class="headerlink" href="#later-option" title="Permanent link">&para;</a></h3>
-<p>Later, the real robot could expose a true <code>ros2_control</code> hardware interface so
-both sim and real use:</p>
+<p>A real robot <code>ros2_control</code> hardware interface is compatible with this boundary,
+but the robot does not use that as the boundary today.</p>
+<h3 id="ros2_control-compatibility"><code>ros2_control</code> Compatibility<a class="headerlink" href="#ros2_control-compatibility" title="Permanent link">&para;</a></h3>
+<p>A real robot hardware interface would let both sim and real use:</p>
 <ul>
 <li><code>controller_manager</code></li>
 <li><code>joint_state_broadcaster</code></li>
@@ -2036,22 +2034,23 @@ both sim and real use:</p>
 </ul>
 <p>with only the hardware plugin changing.</p>
 <h3 id="why-not-first">Why Not First<a class="headerlink" href="#why-not-first" title="Permanent link">&para;</a></h3>
-<p>The current firmware already owns:</p>
+<p>The firmware already owns:</p>
 <ul>
 <li>command timeout</li>
 <li>mecanum kinematics</li>
 <li>wheel command writeout</li>
 <li>encoder readout</li>
 </ul>
-<p>Moving that boundary immediately would require:</p>
+<p>Moving that boundary requires:</p>
 <ul>
 <li>a real hardware interface implementation</li>
 <li>transport design between SBC and MCU</li>
 <li>lifecycle/error handling around that transport</li>
-<li>a migration of control semantics that is larger than the current need</li>
+<li>a migration of control semantics</li>
 </ul>
-<p>That can pay off later. It is not the smallest next step.</p>
-<h2 id="target-package-and-launch-layout">Target Package and Launch Layout<a class="headerlink" href="#target-package-and-launch-layout" title="Permanent link">&para;</a></h2>
+<p>Keeping the boundary in firmware preserves the current control semantics and keeps
+the ROS package split focused on the implemented system.</p>
+<h2 id="package-and-launch-layout">Package and Launch Layout<a class="headerlink" href="#package-and-launch-layout" title="Permanent link">&para;</a></h2>
 <h3 id="omniseer_description"><code>omniseer_description</code><a class="headerlink" href="#omniseer_description" title="Permanent link">&para;</a></h3>
 <p>Split the description into pure robot model vs sim-only attachments.</p>
 <p>Recommended files:</p>
@@ -2217,16 +2216,16 @@ consumer instead.</p>
 <ul>
 <li>lets gateway/diagnostic flows behave more similarly in sim and real</li>
 </ul>
-<p>This is optional for the first slice.</p>
-<h2 id="concrete-refactor-of-existing-files">Concrete Refactor of Existing Files<a class="headerlink" href="#concrete-refactor-of-existing-files" title="Permanent link">&para;</a></h2>
-<p>The following changes should happen early because they define the boundary.</p>
+<p>This adapter is optional when no native performance source exists.</p>
+<h2 id="boundary-rules-for-existing-files">Boundary Rules for Existing Files<a class="headerlink" href="#boundary-rules-for-existing-files" title="Permanent link">&para;</a></h2>
+<p>The following files define the boundary.</p>
 <h3 id="navlaunchpy"><code>nav.launch.py</code><a class="headerlink" href="#navlaunchpy" title="Permanent link">&para;</a></h3>
-<p>Current issue:</p>
+<p>Boundary note:</p>
 <ul>
 <li><code>twist_mux</code> output is remapped directly to
   <code>/mecanum_drive_controller/reference</code></li>
 </ul>
-<p>Target:</p>
+<p>Boundary behavior:</p>
 <ul>
 <li>keep <code>twist_mux</code> output on <code>/mecanum_drive_controller/reference</code></li>
 <li>update the MCU subscriber to match that contract directly</li>
@@ -2237,12 +2236,12 @@ consumer instead.</p>
 <li>preserves the current working sim/common command contract</li>
 </ul>
 <h3 id="ekf_fusionyaml"><code>ekf_fusion.yaml</code><a class="headerlink" href="#ekf_fusionyaml" title="Permanent link">&para;</a></h3>
-<p>Current issue:</p>
+<p>Boundary note:</p>
 <ul>
 <li><code>odom0</code> uses <code>/mecanum_drive_controller/odometry</code></li>
 <li><code>imu0</code> uses <code>/imu</code></li>
 </ul>
-<p>Target:</p>
+<p>Boundary behavior:</p>
 <ul>
 <li>keep <code>odom0: /mecanum_drive_controller/odometry</code></li>
 <li>keep <code>imu0: /imu</code></li>
@@ -2276,11 +2275,11 @@ the simulated RF2O input and fuses only wheel odometry plus IMU.</p>
   boundary</li>
 </ul>
 <h3 id="perceptionlaunchpy"><code>perception.launch.py</code><a class="headerlink" href="#perceptionlaunchpy" title="Permanent link">&para;</a></h3>
-<p>Current issue:</p>
+<p>Boundary note:</p>
 <ul>
 <li>it mixes shared perception consumers with sim-only detection provider</li>
 </ul>
-<p>Target:</p>
+<p>Boundary behavior:</p>
 <ul>
 <li>keep only shared consumers above the boundary:</li>
 <li>RF2O</li>
@@ -2290,17 +2289,17 @@ the simulated RF2O input and fuses only wheel odometry plus IMU.</p>
 <li>keep sim sonar below the boundary until it has a direct <code>Range</code> producer</li>
 </ul>
 <h3 id="controllerslaunchpy"><code>controllers.launch.py</code><a class="headerlink" href="#controllerslaunchpy" title="Permanent link">&para;</a></h3>
-<p>Current issue:</p>
+<p>Boundary note:</p>
 <ul>
 <li>controller manager remains coupled to the shared graph shape</li>
 </ul>
-<p>Target:</p>
+<p>Boundary behavior:</p>
 <ul>
 <li>treat it as sim-only below the boundary for now</li>
 <li>only <code>sim_io.launch.py</code> should include it</li>
 </ul>
-<h2 id="current-common-graph-after-refactor">Current Common Graph After Refactor<a class="headerlink" href="#current-common-graph-after-refactor" title="Permanent link">&para;</a></h2>
-<p>The target common graph is:</p>
+<h2 id="common-graph">Common Graph<a class="headerlink" href="#common-graph" title="Permanent link">&para;</a></h2>
+<p>The common graph is:</p>
 <div class="highlight"><pre><span></span><code>             /mecanum_drive_controller/reference
                             |
                             v
@@ -2326,7 +2325,7 @@ the simulated RF2O input and fuses only wheel odometry plus IMU.</p>
   the MCU, so simulated <code>/range</code> should not be treated as identical-fidelity
   physical sensor evidence.</li>
 </ul>
-<h2 id="boundary-rollout-status">Boundary Rollout Status<a class="headerlink" href="#boundary-rollout-status" title="Permanent link">&para;</a></h2>
+<h2 id="boundary-status">Boundary Status<a class="headerlink" href="#boundary-status" title="Permanent link">&para;</a></h2>
 <h3 id="implemented-baseline">Implemented Baseline<a class="headerlink" href="#implemented-baseline" title="Permanent link">&para;</a></h3>
 <ul>
 <li>firmware and simulation use aligned command, IMU, range, and kinematic semantics</li>
@@ -2338,13 +2337,16 @@ the simulated RF2O input and fuses only wheel odometry plus IMU.</p>
 <li>CI verifies four sim boundary topics and message types in headless Gazebo:
   <code>/clock</code>, <code>/imu</code>, <code>/scan</code>, and <code>/mecanum_drive_controller/odometry</code></li>
 </ul>
-<h3 id="parity-work">Parity Work<a class="headerlink" href="#parity-work" title="Permanent link">&para;</a></h3>
+<h3 id="parity-limitations">Parity Limitations<a class="headerlink" href="#parity-limitations" title="Permanent link">&para;</a></h3>
 <ul>
-<li>move provider-specific perception launch ownership fully below the sim/real boundary</li>
-<li>decide whether simulation needs a <code>/vision/perf</code> adapter</li>
-<li>expand contract checks to frame identifiers, timestamps, rates, and stale behavior</li>
-<li>add a mocked real-launch smoke path</li>
-<li>add replay support for the normalized boundary and implemented experiment workflow</li>
+<li>provider-specific perception launch ownership is not fully below the sim/real
+  boundary</li>
+<li>simulation does not always provide a <code>/vision/perf</code> adapter</li>
+<li>contract checks do not yet cover every frame identifier, timestamp, rate, and
+  stale-data behavior</li>
+<li>there is no mocked real-launch smoke path</li>
+<li>replay support for the normalized boundary and experiment workflow is not
+  implemented</li>
 </ul>
 <h2 id="verification-standard-for-the-boundary">Verification Standard for the Boundary<a class="headerlink" href="#verification-standard-for-the-boundary" title="Permanent link">&para;</a></h2>
 <p>Simulation becomes a strong indicator only if the contract is verified.</p>
@@ -2410,7 +2412,7 @@ recording, review, or correct a verified sim/real contract problem.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 5, 2026 21:49:56 UTC">August 5, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 6, 2026 04:01:16 UTC">August 6, 2026</span>
   </span>
 
     
