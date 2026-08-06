@@ -31,6 +31,7 @@ simulation smoke boundaries, portable vision tests, and hardware-independent
 runtime packaging. Target-hardware behavior requires the ROCK 5B+, RKNN/RGA SDKs,
 camera, sensors, Teensy, micro-ROS transport, and robot runtime.
 
-The documented local `runs/pipeline_001` record is target-hardware perception-path
-evidence. Its raw RunBundle is not currently included in the public repository,
-and it should not be read as repeated public autonomy experiment evidence.
+The current evidence catalog does not link a public target-hardware RunBundle,
+static report, annotated frame, video, or measurement. Implementation-backed
+capabilities should not be read as public execution evidence unless a named
+artifact is listed in [Verification Evidence](verification/evidence.md).

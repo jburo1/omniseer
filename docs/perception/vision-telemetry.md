@@ -214,7 +214,7 @@ run-to-run comparisons.
 Summarize one run:
 
 ```bash
-vision/tools/analyze_telemetry.py summary runs/pipeline_001/pipeline_telemetry.jsonl
+vision/tools/analyze_telemetry.py summary runs/<run_id>/pipeline_telemetry.jsonl
 ```
 
 Compare two runs:

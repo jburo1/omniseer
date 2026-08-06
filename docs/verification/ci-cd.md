@@ -180,6 +180,6 @@ CI currently does not guarantee:
 - RKNN/RGA `omniseer_vision_bridge` compilation on generic runners
 - hardware-specific runtime image build or release publishing
 
-Those checks require the ROCK 5B+, target SDKs, devices, or later
+Those checks require the ROCK 5B+, target SDKs, devices, or dedicated
 hardware-in-the-loop infrastructure. CI evidence should not be presented as
 real-hardware evidence.

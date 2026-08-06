@@ -34,10 +34,9 @@ camera
 The native runtime captures
 NV12 frames, preprocesses them with RGA, prepares YOLO-World text embeddings, runs
 RKNN detector inference, maps detections back to source coordinates, and publishes
-bounded results. A local target-hardware RunBundle named `runs/pipeline_001` was
-used to record the documented perception measurements for detections, performance
-summaries, system telemetry, and native pipeline telemetry. The raw bundle is not
-currently included in the public repository.
+bounded results. Public target-hardware perception claims require a named
+RunBundle, report, frame, video, or measurement in
+[Verification Evidence](../verification/evidence.md).
 
 The native bridge currently receives classes from `classes.path` during startup.
 Changing classes requires restarting the bridge with a different class list. The
@@ -87,14 +86,15 @@ A reviewer can:
 - select classes without retraining the detector
 - run the model on the robot NPU
 - observe typed detections and performance summaries
-- reproduce a recorded experiment from documented commands
+- reproduce a recorded experiment from documented commands when the required robot
+  hardware and run artifacts are available
 - inspect latency and throughput over time
 - inspect detections by class and confidence
 - review representative successes, false positives, and missed detections
 - fetch or open the same completed run through the offboard review workflow
 
-Claims should be supported by measured output, captured evidence, and a documented
-hardware/software configuration.
+Execution claims should be supported by measured output, captured evidence, and a
+documented hardware/software configuration.
 
 ## Related Documentation
 

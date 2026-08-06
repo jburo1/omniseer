@@ -126,14 +126,14 @@ validation responsibility.
 
 | Capability | Status | Evidence boundary |
 | --- | --- | --- |
-| Native producer and consumer vision pipeline | **Implemented; documented local target-hardware run evidence** | V4L2, RGA, RKNN target tests and local `runs/pipeline_001` measurements; raw bundle not included in the public repository |
-| YOLO-World post-processing and text embeddings | **Implemented; documented local target-hardware run evidence** | RKNN tests, native runtime, and local `runs/pipeline_001` measurements; raw bundle not included in the public repository |
+| Native producer and consumer vision pipeline | **Implemented** | V4L2, RGA, RKNN source paths, target-oriented launch/config support, and portable tests for hardware-independent pieces; target-hardware execution claims require a named public artifact |
+| YOLO-World post-processing and text embeddings | **Implemented** | Native runtime, RKNN/text-embedding source paths, and portable post-processing tests where available; target-hardware timing and accuracy claims require a named public artifact |
 | ROS detection and performance publication | **Implemented** | `omniseer_vision_bridge` |
-| Bounded visual target acquisition and framing | **Implemented** | `omniseer_autonomy`, `scripts/omni run autonomy`, controller tests, and RunBundle `autonomy.jsonl` support |
+| Bounded visual target acquisition and framing | **Implemented** | `omniseer_autonomy`, `scripts/omni run autonomy`, controller tests, and RunBundle `autonomy.jsonl` support; no public autonomy execution artifact is linked from the current evidence catalog |
 | Portable ROS, vision, firmware, simulation, docs, and portable runtime checks | **CI-verified** | GitHub Actions master-push workflows |
 | gRPC gateway, platform diagnostics, and managed SRT preview | **Implemented** | C++ and Python tests plus local integration |
-| Structured experiment recorder and run bundle | **Implemented; documented local target-hardware run evidence** | local `runs/pipeline_001` measurements include detections, perf, system telemetry, and native pipeline telemetry; raw bundle not included in the public repository |
-| Recorded resource telemetry in experiment bundles | **Implemented; documented local target-hardware run evidence** | local `runs/pipeline_001` measurements include `system.jsonl`; gateway live status remains separate |
+| Structured experiment recorder and run bundle | **Implemented; portable-test covered** | `omniseer_experiments` tests cover manifest, summary, recording helpers, inspection, retrieval, evidence annotation, and static report generation |
+| Recorded resource telemetry in experiment bundles | **Implemented; portable-test covered** | `system.jsonl` support records low-rate CPU, memory, thermal, network, onboard battery, and `/battery` LiPo snapshots when sources are available; gateway live status remains separate |
 
 ## Repository Ownership
 

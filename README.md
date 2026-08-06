@@ -14,8 +14,8 @@ and framing, and records reproducible evidence from real robot runs.
 
 ## What the Robot Does
 
-Given a named target class, the current autonomy mode performs a bounded visual
-target acquisition and framing behavior:
+Given a named target class, the autonomy mode performs a bounded visual target
+acquisition and framing behavior:
 
 ```text
 named target
@@ -72,16 +72,8 @@ claims can be reviewed against recorded artifacts.
 | Evidence | What it supports | Public boundary |
 | --- | --- | --- |
 | GitHub Actions CI | Portable ROS package checks, Gazebo smoke boundary topics, portable vision tests, firmware compile, docs build, and hardware-independent runtime packaging | CI does not prove camera, RKNN/RGA, LiDAR, Teensy, or physical robot execution |
-| Documented local `runs/pipeline_001` measurements | ROCK 5B+ perception path recording detections, performance summaries, system telemetry, and native pipeline telemetry | The raw RunBundle is not currently included in the public repository |
-| RunBundle format and tooling | Reproducible run manifests, detections, performance telemetry, system telemetry, evidence frames, annotations, and static report generation | The cited local evidence is perception-path evidence, not repeated public autonomy experiment evidence |
-
-The documented local `runs/pipeline_001` target-hardware run records 15.5 s of
-native perception evidence: 230 detection records, 235 observed `person`
-detections, 27 `/vision/perf` records, 16 `system.jsonl` records, and 1,067
-native pipeline telemetry records. The documented native telemetry includes all
-`ok` producer and consumer samples, producer total mean latency of 1.12 ms,
-consumer inference mean latency of 60.34 ms, and consumer inference p95 latency
-of 64.47 ms.
+| RunBundle format and tooling | Reproducible run manifests, detections, performance telemetry, system telemetry, evidence frames, annotations, and static report generation | Tool support does not imply a public target-hardware perception or autonomy run |
+| Implementation-backed target runtime | V4L2 capture, RGA preprocessing, RKNN inference, ROS bridge integration, and bounded autonomy source paths | Source and tests are public; target-hardware execution claims require named public artifacts |
 
 ## Engineering Contributions
 
@@ -128,15 +120,13 @@ camera, LiDAR/range data, Teensy firmware, micro-ROS transport, sensors, and the
 physical robot. GitHub CI is intentionally portable and does not prove
 target-hardware execution.
 
-## Current Limitations
+## Limitations
 
 - Autonomy is a bounded visual scan and framing behavior, not room-scale
   navigation-based search or semantic exploration.
 - Hardware-specific inference requires the target ROCK 5B+ platform and RKNN/RGA
   SDK availability.
-- The cited local `runs/pipeline_001` RunBundle is documented but not publicly
-  committed.
-- Public repeated autonomy experiment evidence and v2s/v2m comparison evidence
-  remain future evidence work.
+- No public target-hardware RunBundle, static report, annotated frame, video, or
+  measurement is linked from the current evidence catalog.
 - No strong real robot photograph, public run video, or public report screenshot
   is currently committed, so the README avoids placeholder media.
