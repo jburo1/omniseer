@@ -1,341 +1,263 @@
-# Vision Telemetry and Profiling Spec (v1)
+# Vision Telemetry Contract
 
-## Status
+_Status: implemented; native JSONL schema version `3`_
 
-- Owner: vision pipeline implementation
-- Version: `v1`
-- Scope: producer + consumer runtime telemetry, emitted asynchronously
-- Implementation: rolling summaries, JSONL sink, fan-out, and offline analysis implemented
-- Last updated: 2026-07-06
+This page defines the current telemetry contract for the native vision pipeline.
+The contract covers producer and consumer runtime samples, rolling in-process
+statistics, JSONL export, and offline analysis. Telemetry is optional for native
+harness runs, but the ROS bridge always keeps rolling telemetry active for live
+performance status.
 
-## 1) Purpose
+Mission-critical producer and consumer behavior does not depend on telemetry file
+I/O. When telemetry is unavailable, faulted, or backpressured, frame capture,
+preprocess, inference, postprocess, and publication continue on the normal pipeline
+path.
 
-Define a low-coupling, low-overhead telemetry architecture for the vision pipeline that:
+## Emitted Records
 
-- keeps producer and consumer hot paths non-blocking
-- keeps profiling optional at runtime
-- emits structured stage timing only when telemetry is active
-- supports real-time and offline latency/jitter analysis
-- preserves detector-stage latency/FPS under load
-- keeps producer and consumer instrumentation on one stable contract
-
-## 2) Design Goals
-
-1. **Optional profiling**:
-- if telemetry is disabled, no stage timing work is done
-- pipelines still keep cheap status counters
-
-2. **No data-plane stalls**:
-- producer and consumer must never block on telemetry
-- queue overflow drops telemetry samples, never frames
-
-3. **Loose coupling**:
-- pipelines depend on a small telemetry interface, not sink details
-
-4. **Cross-thread safety**:
-- producer and consumer each publish to telemetry thread through bounded queues
-
-5. **ROS2-friendly timestamps**:
-- monotonic durations for measurement correctness
-- realtime timestamp for cross-system correlation
-
-6. **Low and predictable overhead**:
-- fixed-shape samples on hot path (no `std::optional`, no formatting)
-- one top-level timing gate per tick, then scoped stage timing inside that branch
-
-## 3) Scope Boundary (v1)
-
-- perfect reliability of telemetry delivery
-- dynamic attach/detach of telemetry while running
-- profiling of preflight/startup path
-- multi-process telemetry transport
-- high-cost online analytics UI inside data-plane threads
-
-## 4) Threading Model
-
-The system has up to four threads:
-
-1. **Orchestrator/App thread**
-- owns lifecycle of telemetry hub and pipeline threads
-
-2. **Producer thread**
-- runs producer pipeline tick loop
-- emits producer telemetry samples asynchronously
-
-3. **Consumer thread**
-- runs consumer pipeline tick loop
-- emits consumer telemetry samples asynchronously
-
-4. **Telemetry thread**
-- drains producer and consumer queues
-- writes JSONL sink
-- computes optional rolling stats snapshots
-
-## 5) Architecture
-
-### 5.1 Interface boundary
-
-Pipelines depend on one minimal interface (name can be adjusted):
+The telemetry interface is `omniseer::vision::ITelemetry`:
 
 ```cpp
 class ITelemetry {
 public:
   virtual ~ITelemetry() = default;
-
-  // True only when stage timing + sample emission are active.
   virtual bool timing_enabled() const noexcept = 0;
-
-  // Always non-blocking, never throws, best-effort.
   virtual void emit_producer(const ProducerSample& sample) noexcept = 0;
   virtual void emit_consumer(const ConsumerSample& sample) noexcept = 0;
 };
 ```
 
-### 5.2 Nullability and activation
+Pipeline loops check `timing_enabled()` once at tick start. When it is false, the
+tick skips stage timers and sample emission.
 
-- `ITelemetry* telemetry == nullptr` means telemetry integration is absent.
-- `telemetry != nullptr && telemetry->timing_enabled() == true` means stage timing + sample emission are active.
-- Counters do not require active timing.
+JSONL export writes one JSON object per line. All JSONL records include:
 
-### 5.3 Counters vs samples
+| Field | Meaning |
+|---|---|
+| `schema_version` | Native telemetry schema version. Current value is `3`. |
+| `source` | `producer` or `consumer`. |
+| `frame_id` | Producer-assigned frame correlation ID, or `null` before one exists. |
+| `tick_id` | Per-thread monotonic telemetry tick ID. Producer and consumer tick ID spaces are independent. |
+| `sequence` | Source capture sequence, or `null` before one exists. |
+| `event_ts_real_ns` | Realtime event timestamp in nanoseconds. For frame-backed records, this is the capture timestamp propagated from the source frame. |
+| `stage_mask` | Bitmask of stages that completed for this sample. |
+| `dur_ns` | Object containing per-stage durations plus `total`, all in nanoseconds. |
 
-1. **Always-on cheap counters**:
-- per-pipeline status counters (e.g., produced, no-frame, preprocess-error)
-- no formatting, no allocations, no file writes
+Producer records are emitted for these tick statuses:
 
-2. **Conditional timing + samples**:
-- only when `timing_enabled() == true`
-- stage duration measurement + sample object creation + queue push
+| `producer_status` | Emitted | Notes |
+|---|---:|---|
+| `produced` | yes | Frame was published to the ready buffer and the capture slot was requeued. |
+| `no_writable_buffer` | yes | A frame was dequeued, but no destination buffer was free. |
+| `capture_retryable_error` | yes | Capture returned a retryable error. |
+| `capture_fatal_error` | yes | Capture returned a fatal error. |
+| `preprocess_error` | yes | RGA preprocess returned a non-OK status. |
+| `no_frame` | no | Counter-only path; no per-tick JSONL sample is emitted. |
 
-### 5.4 Hot-path sample representation
+Producer-specific fields:
 
-For producer/consumer in-memory sample structs:
+| Field | Meaning |
+|---|---|
+| `source_age_dequeue_ns` | Realtime age of the source frame when producer dequeue completed. |
+| `source_age_publish_ready_ns` | Realtime age of the source frame when the producer published the ready buffer. |
+| `producer_status` | Producer tick result string. |
+| `capture_status` | Capture result string. |
+| `preprocess_status` | Preprocess result string. |
+| `capture_errno` | System errno associated with capture work, or `0`. |
 
-- use fixed-width fields (`uint64_t` durations default to `0`)
-- include `stage_mask` bitset indicating which stages executed
-- avoid `std::optional` and avoid formatting work in data-plane threads
-- JSON conversion (`stage_mask` -> `null` for missing stage) happens only in telemetry thread
+Producer `dur_ns` keys are `dequeue`, `acquire_write`, `preprocess`,
+`publish_ready`, `requeue`, and `total`.
 
-### 5.5 Timing instrumentation style
+Consumer records are emitted for these tick statuses:
 
-Implementation pattern for each pipeline tick:
+| `consumer_status` | Emitted | Notes |
+|---|---:|---|
+| `consumed` | yes | A ready buffer was acquired, inferred, postprocessed, optionally published, and released. |
+| `infer_error` | yes | The consumer was not armed or inference returned a non-OK status. |
+| `no_ready_buffer` | no | Counter-only path; no per-tick JSONL sample is emitted. |
 
-1. Evaluate `timing_on = (telemetry != nullptr && telemetry->timing_enabled())` once at tick start.
-2. If `timing_on == false`, run pipeline logic with counters only.
-3. If `timing_on == true`, use scoped RAII stage timers that write directly into sample fields.
+Consumer-specific fields:
 
-This keeps instrumentation readable while preserving near-zero disabled-path overhead.
+| Field | Meaning |
+|---|---|
+| `consumer_start_ts_real_ns` | Realtime timestamp at consumer tick start, or `null` when unavailable. |
+| `consumer_end_ts_real_ns` | Realtime timestamp at sample emission, or `null` when unavailable. |
+| `source_age_start_ns` | Realtime age of the source frame at consumer tick start. |
+| `source_age_end_ns` | Realtime age of the source frame at consumer sample emission. |
+| `consumer_status` | Consumer tick result string. |
+| `infer_status` | Inference result string. |
+| `postprocess_status` | `ok` when postprocess ran, otherwise `not_run`. |
+| `infer_errno` | System errno associated with inference work, or `0`. |
 
-## 6) Queueing and Backpressure
+Consumer `dur_ns` keys are `acquire_read`, `infer`, `postprocess`, `publish`,
+`release`, and `total`.
 
-### 6.1 Queue topology
-
-- producer -> telemetry thread: one bounded SPSC queue
-- consumer -> telemetry thread: one bounded SPSC queue
-
-This avoids MPSC complexity and aligns with current lock-free SPSC primitives.
-
-### 6.2 Queue behavior
-
-- `try_push` only; never block producer/consumer
-- on full queue: drop sample and increment a drop counter
-- no retries on hot path
-
-### 6.3 Sink behavior
-
-- telemetry thread batches writes to sink (JSONL)
-- flush by size and/or time interval
-- sink I/O must not run on producer/consumer threads
-
-### 6.4 Capacity sizing rule
-
-- size each SPSC queue from worst burst and sink pause budget:
-  - `capacity >= worst_burst_rate_hz * max_sink_pause_s`
-- default v1 starting point: `512` per queue unless measured data suggests otherwise
-
-## 7) Failure Policy
-
-v1 uses **fail-open** policy:
-
-- telemetry/sink errors must not stop producer/consumer pipeline execution
-- on sink fault, telemetry hub marks itself faulted, increments sink-error counter, and disables timing emission
-- pipeline keeps running with cheap counters
-
-Rationale: pipeline availability is prioritized over telemetry completeness.
-
-## 8) Producer Emission Rules (v1)
-
-### 8.1 Tick inclusion
-
-- Emit samples for:
-  - `Produced`
-  - `NoWritableBuffer`
-  - `CaptureRetryableError`
-  - `CaptureFatalError`
-  - `PreprocessError`
-- Do **not** emit per-tick `NoFrame` sample by default (counter-only), to avoid high-rate log noise.
-
-### 8.2 Identifiers
-
-- `frame_id`: producer-assigned monotonic ID at `publish_ready`, stored in buffer metadata, and propagated into consumer telemetry
-- `tick_id`: always present (monotonic counter in producer thread)
-- `sequence`: present when available from captured frame
-
-`frame_id` is the cross-thread correlation key for end-to-end latency analysis.
-
-### 8.3 Stage partitioning
-
-Producer stage durations are partitioned as:
-
-1. `dequeue_ns`
-2. `acquire_write_ns`
-3. `preprocess_ns`
-4. `publish_ready_ns`
-5. `requeue_ns`
-6. `total_ns`
-
-If a stage did not execute due to early return, stage duration is `null` in JSON.
-
-### 8.4 Early-return semantics
-
-- Early returns are normal outcomes, not process-fatal.
-- Sample contains status fields that explain path taken.
-
-## 9) Clock and Time Semantics
-
-1. Stage durations:
-- measured from monotonic clock
-- stored as nanoseconds
-
-2. Event timestamp:
-- realtime nanoseconds for cross-correlation with ROS2 stamps/logs
-
-3. Duration math:
-- always uses monotonic domain
-- never compute duration from realtime values
-
-## 10) Data Contract (JSONL v1)
-
-Each line is one JSON object. Required top-level fields:
+Example producer record:
 
 ```json
-{
-  "schema_version": 1,
-  "source": "producer",
-  "frame_id": 4421,
-  "tick_id": 12345,
-  "sequence": 9988,
-  "event_ts_real_ns": 1739700000000000000,
-  "producer_status": "produced",
-  "capture_status": "ok",
-  "preprocess_status": "ok",
-  "capture_errno": 0,
-  "dur_ns": {
-    "dequeue": 12000,
-    "acquire_write": 900,
-    "preprocess": 1450000,
-    "publish_ready": 700,
-    "requeue": 11000,
-    "total": 1490000
-  }
-}
+{"schema_version":3,"source":"producer","frame_id":42,"tick_id":1,"sequence":9,"event_ts_real_ns":1000,"source_age_dequeue_ns":25,"source_age_publish_ready_ns":37,"producer_status":"produced","capture_status":"ok","preprocess_status":"ok","capture_errno":0,"stage_mask":31,"dur_ns":{"dequeue":10,"acquire_write":11,"preprocess":12,"publish_ready":13,"requeue":14,"total":60}}
 ```
 
-Notes:
+Example consumer record:
 
-- `frame_id` may be `null` for paths that never reached `publish_ready`.
-- `sequence` may be `null` for paths without a valid dequeued frame.
-- any non-executed stage in `dur_ns` is `null`.
-- consumer events use `source: "consumer"` and consumer-specific status/stage fields.
+```json
+{"schema_version":3,"source":"consumer","frame_id":42,"tick_id":2,"sequence":9,"event_ts_real_ns":1000,"consumer_start_ts_real_ns":1100,"consumer_end_ts_real_ns":1200,"source_age_start_ns":99,"source_age_end_ns":199,"consumer_status":"consumed","infer_status":"ok","postprocess_status":"ok","infer_errno":0,"stage_mask":31,"dur_ns":{"acquire_read":20,"infer":21,"postprocess":22,"publish":23,"release":24,"total":110}}
+```
 
-## 11) Interface and Ownership
+## Queue And Backpressure Behavior
 
-### 11.1 Ownership
+`JsonlTelemetry` owns one bounded single-producer/single-consumer path for producer
+samples and one bounded single-producer/single-consumer path for consumer samples.
+The default capacity is `512` samples per source and can be overridden through
+`JsonlTelemetryConfig`.
 
-- app/orchestrator owns telemetry hub and sink objects
-- producer/consumer receive non-owning pointer/reference to interface
+Hot-path emission is best effort:
 
-### 11.2 Lifetime
+- producer and consumer threads call non-blocking `emit_*` methods;
+- each call first checks whether the sink is still enabled;
+- when no free telemetry slot is available, the sample is dropped and the
+  corresponding internal drop counter is incremented;
+- the producer and consumer do not retry, sleep, allocate, or perform file I/O in
+  response to telemetry backpressure.
 
-- telemetry hub is created before starting producer/consumer loops
-- telemetry hub is stopped and joined after producer/consumer loops exit
+The telemetry worker thread drains ready samples, writes JSONL, returns slots to the
+free queues, and flushes after writing. When no records are available, it sleeps for
+5 ms before checking again. On destruction, the sink asks the worker to stop, drains
+ready samples, flushes, joins, and closes the file.
 
-### 11.3 No runtime toggling (v1)
+Drop counters are currently internal to `JsonlTelemetry`; they are not exported in
+the JSONL schema.
 
-- telemetry configuration is fixed for process lifetime
-- no hot attach/detach requirement
+## Timestamp Semantics
 
-## 12) Flush and Shutdown Policy
+Durations and correlation timestamps use different clock domains:
 
-1. Flush trigger:
-- batch size threshold (e.g., `N` samples), or
-- periodic timer threshold (e.g., `T` milliseconds)
+| Field class | Clock domain | Contract |
+|---|---|---|
+| `dur_ns.*` and `dur_ns.total` | Monotonic clock | Use for duration and latency calculations within one process. |
+| `event_ts_real_ns` | Realtime clock | Use for cross-system correlation with ROS stamps, logs, and RunBundle streams. |
+| `consumer_start_ts_real_ns` and `consumer_end_ts_real_ns` | Realtime clock | Use for alignment and source-age calculation, not monotonic duration math. |
+| `source_age_*_ns` | Realtime timestamp delta | `0` means the source timestamp was unavailable or later than the sampling timestamp. |
 
-2. Shutdown:
-- stop producer and consumer loops
-- drain queued telemetry samples
-- flush sink
-- stop telemetry thread and join
+Do not compute stage durations by subtracting realtime fields. The emitted
+monotonic durations are the authoritative timing measurements.
 
-## 13) Performance Requirements
+`frame_id` is assigned by the producer at `publish_ready`, stored in the image
+buffer metadata, and propagated into consumer telemetry. It is the primary
+correlation key for joining producer and consumer records for the same processed
+frame.
 
-When telemetry inactive:
+## Status And Duration Fields
 
-- no stage clock calls
-- no event allocations
-- no queue operations
-- only cheap status counters
+Status fields are stable strings derived from bounded native enums:
 
-When telemetry active:
+| Field | Values |
+|---|---|
+| `producer_status` | `produced`, `no_frame`, `capture_retryable_error`, `capture_fatal_error`, `no_writable_buffer`, `preprocess_error`, `unknown` |
+| `capture_status` | `ok`, `no_frame`, `retryable_error`, `fatal_error`, `unknown` |
+| `preprocess_status` | `ok`, `invalid_config`, `source_size_mismatch`, `invalid_source_descriptor`, `invalid_destination_descriptor`, `imcheck_failed`, `improcess_failed`, `unknown_error`, `unknown` |
+| `consumer_status` | `consumed`, `no_ready_buffer`, `infer_error`, `unknown` |
+| `infer_status` | `ok`, `not_armed`, `invalid_input_descriptor`, `rknn_error`, `unknown` |
+| `postprocess_status` | `not_run`, `ok`, `unknown` |
 
-- one fixed-shape sample build per emitted tick (stack/local object; no heap required)
-- one non-blocking queue push attempt per sample
-- stage timing guarded by a single top-level `timing_on` branch
-- no blocking I/O on data-plane threads
+`stage_mask` determines which stage durations are present. A duration for a stage
+that did not complete is serialized as `null`. `dur_ns.total` is always serialized
+as an integer for emitted samples.
 
-## 14) Minimal Test Requirements
+Producer stage-mask bits:
 
-1. Interface disabled path:
-- no timing samples emitted when telemetry is null or inactive
+| Bit | JSON duration key |
+|---:|---|
+| `1 << 0` | `dequeue` |
+| `1 << 1` | `acquire_write` |
+| `1 << 2` | `preprocess` |
+| `1 << 3` | `publish_ready` |
+| `1 << 4` | `requeue` |
 
-2. Producer stage coverage:
-- produced path populates expected durations and statuses
-- early-return paths correctly set missing stages to null
+Consumer stage-mask bits:
 
-3. `frame_id` propagation:
-- producer assigns `frame_id` at publish
-- consumer sample for same image carries the same `frame_id`
+| Bit | JSON duration key |
+|---:|---|
+| `1 << 0` | `acquire_read` |
+| `1 << 1` | `infer` |
+| `1 << 2` | `postprocess` |
+| `1 << 3` | `publish` |
+| `1 << 4` | `release` |
 
-4. Queue overflow:
-- full queue causes sample drop counter increment, no blocking
+Source-age fields are not controlled by `stage_mask`. They are serialized as
+integers when the backing timestamp field is available to the JSON writer, and
+`null` otherwise.
 
-5. Sink failure:
-- sink error transitions telemetry to faulted/disabled mode
-- producer/consumer loops continue
+## Failure Behavior
 
-6. Schema stability:
-- JSON keys/types match spec and remain backward compatible within v1
+Telemetry is fail-open:
 
-## 15) Implementation Status
+- failure to construct `JsonlTelemetry` because the path is empty, a queue capacity
+  is zero, or the file cannot be opened raises during setup;
+- after setup, JSONL write failure disables that sink by setting
+  `timing_enabled()` false;
+- once disabled, later producer and consumer `emit_*` calls return immediately;
+- producer and consumer pipeline loops continue running after telemetry sink
+  failure;
+- telemetry samples may be missing after queue overflow or sink failure.
 
-Implemented:
+The native harness only enables telemetry when `--telemetry-jsonl <path>` is
+provided. The ROS bridge always uses `RollingTelemetryStats`; when
+`telemetry.pipeline_jsonl_path` is set, it also creates `JsonlTelemetry` and fans
+samples out through `CompositeTelemetry`.
 
-1. Telemetry interface, optional timing gate, and cheap status counters.
-2. Producer/consumer frame identifiers and timestamp correlation.
-3. Bounded asynchronous JSONL sink with drop/fault accounting.
-4. Rolling in-process performance summaries published by the ROS bridge.
-5. Producer and consumer stage timing with scoped timers.
-6. Portable JSONL and rolling-summary tests plus target pipeline tests.
+## Analysis Tools
 
-RunBundle integration:
+Use `vision/tools/analyze_telemetry.py` for offline JSONL summaries and
+run-to-run comparisons.
 
-- correlate telemetry with typed detections in a structured experiment bundle
-- persist resource samples such as CPU, memory, temperature, network, and power outside the hot path
-- publish measured results and failure analysis
+Summarize one run:
 
-## 16) Open Questions for v2+
+```bash
+vision/tools/analyze_telemetry.py summary runs/pipeline_001/pipeline_telemetry.jsonl
+```
 
-- strict mode option (fail-closed) for CI/debug builds
-- online p50/p95/p99 export endpoint
-- compression/rotation strategy for long-running JSONL logs
-- additional queue/buffer pressure fields if needed for debugging
+Compare two runs:
+
+```bash
+vision/tools/analyze_telemetry.py compare before.jsonl after.jsonl --label-a before --label-b after
+```
+
+The analyzer reports schema versions, producer and consumer sample counts, status
+counts, stage latency quantiles, source-age/freshness breakdowns, and frame or
+sequence delta behavior. It joins producer and consumer records by `frame_id` when
+computing cross-thread freshness metrics.
+
+Run bundles store native pipeline telemetry as `pipeline_telemetry.jsonl` when the
+native vision node is launched with a pipeline telemetry path. Run inspection and
+report tooling treat this file as optional, but malformed JSONL is reported as an
+inspection issue when the file is present.
+
+`RollingTelemetryStats` is the live in-process summary path. It tracks produced,
+buffer-pressure, capture-error, preprocess-error, consumed, and infer-error counts,
+plus the latest producer, preprocess, consumer, infer, postprocess, publish, and
+source-age timings. The native preview overlay and ROS bridge performance messages
+read snapshots from this rolling state.
+
+## Verification
+
+Use the smallest supported verification that covers the change:
+
+```bash
+scripts/omni test vision
+```
+
+This covers portable native telemetry behavior, including JSONL record emission,
+schema version `3`, rolling telemetry counters, composite fan-out, stage masks, and
+producer/consumer timing sample propagation.
+
+For ROS bridge parameter wiring, RunBundle integration, or launch behavior:
+
+```bash
+scripts/omni test ros
+```
+
+For target-hardware timing, camera, RGA, or RKNN claims, collect evidence from the
+ROCK 5B+ runtime or a RunBundle. Host-side tests verify the portable contract only;
+they do not prove target-device frame rate, accelerator latency, camera behavior, or
+end-to-end robot runtime timing.

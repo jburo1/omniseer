@@ -1,302 +1,253 @@
 # Vision Pipeline
 
-_Status: implemented; documented local target-hardware run evidence from `runs/pipeline_001`; raw bundle not included in the public repository_
+_Status: implemented; portable checks cover the software contract, while V4L2,
+RGA, RKNN, camera, and full ROS graph behavior require target hardware or the
+runtime container._
 
-This document describes the multi-stage, low-latency, zero-copy-oriented vision
-pipeline that transforms camera frames into open-vocabulary object detections. The
-implemented robot workflow uses those detections for measured perception experiments
-and bounded visual target acquisition and framing.
+## Purpose and Scope
 
-The producer, consumer, YOLO-World post-processing, text-embedding preparation,
-rolling telemetry, JSONL telemetry, native harness, and ROS bridge are implemented.
-Portable components are CI-verified. V4L2, RGA, and RKNN behavior requires the ROCK
-5B+ and is covered by target-oriented component checks and RunBundle evidence.
+The vision pipeline converts camera frames into canonical object detections for
+Omniseer's perception experiments and bounded target-centering behavior. It is
+optimized for robot state freshness: when inference is slower than capture, the
+consumer processes the newest preprocessed frame available instead of draining an
+old queue.
 
+This page is the reference for the native C++ pipeline and its ROS bridge
+adapter. It covers camera capture, RGA preprocessing, DMA-BUF-backed model input
+buffers, RKNN inference, YOLO-World post-processing, detection publication,
+preview/evidence hooks, telemetry, and failure behavior. It does not describe
+autonomy policy, operator dashboards, cloud-side report generation, or model
+training. Related telemetry field details live in
+[Vision Telemetry](vision-telemetry.md).
 
-## Major Design Considerations
+## End-to-End Data Path
 
-- Focus on latency, not throughput: pipeline is "latest-wins", only the freshest processed image frame is used, older frames are dropped.
+The implemented data path is:
 
-- Accelerator-first: all suitable ops are offloaded to accelerators on-board the SoC instead of clogging the CPU.
+```text
+camera sensor / ISP
+  -> V4L2 driver ring slot exported as a DMA-BUF fd
+  -> V4l2Capture::dequeue_lease()
+  -> FrameDescriptor
+  -> RgaPreprocess::run()
+  -> ImageBufferPool slot containing RGB888 model input
+  -> ImageBufferPool::publish_ready()
+  -> ImageBufferPool::acquire_read_lease()
+  -> RknnRunner::infer(pool_index)
+  -> decode_yolo_world_detections()
+  -> DetectionsFrame
+  -> IDetectionsSink / IFramePreviewSink / ROS publications
+```
 
-- Zero-copy-ish: direct memory access buffers (DMA-BUF) connect pipeline stages to avoid CPU memcpys of full frames. Sharing these buffers between devices is done via a borrow token/ownership leasing strategy to avoid data races.
+`V4l2Capture` owns the camera device and the exported V4L2 DMA-BUF file
+descriptors while streaming. Each successful dequeue borrows one kernel-owned
+ring slot and exposes it as a `FrameDescriptor`. The producer passes that
+descriptor to `RgaPreprocess`, which writes the model-sized RGB image into an
+application-owned `ImageBuffer` slot. `RknnRunner` pre-binds every pool slot
+during startup, so steady-state inference can select a pool index rather than
+constructing RKNN memory bindings per frame.
 
-- Observable: performance information emitted at every stage, including FPS, pipeline stage latency distributions.
+The pipeline avoids full-frame CPU copies across the capture, preprocess, and
+inference handoff by sharing file-descriptor-backed DMA buffers with the hardware
+blocks that support them. `DmaHeapAllocator::allocate(int, int, PixelFormat)`
+creates the application-owned model input buffers, and `DmabufAllocation` keeps
+the backing file descriptor lifetime tied to the pool slot metadata.
 
-- Multithreaded: a producer thread performs image capture and preprocess, a consumer thread performs inference + postprocess, a telemetry thread performs intermediate data aggregation and export, and an orchestrator/application thread manages the lifecycle.
+The consumer publishes detections as `DetectionsFrame`, whose bounding boxes are
+in source-image pixel coordinates. The ROS bridge converts those frames to
+`yolo_msgs::msg::DetectionArray` on `/yolo/detections`, publishes rolling
+performance summaries on `/vision/perf`, and exposes `/vision/capture_frame` for
+evidence capture when an `EvidenceFrameSink` is configured.
 
-## Glossary
+## Threading and Ownership Model
 
-- **ISP**: Image Signal Processor in the camera path that produces sensor frames.
-- **RGA**: Raster Graphic Accelerator used for hardware image preprocess operations (resize, color conversion, letterbox) before inference.
-- **NPU**: Neural Processing Unit used to run neural network model inference.
-- **RKNN**: Rockchip Neural Network runtime/API that loads `.rknn` models and executes inference on the NPU.
-- **V4L2**: Video4Linux2, the Linux camera/video API for configuring image capture, streaming frames, and dequeue/requeue buffer slots.
-- **V4L2 ring slot**: One kernel-managed capture buffer in the camera queue; slots are dequeued, used, then requeued.
-- **DMA-BUF**: File-descriptor-backed shared memory buffer that lets V4L2, RGA, and NPU access the same image data without full CPU copies.
-- **FrameDescriptor**: Borrow-token style handle to a dequeued V4L2 slot (essentially a view consisting of fd + layout + metadata + slot index).
-- **ImageBuffer**: Application-owned DMA-BUF used as RGA output and RKNN input.
-- **ImageBufferPool**: Lock-free single-producer/single-consumer handoff structure for reusable `ImageBuffer` slots. Threshold between producer and consumer threads.
+The native pipeline has two hot-path workers:
+
+- The producer worker runs `ProducerPipeline::run()` repeatedly. Its stage order
+  is `V4l2Capture::dequeue_lease()`, `ImageBufferPool::acquire_write_lease()`,
+  `RgaPreprocess::run()`, `ImageBufferPool::WriteLease::publish()`, and
+  `V4l2Capture::FrameLease::release()`.
+- The consumer worker runs `ConsumerPipeline::run()` repeatedly. Its stage order
+  is `ImageBufferPool::acquire_read_lease()`, `RknnRunner::infer()`,
+  `decode_yolo_world_detections()`, optional `IFramePreviewSink::publish()` and
+  `IDetectionsSink::publish()`, then `ImageBufferPool::ReadLease::release()`.
+
+`VisionBridgeRuntime` in the ROS bridge owns startup orchestration and launches
+the producer and consumer threads. `VisionBridgeNode` owns ROS publishers,
+service handlers, timers, and process shutdown. `JsonlTelemetry` may own its own
+writer implementation behind `JsonlTelemetry::Impl`; callers interact only
+through the non-throwing `ITelemetry` interface. `RollingTelemetryStats` uses
+atomic counters and last-value fields for periodic summaries.
+
+The hot path is single-producer/single-consumer at the `ImageBufferPool`
+boundary. Optional sinks are called synchronously from the consumer path, before
+the read lease is released, and must not retain references into the borrowed
+`ImageBuffer`.
+
+Both manual and RAII APIs are available at this boundary. The implemented
+pipelines use `acquire_write_lease()` and `acquire_read_lease()` so early exits
+preserve ownership automatically. Lower-level tests and adapters may use the
+manual API when they need direct stage accounting, but each successful
+`acquire_write(int&)` must end in `publish_ready(int)` or `cancel_write(int)`,
+and each successful `acquire_read(int&)` must end in `publish_release(int)`.
 
 ## Pipeline Stages
 
-| Stage | Thread | Input | Output | Primary Code |
-|---|---|---|---|---|
-| Capture (V4L2) | Producer | `/dev/video*` | `FrameDescriptor` | `v4l2_capture.hpp/cpp` |
-| Preprocess (RGA) | Producer | `FrameDescriptor` | `ImageBuffer` | `rga_preprocess.hpp/cpp` |
-| Buffering/Drop policy | Cross-thread boundary | `ImageBufferPool` indices | “latest wins” `ImageBufferPool` index | `image_buffer_pool.hpp/cpp` |
-| Inference (NPU) | Consumer | `ImageBuffer` (RGB DMA-BUF) | model outputs | `rknn_runner.hpp/cpp` |
-| Postprocess | Consumer | model outputs | bounded source-space detections | `yolo_world_postprocess.hpp/cpp` |
-| Publish | Consumer/adapter | canonical detections | ROS messages, preview, telemetry | `consumer_pipeline.cpp`, `vision_bridge_node.cpp` |
+| Stage | Thread | Primary API | Contract |
+| --- | --- | --- | --- |
+| Capture | Producer | `V4l2Capture::dequeue_lease()` or `dequeue(FrameDescriptor&)` | Borrow one filled V4L2 slot. A successful borrow must be returned with `FrameLease::release()` or `requeue(uint32_t)`. |
+| Preprocess | Producer | `RgaPreprocess::run()` | Convert NV12 source DMA-BUF to RGB888 model input using the configured letterbox geometry. |
+| Publish ready | Producer | `ImageBufferPool::WriteLease::publish()` or `publish_ready(int)` | Publish a fully written pool slot as the newest ready model input. |
+| Acquire read | Consumer | `ImageBufferPool::acquire_read_lease()` or `acquire_read(int&)` | Atomically claim the newest ready slot, if one exists. |
+| Inference | Consumer | `RknnRunner::infer(int32_t)` | Run RKNN inference against a pre-bound pool slot and refresh output views. |
+| Postprocess | Consumer | `decode_yolo_world_detections()` | Decode YOLO-World outputs into a bounded `DetectionsFrame`. |
+| Publish | Consumer | `IDetectionsSink::publish()` and `IFramePreviewSink::publish()` | Publish detections and optional preview/evidence while the image lease is still valid. |
+| Release | Consumer | `ImageBufferPool::ReadLease::release()` or `publish_release(int)` | Return the consumed pool slot to the free ring. |
 
-## Diagram
+Startup work is intentionally separated from the hot path. `V4l2Capture::start()`
+opens and configures the camera, allocates and exports the V4L2 ring, queues
+buffers, and starts streaming. `ImageBufferPool::allocate_all()` creates the
+fixed DMA-BUF-backed pool. `RgaPreprocess::prefill()` initializes padding once,
+and `RgaPreprocess::preflight()` validates descriptors with a smoke pass.
+`ProducerPipeline::preflight()` validates capture/preprocess handoff and records
+the source-to-model remap. `RknnRunner::preflight()` loads the RKNN model,
+pre-binds image pool slots and static text embeddings, allocates output storage,
+and runs warmup passes. `ConsumerPipeline::preflight()` validates text embedding
+metadata, model output layout, active class count, and remap geometry.
 
+## Latest-Wins Behavior
+
+`ImageBufferPool` maintains one atomic ready slot, `ready_idx`, plus a
+single-producer/single-consumer free ring. `publish_ready(int)` exchanges the
+newly written slot into `ready_idx` with release semantics. If an older ready
+slot was waiting there, the producer drops it into a producer-local free stash.
+That overwrite is the latest-wins policy: a slow consumer does not accumulate
+stale model inputs.
+
+`acquire_read(int&)` exchanges `ready_idx` back to `-1` with acquire semantics.
+If no slot is ready, it reports failure and the bridge consumer loop sleeps for
+1 ms before trying again. If a slot is ready, that slot is owned by the consumer
+until `publish_release(int)` or `ReadLease::release()` returns it to the free
+ring.
+
+This policy bounds latency by limiting the cross-thread handoff to one pending
+frame. It may skip frame IDs and V4L2 sequence numbers under load; those gaps are
+expected evidence that old work was discarded to preserve freshness.
+
+## Buffer Lifetime Invariants
+
+V4L2 slots are kernel-owned. Userspace may access a dequeued slot only between
+`V4l2Capture::dequeue()` and `V4l2Capture::requeue(uint32_t)`, or while a
+`V4l2Capture::FrameLease` is valid. The producer returns the capture slot after
+RGA finishes reading it. `FrameLease` provides exactly-once requeue behavior and
+attempts release from its destructor if the caller did not release explicitly.
+
+Model input buffers are application-owned by `ImageBufferPool`. A producer may
+write a slot only after `acquire_write(int&)` or `acquire_write_lease()` succeeds.
+If a write is abandoned, manual callers use `cancel_write(int)` and RAII callers
+let `WriteLease` destruct without `publish()`. A consumer may read a slot only
+after `acquire_read(int&)` or `acquire_read_lease()` succeeds. Manual callers
+must release with `publish_release(int)`. RAII callers release with
+`ReadLease::release()`, or by letting the lease destructor run.
+
+Pool slots are addressed by integer index. The index is the ownership token
+passed between RGA output, RKNN input selection, telemetry, and tests. Buffer
+metadata such as `sequence`, `capture_ts_real_ns`, and `frame_id` is written
+before `publish_ready()` so the consumer sees a coherent descriptor.
+
+## Publication and Telemetry Contracts
+
+The native detection contract is `DetectionsFrame`. It carries `frame_id`,
+source capture `sequence`, `capture_ts_real_ns`, `active_class_count`,
+`source_size`, a bounded detection count, and up to
+`DetectionsFrame::capacity` detections. Each `Detection` contains a zero-based
+class index, confidence score, and source-space bounding box coordinates.
+
+`IDetectionsSink::publish(const DetectionsFrame&)` is the single native boundary
+for detection publication and must not throw. The ROS bridge implements this
+boundary in `RosYoloDetectionsSink` and publishes `/yolo/detections`.
+`IFramePreviewSink::publish(const ImageBuffer&, const DetectionsFrame&, const
+PipelineRemapConfig&)` is a synchronous preview/evidence callback. The image
+reference is valid only during that call.
+
+`ITelemetry` exposes `timing_enabled()`, `emit_producer(const ProducerSample&)`,
+and `emit_consumer(const ConsumerSample&)`. `ProducerSample` records frame
+identity, source age, dequeue/acquire/preprocess/publish/requeue durations,
+completed `ProducerStageMask` bits, errno, and status codes. `ConsumerSample`
+records frame identity, source age, acquire/infer/postprocess/publish/release
+durations, completed `ConsumerStageMask` bits, errno, and status codes.
+`RollingTelemetryStats` feeds `/vision/perf`; `JsonlTelemetry` writes the
+optional `telemetry.pipeline_jsonl_path`; `CompositeTelemetry` fans samples out
+to both when configured.
+
+## Failure Behavior
+
+Startup validation is fail-fast. Configuration errors, missing model or class
+inputs, camera setup failures, DMA-BUF allocation failures, RGA preflight
+failures, RKNN setup failures, and invalid consumer startup metadata are reported
+by throwing from startup or `preflight()` calls. `VisionBridgeNode` logs startup
+exceptions as fatal and exits with failure.
+
+Steady-state producer and consumer ticks are non-throwing and return structured
+status. The bridge treats `NoFrame`, `CaptureRetryableError`,
+`NoWritableBuffer`, and `NoReadyBuffer` as transient and sleeps for 1 ms before
+retrying. `CaptureFatalError`, `PreprocessError`, and `InferError` are fatal in
+`VisionBridgeRuntime`: the first fatal message is recorded, stop is requested,
+and the node health timer logs the message and shuts ROS down.
+
+No failure path should bypass buffer ownership obligations. RAII leases are used
+in the implemented producer and consumer paths so camera slots and pool slots are
+returned when early exits occur.
+
+## Verification Boundary
+
+Use the narrowest check that matches the change. Portable native pipeline changes
+are covered by:
+
+```bash
+scripts/omni test vision
 ```
-                         photons
-                            |
-                            v
-                  +----------------------+
-                  | Camera Sensor + ISP  |
-                  | NV12 frames          |
-                  +----------+-----------+
-                             |
-                             v
-         +-------------------+--------------------+
-         | V4L2 ring (kernel-owned ring slots)    |
-         | N buffers, each exported as DMA-BUF fd |
-         +-------------------+--------------------+
-                             |
-                             | VIDIOC_DQBUF -> FrameDescriptor (borrowed slot)
-                             v
 
-  ========================== Producer Thread ==========================
-                  +----------+-----------+
-                  | V4l2Capture          |
-                  | owns exported slot fds|
-                  +----------+-----------+
-                             |
-                             v
-                  +----------+-------------------------+
-                  | RgaPreprocess (RGA)               |
-                  | NV12 DMA-BUF -> RGB DMA-BUF       |
-                  | resize + letterbox + color convert|
-                  +----------+-------------------------+
-                             |
-                             | publish_ready(pool_idx)
-                             v
+ROS bridge contracts, parameters, publications, and service behavior are covered
+by:
 
-  ======================= Cross-thread Boundary =======================
-                  +----------+-------------------------------+
-                  | ImageBufferPool (SPSC)                   |
-                  | free_ring + ready_idx (latest-wins)      |
-                  | new publish can evict older ready buffer |
-                  +----------+-------------------------------+
-                             |
-                             | acquire_read(pool_idx)
-                             v
-
-  ========================== Consumer Thread ==========================
-                  +----------+-------------------------+
-                  | RKNN Runner (RKNN on NPU)         |
-                  | reads RGB ImageBuffer DMA-BUF     |
-                  +----------+-------------------------+
-                             |
-                             v
-            detections -> postprocess -> ROS publish / behavior
-
-Return paths:
-  - Producer: requeue(v4l2_index) -> V4L2 ring (after RGA completes)
-  - Consumer: publish_release(pool_idx) -> ImageBufferPool free_ring
-  - Producer + Consumer telemetry samples -> Telemetry thread -> JSONL/metrics sink
+```bash
+scripts/omni test ros
 ```
 
-## Interfaces
-
-### Core data types
-
-Defined in `types.hpp`:
-
-- `FrameDescriptor`: content description of a V4L2 ring buffer slot (owned by the kernel driver). Handle for ISP output/RGA input. This is critically a view of the buffer, not the data itself.
-- `ImageBuffer`: DMA-BUF fd-backed buffer (owned by the application). Handle for RGA output/RKNN(NPU) input. This is also a view.
-
-### Capture: `V4l2Capture`
-
-Manages the V4L2 streaming lifecycle and defines a borrow-token style API for accessing ISP output from downstram devices in a zero-copy fashion.
-
-Defined/implemented in `v4l2_capture.hpp/cpp`.
-
-- `start()`:
-  - Opens device path (e.g. `/dev/video12`), negotiates image format, allocates a driver-managed ring buffer,
-    exports each slot as a DMA-BUF fd, queues all slots, and starts streaming.
-
-- `dequeue(FrameDescriptor& out)`:
-  - Dequeues the most recently filled V4L2 ring slot, populates `out` with a borrow-token (v4l2_index, DMA-BUF fd, layout, metadata). Thse caller must, after performing its work, `requeue(out.v4l2_index)` to return the slot to the driver so it can refill it with a fresh frame.
-
-- `requeue(uint32_t index)`:
-  - Return the specified V4L2 ring buffer slot at `index` to the driver so it can be filled with a fresh frame.
-
-### Preprocess: `RgaPreprocess`
-
-Manages the RGA (2D blitter) transformations from ISP output to correct model input.
-
-Defined/implemented in `rga_preprocess.hpp/cpp`.
-
-- `run(const FrameDescriptor& src_nv12, ImageBuffer& dst_rgb, ...)`:
-  - Runs the RGA hardware pipeline to convert a captured NV12 DMA-BUF frame into a RGB888 destination buffer. Synchronous.
-
-- `prefill(ImageBuffer& dst_rgb)`:
-  - The RK3588's RGA device does not support colorfilling a RGB888 buffer, so callers must do it themselves. This must only be called once at buffer init time.
-
-
-### Buffering: `ImageBufferPool`
-
-This is the boundary between the producer and consumer threads. It facilitates the data handoff between the RGA output and the NPU input in a lock-free fashion. It implements a "freshest-first" policy, where the consumer only has access to the latest processed image.
-
-Defined/implemented in `image_buffer_pool.hpp/cpp`
-
-The usage is as follows:
-
-- Producer: `acquire_write()` -> RGA writes -> `publish_ready()`
-- Consumer: `acquire_read()`  -> RKNN reads -> `publish_release()`
-
-- `acquire_write(int& idx)`
-  - Obtains a free buffer index into `idx` for the producer to write into.
-
-- `publish_ready(int idx)`
-  - Publishes `idx` as the newest ready buffer.
-  - Should be called after performing the write.
-
-- `acquire_read(int& idx)`
-  - Atomically grabs the currently ready buffer index into `idx`.
-
-- `publish_release(int idx)`
-  - Returns the consumed buffer index `idx` back to the pool.
-  - Should be called after performing the read + consumption.
-
-- `buffer_at(int idx)`
-  - Accessor function for buffer at `pool[idx]`
-  - Required to access data once ownership established
-  - Comes in non-const/const flavours for producer/consumer
-
-### Buffer Allocation: `DmaHeapAllocator` + `DmaHeapAllocation`
-
-"Video malloc" allocator + allocation classes that create shareable RGB image buffers for zero-copy-ish data movement between RGA and RKNN. Resource-safe bridge between kernel memory and accelerators.
-
-Defined and implemented in `dma_heap_alloc.hpp/cpp`.
-
-`DmaHeapAllocator`:
-- `DmaHeapAllocator()`
-  - Create factory
-
-- `allocate(int width, int height, PixelFormat fmt)`
-  - Allocate a DMA-BUF suitable for RGA write / RKNN read and return an ImageBuffer
-  and descriptor that points at it.
-
-
-
-## Ownership & Lifetime Rules for Buffers
-
-### V4L2 ring slots (`FrameDescriptor`)
-
-- Owned by: kernel driver.
-- Userspace handle lifetime:
-  - The exported DMA-BUF fds are owned by `V4l2Capture` for the duration of streaming.
-  - Each `dequeue()` borrows one ring slot at index `v4l2_index`.
-  - A `requeue(v4l2_index)` must occur for every successful `dequeue()` to allow slot to be refilled. This should happen after RGA is finished using the buffer.
-
-### Model input buffers (`ImageBufferPool`)
-
-- Owned by: `ImageBufferPool` (backing `DmabufAllocation`s are RAII).
-- Cross-thread rule:
-  - Producer may only write to a buffer index after `acquire_write(idx)` returns true.
-  - Consumer may only read from a buffer index after `acquire_read(idx)` returns true.
-  - Consumer must call `publish_release(idx)` once it is done reading.
-
-## Overview of Producer Responsibilities
-
-Own the upstream clock: drive the loop cadence (dequeue frames) and decide when to drop work to maintain “latest-wins” latency.
-
-Dequeue from V4L2: call DQBUF, receive the newest captured slot, and package it into a FrameDescriptor (fd(s), strides, w/h, format, timestamp, slot index).
-
-Respect V4L2 slot lifetime: treat the dequeued slot as borrowed from the driver; do not hold it longer than necessary.
-
-Acquire an output buffer: get a writable ImageBuffer slot from ImageBufferPool::acquire_write(idx) (or decide to skip processing if none are available).
-
-Run preprocess on accelerators: invoke RGA to transform NV12 DMA-BUF → RGB/BGR DMA-BUF, including resize + letterbox/stretch policy, and produce LetterboxMeta if needed.
-
-Write output metadata: fill ImageBuffer fields (fd, stride, dims, pixel format, timestamp, letterbox params, sequence number).
-
-Publish the newest buffer: call publish_ready(idx) with release semantics so the consumer sees a fully-written frame.
-
-Recycle old ready frames: if publish_ready “steals” the previous ready buffer (because latest-wins), ensure it goes back into the producer/free path so buffers don’t leak.
-
-Return camera buffers promptly: QBUF the V4L2 slot back to the driver as soon as RGA is done with it (or immediately if you drop the frame).
-
-Maintain steady-state buffer hygiene: one-time prefill/padding initialization for destination buffers (your RGB888 imfill limitation means you may do a CPU prefill fallback).
-
-Instrumentation: emit per-stage timings (DQBUF wait, RGA submit/complete, publish cost), drop counters, and queue depths.
-
-Error containment: handle transient failures (EINTR/EAGAIN, occasional RGA errors) without wedging the pipeline; perform clean shutdown (stop streaming, close fds, free allocations).
-
-## Consumer Responsibilities
-
-- Acquire the newest frame (latest-wins)
-
-- Run RKNN inference (NPU)
-
-Initialize RKNN once at startup (load .rknn, init runtime).
-
-Per frame:
-
-Feed the input tensor (usually uint8 NHWC or NCHW depending on how you exported/configured).
-
-Call inference.
-
-Read output tensors.
-
-Why this structure matters: your inference FPS will be lower than camera FPS, so consumer naturally drops frames and always processes “most recent state,” which is exactly what you want for robotics.
-
-- Postprocess (CPU, usually)
-
-Decode YOLO head outputs → candidate boxes + scores + class ids
-
-Apply thresholding + NMS (non-max suppression)
-
-Undo letterbox/resize to map boxes back to 1280×720 (or whatever your original frame is)
-
-- Publish results downstream
-
-Provide a simple struct like:
-
-timestamp, list of {class_id, score, x1,y1,x2,y2} in original image coordinates
-
-Feed typed ROS consumers, experiment recording, or optional operator tools.
-
-- Release buffer
-
-pool.release(idx) so RGA can reuse it.
-
-A minimal consumer loop looks like:
-
-acquire → infer → decode → publish → release
-(no queue buildup, no waiting on stale frames)
-
-## Threading Model
-
-Two threads:
-
-1) Capture/Preprocess thread (producer):
-   - `cap.dequeue(frame)` (nonblocking loop/poll)
-   - `pool.acquire_write(idx)`; if false, immediately `cap.requeue(frame.v4l2_index)` and continue
-   - `rga.run(frame, pool.buffer_at(idx), &meta)`
-   - `pool.publish_ready(idx)`
-   - `cap.requeue(frame.v4l2_index)`
-
-2) Inference thread (consumer):
-   - acquire a move-only `ReadLease` from the latest-ready slot
-   - run pre-bound RKNN inference for that pool index
-   - decode, threshold, apply NMS, and inverse-map detections
-   - publish through narrow detection and optional preview sinks
-   - release the lease exactly once
-
-## Failure Modes & Handling
+Documentation-only changes are covered by:
+
+```bash
+scripts/omni docs build
+```
+
+These checks do not prove live camera, RGA, RKNN, ROCK 5B+, or full runtime
+container behavior unless they are run in an environment with the corresponding
+hardware, SDKs, devices, and ROS graph.
+
+## Primary Implementation Files
+
+- `vision/include/omniseer/vision/v4l2_capture.hpp` and
+  `vision/src/v4l2_capture.cpp`
+- `vision/include/omniseer/vision/rga_preprocess.hpp` and
+  `vision/src/rga_preprocess.cpp`
+- `vision/include/omniseer/vision/image_buffer_pool.hpp` and
+  `vision/src/image_buffer_pool.cpp`
+- `vision/include/omniseer/vision/rknn_runner.hpp` and
+  `vision/src/rknn_runner.cpp`
+- `vision/include/omniseer/vision/producer_pipeline.hpp` and
+  `vision/src/producer_pipeline.cpp`
+- `vision/include/omniseer/vision/consumer_pipeline.hpp` and
+  `vision/src/consumer_pipeline.cpp`
+- `vision/include/omniseer/vision/dma_heap_alloc.hpp`
+- `vision/include/omniseer/vision/yolo_world_postprocess.hpp` and
+  `vision/src/yolo_world_postprocess.cpp`
+- `vision/include/omniseer/vision/detections.hpp`
+- `vision/include/omniseer/vision/detections_sink.hpp`
+- `vision/include/omniseer/vision/frame_preview_sink.hpp`
+- `vision/include/omniseer/vision/telemetry.hpp`
+- `vision/include/omniseer/vision/rolling_telemetry.hpp`
+- `vision/include/omniseer/vision/jsonl_telemetry.hpp`
+- `vision/include/omniseer/vision/composite_telemetry.hpp`
+- `ros_ws/src/omniseer_vision_bridge/src/vision_bridge_runtime.cpp`
+- `ros_ws/src/omniseer_vision_bridge/src/vision_bridge_node.cpp`
