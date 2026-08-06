@@ -54,7 +54,8 @@ namespace omniseer_autonomy
     }
 
     _last_detection_msg_at_sec = now_sec;
-    auto target                = select_target(detections);
+    auto        target         = select_target(detections);
+    std::string target_rejection_reason{};
     if (_state == CenteringState::Scan)
     {
       if (target.has_value() && (!_acquisition_candidate.has_value() ||
@@ -78,6 +79,7 @@ namespace omniseer_autonomy
              !center_jump_within_limit(*_last_target, *target))
     {
       target.reset();
+      target_rejection_reason = "max_target_center_jump_rejected";
     }
 
     if (target.has_value())
@@ -95,12 +97,17 @@ namespace omniseer_autonomy
       _approach_holding = false;
       _target_missing   = true;
       ++_target_loss_count;
-      output.events.push_back(make_event(now_sec, "target_lost"));
+      output.events.push_back(make_event(now_sec, "target_lost",
+                                         target_rejection_reason.empty()
+                                             ? "no_valid_target_detection"
+                                             : target_rejection_reason));
     }
 
     if (!target.has_value())
     {
-      _stable_frames = 0;
+      record_confirmation_miss(now_sec, output,
+                               target_rejection_reason.empty() ? "no_valid_target_detection"
+                                                               : target_rejection_reason);
     }
 
     if (_state == CenteringState::Scan)
@@ -311,6 +318,10 @@ namespace omniseer_autonomy
     {
       throw std::invalid_argument("stable_framed_frames must be positive");
     }
+    if (_config.success_miss_tolerance_updates < 0)
+    {
+      throw std::invalid_argument("success_miss_tolerance_updates must be non-negative");
+    }
     if (_config.proximity_stop_m <= 0.0)
     {
       throw std::invalid_argument("proximity_stop_m must be positive");
@@ -346,6 +357,7 @@ namespace omniseer_autonomy
     _started              = true;
     _started_at_sec       = now_sec;
     _state_started_at_sec = now_sec;
+    reset_success_confirmation();
     output.events.push_back(make_event(now_sec, "started"));
   }
 
@@ -366,6 +378,7 @@ namespace omniseer_autonomy
     _approach_holding = false;
     _terminal_reason  = reason;
     transition(CenteringState::Failed, now_sec, output, "failed", std::move(reason));
+    reset_success_confirmation();
     output.publish_command = true;
     output.linear_x_m_s    = 0.0;
     output.angular_z_rad_s = 0.0;
@@ -381,7 +394,7 @@ namespace omniseer_autonomy
       return fail(now_sec, "scan_complete_no_target");
     }
 
-    _stable_frames    = 0;
+    reset_success_confirmation();
     _approach_holding = false;
     _last_target.reset();
     _target_missing = false;
@@ -464,7 +477,7 @@ namespace omniseer_autonomy
     if (_approach_holding && area_ratio < _config.bbox_area_min_ratio)
     {
       _approach_holding = false;
-      _stable_frames    = 0;
+      reset_success_confirmation();
     }
     else if (!_approach_holding && area_ratio >= _config.approach_stop_area_ratio)
     {
@@ -495,9 +508,18 @@ namespace omniseer_autonomy
     else if (_state == CenteringState::Frame && !centered)
     {
       transition(CenteringState::Center, now_sec, output, "centering_resumed", "", target);
+      reset_success_confirmation();
     }
 
-    _stable_frames    = centered && framed ? _stable_frames + 1 : 0;
+    if (centered && framed)
+    {
+      ++_stable_frames;
+      _confirmation_miss_count = 0;
+    }
+    else
+    {
+      reset_success_confirmation();
+    }
     _final_error      = error;
     _final_confidence = target.confidence;
 
@@ -506,7 +528,31 @@ namespace omniseer_autonomy
       _approach_holding = false;
       _terminal_reason  = "framed";
       transition(CenteringState::Success, now_sec, output, "succeeded", _terminal_reason);
+      reset_success_confirmation();
     }
+  }
+
+  void TargetCenteringController::record_confirmation_miss(double                 now_sec,
+                                                           TargetCenteringOutput& output,
+                                                           const std::string&     reason)
+  {
+    if (_stable_frames == 0)
+    {
+      return;
+    }
+
+    ++_confirmation_miss_count;
+    output.events.push_back(make_event(now_sec, "confirmation_interrupted", reason));
+    if (_confirmation_miss_count > _config.success_miss_tolerance_updates)
+    {
+      reset_success_confirmation();
+    }
+  }
+
+  void TargetCenteringController::reset_success_confirmation() noexcept
+  {
+    _stable_frames           = 0;
+    _confirmation_miss_count = 0;
   }
 
   std::optional<TargetDetection> TargetCenteringController::select_target(
@@ -600,9 +646,19 @@ namespace omniseer_autonomy
       double angular_z_rad_s) const
   {
     return TargetCenteringEvent{
-        now_sec,           _state,          std::move(event), std::move(reason),
-        std::move(target), error,           area_ratio,       _last_proximity_range_m,
-        linear_x_m_s,      angular_z_rad_s, _stable_frames,   _target_loss_count,
+        now_sec,
+        _state,
+        std::move(event),
+        std::move(reason),
+        std::move(target),
+        error,
+        area_ratio,
+        _last_proximity_range_m,
+        linear_x_m_s,
+        angular_z_rad_s,
+        _stable_frames,
+        _confirmation_miss_count,
+        _target_loss_count,
     };
   }
 

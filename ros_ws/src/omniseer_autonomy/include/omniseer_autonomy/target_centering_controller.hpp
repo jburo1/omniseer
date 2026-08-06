@@ -32,6 +32,7 @@ namespace omniseer_autonomy
     double      forward_speed_m_s{0.05};
     double      reverse_speed_m_s{0.04};
     int         stable_framed_frames{10};
+    int         success_miss_tolerance_updates{2};
     double      proximity_stop_m{0.30};
     double      detection_stale_sec{0.5};
     double      scan_limit_revolutions{1.0};
@@ -63,6 +64,7 @@ namespace omniseer_autonomy
     double                         linear_x_m_s{0.0};
     double                         angular_z_rad_s{0.0};
     int                            stable_framed_frames{0};
+    int                            confirmation_miss_count{0};
     int                            target_loss_count{0};
   };
 
@@ -107,6 +109,9 @@ namespace omniseer_autonomy
     void                  update_approach_hysteresis(const TargetDetection& target);
     void                  update_visual_state(const TargetDetection& target, double now_sec,
                                               TargetCenteringOutput& output);
+    void                  record_confirmation_miss(double now_sec, TargetCenteringOutput& output,
+                                                   const std::string& reason);
+    void                  reset_success_confirmation() noexcept;
     std::optional<TargetDetection> select_target(
         const std::vector<TargetDetection>& detections) const;
     bool                 center_jump_within_limit(const TargetDetection& previous,
@@ -141,6 +146,7 @@ namespace omniseer_autonomy
     std::optional<TargetDetection> _acquisition_candidate{};
     int                            _acquisition_frames{0};
     int                            _stable_frames{0};
+    int                            _confirmation_miss_count{0};
     int                            _target_loss_count{0};
     bool                           _approach_holding{false};
     bool                           _target_missing{false};

@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cmath>
 #include <gtest/gtest.h>
 #include <vector>
@@ -232,6 +233,171 @@ namespace omniseer_autonomy
     EXPECT_EQ(controller.state(), CenteringState::Success);
   }
 
+  TEST(TargetCenteringController, SucceedsAfterTenUninterruptedCenteredFramedUpdates)
+  {
+    auto cfg                 = config();
+    cfg.stable_framed_frames = 10;
+    TargetCenteringController controller(cfg);
+
+    controller.update_detections({detection(50.0)}, 0.1);
+    controller.update_detections({detection(50.0)}, 0.2);
+    EXPECT_EQ(controller.state(), CenteringState::Scan);
+    for (int update = 3; update <= 11; ++update)
+    {
+      controller.update_detections({detection(50.0)}, 0.1 * static_cast<double>(update));
+      EXPECT_EQ(controller.state(), CenteringState::Frame);
+    }
+
+    controller.update_detections({detection(50.0)}, 1.2);
+    EXPECT_EQ(controller.state(), CenteringState::Success);
+  }
+
+  TEST(TargetCenteringController, PreservesConfirmationAcrossToleratedMisses)
+  {
+    auto cfg                           = config();
+    cfg.stable_framed_frames           = 5;
+    cfg.success_miss_tolerance_updates = 2;
+    TargetCenteringController controller(cfg);
+
+    controller.update_detections({detection(50.0)}, 0.1);
+    controller.update_detections({detection(50.0)}, 0.2);
+    controller.update_detections({detection(50.0)}, 0.3);
+    controller.update_detections({detection(50.0)}, 0.4);
+    controller.update_detections({detection(50.0)}, 0.5);
+
+    const auto missing = controller.update_detections({}, 0.6);
+    ASSERT_GE(missing.events.size(), 2U);
+    const auto missing_event = std::find_if(missing.events.begin(), missing.events.end(),
+                                            [](const TargetCenteringEvent& event)
+                                            { return event.event == "confirmation_interrupted"; });
+    ASSERT_NE(missing_event, missing.events.end());
+    EXPECT_EQ(missing_event->reason, "no_valid_target_detection");
+    EXPECT_EQ(missing_event->stable_framed_frames, 3);
+    EXPECT_EQ(missing_event->confirmation_miss_count, 1);
+
+    const auto second_missing = controller.update_detections({}, 0.7);
+    ASSERT_FALSE(second_missing.events.empty());
+    const auto second_missing_event =
+        std::find_if(second_missing.events.begin(), second_missing.events.end(),
+                     [](const TargetCenteringEvent& event)
+                     { return event.event == "confirmation_interrupted"; });
+    ASSERT_NE(second_missing_event, second_missing.events.end());
+    EXPECT_EQ(second_missing_event->stable_framed_frames, 3);
+    EXPECT_EQ(second_missing_event->confirmation_miss_count, 2);
+
+    controller.update_detections({detection(50.0)}, 0.8);
+    const auto rejected = controller.update_detections({detection(80.0)}, 0.9);
+    ASSERT_GE(rejected.events.size(), 2U);
+    const auto rejected_event = std::find_if(rejected.events.begin(), rejected.events.end(),
+                                             [](const TargetCenteringEvent& event)
+                                             { return event.event == "confirmation_interrupted"; });
+    ASSERT_NE(rejected_event, rejected.events.end());
+    EXPECT_EQ(rejected_event->reason, "max_target_center_jump_rejected");
+    EXPECT_EQ(rejected_event->stable_framed_frames, 4);
+    EXPECT_EQ(rejected_event->confirmation_miss_count, 1);
+
+    controller.update_detections({detection(50.0)}, 1.0);
+    EXPECT_EQ(controller.state(), CenteringState::Success);
+  }
+
+  TEST(TargetCenteringController, ResetsConfirmationAfterMissesExceedTolerance)
+  {
+    auto cfg                           = config();
+    cfg.stable_framed_frames           = 5;
+    cfg.success_miss_tolerance_updates = 2;
+    TargetCenteringController controller(cfg);
+
+    controller.update_detections({detection(50.0)}, 0.1);
+    controller.update_detections({detection(50.0)}, 0.2);
+    controller.update_detections({detection(50.0)}, 0.3);
+    controller.update_detections({detection(50.0)}, 0.4);
+    controller.update_detections({detection(50.0)}, 0.5);
+
+    controller.update_detections({}, 0.6);
+    controller.update_detections({}, 0.7);
+    const auto reset = controller.update_detections({}, 0.8);
+
+    ASSERT_GE(reset.events.size(), 1U);
+    const auto reset_event =
+        std::find_if(reset.events.begin(), reset.events.end(), [](const TargetCenteringEvent& event)
+                     { return event.event == "confirmation_interrupted"; });
+    ASSERT_NE(reset_event, reset.events.end());
+    EXPECT_EQ(reset_event->stable_framed_frames, 3);
+    EXPECT_EQ(reset_event->confirmation_miss_count, 3);
+    const auto command = controller.tick(0.81);
+    ASSERT_FALSE(command.events.empty());
+    EXPECT_EQ(command.events.back().stable_framed_frames, 0);
+    EXPECT_EQ(command.events.back().confirmation_miss_count, 0);
+    EXPECT_EQ(controller.state(), CenteringState::Frame);
+  }
+
+  TEST(TargetCenteringController, TargetLossTimeoutRestartsConfirmation)
+  {
+    auto cfg                           = config();
+    cfg.stable_framed_frames           = 5;
+    cfg.success_miss_tolerance_updates = 2;
+    cfg.detection_stale_sec            = 2.0;
+    TargetCenteringController controller(cfg);
+
+    controller.update_detections({detection(50.0)}, 0.1);
+    controller.update_detections({detection(50.0)}, 0.2);
+    controller.update_detections({detection(50.0)}, 0.3);
+    controller.update_detections({detection(50.0)}, 0.4);
+    controller.update_detections({detection(50.0)}, 0.5);
+    controller.update_detections({}, 0.6);
+
+    const auto reacquire = controller.tick(1.2);
+    ASSERT_GE(reacquire.events.size(), 2U);
+    EXPECT_EQ(reacquire.events.front().event, "reacquire_started");
+    EXPECT_EQ(reacquire.events.front().stable_framed_frames, 0);
+    EXPECT_EQ(reacquire.events.front().confirmation_miss_count, 0);
+    EXPECT_EQ(controller.state(), CenteringState::Scan);
+
+    controller.update_detections({detection(50.0)}, 1.3);
+    controller.update_detections({detection(50.0)}, 1.4);
+    controller.update_detections({detection(50.0)}, 1.5);
+    EXPECT_EQ(controller.state(), CenteringState::Frame);
+    controller.update_detections({detection(50.0)}, 1.6);
+    controller.update_detections({detection(50.0)}, 1.7);
+    controller.update_detections({detection(50.0)}, 1.8);
+    controller.update_detections({detection(50.0)}, 1.9);
+    EXPECT_EQ(controller.state(), CenteringState::Success);
+  }
+
+  TEST(TargetCenteringController, ZeroMissTolerancePreservesStrictConfirmation)
+  {
+    auto cfg                           = config();
+    cfg.stable_framed_frames           = 4;
+    cfg.success_miss_tolerance_updates = 0;
+    TargetCenteringController controller(cfg);
+
+    controller.update_detections({detection(50.0)}, 0.1);
+    controller.update_detections({detection(50.0)}, 0.2);
+    controller.update_detections({detection(50.0)}, 0.3);
+    controller.update_detections({detection(50.0)}, 0.4);
+    const auto interrupted = controller.update_detections({}, 0.5);
+
+    ASSERT_GE(interrupted.events.size(), 2U);
+    const auto interrupted_event =
+        std::find_if(interrupted.events.begin(), interrupted.events.end(),
+                     [](const TargetCenteringEvent& event)
+                     { return event.event == "confirmation_interrupted"; });
+    ASSERT_NE(interrupted_event, interrupted.events.end());
+    EXPECT_EQ(interrupted_event->stable_framed_frames, 2);
+    EXPECT_EQ(interrupted_event->confirmation_miss_count, 1);
+    const auto command = controller.tick(0.51);
+    ASSERT_FALSE(command.events.empty());
+    EXPECT_EQ(command.events.back().stable_framed_frames, 0);
+    EXPECT_EQ(command.events.back().confirmation_miss_count, 0);
+
+    controller.update_detections({detection(50.0)}, 0.6);
+    controller.update_detections({detection(50.0)}, 0.7);
+    controller.update_detections({detection(50.0)}, 0.8);
+    EXPECT_EQ(controller.state(), CenteringState::Frame);
+    controller.update_detections({detection(50.0)}, 0.9);
+    EXPECT_EQ(controller.state(), CenteringState::Success);
+  }
+
   TEST(TargetCenteringController, FreshMissingOrInvalidTargetResetsFramedStability)
   {
     TargetCenteringController controller(config());
@@ -424,6 +590,10 @@ namespace omniseer_autonomy
     auto invalid_jump                         = config();
     invalid_jump.max_target_center_jump_ratio = 0.0;
     EXPECT_THROW(TargetCenteringController{invalid_jump}, std::invalid_argument);
+
+    auto invalid_miss_tolerance                           = config();
+    invalid_miss_tolerance.success_miss_tolerance_updates = -1;
+    EXPECT_THROW(TargetCenteringController{invalid_miss_tolerance}, std::invalid_argument);
   }
 
   TEST(TargetCenteringController, FailsOnStaleDetectionsAndCommandsZero)

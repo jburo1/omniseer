@@ -50,6 +50,7 @@ class RunConfig:
     autonomy_forward_speed_m_s: str = "0.05"
     autonomy_reverse_speed_m_s: str = "0.04"
     autonomy_stable_framed_frames: str = "10"
+    autonomy_success_miss_tolerance_updates: str = "2"
     autonomy_proximity_stop_m: str = "0.30"
     autonomy_capture_timeout_sec: str = "2.0"
     autonomy_min_target_confidence: str = "0.50"
@@ -273,6 +274,7 @@ def _autonomy_parameter_launch_args(run_config: RunConfig) -> list[str]:
         f"autonomy_forward_speed_m_s:={run_config.autonomy_forward_speed_m_s}",
         f"autonomy_reverse_speed_m_s:={run_config.autonomy_reverse_speed_m_s}",
         f"autonomy_stable_framed_frames:={run_config.autonomy_stable_framed_frames}",
+        f"autonomy_success_miss_tolerance_updates:={run_config.autonomy_success_miss_tolerance_updates}",
         f"autonomy_proximity_stop_m:={run_config.autonomy_proximity_stop_m}",
         f"autonomy_capture_timeout_sec:={run_config.autonomy_capture_timeout_sec}",
         f"autonomy_min_target_confidence:={run_config.autonomy_min_target_confidence}",

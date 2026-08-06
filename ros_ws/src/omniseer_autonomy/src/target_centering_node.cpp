@@ -199,12 +199,14 @@ namespace omniseer_autonomy
       config.forward_speed_m_s        = declare_parameter<double>("forward_speed_m_s", 0.05);
       config.reverse_speed_m_s        = declare_parameter<double>("reverse_speed_m_s", 0.04);
       config.stable_framed_frames     = declare_parameter<int>("stable_framed_frames", 10);
-      config.proximity_stop_m         = declare_parameter<double>("proximity_stop_m", 0.30);
-      const auto detection_stale_ms   = declare_parameter<int>("detection_stale_ms", 500);
-      config.detection_stale_sec      = static_cast<double>(detection_stale_ms) / 1000.0;
-      config.scan_limit_revolutions   = declare_parameter<double>("scan_limit_revolutions", 1.0);
-      config.target_lost_timeout_sec  = declare_parameter<double>("target_lost_timeout_sec", 0.5);
-      config.min_target_confidence    = declare_parameter<double>("min_target_confidence", 0.50);
+      config.success_miss_tolerance_updates =
+          declare_parameter<int>("success_miss_tolerance_updates", 2);
+      config.proximity_stop_m        = declare_parameter<double>("proximity_stop_m", 0.30);
+      const auto detection_stale_ms  = declare_parameter<int>("detection_stale_ms", 500);
+      config.detection_stale_sec     = static_cast<double>(detection_stale_ms) / 1000.0;
+      config.scan_limit_revolutions  = declare_parameter<double>("scan_limit_revolutions", 1.0);
+      config.target_lost_timeout_sec = declare_parameter<double>("target_lost_timeout_sec", 0.5);
+      config.min_target_confidence   = declare_parameter<double>("min_target_confidence", 0.50);
       config.max_target_center_jump_ratio =
           declare_parameter<double>("max_target_center_jump_ratio", 0.20);
       _target_class = config.target_class;
@@ -280,6 +282,7 @@ namespace omniseer_autonomy
               << ",\"linear_x_m_s\":" << event.linear_x_m_s
               << ",\"angular_z_rad_s\":" << event.angular_z_rad_s
               << ",\"stable_framed_frames\":" << event.stable_framed_frames
+              << ",\"confirmation_miss_count\":" << event.confirmation_miss_count
               << ",\"target_loss_count\":" << event.target_loss_count;
       if (event.target.has_value())
       {
@@ -324,6 +327,7 @@ namespace omniseer_autonomy
       message << " normalized_error=" << optional_log_number(event.normalized_error)
               << " bbox_area_ratio=" << optional_log_number(event.bbox_area_ratio)
               << " stable_framed_frames=" << event.stable_framed_frames
+              << " confirmation_miss_count=" << event.confirmation_miss_count
               << " target_loss_count=" << event.target_loss_count;
 
       const auto text = message.str();

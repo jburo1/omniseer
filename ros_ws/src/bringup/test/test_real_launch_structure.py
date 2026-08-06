@@ -192,6 +192,7 @@ class RealLaunchStructureTests(unittest.TestCase):
         self.assertIn("autonomy_forward_speed_m_s", declared_names)
         self.assertIn("autonomy_reverse_speed_m_s", declared_names)
         self.assertIn("autonomy_stable_framed_frames", declared_names)
+        self.assertIn("autonomy_success_miss_tolerance_updates", declared_names)
         self.assertIn("autonomy_proximity_stop_m", declared_names)
         self.assertIn("autonomy_capture_timeout_sec", declared_names)
         self.assertIn("autonomy_target_lost_timeout_sec", declared_names)
@@ -218,6 +219,10 @@ class RealLaunchStructureTests(unittest.TestCase):
         self.assertIn('"forward_speed_m_s": config["autonomy_forward_speed_m_s"]', launch_text)
         self.assertIn('"reverse_speed_m_s": config["autonomy_reverse_speed_m_s"]', launch_text)
         self.assertIn('"stable_framed_frames": config["autonomy_stable_framed_frames"]', launch_text)
+        self.assertIn(
+            '"success_miss_tolerance_updates": config["autonomy_success_miss_tolerance_updates"]',
+            launch_text,
+        )
         self.assertIn('"proximity_stop_m": config["autonomy_proximity_stop_m"]', launch_text)
         self.assertIn('"capture_timeout_sec": config["autonomy_capture_timeout_sec"]', launch_text)
         self.assertIn('"target_lost_timeout_sec": config["autonomy_target_lost_timeout_sec"]', launch_text)
@@ -372,6 +377,7 @@ class RealLaunchStructureTests(unittest.TestCase):
         self.assertNotIn("autonomy_forward_speed_m_s", declared_names)
         self.assertNotIn("autonomy_reverse_speed_m_s", declared_names)
         self.assertNotIn("autonomy_stable_framed_frames", declared_names)
+        self.assertNotIn("autonomy_success_miss_tolerance_updates", declared_names)
         self.assertNotIn("autonomy_proximity_stop_m", declared_names)
         self.assertNotIn("autonomy_capture_timeout_sec", declared_names)
         self.assertNotIn("autonomy_detection_stale_ms", declared_names)

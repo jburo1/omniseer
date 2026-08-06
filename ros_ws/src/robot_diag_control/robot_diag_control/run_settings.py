@@ -39,6 +39,7 @@ class RunFormValues:
     autonomy_forward_speed_m_s: str = "0.05"
     autonomy_reverse_speed_m_s: str = "0.04"
     autonomy_stable_framed_frames: str = "10"
+    autonomy_success_miss_tolerance_updates: str = "2"
     autonomy_proximity_stop_m: str = "0.30"
     autonomy_capture_timeout_sec: str = "2.0"
     autonomy_min_target_confidence: str = "0.50"
@@ -119,6 +120,17 @@ def validated_positive_int(value: str, *, name: str, default: str) -> str:
     return normalized
 
 
+def validated_nonnegative_int(value: str, *, name: str, default: str) -> str:
+    normalized = value.strip() or default
+    try:
+        parsed = int(normalized)
+    except ValueError as exc:
+        raise ValueError(f"{name} must be a non-negative integer") from exc
+    if parsed < 0:
+        raise ValueError(f"{name} must be a non-negative integer")
+    return normalized
+
+
 def validated_positive_unit_interval(value: str, *, name: str, default: str) -> str:
     normalized = validated_unit_interval(value, name=name, default=default)
     if float(normalized) <= 0.0:
@@ -194,6 +206,11 @@ def resolve_run_form(
         autonomy_forward_speed_m_s=values.autonomy_forward_speed_m_s.strip() or "0.05",
         autonomy_reverse_speed_m_s=values.autonomy_reverse_speed_m_s.strip() or "0.04",
         autonomy_stable_framed_frames=values.autonomy_stable_framed_frames.strip() or "10",
+        autonomy_success_miss_tolerance_updates=validated_nonnegative_int(
+            values.autonomy_success_miss_tolerance_updates,
+            name="success miss tolerance updates",
+            default="2",
+        ),
         autonomy_proximity_stop_m=values.autonomy_proximity_stop_m.strip() or "0.30",
         autonomy_capture_timeout_sec=values.autonomy_capture_timeout_sec.strip() or "2.0",
         autonomy_min_target_confidence=validated_unit_interval(

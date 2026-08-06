@@ -119,6 +119,7 @@ class RunCommandsTests(unittest.TestCase):
                 autonomy_forward_speed_m_s="0.06",
                 autonomy_reverse_speed_m_s="0.03",
                 autonomy_stable_framed_frames="7",
+                autonomy_success_miss_tolerance_updates="1",
                 autonomy_proximity_stop_m="0.42",
                 autonomy_capture_timeout_sec="3.5",
                 autonomy_min_target_confidence="0.65",
@@ -139,6 +140,7 @@ class RunCommandsTests(unittest.TestCase):
         self.assertIn("autonomy_forward_speed_m_s:=0.06", command[3])
         self.assertIn("autonomy_reverse_speed_m_s:=0.03", command[3])
         self.assertIn("autonomy_stable_framed_frames:=7", command[3])
+        self.assertIn("autonomy_success_miss_tolerance_updates:=1", command[3])
         self.assertIn("autonomy_proximity_stop_m:=0.42", command[3])
         self.assertIn("autonomy_capture_timeout_sec:=3.5", command[3])
         self.assertIn("autonomy_min_target_confidence:=0.65", command[3])

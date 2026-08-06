@@ -355,6 +355,7 @@ class RobotMonitorGui:
         self._autonomy_forward_speed_var = tk.StringVar(value="0.05")
         self._autonomy_reverse_speed_var = tk.StringVar(value="0.04")
         self._autonomy_stable_frames_var = tk.StringVar(value="10")
+        self._autonomy_success_miss_tolerance_updates_var = tk.StringVar(value="2")
         self._autonomy_proximity_stop_var = tk.StringVar(value="0.30")
         self._autonomy_capture_timeout_var = tk.StringVar(value="2.0")
         self._autonomy_min_target_confidence_var = tk.StringVar(value="0.50")
@@ -607,22 +608,30 @@ class RobotMonitorGui:
         self._add_labeled_entry(autonomy_frame, "Forward m/s", self._autonomy_forward_speed_var, 1, 2, width=8)
         self._add_labeled_entry(autonomy_frame, "Reverse m/s", self._autonomy_reverse_speed_var, 2, 0, width=8)
         self._add_labeled_entry(autonomy_frame, "Stable Frames", self._autonomy_stable_frames_var, 2, 2, width=8)
-        self._add_labeled_entry(autonomy_frame, "Proximity Stop m", self._autonomy_proximity_stop_var, 3, 0, width=8)
-        self._add_labeled_entry(autonomy_frame, "Capture Timeout s", self._autonomy_capture_timeout_var, 3, 2, width=8)
+        self._add_labeled_entry(
+            autonomy_frame,
+            "Success Miss Tolerance",
+            self._autonomy_success_miss_tolerance_updates_var,
+            3,
+            0,
+            width=8,
+        )
+        self._add_labeled_entry(autonomy_frame, "Proximity Stop m", self._autonomy_proximity_stop_var, 3, 2, width=8)
+        self._add_labeled_entry(autonomy_frame, "Capture Timeout s", self._autonomy_capture_timeout_var, 4, 0, width=8)
         self._add_labeled_entry(
             autonomy_frame,
             "Evidence Interval s",
             self._autonomy_evidence_interval_var,
             4,
-            0,
+            2,
             width=8,
         )
         self._add_labeled_entry(
             autonomy_frame,
             "Min Target Confidence",
             self._autonomy_min_target_confidence_var,
-            4,
-            2,
+            5,
+            0,
             width=8,
         )
         self._add_labeled_entry(
@@ -630,7 +639,7 @@ class RobotMonitorGui:
             "Max Center Jump Ratio",
             self._autonomy_max_target_center_jump_ratio_var,
             5,
-            0,
+            2,
             width=8,
         )
         for column in range(4):
@@ -739,6 +748,7 @@ class RobotMonitorGui:
             autonomy_forward_speed_m_s=self._autonomy_forward_speed_var.get(),
             autonomy_reverse_speed_m_s=self._autonomy_reverse_speed_var.get(),
             autonomy_stable_framed_frames=self._autonomy_stable_frames_var.get(),
+            autonomy_success_miss_tolerance_updates=self._autonomy_success_miss_tolerance_updates_var.get(),
             autonomy_proximity_stop_m=self._autonomy_proximity_stop_var.get(),
             autonomy_capture_timeout_sec=self._autonomy_capture_timeout_var.get(),
             autonomy_min_target_confidence=self._autonomy_min_target_confidence_var.get(),
