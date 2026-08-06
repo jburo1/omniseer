@@ -20,7 +20,7 @@ navigation-based object search or room-scale semantic exploration.
 | --- | --- |
 | Understand the system | [System Architecture](architecture/overview.md) |
 | Inspect implementation-backed evidence | [Verification Evidence](verification/evidence.md) |
-| Understand edge perception | [Edge-to-Cloud Perception](perception/edge-to-cloud.md) and [Vision Pipeline](perception/vision-pipeline.md) |
+| Understand edge perception | [Edge Perception and Offboard Review](perception/edge-to-cloud.md) and [Vision Pipeline](perception/vision-pipeline.md) |
 | Operate or review a run | [Operator Run Workflow](operations/operator-run-workflow.md) and [Scripts Front Door](operations/scripts-frontdoor.md) |
 | Inspect verification and CI | [CI/CD Overview](verification/ci-cd.md) |
 

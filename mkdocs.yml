@@ -34,7 +34,7 @@ nav:
   - Home: index.md
   - Project:
     - System Architecture: architecture/overview.md
-    - Edge-to-Cloud Perception: perception/edge-to-cloud.md
+    - Edge Perception and Offboard Review: perception/edge-to-cloud.md
     - Verification Evidence: verification/evidence.md
   - Operate:
     - Scripts Front Door: operations/scripts-frontdoor.md

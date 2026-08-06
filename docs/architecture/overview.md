@@ -148,7 +148,7 @@ validation responsibility.
 
 ## Related Documentation
 
-- [Edge-to-Cloud Perception](../perception/edge-to-cloud.md)
+- [Edge Perception and Offboard Review](../perception/edge-to-cloud.md)
 - [Verification Evidence](../verification/evidence.md)
 - [Vision Pipeline](../perception/vision-pipeline.md)
 - [Vision Telemetry](../perception/vision-telemetry.md)

@@ -1,4 +1,4 @@
-# Edge-to-Cloud Perception
+# Edge Perception and Offboard Review
 
 ## Purpose
 
@@ -86,8 +86,8 @@ A reviewer can:
 - select classes without retraining the detector
 - run the model on the robot NPU
 - observe typed detections and performance summaries
-- reproduce a recorded experiment from documented commands when the required robot
-  hardware and run artifacts are available
+- re-run the documented software configuration and compare the resulting evidence,
+  when the required hardware and artifacts are available
 - inspect latency and throughput over time
 - inspect detections by class and confidence
 - review representative successes, false positives, and missed detections
@@ -95,6 +95,9 @@ A reviewer can:
 
 Execution claims should be supported by measured output, captured evidence, and a
 documented hardware/software configuration.
+
+A complete camera-input-to-report example will be added here when a public run is
+available.
 
 ## Related Documentation
 

@@ -99,7 +99,7 @@ claims can be reviewed against recorded artifacts.
    robot, operator, firmware, runtime, and evidence boundaries.
 2. [Verification Evidence](docs/verification/evidence.md) for CI, local checks,
    target-hardware evidence, and what each artifact supports.
-3. [Edge-to-Cloud Perception](docs/perception/edge-to-cloud.md) and
+3. [Edge Perception and Offboard Review](docs/perception/edge-to-cloud.md) and
    [Vision Pipeline](docs/perception/vision-pipeline.md) for the native
    perception path.
 4. [Operator Run Workflow](docs/operations/operator-run-workflow.md) for the
