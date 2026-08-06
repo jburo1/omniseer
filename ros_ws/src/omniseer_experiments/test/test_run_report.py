@@ -783,6 +783,23 @@ class RunReportTests(unittest.TestCase):
             overwrite_summary = write_run_report(run_dir, overwrite=True)
             self.assertEqual(first_summary.output_path, overwrite_summary.output_path)
 
+    def test_report_includes_videos_only_when_present(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "demo_001"
+            _write_completed_bundle(run_dir)
+            video_dir = run_dir / "video"
+            video_dir.mkdir()
+            (video_dir / "source.ts").write_bytes(b"recorded")
+            waiting = write_run_report(run_dir)
+            self.assertIn("video processing has not yet been run", waiting.output_path.read_text(encoding="utf-8"))
+
+            (video_dir / "source.mp4").write_bytes(b"mp4")
+            (video_dir / "overlay.mp4").write_bytes(b"mp4")
+            complete = write_run_report(run_dir, overwrite=True)
+            output = complete.output_path.read_text(encoding="utf-8")
+            self.assertIn("video/source.mp4", output)
+            self.assertIn("video/overlay.mp4", output)
+
     def test_report_cli_outputs_summary(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             run_dir = Path(tmp) / "demo_001"

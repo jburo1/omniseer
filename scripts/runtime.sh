@@ -36,6 +36,7 @@ Record args:
   --system-interval-sec <seconds>       Default: 1.0
   --experiment-config <name>            Default: operator-runtime
   --experiment-parameter <key=value>    Repeatable; default: stage=manual-operator
+  --record-video                         Record video/source.ts on the robot.
 EOF
 }
 
@@ -366,7 +367,7 @@ runtime_run() {
 }
 
 runtime_record() {
-  local image_base tag image_ref run_id system_interval_sec experiment_config status
+  local image_base tag image_ref run_id system_interval_sec experiment_config status record_video
   local repo_root runs_bind_root host_run_dir
   local experiment_parameters=()
   local launch_args=()
@@ -375,6 +376,7 @@ runtime_record() {
   run_id="operator_$(runtime_timestamp)"
   system_interval_sec="1.0"
   experiment_config="operator-runtime"
+  record_video="false"
   experiment_parameters+=("stage=manual-operator")
 
   runtime_parse_image_tag_args image_base tag "$@"
@@ -411,6 +413,10 @@ runtime_record() {
         [[ ${#remaining[@]} -ge 2 ]] || omni_die "${remaining[0]} requires a value"
         experiment_parameters+=("${remaining[1]}")
         remaining=("${remaining[@]:2}")
+        ;;
+      --record-video)
+        record_video="true"
+        remaining=("${remaining[@]:1}")
         ;;
       --)
         launch_args=("${remaining[@]:1}")
@@ -450,6 +456,9 @@ runtime_record() {
   fi
   if [[ -n "${classes}" ]]; then
     command+=(--record-classes "${classes}")
+  fi
+  if [[ "${record_video}" == "true" ]]; then
+    command+=(--record-video)
   fi
   local parameter
   for parameter in "${experiment_parameters[@]}"; do

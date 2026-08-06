@@ -15,6 +15,9 @@ from robot_diag_control.run_commands import (
 from robot_diag_control.run_commands import (
     build_report_command as build_omni_report_command,
 )
+from robot_diag_control.run_commands import (
+    build_video_command as build_omni_video_command,
+)
 
 CommandExecutor = Callable[[list[str], Path], subprocess.CompletedProcess[str]]
 
@@ -131,6 +134,31 @@ def build_report_command(
         run_dir=imported_run_dir(context, run_id),
         overwrite=overwrite,
     )
+
+
+def build_video_command(context: RunArtifactContext, *, run_id: str) -> list[str]:
+    return build_omni_video_command(repo_root=context.repo_root, run_dir=imported_run_dir(context, run_id))
+
+
+def build_run_videos(
+    context: RunArtifactContext,
+    *,
+    run_id: str,
+    command_executor: CommandExecutor = _default_command_executor,
+) -> RunArtifactResult:
+    command = build_video_command(context, run_id=run_id)
+    path = imported_run_dir(context, run_id) / "video" / "overlay.mp4"
+    try:
+        completed = command_executor(command, context.repo_root)
+    except OSError as error:
+        return RunArtifactResult(command=command, success=False, message=f"video build failed: {error}")
+    if completed.returncode != 0:
+        return RunArtifactResult(
+            command=command,
+            success=False,
+            message=f"video build failed: {_completed_detail(completed)}",
+        )
+    return RunArtifactResult(command=command, success=path.is_file(), path=path, message=f"videos built: {path}")
 
 
 def retrieve_run_artifacts(

@@ -55,6 +55,7 @@ class RunConfig:
     detector_score_threshold: str = "0.25"
     detector_nms_iou_threshold: str = "0.45"
     detector_max_detections: str = "100"
+    record_video: bool = False
 
 
 def sanitize_run_id(run_id: str) -> str:
@@ -153,6 +154,8 @@ def _build_runtime_record_inner_command(
         command.extend(["--record-classes", ",".join(classes)])
     if notes.strip():
         command.extend(["--record-notes", notes.strip()])
+    if run_config.record_video:
+        command.append("--record-video")
     command.extend(_record_experiment_config_args(run_config))
     command.extend(_detector_experiment_parameters(run_config))
     command.append("--")
@@ -197,6 +200,8 @@ def _build_devcontainer_record_inner_command(
         command.extend(["--record-classes", ",".join(classes)])
     if notes.strip():
         command.extend(["--record-notes", notes.strip()])
+    if run_config.record_video:
+        command.append("--record-video")
     command.extend(_record_experiment_config_args(run_config))
     command.extend(_detector_experiment_parameters(run_config))
     command.append("bringup")
@@ -364,3 +369,7 @@ def build_report_command(*, repo_root: Path, run_dir: Path, overwrite: bool = Tr
     if overwrite:
         command.append("--overwrite")
     return command
+
+
+def build_video_command(*, repo_root: Path, run_dir: Path) -> list[str]:
+    return [_omni_command(repo_root), "runs", "video", str(run_dir)]

@@ -50,6 +50,7 @@ _REAL_ARGUMENT_DEFAULTS = [
     ("start_gateway", "false"),
     ("gateway_preview_source_kind", "camera"),
     ("gateway_preview_device", "/dev/video11"),
+    ("gateway_preview_record_path", ""),
     ("start_autonomy", "false"),
     ("autonomy_target_class", ""),
     ("autonomy_run_dir", ""),
@@ -103,6 +104,7 @@ _REAL_ARGUMENT_DEFAULTS = [
     ("experiment_overwrite", "false"),
     ("experiment_queue_size", "256"),
     ("experiment_flush_interval_sec", "1.0"),
+    ("experiment_record_video", "false"),
 ]
 
 _REAL_IO_ARGS = [
@@ -162,6 +164,7 @@ _COMMON_FORWARD_ARGS = [
     "start_gateway",
     "gateway_preview_source_kind",
     "gateway_preview_device",
+    "gateway_preview_record_path",
 ]
 
 
@@ -249,6 +252,8 @@ def _build_real_bringup_actions(*, pkg_bringup, config):
             config["experiment_queue_size"],
             "--flush-interval-sec",
             config["experiment_flush_interval_sec"],
+            "--record-video",
+            config["experiment_record_video"],
             "--ros-args",
             "--log-level",
             config["log_level"],

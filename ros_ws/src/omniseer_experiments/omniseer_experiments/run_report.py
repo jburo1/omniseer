@@ -204,6 +204,7 @@ def _render_report(
             issues=issues,
         ),
         _summary_section(inspection, manifest=manifest),
+        _video_section(inspection.path, inspection.path / "report"),
         _artifacts_section(inspection.path, inspection.path / "report"),
         _configuration_section(manifest),
         _health_section(inspection, evidence_items=evidence_items, pipeline=pipeline, issues=issues),
@@ -311,6 +312,28 @@ def _artifacts_section(run_dir: Path, report_dir: Path) -> str:
     if not artifact_rows:
         return ""
     return _section("Run Artifacts", _artifact_links_table(artifact_rows), open_by_default=True)
+
+
+def _video_section(run_dir: Path, report_dir: Path) -> str:
+    source_ts = run_dir / "video" / "source.ts"
+    source_mp4 = run_dir / "video" / "source.mp4"
+    overlay_mp4 = run_dir / "video" / "overlay.mp4"
+    if not source_ts.is_file() and not source_mp4.is_file() and not overlay_mp4.is_file():
+        return ""
+    if not source_mp4.is_file() and not overlay_mp4.is_file():
+        return _section("Video", "<p>Source video was recorded; video processing has not yet been run.</p>")
+    parts = [
+        "<p>Video overlays use approximate synchronization because preview and inference use separate camera paths.</p>"
+    ]
+    for label, path in (("Source video", source_mp4), ("Detection overlay", overlay_mp4)):
+        if path.is_file():
+            href = _relative_href(report_dir, path)
+            parts.append(
+                f'<h3>{_esc(label)}</h3><video controls preload="metadata" '
+                f'src="{_attr(href)}"></video><p><a href="{_attr(href)}">'
+                f"Open {_esc(label).lower()}</a></p>"
+            )
+    return _section("Video", "".join(parts))
 
 
 def _configuration_section(manifest: dict[str, Any]) -> str:

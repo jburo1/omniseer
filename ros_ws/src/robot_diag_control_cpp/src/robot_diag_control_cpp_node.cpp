@@ -46,6 +46,7 @@ namespace robot_diag_control_cpp
           declare_parameter<std::string>("preview_srt_bind_address", "0.0.0.0");
       const auto preview_srt_port       = declare_parameter<int64_t>("preview_srt_port", 7100);
       const auto preview_srt_latency_ms = declare_parameter<int64_t>("preview_srt_latency_ms", 125);
+      const auto preview_record_path    = declare_parameter<std::string>("preview_record_path", "");
       const auto teleop_command_topic =
           declare_parameter<std::string>("teleop_command_topic", "/cmd_vel_keyboard");
       const auto teleop_frame_id = declare_parameter<std::string>("teleop_frame_id", "base_link");
@@ -108,11 +109,20 @@ namespace robot_diag_control_cpp
             preview_srt_bind_address,
             static_cast<int>(preview_srt_port),
             static_cast<int>(preview_srt_latency_ms),
+            preview_record_path,
         });
       }
       _preview_manager =
           std::make_unique<PreviewProcessManager>(*_state_store,
                                                   std::move(preview_command_factory));
+      if (!preview_record_path.empty())
+      {
+        const auto result = _preview_manager->set_enabled(true, PreviewProfile::Balanced);
+        if (!result.accepted)
+        {
+          throw std::runtime_error("failed to start video recording: " + result.message);
+        }
+      }
       _teleop_publisher =
           create_publisher<geometry_msgs::msg::TwistStamped>(teleop_command_topic, 10);
       _teleop_manager = std::make_unique<TeleopManager>(

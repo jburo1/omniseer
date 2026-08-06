@@ -54,6 +54,7 @@ Recording flags:
   --record-experiment-parameter <key=value>
                                    Store one experiment parameter; may be repeated.
   --record-overwrite               Replace an existing output directory.
+  --record-video                   Record gateway camera video to video/source.ts.
 EOF
 }
 
@@ -162,6 +163,9 @@ prepare_recording_run_dir() {
       | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e '/^$/d' \
       >"${record_out_dir}/classes.txt"
   fi
+  if [[ "${record_video}" == "true" ]]; then
+    mkdir -p -- "${record_out_dir}/video"
+  fi
 }
 
 recording_bringup_log_path() {
@@ -218,6 +222,13 @@ append_recording_launch_args() {
     "experiment_launch_mode:=${mode}"
     "experiment_launch_args:=${launch_args_text}"
   )
+  if [[ "${record_video}" == "true" ]]; then
+    target_args+=(
+      "start_gateway:=true"
+      "gateway_preview_record_path:=${record_out_dir}/video/source.ts"
+      "experiment_record_video:=true"
+    )
+  fi
 
   if [[ -n "${record_notes}" ]]; then
     target_args+=("experiment_notes:=${record_notes}")
@@ -513,6 +524,7 @@ record_container_image_digest=""
 record_experiment_config=""
 record_experiment_parameters=()
 record_overwrite="false"
+record_video="false"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --profile)
@@ -610,6 +622,11 @@ while [[ $# -gt 0 ]]; do
     --record-overwrite)
       record_enabled=true
       record_overwrite="true"
+      shift
+      ;;
+    --record-video)
+      record_enabled=true
+      record_video="true"
       shift
       ;;
     help|-h|--help)

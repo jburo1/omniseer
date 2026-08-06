@@ -283,7 +283,8 @@ namespace robot_diag_control_cpp
       return true;
     }
 
-    if (kill(_child_pid, SIGTERM) != 0 && errno != ESRCH)
+    // gst-launch -e turns SIGINT into EOS, allowing the MPEG-TS filesink to finalize.
+    if (kill(_child_pid, SIGINT) != 0 && errno != ESRCH)
     {
       return false;
     }

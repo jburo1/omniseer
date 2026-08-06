@@ -436,7 +436,19 @@ class MonitorGuiTests(unittest.TestCase):
         try:
             gui = RobotMonitorGui(root, _build_parser().parse_args([]))
 
-            self.assertEqual(set(gui._run_buttons), {"new_id", "start", "stop", "retrieve", "open_report"})
+            self.assertEqual(
+                set(gui._run_buttons),
+                {
+                    "new_id",
+                    "start",
+                    "stop",
+                    "retrieve",
+                    "open_report",
+                    "build_video",
+                    "open_source_video",
+                    "open_overlay_video",
+                },
+            )
         finally:
             root.destroy()
 

@@ -24,6 +24,7 @@ setup(
             "record_run = omniseer_experiments.record_run:main",
             "report_run = omniseer_experiments.run_report:report_run_main",
             "retrieve_runs = omniseer_experiments.run_retrieval:main",
+            "build_run_video = omniseer_experiments.run_video:main",
         ],
     },
 )

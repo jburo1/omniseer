@@ -32,7 +32,7 @@ Commands:
   test    Targeted local verification helpers. Defaults to ROS.
   run     Operator-facing run commands for sim, real, autonomy, monitor, and teleop.
   runtime Build, record, verify, push, and pull robot runtime container checkpoints.
-  runs    Inspect, list, and retrieve perception run bundles.
+  runs    Inspect, retrieve, report, and build RunBundle videos.
   check   Passive verification helpers.
   doctor  Report local build, runtime, and robot dependency state.
   flash   Hardware flashing helpers.
@@ -54,6 +54,7 @@ Examples:
   scripts/omni runs inspect runs/imported/demo_001
   scripts/omni runs annotate runs/imported/demo_001
   scripts/omni runs report runs/imported/demo_001
+  scripts/omni runs video runs/imported/demo_001
   scripts/omni runs local-list --root runs
   scripts/omni test smoke-sim
   scripts/omni build ros
@@ -99,6 +100,7 @@ Recording flags:
   --record-notes <text>
   --record-classes <text>
   --record-overwrite
+  --record-video
 
 Legacy diagnostic profile:
   scripts/omni run real --profile legacy-teleop [operator|bringup|smoke]
@@ -111,6 +113,7 @@ Usage:
   scripts/omni runs inspect <run_dir> [--json]
   scripts/omni runs annotate <run_dir> [--overwrite]
   scripts/omni runs report <run_dir> [--overwrite]   # also annotates evidence
+  scripts/omni runs video <run_dir>
   scripts/omni runs local-list [--root <local-runs-root>]
   scripts/omni runs list [retrieval args...]
   scripts/omni runs pull <run_id> [retrieval args...]
@@ -314,6 +317,10 @@ EOF
       report)
         omni_source_ros_workspace
         exec ros2 run omniseer_experiments report_run "$@"
+        ;;
+      video)
+        omni_source_ros_workspace
+        exec ros2 run omniseer_experiments build_run_video "$@"
         ;;
       local-list)
         omni_source_ros_workspace

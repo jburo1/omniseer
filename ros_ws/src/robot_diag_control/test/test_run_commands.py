@@ -237,3 +237,15 @@ class RunCommandsTests(unittest.TestCase):
             command,
             ["/repo/scripts/omni", "runs", "report", "/repo/runs/imported/operator_001", "--overwrite"],
         )
+
+    def test_video_recording_is_opt_in_and_adds_run_argument(self):
+        default_command = build_remote_start_command(
+            connection=_connection(), run_config=RunConfig(run_id="operator_001", backend=RUN_BACKEND_RUNTIME)
+        )
+        enabled_command = build_remote_start_command(
+            connection=_connection(),
+            run_config=RunConfig(run_id="operator_001", backend=RUN_BACKEND_RUNTIME, record_video=True),
+        )
+
+        self.assertNotIn("--record-video", default_command[3])
+        self.assertIn("--record-video", enabled_command[3])

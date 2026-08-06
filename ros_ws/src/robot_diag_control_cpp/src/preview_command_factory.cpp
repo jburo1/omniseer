@@ -118,17 +118,25 @@ namespace robot_diag_control_cpp
                            "!",
                            "h264parse",
                            "config-interval=-1",
-                           "!",
-                           "mpegtsmux",
-                           "alignment=7",
-                           "!",
-                           "srtsink",
-                           "mode=listener",
-                           "localaddress=" + config.srt_bind_address,
-                           "localport=" + std::to_string(config.srt_port),
-                           "wait-for-connection=false",
-                           "latency=" + std::to_string(config.srt_latency_ms),
                        });
+
+      if (!config.record_path.empty())
+      {
+        arguments.insert(arguments.end(),
+                         {"!", "tee", "name=encoded", "encoded.", "!", "queue", "!", "mpegtsmux",
+                          "alignment=7", "!", "filesink", "location=" + config.record_path,
+                          "encoded.", "!", "queue", "!"});
+      }
+      else
+      {
+        arguments.push_back("!");
+      }
+
+      arguments.insert(arguments.end(),
+                       {"mpegtsmux", "alignment=7", "!", "srtsink", "mode=listener",
+                        "localaddress=" + config.srt_bind_address,
+                        "localport=" + std::to_string(config.srt_port), "wait-for-connection=false",
+                        "latency=" + std::to_string(config.srt_latency_ms)});
 
       return PreviewCommandResolution{
           true,

@@ -53,5 +53,24 @@ namespace robot_diag_control_cpp
       EXPECT_FALSE(resolution.ok);
       EXPECT_EQ(resolution.message, "unsupported preview source kind: bogus");
     }
+
+    TEST(PreviewCommandFactoryTest, AddsFileSinkToTheEncodedStreamWhenRecording)
+    {
+      auto config        = GstreamerPreviewConfig{};
+      config.record_path = "/runs/demo/video/source.ts";
+      const auto resolution =
+          make_gstreamer_preview_command_factory(config)(PreviewProfile::Balanced);
+
+      ASSERT_TRUE(resolution.ok);
+      EXPECT_NE(std::find(resolution.command.arguments.begin(), resolution.command.arguments.end(),
+                          "tee"),
+                resolution.command.arguments.end());
+      EXPECT_NE(std::find(resolution.command.arguments.begin(), resolution.command.arguments.end(),
+                          "filesink"),
+                resolution.command.arguments.end());
+      EXPECT_NE(std::find(resolution.command.arguments.begin(), resolution.command.arguments.end(),
+                          "location=/runs/demo/video/source.ts"),
+                resolution.command.arguments.end());
+    }
   } // namespace
 } // namespace robot_diag_control_cpp

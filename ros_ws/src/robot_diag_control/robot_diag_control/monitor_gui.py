@@ -36,6 +36,7 @@ from robot_diag_control.monitor_settings import (
 from robot_diag_control.run_artifacts import (
     RunArtifactContext,
     RunArtifactResult,
+    build_run_videos,
     generate_run_report,
     inspect_run_artifacts,
     report_path,
@@ -345,6 +346,7 @@ class RobotMonitorGui:
         self._devcontainer_exec_template_var = tk.StringVar(value=parsed.devcontainer_exec_template)
         self._run_id_var = tk.StringVar(value=_default_run_id())
         self._run_classes_var = tk.StringVar(value="person")
+        self._record_video_var = tk.BooleanVar(value=False)
         self._autonomy_bbox_area_min_ratio_var = tk.StringVar(value="0.08")
         self._autonomy_bbox_area_max_ratio_var = tk.StringVar(value="0.35")
         self._autonomy_forward_speed_var = tk.StringVar(value="0.05")
@@ -549,6 +551,9 @@ class RobotMonitorGui:
         run_type_box.bind("<<ComboboxSelected>>", lambda _event: self._sync_run_experiment_fields())
 
         self._add_labeled_entry(experiment_holder, "Class List", self._run_classes_var, 1, 0)
+        ttk.Checkbutton(experiment_holder, text="Record video", variable=self._record_video_var).grid(
+            row=1, column=2, columnspan=2, sticky=tk.W, pady=(8, 0)
+        )
         self._add_labeled_entry(
             experiment_holder,
             "Score Threshold",
@@ -621,6 +626,16 @@ class RobotMonitorGui:
         self._run_buttons["retrieve"].pack(fill=tk.X, pady=(18, 0))
         self._run_buttons["open_report"] = ttk.Button(actions, text="Open Report", command=self.open_report)
         self._run_buttons["open_report"].pack(fill=tk.X, pady=(8, 0))
+        self._run_buttons["build_video"] = ttk.Button(actions, text="Build Videos", command=self.build_videos)
+        self._run_buttons["build_video"].pack(fill=tk.X, pady=(8, 0))
+        self._run_buttons["open_source_video"] = ttk.Button(
+            actions, text="Open Source Video", command=self.open_source_video
+        )
+        self._run_buttons["open_source_video"].pack(fill=tk.X, pady=(8, 0))
+        self._run_buttons["open_overlay_video"] = ttk.Button(
+            actions, text="Open Overlay Video", command=self.open_overlay_video
+        )
+        self._run_buttons["open_overlay_video"].pack(fill=tk.X, pady=(8, 0))
 
     def _sync_run_experiment_fields(self) -> None:
         try:
@@ -697,6 +712,7 @@ class RobotMonitorGui:
             detector_score_threshold=self._detector_score_threshold_var.get(),
             detector_nms_iou_threshold=self._detector_nms_iou_threshold_var.get(),
             detector_max_detections=self._detector_max_detections_var.get(),
+            record_video=bool(self._record_video_var.get()),
         )
 
     def _run_form_selection(self, run_id: str | None = None) -> RunFormSelection:
@@ -765,6 +781,9 @@ class RobotMonitorGui:
             "stop": availability.stop,
             "retrieve": availability.retrieve,
             "open_report": availability.open_report,
+            "build_video": availability.open_report,
+            "open_source_video": availability.open_report,
+            "open_overlay_video": availability.open_report,
         }
         for name, enabled in states.items():
             button = self._run_buttons.get(name)
@@ -1019,6 +1038,27 @@ class RobotMonitorGui:
             return
         webbrowser.open(path.as_uri())
         self._append_log(f"report opened: {path}")
+
+    def build_videos(self) -> None:
+        run_id = self._current_run_id()
+        result = build_run_videos(self._artifact_context(), run_id=run_id)
+        self._append_artifact_result(result)
+        if result.success:
+            self._append_artifact_result(generate_run_report(self._artifact_context(), run_id=run_id, overwrite=True))
+
+    def _open_video(self, name: str) -> None:
+        path = self._artifact_context().local_import_root / self._current_run_id() / "video" / name
+        if not path.is_file():
+            self._append_log(f"video not found: {path}")
+            return
+        webbrowser.open(path.as_uri())
+        self._append_log(f"video opened: {path}")
+
+    def open_source_video(self) -> None:
+        self._open_video("source.mp4")
+
+    def open_overlay_video(self) -> None:
+        self._open_video("overlay.mp4")
 
     def refresh_status(self) -> None:
         self._append_log("status refresh requested")
