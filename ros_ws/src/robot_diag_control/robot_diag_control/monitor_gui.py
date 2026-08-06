@@ -89,14 +89,15 @@ except ModuleNotFoundError as error:  # pragma: no cover - exercised in runtime 
 if ttk is not None:
 
     class CollapsibleSection(ttk.Frame):
-        def __init__(self, parent: Any, title: str, *, padding: int = 0) -> None:
+        def __init__(self, parent: Any, title: str, *, padding: int = 0, expanded: bool = True) -> None:
             super().__init__(parent)
             self._title = title
-            self._expanded = True
+            self._expanded = expanded
             self._toggle_button = ttk.Button(self, text=self._button_text(), command=self.toggle)
             self._toggle_button.pack(fill=tk.X)
             self.body = ttk.Frame(self, padding=padding)
-            self.body.pack(fill=tk.BOTH, expand=True)
+            if self._expanded:
+                self.body.pack(fill=tk.BOTH, expand=True)
 
         @property
         def expanded(self) -> bool:
@@ -422,7 +423,7 @@ class RobotMonitorGui:
         for column in range(4):
             connection_frame.columnconfigure(column, weight=1 if column in {1, 3} else 0)
 
-        actions_section = CollapsibleSection(container, "Actions", padding=8)
+        actions_section = CollapsibleSection(container, "Actions", padding=8, expanded=False)
         actions_section.pack(fill=tk.X, pady=(0, 10))
         self._sections["actions"] = actions_section
         controls = actions_section.body
@@ -442,7 +443,7 @@ class RobotMonitorGui:
         body.add(control_column, weight=2)
         body.add(review_column, weight=3)
 
-        teleop_section = CollapsibleSection(control_column, "Teleop", padding=8)
+        teleop_section = CollapsibleSection(control_column, "Teleop", padding=8, expanded=False)
         self._sections["teleop"] = teleop_section
         self._build_teleop_controls(teleop_section.body)
         teleop_section.pack(fill=tk.X)

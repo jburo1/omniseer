@@ -413,6 +413,11 @@ class MonitorGuiTests(unittest.TestCase):
             gui = RobotMonitorGui(root, _build_parser().parse_args([]))
             self.assertEqual(set(gui._sections), {"connection", "actions", "teleop", "run", "status", "log"})
 
+            for section_name in ("actions", "teleop"):
+                section = gui._sections[section_name]
+                self.assertFalse(section.expanded)
+                self.assertEqual(section.body.winfo_manager(), "")
+
             section = gui._sections["run"]
             root.update_idletasks()
             self.assertTrue(section.expanded)
