@@ -1,10 +1,11 @@
-"""RunBundle video generation from frame-associated inference evidence."""
+"""Laptop-side RunBundle video remuxing and source-timed detection overlays."""
 
 from __future__ import annotations
 
 import argparse
 import json
 import subprocess
+from bisect import bisect_right
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -12,67 +13,48 @@ from typing import Any
 
 from omniseer_experiments.run_inspection import _parse_generated_manifest
 
+MAX_DETECTION_AGE_SEC = 0.5
 TARGET_COLOR = (0, 255, 0)
 NON_TARGET_COLOR = (0, 0, 255)
 
 
 @dataclass(frozen=True)
-class InferenceFrame:
-    """One model-input image and the detections produced from that same image."""
-
-    image_path: Path
+class TimedDetections:
+    timestamp_sec: float
     detections: tuple[dict[str, Any], ...]
-    remap_scale: float
-    remap_pad_x: float
-    remap_pad_y: float
     target_class: str = ""
 
 
-def read_inference_frames(run_dir: Path) -> list[InferenceFrame]:
-    """Read only complete, self-contained inference-frame records.
+def detection_header_timestamp(record: dict[str, Any]) -> float | None:
+    stamp = record.get("header_stamp")
+    if not isinstance(stamp, dict):
+        return None
+    sec = stamp.get("sec")
+    nanosec = stamp.get("nanosec")
+    if isinstance(sec, bool) or isinstance(nanosec, bool) or not isinstance(sec, int) or not isinstance(nanosec, int):
+        return None
+    return sec + nanosec / 1_000_000_000
 
-    An incomplete record can occur if a run ends while the evidence writer still
-    has work queued.  It is deliberately omitted instead of borrowing a
-    detection from another frame.
-    """
-    evidence_path = run_dir / "evidence" / "evidence.jsonl"
-    target_class = _target_class_from_manifest(run_dir / "manifest.yaml")
-    frames: list[InferenceFrame] = []
-    for line in evidence_path.read_text(encoding="utf-8").splitlines():
+
+def read_timed_detections(path: Path, *, target_class: str = "") -> list[TimedDetections]:
+    records: list[TimedDetections] = []
+    for line in path.read_text(encoding="utf-8").splitlines():
         if not line.strip():
             continue
         try:
             record = json.loads(line)
         except json.JSONDecodeError:
             continue
-        if not isinstance(record, dict) or record.get("artifact_type") != "sampled_frame":
+        if not isinstance(record, dict):
             continue
-        image_path = _evidence_image_path(run_dir, record.get("image_path"))
+        timestamp = detection_header_timestamp(record)
         detections = record.get("detections")
-        remap = record.get("remap")
-        if (
-            image_path is None
-            or not image_path.is_file()
-            or not isinstance(detections, list)
-            or not isinstance(remap, dict)
-        ):
+        if timestamp is None or not isinstance(detections, list):
             continue
-        scale = _number(remap.get("scale"))
-        pad_x = _number(remap.get("pad_x"))
-        pad_y = _number(remap.get("pad_y"))
-        if scale is None or scale <= 0.0 or pad_x is None or pad_y is None:
-            continue
-        frames.append(
-            InferenceFrame(
-                image_path=image_path,
-                detections=tuple(item for item in detections if isinstance(item, dict)),
-                remap_scale=scale,
-                remap_pad_x=pad_x,
-                remap_pad_y=pad_y,
-                target_class=target_class,
-            )
+        records.append(
+            TimedDetections(timestamp, tuple(item for item in detections if isinstance(item, dict)), target_class)
         )
-    return frames
+    return records
 
 
 def _target_class_from_manifest(manifest_path: Path) -> str:
@@ -97,13 +79,20 @@ def _target_class_from_manifest(manifest_path: Path) -> str:
     return ""
 
 
-def _evidence_image_path(run_dir: Path, value: object) -> Path | None:
-    if not isinstance(value, str) or not value:
+def nearest_detections(
+    records: Sequence[TimedDetections],
+    *,
+    video_time_sec: float,
+    max_age_sec: float = MAX_DETECTION_AGE_SEC,
+) -> TimedDetections | None:
+    if not records:
         return None
-    relative = Path(value)
-    if relative.is_absolute() or ".." in relative.parts or relative.suffix.lower() not in {".jpg", ".jpeg"}:
+    first_timestamp = records[0].timestamp_sec
+    timestamps = [item.timestamp_sec - first_timestamp for item in records]
+    index = bisect_right(timestamps, video_time_sec) - 1
+    if index < 0 or video_time_sec - timestamps[index] > max_age_sec:
         return None
-    return run_dir / relative
+    return records[index]
 
 
 def remux_source_video(source_ts: Path, source_mp4: Path, *, runner: Callable[..., Any] = subprocess.run) -> None:
@@ -151,104 +140,114 @@ def build_run_video(
 ) -> None:
     video_dir = run_dir / "video"
     source_ts = video_dir / "source.ts"
-    video_dir.mkdir(exist_ok=True)
-    if source_ts.is_file():
-        remux_source_video(source_ts, video_dir / "source.mp4", runner=runner)
+    if not source_ts.is_file():
+        raise FileNotFoundError(f"recorded source video not found: {source_ts}")
+    detections_path = run_dir / "detections.jsonl"
+    if not detections_path.is_file():
+        raise FileNotFoundError(f"detections not found: {detections_path}")
 
-    frames = read_inference_frames(run_dir)
-    if not frames:
-        raise FileNotFoundError("no complete inference evidence frames found")
-    render_overlay(video_dir / "overlay.mp4", frames, runner=runner, cv2_module=cv2_module)
+    video_dir.mkdir(exist_ok=True)
+    source_mp4 = video_dir / "source.mp4"
+    remux_source_video(source_ts, source_mp4, runner=runner)
+    render_overlay(
+        source_mp4,
+        video_dir / "overlay.mp4",
+        read_timed_detections(
+            detections_path,
+            target_class=_target_class_from_manifest(run_dir / "manifest.yaml"),
+        ),
+        runner=runner,
+        cv2_module=cv2_module,
+    )
 
 
 def render_overlay(
+    source_mp4: Path,
     overlay_mp4: Path,
-    frames: Sequence[InferenceFrame],
+    records: Sequence[TimedDetections],
     *,
     runner: Callable[..., Any] = subprocess.run,
     cv2_module: Any | None = None,
 ) -> None:
     rendered_overlay_mp4 = overlay_mp4.with_name(f"{overlay_mp4.stem}.rendered.mp4")
     try:
-        render_overlay_frames(rendered_overlay_mp4, frames, cv2_module=cv2_module)
+        render_overlay_frames(source_mp4, rendered_overlay_mp4, records, cv2_module=cv2_module)
         transcode_overlay_video(rendered_overlay_mp4, overlay_mp4, runner=runner)
     finally:
         rendered_overlay_mp4.unlink(missing_ok=True)
 
 
 def render_overlay_frames(
+    source_mp4: Path,
     rendered_overlay_mp4: Path,
-    frames: Sequence[InferenceFrame],
+    records: Sequence[TimedDetections],
     *,
     max_output_width: int = 640,
-    output_fps: float = 1.0,
+    max_output_fps: float = 30.0,
     cv2_module: Any | None = None,
 ) -> None:
-    if not frames:
-        raise ValueError("at least one inference frame is required")
     cv2 = cv2_module or _import_cv2()
-    writer = None
+    capture = cv2.VideoCapture(str(source_mp4))
+    if not capture.isOpened():
+        raise RuntimeError(f"failed to open remuxed video: {source_mp4}")
+    width = int(capture.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fps = capture.get(cv2.CAP_PROP_FPS) or 30.0
+    output_width = min(width, max_output_width)
+    output_height = max(2, round(height * output_width / width / 2) * 2)
+    frame_step = max(1, round(fps / max_output_fps))
+    output_fps = fps / frame_step
+    writer = cv2.VideoWriter(
+        str(rendered_overlay_mp4),
+        cv2.VideoWriter_fourcc(*"mp4v"),
+        output_fps,
+        (output_width, output_height),
+    )
+    if not writer.isOpened():
+        capture.release()
+        raise RuntimeError(f"failed to create overlay video: {rendered_overlay_mp4}")
     try:
-        for frame_record in frames:
-            frame = cv2.imread(str(frame_record.image_path), cv2.IMREAD_COLOR)
-            if frame is None:
+        frame_index = 0
+        while True:
+            ok, frame = capture.read()
+            if not ok:
+                break
+            if frame_index % frame_step:
+                frame_index += 1
                 continue
-            height, width = frame.shape[:2]
-            output_width = min(width, max_output_width)
-            output_height = max(2, round(height * output_width / width / 2) * 2)
-            if writer is None:
-                writer = cv2.VideoWriter(
-                    str(rendered_overlay_mp4),
-                    cv2.VideoWriter_fourcc(*"mp4v"),
-                    output_fps,
-                    (output_width, output_height),
-                )
-                if not writer.isOpened():
-                    raise RuntimeError(f"failed to create overlay video: {rendered_overlay_mp4}")
-            _draw_detections(cv2, frame, frame_record.detections, frame_record)
+            match = nearest_detections(records, video_time_sec=capture.get(cv2.CAP_PROP_POS_MSEC) / 1000.0)
+            if match is not None:
+                _draw_detections(cv2, frame, match.detections, target_class=match.target_class)
             if (output_width, output_height) != (width, height):
                 frame = cv2.resize(frame, (output_width, output_height), interpolation=cv2.INTER_AREA)
             writer.write(frame)
-        if writer is None:
-            raise RuntimeError("no readable inference evidence frames found")
+            frame_index += 1
     finally:
-        if writer is not None:
-            writer.release()
+        capture.release()
+        writer.release()
 
 
-def _draw_detections(cv2: Any, frame: Any, detections: Sequence[dict[str, Any]], association: InferenceFrame) -> None:
+def _draw_detections(cv2: Any, frame: Any, detections: Sequence[dict[str, Any]], *, target_class: str = "") -> None:
     frame_height, frame_width = frame.shape[:2]
     for detection in detections:
         bbox = detection.get("bbox")
         if not isinstance(bbox, dict):
             continue
-        source_x1, source_y1 = _number(bbox.get("x1")), _number(bbox.get("y1"))
-        source_x2, source_y2 = _number(bbox.get("x2")), _number(bbox.get("y2"))
-        if None in {source_x1, source_y1, source_x2, source_y2}:
+        center_x, center_y = _number(bbox.get("center_x")), _number(bbox.get("center_y"))
+        size_x, size_y = _number(bbox.get("size_x")), _number(bbox.get("size_y"))
+        if None in {center_x, center_y, size_x, size_y}:
             continue
-        # Detections are source-camera pixels; the saved image is the model input.
-        x1 = max(
-            0,
-            min(frame_width - 1, round(min(source_x1, source_x2) * association.remap_scale + association.remap_pad_x)),
-        )
-        y1 = max(
-            0,
-            min(frame_height - 1, round(min(source_y1, source_y2) * association.remap_scale + association.remap_pad_y)),
-        )
-        x2 = max(
-            0,
-            min(frame_width - 1, round(max(source_x1, source_x2) * association.remap_scale + association.remap_pad_x)),
-        )
-        y2 = max(
-            0,
-            min(frame_height - 1, round(max(source_y1, source_y2) * association.remap_scale + association.remap_pad_y)),
-        )
+        # DetectionArray coordinates are remapped by vision into source-camera pixels.
+        x1 = max(0, min(frame_width - 1, round(center_x - size_x / 2)))
+        y1 = max(0, min(frame_height - 1, round(center_y - size_y / 2)))
+        x2 = max(0, min(frame_width - 1, round(center_x + size_x / 2)))
+        y2 = max(0, min(frame_height - 1, round(center_y + size_y / 2)))
         if x2 <= x1 or y2 <= y1:
             continue
         class_id = detection.get("class_id", 0)
         class_name = str(detection.get("class_name", "") or class_id)
         score = _number(detection.get("score")) or 0.0
-        color = TARGET_COLOR if class_name == association.target_class else NON_TARGET_COLOR
+        color = TARGET_COLOR if class_name == target_class else NON_TARGET_COLOR
         cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
         cv2.putText(
             frame,
@@ -275,9 +274,7 @@ def _import_cv2() -> Any:
 
 
 def main(argv: list[str] | None = None) -> None:
-    parser = argparse.ArgumentParser(
-        description="Build source and frame-aligned detection-overlay videos for a RunBundle."
-    )
+    parser = argparse.ArgumentParser(description="Build source and detection-overlay videos for a RunBundle.")
     parser.add_argument("run_dir", help="path to a local RunBundle")
     args = parser.parse_args(argv)
     build_run_video(Path(args.run_dir))
