@@ -311,6 +311,8 @@ class RunBundleWriter:
             "evidence",
             "logs",
             "provenance",
+            "video",
+            "rosbag",
         }
         for child in children:
             if child.name not in allowed_names:
@@ -326,6 +328,10 @@ class RunBundleWriter:
             if child.name == "logs" and not child.is_dir():
                 return False
             if child.name == "provenance" and not child.is_dir():
+                return False
+            if child.name == "video" and not child.is_dir():
+                return False
+            if child.name == "rosbag" and not child.is_dir():
                 return False
         return True
 

@@ -369,6 +369,41 @@ class RunBundleWriterTests(unittest.TestCase):
             finally:
                 writer.close()
 
+    def test_overwrite_preserves_precreated_recording_artifacts_with_video_and_rosbag(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "precreated"
+            run_dir.mkdir()
+            (run_dir / "classes.txt").write_text("chair\nbackpack\n", encoding="utf-8")
+            (run_dir / "autonomy.jsonl").write_text('{"event":"started"}\n', encoding="utf-8")
+            (run_dir / "pipeline_telemetry.jsonl").write_text('{"source":"producer"}\n', encoding="utf-8")
+            (run_dir / "logs").mkdir()
+            (run_dir / "logs" / "bringup.log").write_text("[INFO] launch started\n", encoding="utf-8")
+            (run_dir / "evidence").mkdir()
+            (run_dir / "video").mkdir()
+            (run_dir / "rosbag").mkdir()
+
+            writer = RunBundleWriter(_config(run_dir, overwrite=True), started_at=STARTED_AT)
+            try:
+                self.assertEqual((run_dir / "classes.txt").read_text(encoding="utf-8"), "chair\nbackpack\n")
+                self.assertEqual((run_dir / "autonomy.jsonl").read_text(encoding="utf-8"), '{"event":"started"}\n')
+                self.assertEqual(
+                    (run_dir / "pipeline_telemetry.jsonl").read_text(encoding="utf-8"),
+                    '{"source":"producer"}\n',
+                )
+                self.assertEqual(
+                    (run_dir / "logs" / "bringup.log").read_text(encoding="utf-8"),
+                    "[INFO] launch started\n",
+                )
+                self.assertTrue((run_dir / "evidence").is_dir())
+                self.assertTrue((run_dir / "video").is_dir())
+                self.assertTrue((run_dir / "rosbag").is_dir())
+                self.assertTrue((run_dir / "manifest.yaml").is_file())
+                self.assertTrue((run_dir / "detections.jsonl").is_file())
+                self.assertTrue((run_dir / "perf.jsonl").is_file())
+                self.assertTrue((run_dir / "system.jsonl").is_file())
+            finally:
+                writer.close()
+
     def test_resolve_git_sha_prefers_runtime_image_env(self) -> None:
         original_value = os.environ.get("OMNISEER_GIT_SHA")
         try:
