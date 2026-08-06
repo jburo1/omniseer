@@ -789,7 +789,7 @@ class RunReportTests(unittest.TestCase):
             _write_completed_bundle(run_dir)
             video_dir = run_dir / "video"
             video_dir.mkdir()
-            (video_dir / "frames.jsonl").write_text("{}\n", encoding="utf-8")
+            (video_dir / "source.ts").write_bytes(b"recorded")
             waiting = write_run_report(run_dir)
             self.assertIn("video processing has not yet been run", waiting.output_path.read_text(encoding="utf-8"))
 

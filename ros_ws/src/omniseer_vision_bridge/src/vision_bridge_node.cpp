@@ -260,7 +260,6 @@ namespace omniseer_vision_bridge
       cfg.pipeline_telemetry_path = declare_parameter<std::string>("telemetry.pipeline_jsonl_path",
                                                                    cfg.pipeline_telemetry_path);
       cfg.evidence_dir = declare_parameter<std::string>("evidence.dir", cfg.evidence_dir);
-      cfg.video_dir    = declare_parameter<std::string>("video.dir", cfg.video_dir);
       cfg.evidence_interval_sec =
           declare_parameter<double>("evidence.interval_sec", cfg.evidence_interval_sec);
       cfg.evidence_jpeg_quality =
@@ -296,7 +295,6 @@ namespace omniseer_vision_bridge
               << " telemetry.pipeline_jsonl_path="
               << quote_or_placeholder(cfg.pipeline_telemetry_path)
               << " evidence.dir=" << quote_or_placeholder(cfg.evidence_dir)
-              << " video.dir=" << quote_or_placeholder(cfg.video_dir)
               << " evidence.interval_sec=" << cfg.evidence_interval_sec
               << " evidence.jpeg_quality=" << cfg.evidence_jpeg_quality
               << " evidence.storage_budget_mb=" << cfg.evidence_storage_budget_mb

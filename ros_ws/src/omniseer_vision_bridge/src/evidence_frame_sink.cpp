@@ -197,8 +197,6 @@ namespace omniseer_vision_bridge
       int                            remap_resized_w{0};
       int                            remap_resized_h{0};
       std::string                    capture_reason{"periodic"};
-      bool                           write_evidence{false};
-      bool                           write_video{false};
       bool                           has_target_capture{false};
       TargetCaptureMetadata          target_capture{};
       std::vector<uint8_t>           rgb{};
@@ -239,18 +237,6 @@ namespace omniseer_vision_bridge
       frames_dir   = evidence_dir / "frames";
       std::filesystem::create_directories(frames_dir);
 
-      if (!config.video_dir.empty())
-      {
-        video_dir        = std::filesystem::path(config.video_dir);
-        video_frames_dir = video_dir / "frames";
-        std::filesystem::create_directories(video_frames_dir);
-        video_metadata.open(video_dir / "frames.jsonl", std::ios::out | std::ios::trunc);
-        if (!video_metadata.is_open())
-        {
-          throw std::runtime_error("EvidenceFrameSink: failed to open video frames.jsonl");
-        }
-      }
-
       const auto relative_base = evidence_dir.filename().empty() ? std::string("evidence")
                                                                  : evidence_dir.filename().string();
       relative_frames_dir      = relative_base + "/frames";
@@ -274,8 +260,6 @@ namespace omniseer_vision_bridge
       }
       metadata.flush();
       metadata.close();
-      video_metadata.flush();
-      video_metadata.close();
     }
 
     void publish(const omniseer::vision::ImageBuffer&         image,
@@ -311,9 +295,7 @@ namespace omniseer_vision_bridge
             recent_items.pop_front();
           }
         }
-        cached_item->write_evidence = periodic_sample;
-        cached_item->write_video    = !config.video_dir.empty();
-        if (!cached_item->write_evidence && !cached_item->write_video)
+        if (!periodic_sample)
         {
           return;
         }
@@ -383,7 +365,6 @@ namespace omniseer_vision_bridge
       item->has_target_capture = true;
       item->target_capture     = waiter->metadata;
       item->capture_waiter     = waiter;
-      item->write_evidence     = true;
       {
         std::unique_lock<std::mutex> lock(queue_mutex, std::try_to_lock);
         if (!lock.owns_lock())
@@ -563,47 +544,26 @@ namespace omniseer_vision_bridge
         return;
       }
 
-      if (item.write_video)
+      const std::string           prefix   = item.has_target_capture ? "capture_frame_" : "frame_";
+      const std::string           filename = prefix + std::to_string(item.frame_id) + ".jpg";
+      const std::filesystem::path image_path = frames_dir / filename;
+      if (!write_jpeg(image_path, item.rgb, item.model_width, item.model_height, jpeg_quality))
       {
-        const std::string filename   = "frame_" + std::to_string(item.frame_id) + ".jpg";
-        const auto        image_path = video_frames_dir / filename;
-        if (!write_jpeg(image_path, item.rgb, item.model_width, item.model_height, jpeg_quality))
-        {
-          dropped_count.fetch_add(1, std::memory_order_relaxed);
-          return;
-        }
-        account_written_bytes(image_path);
-        write_video_metadata(item, std::string("frames/") + filename);
-        written_count.fetch_add(1, std::memory_order_relaxed);
+        dropped_count.fetch_add(1, std::memory_order_relaxed);
+        complete_capture(item.capture_waiter, false, "write_failed", item);
+        return;
       }
 
-      if (item.write_evidence)
-      {
-        const std::string prefix     = item.has_target_capture ? "capture_frame_" : "frame_";
-        const std::string filename   = prefix + std::to_string(item.frame_id) + ".jpg";
-        const auto        image_path = frames_dir / filename;
-        if (!write_jpeg(image_path, item.rgb, item.model_width, item.model_height, jpeg_quality))
-        {
-          dropped_count.fetch_add(1, std::memory_order_relaxed);
-          complete_capture(item.capture_waiter, false, "write_failed", item);
-          return;
-        }
-        account_written_bytes(image_path);
-        const auto relative_image_path = relative_frames_dir + "/" + filename;
-        write_metadata(item, relative_image_path);
-        written_count.fetch_add(1, std::memory_order_relaxed);
-        complete_capture(item.capture_waiter, true, "captured", item, relative_image_path);
-      }
-    }
-
-    void account_written_bytes(const std::filesystem::path& image_path) noexcept
-    {
       std::error_code ec;
       const auto      size = std::filesystem::file_size(image_path, ec);
       if (!ec)
       {
         written_bytes.fetch_add(size, std::memory_order_relaxed);
       }
+      const auto relative_image_path = relative_frames_dir + "/" + filename;
+      write_metadata(item, relative_image_path);
+      written_count.fetch_add(1, std::memory_order_relaxed);
+      complete_capture(item.capture_waiter, true, "captured", item, relative_image_path);
     }
 
     bool storage_available() noexcept
@@ -724,44 +684,11 @@ namespace omniseer_vision_bridge
       metadata.flush();
     }
 
-    void write_video_metadata(const Item& item, const std::string& image_path)
-    {
-      video_metadata << "{\"schema_version\":" << kEvidenceSchemaVersion << ",\"image_path\":\""
-                     << json_escape(image_path) << "\""
-                     << ",\"frame_id\":" << item.frame_id << ",\"sequence\":" << item.sequence
-                     << ",\"capture_ts_real_ns\":" << item.capture_ts_real_ns
-                     << ",\"model_input\":{\"width\":" << item.model_width
-                     << ",\"height\":" << item.model_height << "}"
-                     << ",\"remap\":{\"scale\":" << item.remap_scale
-                     << ",\"pad_x\":" << item.remap_pad_x << ",\"pad_y\":" << item.remap_pad_y
-                     << ",\"resized_w\":" << item.remap_resized_w
-                     << ",\"resized_h\":" << item.remap_resized_h << "}"
-                     << ",\"detections\":[";
-      for (std::size_t i = 0; i < item.detections.size(); ++i)
-      {
-        const auto& det = item.detections[i];
-        if (i != 0)
-        {
-          video_metadata << ",";
-        }
-        video_metadata << "{\"class_id\":" << det.class_id << ",\"class_name\":\""
-                       << json_escape(det.class_name) << "\""
-                       << ",\"score\":" << det.score << ",\"bbox\":{\"x1\":" << det.x1
-                       << ",\"y1\":" << det.y1 << ",\"x2\":" << det.x2 << ",\"y2\":" << det.y2
-                       << "}}";
-      }
-      video_metadata << "]}\n";
-      video_metadata.flush();
-    }
-
     EvidenceFrameSinkConfig config{};
     std::filesystem::path   evidence_dir{};
     std::filesystem::path   frames_dir{};
     std::string             relative_frames_dir{};
     std::ofstream           metadata{};
-    std::filesystem::path   video_dir{};
-    std::filesystem::path   video_frames_dir{};
-    std::ofstream           video_metadata{};
     uint64_t                sample_interval_ns{0};
     int                     jpeg_quality{85};
     uint64_t                storage_budget_bytes{0};

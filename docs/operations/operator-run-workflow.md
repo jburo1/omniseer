@@ -111,11 +111,11 @@ label even when no external experiment config file is used. Model paths, camera
 device, capture size, model input size, class padding, and runner warmup remain
 launch/config-file controls.
 
-To record the inference frame stream, select **Record video** before starting the run.
+For a recorded camera stream, select **Record video** before starting the run.
 This is off by default. After retrieving the RunBundle, use **Build Videos** to
-create `video/source.mp4` and `video/overlay.mp4`. Both are built from the
-inference-source frames recorded by the vision bridge, so every overlay frame
-uses the detections produced for that same frame.
+create `video/source.mp4` and the approximate detection overlay
+`video/overlay.mp4`; source preview and inference use separate camera paths, so
+the overlay is not pixel-perfect synchronized.
 
 Select **Record rosbag** to add the configured ROS topic allowlist to the same
 RunBundle. This is also off by default and creates the standard ROS 2 bag layout:

@@ -42,7 +42,6 @@ namespace omniseer_vision_bridge
     std::string                        camera_frame_id{"camera_optical_frame"};
     std::string                        pipeline_telemetry_path{};
     std::string                        evidence_dir{};
-    std::string                        video_dir{};
     double                             evidence_interval_sec{1.0};
     int64_t                            evidence_jpeg_quality{85};
     int64_t                            evidence_storage_budget_mb{1024};

@@ -36,7 +36,7 @@ Record args:
   --system-interval-sec <seconds>       Default: 1.0
   --experiment-config <name>            Default: operator-runtime
   --experiment-parameter <key=value>    Repeatable; default: stage=manual-operator
-  --record-video                         Record inference frames for RunBundle videos on the robot.
+  --record-video                         Record video/source.ts on the robot.
   --record-rosbag                        Record the configured ROS topic allowlist on the robot.
 EOF
 }
