@@ -51,6 +51,8 @@ class RunConfig:
     autonomy_stable_framed_frames: str = "10"
     autonomy_proximity_stop_m: str = "0.30"
     autonomy_capture_timeout_sec: str = "2.0"
+    autonomy_min_target_confidence: str = "0.50"
+    autonomy_max_target_center_jump_ratio: str = "0.20"
     autonomy_evidence_interval_sec: str = "0.25"
     detector_score_threshold: str = "0.25"
     detector_nms_iou_threshold: str = "0.45"
@@ -271,6 +273,8 @@ def _autonomy_parameter_launch_args(run_config: RunConfig) -> list[str]:
         f"autonomy_stable_framed_frames:={run_config.autonomy_stable_framed_frames}",
         f"autonomy_proximity_stop_m:={run_config.autonomy_proximity_stop_m}",
         f"autonomy_capture_timeout_sec:={run_config.autonomy_capture_timeout_sec}",
+        f"autonomy_min_target_confidence:={run_config.autonomy_min_target_confidence}",
+        f"autonomy_max_target_center_jump_ratio:={run_config.autonomy_max_target_center_jump_ratio}",
         f"evidence_interval_sec:={run_config.autonomy_evidence_interval_sec}",
     ]
 

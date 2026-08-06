@@ -45,6 +45,8 @@ def _values(**overrides: str) -> RunFormValues:
         "autonomy_stable_framed_frames": " 7 ",
         "autonomy_proximity_stop_m": " 0.42 ",
         "autonomy_capture_timeout_sec": " 3.5 ",
+        "autonomy_min_target_confidence": " 0.65 ",
+        "autonomy_max_target_center_jump_ratio": " 0.15 ",
         "autonomy_evidence_interval_sec": " 0.20 ",
         "detector_score_threshold": " 0.31 ",
         "detector_nms_iou_threshold": " 0.52 ",
@@ -111,6 +113,8 @@ class RunSettingsTests(unittest.TestCase):
         self.assertEqual(selection.run_config.autonomy_stable_framed_frames, "7")
         self.assertEqual(selection.run_config.autonomy_proximity_stop_m, "0.42")
         self.assertEqual(selection.run_config.autonomy_capture_timeout_sec, "3.5")
+        self.assertEqual(selection.run_config.autonomy_min_target_confidence, "0.65")
+        self.assertEqual(selection.run_config.autonomy_max_target_center_jump_ratio, "0.15")
         self.assertEqual(selection.run_config.autonomy_evidence_interval_sec, "0.20")
         self.assertEqual(selection.run_config.detector_score_threshold, "0.31")
         self.assertEqual(selection.run_config.detector_nms_iou_threshold, "0.52")

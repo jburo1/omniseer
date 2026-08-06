@@ -201,7 +201,10 @@ namespace omniseer_autonomy
       config.detection_stale_sec     = static_cast<double>(detection_stale_ms) / 1000.0;
       config.scan_limit_revolutions  = declare_parameter<double>("scan_limit_revolutions", 1.0);
       config.target_lost_timeout_sec = declare_parameter<double>("target_lost_timeout_sec", 0.5);
-      _target_class                  = config.target_class;
+      config.min_target_confidence   = declare_parameter<double>("min_target_confidence", 0.50);
+      config.max_target_center_jump_ratio =
+          declare_parameter<double>("max_target_center_jump_ratio", 0.20);
+      _target_class = config.target_class;
       return config;
     }
 

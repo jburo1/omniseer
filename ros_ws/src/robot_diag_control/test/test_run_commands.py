@@ -120,6 +120,8 @@ class RunCommandsTests(unittest.TestCase):
                 autonomy_stable_framed_frames="7",
                 autonomy_proximity_stop_m="0.42",
                 autonomy_capture_timeout_sec="3.5",
+                autonomy_min_target_confidence="0.65",
+                autonomy_max_target_center_jump_ratio="0.15",
                 autonomy_evidence_interval_sec="0.20",
             ),
         )
@@ -137,6 +139,8 @@ class RunCommandsTests(unittest.TestCase):
         self.assertIn("autonomy_stable_framed_frames:=7", command[3])
         self.assertIn("autonomy_proximity_stop_m:=0.42", command[3])
         self.assertIn("autonomy_capture_timeout_sec:=3.5", command[3])
+        self.assertIn("autonomy_min_target_confidence:=0.65", command[3])
+        self.assertIn("autonomy_max_target_center_jump_ratio:=0.15", command[3])
         self.assertIn("evidence_interval_sec:=0.20", command[3])
 
     def test_autonomy_run_requires_a_class(self):

@@ -9,9 +9,8 @@ namespace omniseer_autonomy
 {
   namespace
   {
-    constexpr std::size_t kConsistencyWindow   = 5;
-    constexpr int         kConsistencyRequired = 3;
-    constexpr double      kTwoPi               = 6.28318530717958647692;
+    constexpr int    kConsistencyRequired = 3;
+    constexpr double kTwoPi               = 6.28318530717958647692;
 
     double distance_sq_or_zero(std::optional<TargetDetection> previous,
                                const TargetDetection&         candidate)
@@ -56,7 +55,30 @@ namespace omniseer_autonomy
 
     _last_detection_msg_at_sec = now_sec;
     auto target                = select_target(detections);
-    push_target_seen(target.has_value());
+    if (_state == CenteringState::Scan)
+    {
+      if (target.has_value() && (!_acquisition_candidate.has_value() ||
+                                 center_jump_within_limit(*_acquisition_candidate, *target)))
+      {
+        _acquisition_candidate = target;
+        ++_acquisition_frames;
+      }
+      else if (target.has_value())
+      {
+        _acquisition_candidate = target;
+        _acquisition_frames    = 1;
+      }
+      else
+      {
+        _acquisition_candidate.reset();
+        _acquisition_frames = 0;
+      }
+    }
+    else if (target.has_value() && _last_target.has_value() &&
+             !center_jump_within_limit(*_last_target, *target))
+    {
+      target.reset();
+    }
 
     if (target.has_value())
     {
@@ -66,7 +88,6 @@ namespace omniseer_autonomy
         output.events.push_back(make_event(now_sec, "first_detection", "", target));
       }
       _last_target_seen_at_sec = now_sec;
-      _last_target             = target;
       _target_missing          = false;
     }
     else if (_state != CenteringState::Scan && !_target_missing)
@@ -83,7 +104,7 @@ namespace omniseer_autonomy
 
     if (_state == CenteringState::Scan)
     {
-      if (target.has_value() && target_consistent())
+      if (target.has_value() && _acquisition_frames >= kConsistencyRequired)
       {
         transition(CenteringState::Lock, now_sec, output, "target_locked", "", target);
         transition(CenteringState::Center, now_sec, output, "centering_started", "", target);
@@ -297,6 +318,14 @@ namespace omniseer_autonomy
     {
       throw std::invalid_argument("target_lost_timeout_sec must be positive");
     }
+    if (_config.min_target_confidence < 0.0 || _config.min_target_confidence > 1.0)
+    {
+      throw std::invalid_argument("min_target_confidence must be in [0, 1]");
+    }
+    if (_config.max_target_center_jump_ratio <= 0.0 || _config.max_target_center_jump_ratio > 1.0)
+    {
+      throw std::invalid_argument("max_target_center_jump_ratio must be in (0, 1]");
+    }
   }
 
   void TargetCenteringController::ensure_started(double now_sec, TargetCenteringOutput& output)
@@ -345,7 +374,8 @@ namespace omniseer_autonomy
     _stable_frames = 0;
     _last_target.reset();
     _target_missing = false;
-    _recent_target_seen.clear();
+    _acquisition_candidate.reset();
+    _acquisition_frames = 0;
     transition(CenteringState::Scan, now_sec, output, "reacquire_started", std::move(reason));
     return append_output(output, command_scan(now_sec));
   }
@@ -409,6 +439,8 @@ namespace omniseer_autonomy
       yaw      = 0.0;
     }
 
+    _last_target = target;
+
     output.publish_command = true;
     output.linear_x_m_s    = linear_x;
     output.angular_z_rad_s = yaw;
@@ -463,6 +495,10 @@ namespace omniseer_autonomy
       {
         continue;
       }
+      if (detection.confidence < _config.min_target_confidence)
+      {
+        continue;
+      }
       if (!selected.has_value())
       {
         selected = detection;
@@ -486,19 +522,12 @@ namespace omniseer_autonomy
     return selected;
   }
 
-  void TargetCenteringController::push_target_seen(bool seen)
+  bool TargetCenteringController::center_jump_within_limit(const TargetDetection& previous,
+                                                           const TargetDetection& candidate) const
   {
-    _recent_target_seen.push_back(seen);
-    while (_recent_target_seen.size() > kConsistencyWindow)
-    {
-      _recent_target_seen.pop_front();
-    }
-  }
-
-  bool TargetCenteringController::target_consistent() const
-  {
-    return std::count(_recent_target_seen.begin(), _recent_target_seen.end(), true) >=
-           kConsistencyRequired;
+    const auto diagonal = std::hypot(_config.image_width_px, _config.image_height_px);
+    return std::sqrt(distance_sq_or_zero(previous, candidate)) / diagonal <=
+           _config.max_target_center_jump_ratio;
   }
 
   bool TargetCenteringController::scan_complete() const

@@ -194,6 +194,8 @@ class RealLaunchStructureTests(unittest.TestCase):
         self.assertIn("autonomy_proximity_stop_m", declared_names)
         self.assertIn("autonomy_capture_timeout_sec", declared_names)
         self.assertIn("autonomy_target_lost_timeout_sec", declared_names)
+        self.assertIn("autonomy_min_target_confidence", declared_names)
+        self.assertIn("autonomy_max_target_center_jump_ratio", declared_names)
 
         autonomy_nodes = [
             entity
@@ -217,6 +219,11 @@ class RealLaunchStructureTests(unittest.TestCase):
         self.assertIn('"proximity_stop_m": config["autonomy_proximity_stop_m"]', launch_text)
         self.assertIn('"capture_timeout_sec": config["autonomy_capture_timeout_sec"]', launch_text)
         self.assertIn('"target_lost_timeout_sec": config["autonomy_target_lost_timeout_sec"]', launch_text)
+        self.assertIn('"min_target_confidence": config["autonomy_min_target_confidence"]', launch_text)
+        self.assertIn(
+            '"max_target_center_jump_ratio": config["autonomy_max_target_center_jump_ratio"]',
+            launch_text,
+        )
 
     def test_twist_mux_includes_autonomy_below_keyboard_above_nav(self) -> None:
         config_path = Path(__file__).resolve().parents[1] / "config" / "twist_mux.yaml"
@@ -366,6 +373,8 @@ class RealLaunchStructureTests(unittest.TestCase):
         self.assertNotIn("autonomy_capture_timeout_sec", declared_names)
         self.assertNotIn("autonomy_detection_stale_ms", declared_names)
         self.assertNotIn("autonomy_target_lost_timeout_sec", declared_names)
+        self.assertNotIn("autonomy_min_target_confidence", declared_names)
+        self.assertNotIn("autonomy_max_target_center_jump_ratio", declared_names)
         self.assertIn("sim_camera_width", declared_names)
         self.assertIn("sim_camera_height", declared_names)
         self.assertIn("sim_camera_update_rate", declared_names)

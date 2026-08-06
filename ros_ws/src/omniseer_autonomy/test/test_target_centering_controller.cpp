@@ -67,7 +67,7 @@ namespace omniseer_autonomy
     EXPECT_TRUE(controller.terminal_reason().empty());
   }
 
-  TEST(TargetCenteringController, RequiresThreeOfFiveFramesBeforeAcquisition)
+  TEST(TargetCenteringController, RequiresThreeConsecutiveDetectionsBeforeAcquisition)
   {
     TargetCenteringController controller(config());
 
@@ -83,6 +83,72 @@ namespace omniseer_autonomy
     EXPECT_GT(acquired.events.size(), 1U);
     EXPECT_GT(acquired.angular_z_rad_s, 0.0);
     EXPECT_DOUBLE_EQ(acquired.linear_x_m_s, 0.0);
+  }
+
+  TEST(TargetCenteringController, LowConfidenceDetectionsDoNotContributeToAcquisition)
+  {
+    TargetCenteringController controller(config());
+
+    controller.update_detections({detection(20.0, 0.49)}, 0.1);
+    controller.update_detections({detection(20.0)}, 0.2);
+    controller.update_detections({detection(20.0)}, 0.3);
+
+    EXPECT_EQ(controller.state(), CenteringState::Scan);
+    controller.update_detections({detection(20.0)}, 0.4);
+    EXPECT_EQ(controller.state(), CenteringState::Center);
+  }
+
+  TEST(TargetCenteringController, DiscontinuousDetectionsRestartAcquisition)
+  {
+    TargetCenteringController controller(config());
+
+    controller.update_detections({detection(20.0)}, 0.1);
+    controller.update_detections({detection(80.0)}, 0.2);
+    controller.update_detections({detection(80.0)}, 0.3);
+
+    EXPECT_EQ(controller.state(), CenteringState::Scan);
+    controller.update_detections({detection(80.0)}, 0.4);
+    EXPECT_EQ(controller.state(), CenteringState::Center);
+  }
+
+  TEST(TargetCenteringController, ThreeContinuousQualifyingDetectionsAcquireTarget)
+  {
+    TargetCenteringController controller(config());
+
+    controller.update_detections({detection(20.0)}, 0.1);
+    controller.update_detections({detection(25.0)}, 0.2);
+    controller.update_detections({detection(30.0)}, 0.3);
+
+    EXPECT_EQ(controller.state(), CenteringState::Center);
+  }
+
+  TEST(TargetCenteringController, RejectsLargeTargetJumpAfterLock)
+  {
+    TargetCenteringController controller(config());
+    controller.update_detections({detection(20.0)}, 0.1);
+    controller.update_detections({detection(20.0)}, 0.2);
+    controller.update_detections({detection(20.0)}, 0.3);
+
+    const auto output = controller.update_detections({detection(80.0)}, 0.4);
+
+    EXPECT_EQ(controller.state(), CenteringState::Center);
+    EXPECT_EQ(controller.target_loss_count(), 1);
+    EXPECT_DOUBLE_EQ(output.linear_x_m_s, 0.0);
+    EXPECT_DOUBLE_EQ(output.angular_z_rad_s, 0.0);
+  }
+
+  TEST(TargetCenteringController, NearbyQualifyingTargetMaintainsLock)
+  {
+    TargetCenteringController controller(config());
+    controller.update_detections({detection(20.0)}, 0.1);
+    controller.update_detections({detection(20.0)}, 0.2);
+    controller.update_detections({detection(20.0)}, 0.3);
+
+    const auto output = controller.update_detections({detection(25.0)}, 0.4);
+
+    EXPECT_EQ(controller.state(), CenteringState::Center);
+    EXPECT_EQ(controller.target_loss_count(), 0);
+    EXPECT_GT(output.angular_z_rad_s, 0.0);
   }
 
   TEST(TargetCenteringController, UsesNegativeYawForTargetRightOfImageCenter)
@@ -263,6 +329,17 @@ namespace omniseer_autonomy
     EXPECT_EQ(controller.terminal_reason(), "proximity_blocked");
     EXPECT_DOUBLE_EQ(output.linear_x_m_s, 0.0);
     EXPECT_DOUBLE_EQ(output.angular_z_rad_s, 0.0);
+  }
+
+  TEST(TargetCenteringController, RejectsInvalidContinuityConfiguration)
+  {
+    auto invalid_confidence                  = config();
+    invalid_confidence.min_target_confidence = 1.01;
+    EXPECT_THROW(TargetCenteringController(invalid_confidence), std::invalid_argument);
+
+    auto invalid_jump                         = config();
+    invalid_jump.max_target_center_jump_ratio = 0.0;
+    EXPECT_THROW(TargetCenteringController(invalid_jump), std::invalid_argument);
   }
 
   TEST(TargetCenteringController, FailsOnStaleDetectionsAndCommandsZero)

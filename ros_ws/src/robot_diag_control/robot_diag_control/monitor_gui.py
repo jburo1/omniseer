@@ -356,6 +356,8 @@ class RobotMonitorGui:
         self._autonomy_stable_frames_var = tk.StringVar(value="10")
         self._autonomy_proximity_stop_var = tk.StringVar(value="0.30")
         self._autonomy_capture_timeout_var = tk.StringVar(value="2.0")
+        self._autonomy_min_target_confidence_var = tk.StringVar(value="0.50")
+        self._autonomy_max_target_center_jump_ratio_var = tk.StringVar(value="0.20")
         self._autonomy_evidence_interval_var = tk.StringVar(value="0.25")
         self._detector_score_threshold_var = tk.StringVar(value="0.25")
         self._detector_nms_iou_threshold_var = tk.StringVar(value="0.45")
@@ -606,6 +608,22 @@ class RobotMonitorGui:
             2,
             width=8,
         )
+        self._add_labeled_entry(
+            autonomy_frame,
+            "Min Target Confidence",
+            self._autonomy_min_target_confidence_var,
+            4,
+            0,
+            width=8,
+        )
+        self._add_labeled_entry(
+            autonomy_frame,
+            "Max Center Jump Ratio",
+            self._autonomy_max_target_center_jump_ratio_var,
+            4,
+            2,
+            width=8,
+        )
         for column in range(4):
             autonomy_frame.columnconfigure(column, weight=1 if column in {1, 3} else 0)
         self._run_experiment_frames[RUN_TYPE_AUTONOMY_CENTER] = autonomy_frame
@@ -713,6 +731,8 @@ class RobotMonitorGui:
             autonomy_stable_framed_frames=self._autonomy_stable_frames_var.get(),
             autonomy_proximity_stop_m=self._autonomy_proximity_stop_var.get(),
             autonomy_capture_timeout_sec=self._autonomy_capture_timeout_var.get(),
+            autonomy_min_target_confidence=self._autonomy_min_target_confidence_var.get(),
+            autonomy_max_target_center_jump_ratio=self._autonomy_max_target_center_jump_ratio_var.get(),
             autonomy_evidence_interval_sec=self._autonomy_evidence_interval_var.get(),
             detector_score_threshold=self._detector_score_threshold_var.get(),
             detector_nms_iou_threshold=self._detector_nms_iou_threshold_var.get(),

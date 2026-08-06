@@ -62,6 +62,8 @@ _REAL_ARGUMENT_DEFAULTS = [
     ("autonomy_proximity_stop_m", "0.30"),
     ("autonomy_capture_timeout_sec", "2.0"),
     ("autonomy_target_lost_timeout_sec", "0.5"),
+    ("autonomy_min_target_confidence", "0.50"),
+    ("autonomy_max_target_center_jump_ratio", "0.20"),
     ("start_vision", "true"),
     ("vision_params_file", "vision_bridge.real.yaml"),
     ("camera_device", "__from_config__"),
@@ -302,6 +304,8 @@ def _build_real_bringup_actions(*, pkg_bringup, config):
                 "proximity_stop_m": config["autonomy_proximity_stop_m"],
                 "capture_timeout_sec": config["autonomy_capture_timeout_sec"],
                 "target_lost_timeout_sec": config["autonomy_target_lost_timeout_sec"],
+                "min_target_confidence": config["autonomy_min_target_confidence"],
+                "max_target_center_jump_ratio": config["autonomy_max_target_center_jump_ratio"],
             }
         ],
         condition=IfCondition(config["start_autonomy"]),

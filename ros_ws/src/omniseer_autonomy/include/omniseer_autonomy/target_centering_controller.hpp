@@ -1,6 +1,5 @@
 #pragma once
 
-#include <deque>
 #include <optional>
 #include <string>
 #include <vector>
@@ -36,6 +35,8 @@ namespace omniseer_autonomy
     double      detection_stale_sec{0.5};
     double      scan_limit_revolutions{1.0};
     double      target_lost_timeout_sec{0.5};
+    double      min_target_confidence{0.50};
+    double      max_target_center_jump_ratio{0.20};
   };
 
   struct TargetDetection
@@ -106,8 +107,8 @@ namespace omniseer_autonomy
                                               TargetCenteringOutput& output);
     std::optional<TargetDetection> select_target(
         const std::vector<TargetDetection>& detections) const;
-    void                 push_target_seen(bool seen);
-    bool                 target_consistent() const;
+    bool                 center_jump_within_limit(const TargetDetection& previous,
+                                                  const TargetDetection& candidate) const;
     bool                 scan_complete() const;
     double               normalized_error(double center_x_px) const;
     double               bbox_area_ratio(const TargetDetection& target) const;
@@ -135,7 +136,8 @@ namespace omniseer_autonomy
     std::optional<double>          _final_error{};
     std::optional<double>          _final_confidence{};
     double                         _scan_yaw_travel_rad{0.0};
-    std::deque<bool>               _recent_target_seen{};
+    std::optional<TargetDetection> _acquisition_candidate{};
+    int                            _acquisition_frames{0};
     int                            _stable_frames{0};
     int                            _target_loss_count{0};
     bool                           _target_missing{false};

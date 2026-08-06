@@ -40,6 +40,8 @@ class RunFormValues:
     autonomy_stable_framed_frames: str = "10"
     autonomy_proximity_stop_m: str = "0.30"
     autonomy_capture_timeout_sec: str = "2.0"
+    autonomy_min_target_confidence: str = "0.50"
+    autonomy_max_target_center_jump_ratio: str = "0.20"
     autonomy_evidence_interval_sec: str = "0.25"
     detector_score_threshold: str = "0.25"
     detector_nms_iou_threshold: str = "0.45"
@@ -116,6 +118,13 @@ def validated_positive_int(value: str, *, name: str, default: str) -> str:
     return normalized
 
 
+def validated_positive_unit_interval(value: str, *, name: str, default: str) -> str:
+    normalized = validated_unit_interval(value, name=name, default=default)
+    if float(normalized) <= 0.0:
+        raise ValueError(f"{name} must be a number greater than 0.0 and no greater than 1.0")
+    return normalized
+
+
 def resolve_run_form(
     values: RunFormValues,
     *,
@@ -147,6 +156,16 @@ def resolve_run_form(
         autonomy_stable_framed_frames=values.autonomy_stable_framed_frames.strip() or "10",
         autonomy_proximity_stop_m=values.autonomy_proximity_stop_m.strip() or "0.30",
         autonomy_capture_timeout_sec=values.autonomy_capture_timeout_sec.strip() or "2.0",
+        autonomy_min_target_confidence=validated_unit_interval(
+            values.autonomy_min_target_confidence,
+            name="minimum target confidence",
+            default="0.50",
+        ),
+        autonomy_max_target_center_jump_ratio=validated_positive_unit_interval(
+            values.autonomy_max_target_center_jump_ratio,
+            name="maximum target center jump ratio",
+            default="0.20",
+        ),
         autonomy_evidence_interval_sec=values.autonomy_evidence_interval_sec.strip() or "0.25",
         detector_score_threshold=validated_unit_interval(
             values.detector_score_threshold,
