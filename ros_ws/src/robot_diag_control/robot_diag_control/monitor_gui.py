@@ -350,6 +350,7 @@ class RobotMonitorGui:
         self._record_video_var = tk.BooleanVar(value=False)
         self._record_rosbag_var = tk.BooleanVar(value=False)
         self._autonomy_bbox_area_min_ratio_var = tk.StringVar(value="0.08")
+        self._autonomy_approach_stop_area_percent_var = tk.StringVar(value="125")
         self._autonomy_bbox_area_max_ratio_var = tk.StringVar(value="0.35")
         self._autonomy_forward_speed_var = tk.StringVar(value="0.05")
         self._autonomy_reverse_speed_var = tk.StringVar(value="0.04")
@@ -594,18 +595,26 @@ class RobotMonitorGui:
 
         autonomy_frame = ttk.Frame(experiment_fields)
         self._add_labeled_entry(autonomy_frame, "BBox Min Area", self._autonomy_bbox_area_min_ratio_var, 0, 0, width=8)
-        self._add_labeled_entry(autonomy_frame, "BBox Max Area", self._autonomy_bbox_area_max_ratio_var, 0, 2, width=8)
-        self._add_labeled_entry(autonomy_frame, "Forward m/s", self._autonomy_forward_speed_var, 1, 0, width=8)
-        self._add_labeled_entry(autonomy_frame, "Reverse m/s", self._autonomy_reverse_speed_var, 1, 2, width=8)
-        self._add_labeled_entry(autonomy_frame, "Stable Frames", self._autonomy_stable_frames_var, 2, 0, width=8)
-        self._add_labeled_entry(autonomy_frame, "Proximity Stop m", self._autonomy_proximity_stop_var, 2, 2, width=8)
-        self._add_labeled_entry(autonomy_frame, "Capture Timeout s", self._autonomy_capture_timeout_var, 3, 0, width=8)
+        self._add_labeled_entry(
+            autonomy_frame,
+            "Approach Stop (% BBox Min)",
+            self._autonomy_approach_stop_area_percent_var,
+            0,
+            2,
+            width=8,
+        )
+        self._add_labeled_entry(autonomy_frame, "BBox Max Area", self._autonomy_bbox_area_max_ratio_var, 1, 0, width=8)
+        self._add_labeled_entry(autonomy_frame, "Forward m/s", self._autonomy_forward_speed_var, 1, 2, width=8)
+        self._add_labeled_entry(autonomy_frame, "Reverse m/s", self._autonomy_reverse_speed_var, 2, 0, width=8)
+        self._add_labeled_entry(autonomy_frame, "Stable Frames", self._autonomy_stable_frames_var, 2, 2, width=8)
+        self._add_labeled_entry(autonomy_frame, "Proximity Stop m", self._autonomy_proximity_stop_var, 3, 0, width=8)
+        self._add_labeled_entry(autonomy_frame, "Capture Timeout s", self._autonomy_capture_timeout_var, 3, 2, width=8)
         self._add_labeled_entry(
             autonomy_frame,
             "Evidence Interval s",
             self._autonomy_evidence_interval_var,
-            3,
-            2,
+            4,
+            0,
             width=8,
         )
         self._add_labeled_entry(
@@ -613,15 +622,15 @@ class RobotMonitorGui:
             "Min Target Confidence",
             self._autonomy_min_target_confidence_var,
             4,
-            0,
+            2,
             width=8,
         )
         self._add_labeled_entry(
             autonomy_frame,
             "Max Center Jump Ratio",
             self._autonomy_max_target_center_jump_ratio_var,
-            4,
-            2,
+            5,
+            0,
             width=8,
         )
         for column in range(4):
@@ -725,6 +734,7 @@ class RobotMonitorGui:
             notes=self._run_notes(),
             devcontainer_exec_template=self._devcontainer_exec_template_var.get(),
             autonomy_bbox_area_min_ratio=self._autonomy_bbox_area_min_ratio_var.get(),
+            autonomy_approach_stop_area_percent=self._autonomy_approach_stop_area_percent_var.get(),
             autonomy_bbox_area_max_ratio=self._autonomy_bbox_area_max_ratio_var.get(),
             autonomy_forward_speed_m_s=self._autonomy_forward_speed_var.get(),
             autonomy_reverse_speed_m_s=self._autonomy_reverse_speed_var.get(),

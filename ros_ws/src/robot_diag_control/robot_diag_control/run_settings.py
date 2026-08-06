@@ -34,6 +34,7 @@ class RunFormValues:
     notes: str
     devcontainer_exec_template: str
     autonomy_bbox_area_min_ratio: str = "0.08"
+    autonomy_approach_stop_area_percent: str = "125"
     autonomy_bbox_area_max_ratio: str = "0.35"
     autonomy_forward_speed_m_s: str = "0.05"
     autonomy_reverse_speed_m_s: str = "0.04"
@@ -125,6 +126,38 @@ def validated_positive_unit_interval(value: str, *, name: str, default: str) -> 
     return normalized
 
 
+def approach_stop_area_ratio(*, bbox_area_min_ratio: str, bbox_area_max_ratio: str, percent: str) -> str:
+    minimum = float(
+        validated_unit_interval(
+            bbox_area_min_ratio,
+            name="bbox minimum area",
+            default="0.08",
+        )
+    )
+    maximum = float(
+        validated_unit_interval(
+            bbox_area_max_ratio,
+            name="bbox maximum area",
+            default="0.35",
+        )
+    )
+    if maximum <= minimum:
+        raise ValueError("bbox maximum area must be greater than bbox minimum area")
+
+    normalized_percent = percent.strip() or "125"
+    try:
+        multiplier = float(normalized_percent) / 100.0
+    except ValueError as exc:
+        raise ValueError("approach stop percentage must be a number of at least 100") from exc
+    if not math.isfinite(multiplier) or multiplier < 1.0:
+        raise ValueError("approach stop percentage must be a number of at least 100")
+
+    ratio = minimum * multiplier
+    if ratio > maximum:
+        raise ValueError("approach stop percentage produces an area greater than bbox maximum area")
+    return format(ratio, ".12g")
+
+
 def resolve_run_form(
     values: RunFormValues,
     *,
@@ -141,6 +174,8 @@ def resolve_run_form(
         remote_repo_root=remote_repo_root,
         remote_runs_root=remote_runs_root,
     )
+    autonomy_bbox_area_min_ratio = values.autonomy_bbox_area_min_ratio.strip() or "0.08"
+    autonomy_bbox_area_max_ratio = values.autonomy_bbox_area_max_ratio.strip() or "0.35"
     run_config = RunConfig(
         run_id=run_id,
         backend=selected_run_backend(values.backend_label),
@@ -149,8 +184,13 @@ def resolve_run_form(
         devcontainer_exec_template=values.devcontainer_exec_template.strip() or DEFAULT_DEVCONTAINER_EXEC_TEMPLATE,
         run_type=run_type,
         experiment_config=RUN_TYPE_LABELS[run_type],
-        autonomy_bbox_area_min_ratio=values.autonomy_bbox_area_min_ratio.strip() or "0.08",
-        autonomy_bbox_area_max_ratio=values.autonomy_bbox_area_max_ratio.strip() or "0.35",
+        autonomy_bbox_area_min_ratio=autonomy_bbox_area_min_ratio,
+        autonomy_approach_stop_area_ratio=approach_stop_area_ratio(
+            bbox_area_min_ratio=autonomy_bbox_area_min_ratio,
+            bbox_area_max_ratio=autonomy_bbox_area_max_ratio,
+            percent=values.autonomy_approach_stop_area_percent,
+        ),
+        autonomy_bbox_area_max_ratio=autonomy_bbox_area_max_ratio,
         autonomy_forward_speed_m_s=values.autonomy_forward_speed_m_s.strip() or "0.05",
         autonomy_reverse_speed_m_s=values.autonomy_reverse_speed_m_s.strip() or "0.04",
         autonomy_stable_framed_frames=values.autonomy_stable_framed_frames.strip() or "10",

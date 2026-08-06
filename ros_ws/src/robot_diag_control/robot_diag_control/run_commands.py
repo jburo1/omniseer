@@ -45,6 +45,7 @@ class RunConfig:
     run_type: str = RUN_TYPE_PERCEPTION
     experiment_config: str = ""
     autonomy_bbox_area_min_ratio: str = "0.08"
+    autonomy_approach_stop_area_ratio: str = "0.10"
     autonomy_bbox_area_max_ratio: str = "0.35"
     autonomy_forward_speed_m_s: str = "0.05"
     autonomy_reverse_speed_m_s: str = "0.04"
@@ -267,6 +268,7 @@ def _autonomy_parameter_launch_args(run_config: RunConfig) -> list[str]:
         raise ValueError(f"unsupported run type: {run_config.run_type}")
     return [
         f"autonomy_bbox_area_min_ratio:={run_config.autonomy_bbox_area_min_ratio}",
+        f"autonomy_approach_stop_area_ratio:={run_config.autonomy_approach_stop_area_ratio}",
         f"autonomy_bbox_area_max_ratio:={run_config.autonomy_bbox_area_max_ratio}",
         f"autonomy_forward_speed_m_s:={run_config.autonomy_forward_speed_m_s}",
         f"autonomy_reverse_speed_m_s:={run_config.autonomy_reverse_speed_m_s}",

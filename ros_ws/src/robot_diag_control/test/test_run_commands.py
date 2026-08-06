@@ -114,6 +114,7 @@ class RunCommandsTests(unittest.TestCase):
                 classes=("backpack", "chair"),
                 run_type=RUN_TYPE_AUTONOMY_CENTER,
                 autonomy_bbox_area_min_ratio="0.10",
+                autonomy_approach_stop_area_ratio="0.18",
                 autonomy_bbox_area_max_ratio="0.28",
                 autonomy_forward_speed_m_s="0.06",
                 autonomy_reverse_speed_m_s="0.03",
@@ -133,6 +134,7 @@ class RunCommandsTests(unittest.TestCase):
         self.assertIn("autonomy_target_class:=backpack", command[3])
         self.assertIn("autonomy_run_dir:=/runs/operator_001", command[3])
         self.assertIn("autonomy_bbox_area_min_ratio:=0.10", command[3])
+        self.assertIn("autonomy_approach_stop_area_ratio:=0.18", command[3])
         self.assertIn("autonomy_bbox_area_max_ratio:=0.28", command[3])
         self.assertIn("autonomy_forward_speed_m_s:=0.06", command[3])
         self.assertIn("autonomy_reverse_speed_m_s:=0.03", command[3])

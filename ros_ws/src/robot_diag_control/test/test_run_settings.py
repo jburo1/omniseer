@@ -39,6 +39,7 @@ def _values(**overrides: str) -> RunFormValues:
         "notes": "  trial notes  ",
         "devcontainer_exec_template": "",
         "autonomy_bbox_area_min_ratio": " 0.10 ",
+        "autonomy_approach_stop_area_percent": " 180 ",
         "autonomy_bbox_area_max_ratio": " 0.28 ",
         "autonomy_forward_speed_m_s": " 0.06 ",
         "autonomy_reverse_speed_m_s": " 0.03 ",
@@ -107,6 +108,7 @@ class RunSettingsTests(unittest.TestCase):
         self.assertEqual(selection.run_config.experiment_config, "Perception recording")
         self.assertEqual(selection.run_config.devcontainer_exec_template, DEFAULT_DEVCONTAINER_EXEC_TEMPLATE)
         self.assertEqual(selection.run_config.autonomy_bbox_area_min_ratio, "0.10")
+        self.assertEqual(selection.run_config.autonomy_approach_stop_area_ratio, "0.18")
         self.assertEqual(selection.run_config.autonomy_bbox_area_max_ratio, "0.28")
         self.assertEqual(selection.run_config.autonomy_forward_speed_m_s, "0.06")
         self.assertEqual(selection.run_config.autonomy_reverse_speed_m_s, "0.03")
@@ -163,6 +165,21 @@ class RunSettingsTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "NMS IoU must be a number from 0.0 to 1.0"):
             resolve_run_form(
                 _values(detector_nms_iou_threshold="nan"),
+                repo_root=Path("/repo"),
+                default_run_id=lambda: "operator_default",
+            )
+
+    def test_resolve_run_form_rejects_invalid_approach_stop_percentage(self):
+        with self.assertRaisesRegex(ValueError, "approach stop percentage must be a number of at least 100"):
+            resolve_run_form(
+                _values(autonomy_approach_stop_area_percent="99"),
+                repo_root=Path("/repo"),
+                default_run_id=lambda: "operator_default",
+            )
+
+        with self.assertRaisesRegex(ValueError, "greater than bbox maximum area"):
+            resolve_run_form(
+                _values(autonomy_approach_stop_area_percent="300"),
                 repo_root=Path("/repo"),
                 default_run_id=lambda: "operator_default",
             )
