@@ -2,277 +2,137 @@
 
 _Status: implemented v1 diagnostics, preview-control, and bounded-teleop slice_
 
-This document describes the operator-facing gateway between the robot's internal
-ROS 2 graph and the external operator laptop application. The first C++ gateway,
-typed gRPC API, preview lifecycle manager, bounded teleop path, and Python operator
-tools are implemented.
+This page is the current implementation reference for the operator-facing
+gateway between the robot's internal ROS 2 graph and the external operator
+laptop tools.
 
-## Purpose
+## Current implementation
 
-Provide one explicit integration boundary for operator-facing features:
+The gateway is implemented by `robot_diag_control_cpp` inside the `robot-core`
+runtime. It keeps the internal ROS 2 graph private and exposes a narrow external
+gRPC boundary for optional operator status, preview control, overlays, and
+bounded teleop.
 
-- gRPC control and state access
-- preview session management
-- bounded teleop control
+The current process contains:
 
-The gateway keeps the internal ROS 2 graph private and prevents the laptop app
-from becoming a generic DDS client that is tightly coupled to internal topics
-and services.
-
-## Current State
-
-What exists today:
-
-- ROS 2 graph on the SBC
-- native vision runtime
-- `omniseer_vision_bridge` publishing detections into ROS 2
-- RViz and debug tooling on the ROS side
-- a `robot_diag_control_cpp` package with:
-  - a shared generated C++ gRPC/protobuf library from the locked `.proto`
-  - an in-memory gateway state store
-  - a synchronous unary gRPC service/server layer
-  - a ROS-backed node that aggregates `/vision/perf`, filtered odometry, and serves the locked API
-  - a gateway-owned preview subprocess manager backing `SetPreviewMode`
-  - a bounded teleop manager backing `SetTeleopEnabled` and `SendTeleopCommand`
-  - live platform diagnostics for compute, Wi-Fi, LiPo, and onboard battery state
-  - a built-in GStreamer preview worker path using `/dev/video11 -> x264 -> MPEG-TS -> SRT`
-  - packaged Python client tools for gateway status/control and host-side preview consumption
-  - a packaged Python monitor shell that integrates status polling and preview launch
-  - a first packaged Tk monitor GUI for desktop status, preview, and teleop bring-up
-  - local verification against those packaged Python tools
-
-Current API boundary:
-
-- stream endpoint metadata in the API
-- preview transport uses the implemented software x264/MPEG-TS/SRT path
-- experiment recording is owned by launch profiles and `scripts/omni runs`
-
-Operating model:
-
-- keep `robot_diag_control_cpp` inside `robot-core`
-- use the gateway for optional status, preview control, and bounded operator teleop
-
-## Implementation Shape
-
-The current C++ implementation stays deliberately simple:
-
-- one process
+- a shared generated C++ gRPC/protobuf library from the locked
+  `omniseer.gateway.v1` proto
 - one synchronous unary gRPC server
-- one shared in-memory state store
-- one ROS subscription path feeding that store
-- one expected operator client
+- one in-memory `GatewayStateStore`
+- one ROS-backed gateway node
+- ROS subscriptions for `/vision/perf`, filtered odometry, detections, and
+  battery state
+- a platform sampler for compute, Wi-Fi, LiPo, and onboard battery diagnostics
+- a gateway-owned preview subprocess manager
+- a bounded teleop manager
+- a built-in GStreamer preview worker command using
+  `/dev/video11 -> x264 -> MPEG-TS -> SRT`
 
-Completed slices:
+The packaged laptop-side tools are implemented in `robot_diag_control`:
 
-1. add a standalone C++ gRPC service/server layer with tests
-2. wire that layer into the existing ROS-backed node
-3. replace the original preview toggle with a gateway-owned subprocess lifecycle
-4. wire the first real preview export command into that lifecycle
-5. add bounded teleop enable/disable and command forwarding through the gateway
-6. surface live platform diagnostics in system status and overlay snapshots
+- `robot_gateway_client` for status, preview control, overlay snapshots, and
+  teleop RPCs
+- `robot_preview_viewer` for host-side SRT consumption
+- `robot_overlay_viewer` for host-side preview plus gateway overlay snapshots
+- `robot_monitor_shell` for status polling and preview bring-up
+- `robot_monitor_gui` for the first Tk desktop status, preview, and teleop
+  surface
 
-This keeps the control/status boundary small while avoiding premature async
-gRPC complexity.
+The implemented process model is deliberately small:
 
-## Major Design Considerations
-
-- Narrow external contract: expose stable RPCs, not internal ROS topic names.
-
-- Mission isolation: preview, UI, and diagnostics must not interfere with
-  navigation/control runtime. Gateway failure, preview failure, or laptop
-  disconnect must not terminate mission-critical perception, command
-  arbitration, or robot behavior.
-
-- Process-level containment: preview transport should run as an on-demand child
-  process or equivalent supervised worker.
-
-- Typed API: use gRPC for request/response, state queries, and event streaming.
-
-- ROS stays internal: the gateway translates between external API calls and
-  internal ROS topics/services/actions.
-
-- Ownership: experiment recording and RunBundle review stay outside the gRPC
-  gateway API.
-
-## High-Level Shape
-
-```text
-                    [ Operator Laptop App ]
-                               |
-                    gRPC control / state API
-                               |
-                        [ Robot Gateway ]
-                  +------------+-------------+
-                  |            |             |
-               preview      diagnostics    teleop
-               manager       adapter       adapter
-                  |            |             |
-                  +------------+-------------+
-                               |
-                         internal ROS 2 API
-                               |
-                         [ ROS 2 graph ]
-```
-
-The implemented process model is:
-
-- one process inside `robot-core`
+- one gateway process inside `robot-core`
 - one gRPC server
 - one ROS adapter layer
 - one preview manager
 - one bounded teleop manager
+- one expected operator client at a time
 
-## Responsibilities
+## Current contract
 
-### External API boundary
+The gateway contract is the `omniseer.gateway.v1.RobotGateway` protobuf service
+defined in
+`ros_ws/src/robot_diag_control/robot_diag_control/api/robot_gateway.proto`.
 
-Expose a versioned operator-facing API for:
+Implemented unary RPCs:
 
-- robot status
-- preview enable/disable
-- preview session status
-- bounded teleop session control
+- `GetSystemStatus`
+- `SetPreviewMode`
+- `SetTeleopEnabled`
+- `SendTeleopCommand`
+- `GetOverlaySnapshot`
 
-### State aggregation
+The external contract exposes robot operations and normalized status, not ROS
+resource names. ROS topics, services, actions, and message types remain internal
+to the gateway process.
 
-Collect and normalize data from the internal ROS graph:
+The gateway owns these current responsibilities:
 
-- vision health/perf
-- preview status
-- teleop status
-- platform diagnostics
-- robot mode or mission state
-- fault summaries
+- normalize cached system status from ROS and platform inputs
+- report gateway name and version
+- report preview, vision, odometry, teleop, and platform status
+- enable and disable preview through the gateway-owned subprocess lifecycle
+- reject invalid preview profiles
+- enable and disable bounded teleop
+- reject teleop commands while teleop is disabled or outside configured bounds
+- command a stop when teleop is disabled or the teleop manager shuts down
+- report latest detection overlay data and recent operator events
 
-### Preview lifecycle control
+The gateway intentionally does not provide:
 
-Own the state machine for preview export:
-
-- disabled
-- starting
-- running
-- stopping
-- faulted
-
-This includes spawning and supervising the preview subprocess.
-
-### Internal ROS adaptation
-
-The gateway should speak ROS internally, not expose ROS externally.
-
-Likely responsibilities:
-
-- subscribe to selected internal topics
-- call selected services/actions
-- translate ROS status into gateway status
-- publish internal commands requested by the operator app
-
-## API Boundary
-
-- browser-native delivery
+- generic ROS graph browsing
+- topic tunneling
+- raw video transport over gRPC
+- RunBundle recording or review
+- browser-native preview delivery
 - remote internet-facing access
-- generic ROS graph proxying
-- replacing local mission-critical ROS consumers
+- mission-critical command arbitration
 
-## Internal Modules
+RunBundle recording and review are owned by launch profiles and
+`scripts/omni runs`, outside the gRPC API.
 
-### gRPC server
+## Verification
 
-Accepts operator requests and exposes state.
+Supported local verification:
 
-Likely responsibilities:
+- `scripts/omni test ros`
 
-- request validation
-- versioning
-- streaming updates to the host app
-- authn/authz hooks later if needed
+Focused package tests cover the gateway state store, synchronous gRPC server,
+service adapter, preview command factory, preview process manager, teleop
+manager, Python gateway client formatting, preview viewer helpers, overlay
+viewer helpers, monitor shell behavior, and Tk monitor smoke coverage.
 
-### ROS adapter
+Preview transport proof-of-life has been locally validated with the packaged
+Python tools against the live C++ gateway and the software x264/SRT worker path.
 
-Internal-only bridge between gateway logic and ROS resources.
+Hardware behavior still requires target-side verification when a change depends
+on ROCK 5B Plus camera devices, GStreamer plugins, Wi-Fi conditions, LiPo or
+onboard battery sources, an active ROS graph, or physical robot command paths.
 
-Likely responsibilities:
+## Limitations
 
-- subscribe to `/vision/perf` and selected status topics
-- call internal services
-- isolate ROS-specific message names from the external API
+- Preview video uses the current software x264/MPEG-TS/SRT path.
+- The gateway API does not publish stream endpoint metadata.
+- The gRPC service is synchronous and unary.
+- Streaming RPCs and multi-client semantics are not implemented.
+- The Tk GUI launches preview in a separate helper process; decoded video is not
+  embedded in the GUI.
+- There is no gateway authn/authz layer.
+- Platform diagnostics are operator diagnostics; they do not currently alter
+  `RobotHealth.ready`.
+- Preview and gateway failures are isolated from the mission path, but the
+  gateway is not a substitute for mission-critical ROS consumers.
 
-### Preview manager
+## Future optimization
 
-Owns the on-demand preview worker lifecycle.
-
-Likely responsibilities:
-
-- resolve preview profile to command/config
-- launch subprocess
-- monitor health
-- return SRT endpoint metadata
-
-### Teleop adapter
-
-Likely responsibilities:
-
-- explicit teleop command validation
-- explicit enable/disable gating
-- command stop on disable and gateway shutdown
-- command arbitration
-
-## Lifecycle
-
-### Boot
-
-At boot:
-
-- `robot-core` starts
-- gateway process starts with preview disabled
-- no preview worker is running
-- mission-critical ROS nodes operate without the gateway being on the hot path
-
-### Preview enable flow
-
-1. Operator app sends `SetPreviewMode`.
-2. Gateway validates the request.
-3. Gateway resolves a bounded preview profile.
-4. Gateway spawns the preview worker.
-5. Gateway reports preview state; the current client uses configured endpoint data.
-
-### Preview disable flow
-
-1. Operator app requests preview off.
-2. Gateway terminates preview worker cleanly.
-3. Gateway reports preview disabled.
-
-## Failure Policy
-
-- Gateway failure must not terminate mission-critical robot behavior.
-- Preview worker failure must not terminate the gateway.
-- External client disconnect must not affect the ROS runtime.
-- Repeated preview failures should be visible through counters and state.
-
-The gateway prefers fail-open behavior for the mission path and fail-closed behavior
-for optional diagnostics.
-
-## Observability
-
-The gateway status surface includes:
-
-- preview restart/fault counters
-- current preview state
-- selected transport/profile information
-
-The gateway keeps status aggregation bounded and cache-backed.
-
-## Rollout Status
-
-**Implemented:**
-
-- locked unary gRPC service and generated C++/Python code
-- cache-backed system status from ROS vision, odometry, platform, preview, and teleop inputs
-- bounded preview profiles and subprocess lifecycle management
-- bounded teleop enable/disable plus bounded velocity commands
-- CLI, monitor shell, Tk monitor, SRT preview helper, and overlay viewer
-
-## Related Docs
-
-- [Gateway API](gateway-api.md)
-- [Preview streaming](preview-streaming.md)
+- Integrate a low-overhead hardware H.265 encoder path for robot-side preview.
+- Add API-owned stream endpoint metadata once endpoint negotiation needs to move
+  out of host tool configuration.
+- Add streaming status or event RPCs after unary status semantics remain stable
+  under real operator workflows.
+- Define multi-client ownership semantics before supporting multiple concurrent
+  operator clients.
+- Embed decoded preview directly in the desktop monitor UI.
+- Add authentication and authorization for deployments that expose the gateway
+  beyond the trusted robot/operator network.
+- Add exact-frame preview/overlay correlation only for targeted debugging paths
+  that require it.

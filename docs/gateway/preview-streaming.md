@@ -1,245 +1,145 @@
 # Preview Streaming
 
-_Status: software x264/SRT bringup path implemented; hardware H.265 planned_
+_Status: software x264/SRT bring-up path implemented_
 
-This page describes the operator preview export path from the robot SBC to the
-operator laptop.
+This page is the current implementation reference for the optional operator
+preview export path from the robot SBC to the operator laptop.
 
-The key design goal is to keep the preview path optional and low-impact while
-still being useful for diagnosis, evaluation, and visual verification of the
-vision stack.
+## Current implementation
 
-## Purpose
+The preview path is managed by the `robot_diag_control_cpp` gateway process. It
+is off by default and runs as a gateway-owned worker process only after an
+operator calls `SetPreviewMode`.
 
-Provide an on-demand, remotely controlled preview stream that:
-
-- does not burden the mission-critical inference path when disabled
-- uses a separate camera path where possible
-- exports video to the laptop over Wi-Fi
-- keeps higher-cost decode/visualization work offboard
-
-## Current State
-
-What is already known from the current ROCK 5B Plus target:
+Current ROCK 5B Plus camera facts:
 
 - `/dev/video11` is `rkisp_mainpath`
 - `/dev/video12` is `rkisp_selfpath`
 - both can stream concurrently at `1280x720 NV12 60 fps`
-- neither path currently advertises direct `BGR24`/`RGB24`
-- `mainpath` and `selfpath` are the right split for preview vs inference
+- neither path currently advertises direct `BGR24` or `RGB24`
+- `mainpath` and `selfpath` provide the current preview/inference split
 
-Transport/runtime checks already completed on this SBC:
-
-- GStreamer `v4l2src` can capture from `rkisp_mainpath`
-- GStreamer SRT plugins are installed
-- local `mainpath -> x264 -> MPEG-TS -> SRT -> decode` loopback has been
-  validated
-- the current C++ gateway can now launch that `x264 -> MPEG-TS -> SRT` path as
-  its built-in preview worker
-- the packaged Python host tools can now request preview over gRPC and consume
-  that SRT stream using `gst-launch-1.0`
-
-Current blocker for the intended production path:
-
-- hardware H.265 encode is not currently exposed through the installed
-  userspace stack on this image
-- FFmpeg exposes `hevc_v4l2m2m`, but encode failed with `Could not find a valid
-  device`
-- no Rockchip-specific GStreamer H.265 encoder plugin appears to be installed
-
-Implication:
-
-- SRT transport is feasible now
-- preview export is feasible now
-- low-overhead production H.265 still needs encoder integration work
-
-## Major Design Considerations
-
-- Keep preview off by default.
-
-- Use `rkisp_mainpath` for preview and `rkisp_selfpath` for inference by
-  default.
-
-- Keep preview and overlay work optional. Preview startup, shutdown, or failure
-  must not disrupt the mission-critical inference or robot behavior path.
-
-- Keep preview in `NV12` into the encoder when possible; do not convert to BGR
-  on the robot in the default path.
-
-- Use SRT as the first preview transport over Wi-Fi.
-
-- Decode and render on the host laptop.
-
-- Reserve exact-frame debug paths for later targeted debugging, not the default
-  operator preview flow.
-
-## Current and Target Pipeline
+Implemented robot-side preview worker:
 
 ```text
 rkisp_mainpath (/dev/video11, NV12)
             |
             v
-     managed preview worker
+     GStreamer preview worker
             |
-            +--> encode (target: H.265, current fallback: x264 for bring-up)
+            v
+     software x264 encode
             |
             v
         MPEG-TS / SRT
-            |
-            v
-     operator laptop decode
-            |
-     +--> current external viewer process
-     +--> monitor app preview viewer
-            +--> optional local ROS Image bridge
-            +--> optional host-side overlays / RViz2
 ```
 
-## Why `mainpath` for Preview
+Implemented host-side consumers:
 
-The mission-critical vision pipeline already uses a producer/consumer hot path
-on the SBC and is optimized around low-latency inference. The preview path
-should not add avoidable work to that path.
+- `robot_preview_viewer` enables preview over gRPC and consumes the configured
+  SRT endpoint with `gst-launch-1.0`
+- `robot_overlay_viewer` enables preview, decodes SRT into an OpenCV window,
+  polls gateway overlay snapshots, and draws detections plus telemetry over the
+  live video
+- `robot_monitor_shell` polls gateway status, runs short watch loops, and
+  launches `robot_preview_viewer`
+- `robot_monitor_gui` refreshes status, toggles preview, and launches
+  `robot_preview_viewer` from a desktop GUI
 
-Using `mainpath` for preview gives:
+Transport/runtime checks completed on the target SBC:
 
-- better isolation from inference
-- no need to add a same-frame conversion branch in the default case
-- a natural on/off switch for operator diagnostics
+- GStreamer `v4l2src` captures from `rkisp_mainpath`
+- GStreamer SRT plugins are installed
+- local `mainpath -> x264 -> MPEG-TS -> SRT -> decode` loopback has been
+  validated
+- the C++ gateway launches the `x264 -> MPEG-TS -> SRT` path as its built-in
+  preview worker
+- packaged Python host tools request preview over gRPC and consume the SRT
+  stream
 
-The tradeoff is that preview frames and detection frames are close in time but
-not guaranteed to be the exact same frame. That is acceptable for normal
-operator monitoring.
+## Current contract
 
-## Transport Choice: SRT
+Preview control is part of the gateway gRPC API:
 
-The implemented preview transport is SRT.
+- `SetPreviewMode(enabled=true, profile=...)` starts the worker
+- `SetPreviewMode(enabled=false)` terminates the worker
+- `GetSystemStatus` reports `PreviewStatus`
+- `GetOverlaySnapshot` returns source-space detection geometry for host-side
+  overlay scaling
 
-Why:
-
-- better fit for variable Wi-Fi than plain RTP/UDP
-- built-in recovery/latency tuning
-- good support in the installed GStreamer stack
-- simpler than WebRTC for the current scope
-
-This is a diagnostics-oriented link, not a browser-delivery problem.
-
-## Preview Profiles
-
-The preview path exposes bounded named profiles, not raw encoder knobs.
-
-Implemented profiles:
-
-- `off`
-- `low_bw`
-- `balanced`
-- `high_quality`
-
-Current x264 meanings:
+Implemented preview profiles:
 
 - `off`: no preview worker running
 - `low_bw`: 720p, 15 fps, 1000 kbit/s
 - `balanced`: 720p, 30 fps, 2500 kbit/s
 - `high_quality`: 720p, 60 fps, 4500 kbit/s
 
-The exact numbers can be tuned later after integration and Wi-Fi testing.
-
-## Sync Model
-
-### Default mode
-
-- inference on `selfpath`
-- preview on `mainpath`
-- approximate temporal alignment
-
-This is the recommended operator mode.
-
-### Exact-sync mode
-
-Later optional mode:
-
-- preview derived from the same frame path as inference
-- more expensive on the SBC
-- only used when exact overlay verification matters
-
-This should not be the default always-on path.
-
-## Worker Lifecycle
-
-The preview worker is managed by the `robot_diag_control_cpp` gateway process.
-
-Basic lifecycle:
+Preview lifecycle:
 
 1. preview disabled
 2. operator requests preview
-3. gateway spawns preview worker
-4. worker binds SRT endpoint and begins export
-5. operator disables preview
-6. gateway terminates preview worker
+3. gateway validates the requested profile
+4. gateway resolves the profile to a bounded worker command
+5. gateway spawns the worker
+6. worker binds the SRT endpoint and exports video
+7. operator disables preview
+8. gateway terminates the worker
 
-The worker is disposable. Its process state is polled by the gateway, and worker
-failure does not terminate the mission-critical runtime.
+Operational contract:
 
-## Current Encoder Options
+- preview is optional and off by default
+- preview startup, shutdown, and failure do not terminate mission-critical
+  inference or robot behavior
+- preview uses `rkisp_mainpath` by default
+- inference uses `rkisp_selfpath` by default
+- host tooling requires general-purpose decode/render capability, not Rockchip
+  RGA
+- decoded preview and detection overlays are approximately aligned, not
+  exact-frame synchronized
 
-### Desired production path
+## Verification
 
-- `NV12 mainpath -> hardware H.265 encode -> SRT`
+Supported local verification:
 
-This is the desired low-overhead end state.
+- `scripts/omni test ros`
 
-### Current implemented bring-up path
+Focused tests cover:
 
-- `NV12 mainpath -> software x264 -> SRT`
+- preview command profile resolution
+- preview process lifecycle behavior
+- gateway service preview responses
+- Python preview viewer helper behavior
+- Python overlay viewer helper behavior
+- monitor shell and Tk monitor smoke behavior
 
-This path is now the implemented robot-side preview export path for early
-integration and proof-of-life, but it is not the desired long-term robot-side
-budget.
+Target-side preview verification requires the ROCK 5B Plus camera devices,
+installed GStreamer SRT plugins, the configured SRT endpoint, and representative
+Wi-Fi conditions.
 
-### Currently unattractive path
+## Limitations
 
-- `NV12 mainpath -> software x265 -> SRT`
+- Robot-side preview currently uses software x264.
+- Hardware H.265 encode is not exposed through the installed userspace stack on
+  the current image.
+- FFmpeg exposes `hevc_v4l2m2m`, but encode failed with `Could not find a valid
+  device` during bring-up.
+- No Rockchip-specific GStreamer H.265 encoder plugin appears to be installed
+  on the current image.
+- The gateway API does not publish SRT endpoint metadata.
+- The Tk monitor GUI launches preview in a separate helper process and does not
+  embed decoded video.
+- Preview frames and detection frames come from separate camera paths and are
+  not exact-frame synchronized.
+- Software x265 is too CPU-expensive for the intended SBC mission budget.
 
-This is too CPU-expensive for the intended mission-critical budget on the SBC.
+## Future optimization
 
-## Host-Side Expectations
-
-The operator laptop is expected to:
-
-- receive SRT
-- decode the stream
-- render it in the operator app
-- optionally feed decoded frames into local analysis/overlay pipelines
-
-Current implemented host slice:
-
-- `robot_preview_viewer` can enable preview over gRPC and consume the fixed or
-  configured SRT endpoint
-- `robot_overlay_viewer` can enable preview, decode SRT into an OpenCV window,
-  poll gateway overlay snapshots, and draw detections plus telemetry over the
-  live video
-- `robot_monitor_shell` can poll gateway status, run short watch loops, and
-  launch `robot_preview_viewer` from one integrated tool
-- `robot_monitor_gui` can refresh status, toggle preview, and launch
-  `robot_preview_viewer` from a desktop GUI
-- it currently shells out to `gst-launch-1.0`, so host-side GStreamer tooling
-  is required
-- the GUI currently launches preview in a separate helper process; it does not
-  yet embed decoded video in its own window
-- these are minimal bring-up tools, not the final operator UI
-
-The architecture should **not** assume the laptop has Rockchip RGA. It should
-only assume general-purpose CPU/GPU resources and likely hardware video decode.
-
-## Open Integration Questions
-
-- what exact hardware H.265 userspace path should be installed on the SBC image
-- what preview profile defaults should be used over the current Wi-Fi setup
-- whether decoded preview should be bridged into ROS on the host in the first
-  UI slices or kept as a plain video panel initially
-- how recorded preview evidence correlates with the RunBundle evidence format
-
-## Related Docs
-
-- [Robot gateway](robot-gateway.md)
-- [Gateway API](gateway-api.md)
+- Install and verify a low-overhead hardware H.265 userspace encode path on the
+  SBC image.
+- Move from `NV12 mainpath -> software x264 -> SRT` to
+  `NV12 mainpath -> hardware H.265 -> SRT`.
+- Tune preview profile defaults with measured Wi-Fi and SBC load data.
+- Publish stream endpoint metadata through the gateway API.
+- Embed decoded preview directly in the monitor GUI.
+- Add an exact-frame debug preview path for targeted overlay verification.
+- Define how recorded preview evidence correlates with RunBundle evidence.
