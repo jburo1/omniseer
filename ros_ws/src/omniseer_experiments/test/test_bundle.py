@@ -122,7 +122,7 @@ class RunBundleWriterTests(unittest.TestCase):
                 self.assertIn("launch:", manifest)
                 self.assertIn('command: "run real --profile operator bringup"', manifest)
                 self.assertIn('profile: "operator"', manifest)
-                self.assertIn("requested: false", manifest)
+                self.assertNotIn("video:\n", manifest)
                 self.assertIn('mode: "bringup"', manifest)
                 self.assertIn('- "start_gateway:=true"', manifest)
                 self.assertIn('- "camera_device:=/dev/video11"', manifest)

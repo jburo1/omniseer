@@ -93,7 +93,6 @@ class RunBundleConfig:
     experiment_parameters: dict[str, Any] = field(default_factory=dict)
     detections_topic: str = DEFAULT_DETECTIONS_TOPIC
     perf_topic: str = DEFAULT_PERF_TOPIC
-    record_video: bool = False
 
 
 class SummaryAccumulator:
@@ -368,14 +367,6 @@ class RunBundleWriter:
             "topics": {
                 "detections": self.config.detections_topic,
                 "perf": self.config.perf_topic,
-            },
-            "video": {
-                "requested": self.config.record_video,
-                "source_width_px": 1280,
-                "source_height_px": 720,
-                "inference_width_px": 640,
-                "inference_height_px": 640,
-                "synchronization": "approximate: independent preview and inference camera paths",
             },
             "notes": self.config.notes,
         }

@@ -219,6 +219,8 @@ class RunRetrievalTests(unittest.TestCase):
                 '{"schema_version":3,"source":"producer","tick_id":1}\n',
                 encoding="utf-8",
             )
+            (source / "video").mkdir()
+            (source / "video" / "source.ts").write_bytes(b"recorded video")
             (source / "future" / "nested").mkdir(parents=True)
             (source / "future" / "nested" / "artifact.txt").write_text("preserved", encoding="utf-8")
             runner = FakePullRunner(source)
@@ -229,6 +231,7 @@ class RunRetrievalTests(unittest.TestCase):
             self.assertEqual(result.inspection.state, STATE_COMPLETE)
             self.assertTrue((destination / "system.jsonl").exists())
             self.assertTrue((destination / "pipeline_telemetry.jsonl").exists())
+            self.assertEqual((destination / "video" / "source.ts").read_bytes(), b"recorded video")
             self.assertEqual(
                 (destination / "future" / "nested" / "artifact.txt").read_text(encoding="utf-8"),
                 "preserved",

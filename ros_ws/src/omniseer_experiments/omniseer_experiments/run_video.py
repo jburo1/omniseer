@@ -5,12 +5,11 @@ from __future__ import annotations
 import argparse
 import json
 import subprocess
+from bisect import bisect_right
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-
-from robot_diag_control.overlay_viewer import _class_color, _put_label
 
 MAX_DETECTION_AGE_SEC = 0.5
 
@@ -57,10 +56,11 @@ def nearest_detections(
     if not records:
         return None
     first_timestamp = records[0].timestamp_sec
-    nearest = min(records, key=lambda item: abs((item.timestamp_sec - first_timestamp) - video_time_sec))
-    if abs((nearest.timestamp_sec - first_timestamp) - video_time_sec) > max_age_sec:
+    timestamps = [item.timestamp_sec - first_timestamp for item in records]
+    index = bisect_right(timestamps, video_time_sec) - 1
+    if index < 0 or video_time_sec - timestamps[index] > max_age_sec:
         return None
-    return nearest
+    return records[index]
 
 
 def remux_source_video(source_ts: Path, source_mp4: Path, *, runner: Callable[..., Any] = subprocess.run) -> None:
@@ -86,13 +86,10 @@ def build_run_video(
     video_dir.mkdir(exist_ok=True)
     source_mp4 = video_dir / "source.mp4"
     remux_source_video(source_ts, source_mp4, runner=runner)
-    inference_width, inference_height = _inference_dimensions(run_dir / "manifest.yaml")
     render_overlay(
         source_mp4,
         video_dir / "overlay.mp4",
         read_timed_detections(detections_path),
-        inference_width=inference_width,
-        inference_height=inference_height,
         cv2_module=cv2_module,
     )
 
@@ -152,29 +149,22 @@ def _draw_detections(
         class_id = detection.get("class_id", 0)
         class_name = str(detection.get("class_name", "") or class_id)
         score = _number(detection.get("score")) or 0.0
-        color = _class_color(class_name, int(class_id) if isinstance(class_id, int) else 0)
+        color = (0, 255, 0)
         cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
-        _put_label(cv2, frame, f"{class_name} {score:.2f}", (x1, max(16, y1)), color=(255, 255, 255), background=color)
+        cv2.putText(
+            frame,
+            f"{class_name} {score:.2f}",
+            (x1, max(16, y1)),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.5,
+            color,
+            1,
+            cv2.LINE_AA,
+        )
 
 
 def _number(value: object) -> float | None:
     return float(value) if isinstance(value, (int, float)) and not isinstance(value, bool) else None
-
-
-def _inference_dimensions(manifest_path: Path) -> tuple[int, int]:
-    try:
-        text = manifest_path.read_text(encoding="utf-8")
-    except OSError:
-        return 640, 640
-    values: dict[str, int] = {}
-    for line in text.splitlines():
-        key, separator, value = line.strip().partition(":")
-        if separator and key in {"inference_width_px", "inference_height_px"}:
-            try:
-                values[key] = int(value.strip())
-            except ValueError:
-                pass
-    return values.get("inference_width_px", 640), values.get("inference_height_px", 640)
 
 
 def _import_cv2() -> Any:

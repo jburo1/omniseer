@@ -104,7 +104,6 @@ _REAL_ARGUMENT_DEFAULTS = [
     ("experiment_overwrite", "false"),
     ("experiment_queue_size", "256"),
     ("experiment_flush_interval_sec", "1.0"),
-    ("experiment_record_video", "false"),
 ]
 
 _REAL_IO_ARGS = [
@@ -252,8 +251,6 @@ def _build_real_bringup_actions(*, pkg_bringup, config):
             config["experiment_queue_size"],
             "--flush-interval-sec",
             config["experiment_flush_interval_sec"],
-            "--record-video",
-            config["experiment_record_video"],
             "--ros-args",
             "--log-level",
             config["log_level"],

@@ -226,7 +226,6 @@ append_recording_launch_args() {
     target_args+=(
       "start_gateway:=true"
       "gateway_preview_record_path:=${record_out_dir}/video/source.ts"
-      "experiment_record_video:=true"
     )
   fi
 

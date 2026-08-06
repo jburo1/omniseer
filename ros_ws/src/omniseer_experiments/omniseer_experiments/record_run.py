@@ -67,7 +67,6 @@ class RecorderOptions:
     queue_size: int = DEFAULT_QUEUE_SIZE
     flush_interval_sec: float = 1.0
     battery_topic: str = "/battery"
-    record_video: bool = False
 
 
 class AsyncBundleWriter:
@@ -221,7 +220,6 @@ class PerceptionRunRecorder(Node):
                 experiment_parameters=options.experiment_parameters or {},
                 detections_topic=options.detections_topic,
                 perf_topic=options.perf_topic,
-                record_video=options.record_video,
             )
         )
         self._writer = AsyncBundleWriter(
@@ -409,7 +407,6 @@ def options_from_args(argv: list[str] | None = None) -> RecorderOptions:
         queue_size=args.queue_size,
         flush_interval_sec=args.flush_interval_sec,
         battery_topic=args.battery_topic,
-        record_video=_as_bool(args.record_video),
     )
 
 
@@ -460,7 +457,6 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--queue-size", type=int, default=DEFAULT_QUEUE_SIZE)
     parser.add_argument("--flush-interval-sec", type=float, default=1.0)
     parser.add_argument("--battery-topic", default="/battery", help="battery topic for LiPo snapshots")
-    parser.add_argument("--record-video", default="false", help="recording requested for this RunBundle")
     return parser
 
 

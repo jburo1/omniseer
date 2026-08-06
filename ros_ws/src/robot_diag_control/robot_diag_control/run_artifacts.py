@@ -147,7 +147,9 @@ def build_run_videos(
     command_executor: CommandExecutor = _default_command_executor,
 ) -> RunArtifactResult:
     command = build_video_command(context, run_id=run_id)
-    path = imported_run_dir(context, run_id) / "video" / "overlay.mp4"
+    video_dir = imported_run_dir(context, run_id) / "video"
+    source_path = video_dir / "source.mp4"
+    overlay_path = video_dir / "overlay.mp4"
     try:
         completed = command_executor(command, context.repo_root)
     except OSError as error:
@@ -158,7 +160,13 @@ def build_run_videos(
             success=False,
             message=f"video build failed: {_completed_detail(completed)}",
         )
-    return RunArtifactResult(command=command, success=path.is_file(), path=path, message=f"videos built: {path}")
+    if not source_path.is_file() or not overlay_path.is_file():
+        return RunArtifactResult(
+            command=command,
+            success=False,
+            message=f"video build completed but expected outputs are missing: {source_path}, {overlay_path}",
+        )
+    return RunArtifactResult(command=command, success=True, path=overlay_path, message=f"videos built: {overlay_path}")
 
 
 def retrieve_run_artifacts(
