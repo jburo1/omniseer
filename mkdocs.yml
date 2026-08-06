@@ -1,16 +1,24 @@
-site_name: omniseer
+site_name: Omniseer
+site_description: Edge-to-cloud ROS 2 robot for open-vocabulary perception and reproducible edge-AI experiments
+site_url: https://jburo1.github.io/omniseer/
 repo_url: https://github.com/jburo1/omniseer
+repo_name: jburo1/omniseer
 exclude_docs: |
   diagrams/README.md
   diagrams/explorer/README.md
   diagrams/**/*.d2
 theme:
   name: material
+  custom_dir: docs/overrides
+  logo: assets/brand/logo.svg
+  favicon: assets/brand/favicon.svg
   palette:
     scheme: default
     primary: indigo
   features:
     - navigation.instant
+extra:
+  social_image: assets/brand/social-preview.png
 markdown_extensions:
   - toc:
       permalink: true
