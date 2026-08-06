@@ -3,6 +3,7 @@
 #include "micro_ros_node.hpp"
 
 #include <Arduino.h>
+#include <math.h>
 
 static MicroRosNode* g_micro_ros_node_instance = nullptr;
 
@@ -262,6 +263,9 @@ void MicroRosNode::publish_battery()
   _set_stamp_from_local_us(_battery_msg.header.stamp, now_us);
 
   _battery_msg.voltage = voltage;
+  _battery_msg.percentage = NAN;
+  _battery_msg.power_supply_technology =
+      sensor_msgs__msg__BatteryState__POWER_SUPPLY_TECHNOLOGY_LIPO;
   _battery_msg.present = true;
 
   rcl_soft_check(rcl_publish(&_battery_pub, &_battery_msg, nullptr), "battery publish");

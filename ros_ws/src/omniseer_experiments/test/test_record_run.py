@@ -134,6 +134,23 @@ class RecordRunConversionTests(unittest.TestCase):
         self.assertEqual(snapshot["percentage"], 72.0)
         self.assertEqual(snapshot["charging"], True)
 
+    def test_battery_state_to_snapshot_serializes_nan_percentage_as_unknown(self) -> None:
+        message = _battery_message()
+        message.percentage = float("nan")
+
+        snapshot = battery_state_to_snapshot(message)
+
+        self.assertEqual(snapshot["voltage"], 8.34)
+        self.assertIsNone(snapshot["percentage"])
+
+    def test_battery_state_to_snapshot_preserves_explicit_zero_percentage(self) -> None:
+        message = _battery_message()
+        message.percentage = 0.0
+
+        snapshot = battery_state_to_snapshot(message)
+
+        self.assertEqual(snapshot["percentage"], 0.0)
+
     def test_unavailable_lipo_battery_snapshot_has_explicit_shape(self) -> None:
         snapshot = unavailable_lipo_battery_snapshot("/custom_battery")
 

@@ -254,6 +254,7 @@ namespace robot_diag_control_cpp
       EXPECT_EQ(status.platform.network.wifi_signal_dbm, -58);
       EXPECT_TRUE(status.platform.power.lipo_battery.voltage_available);
       EXPECT_NEAR(status.platform.power.lipo_battery.voltage, 7.8, 0.001);
+      EXPECT_FALSE(status.platform.power.lipo_battery.percentage_available);
       EXPECT_TRUE(status.platform.power.onboard_battery.percentage_available);
       EXPECT_DOUBLE_EQ(status.platform.power.onboard_battery.percentage, 91.0);
 
