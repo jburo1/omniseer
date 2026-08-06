@@ -6,7 +6,11 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
+        <meta name="description" content="Edge-to-cloud ROS 2 robot for open-vocabulary perception and reproducible edge-AI experiments">
       
+      
+      
+        <link rel="canonical" href="https://jburo1.github.io/omniseer/perception/vision-telemetry/">
       
       
         <link rel="prev" href="../vision-pipeline/">
@@ -18,12 +22,12 @@
         
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/brand/favicon.svg">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
-        <title>Vision Telemetry - omniseer</title>
+        <title>Vision Telemetry - Omniseer</title>
       
     
     
@@ -55,6 +59,24 @@
 
     
     
+  
+  
+  
+  
+  
+  
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Omniseer">
+  <meta property="og:title" content="Vision Telemetry - Omniseer">
+  <meta property="og:description" content="Edge-to-cloud ROS 2 robot for open-vocabulary perception and reproducible edge-AI experiments">
+  <meta property="og:url" content="https://jburo1.github.io/omniseer/perception/vision-telemetry/">
+  <meta property="og:image" content="https://jburo1.github.io/omniseer/assets/brand/social-preview.png">
+  <meta property="og:image:type" content="image/png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Vision Telemetry - Omniseer">
+  <meta name="twitter:description" content="Edge-to-cloud ROS 2 robot for open-vocabulary perception and reproducible edge-AI experiments">
+  <meta name="twitter:image" content="https://jburo1.github.io/omniseer/assets/brand/social-preview.png">
+
   </head>
   
   
@@ -72,7 +94,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#vision-telemetry-and-profiling-spec-v1" class="md-skip">
+        <a href="#vision-telemetry-contract" class="md-skip">
           Skip to content
         </a>
       
@@ -88,10 +110,9 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="omniseer" class="md-header__button md-logo" aria-label="omniseer" data-md-component="logo">
+    <a href="../.." title="Omniseer" class="md-header__button md-logo" aria-label="Omniseer" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/brand/logo.svg" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -102,7 +123,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            omniseer
+            Omniseer
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -168,7 +189,7 @@
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
   </div>
   <div class="md-source__repository">
-    GitHub
+    jburo1/omniseer
   </div>
 </a>
       </div>
@@ -198,13 +219,12 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="omniseer" class="md-nav__button md-logo" aria-label="omniseer" data-md-component="logo">
+    <a href="../.." title="Omniseer" class="md-nav__button md-logo" aria-label="Omniseer" data-md-component="logo">
       
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+  <img src="../../assets/brand/logo.svg" alt="logo">
 
     </a>
-    omniseer
+    Omniseer
   </label>
   
     <div class="md-nav__source">
@@ -214,7 +234,7 @@
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
   </div>
   <div class="md-source__repository">
-    GitHub
+    jburo1/omniseer
   </div>
 </a>
     </div>
@@ -696,10 +716,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#status" class="md-nav__link">
+  <a href="#emitted-records" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Status
+        Emitted Records
       
     </span>
   </a>
@@ -707,10 +727,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#1-purpose" class="md-nav__link">
+  <a href="#queue-and-backpressure-behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1) Purpose
+        Queue And Backpressure Behavior
       
     </span>
   </a>
@@ -718,10 +738,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-design-goals" class="md-nav__link">
+  <a href="#timestamp-semantics" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2) Design Goals
+        Timestamp Semantics
       
     </span>
   </a>
@@ -729,10 +749,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-scope-boundary-v1" class="md-nav__link">
+  <a href="#status-and-duration-fields" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3) Scope Boundary (v1)
+        Status And Duration Fields
       
     </span>
   </a>
@@ -740,10 +760,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-threading-model" class="md-nav__link">
+  <a href="#failure-behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4) Threading Model
+        Failure Behavior
       
     </span>
   </a>
@@ -751,143 +771,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#5-architecture" class="md-nav__link">
+  <a href="#analysis-tools" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5) Architecture
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="5) Architecture">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#51-interface-boundary" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5.1 Interface boundary
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#52-nullability-and-activation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5.2 Nullability and activation
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#53-counters-vs-samples" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5.3 Counters vs samples
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#54-hot-path-sample-representation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5.4 Hot-path sample representation
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#55-timing-instrumentation-style" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5.5 Timing instrumentation style
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#6-queueing-and-backpressure" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        6) Queueing and Backpressure
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="6) Queueing and Backpressure">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#61-queue-topology" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        6.1 Queue topology
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#62-queue-behavior" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        6.2 Queue behavior
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#63-sink-behavior" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        6.3 Sink behavior
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#64-capacity-sizing-rule" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        6.4 Capacity sizing rule
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#7-failure-policy" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        7) Failure Policy
+        Analysis Tools
       
     </span>
   </a>
@@ -895,187 +782,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#8-producer-emission-rules-v1" class="md-nav__link">
+  <a href="#verification" class="md-nav__link">
     <span class="md-ellipsis">
       
-        8) Producer Emission Rules (v1)
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="8) Producer Emission Rules (v1)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#81-tick-inclusion" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        8.1 Tick inclusion
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#82-identifiers" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        8.2 Identifiers
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#83-stage-partitioning" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        8.3 Stage partitioning
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#84-early-return-semantics" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        8.4 Early-return semantics
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#9-clock-and-time-semantics" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        9) Clock and Time Semantics
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#10-data-contract-jsonl-v1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        10) Data Contract (JSONL v1)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#11-interface-and-ownership" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        11) Interface and Ownership
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="11) Interface and Ownership">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#111-ownership" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        11.1 Ownership
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#112-lifetime" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        11.2 Lifetime
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#113-no-runtime-toggling-v1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        11.3 No runtime toggling (v1)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#12-flush-and-shutdown-policy" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        12) Flush and Shutdown Policy
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#13-performance-requirements" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        13) Performance Requirements
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#14-minimal-test-requirements" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        14) Minimal Test Requirements
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#15-implementation-status" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        15) Implementation Status
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#16-open-questions-for-v2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        16) Open Questions for v2+
+        Verification
       
     </span>
   </a>
@@ -1291,10 +1001,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#status" class="md-nav__link">
+  <a href="#emitted-records" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Status
+        Emitted Records
       
     </span>
   </a>
@@ -1302,10 +1012,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#1-purpose" class="md-nav__link">
+  <a href="#queue-and-backpressure-behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1) Purpose
+        Queue And Backpressure Behavior
       
     </span>
   </a>
@@ -1313,10 +1023,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-design-goals" class="md-nav__link">
+  <a href="#timestamp-semantics" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2) Design Goals
+        Timestamp Semantics
       
     </span>
   </a>
@@ -1324,10 +1034,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-scope-boundary-v1" class="md-nav__link">
+  <a href="#status-and-duration-fields" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3) Scope Boundary (v1)
+        Status And Duration Fields
       
     </span>
   </a>
@@ -1335,10 +1045,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-threading-model" class="md-nav__link">
+  <a href="#failure-behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4) Threading Model
+        Failure Behavior
       
     </span>
   </a>
@@ -1346,143 +1056,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#5-architecture" class="md-nav__link">
+  <a href="#analysis-tools" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5) Architecture
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="5) Architecture">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#51-interface-boundary" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5.1 Interface boundary
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#52-nullability-and-activation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5.2 Nullability and activation
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#53-counters-vs-samples" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5.3 Counters vs samples
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#54-hot-path-sample-representation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5.4 Hot-path sample representation
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#55-timing-instrumentation-style" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5.5 Timing instrumentation style
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#6-queueing-and-backpressure" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        6) Queueing and Backpressure
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="6) Queueing and Backpressure">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#61-queue-topology" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        6.1 Queue topology
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#62-queue-behavior" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        6.2 Queue behavior
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#63-sink-behavior" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        6.3 Sink behavior
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#64-capacity-sizing-rule" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        6.4 Capacity sizing rule
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#7-failure-policy" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        7) Failure Policy
+        Analysis Tools
       
     </span>
   </a>
@@ -1490,187 +1067,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#8-producer-emission-rules-v1" class="md-nav__link">
+  <a href="#verification" class="md-nav__link">
     <span class="md-ellipsis">
       
-        8) Producer Emission Rules (v1)
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="8) Producer Emission Rules (v1)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#81-tick-inclusion" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        8.1 Tick inclusion
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#82-identifiers" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        8.2 Identifiers
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#83-stage-partitioning" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        8.3 Stage partitioning
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#84-early-return-semantics" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        8.4 Early-return semantics
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#9-clock-and-time-semantics" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        9) Clock and Time Semantics
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#10-data-contract-jsonl-v1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        10) Data Contract (JSONL v1)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#11-interface-and-ownership" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        11) Interface and Ownership
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="11) Interface and Ownership">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#111-ownership" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        11.1 Ownership
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#112-lifetime" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        11.2 Lifetime
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#113-no-runtime-toggling-v1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        11.3 No runtime toggling (v1)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#12-flush-and-shutdown-policy" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        12) Flush and Shutdown Policy
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#13-performance-requirements" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        13) Performance Requirements
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#14-minimal-test-requirements" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        14) Minimal Test Requirements
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#15-implementation-status" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        15) Implementation Status
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#16-open-questions-for-v2" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        16) Open Questions for v2+
+        Verification
       
     </span>
   </a>
@@ -1697,373 +1097,444 @@
   
 
 
-<h1 id="vision-telemetry-and-profiling-spec-v1">Vision Telemetry and Profiling Spec (v1)<a class="headerlink" href="#vision-telemetry-and-profiling-spec-v1" title="Permanent link">&para;</a></h1>
-<h2 id="status">Status<a class="headerlink" href="#status" title="Permanent link">&para;</a></h2>
-<ul>
-<li>Owner: vision pipeline implementation</li>
-<li>Version: <code>v1</code></li>
-<li>Scope: producer + consumer runtime telemetry, emitted asynchronously</li>
-<li>Implementation: rolling summaries, JSONL sink, fan-out, and offline analysis implemented</li>
-<li>Last updated: 2026-07-06</li>
-</ul>
-<h2 id="1-purpose">1) Purpose<a class="headerlink" href="#1-purpose" title="Permanent link">&para;</a></h2>
-<p>Define a low-coupling, low-overhead telemetry architecture for the vision pipeline that:</p>
-<ul>
-<li>keeps producer and consumer hot paths non-blocking</li>
-<li>keeps profiling optional at runtime</li>
-<li>emits structured stage timing only when telemetry is active</li>
-<li>supports real-time and offline latency/jitter analysis</li>
-<li>preserves detector-stage latency/FPS under load</li>
-<li>keeps producer and consumer instrumentation on one stable contract</li>
-</ul>
-<h2 id="2-design-goals">2) Design Goals<a class="headerlink" href="#2-design-goals" title="Permanent link">&para;</a></h2>
-<ol>
-<li><strong>Optional profiling</strong>:</li>
-<li>if telemetry is disabled, no stage timing work is done</li>
-<li>
-<p>pipelines still keep cheap status counters</p>
-</li>
-<li>
-<p><strong>No data-plane stalls</strong>:</p>
-</li>
-<li>producer and consumer must never block on telemetry</li>
-<li>
-<p>queue overflow drops telemetry samples, never frames</p>
-</li>
-<li>
-<p><strong>Loose coupling</strong>:</p>
-</li>
-<li>
-<p>pipelines depend on a small telemetry interface, not sink details</p>
-</li>
-<li>
-<p><strong>Cross-thread safety</strong>:</p>
-</li>
-<li>
-<p>producer and consumer each publish to telemetry thread through bounded queues</p>
-</li>
-<li>
-<p><strong>ROS2-friendly timestamps</strong>:</p>
-</li>
-<li>monotonic durations for measurement correctness</li>
-<li>
-<p>realtime timestamp for cross-system correlation</p>
-</li>
-<li>
-<p><strong>Low and predictable overhead</strong>:</p>
-</li>
-<li>fixed-shape samples on hot path (no <code>std::optional</code>, no formatting)</li>
-<li>one top-level timing gate per tick, then scoped stage timing inside that branch</li>
-</ol>
-<h2 id="3-scope-boundary-v1">3) Scope Boundary (v1)<a class="headerlink" href="#3-scope-boundary-v1" title="Permanent link">&para;</a></h2>
-<ul>
-<li>perfect reliability of telemetry delivery</li>
-<li>dynamic attach/detach of telemetry while running</li>
-<li>profiling of preflight/startup path</li>
-<li>multi-process telemetry transport</li>
-<li>high-cost online analytics UI inside data-plane threads</li>
-</ul>
-<h2 id="4-threading-model">4) Threading Model<a class="headerlink" href="#4-threading-model" title="Permanent link">&para;</a></h2>
-<p>The system has up to four threads:</p>
-<ol>
-<li><strong>Orchestrator/App thread</strong></li>
-<li>
-<p>owns lifecycle of telemetry hub and pipeline threads</p>
-</li>
-<li>
-<p><strong>Producer thread</strong></p>
-</li>
-<li>runs producer pipeline tick loop</li>
-<li>
-<p>emits producer telemetry samples asynchronously</p>
-</li>
-<li>
-<p><strong>Consumer thread</strong></p>
-</li>
-<li>runs consumer pipeline tick loop</li>
-<li>
-<p>emits consumer telemetry samples asynchronously</p>
-</li>
-<li>
-<p><strong>Telemetry thread</strong></p>
-</li>
-<li>drains producer and consumer queues</li>
-<li>writes JSONL sink</li>
-<li>computes optional rolling stats snapshots</li>
-</ol>
-<h2 id="5-architecture">5) Architecture<a class="headerlink" href="#5-architecture" title="Permanent link">&para;</a></h2>
-<h3 id="51-interface-boundary">5.1 Interface boundary<a class="headerlink" href="#51-interface-boundary" title="Permanent link">&para;</a></h3>
-<p>Pipelines depend on one minimal interface (name can be adjusted):</p>
+<h1 id="vision-telemetry-contract">Vision Telemetry Contract<a class="headerlink" href="#vision-telemetry-contract" title="Permanent link">&para;</a></h1>
+<p><em>Status: implemented; native JSONL schema version <code>3</code></em></p>
+<p>This page defines the current telemetry contract for the native vision pipeline.
+The contract covers producer and consumer runtime samples, rolling in-process
+statistics, JSONL export, and offline analysis. Telemetry is optional for native
+harness runs, but the ROS bridge always keeps rolling telemetry active for live
+performance status.</p>
+<p>Mission-critical producer and consumer behavior does not depend on telemetry file
+I/O. When telemetry is unavailable, faulted, or backpressured, frame capture,
+preprocess, inference, postprocess, and publication continue on the normal pipeline
+path.</p>
+<h2 id="emitted-records">Emitted Records<a class="headerlink" href="#emitted-records" title="Permanent link">&para;</a></h2>
+<p>The telemetry interface is <code>omniseer::vision::ITelemetry</code>:</p>
 <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ITelemetry</span><span class="w"> </span><span class="p">{</span>
 <span class="k">public</span><span class="o">:</span>
 <span class="w">  </span><span class="k">virtual</span><span class="w"> </span><span class="o">~</span><span class="n">ITelemetry</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">default</span><span class="p">;</span>
-
-<span class="w">  </span><span class="c1">// True only when stage timing + sample emission are active.</span>
 <span class="w">  </span><span class="k">virtual</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="nf">timing_enabled</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">noexcept</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-
-<span class="w">  </span><span class="c1">// Always non-blocking, never throws, best-effort.</span>
 <span class="w">  </span><span class="k">virtual</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">emit_producer</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">ProducerSample</span><span class="o">&amp;</span><span class="w"> </span><span class="n">sample</span><span class="p">)</span><span class="w"> </span><span class="k">noexcept</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="w">  </span><span class="k">virtual</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">emit_consumer</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">ConsumerSample</span><span class="o">&amp;</span><span class="w"> </span><span class="n">sample</span><span class="p">)</span><span class="w"> </span><span class="k">noexcept</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">};</span>
 </code></pre></div>
-<h3 id="52-nullability-and-activation">5.2 Nullability and activation<a class="headerlink" href="#52-nullability-and-activation" title="Permanent link">&para;</a></h3>
-<ul>
-<li><code>ITelemetry* telemetry == nullptr</code> means telemetry integration is absent.</li>
-<li><code>telemetry != nullptr &amp;&amp; telemetry-&gt;timing_enabled() == true</code> means stage timing + sample emission are active.</li>
-<li>Counters do not require active timing.</li>
-</ul>
-<h3 id="53-counters-vs-samples">5.3 Counters vs samples<a class="headerlink" href="#53-counters-vs-samples" title="Permanent link">&para;</a></h3>
-<ol>
-<li><strong>Always-on cheap counters</strong>:</li>
-<li>per-pipeline status counters (e.g., produced, no-frame, preprocess-error)</li>
-<li>
-<p>no formatting, no allocations, no file writes</p>
-</li>
-<li>
-<p><strong>Conditional timing + samples</strong>:</p>
-</li>
-<li>only when <code>timing_enabled() == true</code></li>
-<li>stage duration measurement + sample object creation + queue push</li>
-</ol>
-<h3 id="54-hot-path-sample-representation">5.4 Hot-path sample representation<a class="headerlink" href="#54-hot-path-sample-representation" title="Permanent link">&para;</a></h3>
-<p>For producer/consumer in-memory sample structs:</p>
-<ul>
-<li>use fixed-width fields (<code>uint64_t</code> durations default to <code>0</code>)</li>
-<li>include <code>stage_mask</code> bitset indicating which stages executed</li>
-<li>avoid <code>std::optional</code> and avoid formatting work in data-plane threads</li>
-<li>JSON conversion (<code>stage_mask</code> -&gt; <code>null</code> for missing stage) happens only in telemetry thread</li>
-</ul>
-<h3 id="55-timing-instrumentation-style">5.5 Timing instrumentation style<a class="headerlink" href="#55-timing-instrumentation-style" title="Permanent link">&para;</a></h3>
-<p>Implementation pattern for each pipeline tick:</p>
-<ol>
-<li>Evaluate <code>timing_on = (telemetry != nullptr &amp;&amp; telemetry-&gt;timing_enabled())</code> once at tick start.</li>
-<li>If <code>timing_on == false</code>, run pipeline logic with counters only.</li>
-<li>If <code>timing_on == true</code>, use scoped RAII stage timers that write directly into sample fields.</li>
-</ol>
-<p>This keeps instrumentation readable while preserving near-zero disabled-path overhead.</p>
-<h2 id="6-queueing-and-backpressure">6) Queueing and Backpressure<a class="headerlink" href="#6-queueing-and-backpressure" title="Permanent link">&para;</a></h2>
-<h3 id="61-queue-topology">6.1 Queue topology<a class="headerlink" href="#61-queue-topology" title="Permanent link">&para;</a></h3>
-<ul>
-<li>producer -&gt; telemetry thread: one bounded SPSC queue</li>
-<li>consumer -&gt; telemetry thread: one bounded SPSC queue</li>
-</ul>
-<p>This avoids MPSC complexity and aligns with current lock-free SPSC primitives.</p>
-<h3 id="62-queue-behavior">6.2 Queue behavior<a class="headerlink" href="#62-queue-behavior" title="Permanent link">&para;</a></h3>
-<ul>
-<li><code>try_push</code> only; never block producer/consumer</li>
-<li>on full queue: drop sample and increment a drop counter</li>
-<li>no retries on hot path</li>
-</ul>
-<h3 id="63-sink-behavior">6.3 Sink behavior<a class="headerlink" href="#63-sink-behavior" title="Permanent link">&para;</a></h3>
-<ul>
-<li>telemetry thread batches writes to sink (JSONL)</li>
-<li>flush by size and/or time interval</li>
-<li>sink I/O must not run on producer/consumer threads</li>
-</ul>
-<h3 id="64-capacity-sizing-rule">6.4 Capacity sizing rule<a class="headerlink" href="#64-capacity-sizing-rule" title="Permanent link">&para;</a></h3>
-<ul>
-<li>size each SPSC queue from worst burst and sink pause budget:</li>
-<li><code>capacity &gt;= worst_burst_rate_hz * max_sink_pause_s</code></li>
-<li>default v1 starting point: <code>512</code> per queue unless measured data suggests otherwise</li>
-</ul>
-<h2 id="7-failure-policy">7) Failure Policy<a class="headerlink" href="#7-failure-policy" title="Permanent link">&para;</a></h2>
-<p>v1 uses <strong>fail-open</strong> policy:</p>
-<ul>
-<li>telemetry/sink errors must not stop producer/consumer pipeline execution</li>
-<li>on sink fault, telemetry hub marks itself faulted, increments sink-error counter, and disables timing emission</li>
-<li>pipeline keeps running with cheap counters</li>
-</ul>
-<p>Rationale: pipeline availability is prioritized over telemetry completeness.</p>
-<h2 id="8-producer-emission-rules-v1">8) Producer Emission Rules (v1)<a class="headerlink" href="#8-producer-emission-rules-v1" title="Permanent link">&para;</a></h2>
-<h3 id="81-tick-inclusion">8.1 Tick inclusion<a class="headerlink" href="#81-tick-inclusion" title="Permanent link">&para;</a></h3>
-<ul>
-<li>Emit samples for:</li>
-<li><code>Produced</code></li>
-<li><code>NoWritableBuffer</code></li>
-<li><code>CaptureRetryableError</code></li>
-<li><code>CaptureFatalError</code></li>
-<li><code>PreprocessError</code></li>
-<li>Do <strong>not</strong> emit per-tick <code>NoFrame</code> sample by default (counter-only), to avoid high-rate log noise.</li>
-</ul>
-<h3 id="82-identifiers">8.2 Identifiers<a class="headerlink" href="#82-identifiers" title="Permanent link">&para;</a></h3>
-<ul>
-<li><code>frame_id</code>: producer-assigned monotonic ID at <code>publish_ready</code>, stored in buffer metadata, and propagated into consumer telemetry</li>
-<li><code>tick_id</code>: always present (monotonic counter in producer thread)</li>
-<li><code>sequence</code>: present when available from captured frame</li>
-</ul>
-<p><code>frame_id</code> is the cross-thread correlation key for end-to-end latency analysis.</p>
-<h3 id="83-stage-partitioning">8.3 Stage partitioning<a class="headerlink" href="#83-stage-partitioning" title="Permanent link">&para;</a></h3>
-<p>Producer stage durations are partitioned as:</p>
-<ol>
-<li><code>dequeue_ns</code></li>
-<li><code>acquire_write_ns</code></li>
-<li><code>preprocess_ns</code></li>
-<li><code>publish_ready_ns</code></li>
-<li><code>requeue_ns</code></li>
-<li><code>total_ns</code></li>
-</ol>
-<p>If a stage did not execute due to early return, stage duration is <code>null</code> in JSON.</p>
-<h3 id="84-early-return-semantics">8.4 Early-return semantics<a class="headerlink" href="#84-early-return-semantics" title="Permanent link">&para;</a></h3>
-<ul>
-<li>Early returns are normal outcomes, not process-fatal.</li>
-<li>Sample contains status fields that explain path taken.</li>
-</ul>
-<h2 id="9-clock-and-time-semantics">9) Clock and Time Semantics<a class="headerlink" href="#9-clock-and-time-semantics" title="Permanent link">&para;</a></h2>
-<ol>
-<li>Stage durations:</li>
-<li>measured from monotonic clock</li>
-<li>
-<p>stored as nanoseconds</p>
-</li>
-<li>
-<p>Event timestamp:</p>
-</li>
-<li>
-<p>realtime nanoseconds for cross-correlation with ROS2 stamps/logs</p>
-</li>
-<li>
-<p>Duration math:</p>
-</li>
-<li>always uses monotonic domain</li>
-<li>never compute duration from realtime values</li>
-</ol>
-<h2 id="10-data-contract-jsonl-v1">10) Data Contract (JSONL v1)<a class="headerlink" href="#10-data-contract-jsonl-v1" title="Permanent link">&para;</a></h2>
-<p>Each line is one JSON object. Required top-level fields:</p>
-<div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;schema_version&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;source&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;producer&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;frame_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">4421</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;tick_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">12345</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;sequence&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">9988</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;event_ts_real_ns&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1739700000000000000</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;producer_status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;produced&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;capture_status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ok&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;preprocess_status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ok&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;capture_errno&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;dur_ns&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;dequeue&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">12000</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;acquire_write&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">900</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;preprocess&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1450000</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;publish_ready&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">700</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;requeue&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">11000</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;total&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1490000</span>
-<span class="w">  </span><span class="p">}</span>
-<span class="p">}</span>
+<p>Pipeline loops check <code>timing_enabled()</code> once at tick start. When it is false, the
+tick skips stage timers and sample emission.</p>
+<p>JSONL export writes one JSON object per line. All JSONL records include:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>schema_version</code></td>
+<td>Native telemetry schema version. Current value is <code>3</code>.</td>
+</tr>
+<tr>
+<td><code>source</code></td>
+<td><code>producer</code> or <code>consumer</code>.</td>
+</tr>
+<tr>
+<td><code>frame_id</code></td>
+<td>Producer-assigned frame correlation ID, or <code>null</code> before one exists.</td>
+</tr>
+<tr>
+<td><code>tick_id</code></td>
+<td>Per-thread monotonic telemetry tick ID. Producer and consumer tick ID spaces are independent.</td>
+</tr>
+<tr>
+<td><code>sequence</code></td>
+<td>Source capture sequence, or <code>null</code> before one exists.</td>
+</tr>
+<tr>
+<td><code>event_ts_real_ns</code></td>
+<td>Realtime event timestamp in nanoseconds. For frame-backed records, this is the capture timestamp propagated from the source frame.</td>
+</tr>
+<tr>
+<td><code>stage_mask</code></td>
+<td>Bitmask of stages that completed for this sample.</td>
+</tr>
+<tr>
+<td><code>dur_ns</code></td>
+<td>Object containing per-stage durations plus <code>total</code>, all in nanoseconds.</td>
+</tr>
+</tbody>
+</table>
+<p>Producer records are emitted for these tick statuses:</p>
+<table>
+<thead>
+<tr>
+<th><code>producer_status</code></th>
+<th style="text-align: right;">Emitted</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>produced</code></td>
+<td style="text-align: right;">yes</td>
+<td>Frame was published to the ready buffer and the capture slot was requeued.</td>
+</tr>
+<tr>
+<td><code>no_writable_buffer</code></td>
+<td style="text-align: right;">yes</td>
+<td>A frame was dequeued, but no destination buffer was free.</td>
+</tr>
+<tr>
+<td><code>capture_retryable_error</code></td>
+<td style="text-align: right;">yes</td>
+<td>Capture returned a retryable error.</td>
+</tr>
+<tr>
+<td><code>capture_fatal_error</code></td>
+<td style="text-align: right;">yes</td>
+<td>Capture returned a fatal error.</td>
+</tr>
+<tr>
+<td><code>preprocess_error</code></td>
+<td style="text-align: right;">yes</td>
+<td>RGA preprocess returned a non-OK status.</td>
+</tr>
+<tr>
+<td><code>no_frame</code></td>
+<td style="text-align: right;">no</td>
+<td>Counter-only path; no per-tick JSONL sample is emitted.</td>
+</tr>
+</tbody>
+</table>
+<p>Producer-specific fields:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>source_age_dequeue_ns</code></td>
+<td>Realtime age of the source frame when producer dequeue completed.</td>
+</tr>
+<tr>
+<td><code>source_age_publish_ready_ns</code></td>
+<td>Realtime age of the source frame when the producer published the ready buffer.</td>
+</tr>
+<tr>
+<td><code>producer_status</code></td>
+<td>Producer tick result string.</td>
+</tr>
+<tr>
+<td><code>capture_status</code></td>
+<td>Capture result string.</td>
+</tr>
+<tr>
+<td><code>preprocess_status</code></td>
+<td>Preprocess result string.</td>
+</tr>
+<tr>
+<td><code>capture_errno</code></td>
+<td>System errno associated with capture work, or <code>0</code>.</td>
+</tr>
+</tbody>
+</table>
+<p>Producer <code>dur_ns</code> keys are <code>dequeue</code>, <code>acquire_write</code>, <code>preprocess</code>,
+<code>publish_ready</code>, <code>requeue</code>, and <code>total</code>.</p>
+<p>Consumer records are emitted for these tick statuses:</p>
+<table>
+<thead>
+<tr>
+<th><code>consumer_status</code></th>
+<th style="text-align: right;">Emitted</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>consumed</code></td>
+<td style="text-align: right;">yes</td>
+<td>A ready buffer was acquired, inferred, postprocessed, optionally published, and released.</td>
+</tr>
+<tr>
+<td><code>infer_error</code></td>
+<td style="text-align: right;">yes</td>
+<td>The consumer was not armed or inference returned a non-OK status.</td>
+</tr>
+<tr>
+<td><code>no_ready_buffer</code></td>
+<td style="text-align: right;">no</td>
+<td>Counter-only path; no per-tick JSONL sample is emitted.</td>
+</tr>
+</tbody>
+</table>
+<p>Consumer-specific fields:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>consumer_start_ts_real_ns</code></td>
+<td>Realtime timestamp at consumer tick start, or <code>null</code> when unavailable.</td>
+</tr>
+<tr>
+<td><code>consumer_end_ts_real_ns</code></td>
+<td>Realtime timestamp at sample emission, or <code>null</code> when unavailable.</td>
+</tr>
+<tr>
+<td><code>source_age_start_ns</code></td>
+<td>Realtime age of the source frame at consumer tick start.</td>
+</tr>
+<tr>
+<td><code>source_age_end_ns</code></td>
+<td>Realtime age of the source frame at consumer sample emission.</td>
+</tr>
+<tr>
+<td><code>consumer_status</code></td>
+<td>Consumer tick result string.</td>
+</tr>
+<tr>
+<td><code>infer_status</code></td>
+<td>Inference result string.</td>
+</tr>
+<tr>
+<td><code>postprocess_status</code></td>
+<td><code>ok</code> when postprocess ran, otherwise <code>not_run</code>.</td>
+</tr>
+<tr>
+<td><code>infer_errno</code></td>
+<td>System errno associated with inference work, or <code>0</code>.</td>
+</tr>
+</tbody>
+</table>
+<p>Consumer <code>dur_ns</code> keys are <code>acquire_read</code>, <code>infer</code>, <code>postprocess</code>, <code>publish</code>,
+<code>release</code>, and <code>total</code>.</p>
+<p>Example producer record:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;schema_version&quot;</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span><span class="nt">&quot;source&quot;</span><span class="p">:</span><span class="s2">&quot;producer&quot;</span><span class="p">,</span><span class="nt">&quot;frame_id&quot;</span><span class="p">:</span><span class="mi">42</span><span class="p">,</span><span class="nt">&quot;tick_id&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="nt">&quot;sequence&quot;</span><span class="p">:</span><span class="mi">9</span><span class="p">,</span><span class="nt">&quot;event_ts_real_ns&quot;</span><span class="p">:</span><span class="mi">1000</span><span class="p">,</span><span class="nt">&quot;source_age_dequeue_ns&quot;</span><span class="p">:</span><span class="mi">25</span><span class="p">,</span><span class="nt">&quot;source_age_publish_ready_ns&quot;</span><span class="p">:</span><span class="mi">37</span><span class="p">,</span><span class="nt">&quot;producer_status&quot;</span><span class="p">:</span><span class="s2">&quot;produced&quot;</span><span class="p">,</span><span class="nt">&quot;capture_status&quot;</span><span class="p">:</span><span class="s2">&quot;ok&quot;</span><span class="p">,</span><span class="nt">&quot;preprocess_status&quot;</span><span class="p">:</span><span class="s2">&quot;ok&quot;</span><span class="p">,</span><span class="nt">&quot;capture_errno&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="nt">&quot;stage_mask&quot;</span><span class="p">:</span><span class="mi">31</span><span class="p">,</span><span class="nt">&quot;dur_ns&quot;</span><span class="p">:{</span><span class="nt">&quot;dequeue&quot;</span><span class="p">:</span><span class="mi">10</span><span class="p">,</span><span class="nt">&quot;acquire_write&quot;</span><span class="p">:</span><span class="mi">11</span><span class="p">,</span><span class="nt">&quot;preprocess&quot;</span><span class="p">:</span><span class="mi">12</span><span class="p">,</span><span class="nt">&quot;publish_ready&quot;</span><span class="p">:</span><span class="mi">13</span><span class="p">,</span><span class="nt">&quot;requeue&quot;</span><span class="p">:</span><span class="mi">14</span><span class="p">,</span><span class="nt">&quot;total&quot;</span><span class="p">:</span><span class="mi">60</span><span class="p">}}</span>
 </code></pre></div>
-<p>Notes:</p>
+<p>Example consumer record:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;schema_version&quot;</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span><span class="nt">&quot;source&quot;</span><span class="p">:</span><span class="s2">&quot;consumer&quot;</span><span class="p">,</span><span class="nt">&quot;frame_id&quot;</span><span class="p">:</span><span class="mi">42</span><span class="p">,</span><span class="nt">&quot;tick_id&quot;</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span><span class="nt">&quot;sequence&quot;</span><span class="p">:</span><span class="mi">9</span><span class="p">,</span><span class="nt">&quot;event_ts_real_ns&quot;</span><span class="p">:</span><span class="mi">1000</span><span class="p">,</span><span class="nt">&quot;consumer_start_ts_real_ns&quot;</span><span class="p">:</span><span class="mi">1100</span><span class="p">,</span><span class="nt">&quot;consumer_end_ts_real_ns&quot;</span><span class="p">:</span><span class="mi">1200</span><span class="p">,</span><span class="nt">&quot;source_age_start_ns&quot;</span><span class="p">:</span><span class="mi">99</span><span class="p">,</span><span class="nt">&quot;source_age_end_ns&quot;</span><span class="p">:</span><span class="mi">199</span><span class="p">,</span><span class="nt">&quot;consumer_status&quot;</span><span class="p">:</span><span class="s2">&quot;consumed&quot;</span><span class="p">,</span><span class="nt">&quot;infer_status&quot;</span><span class="p">:</span><span class="s2">&quot;ok&quot;</span><span class="p">,</span><span class="nt">&quot;postprocess_status&quot;</span><span class="p">:</span><span class="s2">&quot;ok&quot;</span><span class="p">,</span><span class="nt">&quot;infer_errno&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="nt">&quot;stage_mask&quot;</span><span class="p">:</span><span class="mi">31</span><span class="p">,</span><span class="nt">&quot;dur_ns&quot;</span><span class="p">:{</span><span class="nt">&quot;acquire_read&quot;</span><span class="p">:</span><span class="mi">20</span><span class="p">,</span><span class="nt">&quot;infer&quot;</span><span class="p">:</span><span class="mi">21</span><span class="p">,</span><span class="nt">&quot;postprocess&quot;</span><span class="p">:</span><span class="mi">22</span><span class="p">,</span><span class="nt">&quot;publish&quot;</span><span class="p">:</span><span class="mi">23</span><span class="p">,</span><span class="nt">&quot;release&quot;</span><span class="p">:</span><span class="mi">24</span><span class="p">,</span><span class="nt">&quot;total&quot;</span><span class="p">:</span><span class="mi">110</span><span class="p">}}</span>
+</code></pre></div>
+<h2 id="queue-and-backpressure-behavior">Queue And Backpressure Behavior<a class="headerlink" href="#queue-and-backpressure-behavior" title="Permanent link">&para;</a></h2>
+<p><code>JsonlTelemetry</code> owns one bounded single-producer/single-consumer path for producer
+samples and one bounded single-producer/single-consumer path for consumer samples.
+The default capacity is <code>512</code> samples per source and can be overridden through
+<code>JsonlTelemetryConfig</code>.</p>
+<p>Hot-path emission is best effort:</p>
 <ul>
-<li><code>frame_id</code> may be <code>null</code> for paths that never reached <code>publish_ready</code>.</li>
-<li><code>sequence</code> may be <code>null</code> for paths without a valid dequeued frame.</li>
-<li>any non-executed stage in <code>dur_ns</code> is <code>null</code>.</li>
-<li>consumer events use <code>source: "consumer"</code> and consumer-specific status/stage fields.</li>
+<li>producer and consumer threads call non-blocking <code>emit_*</code> methods;</li>
+<li>each call first checks whether the sink is still enabled;</li>
+<li>when no free telemetry slot is available, the sample is dropped and the
+  corresponding internal drop counter is incremented;</li>
+<li>the producer and consumer do not retry, sleep, allocate, or perform file I/O in
+  response to telemetry backpressure.</li>
 </ul>
-<h2 id="11-interface-and-ownership">11) Interface and Ownership<a class="headerlink" href="#11-interface-and-ownership" title="Permanent link">&para;</a></h2>
-<h3 id="111-ownership">11.1 Ownership<a class="headerlink" href="#111-ownership" title="Permanent link">&para;</a></h3>
+<p>The telemetry worker thread drains ready samples, writes JSONL, returns slots to the
+free queues, and flushes after writing. When no records are available, it sleeps for
+5 ms before checking again. On destruction, the sink asks the worker to stop, drains
+ready samples, flushes, joins, and closes the file.</p>
+<p>Drop counters are currently internal to <code>JsonlTelemetry</code>; they are not exported in
+the JSONL schema.</p>
+<h2 id="timestamp-semantics">Timestamp Semantics<a class="headerlink" href="#timestamp-semantics" title="Permanent link">&para;</a></h2>
+<p>Durations and correlation timestamps use different clock domains:</p>
+<table>
+<thead>
+<tr>
+<th>Field class</th>
+<th>Clock domain</th>
+<th>Contract</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>dur_ns.*</code> and <code>dur_ns.total</code></td>
+<td>Monotonic clock</td>
+<td>Use for duration and latency calculations within one process.</td>
+</tr>
+<tr>
+<td><code>event_ts_real_ns</code></td>
+<td>Realtime clock</td>
+<td>Use for cross-system correlation with ROS stamps, logs, and RunBundle streams.</td>
+</tr>
+<tr>
+<td><code>consumer_start_ts_real_ns</code> and <code>consumer_end_ts_real_ns</code></td>
+<td>Realtime clock</td>
+<td>Use for alignment and source-age calculation, not monotonic duration math.</td>
+</tr>
+<tr>
+<td><code>source_age_*_ns</code></td>
+<td>Realtime timestamp delta</td>
+<td><code>0</code> means the source timestamp was unavailable or later than the sampling timestamp.</td>
+</tr>
+</tbody>
+</table>
+<p>Do not compute stage durations by subtracting realtime fields. The emitted
+monotonic durations are the authoritative timing measurements.</p>
+<p><code>frame_id</code> is assigned by the producer at <code>publish_ready</code>, stored in the image
+buffer metadata, and propagated into consumer telemetry. It is the primary
+correlation key for joining producer and consumer records for the same processed
+frame.</p>
+<h2 id="status-and-duration-fields">Status And Duration Fields<a class="headerlink" href="#status-and-duration-fields" title="Permanent link">&para;</a></h2>
+<p>Status fields are stable strings derived from bounded native enums:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Values</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>producer_status</code></td>
+<td><code>produced</code>, <code>no_frame</code>, <code>capture_retryable_error</code>, <code>capture_fatal_error</code>, <code>no_writable_buffer</code>, <code>preprocess_error</code>, <code>unknown</code></td>
+</tr>
+<tr>
+<td><code>capture_status</code></td>
+<td><code>ok</code>, <code>no_frame</code>, <code>retryable_error</code>, <code>fatal_error</code>, <code>unknown</code></td>
+</tr>
+<tr>
+<td><code>preprocess_status</code></td>
+<td><code>ok</code>, <code>invalid_config</code>, <code>source_size_mismatch</code>, <code>invalid_source_descriptor</code>, <code>invalid_destination_descriptor</code>, <code>imcheck_failed</code>, <code>improcess_failed</code>, <code>unknown_error</code>, <code>unknown</code></td>
+</tr>
+<tr>
+<td><code>consumer_status</code></td>
+<td><code>consumed</code>, <code>no_ready_buffer</code>, <code>infer_error</code>, <code>unknown</code></td>
+</tr>
+<tr>
+<td><code>infer_status</code></td>
+<td><code>ok</code>, <code>not_armed</code>, <code>invalid_input_descriptor</code>, <code>rknn_error</code>, <code>unknown</code></td>
+</tr>
+<tr>
+<td><code>postprocess_status</code></td>
+<td><code>not_run</code>, <code>ok</code>, <code>unknown</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>stage_mask</code> determines which stage durations are present. A duration for a stage
+that did not complete is serialized as <code>null</code>. <code>dur_ns.total</code> is always serialized
+as an integer for emitted samples.</p>
+<p>Producer stage-mask bits:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Bit</th>
+<th>JSON duration key</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;"><code>1 &lt;&lt; 0</code></td>
+<td><code>dequeue</code></td>
+</tr>
+<tr>
+<td style="text-align: right;"><code>1 &lt;&lt; 1</code></td>
+<td><code>acquire_write</code></td>
+</tr>
+<tr>
+<td style="text-align: right;"><code>1 &lt;&lt; 2</code></td>
+<td><code>preprocess</code></td>
+</tr>
+<tr>
+<td style="text-align: right;"><code>1 &lt;&lt; 3</code></td>
+<td><code>publish_ready</code></td>
+</tr>
+<tr>
+<td style="text-align: right;"><code>1 &lt;&lt; 4</code></td>
+<td><code>requeue</code></td>
+</tr>
+</tbody>
+</table>
+<p>Consumer stage-mask bits:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Bit</th>
+<th>JSON duration key</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;"><code>1 &lt;&lt; 0</code></td>
+<td><code>acquire_read</code></td>
+</tr>
+<tr>
+<td style="text-align: right;"><code>1 &lt;&lt; 1</code></td>
+<td><code>infer</code></td>
+</tr>
+<tr>
+<td style="text-align: right;"><code>1 &lt;&lt; 2</code></td>
+<td><code>postprocess</code></td>
+</tr>
+<tr>
+<td style="text-align: right;"><code>1 &lt;&lt; 3</code></td>
+<td><code>publish</code></td>
+</tr>
+<tr>
+<td style="text-align: right;"><code>1 &lt;&lt; 4</code></td>
+<td><code>release</code></td>
+</tr>
+</tbody>
+</table>
+<p>Source-age fields are not controlled by <code>stage_mask</code>. They are serialized as
+integers when the backing timestamp field is available to the JSON writer, and
+<code>null</code> otherwise.</p>
+<h2 id="failure-behavior">Failure Behavior<a class="headerlink" href="#failure-behavior" title="Permanent link">&para;</a></h2>
+<p>Telemetry is fail-open:</p>
 <ul>
-<li>app/orchestrator owns telemetry hub and sink objects</li>
-<li>producer/consumer receive non-owning pointer/reference to interface</li>
+<li>failure to construct <code>JsonlTelemetry</code> because the path is empty, a queue capacity
+  is zero, or the file cannot be opened raises during setup;</li>
+<li>after setup, JSONL write failure disables that sink by setting
+  <code>timing_enabled()</code> false;</li>
+<li>once disabled, later producer and consumer <code>emit_*</code> calls return immediately;</li>
+<li>producer and consumer pipeline loops continue running after telemetry sink
+  failure;</li>
+<li>telemetry samples may be missing after queue overflow or sink failure.</li>
 </ul>
-<h3 id="112-lifetime">11.2 Lifetime<a class="headerlink" href="#112-lifetime" title="Permanent link">&para;</a></h3>
-<ul>
-<li>telemetry hub is created before starting producer/consumer loops</li>
-<li>telemetry hub is stopped and joined after producer/consumer loops exit</li>
-</ul>
-<h3 id="113-no-runtime-toggling-v1">11.3 No runtime toggling (v1)<a class="headerlink" href="#113-no-runtime-toggling-v1" title="Permanent link">&para;</a></h3>
-<ul>
-<li>telemetry configuration is fixed for process lifetime</li>
-<li>no hot attach/detach requirement</li>
-</ul>
-<h2 id="12-flush-and-shutdown-policy">12) Flush and Shutdown Policy<a class="headerlink" href="#12-flush-and-shutdown-policy" title="Permanent link">&para;</a></h2>
-<ol>
-<li>Flush trigger:</li>
-<li>batch size threshold (e.g., <code>N</code> samples), or</li>
-<li>
-<p>periodic timer threshold (e.g., <code>T</code> milliseconds)</p>
-</li>
-<li>
-<p>Shutdown:</p>
-</li>
-<li>stop producer and consumer loops</li>
-<li>drain queued telemetry samples</li>
-<li>flush sink</li>
-<li>stop telemetry thread and join</li>
-</ol>
-<h2 id="13-performance-requirements">13) Performance Requirements<a class="headerlink" href="#13-performance-requirements" title="Permanent link">&para;</a></h2>
-<p>When telemetry inactive:</p>
-<ul>
-<li>no stage clock calls</li>
-<li>no event allocations</li>
-<li>no queue operations</li>
-<li>only cheap status counters</li>
-</ul>
-<p>When telemetry active:</p>
-<ul>
-<li>one fixed-shape sample build per emitted tick (stack/local object; no heap required)</li>
-<li>one non-blocking queue push attempt per sample</li>
-<li>stage timing guarded by a single top-level <code>timing_on</code> branch</li>
-<li>no blocking I/O on data-plane threads</li>
-</ul>
-<h2 id="14-minimal-test-requirements">14) Minimal Test Requirements<a class="headerlink" href="#14-minimal-test-requirements" title="Permanent link">&para;</a></h2>
-<ol>
-<li>Interface disabled path:</li>
-<li>
-<p>no timing samples emitted when telemetry is null or inactive</p>
-</li>
-<li>
-<p>Producer stage coverage:</p>
-</li>
-<li>produced path populates expected durations and statuses</li>
-<li>
-<p>early-return paths correctly set missing stages to null</p>
-</li>
-<li>
-<p><code>frame_id</code> propagation:</p>
-</li>
-<li>producer assigns <code>frame_id</code> at publish</li>
-<li>
-<p>consumer sample for same image carries the same <code>frame_id</code></p>
-</li>
-<li>
-<p>Queue overflow:</p>
-</li>
-<li>
-<p>full queue causes sample drop counter increment, no blocking</p>
-</li>
-<li>
-<p>Sink failure:</p>
-</li>
-<li>sink error transitions telemetry to faulted/disabled mode</li>
-<li>
-<p>producer/consumer loops continue</p>
-</li>
-<li>
-<p>Schema stability:</p>
-</li>
-<li>JSON keys/types match spec and remain backward compatible within v1</li>
-</ol>
-<h2 id="15-implementation-status">15) Implementation Status<a class="headerlink" href="#15-implementation-status" title="Permanent link">&para;</a></h2>
-<p>Implemented:</p>
-<ol>
-<li>Telemetry interface, optional timing gate, and cheap status counters.</li>
-<li>Producer/consumer frame identifiers and timestamp correlation.</li>
-<li>Bounded asynchronous JSONL sink with drop/fault accounting.</li>
-<li>Rolling in-process performance summaries published by the ROS bridge.</li>
-<li>Producer and consumer stage timing with scoped timers.</li>
-<li>Portable JSONL and rolling-summary tests plus target pipeline tests.</li>
-</ol>
-<p>RunBundle integration:</p>
-<ul>
-<li>correlate telemetry with typed detections in a structured experiment bundle</li>
-<li>persist resource samples such as CPU, memory, temperature, network, and power outside the hot path</li>
-<li>publish measured results and failure analysis</li>
-</ul>
-<h2 id="16-open-questions-for-v2">16) Open Questions for v2+<a class="headerlink" href="#16-open-questions-for-v2" title="Permanent link">&para;</a></h2>
-<ul>
-<li>strict mode option (fail-closed) for CI/debug builds</li>
-<li>online p50/p95/p99 export endpoint</li>
-<li>compression/rotation strategy for long-running JSONL logs</li>
-<li>additional queue/buffer pressure fields if needed for debugging</li>
-</ul>
+<p>The native harness only enables telemetry when <code>--telemetry-jsonl &lt;path&gt;</code> is
+provided. The ROS bridge always uses <code>RollingTelemetryStats</code>; when
+<code>telemetry.pipeline_jsonl_path</code> is set, it also creates <code>JsonlTelemetry</code> and fans
+samples out through <code>CompositeTelemetry</code>.</p>
+<h2 id="analysis-tools">Analysis Tools<a class="headerlink" href="#analysis-tools" title="Permanent link">&para;</a></h2>
+<p>Use <code>vision/tools/analyze_telemetry.py</code> for offline JSONL summaries and
+run-to-run comparisons.</p>
+<p>Summarize one run:</p>
+<div class="highlight"><pre><span></span><code>vision/tools/analyze_telemetry.py<span class="w"> </span>summary<span class="w"> </span>runs/pipeline_001/pipeline_telemetry.jsonl
+</code></pre></div>
+<p>Compare two runs:</p>
+<div class="highlight"><pre><span></span><code>vision/tools/analyze_telemetry.py<span class="w"> </span>compare<span class="w"> </span>before.jsonl<span class="w"> </span>after.jsonl<span class="w"> </span>--label-a<span class="w"> </span>before<span class="w"> </span>--label-b<span class="w"> </span>after
+</code></pre></div>
+<p>The analyzer reports schema versions, producer and consumer sample counts, status
+counts, stage latency quantiles, source-age/freshness breakdowns, and frame or
+sequence delta behavior. It joins producer and consumer records by <code>frame_id</code> when
+computing cross-thread freshness metrics.</p>
+<p>Run bundles store native pipeline telemetry as <code>pipeline_telemetry.jsonl</code> when the
+native vision node is launched with a pipeline telemetry path. Run inspection and
+report tooling treat this file as optional, but malformed JSONL is reported as an
+inspection issue when the file is present.</p>
+<p><code>RollingTelemetryStats</code> is the live in-process summary path. It tracks produced,
+buffer-pressure, capture-error, preprocess-error, consumed, and infer-error counts,
+plus the latest producer, preprocess, consumer, infer, postprocess, publish, and
+source-age timings. The native preview overlay and ROS bridge performance messages
+read snapshots from this rolling state.</p>
+<h2 id="verification">Verification<a class="headerlink" href="#verification" title="Permanent link">&para;</a></h2>
+<p>Use the smallest supported verification that covers the change:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span><span class="nb">test</span><span class="w"> </span>vision
+</code></pre></div>
+<p>This covers portable native telemetry behavior, including JSONL record emission,
+schema version <code>3</code>, rolling telemetry counters, composite fan-out, stage masks, and
+producer/consumer timing sample propagation.</p>
+<p>For ROS bridge parameter wiring, RunBundle integration, or launch behavior:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span><span class="nb">test</span><span class="w"> </span>ros
+</code></pre></div>
+<p>For target-hardware timing, camera, RGA, or RKNN claims, collect evidence from the
+ROCK 5B+ runtime or a RunBundle. Host-side tests verify the portable contract only;
+they do not prove target-device frame rate, accelerator latency, camera behavior, or
+end-to-end robot runtime timing.</p>
 
 
 
@@ -2084,7 +1555,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 30, 2026 20:37:26 UTC">July 30, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 6, 2026 03:29:06 UTC">August 6, 2026</span>
   </span>
 
     
