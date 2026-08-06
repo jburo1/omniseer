@@ -185,25 +185,26 @@ namespace omniseer_autonomy
     TargetCenteringConfig make_config()
     {
       TargetCenteringConfig config{};
-      config.target_class            = declare_parameter<std::string>("target_class", "");
-      config.image_width_px          = declare_parameter<double>("image_width_px", 1280.0);
-      config.image_height_px         = declare_parameter<double>("image_height_px", 720.0);
-      config.scan_yaw_rate_rad_s     = declare_parameter<double>("scan_yaw_rate_rad_s", 0.20);
-      config.max_yaw_rate_rad_s      = declare_parameter<double>("max_yaw_rate_rad_s", 0.30);
-      config.min_yaw_rate_rad_s      = declare_parameter<double>("min_yaw_rate_rad_s", 0.08);
-      config.kp                      = declare_parameter<double>("kp", 0.30);
-      config.center_deadband         = declare_parameter<double>("center_deadband", 0.05);
-      config.bbox_area_min_ratio     = declare_parameter<double>("bbox_area_min_ratio", 0.08);
-      config.bbox_area_max_ratio     = declare_parameter<double>("bbox_area_max_ratio", 0.35);
-      config.forward_speed_m_s       = declare_parameter<double>("forward_speed_m_s", 0.05);
-      config.reverse_speed_m_s       = declare_parameter<double>("reverse_speed_m_s", 0.04);
-      config.stable_framed_frames    = declare_parameter<int>("stable_framed_frames", 10);
-      config.proximity_stop_m        = declare_parameter<double>("proximity_stop_m", 0.30);
-      const auto detection_stale_ms  = declare_parameter<int>("detection_stale_ms", 500);
-      config.detection_stale_sec     = static_cast<double>(detection_stale_ms) / 1000.0;
-      config.scan_limit_revolutions  = declare_parameter<double>("scan_limit_revolutions", 1.0);
-      config.target_lost_timeout_sec = declare_parameter<double>("target_lost_timeout_sec", 0.5);
-      config.min_target_confidence   = declare_parameter<double>("min_target_confidence", 0.50);
+      config.target_class             = declare_parameter<std::string>("target_class", "");
+      config.image_width_px           = declare_parameter<double>("image_width_px", 1280.0);
+      config.image_height_px          = declare_parameter<double>("image_height_px", 720.0);
+      config.scan_yaw_rate_rad_s      = declare_parameter<double>("scan_yaw_rate_rad_s", 0.20);
+      config.max_yaw_rate_rad_s       = declare_parameter<double>("max_yaw_rate_rad_s", 0.30);
+      config.min_yaw_rate_rad_s       = declare_parameter<double>("min_yaw_rate_rad_s", 0.08);
+      config.kp                       = declare_parameter<double>("kp", 0.30);
+      config.center_deadband          = declare_parameter<double>("center_deadband", 0.05);
+      config.bbox_area_min_ratio      = declare_parameter<double>("bbox_area_min_ratio", 0.08);
+      config.approach_stop_area_ratio = declare_parameter<double>("approach_stop_area_ratio", 0.10);
+      config.bbox_area_max_ratio      = declare_parameter<double>("bbox_area_max_ratio", 0.35);
+      config.forward_speed_m_s        = declare_parameter<double>("forward_speed_m_s", 0.05);
+      config.reverse_speed_m_s        = declare_parameter<double>("reverse_speed_m_s", 0.04);
+      config.stable_framed_frames     = declare_parameter<int>("stable_framed_frames", 10);
+      config.proximity_stop_m         = declare_parameter<double>("proximity_stop_m", 0.30);
+      const auto detection_stale_ms   = declare_parameter<int>("detection_stale_ms", 500);
+      config.detection_stale_sec      = static_cast<double>(detection_stale_ms) / 1000.0;
+      config.scan_limit_revolutions   = declare_parameter<double>("scan_limit_revolutions", 1.0);
+      config.target_lost_timeout_sec  = declare_parameter<double>("target_lost_timeout_sec", 0.5);
+      config.min_target_confidence    = declare_parameter<double>("min_target_confidence", 0.50);
       config.max_target_center_jump_ratio =
           declare_parameter<double>("max_target_center_jump_ratio", 0.20);
       _target_class = config.target_class;

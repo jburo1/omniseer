@@ -27,6 +27,7 @@ namespace omniseer_autonomy
     double      kp{0.30};
     double      center_deadband{0.05};
     double      bbox_area_min_ratio{0.08};
+    double      approach_stop_area_ratio{0.10};
     double      bbox_area_max_ratio{0.35};
     double      forward_speed_m_s{0.05};
     double      reverse_speed_m_s{0.04};
@@ -103,6 +104,7 @@ namespace omniseer_autonomy
     TargetCenteringOutput command_scan(double now_sec);
     TargetCenteringOutput command_zero(double now_sec);
     TargetCenteringOutput command_for_target(const TargetDetection& target, double now_sec);
+    void                  update_approach_hysteresis(const TargetDetection& target);
     void                  update_visual_state(const TargetDetection& target, double now_sec,
                                               TargetCenteringOutput& output);
     std::optional<TargetDetection> select_target(
@@ -140,6 +142,7 @@ namespace omniseer_autonomy
     int                            _acquisition_frames{0};
     int                            _stable_frames{0};
     int                            _target_loss_count{0};
+    bool                           _approach_holding{false};
     bool                           _target_missing{false};
     std::string                    _terminal_reason{};
   };

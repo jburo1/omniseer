@@ -92,7 +92,8 @@ namespace omniseer_autonomy
     }
     else if (_state != CenteringState::Scan && !_target_missing)
     {
-      _target_missing = true;
+      _approach_holding = false;
+      _target_missing   = true;
       ++_target_loss_count;
       output.events.push_back(make_event(now_sec, "target_lost"));
     }
@@ -108,6 +109,7 @@ namespace omniseer_autonomy
       {
         transition(CenteringState::Lock, now_sec, output, "target_locked", "", target);
         transition(CenteringState::Center, now_sec, output, "centering_started", "", target);
+        update_approach_hysteresis(*target);
         update_visual_state(*target, now_sec, output);
         return append_output(output, command_for_target(*target, now_sec));
       }
@@ -123,6 +125,7 @@ namespace omniseer_autonomy
     {
       if (target.has_value())
       {
+        update_approach_hysteresis(*target);
         update_visual_state(*target, now_sec, output);
         return append_output(output, command_for_target(*target, now_sec));
       }
@@ -290,6 +293,12 @@ namespace omniseer_autonomy
     {
       throw std::invalid_argument("bbox_area_max_ratio must be greater than bbox_area_min_ratio");
     }
+    if (_config.approach_stop_area_ratio < _config.bbox_area_min_ratio ||
+        _config.approach_stop_area_ratio > _config.bbox_area_max_ratio)
+    {
+      throw std::invalid_argument(
+          "approach_stop_area_ratio must be in [bbox_area_min_ratio, bbox_area_max_ratio]");
+    }
     if (_config.forward_speed_m_s <= 0.0)
     {
       throw std::invalid_argument("forward_speed_m_s must be positive");
@@ -354,7 +363,8 @@ namespace omniseer_autonomy
   TargetCenteringOutput TargetCenteringController::fail(double now_sec, std::string reason)
   {
     TargetCenteringOutput output{};
-    _terminal_reason = reason;
+    _approach_holding = false;
+    _terminal_reason  = reason;
     transition(CenteringState::Failed, now_sec, output, "failed", std::move(reason));
     output.publish_command = true;
     output.linear_x_m_s    = 0.0;
@@ -371,7 +381,8 @@ namespace omniseer_autonomy
       return fail(now_sec, "scan_complete_no_target");
     }
 
-    _stable_frames = 0;
+    _stable_frames    = 0;
+    _approach_holding = false;
     _last_target.reset();
     _target_missing = false;
     _acquisition_candidate.reset();
@@ -410,8 +421,6 @@ namespace omniseer_autonomy
     const auto            error      = normalized_error(target.center_x_px);
     const auto            area_ratio = bbox_area_ratio(target);
     const auto            centered   = std::abs(error) <= _config.center_deadband;
-    const auto            framed =
-        area_ratio >= _config.bbox_area_min_ratio && area_ratio <= _config.bbox_area_max_ratio;
 
     double yaw = 0.0;
     if (!centered)
@@ -420,17 +429,17 @@ namespace omniseer_autonomy
     }
 
     double linear_x = 0.0;
-    if (area_ratio < _config.bbox_area_min_ratio)
+    if (area_ratio > _config.bbox_area_max_ratio)
+    {
+      linear_x = -_config.reverse_speed_m_s;
+    }
+    else if (!_approach_holding)
     {
       if (proximity_blocks_forward())
       {
         return fail(now_sec, "proximity_blocked");
       }
       linear_x = _config.forward_speed_m_s;
-    }
-    else if (area_ratio > _config.bbox_area_max_ratio)
-    {
-      linear_x = -_config.reverse_speed_m_s;
     }
 
     if (_state == CenteringState::Success)
@@ -449,14 +458,28 @@ namespace omniseer_autonomy
     return output;
   }
 
+  void TargetCenteringController::update_approach_hysteresis(const TargetDetection& target)
+  {
+    const auto area_ratio = bbox_area_ratio(target);
+    if (_approach_holding && area_ratio < _config.bbox_area_min_ratio)
+    {
+      _approach_holding = false;
+      _stable_frames    = 0;
+    }
+    else if (!_approach_holding && area_ratio >= _config.approach_stop_area_ratio)
+    {
+      _approach_holding = true;
+    }
+  }
+
   void TargetCenteringController::update_visual_state(const TargetDetection& target, double now_sec,
                                                       TargetCenteringOutput& output)
   {
     const auto error      = normalized_error(target.center_x_px);
     const auto area_ratio = bbox_area_ratio(target);
     const auto centered   = std::abs(error) <= _config.center_deadband;
-    const auto framed =
-        area_ratio >= _config.bbox_area_min_ratio && area_ratio <= _config.bbox_area_max_ratio;
+    const auto framed     = _approach_holding && area_ratio >= _config.bbox_area_min_ratio &&
+                        area_ratio <= _config.bbox_area_max_ratio;
 
     if (centered && !_centered_at_sec.has_value())
     {
@@ -480,7 +503,8 @@ namespace omniseer_autonomy
 
     if (_stable_frames >= _config.stable_framed_frames)
     {
-      _terminal_reason = "framed";
+      _approach_holding = false;
+      _terminal_reason  = "framed";
       transition(CenteringState::Success, now_sec, output, "succeeded", _terminal_reason);
     }
   }

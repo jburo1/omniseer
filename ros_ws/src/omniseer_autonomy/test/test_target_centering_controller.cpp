@@ -13,23 +13,24 @@ namespace omniseer_autonomy
     TargetCenteringConfig config()
     {
       TargetCenteringConfig out{};
-      out.target_class            = "backpack";
-      out.image_width_px          = 100.0;
-      out.image_height_px         = 100.0;
-      out.scan_yaw_rate_rad_s     = 0.2;
-      out.max_yaw_rate_rad_s      = 0.3;
-      out.min_yaw_rate_rad_s      = 0.08;
-      out.kp                      = 0.3;
-      out.center_deadband         = 0.05;
-      out.bbox_area_min_ratio     = 0.08;
-      out.bbox_area_max_ratio     = 0.35;
-      out.forward_speed_m_s       = 0.05;
-      out.reverse_speed_m_s       = 0.04;
-      out.stable_framed_frames    = 3;
-      out.proximity_stop_m        = 0.3;
-      out.detection_stale_sec     = 0.5;
-      out.scan_limit_revolutions  = 1.0;
-      out.target_lost_timeout_sec = 0.5;
+      out.target_class             = "backpack";
+      out.image_width_px           = 100.0;
+      out.image_height_px          = 100.0;
+      out.scan_yaw_rate_rad_s      = 0.2;
+      out.max_yaw_rate_rad_s       = 0.3;
+      out.min_yaw_rate_rad_s       = 0.08;
+      out.kp                       = 0.3;
+      out.center_deadband          = 0.05;
+      out.bbox_area_min_ratio      = 0.08;
+      out.approach_stop_area_ratio = 0.08;
+      out.bbox_area_max_ratio      = 0.35;
+      out.forward_speed_m_s        = 0.05;
+      out.reverse_speed_m_s        = 0.04;
+      out.stable_framed_frames     = 3;
+      out.proximity_stop_m         = 0.3;
+      out.detection_stale_sec      = 0.5;
+      out.scan_limit_revolutions   = 1.0;
+      out.target_lost_timeout_sec  = 0.5;
       return out;
     }
 
@@ -76,7 +77,8 @@ namespace omniseer_autonomy
     EXPECT_EQ(controller.update_detections({detection(20.0)}, 0.3).angular_z_rad_s, 0.2);
     EXPECT_EQ(controller.state(), CenteringState::Scan);
 
-    const auto acquired = controller.update_detections({detection(20.0)}, 0.4);
+    controller.update_detections({detection(20.0)}, 0.4);
+    const auto acquired = controller.update_detections({detection(20.0)}, 0.5);
 
     EXPECT_EQ(controller.state(), CenteringState::Center);
     EXPECT_TRUE(acquired.publish_command);
@@ -273,6 +275,88 @@ namespace omniseer_autonomy
     EXPECT_EQ(controller.state(), CenteringState::Frame);
     EXPECT_DOUBLE_EQ(output.linear_x_m_s, config().forward_speed_m_s);
     EXPECT_DOUBLE_EQ(output.angular_z_rad_s, 0.0);
+  }
+
+  TEST(TargetCenteringController, HoldingDoesNotResumeForwardForAreaJitter)
+  {
+    auto cfg                     = config();
+    cfg.bbox_area_min_ratio      = 0.15;
+    cfg.approach_stop_area_ratio = 0.18;
+    cfg.stable_framed_frames     = 10;
+    TargetCenteringController controller(cfg);
+
+    controller.update_detections({detection(50.0, 0.8, "backpack", 40.0, 40.0)}, 0.1);
+    controller.update_detections({detection(50.0, 0.8, "backpack", 40.0, 40.0)}, 0.2);
+    controller.update_detections({detection(50.0, 0.8, "backpack", 40.0, 40.0)}, 0.3);
+
+    const auto stop =
+        controller.update_detections({detection(50.0, 0.8, "backpack", 43.0, 43.0)}, 0.4);
+    const auto jitter =
+        controller.update_detections({detection(50.0, 0.8, "backpack", 40.0, 40.0)}, 0.5);
+
+    EXPECT_DOUBLE_EQ(stop.linear_x_m_s, 0.0);
+    EXPECT_DOUBLE_EQ(jitter.linear_x_m_s, 0.0);
+  }
+
+  TEST(TargetCenteringController, AccumulatesStableFramesWhileHolding)
+  {
+    auto cfg                     = config();
+    cfg.bbox_area_min_ratio      = 0.15;
+    cfg.approach_stop_area_ratio = 0.18;
+    cfg.stable_framed_frames     = 3;
+    TargetCenteringController controller(cfg);
+
+    controller.update_detections({detection(50.0, 0.8, "backpack", 40.0, 40.0)}, 0.1);
+    controller.update_detections({detection(50.0, 0.8, "backpack", 40.0, 40.0)}, 0.2);
+    controller.update_detections({detection(50.0, 0.8, "backpack", 40.0, 40.0)}, 0.3);
+    controller.update_detections({detection(50.0, 0.8, "backpack", 43.0, 43.0)}, 0.4);
+    controller.update_detections({detection(50.0, 0.8, "backpack", 40.0, 40.0)}, 0.5);
+
+    EXPECT_EQ(controller.state(), CenteringState::Frame);
+    controller.update_detections({detection(50.0, 0.8, "backpack", 40.0, 40.0)}, 0.6);
+    EXPECT_EQ(controller.state(), CenteringState::Success);
+  }
+
+  TEST(TargetCenteringController, DroppingBelowFramedAreaResumesApproachAndResetsStability)
+  {
+    auto cfg                     = config();
+    cfg.bbox_area_min_ratio      = 0.15;
+    cfg.approach_stop_area_ratio = 0.18;
+    cfg.stable_framed_frames     = 3;
+    TargetCenteringController controller(cfg);
+
+    controller.update_detections({detection(50.0, 0.8, "backpack", 40.0, 40.0)}, 0.1);
+    controller.update_detections({detection(50.0, 0.8, "backpack", 40.0, 40.0)}, 0.2);
+    controller.update_detections({detection(50.0, 0.8, "backpack", 40.0, 40.0)}, 0.3);
+    controller.update_detections({detection(50.0, 0.8, "backpack", 43.0, 43.0)}, 0.4);
+    controller.update_detections({detection(50.0, 0.8, "backpack", 40.0, 40.0)}, 0.5);
+
+    const auto resumed =
+        controller.update_detections({detection(50.0, 0.8, "backpack", 30.0, 30.0)}, 0.6);
+    EXPECT_DOUBLE_EQ(resumed.linear_x_m_s, cfg.forward_speed_m_s);
+
+    controller.update_detections({detection(50.0, 0.8, "backpack", 43.0, 43.0)}, 0.7);
+    controller.update_detections({detection(50.0, 0.8, "backpack", 40.0, 40.0)}, 0.8);
+    EXPECT_EQ(controller.state(), CenteringState::Frame);
+    controller.update_detections({detection(50.0, 0.8, "backpack", 40.0, 40.0)}, 0.9);
+    EXPECT_EQ(controller.state(), CenteringState::Success);
+  }
+
+  TEST(TargetCenteringController, DoesNotCompleteStableFramesWhileApproaching)
+  {
+    auto cfg                     = config();
+    cfg.bbox_area_min_ratio      = 0.15;
+    cfg.approach_stop_area_ratio = 0.18;
+    cfg.stable_framed_frames     = 1;
+    TargetCenteringController controller(cfg);
+
+    controller.update_detections({detection(50.0, 0.8, "backpack", 40.0, 40.0)}, 0.1);
+    controller.update_detections({detection(50.0, 0.8, "backpack", 40.0, 40.0)}, 0.2);
+    const auto approaching =
+        controller.update_detections({detection(50.0, 0.8, "backpack", 40.0, 40.0)}, 0.3);
+
+    EXPECT_EQ(controller.state(), CenteringState::Frame);
+    EXPECT_DOUBLE_EQ(approaching.linear_x_m_s, cfg.forward_speed_m_s);
   }
 
   TEST(TargetCenteringController, TooLargeTargetCommandsBackward)
