@@ -37,6 +37,7 @@ Record args:
   --experiment-config <name>            Default: operator-runtime
   --experiment-parameter <key=value>    Repeatable; default: stage=manual-operator
   --record-video                         Record video/source.ts on the robot.
+  --record-rosbag                        Record the configured ROS topic allowlist on the robot.
 EOF
 }
 
@@ -367,7 +368,7 @@ runtime_run() {
 }
 
 runtime_record() {
-  local image_base tag image_ref run_id system_interval_sec experiment_config status record_video
+  local image_base tag image_ref run_id system_interval_sec experiment_config status record_video record_rosbag
   local repo_root runs_bind_root host_run_dir
   local experiment_parameters=()
   local launch_args=()
@@ -377,6 +378,7 @@ runtime_record() {
   system_interval_sec="1.0"
   experiment_config="operator-runtime"
   record_video="false"
+  record_rosbag="false"
   experiment_parameters+=("stage=manual-operator")
 
   runtime_parse_image_tag_args image_base tag "$@"
@@ -416,6 +418,10 @@ runtime_record() {
         ;;
       --record-video)
         record_video="true"
+        remaining=("${remaining[@]:1}")
+        ;;
+      --record-rosbag)
+        record_rosbag="true"
         remaining=("${remaining[@]:1}")
         ;;
       --)
@@ -459,6 +465,9 @@ runtime_record() {
   fi
   if [[ "${record_video}" == "true" ]]; then
     command+=(--record-video)
+  fi
+  if [[ "${record_rosbag}" == "true" ]]; then
+    command+=(--record-rosbag)
   fi
   local parameter
   for parameter in "${experiment_parameters[@]}"; do

@@ -347,6 +347,7 @@ class RobotMonitorGui:
         self._run_id_var = tk.StringVar(value=_default_run_id())
         self._run_classes_var = tk.StringVar(value="person")
         self._record_video_var = tk.BooleanVar(value=False)
+        self._record_rosbag_var = tk.BooleanVar(value=False)
         self._autonomy_bbox_area_min_ratio_var = tk.StringVar(value="0.08")
         self._autonomy_bbox_area_max_ratio_var = tk.StringVar(value="0.35")
         self._autonomy_forward_speed_var = tk.StringVar(value="0.05")
@@ -552,7 +553,10 @@ class RobotMonitorGui:
 
         self._add_labeled_entry(experiment_holder, "Class List", self._run_classes_var, 1, 0)
         ttk.Checkbutton(experiment_holder, text="Record video", variable=self._record_video_var).grid(
-            row=1, column=2, columnspan=2, sticky=tk.W, pady=(8, 0)
+            row=1, column=2, sticky=tk.W, pady=(8, 0)
+        )
+        ttk.Checkbutton(experiment_holder, text="Record rosbag", variable=self._record_rosbag_var).grid(
+            row=1, column=3, sticky=tk.W, pady=(8, 0)
         )
         self._add_labeled_entry(
             experiment_holder,
@@ -713,6 +717,7 @@ class RobotMonitorGui:
             detector_nms_iou_threshold=self._detector_nms_iou_threshold_var.get(),
             detector_max_detections=self._detector_max_detections_var.get(),
             record_video=bool(self._record_video_var.get()),
+            record_rosbag=bool(self._record_rosbag_var.get()),
         )
 
     def _run_form_selection(self, run_id: str | None = None) -> RunFormSelection:

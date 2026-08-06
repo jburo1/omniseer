@@ -166,6 +166,13 @@ def test_robot_runtime_installs_rockchip_v4l_packages_for_preview() -> None:
     assert dockerfile.count("/usr/lib/aarch64-linux-gnu/libv4l/plugins") == 2
 
 
+def test_runtime_image_installs_rosbag_recording_dependencies() -> None:
+    dockerfile = (REPO_ROOT / "docker/runtime/Dockerfile").read_text(encoding="utf-8")
+
+    assert "ros-${ROS_DISTRO}-rosbag2" in dockerfile
+    assert "ros-${ROS_DISTRO}-rosbag2-storage-default-plugins" in dockerfile
+
+
 def test_runtime_build_dispatches_to_robot_runtime_build_with_default_image(tmp_path: Path) -> None:
     env = _runtime_env(tmp_path)
 
@@ -363,6 +370,7 @@ def test_runtime_record_accepts_options_and_launch_args(tmp_path: Path) -> None:
             "lighting changed",
             "--record-classes",
             "person,fire extinguisher",
+            "--record-rosbag",
             "--",
             "start_lidar:=false",
         ],
@@ -382,6 +390,7 @@ def test_runtime_record_accepts_options_and_launch_args(tmp_path: Path) -> None:
     assert "--record-experiment-parameter note=desk" in log
     assert "--record-notes lighting\\ changed" in log
     assert "--record-classes person\\,fire\\ extinguisher" in log
+    assert "--record-rosbag" in log
     assert "bringup classes_path:=/runs/operator_debug/classes.txt start_lidar:=false" in log
 
 

@@ -55,6 +55,7 @@ Recording flags:
                                    Store one experiment parameter; may be repeated.
   --record-overwrite               Replace an existing output directory.
   --record-video                   Record gateway camera video to video/source.ts.
+  --record-rosbag                  Record the configured ROS topic allowlist to rosbag/.
 EOF
 }
 
@@ -227,6 +228,9 @@ append_recording_launch_args() {
       "start_gateway:=true"
       "gateway_preview_record_path:=${record_out_dir}/video/source.ts"
     )
+  fi
+  if [[ "${record_rosbag}" == "true" ]]; then
+    target_args+=("start_rosbag_recording:=true")
   fi
 
   if [[ -n "${record_notes}" ]]; then
@@ -524,6 +528,7 @@ record_experiment_config=""
 record_experiment_parameters=()
 record_overwrite="false"
 record_video="false"
+record_rosbag="false"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --profile)
@@ -626,6 +631,11 @@ while [[ $# -gt 0 ]]; do
     --record-video)
       record_enabled=true
       record_video="true"
+      shift
+      ;;
+    --record-rosbag)
+      record_enabled=true
+      record_rosbag="true"
       shift
       ;;
     help|-h|--help)

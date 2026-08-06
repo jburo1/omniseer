@@ -45,6 +45,7 @@ class RunFormValues:
     detector_nms_iou_threshold: str = "0.45"
     detector_max_detections: str = "100"
     record_video: bool = False
+    record_rosbag: bool = False
 
 
 @dataclass(frozen=True)
@@ -163,6 +164,7 @@ def resolve_run_form(
             default="100",
         ),
         record_video=values.record_video,
+        record_rosbag=values.record_rosbag,
     )
     artifact_context = RunArtifactContext(
         repo_root=repo_root,

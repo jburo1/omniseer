@@ -353,6 +353,8 @@ class MonitorGuiTests(unittest.TestCase):
             texts = _widget_texts(root)
 
             self.assertIn("Class List", texts)
+            self.assertIn("Record video", texts)
+            self.assertIn("Record rosbag", texts)
             self.assertNotIn("Object to Search For", texts)
             self.assertNotIn("Target Class", texts)
         finally:

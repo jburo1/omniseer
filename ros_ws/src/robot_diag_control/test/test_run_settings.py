@@ -115,6 +115,7 @@ class RunSettingsTests(unittest.TestCase):
         self.assertEqual(selection.run_config.detector_score_threshold, "0.31")
         self.assertEqual(selection.run_config.detector_nms_iou_threshold, "0.52")
         self.assertEqual(selection.run_config.detector_max_detections, "42")
+        self.assertFalse(selection.run_config.record_rosbag)
         self.assertEqual(selection.artifact_context.repo_root, Path("/repo"))
         self.assertEqual(selection.artifact_context.connection, selection.connection)
         self.assertEqual(selection.artifact_context.local_import_root, Path("/repo/runs/imported"))

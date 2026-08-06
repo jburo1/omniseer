@@ -56,6 +56,7 @@ class RunConfig:
     detector_nms_iou_threshold: str = "0.45"
     detector_max_detections: str = "100"
     record_video: bool = False
+    record_rosbag: bool = False
 
 
 def sanitize_run_id(run_id: str) -> str:
@@ -156,6 +157,8 @@ def _build_runtime_record_inner_command(
         command.extend(["--record-notes", notes.strip()])
     if run_config.record_video:
         command.append("--record-video")
+    if run_config.record_rosbag:
+        command.append("--record-rosbag")
     command.extend(_record_experiment_config_args(run_config))
     command.extend(_detector_experiment_parameters(run_config))
     command.append("--")
@@ -202,6 +205,8 @@ def _build_devcontainer_record_inner_command(
         command.extend(["--record-notes", notes.strip()])
     if run_config.record_video:
         command.append("--record-video")
+    if run_config.record_rosbag:
+        command.append("--record-rosbag")
     command.extend(_record_experiment_config_args(run_config))
     command.extend(_detector_experiment_parameters(run_config))
     command.append("bringup")

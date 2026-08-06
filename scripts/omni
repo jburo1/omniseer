@@ -101,6 +101,7 @@ Recording flags:
   --record-classes <text>
   --record-overwrite
   --record-video
+  --record-rosbag
 
 Legacy diagnostic profile:
   scripts/omni run real --profile legacy-teleop [operator|bringup|smoke]

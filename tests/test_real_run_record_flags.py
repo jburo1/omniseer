@@ -54,9 +54,11 @@ class RealRunRecordFlagsTests(unittest.TestCase):
         self.assertIn("experiment_launch_command:=scripts/omni\\ run\\ real", result.stdout)
         self.assertIn("experiment_launch_args:=start_nav:=false", result.stdout)
         self.assertIn("start_vision:=false", result.stdout)
+        self.assertNotIn("start_rosbag_recording:=true", result.stdout)
         self.assertNotIn("experiment_notes:=", result.stdout)
         self.assertNotIn("experiment_classes:=", result.stdout)
         self.assertTrue(run_dir_exists)
+        self.assertFalse((run_dir / "rosbag").exists())
 
     def test_record_run_flags_map_to_real_launch_args(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -112,6 +114,42 @@ class RealRunRecordFlagsTests(unittest.TestCase):
         self.assertIn("experiment_launch_profile:=perception", result.stdout)
         self.assertIn("experiment_launch_mode:=bringup", result.stdout)
         self.assertEqual(classes_text, "chair backpack\n")
+
+    def test_record_rosbag_flag_maps_to_real_launch_arg(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            setup_file = pathlib.Path(tmp) / "setup.bash"
+            setup_file.write_text("# test setup shim\n", encoding="utf-8")
+            fake_ros2 = pathlib.Path(tmp) / "ros2"
+            fake_ros2.write_text("#!/usr/bin/env bash\nprintf '%q\\n' \"$@\"\n", encoding="utf-8")
+            fake_ros2.chmod(0o755)
+            run_dir = pathlib.Path(tmp) / "demo_001"
+
+            env = os.environ.copy()
+            env["PATH"] = f"{tmp}:{env['PATH']}"
+            env["OMNISEER_ROS_SETUP"] = str(setup_file)
+            env["OMNISEER_WS_SETUP"] = str(setup_file)
+
+            result = subprocess.run(
+                [
+                    "scripts/run/real.sh",
+                    "--record-run",
+                    "demo_001",
+                    "--record-out",
+                    str(run_dir),
+                    "--record-rosbag",
+                    "bringup",
+                    "start_vision:=false",
+                ],
+                cwd=_repo_root(),
+                env=env,
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=30.0,
+            )
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("start_rosbag_recording:=true", result.stdout)
 
     def test_record_run_writes_comma_separated_classes_file_before_launch(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

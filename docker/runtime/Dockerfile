@@ -78,6 +78,8 @@ RUN set -eux; \
     ros-${ROS_DISTRO}-robot-localization \
     ros-${ROS_DISTRO}-robot-state-publisher \
     ros-${ROS_DISTRO}-ros2launch \
+    ros-${ROS_DISTRO}-rosbag2 \
+    ros-${ROS_DISTRO}-rosbag2-storage-default-plugins \
     ros-${ROS_DISTRO}-rosidl-default-runtime \
     ros-${ROS_DISTRO}-rosidl-runtime-cpp \
     ros-${ROS_DISTRO}-rosidl-typesupport-cpp \

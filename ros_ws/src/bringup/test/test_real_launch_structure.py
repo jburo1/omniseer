@@ -135,6 +135,45 @@ class RealLaunchStructureTests(unittest.TestCase):
         self.assertIn("--experiment-parameters", recorder_text)
         self.assertIn("--system-interval-sec", recorder_text)
 
+    def test_real_launch_includes_conditioned_rosbag_recorder(self) -> None:
+        module = _load_launch_module("real.launch.py")
+        launch_description = module.generate_launch_description()
+
+        declared_names = {
+            _flatten_launch_value(entity.name)
+            for entity in launch_description.entities
+            if isinstance(entity, DeclareLaunchArgument)
+        }
+        self.assertIn("start_rosbag_recording", declared_names)
+
+        rosbag_processes = [
+            entity
+            for entity in _walk_entities(launch_description.entities)
+            if isinstance(entity, ExecuteProcess) and "ros2bagrecord" in _flatten_launch_value(entity.cmd)
+        ]
+        self.assertEqual(len(rosbag_processes), 1)
+        rosbag_process = rosbag_processes[0]
+        command_text = _flatten_launch_value(rosbag_process.cmd)
+        self.assertIn("--output", command_text)
+        self.assertIn("experiment_out_dir", command_text)
+        self.assertIn("rosbag", command_text)
+        for topic in (
+            "/yolo/detections",
+            "/vision/perf",
+            "/imu",
+            "/encoder_counts",
+            "/scan",
+            "/mecanum_drive_controller/odometry",
+            "/mecanum_drive_controller/reference",
+            "/cmd_vel_autonomy",
+            "/cmd_vel_keyboard",
+            "/tf",
+            "/tf_static",
+        ):
+            self.assertIn(topic, command_text)
+        launch_source = (Path(__file__).resolve().parents[1] / "launch" / "real.launch.py").read_text(encoding="utf-8")
+        self.assertIn('condition=IfCondition(config["start_rosbag_recording"])', launch_source)
+
     def test_real_launch_includes_optional_autonomy_node(self) -> None:
         module = _load_launch_module("real.launch.py")
         launch_description = module.generate_launch_description()

@@ -88,6 +88,7 @@ _REAL_ARGUMENT_DEFAULTS = [
     ("evidence_storage_budget_mb", "1024"),
     ("evidence_min_free_mb", "256"),
     ("start_experiment_recording", "false"),
+    ("start_rosbag_recording", "false"),
     ("experiment_run_id", ""),
     ("experiment_out_dir", ""),
     ("experiment_classes", ""),
@@ -258,6 +259,30 @@ def _build_real_bringup_actions(*, pkg_bringup, config):
         condition=IfCondition(config["start_experiment_recording"]),
     )
 
+    rosbag_recorder = ExecuteProcess(
+        cmd=[
+            "ros2",
+            "bag",
+            "record",
+            "--output",
+            PathJoinSubstitution([config["experiment_out_dir"], "rosbag"]),
+            "/yolo/detections",
+            "/vision/perf",
+            "/imu",
+            "/encoder_counts",
+            "/scan",
+            "/mecanum_drive_controller/odometry",
+            "/mecanum_drive_controller/reference",
+            "/cmd_vel_autonomy",
+            "/cmd_vel_keyboard",
+            "/tf",
+            "/tf_static",
+        ],
+        name="record_rosbag",
+        output="screen",
+        condition=IfCondition(config["start_rosbag_recording"]),
+    )
+
     autonomy_node = Node(
         package="omniseer_autonomy",
         executable="target_centering_node",
@@ -375,6 +400,7 @@ def _build_real_bringup_actions(*, pkg_bringup, config):
         real_io_launch,
         real_vision_launch,
         experiment_recorder_node,
+        rosbag_recorder,
         autonomy_node,
         autonomy_completion_shutdown,
         baseline_twist_mux_node,

@@ -117,6 +117,16 @@ create `video/source.mp4` and the approximate detection overlay
 `video/overlay.mp4`; source preview and inference use separate camera paths, so
 the overlay is not pixel-perfect synchronized.
 
+Select **Record rosbag** to add the configured ROS topic allowlist to the same
+RunBundle. This is also off by default and creates the standard ROS 2 bag layout:
+
+```text
+run_id/
+  rosbag/
+    metadata.yaml
+    ...
+```
+
 ## Autonomy Run Type
 
 The monitor can launch either a perception-only recording or the bounded
