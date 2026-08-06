@@ -335,11 +335,11 @@ namespace omniseer_autonomy
   {
     auto invalid_confidence                  = config();
     invalid_confidence.min_target_confidence = 1.01;
-    EXPECT_THROW(TargetCenteringController(invalid_confidence), std::invalid_argument);
+    EXPECT_THROW(TargetCenteringController{invalid_confidence}, std::invalid_argument);
 
     auto invalid_jump                         = config();
     invalid_jump.max_target_center_jump_ratio = 0.0;
-    EXPECT_THROW(TargetCenteringController(invalid_jump), std::invalid_argument);
+    EXPECT_THROW(TargetCenteringController{invalid_jump}, std::invalid_argument);
   }
 
   TEST(TargetCenteringController, FailsOnStaleDetectionsAndCommandsZero)
