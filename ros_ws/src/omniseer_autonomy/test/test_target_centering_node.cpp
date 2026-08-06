@@ -122,6 +122,8 @@ namespace omniseer_autonomy
           EXPECT_EQ(request->target_class, "backpack");
           EXPECT_NEAR(request->normalized_error, 0.0, 1.0e-9);
           EXPECT_NEAR(request->bbox_area_ratio, 0.09, 1.0e-9);
+          EXPECT_EQ(request->source_stamp.sec, 123);
+          EXPECT_EQ(request->source_stamp.nanosec, 456u);
           response->success    = true;
           response->reason     = "saved";
           response->image_path = "/tmp/target.jpg";
@@ -138,7 +140,10 @@ namespace omniseer_autonomy
     ASSERT_TRUE(spin_until(executor, [&]() { return detections->get_subscription_count() > 0; }));
     for (int i = 0; i < 4; ++i)
     {
-      detections->publish(centered_detection());
+      auto detection_msg                 = centered_detection();
+      detection_msg.header.stamp.sec     = 123;
+      detection_msg.header.stamp.nanosec = 456;
+      detections->publish(detection_msg);
       executor.spin_some(50ms);
       std::this_thread::sleep_for(50ms);
     }

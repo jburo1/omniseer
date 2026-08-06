@@ -1,5 +1,6 @@
 #include <chrono>
 #include <cmath>
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <memory>
@@ -141,7 +142,8 @@ namespace omniseer_autonomy
                   static_cast<double>(detection.bbox.size.y),
               });
             }
-            apply_output(_controller.update_detections(detections, elapsed_sec()));
+            apply_output(_controller.update_detections(detections, elapsed_sec()),
+                                 rclcpp::Time(msg.header.stamp).nanoseconds());
           });
       _odometry_subscription = create_subscription<nav_msgs::msg::Odometry>(
           odometry_topic, 10, [this](const nav_msgs::msg::Odometry& msg)
@@ -214,7 +216,7 @@ namespace omniseer_autonomy
       return std::chrono::duration<double>(elapsed).count();
     }
 
-    void apply_output(const TargetCenteringOutput& output)
+    void apply_output(const TargetCenteringOutput& output, int64_t source_stamp_ns = 0)
     {
       for (const auto& event : output.events)
       {
@@ -230,7 +232,7 @@ namespace omniseer_autonomy
         _terminal_logged = true;
         RCLCPP_INFO(get_logger(), "target centering succeeded");
         log_terminal_summary();
-        if (!request_capture(output))
+        if (!request_capture(output, source_stamp_ns))
         {
           request_terminal_shutdown("target centering succeeded");
         }
@@ -372,7 +374,7 @@ namespace omniseer_autonomy
       RCLCPP_INFO(get_logger(), "%s", text.c_str());
     }
 
-    bool request_capture(const TargetCenteringOutput& output)
+    bool request_capture(const TargetCenteringOutput& output, int64_t source_stamp_ns)
     {
       if (_capture_requested)
       {
@@ -391,7 +393,7 @@ namespace omniseer_autonomy
         return false;
       }
 
-      auto request = make_capture_request(output);
+      auto request = make_capture_request(output, source_stamp_ns);
       if (!request.has_value())
       {
         write_capture_result(false, "capture_target_unavailable", "", 0, 0);
@@ -454,7 +456,7 @@ namespace omniseer_autonomy
     }
 
     std::optional<omniseer_msgs::srv::CaptureFrame::Request> make_capture_request(
-        const TargetCenteringOutput& output) const
+        const TargetCenteringOutput& output, int64_t source_stamp_ns) const
     {
       for (auto it = output.events.rbegin(); it != output.events.rend(); ++it)
       {
@@ -465,16 +467,18 @@ namespace omniseer_autonomy
         }
 
         omniseer_msgs::srv::CaptureFrame::Request request{};
-        request.capture_reason   = "target_framed";
-        request.target_class     = _target_class;
-        request.confidence       = it->target->confidence;
-        request.bbox_center_x_px = it->target->center_x_px;
-        request.bbox_center_y_px = it->target->center_y_px;
-        request.bbox_size_x_px   = it->target->size_x_px;
-        request.bbox_size_y_px   = it->target->size_y_px;
-        request.normalized_error = *it->normalized_error;
-        request.bbox_area_ratio  = *it->bbox_area_ratio;
-        request.timeout_sec      = _capture_timeout_sec;
+        request.capture_reason       = "target_framed";
+        request.target_class         = _target_class;
+        request.confidence           = it->target->confidence;
+        request.bbox_center_x_px     = it->target->center_x_px;
+        request.bbox_center_y_px     = it->target->center_y_px;
+        request.bbox_size_x_px       = it->target->size_x_px;
+        request.bbox_size_y_px       = it->target->size_y_px;
+        request.normalized_error     = *it->normalized_error;
+        request.bbox_area_ratio      = *it->bbox_area_ratio;
+        request.source_stamp.sec     = static_cast<int32_t>(source_stamp_ns / 1000000000LL);
+        request.source_stamp.nanosec = static_cast<uint32_t>(source_stamp_ns % 1000000000LL);
+        request.timeout_sec          = _capture_timeout_sec;
         return request;
       }
       return std::nullopt;

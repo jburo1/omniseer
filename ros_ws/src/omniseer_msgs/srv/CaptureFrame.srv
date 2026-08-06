@@ -7,6 +7,7 @@ float64 bbox_size_x_px
 float64 bbox_size_y_px
 float64 normalized_error
 float64 bbox_area_ratio
+builtin_interfaces/Time source_stamp
 float64 timeout_sec
 ---
 bool success

@@ -440,8 +440,9 @@ namespace omniseer_vision_bridge
     return _impl->rolling_stats.snapshot();
   }
 
-  TargetCaptureResult VisionBridgeRuntime::capture_next_frame(TargetCaptureMetadata     metadata,
-                                                              std::chrono::milliseconds timeout)
+  TargetCaptureResult VisionBridgeRuntime::capture_source_frame(TargetCaptureMetadata metadata,
+                                                                uint64_t source_capture_ts_real_ns,
+                                                                std::chrono::milliseconds timeout)
   {
     if (!_impl->evidence_sink)
     {
@@ -451,6 +452,7 @@ namespace omniseer_vision_bridge
     {
       return TargetCaptureResult{false, "runtime_not_running"};
     }
-    return _impl->evidence_sink->capture_next(std::move(metadata), timeout);
+    return _impl->evidence_sink->capture_source_frame(std::move(metadata),
+                                                      source_capture_ts_real_ns, timeout);
   }
 } // namespace omniseer_vision_bridge

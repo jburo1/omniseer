@@ -71,8 +71,9 @@ namespace omniseer_vision_bridge
                  const omniseer::vision::DetectionsFrame&     detections,
                  const omniseer::vision::PipelineRemapConfig& remap) noexcept override;
 
-    TargetCaptureResult capture_next(TargetCaptureMetadata     metadata,
-                                     std::chrono::milliseconds timeout);
+    TargetCaptureResult capture_source_frame(TargetCaptureMetadata     metadata,
+                                             uint64_t                  source_capture_ts_real_ns,
+                                             std::chrono::milliseconds timeout);
 
     EvidenceFrameSinkSnapshot snapshot() const;
 

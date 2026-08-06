@@ -271,18 +271,12 @@ namespace omniseer_vision_bridge
         return;
       }
 
-      auto capture_waiter = claim_capture();
       if (stopped.load(std::memory_order_acquire))
       {
-        complete_capture(capture_waiter, false, current_stopped_reason(), {});
         return;
       }
 
-      const bool periodic_sample = !capture_waiter && should_sample(detections.capture_ts_real_ns);
-      if (!capture_waiter && !periodic_sample)
-      {
-        return;
-      }
+      const bool periodic_sample = should_sample(detections.capture_ts_real_ns);
 
       try
       {
@@ -290,33 +284,34 @@ namespace omniseer_vision_bridge
         if (!item.has_value)
         {
           dropped_count.fetch_add(1, std::memory_order_relaxed);
-          complete_capture(capture_waiter, false, "copy_failed", {});
           return;
         }
-        if (capture_waiter)
+        auto cached_item = std::make_shared<Item>(std::move(item.value));
         {
-          item.value.capture_reason     = capture_waiter->metadata.capture_reason.empty()
-                                              ? std::string("target_framed")
-                                              : capture_waiter->metadata.capture_reason;
-          item.value.has_target_capture = true;
-          item.value.target_capture     = capture_waiter->metadata;
-          item.value.capture_waiter     = capture_waiter;
+          std::lock_guard<std::mutex> cache_lock(cache_mutex);
+          recent_items.emplace_back(cached_item);
+          if (recent_items.size() > kRecentItemCapacity)
+          {
+            recent_items.pop_front();
+          }
+        }
+        if (!periodic_sample)
+        {
+          return;
         }
 
         std::unique_lock<std::mutex> lock(queue_mutex, std::try_to_lock);
         if (!lock.owns_lock())
         {
           dropped_count.fetch_add(1, std::memory_order_relaxed);
-          complete_capture(capture_waiter, false, "queue_busy", item.value);
           return;
         }
         if (queue.size() >= config.queue_capacity)
         {
           dropped_count.fetch_add(1, std::memory_order_relaxed);
-          complete_capture(capture_waiter, false, "queue_full", item.value);
           return;
         }
-        queue.emplace_back(std::move(item.value));
+        queue.emplace_back(std::move(cached_item));
         enqueued_count.fetch_add(1, std::memory_order_relaxed);
         lock.unlock();
         queue_cv.notify_one();
@@ -324,12 +319,12 @@ namespace omniseer_vision_bridge
       catch (...)
       {
         dropped_count.fetch_add(1, std::memory_order_relaxed);
-        complete_capture(capture_waiter, false, "exception", {});
       }
     }
 
-    TargetCaptureResult capture_next(TargetCaptureMetadata     metadata,
-                                     std::chrono::milliseconds timeout)
+    TargetCaptureResult capture_source_frame(TargetCaptureMetadata     metadata,
+                                             uint64_t                  source_capture_ts_real_ns,
+                                             std::chrono::milliseconds timeout)
     {
       if (timeout <= std::chrono::milliseconds::zero())
       {
@@ -344,34 +339,51 @@ namespace omniseer_vision_bridge
         return TargetCaptureResult{false, current_stopped_reason()};
       }
 
-      auto waiter = std::make_shared<CaptureWaiter>(std::move(metadata));
+      if (source_capture_ts_real_ns == 0)
       {
-        std::lock_guard<std::mutex> lock(capture_mutex);
-        pending_captures.emplace_back(waiter);
+        return TargetCaptureResult{false, "source_frame_not_available"};
       }
+
+      std::shared_ptr<Item> item{};
+      {
+        std::lock_guard<std::mutex> lock(cache_mutex);
+        const auto                  it =
+            std::find_if(recent_items.begin(), recent_items.end(),
+                         [source_capture_ts_real_ns](const auto& candidate)
+                         { return candidate->capture_ts_real_ns == source_capture_ts_real_ns; });
+        if (it == recent_items.end())
+        {
+          return TargetCaptureResult{false, "source_frame_not_available"};
+        }
+        item = std::make_shared<Item>(**it);
+      }
+
+      auto waiter              = std::make_shared<CaptureWaiter>(std::move(metadata));
+      item->capture_reason     = waiter->metadata.capture_reason.empty()
+                                     ? "target_framed"
+                                     : waiter->metadata.capture_reason;
+      item->has_target_capture = true;
+      item->target_capture     = waiter->metadata;
+      item->capture_waiter     = waiter;
+      {
+        std::unique_lock<std::mutex> lock(queue_mutex, std::try_to_lock);
+        if (!lock.owns_lock())
+        {
+          return TargetCaptureResult{false, "queue_busy"};
+        }
+        if (queue.size() >= config.queue_capacity)
+        {
+          return TargetCaptureResult{false, "queue_full"};
+        }
+        queue.emplace_back(std::move(item));
+        enqueued_count.fetch_add(1, std::memory_order_relaxed);
+      }
+      queue_cv.notify_one();
 
       std::unique_lock<std::mutex> lock(waiter->mutex);
       if (!waiter->cv.wait_for(lock, timeout, [&]() { return waiter->done; }))
       {
-        lock.unlock();
-        bool remove_pending = false;
-        {
-          std::lock_guard<std::mutex> capture_lock(capture_mutex);
-          if (!waiter->claimed)
-          {
-            auto it = std::find(pending_captures.begin(), pending_captures.end(), waiter);
-            if (it != pending_captures.end())
-            {
-              pending_captures.erase(it);
-              remove_pending = true;
-            }
-          }
-        }
-        lock.lock();
-        if (remove_pending || !waiter->done)
-        {
-          return TargetCaptureResult{false, "timeout"};
-        }
+        return TargetCaptureResult{false, "timeout"};
       }
       return waiter->result;
     }
@@ -407,19 +419,6 @@ namespace omniseer_vision_bridge
         return true;
       }
       return false;
-    }
-
-    std::shared_ptr<CaptureWaiter> claim_capture()
-    {
-      std::lock_guard<std::mutex> lock(capture_mutex);
-      if (pending_captures.empty())
-      {
-        return {};
-      }
-      auto waiter = pending_captures.front();
-      pending_captures.pop_front();
-      waiter->claimed = true;
-      return waiter;
     }
 
     CopyResult copy_item(const omniseer::vision::ImageBuffer&         image,
@@ -514,15 +513,15 @@ namespace omniseer_vision_bridge
       for (;;)
       {
         auto item = wait_for_item();
-        if (!item.has_value)
+        if (!item)
         {
           return;
         }
-        write_item(item.value);
+        write_item(*item);
       }
     }
 
-    CopyResult wait_for_item()
+    std::shared_ptr<Item> wait_for_item()
     {
       std::unique_lock<std::mutex> lock(queue_mutex);
       queue_cv.wait(lock, [this]()
@@ -533,7 +532,7 @@ namespace omniseer_vision_bridge
       }
       auto item = std::move(queue.front());
       queue.pop_front();
-      return CopyResult{true, std::move(item)};
+      return item;
     }
 
     void write_item(const Item& item) noexcept
@@ -696,20 +695,21 @@ namespace omniseer_vision_bridge
     uint64_t                min_free_bytes{0};
     uint64_t                last_sample_ts_real_ns{0};
 
-    mutable std::mutex                         queue_mutex{};
-    std::condition_variable                    queue_cv{};
-    std::deque<Item>                           queue{};
-    mutable std::mutex                         capture_mutex{};
-    std::deque<std::shared_ptr<CaptureWaiter>> pending_captures{};
-    std::thread                                worker{};
-    std::atomic<bool>                          stop_requested{false};
-    std::atomic<bool>                          stopped{false};
-    mutable std::mutex                         stopped_reason_mutex{};
-    std::string                                stopped_reason{};
-    std::atomic<uint64_t>                      enqueued_count{0};
-    std::atomic<uint64_t>                      written_count{0};
-    std::atomic<uint64_t>                      dropped_count{0};
-    std::atomic<uint64_t>                      written_bytes{0};
+    static constexpr std::size_t      kRecentItemCapacity{3};
+    mutable std::mutex                queue_mutex{};
+    std::condition_variable           queue_cv{};
+    std::deque<std::shared_ptr<Item>> queue{};
+    mutable std::mutex                cache_mutex{};
+    std::deque<std::shared_ptr<Item>> recent_items{};
+    std::thread                       worker{};
+    std::atomic<bool>                 stop_requested{false};
+    std::atomic<bool>                 stopped{false};
+    mutable std::mutex                stopped_reason_mutex{};
+    std::string                       stopped_reason{};
+    std::atomic<uint64_t>             enqueued_count{0};
+    std::atomic<uint64_t>             written_count{0};
+    std::atomic<uint64_t>             dropped_count{0};
+    std::atomic<uint64_t>             written_bytes{0};
   };
 
   EvidenceFrameSink::EvidenceFrameSink(EvidenceFrameSinkConfig config)
@@ -726,10 +726,11 @@ namespace omniseer_vision_bridge
     _impl->publish(image, detections, remap);
   }
 
-  TargetCaptureResult EvidenceFrameSink::capture_next(TargetCaptureMetadata     metadata,
-                                                      std::chrono::milliseconds timeout)
+  TargetCaptureResult EvidenceFrameSink::capture_source_frame(TargetCaptureMetadata metadata,
+                                                              uint64_t source_capture_ts_real_ns,
+                                                              std::chrono::milliseconds timeout)
   {
-    return _impl->capture_next(std::move(metadata), timeout);
+    return _impl->capture_source_frame(std::move(metadata), source_capture_ts_real_ns, timeout);
   }
 
   EvidenceFrameSinkSnapshot EvidenceFrameSink::snapshot() const

@@ -214,7 +214,7 @@ TEST(EvidenceFrameSinkTest, SamplesPeriodicallyAndKeepsEmptyDetectionFrames)
   EXPECT_NE(metadata.find("\"detections\":[]"), std::string::npos);
 }
 
-TEST(EvidenceFrameSinkTest, CaptureNextWritesTargetFrameAndMetadata)
+TEST(EvidenceFrameSinkTest, CaptureSourceFrameWritesMatchedFrameAndMetadata)
 {
   const auto   root = make_temp_dir();
   TempRgbImage rgb(root, 8, 8);
@@ -240,11 +240,9 @@ TEST(EvidenceFrameSinkTest, CaptureNextWritesTargetFrameAndMetadata)
   omniseer_vision_bridge::TargetCaptureResult result{};
   {
     omniseer_vision_bridge::EvidenceFrameSink sink(cfg);
-    auto                                      future =
-        std::async(std::launch::async, [&sink, metadata]()
-                   { return sink.capture_next(metadata, std::chrono::milliseconds(500)); });
     sink.publish(rgb.image(), frame(9, kNsPerSec, 1), remap());
-    result = future.get();
+    sink.publish(rgb.image(), frame(10, kNsPerSec + 1, 0), remap());
+    result = sink.capture_source_frame(metadata, kNsPerSec, std::chrono::milliseconds(500));
   }
 
   EXPECT_TRUE(result.success);
@@ -262,11 +260,15 @@ TEST(EvidenceFrameSinkTest, CaptureNextWritesTargetFrameAndMetadata)
   EXPECT_NE(text.find("\"capture_reason\":\"target_framed\""), std::string::npos);
   EXPECT_NE(text.find("\"target_capture\":{\"target_class\":\"mug\""), std::string::npos);
   EXPECT_NE(text.find("\"bbox_area_ratio\":0.12"), std::string::npos);
+  EXPECT_NE(text.find("\"detections\":[{\"class_id\":0"), std::string::npos);
+  EXPECT_EQ(text.find("\"frame_id\":10,\"sequence\":1010,\"capture_ts_real_ns\":"),
+            std::string::npos);
 }
 
-TEST(EvidenceFrameSinkTest, CaptureNextTimesOutWithoutFrame)
+TEST(EvidenceFrameSinkTest, CaptureSourceFrameFailsWhenSourceIsNotCached)
 {
-  const auto root = make_temp_dir();
+  const auto   root = make_temp_dir();
+  TempRgbImage rgb(root, 8, 8);
 
   omniseer_vision_bridge::EvidenceFrameSinkConfig cfg{};
   cfg.evidence_dir      = (root / "evidence").string();
@@ -280,9 +282,13 @@ TEST(EvidenceFrameSinkTest, CaptureNextTimesOutWithoutFrame)
 
   {
     omniseer_vision_bridge::EvidenceFrameSink sink(cfg);
-    const auto result = sink.capture_next(metadata, std::chrono::milliseconds(1));
+    sink.publish(rgb.image(), frame(11, kNsPerSec, 1), remap());
+    sink.publish(rgb.image(), frame(12, kNsPerSec + 1, 1), remap());
+    const auto result =
+        sink.capture_source_frame(metadata, 2 * kNsPerSec, std::chrono::milliseconds(100));
     EXPECT_FALSE(result.success);
-    EXPECT_EQ(result.reason, "timeout");
+    EXPECT_EQ(result.reason, "source_frame_not_available");
+    EXPECT_FALSE(std::filesystem::exists(root / "evidence" / "frames" / "capture_frame_12.jpg"));
   }
 }
 

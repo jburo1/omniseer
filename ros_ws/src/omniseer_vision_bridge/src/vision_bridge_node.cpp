@@ -158,7 +158,10 @@ namespace omniseer_vision_bridge
 
       const auto timeout = std::chrono::milliseconds(
           static_cast<int64_t>((request.timeout_sec > 0.0 ? request.timeout_sec : 2.0) * 1000.0));
-      const auto result   = _runtime->capture_next_frame(std::move(metadata), timeout);
+      const auto source_stamp_ns = rclcpp::Time(request.source_stamp).nanoseconds();
+      const auto result          = _runtime->capture_source_frame(
+          std::move(metadata), source_stamp_ns > 0 ? static_cast<uint64_t>(source_stamp_ns) : 0,
+          timeout);
       response.success    = result.success;
       response.reason     = result.reason;
       response.image_path = result.image_path;
