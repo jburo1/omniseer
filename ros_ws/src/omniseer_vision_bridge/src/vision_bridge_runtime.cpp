@@ -202,6 +202,7 @@ namespace omniseer_vision_bridge
         {
           EvidenceFrameSinkConfig evidence_config{};
           evidence_config.evidence_dir      = config.evidence_dir;
+          evidence_config.video_dir         = config.video_dir;
           evidence_config.class_names       = class_names;
           evidence_config.interval_sec      = config.evidence_interval_sec;
           evidence_config.jpeg_quality      = config.evidence_jpeg_quality;

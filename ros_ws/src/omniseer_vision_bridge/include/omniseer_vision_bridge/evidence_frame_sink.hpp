@@ -15,7 +15,10 @@ namespace omniseer_vision_bridge
 {
   struct EvidenceFrameSinkConfig
   {
-    std::string              evidence_dir{};
+    std::string evidence_dir{};
+    // When set, save every consumed model-input frame and its exact detection
+    // association for RunBundle source/overlay video generation.
+    std::string              video_dir{};
     std::vector<std::string> class_names{};
     double                   interval_sec{1.0};
     int64_t                  jpeg_quality{85};

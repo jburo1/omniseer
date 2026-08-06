@@ -54,7 +54,7 @@ Recording flags:
   --record-experiment-parameter <key=value>
                                    Store one experiment parameter; may be repeated.
   --record-overwrite               Replace an existing output directory.
-  --record-video                   Record gateway camera video to video/source.ts.
+  --record-video                   Record inference frames for RunBundle source/overlay videos.
   --record-rosbag                  Record the configured ROS topic allowlist to rosbag/.
 EOF
 }
@@ -225,8 +225,7 @@ append_recording_launch_args() {
   )
   if [[ "${record_video}" == "true" ]]; then
     target_args+=(
-      "start_gateway:=true"
-      "gateway_preview_record_path:=${record_out_dir}/video/source.ts"
+      "video_dir:=${record_out_dir}/video"
     )
   fi
   if [[ "${record_rosbag}" == "true" ]]; then

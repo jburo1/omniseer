@@ -89,6 +89,7 @@ class RealRunRecordFlagsTests(unittest.TestCase):
                     "note text",
                     "--record-classes",
                     "chair backpack",
+                    "--record-video",
                     "bringup",
                     "start_vision:=false",
                 ],
@@ -108,6 +109,8 @@ class RealRunRecordFlagsTests(unittest.TestCase):
         self.assertIn(f"experiment_out_dir:={run_dir}", result.stdout)
         self.assertIn(f"pipeline_telemetry_path:={run_dir}/pipeline_telemetry.jsonl", result.stdout)
         self.assertIn(f"evidence_dir:={run_dir}/evidence", result.stdout)
+        self.assertIn(f"video_dir:={run_dir}/video", result.stdout)
+        self.assertNotIn("gateway_preview_record_path:=", result.stdout)
         self.assertIn("experiment_system_interval_sec:=0.5", result.stdout)
         self.assertIn("experiment_notes:=note\\ text", result.stdout)
         self.assertIn("experiment_classes:=chair\\ backpack", result.stdout)

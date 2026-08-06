@@ -214,6 +214,41 @@ TEST(EvidenceFrameSinkTest, SamplesPeriodicallyAndKeepsEmptyDetectionFrames)
   EXPECT_NE(metadata.find("\"detections\":[]"), std::string::npos);
 }
 
+TEST(EvidenceFrameSinkTest, RecordsEveryInferenceFrameWithItsExactDetectionsForVideo)
+{
+  const auto   root = make_temp_dir();
+  TempRgbImage rgb(root, 16, 12);
+
+  omniseer_vision_bridge::EvidenceFrameSinkConfig cfg{};
+  cfg.evidence_dir      = (root / "evidence").string();
+  cfg.video_dir         = (root / "video").string();
+  cfg.class_names       = {"person", "chair"};
+  cfg.interval_sec      = 10.0;
+  cfg.jpeg_quality      = 85;
+  cfg.min_free_mb       = 0;
+  cfg.storage_budget_mb = 64;
+
+  {
+    omniseer_vision_bridge::EvidenceFrameSink sink(cfg);
+    sink.publish(rgb.image(), frame(7, kNsPerSec, 1), remap());
+    sink.publish(rgb.image(), frame(8, kNsPerSec + 50000000ULL, 0), remap());
+    ASSERT_TRUE(wait_for_written(sink, 3));
+  }
+
+  EXPECT_TRUE(has_jpeg_soi(root / "video" / "frames" / "frame_7.jpg"));
+  EXPECT_TRUE(has_jpeg_soi(root / "video" / "frames" / "frame_8.jpg"));
+  const std::string metadata = read_text(root / "video" / "frames.jsonl");
+  const auto        first    = metadata.find("\"frame_id\":7");
+  const auto        second   = metadata.find("\"frame_id\":8");
+  ASSERT_NE(first, std::string::npos);
+  ASSERT_NE(second, std::string::npos);
+  EXPECT_LT(first, second);
+  EXPECT_NE(metadata.find("\"image_path\":\"frames/frame_7.jpg\""), std::string::npos);
+  EXPECT_NE(metadata.find("\"capture_ts_real_ns\":1000000000"), std::string::npos);
+  EXPECT_NE(metadata.find("\"class_name\":\"person\""), std::string::npos);
+  EXPECT_NE(metadata.find("\"remap\":{\"scale\":0.5,\"pad_x\":0,\"pad_y\":140"), std::string::npos);
+}
+
 TEST(EvidenceFrameSinkTest, CaptureSourceFrameWritesMatchedFrameAndMetadata)
 {
   const auto   root = make_temp_dir();

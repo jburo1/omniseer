@@ -315,16 +315,14 @@ def _artifacts_section(run_dir: Path, report_dir: Path) -> str:
 
 
 def _video_section(run_dir: Path, report_dir: Path) -> str:
-    source_ts = run_dir / "video" / "source.ts"
+    recorded_frames = run_dir / "video" / "frames.jsonl"
     source_mp4 = run_dir / "video" / "source.mp4"
     overlay_mp4 = run_dir / "video" / "overlay.mp4"
-    if not source_ts.is_file() and not source_mp4.is_file() and not overlay_mp4.is_file():
+    if not recorded_frames.is_file() and not source_mp4.is_file() and not overlay_mp4.is_file():
         return ""
     if not source_mp4.is_file() and not overlay_mp4.is_file():
         return _section("Video", "<p>Source video was recorded; video processing has not yet been run.</p>")
-    parts = [
-        "<p>Video overlays use approximate synchronization because preview and inference use separate camera paths.</p>"
-    ]
+    parts = ["<p>Each overlay frame uses the detections produced from that same inference-source frame.</p>"]
     for label, path in (("Source video", source_mp4), ("Detection overlay", overlay_mp4)):
         if path.is_file():
             href = _relative_href(report_dir, path)
