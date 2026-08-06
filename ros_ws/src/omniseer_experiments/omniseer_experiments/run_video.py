@@ -72,6 +72,37 @@ def remux_source_video(source_ts: Path, source_mp4: Path, *, runner: Callable[..
     )
 
 
+def transcode_overlay_video(
+    rendered_overlay_mp4: Path, overlay_mp4: Path, *, runner: Callable[..., Any] = subprocess.run
+) -> None:
+    """Encode an OpenCV-rendered overlay for HTML5 video playback."""
+    runner(
+        [
+            "ffmpeg",
+            "-y",
+            "-i",
+            str(rendered_overlay_mp4),
+            "-map",
+            "0:v:0",
+            "-an",
+            "-c:v",
+            "libx264",
+            "-preset",
+            "ultrafast",
+            "-crf",
+            "18",
+            "-pix_fmt",
+            "yuv420p",
+            "-movflags",
+            "+faststart",
+            str(overlay_mp4),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+
 def build_run_video(
     run_dir: Path, *, runner: Callable[..., Any] = subprocess.run, cv2_module: Any | None = None
 ) -> None:
@@ -90,6 +121,7 @@ def build_run_video(
         source_mp4,
         video_dir / "overlay.mp4",
         read_timed_detections(detections_path),
+        runner=runner,
         cv2_module=cv2_module,
     )
 
@@ -99,8 +131,29 @@ def render_overlay(
     overlay_mp4: Path,
     records: Sequence[TimedDetections],
     *,
-    inference_width: int = 640,
-    inference_height: int = 640,
+    runner: Callable[..., Any] = subprocess.run,
+    cv2_module: Any | None = None,
+) -> None:
+    rendered_overlay_mp4 = overlay_mp4.with_name(f"{overlay_mp4.stem}.rendered.mp4")
+    try:
+        render_overlay_frames(
+            source_mp4,
+            rendered_overlay_mp4,
+            records,
+            cv2_module=cv2_module,
+        )
+        transcode_overlay_video(rendered_overlay_mp4, overlay_mp4, runner=runner)
+    finally:
+        rendered_overlay_mp4.unlink(missing_ok=True)
+
+
+def render_overlay_frames(
+    source_mp4: Path,
+    rendered_overlay_mp4: Path,
+    records: Sequence[TimedDetections],
+    *,
+    max_output_width: int = 640,
+    max_output_fps: float = 30.0,
     cv2_module: Any | None = None,
 ) -> None:
     cv2 = cv2_module or _import_cv2()
@@ -110,27 +163,41 @@ def render_overlay(
     width = int(capture.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
     fps = capture.get(cv2.CAP_PROP_FPS) or 30.0
-    writer = cv2.VideoWriter(str(overlay_mp4), cv2.VideoWriter_fourcc(*"mp4v"), fps, (width, height))
+    output_width = min(width, max_output_width)
+    output_height = max(2, round(height * output_width / width / 2) * 2)
+    frame_step = max(1, round(fps / max_output_fps))
+    output_fps = fps / frame_step
+    writer = cv2.VideoWriter(
+        str(rendered_overlay_mp4),
+        cv2.VideoWriter_fourcc(*"mp4v"),
+        output_fps,
+        (output_width, output_height),
+    )
     if not writer.isOpened():
         capture.release()
-        raise RuntimeError(f"failed to create overlay video: {overlay_mp4}")
+        raise RuntimeError(f"failed to create overlay video: {rendered_overlay_mp4}")
     try:
+        frame_index = 0
         while True:
             ok, frame = capture.read()
             if not ok:
                 break
+            if frame_index % frame_step:
+                frame_index += 1
+                continue
             match = nearest_detections(records, video_time_sec=capture.get(cv2.CAP_PROP_POS_MSEC) / 1000.0)
             if match is not None:
-                _draw_detections(cv2, frame, match.detections, inference_width, inference_height)
+                _draw_detections(cv2, frame, match.detections)
+            if (output_width, output_height) != (width, height):
+                frame = cv2.resize(frame, (output_width, output_height), interpolation=cv2.INTER_AREA)
             writer.write(frame)
+            frame_index += 1
     finally:
         capture.release()
         writer.release()
 
 
-def _draw_detections(
-    cv2: Any, frame: Any, detections: Sequence[dict[str, Any]], inference_width: int, inference_height: int
-) -> None:
+def _draw_detections(cv2: Any, frame: Any, detections: Sequence[dict[str, Any]]) -> None:
     frame_height, frame_width = frame.shape[:2]
     for detection in detections:
         bbox = detection.get("bbox")
@@ -140,10 +207,11 @@ def _draw_detections(
         size_x, size_y = _number(bbox.get("size_x")), _number(bbox.get("size_y"))
         if None in {center_x, center_y, size_x, size_y}:
             continue
-        x1 = max(0, min(frame_width - 1, round((center_x - size_x / 2) * frame_width / inference_width)))
-        y1 = max(0, min(frame_height - 1, round((center_y - size_y / 2) * frame_height / inference_height)))
-        x2 = max(0, min(frame_width - 1, round((center_x + size_x / 2) * frame_width / inference_width)))
-        y2 = max(0, min(frame_height - 1, round((center_y + size_y / 2) * frame_height / inference_height)))
+        # DetectionArray coordinates are remapped by vision into source-camera pixels.
+        x1 = max(0, min(frame_width - 1, round(center_x - size_x / 2)))
+        y1 = max(0, min(frame_height - 1, round(center_y - size_y / 2)))
+        x2 = max(0, min(frame_width - 1, round(center_x + size_x / 2)))
+        y2 = max(0, min(frame_height - 1, round(center_y + size_y / 2)))
         if x2 <= x1 or y2 <= y1:
             continue
         class_id = detection.get("class_id", 0)
