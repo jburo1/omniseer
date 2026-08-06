@@ -1,8 +1,8 @@
 # Operator Run Workflow
 
-This document explains the operator monitor run workflow. The GUI collects operator
-input and displays state; small run modules own command building, process control,
-artifact handling, and validation.
+This document explains the implemented operator monitor run workflow. The GUI
+collects operator input and displays state; small run modules own command
+building, process control, artifact handling, and validation.
 
 ## Purpose
 
@@ -15,13 +15,13 @@ The operator monitor is the laptop-side interface for remote perception runs. It
 - retrieves the completed run bundle
 - generates and opens the local HTML report
 
-The monitor remains laptop-side tooling. Robot behavior still belongs to
-`robot-core` and the robot-side `scripts/omni runtime record` / `run real`
+The monitor remains laptop-side tooling. Robot behavior belongs to `robot-core`
+and the robot-side `scripts/omni runtime record` / `scripts/omni run real`
 surfaces.
 
-## Ownership
+## Operator Modules
 
-Current Python modules under `robot_diag_control`:
+Python modules under `ros_ws/src/robot_diag_control/robot_diag_control`:
 
 | Module | Owns | Should not own |
 | --- | --- | --- |
@@ -33,8 +33,8 @@ Current Python modules under `robot_diag_control`:
 | `run_manager.py` | Start/stop orchestration, runtime-stop fallback, completion interpretation | Tk widgets or artifact report generation |
 | `run_artifacts.py` | Pulling run bundles, generating reports, artifact paths, artifact result messages | Tk widgets or robot process lifecycle |
 
-This split keeps the GUI readable and makes the operational decisions unit
-testable without launching Tk.
+This split keeps command construction, process lifecycle, and artifact handling
+separate from Tk widgets.
 
 ## Start Sequence
 
@@ -91,27 +91,13 @@ needs it to write final metadata such as `manifest.yaml` and `summary.json`.
 5. The GUI opens `runs/imported/<run_id>/report/index.html` when present.
 
 Artifact operations are local laptop actions after the robot run has completed.
-They should stay separate from robot process lifecycle.
-
-## Adding Experiment Behavior
-
-Use this rule of thumb:
-
-- new form value or default -> `run_settings.py`
-- new SSH/runtime command argument -> `run_commands.py`
-- new pre-launch file or directory setup -> `run_preparation.py`
-- new run start/stop policy -> `run_manager.py`
-- new process signal or process-state primitive -> `run_lifecycle.py`
-- new retrieve/report artifact behavior -> `run_artifacts.py`
-- new button, field, timer, or display text -> `monitor_gui.py`
-
-Prefer additive changes to `RunConfig` and command builders. Do not make the GUI
-assemble shell strings directly.
+They stay separate from robot process lifecycle and do not change robot-side
+behavior.
 
 ## Detector Tuning
 
-The Run form exposes the detector controls that are useful to adjust between
-experiments without changing hardware or model assumptions:
+The Run form exposes detector controls that operators can adjust between runs
+without changing hardware or model assumptions:
 
 - `Score Threshold` -> `postprocess.score_threshold`
 - `NMS IoU` -> `postprocess.nms_iou_threshold`
@@ -119,27 +105,34 @@ experiments without changing hardware or model assumptions:
 
 The command builder passes these as launch arguments and also records them as
 experiment parameters in the run manifest. Operator-started runs also record the
-selected `Experiment` dropdown label, such as `Perception recording` or
+selected `Experiment` dropdown label, either `Perception recording` or
 `Autonomy: frame and capture target`, so the HTML report has a clear provenance
-label even when no external experiment config file is used. Keep model paths,
-camera device, capture size, model input size, class padding, and runner warmup
-in launch/config files unless an experiment explicitly needs those lower-level
-controls.
+label even when no external experiment config file is used. Model paths, camera
+device, capture size, model input size, class padding, and runner warmup remain
+launch/config-file controls.
 
 ## Autonomy Run Type
 
-The monitor can launch either a perception-only recording or the first bounded
-autonomy experiment, `Autonomy: center first class`. The autonomy mode still uses
-the runtime-container recording path, but appends launch arguments that start
-`omniseer_autonomy/target_centering_node`, set the target to the first configured
-class in the operator `Class List`, pass the full class list to native vision and
-run metadata, and write `autonomy.jsonl` into the run bundle. When target centering
-reaches success or failure, the autonomy node stops commanding motion, completes
-terminal logging and capture handling, and exits cleanly; real launch then shuts
-down so the recorder can finalize the run bundle without an operator Stop Run.
+The monitor can launch either a perception-only recording or the bounded
+autonomy run type labeled `Autonomy: frame and capture target` in the
+`Experiment` dropdown. The matching command-line helper is:
 
-The current autonomy behavior performs a bounded in-place visual scan for a
-configured target class, acquires a stable detection, centers the target
+```bash
+scripts/omni run autonomy --classes <class[,class...]>
+scripts/omni run autonomy --target <class>
+```
+
+The monitor uses the runtime-container recording path for this run type and
+appends launch arguments that start `omniseer_autonomy/target_centering_node`,
+set the target to the first configured class in the operator `Class List`, pass
+the full class list to native vision and run metadata, and write
+`autonomy.jsonl` into the run bundle. When target centering reaches success or
+failure, the autonomy node stops commanding motion, completes terminal logging
+and capture handling, and exits cleanly; real launch then shuts down so the
+recorder can finalize the run bundle without an operator Stop Run.
+
+The autonomy behavior performs a bounded in-place visual scan for a configured
+target class, acquires a stable detection, centers the target
 horizontally using yaw, and uses small bounded forward or reverse motion to bring
 the target's bounding-box area into the configured framing range. Forward motion
 is blocked when the proximity range crosses the configured safety threshold. This
@@ -161,7 +154,8 @@ remains the canonical machine-readable event record.
 
 ## Verification
 
-Current local coverage focuses on behavior that does not require robot hardware:
+Local documentation and unit-test coverage can verify behavior that does not
+require robot hardware:
 
 - command construction
 - form normalization
@@ -172,7 +166,7 @@ Current local coverage focuses on behavior that does not require robot hardware:
 - artifact pull/report result handling
 - compact GUI-facing gRPC error messages
 
-Hardware verification is still required for the full path:
+Full hardware acceptance requires a real operator run:
 
 1. launch the monitor from the laptop
 2. start a runtime-container run on the robot
@@ -181,8 +175,8 @@ Hardware verification is still required for the full path:
 5. retrieve it
 6. generate and open the report
 
-For the current operator profile, a robot-side acceptance check can be run
-against an existing graph:
+For the operator profile, a robot-side acceptance check can be run against an
+existing graph:
 
 ```bash
 OMNISEER_REQUIRE_DETECTIONS=1 scripts/omni run real verify
@@ -193,5 +187,5 @@ messages; healthy gateway status; and zero vision errors. It also starts and
 stops preview, runs a short headless overlay viewer smoke when laptop-side
 dependencies are available, enables teleop, sends only a zero command, verifies
 that the stamped controller reference receives it, and disables teleop. This is
-an acceptance check for the operator profile, not a replacement for target
+an acceptance check for the operator profile, not a substitute for recorded
 hardware run evidence.

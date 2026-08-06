@@ -1,296 +1,286 @@
 # Scripts Front Door
 
-_Status: implemented; command surface expected to grow additively as the project advances_
-
-The root `scripts/omni` entrypoint is the supported front door for common local
-workflows in this repository.
-
-Use it when you want a stable human-facing command instead of remembering:
-
-- which subdirectory owns a helper
-- which workspace setup file must be sourced first
-- which local build/test subset matches the documented workflow
-
-The design intent is simple:
-
-- one memorable top-level command
-- thin wrappers around the existing build, test, run, and flash flows
-- explicit profile selection for real-hardware bringup as the rollout expands
-- additive growth without breaking familiar operator commands
-
-This does **not** replace every package-local helper. Narrow package-owned scripts
-still live close to their code. `scripts/omni` promotes the commands you are most
-likely to run repeatedly.
-
-## Core Usage
-
-General shape:
+`scripts/omni` is the supported human-facing entrypoint for common Omniseer
+setup, build, verification, run, runtime-container, RunBundle, docs, flashing,
+environment, and cleanup tasks.
 
 ```bash
 scripts/omni <command> [subcommand] [args...]
-```
-
-Use help at any level:
-
-```bash
 scripts/omni --help
-scripts/omni run --help
-scripts/omni run real --help
-```
-
-Useful discovery command:
-
-```bash
+scripts/omni <command> --help
 scripts/omni env
 scripts/omni doctor
 ```
 
-`env` prints resolved path/default settings. `doctor` checks local toolchains,
-workspace setup, hardware SDKs, camera devices, installed ROS packages, and the
-real vision asset paths used by the robot demo.
+Command groups:
 
-## Command Groups
+| Group | Purpose |
+| --- | --- |
+| `setup` | Install local development dependencies. |
+| `build` | Build ROS, native vision, firmware, and runtime-container artifacts. |
+| `runtime` | Build, run, record, verify, push, and pull robot runtime container checkpoints. |
+| `test` | Run targeted local verification checks. |
+| `run` | Launch sim, real robot profiles, autonomy, monitor, and teleop surfaces. |
+| `runs` | Inspect, annotate, report, list, and retrieve RunBundles. |
+| `check` | Passively verify an already running graph. |
+| `doctor` | Report local environment and dependency state. |
+| `flash` | Run hardware flashing helpers. |
+| `docs` | Build documentation and verify diagrams. |
+| `clean` | Remove generated local build artifacts. |
 
-### `setup`
+## `setup`
 
-Install local prerequisites needed for the portable ROS workflow.
+Installs dependencies for the portable ROS development path.
 
-Primary command:
+```bash
+scripts/omni setup ros-deps [package_path ...]
+```
+
+With no package paths, installs the default ROS dependency set. Explicit package
+paths narrow the install.
+
+Example:
 
 ```bash
 scripts/omni setup ros-deps
 ```
 
-Use this when:
+## `build`
 
-- you are setting up a fresh machine or container
-- ROS package dependencies have changed
-- you want the local dependency set that matches the documented portable ROS flow
-
-Notes:
-
-- this wraps `scripts/ci/install_ros_workspace_deps.sh`
-- it installs the default dependency set when no package paths are provided
-- you can also pass explicit package paths when you want a narrower install
-
-
-### `build`
-
-Run the main local build flows without reassembling the underlying commands.
-
-Commands:
+Builds supported local artifacts through repository-owned wrappers.
 
 ```bash
 scripts/omni build
 scripts/omni build all
 scripts/omni build strict
-scripts/omni build ros --with-vision
-scripts/omni build ros --without-vision
-scripts/omni build ros --with-yolo
+scripts/omni build ros [--with-vision|--without-vision] [--with-yolo] [colcon args...]
 scripts/omni build vision
 scripts/omni build firmware
+scripts/omni build runtime-container [options] [docker build args...]
 ```
 
-Use `build` or `build all` when:
+Behavior:
 
-- you want the normal product build from one command
-- you want ROS built first, native vision built when CMake is available, and
-  firmware built when PlatformIO is available and a Teensy is attached
-- you want missing optional toolchains to warn instead of stopping the whole build
+- `build` and `build all`: ROS is required; native vision builds when CMake is
+  available; firmware builds when PlatformIO is available and a Teensy is
+  attached.
+- `build strict`: same product build, but missing native vision or firmware
+  toolchains fail the command.
+- `build ros`: builds the default ROS package set and auto-includes
+  `omniseer_vision_bridge` when RKNN/RGA development files are present.
+- `build ros --with-vision`: requires the real-hardware vision bridge.
+- `build ros --without-vision`: builds the portable ROS package set.
+- `build ros --with-yolo`: also builds optional Python sim YOLO packages;
+  `torch` and `ultralytics` must be available.
+- `build runtime-container`: builds Docker target `robot-runtime` by default.
+  The robot target requires RKNN SDK files.
+- `build runtime-container --target portable-runtime`: builds the
+  hardware-independent container target.
 
-Use `build strict` when:
+Runtime-container build options:
 
-- you want the same product build but missing native vision or firmware toolchains
-  should fail the command
+```bash
+--image <name>                 Default: omniseer/robot-runtime:v2
+--target <target>              robot-runtime or portable-runtime
+--ros-distro <name>            Default: kilted
+--micro-ros-agent-ref <ref>    Default: pinned upstream Kilted commit
+--rknn-include <path>          Default: /usr/include/rknn_api.h
+--rknn-lib <path>              Auto-detected from ldconfig when omitted
+```
 
-Use `build ros` when:
+Examples:
 
-- you changed ROS packages, launch files, configs, or message wiring
-- you need the workspace install tree refreshed before a launch
-- you are on the robot and want hardware-only ROS packages included when their
-  SDK files are installed
+```bash
+scripts/omni build ros --with-yolo
+scripts/omni build runtime-container --target portable-runtime --image omniseer/robot-runtime:portable
+```
 
-Use `build ros --with-vision` when:
+See [Robot Runtime Container](../robot-runtime/robot-runtime-container.md).
 
-- you need `omniseer_vision_bridge` installed for native RKNN/RGA perception
-- you want the build to fail loudly if RKNN/RGA development files are missing
+## `runtime`
 
-Use `build ros --without-vision` when:
+Manages robot-local runtime container checkpoints and evidence runs.
 
-- you are on a robot image but intentionally want the portable ROS package set
-- you are checking launch/package changes without rebuilding the native bridge
+```bash
+scripts/omni runtime build [--image <base>] [--tag <tag>] [build args...]
+scripts/omni runtime run [--image <base>] [--tag <tag>] [container command...]
+scripts/omni runtime record [--image <base>] [--tag <tag>] [record args...] [-- launch args...]
+scripts/omni runtime stop --run-id <id> [--time <seconds>]
+scripts/omni runtime verify [--image <base>] [--tag <tag>] [--stage smoke|full]
+scripts/omni runtime push [--image <base>] [--tag <tag>] [--release-tag <tag>]
+scripts/omni runtime pull [--image <base>] [--tag <tag>]
+```
 
-Use `build ros --with-yolo` when:
+Defaults:
 
-- you want the optional Python `yolo_ros` sim provider installed for `run sim --yolo`
-- you already have the Python YOLO runtime dependencies, including `ultralytics`, available in the environment
+- `--image`: `ghcr.io/jburo1/omniseer-robot-runtime`, or
+  `OMNISEER_RUNTIME_IMAGE`.
+- `runtime build`: creates `robot-candidate-<UTC>-g<shortsha>` when `--tag` is
+  omitted and writes metadata under `.omniseer/runtime/`.
+- `runtime run`, `record`, `verify`, and `push`: use the latest local runtime
+  build metadata when `--tag` is omitted.
+- `runtime pull`: defaults to `robot-verified` when `--tag` is omitted.
 
-Use `build vision` when:
+Record arguments:
 
-- you are iterating on the native vision code outside the ROS layer
-- you want the default `vision/build` CMake flow
+```bash
+--run-id <id>                         Default: operator_<UTC>
+--notes <text>                        Store notes in manifest.yaml.
+--classes <text>                      Store configured class names in manifest.yaml.
+--system-interval-sec <seconds>       Default: 1.0
+--experiment-config <name>            Default: operator-runtime
+--experiment-parameter <key=value>    Repeatable; default: stage=manual-operator
+```
 
-Use `build firmware` when:
+Behavior and constraints:
 
-- you changed Teensy firmware
-- you want a compile-only firmware check before flashing
-- you are on a laptop without a Teensy attached but still want to verify firmware
+- `runtime build` builds the robot hardware target through
+  `build runtime-container --target robot-runtime`.
+- `runtime record` starts the selected image with the real `operator` profile,
+  writes `runs/<run_id>` through the Docker `/runs` mount, and records image
+  reference and digest in the manifest.
+- Stop recorded runs gracefully with Ctrl-C, monitor Stop Run, or
+  `runtime stop --run-id <id>` so telemetry, evidence, `manifest.yaml`,
+  `summary.json`, and `logs/bringup.log` are finalized.
+- `runtime verify` defaults to `--stage smoke`, a bounded container smoke check
+  with hardware-dependent launch components disabled.
+- `runtime verify --stage full` runs the real operator smoke path with recording
+  and image provenance; it requires the robot runtime environment and target
+  hardware dependencies.
+- `runtime push` requires a clean git tree, passed full verification for the
+  same local image ID, and matching verification/current git commits. It
+  promotes to immutable `robot-verified-g<full-commit-sha>`, optional
+  `--release-tag <tag>`, and moving `robot-verified`.
+- `runtime pull` retrieves a registry image, defaulting to the moving verified
+  tag.
 
-Suggestion:
+Container boundaries:
 
-- `build` is the best default before an operator run or handoff
-- `build ros` is the best focused target when your change touches launch, bringup, adapters, gateway diagnostics, or ROS message surfaces
-- `build ros --with-vision` requires RKNN/RGA development files and is expected to fail on hosts without the target SDKs
-- `build vision` is better than a full ROS build when only the native C++ vision pipeline changed
+- The checkpoint path is robot-local and does not request remote CI publishing.
+- Runtime Docker commands bind `/dev`, `/run/udev`, host networking, host
+  PID/IPC namespaces, and the repository `runs/` directory for hardware access
+  and RunBundle persistence.
+- Override host bind detection with `OMNISEER_RUNTIME_HOST_REPO_ROOT` or
+  `OMNISEER_RUNTIME_RUNS_HOST_ROOT`.
+- Set Docker TTY mode with `OMNISEER_RUNTIME_DOCKER_TTY=auto`, `always`, or
+  `never`; verification forces `never`.
 
-### `runtime`
-
-Build, record, verify, publish, and pull robot runtime container checkpoints.
-This is a robot-local workflow; it does not require GitHub Actions to rebuild
-the hardware-specific image.
-
-Commands:
+Examples:
 
 ```bash
 scripts/omni runtime build
-scripts/omni runtime record
-scripts/omni runtime verify
+scripts/omni runtime record --run-id operator_001 --classes chair,bottle -- start_lidar:=false
 scripts/omni runtime verify --stage full
-scripts/omni runtime push
+scripts/omni runtime push --release-tag robot-demo-001
 scripts/omni runtime pull
 ```
 
-Use `runtime record` for a manual operator evidence run. It starts the latest
-local runtime image in the operator profile, records an indefinite runbundle
-under `runs/operator_<UTC>`, samples system telemetry every second, and exits
-when the container receives a graceful interrupt or an autonomy experiment
-reaches a terminal state. Ctrl-C and the monitor GUI Stop Run button remain the
-supported manual stop paths because they let the recorder finalize
-`manifest.yaml` and `summary.json`. For runtime-backed GUI runs, Stop Run also
-issues the named `runtime stop` command immediately and marks the GUI stopped
-after Docker confirms the container is stopped or already absent. Pass extra
-launch args after `--`, for example:
+See [Robot Runtime Container](../robot-runtime/robot-runtime-container.md#checkpoint-and-promotion).
+
+## `test`
+
+Runs targeted local verification checks.
 
 ```bash
-sudo scripts/omni runtime record -- start_lidar:=false
-```
-
-If a GUI-started runtime container outlives its SSH session, stop it explicitly
-with:
-
-```bash
-sudo scripts/omni runtime stop --run-id <run_id>
-```
-
-When these commands are launched from a devcontainer, the wrapper resolves the
-workspace's host-side bind path before starting Docker so runbundles still appear
-under this checkout's `runs/` directory. Override that detection with
-`OMNISEER_RUNTIME_RUNS_HOST_ROOT=/host/path/to/omniseer/runs` if needed.
-
-Use `runtime verify` without `--stage` for a safe container smoke check. Use
-`--stage full` to run the real operator smoke path with run recording and image
-provenance. `runtime push` publishes only after a passed full verification for
-the same local image ID, a matching verified/current git commit, and a clean
-working tree. Default builds are tagged `robot-candidate-<UTC>-g<shortsha>`;
-push promotes the same image to immutable `robot-verified-g<full-commit-sha>`
-and moving `robot-verified` tags. Pass `--release-tag <tag>` to publish one
-additional release label, and use the recorded registry digest or immutable
-full-commit tag for later RunBundle provenance instead of relying only on
-moving `robot-verified`.
-`runtime verify` runs Docker without an interactive TTY so it works under `sudo`,
-SSH automation, and other non-interactive launch paths. For direct `runtime run`
-and manual `runtime record` commands, Docker TTY allocation defaults to `auto`;
-set `OMNISEER_RUNTIME_DOCKER_TTY=always` or `never` to override it.
-
-See [Robot Runtime Container](../robot-runtime/robot-runtime-container.md#checkpoint-and-promotion)
-for the full pre-registry workflow, including runbundle inspection and report
-generation.
-
-### `test`
-
-Run focused local verification flows.
-
-Commands:
-
-```bash
+scripts/omni test
 scripts/omni test ros
 scripts/omni test vision
 scripts/omni test smoke-sim
 ```
 
-Use `test ros` when:
+`test` defaults to `test ros`. Use `test ros` for portable ROS checks,
+`test vision` for portable native vision checks, and `test smoke-sim` for the
+headless simulation smoke check.
 
-- you changed portable ROS packages
-- you want the closest local equivalent to the documented ROS CI lane
-
-Use `test vision` when:
-
-- you changed portable native vision components
-- you want the targeted host-side vision tests from the CI docs
-
-Use `test smoke-sim` when:
-
-- you changed simulation bringup or topic boundaries
-- you want a headless Gazebo smoke check instead of a broad test sweep
-
-Suggestion:
-
-- start with the smallest relevant test first
-- use `test smoke-sim` after sim launch or boundary-topic changes
-- use `test ros` after wider ROS package changes
-
-### `run`
-
-Launch the operator-facing runtime workflows. Build explicitly first when code,
-launch files, or generated interfaces changed.
-
-Commands:
+Examples:
 
 ```bash
-scripts/omni run sim
-scripts/omni run sim --yolo
-scripts/omni run real
-scripts/omni run real --profile perception --record-run demo_001
-scripts/omni run real --profile legacy-teleop smoke
-scripts/omni run monitor
+scripts/omni test ros
+scripts/omni test smoke-sim
+```
+
+## `run`
+
+Launches operator-facing simulation, robot, autonomy, monitor, and teleop
+commands. Build explicitly before running when code, launch files, configs, or
+generated interfaces changed.
+
+```bash
+scripts/omni run sim [--yolo] [--yolo-device <device>] [--yolo-model <path>] [launch args...]
+scripts/omni run real [--profile <name>] [recording flags] [--mode <mode>] [mode] [launch args...]
+scripts/omni run autonomy --classes <classes> [options] [-- launch args...]
+scripts/omni run monitor [monitor args...]
 scripts/omni run teleop
 ```
 
-#### `run sim`
+### `run sim`
 
-Launches the existing simulation bringup path.
-
-Use this when:
-
-- you want the normal local simulation entrypoint
-- you want the bringup-owned cleanup behavior before launch
-- you want optional Python YOLO detections overlaid on `/yolo/dbg_image` with `--yolo`
-
-Example:
+Sources ROS and the workspace, then launches `bringup sim.launch.py`.
+Remaining arguments are forwarded as ROS launch arguments.
 
 ```bash
 scripts/omni run sim headless:=true
 scripts/omni run sim --yolo --yolo-device cpu
 ```
 
-`--yolo` starts the Python/Ultralytics sim provider, not the native RKNN/RGA
-vision bridge used on the robot. Build the optional ROS packages first with
-`scripts/omni build ros --with-yolo`; the command also requires the Python
-`torch` and `ultralytics` packages at runtime. The sim YOLO-World class list
-defaults to `chair`; when `ros_ws/yolov8s-worldv2.pt` is present, `--yolo` uses
-that workspace model unless `--yolo-model <path>` or `yolo_model:=...` overrides
-it. The YOLO debug node publishes annotated frames on `/yolo/dbg_image`, which
-is enabled in the sim RViz Displays panel.
+`--yolo` starts the optional Python/Ultralytics sim provider and
+`/yolo/dbg_image` overlay. Build it first with
+`scripts/omni build ros --with-yolo`. `--yolo-device <device>` forwards
+`yolo_device:=...`; `--yolo-model <path>` forwards `yolo_model:=...`.
 
-#### `run real`
+### `run real`
 
-Launches a named real-hardware runtime profile.
+Launches real robot profiles, optionally with RunBundle recording.
 
-Current supported profiles:
+Profiles:
 
-- `current`: default alias for the current supported real robot runtime
-- `operator`: gateway, native vision, preview, bounded teleop, and recording
-- `perception`: native vision and recording without the gateway operator surface
+| Profile | Behavior |
+| --- | --- |
+| `current` | Default alias. Currently resolves to `operator`. |
+| `operator` | Gateway, native vision, preview, bounded teleop, and recording. |
+| `perception` | Native vision and recording without the gateway operator surface. |
+| `legacy-teleop` | Diagnostic compatibility profile. |
+
+Modes:
+
+| Mode | Behavior |
+| --- | --- |
+| `bringup` | Start the selected real profile in the foreground. |
+| `smoke` | Start the selected profile, run its verifier, then stop. |
+| `verify` | Run the selected profile verifier against an existing ROS graph. |
+| `teleop` | Start only the stamped keyboard teleop publisher. |
+| `operator` | Legacy-teleop profile only: start bringup, then open keyboard teleop. |
+
+Recording flags:
+
+```bash
+--record
+--record-run <run_id>
+--record-out <path>
+--record-system-interval-sec <seconds>
+--record-notes <text>
+--record-classes <text>
+--record-container-image-ref <ref>
+--record-container-image-digest <digest>
+--record-experiment-config <text>
+--record-experiment-parameters <items>
+--record-experiment-parameter <key=value>
+--record-overwrite
+```
+
+Omitting `--profile` selects `current`. Omitting the mode for `operator`,
+`perception`, or `current` selects foreground `bringup`. Recording flags require
+a mode that launches real bringup. `--record` creates a timestamped run ID;
+`--record-run <run_id>` uses the supplied ID; `--record-out` defaults to
+`runs/<run_id>`.
+
+Recorded RunBundles include manifest, summary, detections, performance,
+available system and native pipeline telemetry, evidence, provenance inputs, and
+`logs/bringup.log`. During recorded runs, `OMNISEER_BRINGUP_LOG` is replaced by
+the bundle-local log path. Containerized runs can provide provenance through the
+record flags or `OMNISEER_CONTAINER_IMAGE_REF`,
+`OMNISEER_CONTAINER_IMAGE_DIGEST`, `OMNISEER_GIT_SHA`,
+`OMNISEER_EXPERIMENT_CONFIG`, and `OMNISEER_EXPERIMENT_PARAMETERS`.
 
 Examples:
 
@@ -302,274 +292,168 @@ scripts/omni run real --record-run demo_001
 scripts/omni run real --profile perception --record-run demo_001
 ```
 
-If `--profile` is omitted, the command selects `current`. Today `current`
-resolves to `operator`; that alias can move as the supported real runtime
-changes.
+### `run autonomy`
 
-The `operator` and `perception` profiles default to foreground `bringup`.
-
-The older `legacy-teleop` profile is retained only for hardware diagnostics and
-compatibility with older runbooks:
+Starts the real `operator` profile with bounded target-centering autonomy
+enabled from inside the Radxa devcontainer.
 
 ```bash
-scripts/omni run real --profile legacy-teleop operator camera_device:=/dev/video11
+scripts/omni run autonomy --classes <class[,class...]> [options] [-- launch args...]
+scripts/omni run autonomy --target <class> [options] [-- launch args...]
+scripts/omni run autonomy <class> [options] [-- launch args...]
 ```
 
-Recording flags can be used with modes that launch real bringup:
+Options:
 
 ```bash
-scripts/omni run real --record
-scripts/omni run real --record-run demo_001
-scripts/omni run real --record-run demo_001 --record-out runs/demo_001
-scripts/omni run real --record-run demo_001 \
-  --record-container-image-ref ghcr.io/acme/omniseer:robot-v2 \
-  --record-container-image-digest sha256:<digest> \
-  --record-experiment-config experiments/container-smoke.yaml \
-  --record-experiment-parameter profile=operator
+--classes <text>                 First class is centered; all classes are evidence candidates.
+--target <class>                 One-class compatibility alias.
+--run-id <id>                    Default: autonomy_<class>_<UTC>
+--out <path>                     Default: runs/<run_id>
+--notes <text>                   Store notes in manifest.yaml.
+--system-interval-sec <seconds>  Default: 1.0
+--evidence-interval-sec <s>      Default: 0.25
+--no-overwrite                   Do not replace an existing output directory.
 ```
 
-The recorder is an optional sidecar. It writes a local bundle containing
-`manifest.yaml`, `detections.jsonl`, `perf.jsonl`, optional automatic
-`system.jsonl` resource telemetry, optional native
-`pipeline_telemetry.jsonl`, representative native JPEG evidence frames under
-`evidence/`, small provenance input copies under `provenance/`, the ROS launch
-stdout/stderr transcript at `logs/bringup.log`, and `summary.json`.
-`manifest.yaml` records SHA-256 hashes and byte sizes for the configured
-detector model, CLIP model, vocabulary, classes, vision config, and experiment
-config inputs when they are available. The first slice stores bundles on the
-robot; laptop download, inspection, evidence annotation, and a simple local HTML
-report are available through `scripts/omni runs`. Rich hosted review and cloud
-synchronization remain later work.
-
-`manifest.yaml` records the resolved real profile, mode, command, and launch
-arguments. `system.jsonl` records low-rate CPU, memory, thermal, WiFi/network,
-onboard battery, and `/battery` LiPo snapshots when those sources are available.
-Unavailable numeric CPU, memory, temperature, and battery values are recorded as
-JSON `null`; report statistics exclude unavailable values and the initial CPU
-sample.
-During recorded runs, `OMNISEER_BRINGUP_LOG` is replaced by the bundle-local
-`logs/bringup.log` path so the run artifact retains the console stream. For
-non-recording runs, `OMNISEER_BRINGUP_LOG` still overrides the temporary bringup
-log path.
-
-`--record-overwrite` removes and recreates the selected run directory before
-launching ROS. The recorder then accepts an empty precreated directory, or one
-where the native vision node has already opened `pipeline_telemetry.jsonl`,
-`evidence/`, or `logs/bringup.log`, so startup ordering does not drop pipeline
-telemetry or launch logs.
-
-Containerized runs can provide the same provenance through
-`OMNISEER_CONTAINER_IMAGE_REF`, `OMNISEER_CONTAINER_IMAGE_DIGEST`,
-`OMNISEER_GIT_SHA`, `OMNISEER_EXPERIMENT_CONFIG`, and
-`OMNISEER_EXPERIMENT_PARAMETERS`. Experiment parameters may be a JSON object or
-comma/space-separated `key=value` pairs. For promoted robot-runtime experiments,
-prefer the registry digest recorded by `scripts/omni runtime push`; otherwise use
-the immutable `robot-verified-g<full-commit-sha>` tag. Avoid recording only the
-moving `robot-verified` tag when a run is intended to be reviewable release
-evidence.
-
-#### Real run modes
-
-`operator`
-
-- starts the current operator real profile in the foreground
-
-`smoke`
-
-- starts the selected profile
-- runs its passive verifier
-- shuts the bringup down afterward
-
-`bringup`
-
-- launches only the selected profile bringup in the foreground
-
-`teleop`
-
-- launches only the stamped keyboard teleop publisher
-
-`verify`
-
-- runs only the passive verification helper against an existing ROS graph
-
-Suggestions:
-
-- run `scripts/omni build ros` before `run` when code or launch wiring changed
-- use `run real` on the robot for the current supported real runtime
-- use `run real smoke` for a quick integrated health check
-- add `--record-run <run_id>` when the run should produce a local perception bundle
-
-#### `run monitor`
-
-Launches the Tk operator monitor from the laptop workspace:
+The command writes `classes.txt`, starts
+`omniseer_autonomy/target_centering_node`, records through the real-run
+recording path, and forwards launch arguments after `--`.
 
 ```bash
-scripts/omni run monitor
+scripts/omni run autonomy --classes chair,backpack,bottle --run-id autonomy_chair_001 -- start_vision:=false
 ```
 
-The wrapper sources ROS and the workspace, then launches the GUI without opening
-a gateway connection until the operator requests an action such as Refresh, Start
-Watch, Preview On, or Teleop Enable. Pass `--refresh-on-start` explicitly when a
-startup status probe is desired. The default robot target is
-`radxa@192.168.1.178`; override it with `--host`, `--ssh-user`,
-`OMNISEER_ROBOT_HOST`, or `OMNISEER_ROBOT_USER`. Additional monitor arguments are
-forwarded to `robot_monitor_gui`.
+### `run monitor`
 
-The monitor run starter is laptop-side only. It starts robot-side runs over SSH,
-then retrieves the completed bundle and generates the local report. Select either
-the runtime-container backend or the devcontainer backend in the GUI:
+Launches the laptop Tk operator monitor and forwards arguments to
+`robot_monitor_gui`.
 
 ```bash
-scripts/omni run monitor \
-  --host 192.168.1.178 \
-  --ssh-user radxa \
-  --remote-repo-root /home/radxa/apps/omniseer
+scripts/omni run monitor --host 192.168.1.178 --ssh-user radxa
 ```
 
-The runtime-container backend runs `scripts/omni runtime record` on the robot and
-passes class files through the container-visible `/runs/<run_id>/classes.txt`
-path. The devcontainer backend runs a configurable remote exec template, defaulting
-to a `docker exec` command that finds the running devcontainer by the
-`devcontainer.local_folder={remote_repo_root}` Docker label. The SSH preparation
-steps still create and upload run files under the robot-host checkout, while the
-command inside the devcontainer uses the container-visible workspace path
-`/<repo-name>` such as `/omniseer`. Override `--devcontainer-exec-template` or
-`OMNISEER_DEVCONTAINER_EXEC_TEMPLATE` when the robot devcontainer is launched
-without standard devcontainer labels.
+The monitor defaults to robot SSH target `radxa@192.168.1.178`. It starts
+robot-side runs over SSH, using either `scripts/omni runtime record` or the
+configured devcontainer command template, then retrieves completed bundles and
+generates local reports. See [Operator Run Workflow](operator-run-workflow.md).
 
-See [Operator Run Workflow](operator-run-workflow.md) for the current GUI
-start/stop/retrieve architecture and module ownership boundaries.
+### `run teleop`
 
-#### `run autonomy`
-
-Starts a bounded real autonomy recording from inside the Radxa devcontainer. The
-class list is passed on the CLI. The first class is used as the target-centering
-autonomy class; the full list is used by native vision and recorded as evidence
-candidates:
+Starts the stamped keyboard teleop publisher.
 
 ```bash
-scripts/omni run autonomy --classes chair,backpack,bottle
+scripts/omni run teleop
 ```
 
-The command runs the operator real profile, writes a run bundle under
-`runs/<run_id>`, creates `classes.txt`, starts
-`omniseer_autonomy/target_centering_node`, and forwards extra launch arguments
-after `--`:
+## `runs`
+
+Inspects local RunBundles and retrieves robot-side RunBundles.
 
 ```bash
-scripts/omni run autonomy --classes chair,backpack,bottle --run-id autonomy_chair_001 -- \
-  start_vision:=false
+scripts/omni runs inspect <run_dir> [--json]
+scripts/omni runs annotate <run_dir> [--overwrite]
+scripts/omni runs report <run_dir> [--overwrite]
+scripts/omni runs local-list [--root <local-runs-root>]
+scripts/omni runs list [retrieval args...]
+scripts/omni runs pull <run_id> [retrieval args...]
 ```
 
-Stop the foreground launch with `Ctrl-C`, then inspect the bundle:
+Retrieval arguments:
 
 ```bash
-scripts/omni runs inspect runs/autonomy_chair_001
+--host <robot-ip>
+--user <ssh-user>
+--remote-root <robot-runs-root>
+--import-root <local-import-root>
+--out <local-run-dir>
+--overwrite
 ```
 
-### `runs`
+Defaults: `--host 192.168.1.178`, `--user radxa`, and
+`--remote-root /home/radxa/apps/omniseer/runs`; override them with
+`OMNISEER_ROBOT_HOST`, `OMNISEER_ROBOT_USER`, and
+`OMNISEER_ROBOT_RUNS_ROOT`.
 
-List and retrieve robot-side perception run bundles from the laptop workspace:
+`inspect`, `annotate`, `report`, and `local-list` operate on local bundle
+directories. `annotate` creates derived annotated evidence without modifying
+canonical evidence frames. `report` annotates missing evidence first, then
+writes `report/index.html`. `list` and `pull` use SSH and validate pulled
+bundles locally.
+
+Examples:
 
 ```bash
-scripts/omni runs local-list --root runs
-scripts/omni runs inspect runs/imported/demo_001
-scripts/omni runs report runs/imported/demo_001
 scripts/omni runs list
 scripts/omni runs pull demo_001
+scripts/omni runs inspect runs/imported/demo_001
+scripts/omni runs report runs/imported/demo_001
 ```
 
-`local-list`, `inspect`, and `annotate` operate on local bundle directories
-through the `omniseer_experiments` tools. `annotate` derives
-`evidence/annotated/*.jpg` from clean evidence frames and `evidence/evidence.jsonl`
-without modifying the canonical `evidence/frames/*.jpg` inputs. `report`
-generates missing annotations first, then writes a derived static HTML summary at
-`report/index.html`, using annotated evidence when present and falling back to
-clean evidence frames. The report includes an evidence summary, run
-configuration, detection counts, performance and native pipeline telemetry,
-resource samples with sample timestamps, error/drop counters, evidence links, and
-inspection issues. `list` and `pull` operate on robot-side bundles over SSH and
-validate pulled bundles locally.
+## `check`
 
-The front door defaults to SSH target `radxa@192.168.1.178` and remote run root
-`/home/radxa/apps/omniseer/runs`. Override those with `--host`, `--user`,
-`--remote-root`, `OMNISEER_ROBOT_HOST`, `OMNISEER_ROBOT_USER`, or
-`OMNISEER_ROBOT_RUNS_ROOT` when using a different robot, account, or checkout.
-
-### `check`
-
-Run passive validation commands that inspect an existing graph rather than building
-or launching it.
-
-Command:
+Passively validates an already running graph.
 
 ```bash
 scripts/omni check
 scripts/omni check real-perception
 ```
 
-Use this when:
+`check` defaults to `real-perception`. The verifier checks stamped teleop,
+detections, and vision performance topic types, then waits for representative
+messages. `OMNISEER_TOPIC_TIMEOUT_SECONDS` controls wait time; default `15`.
+`OMNISEER_REQUIRE_DETECTIONS=1` makes missing detections fatal.
 
-- the real graph is already running
-- you want to confirm the legacy teleop/perception boundary topics
-- you want a non-driving verification helper
+```bash
+OMNISEER_REQUIRE_DETECTIONS=1 scripts/omni check real-perception
+```
 
-Suggestion:
+## `doctor`
 
-- pair this with `run real --profile legacy-teleop smoke` for a quick end-to-end check
-- use `OMNISEER_REQUIRE_DETECTIONS=1` when detections must be present for the run to count
-
-### `doctor`
-
-Report local environment state relevant to build and robot runs.
-
-Command:
+Reports local build, runtime, and robot dependency state.
 
 ```bash
 scripts/omni doctor
 ```
 
-Use this when:
+Use it to inspect local toolchains, workspace setup, hardware SDK availability,
+device visibility, installed ROS packages, and real vision asset paths.
 
-- a build or launch fails due to missing workspace, SDK, device, or asset state
-- you are moving between laptop, container, and robot images
-- you want to confirm whether `omniseer_vision_bridge` is installed and buildable
+## `flash`
 
-### `flash`
-
-Run hardware flashing helpers.
-
-Command:
+Runs hardware flashing helpers.
 
 ```bash
 scripts/omni flash teensy
 ```
 
-Use this when:
+This delegates to the headless Teensy flashing helper and changes firmware on
+the connected controller.
 
-- you need headless Teensy flashing over SSH or in a container
-- you want the supported wrapper around the existing firmware flash helper
+## `docs`
 
-### `docs`
-
-Build the documentation site locally.
-
-Command:
+Builds documentation and verifies tracked diagrams.
 
 ```bash
 scripts/omni docs build
+scripts/omni docs diagrams [--check]
+scripts/omni docs check-diagram-links [--site-dir site]
 ```
 
-Use this when:
+`docs build` runs the strict local documentation build. `docs diagrams` renders
+D2 sources under `docs/diagrams/` into tracked SVG assets under
+`docs/assets/diagrams/`; `--check` verifies freshness. `docs check-diagram-links`
+verifies embedded diagram links, defaulting to `site` unless `--site-dir` is
+supplied. `OMNISEER_D2_BIN` can point to the pinned D2 renderer.
 
-- you changed docs or `mkdocs.yml`
-- you want the local strict docs build without waiting for CI
+```bash
+scripts/omni docs build
+scripts/omni docs diagrams --check
+```
 
-### `clean`
+## `clean`
 
-Remove generated local build artifacts.
-
-Commands:
+Removes generated local build artifacts.
 
 ```bash
 scripts/omni clean
@@ -579,124 +463,32 @@ scripts/omni clean docs
 scripts/omni clean all
 ```
 
-Use this when:
-
-- a local build tree is stale or confusing
-- you want to force a clean rebuild of a specific layer
-
-Suggestion:
-
-- `clean` defaults to the ROS workspace, matching the `build` and `test` defaults
-- prefer the narrowest clean target that solves the problem
-- avoid `clean all` unless multiple build trees are genuinely suspect
-
-## Suggested Workflows
-
-### Fresh local ROS iteration
-
-```bash
-scripts/omni setup ros-deps
-scripts/omni build ros
-scripts/omni test ros
-```
-
-Use this for:
-
-- normal ROS package development
-- launch/config changes that need rebuild plus validation
-
-### Simulation-focused iteration
-
-```bash
-scripts/omni build ros
-scripts/omni test smoke-sim
-scripts/omni run sim
-```
-
-Use this for:
-
-- simulation bringup changes
-- boundary-topic or launch-structure debugging
-
-### Current Real Operator Demo
-
-Robot:
-
-```bash
-scripts/omni run real
-```
-
-Robot with local run-bundle recording:
-
-```bash
-scripts/omni run real --record-run demo_001
-```
-
-Laptop:
-
-```bash
-scripts/omni run monitor
-```
-
-Active zero-motion acceptance verification from a second robot shell:
-
-```bash
-OMNISEER_REQUIRE_DETECTIONS=1 scripts/omni run real verify
-```
-
-Use this for the integrated gateway status, preview, perception, and bounded
-teleop acceptance check for the current operator profile.
-
-### Native vision iteration
-
-```bash
-scripts/omni build vision
-scripts/omni test vision
-```
-
-Use this for:
-
-- portable native vision changes
-- tight local C++ iteration without rebuilding the ROS workspace first
-
-### Firmware loop
-
-```bash
-scripts/omni build firmware
-scripts/omni flash teensy
-```
-
-Use this for:
-
-- firmware compile followed by hardware flashing
-
-## Compatibility Notes
-
-The new front door keeps a compatibility path for existing habits:
-
-- `scripts/omni up <profile>` still builds ROS before launching and emits a
-  deprecation warning
-- `scripts/omni run real --phase 2` maps to `--profile legacy-teleop`
-- `scripts/omni run real --phase 3` maps to `--profile operator`
-- `scripts/phase2_real.sh` delegates to `scripts/omni run real --profile legacy-teleop`
-- `scripts/check_real_teleop_perception.sh` delegates to `scripts/omni check real-perception`
-
-Those compatibility wrappers exist to reduce churn. New docs and day-to-day usage
-should prefer `scripts/omni`.
+`clean` defaults to `clean ros`. Targets remove ROS workspace
+`build/install/log` trees, native vision build directories, generated docs
+outputs, or all of those targets.
 
 ## Environment Overrides
 
-Useful environment variables:
+Use `scripts/omni env` to see resolved values for the current shell.
 
-- `OMNISEER_ROS_SETUP`
-- `OMNISEER_WS_SETUP`
-- `OMNISEER_UROS_WS_SETUP`
-- `OMNISEER_ROS_DISTRO`
-- `OMNISEER_LATEST_STABLE_REAL_PHASE`
-- `OMNISEER_VISION_PARAMS_FILE`
-- `OMNISEER_BRINGUP_DELAY_SEC`
-- `OMNISEER_BRINGUP_LOG`
-- `OMNISEER_REQUIRE_DETECTIONS`
+| Variable | Effect |
+| --- | --- |
+| `OMNISEER_ROS_SETUP`, `OMNISEER_WS_SETUP`, `OMNISEER_UROS_WS_SETUP` | Override ROS, workspace, and micro-ROS setup files. |
+| `OMNISEER_ROS_DISTRO` | Override the ROS distro used by setup and builds. |
+| `OMNISEER_DEFAULT_REAL_PROFILE`, `OMNISEER_CURRENT_REAL_PROFILE` | Override real-profile defaults. |
+| `OMNISEER_VISION_PARAMS_FILE` | Override real vision bridge parameter file. |
+| `OMNISEER_BRINGUP_DELAY_SEC`, `OMNISEER_BRINGUP_LOG` | Override real-run smoke wait and non-recording log path. |
+| `OMNISEER_TOPIC_TIMEOUT_SECONDS`, `OMNISEER_REQUIRE_DETECTIONS` | Override passive check timing and detection requirements. |
+| `OMNISEER_ROBOT_HOST`, `OMNISEER_ROBOT_USER`, `OMNISEER_ROBOT_RUNS_ROOT` | Override robot RunBundle retrieval target. |
+| `OMNISEER_RUNTIME_IMAGE`, `OMNISEER_RUNTIME_METADATA_DIR` | Override runtime image base and metadata directory. |
+| `OMNISEER_RUNTIME_HOST_REPO_ROOT`, `OMNISEER_RUNTIME_RUNS_HOST_ROOT` | Override runtime Docker host bind paths. |
+| `OMNISEER_RUNTIME_DOCKER_TTY`, `OMNISEER_RUNTIME_SAFE_SMOKE_SEC` | Override runtime Docker TTY mode and smoke timeout. |
+| `OMNISEER_CONTAINER_IMAGE_REF`, `OMNISEER_CONTAINER_IMAGE_DIGEST`, `OMNISEER_EXPERIMENT_CONFIG`, `OMNISEER_EXPERIMENT_PARAMETERS` | Record container and experiment provenance. |
+| `OMNISEER_D2_BIN` | Override D2 renderer path for diagram commands. |
 
-Use `scripts/omni env` to confirm what the front door will resolve on the current
-machine.
+## Compatibility Note
+
+`scripts/omni up` and legacy real-profile aliases remain available for older
+runbooks. New operator commands should use
+`scripts/omni run sim`, `scripts/omni run real --profile operator`, or
+`scripts/omni run real --profile perception` directly.
