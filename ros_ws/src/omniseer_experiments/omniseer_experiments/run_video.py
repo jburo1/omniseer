@@ -10,6 +10,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from omniseer_experiments.run_inspection import _parse_generated_manifest
+
+TARGET_COLOR = (0, 255, 0)
+NON_TARGET_COLOR = (0, 0, 255)
+
 
 @dataclass(frozen=True)
 class InferenceFrame:
@@ -20,6 +25,7 @@ class InferenceFrame:
     remap_scale: float
     remap_pad_x: float
     remap_pad_y: float
+    target_class: str = ""
 
 
 def read_inference_frames(run_dir: Path) -> list[InferenceFrame]:
@@ -30,6 +36,7 @@ def read_inference_frames(run_dir: Path) -> list[InferenceFrame]:
     detection from another frame.
     """
     evidence_path = run_dir / "evidence" / "evidence.jsonl"
+    target_class = _target_class_from_manifest(run_dir / "manifest.yaml")
     frames: list[InferenceFrame] = []
     for line in evidence_path.read_text(encoding="utf-8").splitlines():
         if not line.strip():
@@ -62,9 +69,32 @@ def read_inference_frames(run_dir: Path) -> list[InferenceFrame]:
                 remap_scale=scale,
                 remap_pad_x=pad_x,
                 remap_pad_y=pad_y,
+                target_class=target_class,
             )
         )
     return frames
+
+
+def _target_class_from_manifest(manifest_path: Path) -> str:
+    """Return the target class configured for this recorded run, if available."""
+    try:
+        manifest = _parse_generated_manifest(manifest_path.read_text(encoding="utf-8").splitlines())
+    except (FileNotFoundError, OSError):
+        return ""
+
+    launch = manifest.get("launch")
+    if not isinstance(launch, dict):
+        return ""
+    args = launch.get("args")
+    if not isinstance(args, list):
+        return ""
+    for arg in args:
+        if not isinstance(arg, str):
+            continue
+        name, separator, value = arg.partition(":=")
+        if name == "autonomy_target_class" and separator:
+            return value
+    return ""
 
 
 def _evidence_image_path(run_dir: Path, value: object) -> Path | None:
@@ -218,7 +248,7 @@ def _draw_detections(cv2: Any, frame: Any, detections: Sequence[dict[str, Any]],
         class_id = detection.get("class_id", 0)
         class_name = str(detection.get("class_name", "") or class_id)
         score = _number(detection.get("score")) or 0.0
-        color = (0, 255, 0)
+        color = TARGET_COLOR if class_name == association.target_class else NON_TARGET_COLOR
         cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
         cv2.putText(
             frame,
