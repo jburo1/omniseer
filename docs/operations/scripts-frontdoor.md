@@ -21,7 +21,7 @@ Command groups:
 | `runtime` | Build, run, record, verify, push, and pull robot runtime container checkpoints. |
 | `test` | Run targeted local verification checks. |
 | `run` | Launch sim, real robot profiles, autonomy, monitor, and teleop surfaces. |
-| `runs` | Inspect, annotate, report, list, and retrieve RunBundles. |
+| `runs` | Inspect, annotate, report, build videos, list, and retrieve RunBundles. |
 | `check` | Passively verify an already running graph. |
 | `doctor` | Report local environment and dependency state. |
 | `flash` | Run hardware flashing helpers. |

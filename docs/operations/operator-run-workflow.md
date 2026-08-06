@@ -111,6 +111,12 @@ label even when no external experiment config file is used. Model paths, camera
 device, capture size, model input size, class padding, and runner warmup remain
 launch/config-file controls.
 
+For a recorded camera stream, select **Record video** before starting the run.
+This is off by default. After retrieving the RunBundle, use **Build Videos** to
+create `video/source.mp4` and the approximate detection overlay
+`video/overlay.mp4`; source preview and inference use separate camera paths, so
+the overlay is not pixel-perfect synchronized.
+
 ## Autonomy Run Type
 
 The monitor can launch either a perception-only recording or the bounded
