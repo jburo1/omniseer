@@ -32,7 +32,7 @@ The recommended near-term boundary is:
 The boundary should be a canonical ROS contract, not Gazebo internals and not
 `ros2_control` internals.
 
-For this refactor, prefer source-side standardization over pure rename relays:
+Source-side standardization is preferred over pure rename relays:
 
 - if a mismatch is only topic naming, fix the producer or subscriber
 - if a mismatch is only stamped-vs-unstamped command shape, update the real
@@ -40,14 +40,14 @@ For this refactor, prefer source-side standardization over pure rename relays:
 - only keep adapter nodes when they derive or transform data semantically, such
   as encoder counts to odometry
 
-Why this is the right first move:
+Why this shape is used:
 
 - it matches the current firmware shape
 - it minimizes churn while still making sim and real converge
 - it lets us keep the current MCU motion-control path while still normalizing
   the ROS graph above it
-- it preserves a later path to a true `ros2_control` hardware interface if that
-  later pays for itself
+- it keeps a true `ros2_control` hardware interface compatible with the boundary
+  if that becomes operationally valuable
 
 ## Current State
 
@@ -146,7 +146,7 @@ of no-op relays and gets us to sim/real parity faster.
 The raw camera image does **not** need to be part of the common mission graph
 to get the sim-to-real benefit we want today.
 
-For current navigation and contract work, the more important shared boundary is:
+For navigation and contract work, the more important shared boundary is:
 
 - command
 - wheel odometry
@@ -163,18 +163,16 @@ Raw camera image can remain provider-local for now:
 
 Both then converge on `/yolo/detections`.
 
-That is the right boundary for the current navigation-policy and graph-contract
-goal.
+That is the boundary used for navigation policy and graph contracts.
 
 ## Why Not Use `ros2_control` as the Boundary Yet
 
-That remains a valid later direction, but it is not the smallest effective move
-right now.
+A real robot `ros2_control` hardware interface is compatible with this boundary,
+but the robot does not use that as the boundary today.
 
-### Later Option
+### `ros2_control` Compatibility
 
-Later, the real robot could expose a true `ros2_control` hardware interface so
-both sim and real use:
+A real robot hardware interface would let both sim and real use:
 
 - `controller_manager`
 - `joint_state_broadcaster`
@@ -184,23 +182,24 @@ with only the hardware plugin changing.
 
 ### Why Not First
 
-The current firmware already owns:
+The firmware already owns:
 
 - command timeout
 - mecanum kinematics
 - wheel command writeout
 - encoder readout
 
-Moving that boundary immediately would require:
+Moving that boundary requires:
 
 - a real hardware interface implementation
 - transport design between SBC and MCU
 - lifecycle/error handling around that transport
-- a migration of control semantics that is larger than the current need
+- a migration of control semantics
 
-That can pay off later. It is not the smallest next step.
+Keeping the boundary in firmware preserves the current control semantics and keeps
+the ROS package split focused on the implemented system.
 
-## Target Package and Launch Layout
+## Package and Launch Layout
 
 ### `omniseer_description`
 
@@ -389,20 +388,20 @@ Why:
 
 - lets gateway/diagnostic flows behave more similarly in sim and real
 
-This is optional for the first slice.
+This adapter is optional when no native performance source exists.
 
-## Concrete Refactor of Existing Files
+## Boundary Rules for Existing Files
 
-The following changes should happen early because they define the boundary.
+The following files define the boundary.
 
 ### `nav.launch.py`
 
-Current issue:
+Boundary note:
 
 - `twist_mux` output is remapped directly to
   `/mecanum_drive_controller/reference`
 
-Target:
+Boundary behavior:
 
 - keep `twist_mux` output on `/mecanum_drive_controller/reference`
 - update the MCU subscriber to match that contract directly
@@ -414,12 +413,12 @@ Reason:
 
 ### `ekf_fusion.yaml`
 
-Current issue:
+Boundary note:
 
 - `odom0` uses `/mecanum_drive_controller/odometry`
 - `imu0` uses `/imu`
 
-Target:
+Boundary behavior:
 
 - keep `odom0: /mecanum_drive_controller/odometry`
 - keep `imu0: /imu`
@@ -456,11 +455,11 @@ Why this shape is still correct:
 
 ### `perception.launch.py`
 
-Current issue:
+Boundary note:
 
 - it mixes shared perception consumers with sim-only detection provider
 
-Target:
+Boundary behavior:
 
 - keep only shared consumers above the boundary:
   - RF2O
@@ -471,18 +470,18 @@ Target:
 
 ### `controllers.launch.py`
 
-Current issue:
+Boundary note:
 
 - controller manager remains coupled to the shared graph shape
 
-Target:
+Boundary behavior:
 
 - treat it as sim-only below the boundary for now
 - only `sim_io.launch.py` should include it
 
-## Current Common Graph After Refactor
+## Common Graph
 
-The target common graph is:
+The common graph is:
 
 ```text
              /mecanum_drive_controller/reference
@@ -511,7 +510,7 @@ Below that line:
   the MCU, so simulated `/range` should not be treated as identical-fidelity
   physical sensor evidence.
 
-## Boundary Rollout Status
+## Boundary Status
 
 ### Implemented Baseline
 
@@ -524,13 +523,16 @@ Below that line:
 - CI verifies four sim boundary topics and message types in headless Gazebo:
   `/clock`, `/imu`, `/scan`, and `/mecanum_drive_controller/odometry`
 
-### Parity Work
+### Parity Limitations
 
-- move provider-specific perception launch ownership fully below the sim/real boundary
-- decide whether simulation needs a `/vision/perf` adapter
-- expand contract checks to frame identifiers, timestamps, rates, and stale behavior
-- add a mocked real-launch smoke path
-- add replay support for the normalized boundary and implemented experiment workflow
+- provider-specific perception launch ownership is not fully below the sim/real
+  boundary
+- simulation does not always provide a `/vision/perf` adapter
+- contract checks do not yet cover every frame identifier, timestamp, rate, and
+  stale-data behavior
+- there is no mocked real-launch smoke path
+- replay support for the normalized boundary and experiment workflow is not
+  implemented
 
 ## Verification Standard for the Boundary
 

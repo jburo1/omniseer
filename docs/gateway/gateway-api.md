@@ -185,17 +185,3 @@ locally against the live C++ gateway and software x264/SRT preview worker.
   motor-controller diagnostics, build environment labels, or preview transport
   parameters.
 - The gateway has no authn/authz layer.
-
-## Future optimization
-
-- Add stream endpoint metadata to `PreviewStatus` or a dedicated preview session
-  message.
-- Add streaming status or event RPCs.
-- Add multi-client ownership rules and enforcement.
-- Add robot mode and mission state once those values have stable robot-runtime
-  semantics.
-- Add wheel-level or motor-controller diagnostics through explicit status
-  messages.
-- Add preview dimensions, frame rate, bitrate, and transport metadata after
-  those values are produced by the managed preview path.
-- Add gateway authentication and authorization for non-local deployments.

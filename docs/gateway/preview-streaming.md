@@ -131,15 +131,3 @@ Wi-Fi conditions.
 - Preview frames and detection frames come from separate camera paths and are
   not exact-frame synchronized.
 - Software x265 is too CPU-expensive for the intended SBC mission budget.
-
-## Future optimization
-
-- Install and verify a low-overhead hardware H.265 userspace encode path on the
-  SBC image.
-- Move from `NV12 mainpath -> software x264 -> SRT` to
-  `NV12 mainpath -> hardware H.265 -> SRT`.
-- Tune preview profile defaults with measured Wi-Fi and SBC load data.
-- Publish stream endpoint metadata through the gateway API.
-- Embed decoded preview directly in the monitor GUI.
-- Add an exact-frame debug preview path for targeted overlay verification.
-- Define how recorded preview evidence correlates with RunBundle evidence.

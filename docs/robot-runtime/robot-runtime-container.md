@@ -1,25 +1,22 @@
 # Robot Runtime Container
 
-_Status: v2 build path implemented; target hardware validation still required_
-
 The robot runtime container packages the supported real-hardware ROS workspace into
 an image that starts through the same `scripts/omni run real` surface used on the
-host. The v2 target is robot-side only: it carries the real operator profile, native
-RKNN vision bridge, gateway process, telemetry recording tools, and hardware IO
-launch wiring. It does not include simulation, firmware flashing, docs, or
-laptop-only development tooling.
+host. The robot-side image carries the real operator profile, native RKNN vision
+bridge, gateway process, telemetry recording tools, and hardware IO launch wiring.
+It does not include simulation, firmware flashing, docs, or laptop-only
+development tooling.
 
-V2 makes the runtime boundary stricter than v1. The final image is based on
-`ros:kilted-ros-core-noble`, builds the workspace in a separate stage, and copies
-only the merged ROS install tree, source-built micro-ROS agent, runtime scripts,
-RKNN runtime library, and direct runtime apt dependencies into the final image.
-Build-only tools such as `gcc`, `g++`, `colcon`, and `protoc` are absent from the
-final v2 image. `cmake` remains installed because the Kilted ROS runtime packages
-currently depend on it.
+The final image is based on `ros:kilted-ros-core-noble`, builds the workspace in a
+separate stage, and copies only the merged ROS install tree, source-built
+micro-ROS agent, runtime scripts, RKNN runtime library, and direct runtime apt
+dependencies into the final image. Build-only tools such as `gcc`, `g++`,
+`colcon`, and `protoc` are absent from the final image. `cmake` remains installed
+because the Kilted ROS runtime packages currently depend on it.
 
 ## Build
 
-On the ROCK 5B+ image, build the robot target:
+On the ROCK 5B+ image, build the robot runtime image:
 
 ```bash
 scripts/omni build runtime-container
@@ -38,7 +35,7 @@ default and records local build metadata under `.omniseer/runtime/`. The
 the image base with `--image <base>` or `OMNISEER_RUNTIME_IMAGE`; pass `--tag`
 only when you need an explicit custom checkpoint tag.
 
-The robot target requires RKNN SDK files on the build host:
+The robot runtime image requires RKNN SDK files on the build host:
 
 - `rknn_api.h`, default `/usr/include/rknn_api.h`
 - `librknnrt.so`, auto-detected through `ldconfig`
@@ -47,9 +44,9 @@ The build wrapper enables Docker BuildKit so those files can be passed as tempor
 named build contexts. They are copied into the image, but they are not added to the
 repository build context.
 
-As of the current Kilted apt repositories used on the ROCK 5B+ image,
-`ros-kilted-micro-ros-agent` is not published. V2 builds the upstream
-`micro-ROS-Agent` Kilted source package instead, pinned by default to commit
+The Kilted apt repositories used on the ROCK 5B+ image do not publish
+`ros-kilted-micro-ros-agent`, so the image builds the upstream
+`micro-ROS-Agent` Kilted source package, pinned by default to commit
 `f0d809138de19a61fe1a640d5c5a3076cd648360`. The source build installs the
 `micro_ros_agent` ROS package and Micro XRCE-DDS Agent runtime library into the
 merged `/ros_ws/install` tree.
@@ -69,7 +66,7 @@ scripts/omni build runtime-container \
   --micro-ros-agent-ref <git-ref>
 ```
 
-For non-robot validation, build the portable target. It excludes
+For non-robot validation, build the portable image target. It excludes
 `omniseer_vision_bridge`, so it can prove the container build and entrypoint without
 RKNN/RGA hardware SDK files:
 
@@ -229,15 +226,12 @@ Measured locally on the ROCK 5B+ build host:
 
 | Image | Size | Notes |
 | --- | ---: | --- |
-| `omniseer/robot-runtime:v2` | 2.84 GB | Current runtime target with source-built micro-ROS Agent |
-| `omniseer/robot-runtime:v1` | 3.5 GB | Initial bringup image |
+| `omniseer/robot-runtime:v2` | 2.84 GB | Runtime image with source-built micro-ROS Agent |
 | devcontainer image | 4.99 GB | Full development environment |
-| `ros:kilted-ros-core-noble` | 768 MB | V2 base image |
-| `ros:kilted-ros-base-noble` | 1.33 GB | V1 base image |
 
-V2 is acceptable as a bringup/runtime artifact because it is smaller than the
-devcontainer and no longer carries the compiler, colcon, or protobuf compiler in
-the final image. The image size is mostly from the Python OpenCV stack,
+The runtime image is smaller than the devcontainer and does not carry the
+compiler, colcon, or protobuf compiler in the final image. The image size is
+mostly from the Python OpenCV stack,
 FFmpeg/GStreamer plugins, controller-manager and control message dependencies,
 source-built micro-ROS Agent dependencies, and broad ROS runtime dependencies
 pulled in by Kilted packages. Some large

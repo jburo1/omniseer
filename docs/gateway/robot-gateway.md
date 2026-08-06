@@ -1,10 +1,7 @@
 # Robot Gateway
 
-_Status: implemented v1 diagnostics, preview-control, and bounded-teleop slice_
-
-This page is the current implementation reference for the operator-facing
-gateway between the robot's internal ROS 2 graph and the external operator
-laptop tools.
+This page is the implementation reference for the operator-facing gateway between
+the robot's internal ROS 2 graph and the external operator laptop tools.
 
 ## Current implementation
 
@@ -121,18 +118,3 @@ onboard battery sources, an active ROS graph, or physical robot command paths.
   `RobotHealth.ready`.
 - Preview and gateway failures are isolated from the mission path, but the
   gateway is not a substitute for mission-critical ROS consumers.
-
-## Future optimization
-
-- Integrate a low-overhead hardware H.265 encoder path for robot-side preview.
-- Add API-owned stream endpoint metadata once endpoint negotiation needs to move
-  out of host tool configuration.
-- Add streaming status or event RPCs after unary status semantics remain stable
-  under real operator workflows.
-- Define multi-client ownership semantics before supporting multiple concurrent
-  operator clients.
-- Embed decoded preview directly in the desktop monitor UI.
-- Add authentication and authorization for deployments that expose the gateway
-  beyond the trusted robot/operator network.
-- Add exact-frame preview/overlay correlation only for targeted debugging paths
-  that require it.
