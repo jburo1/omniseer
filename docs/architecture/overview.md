@@ -130,6 +130,7 @@ validation responsibility.
 | YOLO-World post-processing and text embeddings | **Implemented** | Native runtime, RKNN/text-embedding source paths, and portable post-processing tests where available; target-hardware timing and accuracy claims require a named public artifact |
 | ROS detection and performance publication | **Implemented** | `omniseer_vision_bridge` |
 | Bounded visual target acquisition and framing | **Implemented** | `omniseer_autonomy`, `scripts/omni run autonomy`, controller tests, and RunBundle `autonomy.jsonl` support; no public autonomy execution artifact is linked from the current evidence catalog |
+| Navigation and SLAM infrastructure | **Implemented/integrated** | Mapping and development workflows are supported by integrated navigation and SLAM packages; this is separate from the bounded target-acquisition behavior |
 | Portable ROS, vision, firmware, simulation, docs, and portable runtime checks | **CI-verified** | GitHub Actions master-push workflows |
 | gRPC gateway, platform diagnostics, and managed SRT preview | **Implemented** | C++ and Python tests plus local integration |
 | Structured experiment recorder and run bundle | **Implemented; portable-test covered** | `omniseer_experiments` tests cover manifest, summary, recording helpers, inspection, retrieval, evidence annotation, and static report generation |
@@ -137,14 +138,14 @@ validation responsibility.
 
 ## Repository Ownership
 
-- `vision/` owns the native camera-to-detection runtime and detailed telemetry.
-- `ros_ws/src/omniseer_vision_bridge/` owns the native-to-ROS adapter.
-- `ros_ws/src/omniseer_experiments/` owns local perception run-bundle recording.
-- `ros_ws/src/bringup/` owns sim and real launch composition.
-- `robot_diag_control_cpp` owns the robot-side external gateway boundary.
-- `robot_diag_control` owns host-side operator tools.
-- `firmware/` owns MCU behavior and micro-ROS IO.
-- `docs/` owns current-state specifications and operational guidance.
+- [vision/](https://github.com/jburo1/omniseer/tree/master/vision) owns the native camera-to-detection runtime and detailed telemetry.
+- [ros_ws/src/omniseer_vision_bridge/](https://github.com/jburo1/omniseer/tree/master/ros_ws/src/omniseer_vision_bridge) owns the native-to-ROS adapter.
+- [ros_ws/src/omniseer_experiments/](https://github.com/jburo1/omniseer/tree/master/ros_ws/src/omniseer_experiments) owns local perception run-bundle recording.
+- [ros_ws/src/bringup/](https://github.com/jburo1/omniseer/tree/master/ros_ws/src/bringup) owns sim and real launch composition.
+- [robot_diag_control_cpp](https://github.com/jburo1/omniseer/tree/master/ros_ws/src/robot_diag_control_cpp) owns the robot-side external gateway boundary.
+- [robot_diag_control](https://github.com/jburo1/omniseer/tree/master/ros_ws/src/robot_diag_control) owns host-side operator tools.
+- [firmware/](https://github.com/jburo1/omniseer/tree/master/firmware) owns MCU behavior and micro-ROS IO.
+- [docs/](https://github.com/jburo1/omniseer/tree/master/docs) owns current-state specifications and operational guidance.
 
 ## Related Documentation
 

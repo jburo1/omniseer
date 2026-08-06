@@ -147,13 +147,7 @@ failure, the autonomy node stops commanding motion, completes terminal logging
 and capture handling, and exits cleanly; real launch then shuts down so the
 recorder can finalize the run bundle without an operator Stop Run.
 
-The autonomy behavior performs a bounded in-place visual scan for a configured
-target class, acquires a stable detection, centers the target
-horizontally using yaw, and uses small bounded forward or reverse motion to bring
-the target's bounding-box area into the configured framing range. Forward motion
-is blocked when the proximity range crosses the configured safety threshold. This
-is bounded visual target acquisition and framing, not navigation-based object
-search, global exploration, mapping, or semantic planning.
+The bounded autonomy run type is summarized in [System Architecture](../architecture/overview.md). It performs an in-place visual target-acquisition and framing loop for a configured class, records `autonomy.jsonl`, and stops once it reaches a terminal success or failure state.
 
 The node publishes `TwistStamped` commands to `/cmd_vel_autonomy`, relies on
 `twist_mux` arbitration, and records terminal state into the bundle for the HTML

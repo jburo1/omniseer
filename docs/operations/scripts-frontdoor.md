@@ -318,7 +318,8 @@ Options:
 
 The command writes `classes.txt`, starts
 `omniseer_autonomy/target_centering_node`, records through the real-run
-recording path, and forwards launch arguments after `--`.
+recording path, and forwards launch arguments after `--`. The bounded behavior is
+summarized in [System Architecture](../architecture/overview.md).
 
 ```bash
 scripts/omni run autonomy --classes chair,backpack,bottle --run-id autonomy_chair_001 -- start_vision:=false
