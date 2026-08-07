@@ -10,11 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://jburo1.github.io/omniseer/verification/ci-cd/">
+        <link rel="canonical" href="https://jburo1.github.io/omniseer/firmware/overview/">
       
       
-        <link rel="prev" href="../../gateway/preview-streaming/">
+        <link rel="prev" href="../../robot-runtime/ros-packages/">
       
+      
+        <link rel="next" href="../../perception/vision-pipeline/">
       
       
         
@@ -25,7 +27,7 @@
     
     
       
-        <title>CI/CD Overview - Omniseer</title>
+        <title>Firmware & Robot I/O - Omniseer</title>
       
     
     
@@ -65,13 +67,13 @@
   
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Omniseer">
-  <meta property="og:title" content="CI/CD Overview - Omniseer">
+  <meta property="og:title" content="Firmware &amp; Robot I/O - Omniseer">
   <meta property="og:description" content="Edge-to-cloud ROS 2 robot for open-vocabulary perception and reproducible edge-AI experiments">
-  <meta property="og:url" content="https://jburo1.github.io/omniseer/verification/ci-cd/">
+  <meta property="og:url" content="https://jburo1.github.io/omniseer/firmware/overview/">
   <meta property="og:image" content="https://jburo1.github.io/omniseer/assets/brand/social-preview.png">
   <meta property="og:image:type" content="image/png">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="CI/CD Overview - Omniseer">
+  <meta name="twitter:title" content="Firmware &amp; Robot I/O - Omniseer">
   <meta name="twitter:description" content="Edge-to-cloud ROS 2 robot for open-vocabulary perception and reproducible edge-AI experiments">
   <meta name="twitter:image" content="https://jburo1.github.io/omniseer/assets/brand/social-preview.png">
 
@@ -92,7 +94,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#cicd-overview" class="md-skip">
+        <a href="#firmware-robot-io" class="md-skip">
           Skip to content
         </a>
       
@@ -127,7 +129,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              CI/CD Overview
+              Firmware & Robot I/O
             
           </span>
         </div>
@@ -459,7 +461,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../evidence/" class="md-nav__link">
+      <a href="../../verification/evidence/" class="md-nav__link">
         
   
   
@@ -629,18 +631,20 @@
       
   
   
+    
   
   
+  
     
     
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
           <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
@@ -661,7 +665,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
@@ -704,10 +708,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../firmware/overview/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Firmware & Robot I/O
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -723,6 +754,125 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#purpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Purpose
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#system-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        System Boundary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#micro-ros-interface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        micro-ROS Interface
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#firmware-responsibilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Firmware Responsibilities
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ros-interface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ROS Interface
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#firmware-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Firmware Structure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#build-flash" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Build &amp; Flash
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#failure-and-safety-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Failure and Safety Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verification-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verification Boundary
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -879,20 +1029,18 @@
       
   
   
-    
   
   
-  
     
     
     
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
           
           <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
@@ -913,7 +1061,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
@@ -928,37 +1076,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    CI/CD Overview
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../verification/ci-cd/" class="md-nav__link">
         
   
   
@@ -974,164 +1095,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#current-automation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Current Automation
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#ci" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ci
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="ci">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#lint" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        lint
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#python-tests" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        python-tests
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#ros" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ros
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#vision-host" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        vision-host
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#runtime" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        runtime
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#firmware" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        firmware
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#docs" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        docs
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#robot-runtime-releases" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Robot Runtime Releases
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#local-equivalents" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Local Equivalents
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#verification-boundary" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Verification Boundary
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1171,10 +1134,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#current-automation" class="md-nav__link">
+  <a href="#purpose" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current Automation
+        Purpose
       
     </span>
   </a>
@@ -1182,71 +1145,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#ci" class="md-nav__link">
+  <a href="#system-boundary" class="md-nav__link">
     <span class="md-ellipsis">
       
-        ci
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="ci">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#lint" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        lint
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#python-tests" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        python-tests
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#ros" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ros
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#vision-host" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        vision-host
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#runtime" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        runtime
+        System Boundary
       
     </span>
   </a>
@@ -1254,10 +1156,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#firmware" class="md-nav__link">
+  <a href="#micro-ros-interface" class="md-nav__link">
     <span class="md-ellipsis">
       
-        firmware
+        micro-ROS Interface
       
     </span>
   </a>
@@ -1265,10 +1167,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#docs" class="md-nav__link">
+  <a href="#firmware-responsibilities" class="md-nav__link">
     <span class="md-ellipsis">
       
-        docs
+        Firmware Responsibilities
       
     </span>
   </a>
@@ -1276,10 +1178,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#robot-runtime-releases" class="md-nav__link">
+  <a href="#ros-interface" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Robot Runtime Releases
+        ROS Interface
       
     </span>
   </a>
@@ -1287,10 +1189,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#local-equivalents" class="md-nav__link">
+  <a href="#firmware-structure" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Local Equivalents
+        Firmware Structure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#build-flash" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Build &amp; Flash
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#failure-and-safety-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Failure and Safety Behavior
       
     </span>
   </a>
@@ -1328,185 +1252,145 @@
   
 
 
-<h1 id="cicd-overview">CI/CD Overview<a class="headerlink" href="#cicd-overview" title="Permanent link">&para;</a></h1>
-<p>This page documents the automation currently implemented in Omniseer, when it
-runs, and what it does not prove.</p>
-<h2 id="current-automation">Current Automation<a class="headerlink" href="#current-automation" title="Permanent link">&para;</a></h2>
-<p>GitHub Actions is split into four small workflows with built-in path filters:</p>
+<h1 id="firmware-robot-io">Firmware &amp; Robot I/O<a class="headerlink" href="#firmware-robot-io" title="Permanent link">&para;</a></h1>
+<h2 id="purpose">Purpose<a class="headerlink" href="#purpose" title="Permanent link">&para;</a></h2>
+<p>The Teensy 4.1 runs the low-level firmware that turns normalized motion commands
+into mecanum wheel targets and reads the robot-connected motor encoders, IMU,
+ultrasonic range sensor, and battery voltage. It owns the periodic hardware-I/O
+work, wheel mapping, and the local response to stale commands.</p>
+<p>The ROCK 5B+ runs ROS 2 bringup, command arbitration, odometry conversion,
+perception, autonomy, and operator tooling. It does not directly drive motor or
+sensor hardware. This boundary keeps hardware timing and failure handling close to
+the devices while presenting ROS interfaces to the higher-level runtime. See
+<a href="../../robot-runtime/ros-packages/">ROS Packages and Sim/Real Boundary</a> for the
+shared simulation and real-hardware contracts.</p>
+<h2 id="system-boundary">System Boundary<a class="headerlink" href="#system-boundary" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>flowchart LR
+  rock[ROCK 5B+ / ROS 2] --&gt; agent[micro-ROS agent]
+  agent --&gt;|USB serial, 115200 baud| teensy[Teensy 4.1]
+  teensy --&gt; motors[Motor driver, mecanum motors, and encoders]
+  teensy --&gt; imu[BNO055 IMU]
+  teensy --&gt; sonar[HC-SR04 ultrasonic range sensor]
+</code></pre></div>
+<h2 id="micro-ros-interface">micro-ROS Interface<a class="headerlink" href="#micro-ros-interface" title="Permanent link">&para;</a></h2>
+<p><code>real_io.launch.py</code> runs <code>micro_ros_agent</code> on the ROCK 5B+ after a Teensy-device
+preflight. By default it opens the configured Teensy USB serial device at 115200
+baud. The firmware configures the PlatformIO micro-ROS transport as serial and
+uses the Teensy's <code>Serial</code> connection as its custom transport.</p>
+<p>The Teensy creates the <code>omniseer_teensy</code> micro-ROS node in ROS domain 42. The
+agent bridges its subscription and publishers into the ROS 2 graph: a stamped
+motion command reaches the firmware executor, and firmware telemetry is
+published back through the agent. Firmware time-syncs with the agent during
+initialization and periodically resynchronizes timestamps.</p>
+<p>If initialization cannot ping the agent, the firmware retries once per second
+and blinks the built-in LED. After connection, a dropped serial DTR signal, a
+failed agent ping, or an executor error tears down the micro-ROS entities, sets
+the motion command to zero, and returns to the retry loop. This is a local
+communication-loss response; it is not a substitute for physical safety
+validation.</p>
+<h2 id="firmware-responsibilities">Firmware Responsibilities<a class="headerlink" href="#firmware-responsibilities" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Convert <code>TwistStamped</code> planar velocity commands into mecanum wheel speeds and
+  send bounded speed values to the I2C motor driver.</li>
+<li>Read and publish four motor-driver encoder counts and battery voltage.</li>
+<li>Acquire BNO055 orientation, angular velocity, and linear acceleration.</li>
+<li>Trigger, acquire, and publish HC-SR04 ultrasonic range measurements.</li>
+<li>Run motor output at 100 Hz, the micro-ROS executor at 200 Hz, encoder and IMU
+  telemetry at 50 Hz, sonar work at 20 Hz, and battery telemetry at 1 Hz.</li>
+</ul>
+<h2 id="ros-interface">ROS Interface<a class="headerlink" href="#ros-interface" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Workflow</th>
-<th>Triggered by</th>
+<th>Topic</th>
+<th>Direction</th>
 <th>Purpose</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>ci</code></td>
-<td><code>ros_ws/**</code>, <code>vision/**</code>, <code>tests/**</code>, <code>scripts/**</code>, <code>pyproject.toml</code>, <code>pytest.ini</code></td>
-<td>Normal portable software CI</td>
+<td><code>/mecanum_drive_controller/reference</code> (<code>geometry_msgs/msg/TwistStamped</code>)</td>
+<td>ROS 2 → Teensy</td>
+<td>Motion command. The firmware uses <code>linear.x</code>, <code>linear.y</code>, and <code>angular.z</code> for mecanum control.</td>
 </tr>
 <tr>
-<td><code>runtime</code></td>
-<td><code>docker/runtime/**</code>, runtime scripts, <code>pyproject.toml</code>, <code>uv.lock</code>, ROS package manifests, or manual dispatch</td>
-<td>Portable runtime container validation</td>
+<td><code>/encoder_counts</code> (<code>omniseer_msgs/msg/WheelEncoderCounts</code>)</td>
+<td>Teensy → ROS 2</td>
+<td>Timestamped front-left, front-right, rear-left, and rear-right encoder counts; the ROS adapter derives wheel odometry.</td>
 </tr>
 <tr>
-<td><code>firmware</code></td>
-<td><code>firmware/**</code>, <code>uros_ws/**</code></td>
-<td>Compile-only firmware check</td>
+<td><code>/imu</code> (<code>sensor_msgs/msg/Imu</code>)</td>
+<td>Teensy → ROS 2</td>
+<td>BNO055 orientation, angular velocity, and linear acceleration, with frame ID <code>imu_link</code>.</td>
 </tr>
 <tr>
-<td><code>docs</code></td>
-<td><code>docs/**</code>, <code>mkdocs.yml</code>, <code>scripts/docs/**</code></td>
-<td>Strict documentation build and <code>gh-pages</code> publish</td>
+<td><code>/range</code> (<code>sensor_msgs/msg/Range</code>)</td>
+<td>Teensy → ROS 2</td>
+<td>HC-SR04 ultrasonic range, with frame ID <code>sonar_link</code>.</td>
+</tr>
+<tr>
+<td><code>/battery</code> (<code>sensor_msgs/msg/BatteryState</code>)</td>
+<td>Teensy → ROS 2</td>
+<td>Motor-driver voltage reading, marked present and LiPo; percentage is unspecified.</td>
+</tr>
+<tr>
+<td><code>/micro_ros/debug</code> (<code>std_msgs/msg/String</code>)</td>
+<td>Teensy → ROS 2</td>
+<td>Firmware micro-ROS diagnostic messages when the publisher is available.</td>
 </tr>
 </tbody>
 </table>
-<p>Each workflow runs only for pushes to <code>master</code>, except <code>runtime</code>, which also
-supports manual dispatch before a robot release. Concurrency control cancels older
-runs of the same workflow when a newer commit is pushed.</p>
-<p>Documentation publishing is the only automatic deployment flow. GitHub Actions
-does not publish runtime containers, firmware releases, robot images, experiment
-bundles, or cloud dashboards.</p>
-<h2 id="ci"><code>ci</code><a class="headerlink" href="#ci" title="Permanent link">&para;</a></h2>
-<p>The normal software workflow runs when portable software paths change. It does not
-contain custom path-classification logic.</p>
-<h3 id="lint"><code>lint</code><a class="headerlink" href="#lint" title="Permanent link">&para;</a></h3>
-<p>Runs on Ubuntu 24.04:</p>
+<p><code>/encoder_counts</code> is a real-only input to the ROS odometry adapter, rather than
+the common odometry interface. The resulting <code>/mecanum_drive_controller/odometry</code>
+contract is documented on the <a href="../../robot-runtime/ros-packages/">ROS boundary page</a>.</p>
+<h2 id="firmware-structure">Firmware Structure<a class="headerlink" href="#firmware-structure" title="Permanent link">&para;</a></h2>
 <ul>
-<li>existing pre-commit hooks over tracked files, including Ruff and Ruff format</li>
-<li>Shellcheck over tracked shell scripts</li>
+<li><code>src/main.cpp</code> starts peripherals and micro-ROS, registers the cooperative
+  scheduler, and resets the MCU if the main loop stops being serviced for more
+  than five seconds.</li>
+<li><code>src/omniseer_tasks.cpp</code> wires scheduled motor, executor, encoder, IMU, sonar,
+  and battery work to the hardware and micro-ROS objects.</li>
+<li><code>src/micro_ros_node.cpp</code> owns serial transport, node setup, command reception,
+  telemetry publication, timestamp synchronization, and reconnect cleanup.</li>
+<li><code>src/hw_motor_driver.cpp</code> owns the I2C motor-driver protocol, wheel-channel
+  mapping, encoder reads, battery reads, and speed limits.</li>
+<li><code>lib/omniseer_core/</code> contains mecanum kinematics, command-timeout handling,
+  BNO055 acquisition, and HC-SR04 acquisition.</li>
 </ul>
-<h3 id="python-tests"><code>python-tests</code><a class="headerlink" href="#python-tests" title="Permanent link">&para;</a></h3>
-<p>Runs root repository tests with:</p>
-<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>-q<span class="w"> </span>tests
-</code></pre></div>
-<p>This covers script front doors, runtime workflow helpers, and other host-side unit
-tests that are not part of the ROS workspace test graph.</p>
-<h3 id="ros"><code>ros</code><a class="headerlink" href="#ros" title="Permanent link">&para;</a></h3>
-<p>Runs inside the ROS Kilted desktop-full image:</p>
-<ul>
-<li>installs dependencies from the selected portable package manifests with rosdep</li>
-<li>builds the portable ROS package set</li>
-<li>excludes <code>rf2o_laser_odometry</code>, <code>yolo_bringup</code>, and <code>yolo_ros</code></li>
-<li>runs package, unit, XML, CMake, and C++ lint tests</li>
-<li>runs the headless Gazebo bringup smoke test</li>
-</ul>
-<p>The smoke test launches CI-safe geometry and positively verifies that these
-boundary topics appear with expected types:</p>
-<table>
-<thead>
-<tr>
-<th>Topic</th>
-<th>Type</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>/clock</code></td>
-<td><code>rosgraph_msgs/msg/Clock</code></td>
-</tr>
-<tr>
-<td><code>/imu</code></td>
-<td><code>sensor_msgs/msg/Imu</code></td>
-</tr>
-<tr>
-<td><code>/scan</code></td>
-<td><code>sensor_msgs/msg/LaserScan</code></td>
-</tr>
-<tr>
-<td><code>/mecanum_drive_controller/odometry</code></td>
-<td><code>nav_msgs/msg/Odometry</code></td>
-</tr>
-</tbody>
-</table>
-<p>Normal simulation can publish <code>/range</code> through the scan-to-range adapter when
-<code>start_range_adapter</code> is enabled; that topic is not currently asserted by the CI
-smoke test.</p>
-<p>The RKNN/RGA <code>omniseer_vision_bridge</code> is not compiled in GitHub Actions. That
-hardware-specific bridge is compiled and verified by the ROCK 5B+
-<code>robot-runtime</code> release process.</p>
-<h3 id="vision-host"><code>vision-host</code><a class="headerlink" href="#vision-host" title="Permanent link">&para;</a></h3>
-<p>Runs directly on Ubuntu 24.04 and builds/runs portable native vision tests:</p>
-<ul>
-<li><code>image_buffer_pool_test</code></li>
-<li><code>jsonl_telemetry_test</code></li>
-<li><code>rolling_telemetry_test</code></li>
-</ul>
-<p>RKNN, RGA, V4L2 camera, post-processing, text-embedding, and full pipeline tests
-stay outside this lane because they require target SDKs, devices, or hardware.</p>
-<h2 id="runtime"><code>runtime</code><a class="headerlink" href="#runtime" title="Permanent link">&para;</a></h2>
-<p>The runtime workflow validates portable container packaging. It runs on
-packaging/dependency changes and can be manually dispatched before a robot
-release.</p>
-<p>It builds the hardware-independent runtime image:</p>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>build<span class="w"> </span>runtime-container<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--target<span class="w"> </span>portable-runtime<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--image<span class="w"> </span>omniseer/robot-runtime:portable-ci
-</code></pre></div>
-<p>The job checks that the image can source the ROS workspace and resolve expected
-packages, then starts the image with camera, RKNN/RGA, LiDAR, Teensy,
-boundary-topic waits, and pre-launch cleanup disabled. The smoke step requires a
-positive ROS node readiness signal from <code>/twist_mux</code> before it passes; timeout
-alone is not accepted.</p>
-<p>This workflow does not authenticate to GHCR and does not push an image.</p>
-<h2 id="firmware"><code>firmware</code><a class="headerlink" href="#firmware" title="Permanent link">&para;</a></h2>
-<p>The firmware workflow performs a compile-only Teensy 4.1 build through:</p>
+<h2 id="build-flash">Build &amp; Flash<a class="headerlink" href="#build-flash" title="Permanent link">&para;</a></h2>
+<p>Build the default <code>teensy41</code> PlatformIO environment from the repository root:</p>
 <div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>build<span class="w"> </span>firmware
 </code></pre></div>
-<p>It does not flash a board or validate motor, sensor, transport, timing, or
-watchdog behavior.</p>
-<h2 id="docs"><code>docs</code><a class="headerlink" href="#docs" title="Permanent link">&para;</a></h2>
-<p>The docs workflow installs the MkDocs dependencies and runs:</p>
-<div class="highlight"><pre><span></span><code>mkdocs<span class="w"> </span>build<span class="w"> </span>--strict
+<p>To build and upload to a connected Teensy using the repository's headless helper:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>flash<span class="w"> </span>teensy
 </code></pre></div>
-<p>This catches navigation, Markdown, and plugin-level documentation build failures.
-After the strict build passes, it deploys the site to <code>gh-pages</code> with:</p>
-<div class="highlight"><pre><span></span><code>mkdocs<span class="w"> </span>gh-deploy<span class="w"> </span>--clean<span class="w"> </span>--force<span class="w"> </span>--verbose
-</code></pre></div>
-<h2 id="robot-runtime-releases">Robot Runtime Releases<a class="headerlink" href="#robot-runtime-releases" title="Permanent link">&para;</a></h2>
-<p>Hardware-specific <code>robot-runtime</code> images are built and published manually on the
-ROCK 5B+:</p>
-<div class="highlight"><pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>&lt;passed-master-commit&gt;
-scripts/omni<span class="w"> </span>runtime<span class="w"> </span>build
-scripts/omni<span class="w"> </span>runtime<span class="w"> </span>verify
-scripts/omni<span class="w"> </span>runtime<span class="w"> </span>verify<span class="w"> </span>--stage<span class="w"> </span>full
-scripts/omni<span class="w"> </span>runtime<span class="w"> </span>push
-</code></pre></div>
-<p><code>runtime push</code> requires a clean working tree, passed full verification, a matching
-verified image ID, and matching verification/current git commits. It promotes the
-verified local image to <code>robot-verified-g&lt;full-commit-sha&gt;</code>, optional
-<code>--release-tag &lt;tag&gt;</code>, and moving <code>robot-verified</code>, then records release metadata
-under <code>.omniseer/runtime/</code>.</p>
-<h2 id="local-equivalents">Local Equivalents<a class="headerlink" href="#local-equivalents" title="Permanent link">&para;</a></h2>
-<p>Use focused repository commands for local checks:</p>
-<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>-q<span class="w"> </span>tests
-scripts/omni<span class="w"> </span>build<span class="w"> </span>ros
-scripts/omni<span class="w"> </span><span class="nb">test</span><span class="w"> </span>ros
-scripts/omni<span class="w"> </span><span class="nb">test</span><span class="w"> </span>smoke-sim
-scripts/omni<span class="w"> </span><span class="nb">test</span><span class="w"> </span>vision
-scripts/omni<span class="w"> </span>build<span class="w"> </span>runtime-container<span class="w"> </span>--target<span class="w"> </span>portable-runtime<span class="w"> </span>--image<span class="w"> </span>omniseer/robot-runtime:portable
-scripts/omni<span class="w"> </span>build<span class="w"> </span>firmware
-scripts/omni<span class="w"> </span>docs<span class="w"> </span>build
-</code></pre></div>
+<p>The wrapper resolves PlatformIO dependencies, applies the repository's
+micro-ROS PlatformIO compatibility patch, and uploads with the configured
+<code>teensy-cli</code> protocol. The flash helper can fall back to <code>teensy_loader_cli</code>
+when the PlatformIO upload fails and the built HEX file is available.</p>
+<h2 id="failure-and-safety-behavior">Failure and Safety Behavior<a class="headerlink" href="#failure-and-safety-behavior" title="Permanent link">&para;</a></h2>
+<p>The motion controller substitutes a zero velocity command when no command has
+arrived for one second; the 100 Hz motor task then writes the resulting zero
+wheel targets. Firmware initialization stops the wheels after the motor driver
+is detected and configured. If that I2C device is not detected, initialization
+does not continue and the built-in LED signals the fault.</p>
+<p>On the implemented micro-ROS disconnect paths, firmware zeroes the commanded
+motion before reconnecting. The watchdog resets an MCU whose main loop has not
+been serviced for more than five seconds. Sensor read or publication failures
+are handled by their individual paths: an encoder-read failure is logged and not
+published, an invalid sonar reading is not published, and a failed battery read
+is reported as a zero-volt value. This page does not infer additional hardware
+interlocks from those behaviors.</p>
 <h2 id="verification-boundary">Verification Boundary<a class="headerlink" href="#verification-boundary" title="Permanent link">&para;</a></h2>
-<p>CI currently does not guarantee:</p>
-<ul>
-<li>camera capture or stable device enumeration</li>
-<li>RGA or RKNN execution</li>
-<li>detector accuracy or target-hardware latency</li>
-<li>real LiDAR, IMU, sonar, encoder, battery, or motor behavior</li>
-<li>firmware flashing or micro-ROS transport behavior</li>
-<li>long-duration simulation or robot soak behavior</li>
-<li>target-hardware experiment recording</li>
-<li>RKNN/RGA <code>omniseer_vision_bridge</code> compilation on generic runners</li>
-<li>hardware-specific runtime image build or release publishing</li>
-</ul>
-<p>Those checks require the ROCK 5B+, target SDKs, devices, or dedicated
-hardware-in-the-loop infrastructure. CI evidence should not be presented as
-real-hardware evidence.</p>
+<p><code>scripts/omni build firmware</code> is the local compile check, and the CI firmware
+workflow runs the same compile-only Teensy 4.1 build. The repository has a
+PlatformIO test directory but no implemented firmware tests there. Compilation
+does not verify flashing, motor direction, encoder correctness, IMU or sonar
+behavior, battery readings, USB serial micro-ROS communication, or observed
+stale-command and disconnect stopping behavior. Those require the target
+Teensy, motor hardware, sensors, ROCK 5B+, and an observed hardware run.</p>
+<p>For the full software evidence boundary, see <a href="../../verification/ci-cd/">CI/CD Overview</a>
+and <a href="../../verification/evidence/">Verification Evidence</a>.</p>
 
 
 
@@ -1527,7 +1411,7 @@ real-hardware evidence.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 6, 2026 04:01:06 UTC">August 6, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 7, 2026 05:45:55 UTC">August 7, 2026</span>
   </span>
 
     
