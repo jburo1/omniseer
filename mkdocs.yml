@@ -44,6 +44,7 @@ nav:
     - Robot Runtime Container: robot-runtime/robot-runtime-container.md
   - Subsystems:
     - ROS Packages and Sim/Real Boundary: robot-runtime/ros-packages.md
+    - Firmware & Robot I/O: firmware/overview.md
     - Vision Pipeline: perception/vision-pipeline.md
     - Vision Telemetry: perception/vision-telemetry.md
     - Robot Gateway: gateway/robot-gateway.md
