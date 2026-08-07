@@ -836,7 +836,7 @@ class RunReportTests(unittest.TestCase):
             overwrite_summary = write_run_report(run_dir, overwrite=True)
             self.assertEqual(first_summary.output_path, overwrite_summary.output_path)
 
-    def test_report_includes_videos_only_when_present(self) -> None:
+    def test_report_includes_only_detection_overlay_video(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             run_dir = Path(tmp) / "demo_001"
             _write_completed_bundle(run_dir)
@@ -844,19 +844,19 @@ class RunReportTests(unittest.TestCase):
             video_dir.mkdir()
             (video_dir / "source.ts").write_bytes(b"recorded")
             waiting = write_run_report(run_dir)
-            self.assertIn("video processing has not yet been run", waiting.output_path.read_text(encoding="utf-8"))
+            self.assertNotIn('<details id="video"', waiting.output_path.read_text(encoding="utf-8"))
 
             (video_dir / "source.mp4").write_bytes(b"mp4")
             (video_dir / "overlay.mp4").write_bytes(b"mp4")
             complete = write_run_report(run_dir, overwrite=True)
             output = complete.output_path.read_text(encoding="utf-8")
-            self.assertIn("video/source.mp4", output)
             self.assertIn("video/overlay.mp4", output)
             self.assertIn('<details id="video" open>', output)
-            self.assertLess(output.index("Detection overlay"), output.index("Source video"))
+            self.assertNotIn("video/source.mp4", output)
+            self.assertNotIn("Source video", output)
             self.assertIn("map video time to recorded robot time", output)
 
-    def test_outcome_failure_and_configured_metric_threshold_are_prominent(self) -> None:
+    def test_outcome_failure_is_prominent_without_configured_metric_status(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             run_dir = Path(tmp) / "demo_001"
             writer = RunBundleWriter(
@@ -888,7 +888,9 @@ class RunReportTests(unittest.TestCase):
             self.assertIn("Terminal state: <strong>failed</strong>", output)
             self.assertIn("<th>Failure reason</th><td>target_timeout</td>", output)
             self.assertIn("<th>Final target area</th><td>0.12</td>", output)
-            self.assertIn("fail (threshold 20.00)", output)
+            self.assertIn("<th>Metric</th><th>Value</th>", output)
+            self.assertNotIn("Configured status", output)
+            self.assertNotIn("threshold 20.00", output)
 
     def test_report_cli_outputs_summary(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

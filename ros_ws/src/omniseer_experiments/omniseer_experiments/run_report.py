@@ -204,7 +204,7 @@ def _render_report(
             evidence_items=evidence_items,
         ),
         _video_section(inspection.path, inspection.path / "report"),
-        _key_metrics_section(inspection=inspection, manifest=manifest, perf=perf, pipeline=pipeline, autonomy=autonomy),
+        _key_metrics_section(inspection=inspection, perf=perf, pipeline=pipeline, autonomy=autonomy),
         _evidence_summary_section(
             inspection=inspection,
             manifest=manifest,
@@ -305,40 +305,32 @@ def _experiment_outcome_section(
 def _key_metrics_section(
     *,
     inspection: RunInspection,
-    manifest: dict[str, Any],
     perf: Sequence[dict[str, Any]],
     pipeline: Sequence[dict[str, Any]],
     autonomy: Sequence[dict[str, Any]],
 ) -> _ReportSection:
     metrics = (
-        ("Consumer FPS p95", _p95_field(perf, "consumer_fps"), "fps", "min_consumer_fps"),
-        ("Inference p95", _p95_field(perf, "last_infer_ms"), "ms", "max_inference_p95_ms"),
-        ("Consumer total p95", _p95_field(perf, "last_consumer_total_ms"), "ms", "max_consumer_total_p95_ms"),
-        ("Source age p95", _p95_field(pipeline, "source_age_end_ns"), "ns", "max_source_age_p95_ns"),
+        ("Consumer FPS p95", _p95_field(perf, "consumer_fps"), "fps"),
+        ("Inference p95", _p95_field(perf, "last_infer_ms"), "ms"),
+        ("Consumer total p95", _p95_field(perf, "last_consumer_total_ms"), "ms"),
+        ("Source age p95", _p95_field(pipeline, "source_age_end_ns"), "ns"),
         (
             "Target-loss count",
             float(max((_as_int(record.get("target_loss_count")) or 0 for record in autonomy), default=0)),
             "count",
-            "max_target_loss_count",
         ),
-        ("Dropped records", float(sum(inspection.dropped_records.values())), "count", "max_dropped_records"),
-        ("Fatal vision errors", float(inspection.errors.get("capture_fatal", 0)), "count", "max_fatal_vision_errors"),
+        ("Dropped records", float(sum(inspection.dropped_records.values())), "count"),
+        ("Fatal vision errors", float(inspection.errors.get("capture_fatal", 0)), "count"),
     )
     rows = []
-    for label, value, unit, threshold_name in metrics:
+    for label, value, unit in metrics:
         if value is None:
             continue
         if unit == "ns":
             value /= 1_000_000.0
             unit = "ms"
-            threshold = _experiment_parameter_number(manifest, threshold_name)
-            if threshold is not None:
-                threshold /= 1_000_000.0
-        else:
-            threshold = _experiment_parameter_number(manifest, threshold_name)
-        status = _metric_status(value, threshold, lower_is_better=threshold_name.startswith("min_"))
-        rows.append([label, f"{_format_float(value)} {unit}", status])
-    body = _table(["Metric", "Value", "Configured status"], rows) if rows else "<p>No key metrics recorded.</p>"
+        rows.append([label, f"{_format_float(value)} {unit}"])
+    body = _table(["Metric", "Value"], rows) if rows else "<p>No key metrics recorded.</p>"
     return _section("Key Metrics", body, open_by_default=True)
 
 
@@ -410,26 +402,16 @@ def _artifacts_section(run_dir: Path, report_dir: Path) -> str:
 
 
 def _video_section(run_dir: Path, report_dir: Path) -> str:
-    source_ts = run_dir / "video" / "source.ts"
-    source_mp4 = run_dir / "video" / "source.mp4"
     overlay_mp4 = run_dir / "video" / "overlay.mp4"
-    if not source_ts.is_file() and not source_mp4.is_file() and not overlay_mp4.is_file():
+    if not overlay_mp4.is_file():
         return ""
-    if not source_mp4.is_file() and not overlay_mp4.is_file():
-        return _section(
-            "Video",
-            "<p>Source video was recorded; video processing has not yet been run.</p>",
-            open_by_default=True,
-        )
     parts = ["<p>Detection overlays map video time to recorded robot time before matching detections.</p>"]
-    for label, path in (("Detection overlay", overlay_mp4), ("Source video", source_mp4)):
-        if path.is_file():
-            href = _relative_href(report_dir, path)
-            parts.append(
-                f'<h3>{_esc(label)}</h3><video controls preload="metadata" '
-                f'src="{_attr(href)}"></video><p><a href="{_attr(href)}">'
-                f"Open {_esc(label).lower()}</a></p>"
-            )
+    href = _relative_href(report_dir, overlay_mp4)
+    parts.append(
+        f'<h3>Detection overlay</h3><video controls preload="metadata" '
+        f'src="{_attr(href)}"></video><p><a href="{_attr(href)}">'
+        "Open detection overlay</a></p>"
+    )
     return _section("Video", "".join(parts), open_by_default=True)
 
 
@@ -1275,18 +1257,6 @@ def _capture_outcome(record: dict[str, Any] | None, evidence_items: Sequence[_Ev
         if isinstance(success, bool):
             return "yes" if success else "no"
     return "yes" if evidence_items else "-"
-
-
-def _experiment_parameter_number(manifest: dict[str, Any], name: str) -> float | None:
-    return _as_float(_manifest_nested_dict(manifest, "experiment", "parameters").get(name))
-
-
-def _metric_status(value: float, threshold: float | None, *, lower_is_better: bool) -> str:
-    if threshold is None:
-        return "-"
-    passed = value >= threshold if lower_is_better else value <= threshold
-    label = "pass" if passed else "fail"
-    return f"{label} (threshold {_format_float(threshold)})"
 
 
 def _format_mapping(value: dict[str, Any]) -> str:
