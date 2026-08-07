@@ -39,8 +39,9 @@ namespace robot_diag_control_cpp
   public:
     explicit PreviewProcessManager(
         GatewayStateStore& store, PreviewCommandFactory command_factory = {},
-        std::chrono::milliseconds stop_timeout    = std::chrono::milliseconds(1500),
-        std::chrono::milliseconds startup_timeout = std::chrono::milliseconds(300));
+        std::chrono::milliseconds stop_timeout      = std::chrono::milliseconds(1500),
+        std::chrono::milliseconds startup_timeout   = std::chrono::milliseconds(300),
+        std::string               video_timing_path = {});
     ~PreviewProcessManager();
 
     PreviewControlResult set_enabled(bool                          enabled,
@@ -59,6 +60,7 @@ namespace robot_diag_control_cpp
     PreviewCommandFactory     _command_factory{};
     std::chrono::milliseconds _stop_timeout{1500};
     std::chrono::milliseconds _startup_timeout{300};
+    std::string               _video_timing_path{};
     std::mutex                _mutex{};
     pid_t                     _child_pid{-1};
   };

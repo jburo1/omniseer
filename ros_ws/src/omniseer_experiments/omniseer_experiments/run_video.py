@@ -5,7 +5,8 @@ from __future__ import annotations
 import argparse
 import json
 import subprocess
-from bisect import bisect_right
+import warnings
+from bisect import bisect_left
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -13,7 +14,7 @@ from typing import Any
 
 from omniseer_experiments.run_inspection import _parse_generated_manifest
 
-MAX_DETECTION_AGE_SEC = 0.5
+MAX_DETECTION_TIME_DELTA_SEC = 0.10
 TARGET_COLOR = (0, 255, 0)
 NON_TARGET_COLOR = (0, 0, 255)
 
@@ -54,7 +55,36 @@ def read_timed_detections(path: Path, *, target_class: str = "") -> list[TimedDe
         records.append(
             TimedDetections(timestamp, tuple(item for item in detections if isinstance(item, dict)), target_class)
         )
-    return records
+    return sorted(records, key=lambda item: item.timestamp_sec)
+
+
+def load_video_start_time(timing_path: Path) -> float | None:
+    """Load the robot realtime timestamp corresponding to video time zero."""
+    try:
+        timing = json.loads(timing_path.read_text(encoding="utf-8"))
+    except (FileNotFoundError, OSError, json.JSONDecodeError):
+        return None
+    if not isinstance(timing, dict):
+        return None
+    timestamp_ns = timing.get("video_start_time_ns")
+    if isinstance(timestamp_ns, bool) or not isinstance(timestamp_ns, int) or timestamp_ns < 0:
+        return None
+    return timestamp_ns / 1_000_000_000
+
+
+def video_relative_to_robot_time(video_start_time_sec: float, video_relative_time_sec: float) -> float:
+    return video_start_time_sec + video_relative_time_sec
+
+
+def frame_robot_time(
+    video_relative_time_sec: float,
+    records: Sequence[TimedDetections],
+    *,
+    video_start_time_sec: float | None = None,
+) -> float:
+    if video_start_time_sec is not None:
+        return video_relative_to_robot_time(video_start_time_sec, video_relative_time_sec)
+    return records[0].timestamp_sec + video_relative_time_sec if records else video_relative_time_sec
 
 
 def _target_class_from_manifest(manifest_path: Path) -> str:
@@ -82,17 +112,21 @@ def _target_class_from_manifest(manifest_path: Path) -> str:
 def nearest_detections(
     records: Sequence[TimedDetections],
     *,
-    video_time_sec: float,
-    max_age_sec: float = MAX_DETECTION_AGE_SEC,
+    frame_robot_time_sec: float,
+    max_time_delta_sec: float = MAX_DETECTION_TIME_DELTA_SEC,
 ) -> TimedDetections | None:
     if not records:
         return None
-    first_timestamp = records[0].timestamp_sec
-    timestamps = [item.timestamp_sec - first_timestamp for item in records]
-    index = bisect_right(timestamps, video_time_sec) - 1
-    if index < 0 or video_time_sec - timestamps[index] > max_age_sec:
+    timestamps = [item.timestamp_sec for item in records]
+    insertion_index = bisect_left(timestamps, frame_robot_time_sec)
+    candidate_indices = (insertion_index - 1, insertion_index)
+    valid_indices = [index for index in candidate_indices if 0 <= index < len(records)]
+    if not valid_indices:
         return None
-    return records[index]
+    nearest_index = min(valid_indices, key=lambda index: abs(timestamps[index] - frame_robot_time_sec))
+    if abs(timestamps[nearest_index] - frame_robot_time_sec) > max_time_delta_sec:
+        return None
+    return records[nearest_index]
 
 
 def remux_source_video(source_ts: Path, source_mp4: Path, *, runner: Callable[..., Any] = subprocess.run) -> None:
@@ -147,6 +181,13 @@ def build_run_video(
         raise FileNotFoundError(f"detections not found: {detections_path}")
 
     video_dir.mkdir(exist_ok=True)
+    video_start_time_sec = load_video_start_time(video_dir / "timing.json")
+    if video_start_time_sec is None:
+        warnings.warn(
+            "video/timing.json is missing or invalid; using legacy first-detection-relative overlay timing",
+            RuntimeWarning,
+            stacklevel=2,
+        )
     source_mp4 = video_dir / "source.mp4"
     remux_source_video(source_ts, source_mp4, runner=runner)
     render_overlay(
@@ -156,6 +197,7 @@ def build_run_video(
             detections_path,
             target_class=_target_class_from_manifest(run_dir / "manifest.yaml"),
         ),
+        video_start_time_sec=video_start_time_sec,
         runner=runner,
         cv2_module=cv2_module,
     )
@@ -166,12 +208,19 @@ def render_overlay(
     overlay_mp4: Path,
     records: Sequence[TimedDetections],
     *,
+    video_start_time_sec: float | None = None,
     runner: Callable[..., Any] = subprocess.run,
     cv2_module: Any | None = None,
 ) -> None:
     rendered_overlay_mp4 = overlay_mp4.with_name(f"{overlay_mp4.stem}.rendered.mp4")
     try:
-        render_overlay_frames(source_mp4, rendered_overlay_mp4, records, cv2_module=cv2_module)
+        render_overlay_frames(
+            source_mp4,
+            rendered_overlay_mp4,
+            records,
+            video_start_time_sec=video_start_time_sec,
+            cv2_module=cv2_module,
+        )
         transcode_overlay_video(rendered_overlay_mp4, overlay_mp4, runner=runner)
     finally:
         rendered_overlay_mp4.unlink(missing_ok=True)
@@ -182,6 +231,7 @@ def render_overlay_frames(
     rendered_overlay_mp4: Path,
     records: Sequence[TimedDetections],
     *,
+    video_start_time_sec: float | None = None,
     max_output_width: int = 640,
     max_output_fps: float = 30.0,
     cv2_module: Any | None = None,
@@ -215,7 +265,13 @@ def render_overlay_frames(
             if frame_index % frame_step:
                 frame_index += 1
                 continue
-            match = nearest_detections(records, video_time_sec=capture.get(cv2.CAP_PROP_POS_MSEC) / 1000.0)
+            video_relative_time_sec = capture.get(cv2.CAP_PROP_POS_MSEC) / 1000.0
+            frame_robot_time_sec = frame_robot_time(
+                video_relative_time_sec,
+                records,
+                video_start_time_sec=video_start_time_sec,
+            )
+            match = nearest_detections(records, frame_robot_time_sec=frame_robot_time_sec)
             if match is not None:
                 _draw_detections(cv2, frame, match.detections, target_class=match.target_class)
             if (output_width, output_height) != (width, height):

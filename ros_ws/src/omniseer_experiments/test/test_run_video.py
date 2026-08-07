@@ -8,9 +8,12 @@ from omniseer_experiments.run_video import (
     TimedDetections,
     _draw_detections,
     _target_class_from_manifest,
+    frame_robot_time,
+    load_video_start_time,
     nearest_detections,
     remux_source_video,
     transcode_overlay_video,
+    video_relative_to_robot_time,
 )
 
 
@@ -105,12 +108,42 @@ class RunVideoTests(unittest.TestCase):
 
             self.assertEqual(_target_class_from_manifest(manifest_path), "chair")
 
-    def test_timestamp_matching_uses_only_current_or_prior_detection(self):
-        records = [TimedDetections(100.0, ()), TimedDetections(101.0, ())]
+    def test_loads_video_start_time(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            timing_path = Path(temp_dir) / "timing.json"
+            timing_path.write_text('{"video_start_time_ns": 1786061000123456789}', encoding="utf-8")
 
-        self.assertIsNone(nearest_detections(records, video_time_sec=3.0, max_age_sec=0.5))
-        self.assertIsNone(nearest_detections(records, video_time_sec=0.75, max_age_sec=0.5))
-        self.assertEqual(nearest_detections(records, video_time_sec=1.1, max_age_sec=0.5), records[1])
+            self.assertEqual(load_video_start_time(timing_path), 1786061000.1234567)
+
+    def test_converts_video_relative_time_to_robot_realtime(self):
+        self.assertEqual(video_relative_to_robot_time(1786061000.0, 0.125), 1786061000.125)
+
+    def test_timestamp_matching_selects_nearest_detection_before_frame(self):
+        records = [TimedDetections(100.02, ()), TimedDetections(100.09, ())]
+
+        self.assertEqual(nearest_detections(records, frame_robot_time_sec=100.05), records[0])
+
+    def test_timestamp_matching_selects_nearest_detection_after_frame(self):
+        records = [TimedDetections(100.02, ()), TimedDetections(100.09, ())]
+
+        self.assertEqual(nearest_detections(records, frame_robot_time_sec=100.06), records[1])
+
+    def test_timestamp_matching_rejects_stale_detections(self):
+        records = [TimedDetections(100.0, ())]
+
+        self.assertIsNone(nearest_detections(records, frame_robot_time_sec=100.101))
+
+    def test_missing_timing_metadata_uses_legacy_first_detection_relative_time(self):
+        records = [TimedDetections(100.0, ()), TimedDetections(100.08, ())]
+        video_start_time_sec = load_video_start_time(Path("missing-timing.json"))
+        frame_robot_time_sec = frame_robot_time(
+            0.07,
+            records,
+            video_start_time_sec=video_start_time_sec,
+        )
+
+        self.assertIsNone(video_start_time_sec)
+        self.assertEqual(nearest_detections(records, frame_robot_time_sec=frame_robot_time_sec), records[1])
 
 
 if __name__ == "__main__":

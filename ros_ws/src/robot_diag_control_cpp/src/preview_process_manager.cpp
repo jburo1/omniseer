@@ -21,14 +21,42 @@ namespace robot_diag_control_cpp
     {
       return store.set_preview_disabled(profile, last_error);
     }
+
+    bool write_video_timing(const std::string& path)
+    {
+      if (path.empty())
+      {
+        return true;
+      }
+
+      timespec timestamp{};
+      if (clock_gettime(CLOCK_REALTIME, &timestamp) != 0)
+      {
+        return false;
+      }
+      const auto timestamp_ns = static_cast<long long>(timestamp.tv_sec) * 1'000'000'000LL +
+                                static_cast<long long>(timestamp.tv_nsec);
+      const std::string content =
+          "{\n  \"video_start_time_ns\": " + std::to_string(timestamp_ns) + "\n}\n";
+      const int fd = open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+      if (fd < 0)
+      {
+        return false;
+      }
+      const auto written      = write(fd, content.data(), content.size());
+      const bool complete     = written == static_cast<ssize_t>(content.size());
+      const int  close_result = close(fd);
+      return complete && close_result == 0;
+    }
   } // namespace
 
   PreviewProcessManager::PreviewProcessManager(GatewayStateStore&        store,
                                                PreviewCommandFactory     command_factory,
                                                std::chrono::milliseconds stop_timeout,
-                                               std::chrono::milliseconds startup_timeout)
+                                               std::chrono::milliseconds startup_timeout,
+                                               std::string               video_timing_path)
       : _store(store), _command_factory(std::move(command_factory)), _stop_timeout(stop_timeout),
-        _startup_timeout(startup_timeout)
+        _startup_timeout(startup_timeout), _video_timing_path(std::move(video_timing_path))
   {
   }
 
@@ -153,6 +181,14 @@ namespace robot_diag_control_cpp
       if (devnull_fd > STDERR_FILENO)
       {
         close(devnull_fd);
+      }
+
+      if (!write_video_timing(_video_timing_path))
+      {
+        const int  saved_errno = errno;
+        const auto written     = write(exec_error_pipe[1], &saved_errno, sizeof(saved_errno));
+        (void) written;
+        _exit(127);
       }
 
       std::vector<std::string> argv_storage;

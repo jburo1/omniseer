@@ -1,3 +1,4 @@
+#include <filesystem>
 #include <memory>
 #include <stdexcept>
 
@@ -112,9 +113,13 @@ namespace robot_diag_control_cpp
             preview_record_path,
         });
       }
-      _preview_manager =
-          std::make_unique<PreviewProcessManager>(*_state_store,
-                                                  std::move(preview_command_factory));
+      _preview_manager = std::make_unique<PreviewProcessManager>(
+          *_state_store, std::move(preview_command_factory), std::chrono::milliseconds(1500),
+          std::chrono::milliseconds(300),
+          preview_record_path.empty()
+              ? ""
+              : (std::filesystem::path(preview_record_path).parent_path() / "timing.json")
+                    .string());
       if (!preview_record_path.empty())
       {
         const auto result = _preview_manager->set_enabled(true, PreviewProfile::Balanced);
