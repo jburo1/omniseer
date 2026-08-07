@@ -35,6 +35,8 @@ nav:
   - Project:
     - System Architecture: architecture/overview.md
     - Edge Perception and Offboard Review: perception/edge-to-cloud.md
+    - Hardware:
+      - Bill of Materials: hardware/bill-of-materials.md
     - Verification Evidence: verification/evidence.md
   - Operate:
     - Scripts Front Door: operations/scripts-frontdoor.md

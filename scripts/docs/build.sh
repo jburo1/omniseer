@@ -13,8 +13,8 @@ if [[ "${1:-}" =~ ^(-h|--help|help)$ ]]; then
 Usage:
   scripts/omni docs build
 
-Checks diagram assets, builds MkDocs with strict mode enabled, and validates built
-diagram links.
+Exports the hardware BOM, checks diagram assets, builds MkDocs with strict mode
+enabled, and validates built diagram links.
 EOF
   exit 0
 fi
@@ -22,6 +22,9 @@ fi
 omni_require_command mkdocs
 repo_root="$(omni_repo_root)"
 cd "${repo_root}"
+omni_info "Exporting hardware BOM for public documentation"
+python3 "${script_dir}/../export_bom.py"
+
 omni_info "Checking diagram SVG assets before docs build"
 "${script_dir}/diagrams.sh" --check
 
