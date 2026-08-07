@@ -6,7 +6,13 @@ robot's power distribution and physical embedded interfaces.
 
 ## Electrical Schematic
 
-<object data="../assets/hardware/robot_electrical.svg" type="image/svg+xml" aria-label="Omniseer electrical schematic" width="100%"></object>
+<object
+  data="../assets/hardware/robot_electrical.svg"
+  type="image/svg+xml"
+  aria-label="Omniseer electrical schematic"
+  width="100%"
+  style="display: block; width: 100%; aspect-ratio: 297.0022 / 210.0072;">
+</object>
 
 [Editable KiCad source](https://github.com/jburo1/omniseer/blob/master/assets/robot_electrical.kicad_sch) · [Exported SVG in the repository](https://github.com/jburo1/omniseer/blob/master/assets/images/robot_electrical.svg)
 
