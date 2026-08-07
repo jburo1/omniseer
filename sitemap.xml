@@ -2,58 +2,62 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://jburo1.github.io/omniseer/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-07</lastmod>
     </url>
     <url>
          <loc>https://jburo1.github.io/omniseer/architecture/overview/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-07</lastmod>
     </url>
     <url>
          <loc>https://jburo1.github.io/omniseer/gateway/gateway-api/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-07</lastmod>
     </url>
     <url>
          <loc>https://jburo1.github.io/omniseer/gateway/preview-streaming/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-07</lastmod>
     </url>
     <url>
          <loc>https://jburo1.github.io/omniseer/gateway/robot-gateway/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-07</lastmod>
+    </url>
+    <url>
+         <loc>https://jburo1.github.io/omniseer/hardware/bill-of-materials/</loc>
+         <lastmod>2026-08-07</lastmod>
     </url>
     <url>
          <loc>https://jburo1.github.io/omniseer/operations/operator-run-workflow/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-07</lastmod>
     </url>
     <url>
          <loc>https://jburo1.github.io/omniseer/operations/scripts-frontdoor/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-07</lastmod>
     </url>
     <url>
          <loc>https://jburo1.github.io/omniseer/perception/edge-to-cloud/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-07</lastmod>
     </url>
     <url>
          <loc>https://jburo1.github.io/omniseer/perception/vision-pipeline/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-07</lastmod>
     </url>
     <url>
          <loc>https://jburo1.github.io/omniseer/perception/vision-telemetry/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-07</lastmod>
     </url>
     <url>
          <loc>https://jburo1.github.io/omniseer/robot-runtime/robot-runtime-container/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-07</lastmod>
     </url>
     <url>
          <loc>https://jburo1.github.io/omniseer/robot-runtime/ros-packages/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-07</lastmod>
     </url>
     <url>
          <loc>https://jburo1.github.io/omniseer/verification/ci-cd/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-07</lastmod>
     </url>
     <url>
          <loc>https://jburo1.github.io/omniseer/verification/evidence/</loc>
-         <lastmod>2026-08-06</lastmod>
+         <lastmod>2026-08-07</lastmod>
     </url>
 </urlset>
