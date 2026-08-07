@@ -3,6 +3,7 @@ import io
 import json
 import tempfile
 import unittest
+from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -612,6 +613,8 @@ class RunReportTests(unittest.TestCase):
             self.assertIn("<th>Failure reason</th><td>-</td>", output)
             self.assertIn("<th>Time to first detection</th><td>0.4s</td>", output)
             self.assertIn("<th>Time to centered</th><td>1.2s</td>", output)
+            self.assertIn("<th>Time to framed/success</th><td>1.6s</td>", output)
+            self.assertNotIn("Time to centered/framed", output)
             self.assertIn("<th>Final error</th><td>0.02</td>", output)
             self.assertIn("<th>Final confidence</th><td>0.87</td>", output)
             self.assertIn("<th>Target-loss count</th><td>1</td>", output)
@@ -629,6 +632,44 @@ class RunReportTests(unittest.TestCase):
             self.assertIn("<th>Target class</th><td>backpack</td>", output)
             self.assertIn("<th>Final target area</th><td>-</td>", output)
             self.assertIn("Consumer FPS p95", output)
+
+    def test_report_uses_one_time_extent_for_duration_events_and_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "demo_001"
+            _write_completed_bundle(run_dir)
+            _write_autonomy(run_dir)
+            autonomy_path = run_dir / "autonomy.jsonl"
+            autonomy_records = [json.loads(line) for line in autonomy_path.read_text(encoding="utf-8").splitlines()]
+            autonomy_records[-1]["time_sec"] = 70.0
+            autonomy_path.write_text(
+                "\n".join(json.dumps(record) for record in autonomy_records) + "\n", encoding="utf-8"
+            )
+            _write_evidence(run_dir)
+            evidence_path = run_dir / "evidence" / "evidence.jsonl"
+            evidence_record = json.loads(evidence_path.read_text(encoding="utf-8"))
+            evidence_record["capture_ts_real_ns"] = int(STARTED_AT.timestamp() * 1_000_000_000) + 2_000_000_000
+            evidence_path.write_text(json.dumps(evidence_record) + "\n", encoding="utf-8")
+
+            output = write_run_report(run_dir).output_path.read_text(encoding="utf-8")
+
+            self.assertIn("<strong>Duration</strong>70.0s", output)
+            self.assertIn("<th>Run duration</th><td>70.0s</td>", output)
+            self.assertIn("<th>Time to framed/success</th><td>70.0s</td>", output)
+            self.assertIn("t+2.0s", output)
+            self.assertIn("Frames superseded before inference", output)
+            self.assertIn("Normal latest-frame behavior; not an error", output)
+
+    def test_report_marks_missing_runtime_provenance_unavailable(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "demo_001"
+            config = replace(_config(run_dir), container_image_ref="", container_image_digest="")
+            writer = RunBundleWriter(config, started_at=STARTED_AT)
+            writer.finalize(ended_at=ENDED_AT)
+
+            output = write_run_report(run_dir).output_path.read_text(encoding="utf-8")
+
+            self.assertIn("<th>Runtime image ref</th><td>Unavailable (missing)</td>", output)
+            self.assertIn("<th>Runtime image digest</th><td>Unavailable (missing)</td>", output)
 
     def test_report_flags_missing_autonomy_jsonl_for_autonomy_launch(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -819,7 +860,8 @@ class RunReportTests(unittest.TestCase):
             output = write_run_report(run_dir).output_path.read_text(encoding="utf-8")
 
             self.assertIn("<h2>CPU Consumers</h2>", output)
-            self.assertIn("Share of sampled process CPU", output)
+            self.assertIn("CPU share (sampled processes)", output)
+            self.assertIn("not total machine utilization", output)
             self.assertLess(output.index("vision_node"), output.index("python3 — python3 recorder.py"))
             self.assertIn("71.4%", output)
             self.assertIn("approximately 1 Hz", output)

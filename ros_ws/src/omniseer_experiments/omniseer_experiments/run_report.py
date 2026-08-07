@@ -39,6 +39,7 @@ class _EvidenceItem:
     sequence: str
     capture_reason: str
     relative_time: str
+    relative_time_sec: float | None
     image_href: str
     source_href: str
     labels: tuple[str, ...]
@@ -94,7 +95,12 @@ def write_run_report(run_dir: Path, *, overwrite: bool = False) -> ReportSummary
     pipeline = _read_jsonl(run_dir / "pipeline_telemetry.jsonl", required=False)
     autonomy = _read_jsonl(run_dir / "autonomy.jsonl", required=False)
     evidence = _read_jsonl(run_dir / "evidence" / "evidence.jsonl", required=False)
-    evidence_items = _evidence_items(run_dir, report_dir, evidence.records)
+    evidence_items = _evidence_items(
+        run_dir,
+        report_dir,
+        evidence.records,
+        experiment_start_ns=_manifest_start_ns(manifest),
+    )
 
     issues = [
         *[f"{issue.code}: {issue.message}" for issue in inspection.issues],
@@ -195,6 +201,16 @@ def _render_report(
 ) -> str:
     title = f"Omniseer Run Report: {inspection.run_id}"
     experiment_start_ns = _manifest_start_ns(manifest)
+    experiment_duration_sec = _experiment_duration_sec(
+        inspection.duration_sec,
+        experiment_start_ns=experiment_start_ns,
+        autonomy=autonomy,
+        detections=detections,
+        perf=perf,
+        system=system,
+        pipeline=pipeline,
+        evidence_items=evidence_items,
+    )
     sections = [
         _experiment_outcome_section(
             inspection=inspection,
@@ -202,6 +218,7 @@ def _render_report(
             autonomy=autonomy,
             perf=perf,
             evidence_items=evidence_items,
+            duration_sec=experiment_duration_sec,
         ),
         _video_section(inspection.path, inspection.path / "report"),
         _key_metrics_section(inspection=inspection, perf=perf, pipeline=pipeline, autonomy=autonomy),
@@ -212,8 +229,9 @@ def _render_report(
             perf=perf,
             evidence_items=evidence_items,
             issues=issues,
+            duration_sec=experiment_duration_sec,
         ),
-        _summary_section(inspection, manifest=manifest),
+        _summary_section(inspection, manifest=manifest, duration_sec=experiment_duration_sec),
         _health_section(inspection, evidence_items=evidence_items, pipeline=pipeline, issues=issues),
         _autonomy_section(autonomy),
         _detections_section(
@@ -224,8 +242,8 @@ def _render_report(
         _perf_section("Performance", perf, experiment_start_ns=experiment_start_ns),
         _pipeline_section(pipeline, experiment_start_ns=experiment_start_ns),
         _system_section(system, manifest=manifest, experiment_start_ns=experiment_start_ns),
-        _cpu_consumers_section(system, duration_sec=inspection.duration_sec),
-        _errors_section(inspection),
+        _cpu_consumers_section(system, duration_sec=experiment_duration_sec),
+        _errors_section(inspection, perf=perf),
         _configuration_section(manifest),
         _evidence_section(evidence_items),
         _artifacts_section(inspection.path, inspection.path / "report"),
@@ -236,6 +254,7 @@ def _render_report(
         _table_of_contents(
             rendered_sections,
             inspection=inspection,
+            duration_sec=experiment_duration_sec,
             evidence_items=evidence_items,
             issues=issues,
         )
@@ -268,26 +287,32 @@ def _experiment_outcome_section(
     autonomy: Sequence[dict[str, Any]],
     perf: Sequence[dict[str, Any]],
     evidence_items: Sequence[_EvidenceItem],
+    duration_sec: float,
 ) -> _ReportSection:
     terminal = _last_matching_record(autonomy, lambda record: record.get("state") in {"success", "failed"})
     terminal_state = _display(terminal.get("state") if terminal else "")
     status_class = f" outcome-{terminal_state}" if terminal_state in {"success", "failed"} else ""
     first_detection = _first_matching_record(autonomy, lambda record: record.get("event") == "first_detection")
     first_centered = _first_matching_record(autonomy, lambda record: record.get("event") == "centered_first_frame")
+    first_success = _first_matching_record(autonomy, lambda record: record.get("event") == "succeeded")
     capture = _last_matching_record(autonomy, lambda record: record.get("event") == "capture_result")
     target_class = _last_autonomy_target_class(autonomy) or _launch_arg_value(manifest, "autonomy_target_class")
     rows = [
         ("Failure reason", _display(terminal.get("reason") if terminal_state == "failed" and terminal else "")),
         ("Target class", _display(target_class)),
         ("Capture occurred", _capture_outcome(capture, evidence_items)),
-        ("Run duration", _format_duration(inspection.duration_sec)),
+        ("Run duration", _format_duration(duration_sec)),
         (
             "Time to first detection",
             _format_duration(_as_float(first_detection.get("time_sec")) if first_detection else None),
         ),
         (
-            "Time to centered/framed",
+            "Time to centered",
             _format_duration(_as_float(first_centered.get("time_sec")) if first_centered else None),
+        ),
+        (
+            "Time to framed/success",
+            _format_duration(_as_float(first_success.get("time_sec")) if first_success else None),
         ),
         ("Final centering error", _format_optional_float(_last_numeric_field(autonomy, "normalized_error"))),
         ("Final target area", _format_optional_float(_last_numeric_field(autonomy, "bbox_area_ratio"))),
@@ -309,6 +334,7 @@ def _key_metrics_section(
     pipeline: Sequence[dict[str, Any]],
     autonomy: Sequence[dict[str, Any]],
 ) -> _ReportSection:
+    superseded_frames = _superseded_frames(perf)
     metrics = (
         ("Consumer FPS p95", _p95_field(perf, "consumer_fps"), "fps"),
         ("Inference p95", _p95_field(perf, "last_infer_ms"), "ms"),
@@ -320,6 +346,7 @@ def _key_metrics_section(
             "count",
         ),
         ("Dropped records", float(sum(inspection.dropped_records.values())), "count"),
+        ("Frames superseded before inference", float(superseded_frames), "count"),
         ("Fatal vision errors", float(inspection.errors.get("capture_fatal", 0)), "count"),
     )
     rows = []
@@ -342,6 +369,7 @@ def _evidence_summary_section(
     perf: Sequence[dict[str, Any]],
     evidence_items: Sequence[_EvidenceItem],
     issues: Sequence[str],
+    duration_sec: float,
 ) -> str:
     total_detections = sum(1 for _ in _iter_detections(detections))
     observed_classes = _join_or_dash(tuple(sorted(inspection.detections_by_class)))
@@ -352,7 +380,7 @@ def _evidence_summary_section(
     hardware = _manifest_string(manifest, "sbc")
 
     claims = [
-        f"Run state: {inspection.state}; duration {_format_duration(inspection.duration_sec)}; issues {len(issues)}.",
+        f"Run state: {inspection.state}; duration {_format_duration(duration_sec)}; issues {len(issues)}.",
         f"Target: {_display(hardware)} running {_display(detector)} with configured classes: {configured_classes}.",
         f"Observed {total_detections} detections across {len(detections)} detection messages; "
         f"classes observed: {observed_classes}.",
@@ -365,7 +393,7 @@ def _evidence_summary_section(
     return _section("Evidence Summary", f'<ul class="summary-list">{items}</ul>', open_by_default=True)
 
 
-def _summary_section(inspection: RunInspection, *, manifest: dict[str, Any]) -> str:
+def _summary_section(inspection: RunInspection, *, manifest: dict[str, Any], duration_sec: float) -> str:
     rows = [
         ("Run ID", inspection.run_id),
         ("Experiment config", _display(_manifest_nested_string(manifest, "experiment", "config"))),
@@ -373,7 +401,7 @@ def _summary_section(inspection: RunInspection, *, manifest: dict[str, Any]) -> 
         ("Path", str(inspection.path)),
         ("Started", _display(inspection.started_at)),
         ("Ended", _display(inspection.ended_at)),
-        ("Duration", _format_duration(inspection.duration_sec)),
+        ("Duration", _format_duration(duration_sec)),
         ("Configured classes", _join_or_dash(inspection.configured_classes)),
     ]
     return _section("Run Summary", _key_value_table(rows), open_by_default=True)
@@ -427,8 +455,8 @@ def _configuration_section(manifest: dict[str, Any]) -> str:
         ("Launch profile", _manifest_nested_string(manifest, "launch", "profile")),
         ("Launch mode", _manifest_nested_string(manifest, "launch", "mode")),
         ("Launch args", _join_or_dash(_display_launch_args(launch_args, manifest=manifest))),
-        ("Runtime image ref", _manifest_nested_string(manifest, "container", "image_ref")),
-        ("Runtime image digest", _manifest_nested_string(manifest, "container", "image_digest")),
+        ("Runtime image ref", _provenance_value(_manifest_nested_string(manifest, "container", "image_ref"))),
+        ("Runtime image digest", _provenance_value(_manifest_nested_string(manifest, "container", "image_digest"))),
         ("Experiment config", _manifest_nested_string(manifest, "experiment", "config")),
         ("Experiment parameters", _format_mapping(experiment_parameters)),
         ("Detector", _manifest_model_value(manifest, "detector")),
@@ -471,6 +499,7 @@ def _autonomy_section(records: Sequence[dict[str, Any]]) -> str:
     terminal = _last_matching_record(records, lambda record: record.get("state") in {"success", "failed"})
     first_detection = _first_matching_record(records, lambda record: record.get("event") == "first_detection")
     first_centered = _first_matching_record(records, lambda record: record.get("event") == "centered_first_frame")
+    first_success = _first_matching_record(records, lambda record: record.get("event") == "succeeded")
     final_error = _last_numeric_field(records, "normalized_error")
     final_confidence = _last_target_confidence(records)
     target_loss_count = max((_as_int(record.get("target_loss_count")) or 0 for record in records), default=0)
@@ -487,6 +516,10 @@ def _autonomy_section(records: Sequence[dict[str, Any]]) -> str:
             _format_duration(_as_float(first_detection.get("time_sec")) if first_detection else None),
         ),
         ("Time to centered", _format_duration(_as_float(first_centered.get("time_sec")) if first_centered else None)),
+        (
+            "Time to framed/success",
+            _format_duration(_as_float(first_success.get("time_sec")) if first_success else None),
+        ),
         ("Final error", _format_optional_float(final_error)),
         ("Final confidence", _format_optional_float(final_confidence)),
         ("Target-loss count", str(target_loss_count)),
@@ -923,8 +956,7 @@ def _cpu_consumers_section(records: Sequence[dict[str, Any]], *, duration_sec: f
 
     rows = []
     for item in sorted(consumers.values(), key=lambda value: value["cpu_seconds"], reverse=True)[:10]:
-        command = item["cmdline"]
-        process = item["name"] if not command else f"{item['name']} — {command}"
+        process = _process_description(item["name"], item["cmdline"])
         cpu_seconds = item["cpu_seconds"]
         mean_cores = cpu_seconds / duration_sec if duration_sec > 0.0 else 0.0
         share = cpu_seconds * 100.0 / total_cpu_seconds if total_cpu_seconds > 0.0 else 0.0
@@ -940,8 +972,10 @@ def _cpu_consumers_section(records: Sequence[dict[str, Any]], *, duration_sec: f
         )
     return _section(
         "CPU Consumers",
-        _table(["Process", "PID", "CPU-seconds", "Mean cores", "Max cores", "Share of sampled process CPU"], rows)
-        + "<p>Process CPU is sampled at approximately 1 Hz; very short-lived processes may be missed.</p>",
+        _table(["Process", "PID", "CPU-seconds", "Mean cores", "Max cores", "CPU share (sampled processes)"], rows)
+        + "<p>Mean CPU cores is CPU time divided by experiment duration. CPU share is each process's share "
+        "of sampled process CPU, not total machine utilization. Process CPU is sampled at approximately 1 Hz; "
+        "very short-lived processes may be missed.</p>",
     )
 
 
@@ -1080,7 +1114,7 @@ def _battery_summary_table(records: Sequence[dict[str, Any]]) -> str:
     return "<h3>Battery Summary</h3>" + body
 
 
-def _errors_section(inspection: RunInspection) -> str:
+def _errors_section(inspection: RunInspection, *, perf: Sequence[dict[str, Any]]) -> str:
     error_rows = [[name, str(count)] for name, count in sorted(inspection.errors.items())]
     drop_rows = [[name, str(count)] for name, count in sorted(inspection.dropped_records.items())]
     has_errors_or_drops = any(count > 0 for count in inspection.errors.values()) or any(
@@ -1095,6 +1129,13 @@ def _errors_section(inspection: RunInspection) -> str:
         + _table(["Error Counter", "Count"], error_rows)
         + "<h3>Dropped Records</h3>"
         + _table(["Stream", "Count"], drop_rows)
+        + "<h3>Intentional Latest-Frame Supersession</h3>"
+        + _key_value_table(
+            [
+                ("Frames superseded before inference", str(_superseded_frames(perf))),
+                ("Interpretation", "Normal latest-frame behavior; not an error or dropped telemetry record."),
+            ]
+        )
     )
     return _section("Errors And Drops", body, open_by_default=has_errors_or_drops)
 
@@ -1135,17 +1176,25 @@ def _issues_section(issues: Sequence[str]) -> str:
     return _section("Issues", f"<ul>{items}</ul>", open_by_default=True)
 
 
-def _evidence_items(run_dir: Path, report_dir: Path, records: Sequence[dict[str, Any]]) -> tuple[_EvidenceItem, ...]:
+def _evidence_items(
+    run_dir: Path,
+    report_dir: Path,
+    records: Sequence[dict[str, Any]],
+    *,
+    experiment_start_ns: int | None,
+) -> tuple[_EvidenceItem, ...]:
     items: list[_EvidenceItem] = []
     valid_records = [record for record in records if record.get("artifact_type") == "sampled_frame"]
-    base_capture_ts = min(
-        (
-            value
-            for value in (_as_float(record.get("capture_ts_real_ns")) for record in valid_records)
-            if value is not None
-        ),
-        default=None,
-    )
+    base_capture_ts = experiment_start_ns
+    if base_capture_ts is None:
+        base_capture_ts = min(
+            (
+                value
+                for value in (_as_float(record.get("capture_ts_real_ns")) for record in valid_records)
+                if value is not None
+            ),
+            default=None,
+        )
     for record in records:
         if record.get("artifact_type") != "sampled_frame":
             continue
@@ -1169,6 +1218,7 @@ def _evidence_items(run_dir: Path, report_dir: Path, records: Sequence[dict[str,
                 sequence=str(record.get("sequence", "-")),
                 capture_reason=str(record.get("capture_reason", "-")),
                 relative_time=_relative_time(capture_ts, base_capture_ts),
+                relative_time_sec=_relative_seconds(capture_ts, base_capture_ts),
                 image_href=_relative_href(report_dir, display_path),
                 source_href=_relative_href(report_dir, source_path),
                 labels=_detection_labels(record.get("detections")),
@@ -1235,6 +1285,68 @@ def _manifest_start_ns(manifest: dict[str, Any]) -> int | None:
     return int(started_at.timestamp() * 1_000_000_000)
 
 
+def _experiment_duration_sec(
+    recorded_duration_sec: float,
+    *,
+    experiment_start_ns: int | None,
+    autonomy: Sequence[dict[str, Any]],
+    detections: Sequence[dict[str, Any]],
+    perf: Sequence[dict[str, Any]],
+    system: Sequence[dict[str, Any]],
+    pipeline: Sequence[dict[str, Any]],
+    evidence_items: Sequence[_EvidenceItem],
+) -> float:
+    """Use manifest start as report t=0 and include every timestamped report event."""
+
+    candidates = [max(0.0, recorded_duration_sec)]
+    candidates.extend(item.relative_time_sec for item in evidence_items if item.relative_time_sec is not None)
+    candidates.extend(
+        value
+        for value in (_as_float(record.get("time_sec")) for record in autonomy)
+        if value is not None and value >= 0.0
+    )
+    if experiment_start_ns is not None:
+        timestamp_fields = (
+            (detections, ("recv_ts_ns",)),
+            (perf, ("recv_ts_ns",)),
+            (system, ("recv_ts_ns",)),
+            (pipeline, ("event_ts_real_ns", "consumer_start_ts_real_ns", "consumer_end_ts_real_ns")),
+        )
+        for records, fields in timestamp_fields:
+            for record in records:
+                timestamp = _timestamp_from_fields(record, fields)
+                if timestamp is not None and timestamp >= experiment_start_ns:
+                    candidates.append((timestamp - experiment_start_ns) / 1_000_000_000.0)
+    return max(candidates)
+
+
+def _superseded_frames(records: Sequence[dict[str, Any]]) -> int:
+    """Latest-frame producer excess is normal supersession, not a telemetry drop."""
+
+    differences = []
+    for record in records:
+        produced = _as_int(record.get("produced_count"))
+        consumed = _as_int(record.get("consumed_count"))
+        if produced is not None and consumed is not None:
+            differences.append(max(0, produced - consumed))
+    return max(differences, default=0)
+
+
+def _process_description(name: object, cmdline: object) -> str:
+    process_name = name if isinstance(name, str) and name else "unknown"
+    command = cmdline if isinstance(cmdline, str) else ""
+    if not command or command == process_name:
+        return process_name
+    max_command_chars = 120
+    if len(command) > max_command_chars:
+        command = f"{command[: max_command_chars - 1]}…"
+    return f"{process_name} — {command}"
+
+
+def _provenance_value(value: str) -> str:
+    return value if value else "Unavailable (missing)"
+
+
 def _launch_arg_value(manifest: dict[str, Any], name: str) -> str:
     for argument in _manifest_nested_list(manifest, "launch", "args"):
         key, separator, value = argument.partition(":=")
@@ -1294,9 +1406,16 @@ def _top_score(value: object) -> str:
 
 
 def _relative_time(capture_ts_ns: float | None, base_capture_ts_ns: float | None) -> str:
+    seconds = _relative_seconds(capture_ts_ns, base_capture_ts_ns)
+    return _format_duration(seconds)
+
+
+def _relative_seconds(capture_ts_ns: float | None, base_capture_ts_ns: float | None) -> float | None:
     if capture_ts_ns is None or base_capture_ts_ns is None:
-        return "-"
-    return _format_duration(max(0.0, (capture_ts_ns - base_capture_ts_ns) / 1_000_000_000.0))
+        return None
+    if capture_ts_ns < base_capture_ts_ns:
+        return None
+    return (capture_ts_ns - base_capture_ts_ns) / 1_000_000_000.0
 
 
 def _iter_detections(records: Sequence[dict[str, Any]]) -> Iterable[dict[str, Any]]:
@@ -2213,6 +2332,7 @@ def _table_of_contents(
     sections: Sequence[_ReportSection],
     *,
     inspection: RunInspection,
+    duration_sec: float,
     evidence_items: Sequence[_EvidenceItem],
     issues: Sequence[str],
 ) -> str:
@@ -2225,7 +2345,7 @@ def _table_of_contents(
             ("State", inspection.state),
             ("Issues", str(len(issues))),
             ("Evidence", str(len(evidence_items))),
-            ("Duration", _format_duration(inspection.duration_sec)),
+            ("Duration", _format_duration(duration_sec)),
         )
     )
     return (
