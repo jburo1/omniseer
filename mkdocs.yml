@@ -36,6 +36,7 @@ nav:
     - System Architecture: architecture/overview.md
     - Edge Perception and Offboard Review: perception/edge-to-cloud.md
     - Hardware:
+      - Electrical System: hardware/electrical-system.md
       - Bill of Materials: hardware/bill-of-materials.md
     - Verification Evidence: verification/evidence.md
   - Operate:
