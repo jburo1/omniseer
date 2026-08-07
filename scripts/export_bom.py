@@ -60,6 +60,11 @@ def format_cad(value: str | None) -> str:
     return "TBD" if amount is None else f"CAD ${amount:,.2f}"
 
 
+def format_cost(value: str | None) -> str:
+    amount = decimal_value(value)
+    return "TBD" if amount is None else f"{amount:,.2f}"
+
+
 def markdown_cell(value: str) -> str:
     return " ".join(value.replace("|", "\\|").split()) or "—"
 
@@ -99,11 +104,11 @@ def export_markdown(rows: list[list[tuple[str, str | None]]]) -> str:
         "Costs are approximate CAD purchase costs. The downloadable spreadsheet is the "
         "authoritative BOM; this page is generated from it.",
         "",
-        "| Category | Item | Qty | Unit price | Extended cost | Status |",
-        "| --- | --- | ---: | ---: | ---: | --- |",
+        "| Category | Item | Qty | Unit price ($) | Extended cost ($) |",
+        "| --- | --- | ---: | ---: | ---: |",
     ]
     for entry in entries:
-        category, item, quantity, unit_price, extended_cost, _, _, status = entry[:8]
+        category, item, quantity, unit_price, extended_cost, _, _, _ = entry[:8]
         lines.append(
             "| "
             + " | ".join(
@@ -111,9 +116,8 @@ def export_markdown(rows: list[list[tuple[str, str | None]]]) -> str:
                     markdown_cell(category[0]),
                     markdown_cell(item[0]),
                     markdown_cell(quantity[0]),
-                    format_cad(unit_price[1]),
-                    format_cad(extended_cost[1]),
-                    markdown_cell(status[0] or ("Priced" if unit_price[1] else "TBD")),
+                    format_cost(unit_price[1]),
+                    format_cost(extended_cost[1]),
                 )
             )
             + " |"
