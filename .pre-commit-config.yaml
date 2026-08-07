@@ -5,6 +5,7 @@ exclude: |
     log/|
     \.venv/|
     ros_ws/src/omniseer_gz_assets/|
+    assets/images/robot_electrical\.svg$|
     hardware/|
     docs/|
     notes/|
