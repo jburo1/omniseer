@@ -2,32 +2,32 @@
 
 Costs are approximate CAD purchase costs. The downloadable spreadsheet is the authoritative BOM; this page is generated from it.
 
-| Category | Item | Qty | Unit price ($) | Extended cost ($) |
-| --- | --- | ---: | ---: | ---: |
-| Compute | Radxa ROCK 5B+ + accessories | 1 | 300.00 | 300.00 |
-| Compute | WD_BLACK SN850X 1TB NVMe SSD | 1 | 143.00 | 143.00 |
-| Compute | Teensy 4.1 breakout | 1 | 43.00 | 43.00 |
-| Compute | 128GB SD card | 1 | 20.00 | 20.00 |
-| Compute | 65W USB-C PD charger | 1 | 40.00 | 40.00 |
-| Sensors | HC-SR04 ultrasonic sensor | 1 | 5.00 | 5.00 |
-| Sensors | BNO055 breakout | 1 | 10.00 | 10.00 |
-| Sensors | RPLIDAR A1M8 | 1 | 150.00 | 150.00 |
-| Sensors | Radxa Camera 4K | 1 | 35.00 | 35.00 |
-| Mechanical / Power | Hiwonder Large Metal 4WD Mecanum Chassis kit | 1 | 269.00 | 269.00 |
-| Mechanical / Power | 7.4V LiPo battery | 1 | 25.00 | 25.00 |
-| Mechanical / Power | Smart LiPo battery charger | 1 | 70.00 | 70.00 |
-| Mechanical / Power | Custom aluminum parts + labor | 1 | 50.00 | 50.00 |
-| Mechanical / Power | INIU USB-C PD power bank | 1 | 70.00 | 70.00 |
-| Mechanical / Power | LM2596 buck converter | 1 | 5.00 | 5.00 |
-| Wiring / Hardware | Assorted silicone wire | 1 | 10.00 | 10.00 |
-| Wiring / Hardware | Standoffs | 1 | 30.00 | 30.00 |
-| Wiring / Hardware | Fasteners | 1 | 10.00 | 10.00 |
-| Wiring / Hardware | USB cabling | 1 | 10.00 | 10.00 |
-| Wiring / Hardware | Solder + flux | 1 | 20.00 | 20.00 |
-| Wiring / Hardware | XT connector pigtail | 1 | 5.00 | 5.00 |
-| Wiring / Hardware | Terminal blocks | 1 | 5.00 | 5.00 |
-| Wiring / Hardware | In-line fuses + fuse holder assortment | 1 | 20.00 | 20.00 |
-| Wiring / Hardware | Ethernet cable | 1 | 10.00 | 10.00 |
+| Category | Item | Unit price ($) |
+| --- | --- | ---: |
+| Compute | Radxa ROCK 5B+ + accessories | 300.00 |
+| Compute | WD_BLACK SN850X 1TB NVMe SSD | 143.00 |
+| Compute | Teensy 4.1 breakout | 43.00 |
+| Compute | 128GB SD card | 20.00 |
+| Compute | 65W USB-C PD charger | 40.00 |
+| Sensors | HC-SR04 ultrasonic sensor | 5.00 |
+| Sensors | BNO055 breakout | 10.00 |
+| Sensors | RPLIDAR A1M8 | 150.00 |
+| Sensors | Radxa Camera 4K | 35.00 |
+| Mechanical / Power | Hiwonder Large Metal 4WD Mecanum Chassis kit | 269.00 |
+| Mechanical / Power | 7.4V LiPo battery | 25.00 |
+| Mechanical / Power | Smart LiPo battery charger | 70.00 |
+| Mechanical / Power | Custom aluminum parts + labor | 50.00 |
+| Mechanical / Power | INIU USB-C PD power bank | 70.00 |
+| Mechanical / Power | LM2596 buck converter | 5.00 |
+| Wiring / Hardware | Assorted silicone wire | 10.00 |
+| Wiring / Hardware | Standoffs | 30.00 |
+| Wiring / Hardware | Fasteners | 10.00 |
+| Wiring / Hardware | USB cabling | 10.00 |
+| Wiring / Hardware | Solder + flux | 20.00 |
+| Wiring / Hardware | XT connector pigtail | 5.00 |
+| Wiring / Hardware | Terminal blocks | 5.00 |
+| Wiring / Hardware | In-line fuses + fuse holder assortment | 20.00 |
+| Wiring / Hardware | Ethernet cable | 10.00 |
 
 ## Total known hardware cost: CAD $1,355.00
 

@@ -104,20 +104,18 @@ def export_markdown(rows: list[list[tuple[str, str | None]]]) -> str:
         "Costs are approximate CAD purchase costs. The downloadable spreadsheet is the "
         "authoritative BOM; this page is generated from it.",
         "",
-        "| Category | Item | Qty | Unit price ($) | Extended cost ($) |",
-        "| --- | --- | ---: | ---: | ---: |",
+        "| Category | Item | Unit price ($) |",
+        "| --- | --- | ---: |",
     ]
     for entry in entries:
-        category, item, quantity, unit_price, extended_cost, _, _, _ = entry[:8]
+        category, item, _, unit_price, _, _, _, _ = entry[:8]
         lines.append(
             "| "
             + " | ".join(
                 (
                     markdown_cell(category[0]),
                     markdown_cell(item[0]),
-                    markdown_cell(quantity[0]),
                     format_cost(unit_price[1]),
-                    format_cost(extended_cost[1]),
                 )
             )
             + " |"
