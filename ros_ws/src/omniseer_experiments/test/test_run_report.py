@@ -34,6 +34,7 @@ def _config(
     clip_model_path: str = "",
     clip_vocab_path: str = "",
     classes_path: str = "",
+    experiment_parameters: dict[str, object] | None = None,
 ) -> RunBundleConfig:
     return RunBundleConfig(
         run_id="demo_001",
@@ -53,7 +54,7 @@ def _config(
         container_image_ref="ghcr.io/acme/omniseer:robot-v2",
         container_image_digest="ghcr.io/acme/omniseer@sha256:0123456789abcdef",
         experiment_config="runtime-container-full",
-        experiment_parameters={"profile": "operator", "stage": "full"},
+        experiment_parameters=experiment_parameters or {"profile": "operator", "stage": "full"},
     )
 
 
@@ -469,6 +470,10 @@ class RunReportTests(unittest.TestCase):
             self.assertIn('<details id="issues">', output)
             self.assertNotIn('<details id="issues" open>', output)
             self.assertIn("<h2>Run Summary</h2>", output)
+            self.assertIn("<h2>Experiment Outcome</h2>", output)
+            self.assertIn("<h2>Key Metrics</h2>", output)
+            self.assertIn("<h2>Data Coverage</h2>", output)
+            self.assertNotIn("<h2>Health</h2>", output)
             self.assertIn("<th>Experiment config</th><td>runtime-container-full</td>", output)
             self.assertIn("<h2>Run Artifacts</h2>", output)
             self.assertIn('<a href="../manifest.yaml">manifest.yaml</a>', output)
@@ -520,6 +525,7 @@ class RunReportTests(unittest.TestCase):
             self.assertIn("WiFi Signal Over Time", output)
             self.assertIn("Network Link Quality Over Time", output)
             self.assertIn("LiPo Voltage Over Time", output)
+            self.assertIn("seconds since experiment start", output)
             self.assertIn("consumer_fps", output)
             self.assertIn("last_infer_ms", output)
             self.assertIn("../evidence/annotated/frame_1.jpg", output)
@@ -619,6 +625,10 @@ class RunReportTests(unittest.TestCase):
             self.assertIn("Target Loss Events", output)
             self.assertIn("Event Timeline", output)
             self.assertIn("target_lost", output)
+            self.assertIn('class="outcome-banner outcome-success"', output)
+            self.assertIn("<th>Target class</th><td>backpack</td>", output)
+            self.assertIn("<th>Final target area</th><td>-</td>", output)
+            self.assertIn("Consumer FPS p95", output)
 
     def test_report_flags_missing_autonomy_jsonl_for_autonomy_launch(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -799,6 +809,43 @@ class RunReportTests(unittest.TestCase):
             output = complete.output_path.read_text(encoding="utf-8")
             self.assertIn("video/source.mp4", output)
             self.assertIn("video/overlay.mp4", output)
+            self.assertIn('<details id="video" open>', output)
+            self.assertLess(output.index("Detection overlay"), output.index("Source video"))
+            self.assertIn("map video time to recorded robot time", output)
+
+    def test_outcome_failure_and_configured_metric_threshold_are_prominent(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "demo_001"
+            writer = RunBundleWriter(
+                _config(run_dir, experiment_parameters={"min_consumer_fps": 20}),
+                started_at=STARTED_AT,
+            )
+            writer.write_detection_record(_detection_record())
+            writer.write_perf_record(_perf_record())
+            writer.finalize(ended_at=ENDED_AT)
+            (run_dir / "autonomy.jsonl").write_text(
+                json.dumps(
+                    {
+                        "time_sec": 0.5,
+                        "state": "failed",
+                        "event": "failed",
+                        "reason": "target_timeout",
+                        "target_class": "chair",
+                        "target_loss_count": 2,
+                        "bbox_area_ratio": 0.12,
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            output = write_run_report(run_dir).output_path.read_text(encoding="utf-8")
+
+            self.assertIn('class="outcome-banner outcome-failed"', output)
+            self.assertIn("Terminal state: <strong>failed</strong>", output)
+            self.assertIn("<th>Failure reason</th><td>target_timeout</td>", output)
+            self.assertIn("<th>Final target area</th><td>0.12</td>", output)
+            self.assertIn("fail (threshold 20.00)", output)
 
     def test_report_cli_outputs_summary(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
