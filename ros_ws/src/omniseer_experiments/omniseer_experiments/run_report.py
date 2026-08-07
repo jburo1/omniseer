@@ -224,6 +224,7 @@ def _render_report(
         _perf_section("Performance", perf, experiment_start_ns=experiment_start_ns),
         _pipeline_section(pipeline, experiment_start_ns=experiment_start_ns),
         _system_section(system, manifest=manifest, experiment_start_ns=experiment_start_ns),
+        _cpu_consumers_section(system, duration_sec=inspection.duration_sec),
         _errors_section(inspection),
         _configuration_section(manifest),
         _evidence_section(evidence_items),
@@ -896,6 +897,70 @@ def _system_section(
         + _platform_summary_tables(records)
     )
     return _section("System", body)
+
+
+def _cpu_consumers_section(records: Sequence[dict[str, Any]], *, duration_sec: float) -> _ReportSection:
+    """Summarize sampled process CPU time by PID plus Linux start time identity."""
+
+    consumers: dict[tuple[int, int], dict[str, Any]] = {}
+    total_cpu_seconds = 0.0
+    for record in records:
+        samples = record.get("process_cpu")
+        if not isinstance(samples, list):
+            continue
+        for sample in samples:
+            if not isinstance(sample, dict):
+                continue
+            pid = _as_int(sample.get("pid"))
+            start_time_ticks = _as_int(sample.get("start_time_ticks"))
+            cpu_seconds = _as_float(sample.get("cpu_seconds_delta"))
+            cpu_cores = _as_float(sample.get("cpu_cores"))
+            if pid is None or start_time_ticks is None or cpu_seconds is None or cpu_seconds <= 0.0:
+                continue
+            identity = (pid, start_time_ticks)
+            item = consumers.setdefault(
+                identity,
+                {
+                    "pid": pid,
+                    "name": sample.get("name") if isinstance(sample.get("name"), str) else "unknown",
+                    "cmdline": sample.get("cmdline") if isinstance(sample.get("cmdline"), str) else "",
+                    "cpu_seconds": 0.0,
+                    "max_cores": 0.0,
+                },
+            )
+            item["cpu_seconds"] += cpu_seconds
+            item["max_cores"] = max(item["max_cores"], cpu_cores or 0.0)
+            total_cpu_seconds += cpu_seconds
+
+    if not consumers:
+        return _section(
+            "CPU Consumers",
+            "<p>No sampled process CPU consumption was recorded.</p>"
+            "<p>Process CPU is sampled at approximately 1 Hz; very short-lived processes may be missed.</p>",
+        )
+
+    rows = []
+    for item in sorted(consumers.values(), key=lambda value: value["cpu_seconds"], reverse=True)[:10]:
+        command = item["cmdline"]
+        process = item["name"] if not command else f"{item['name']} — {command}"
+        cpu_seconds = item["cpu_seconds"]
+        mean_cores = cpu_seconds / duration_sec if duration_sec > 0.0 else 0.0
+        share = cpu_seconds * 100.0 / total_cpu_seconds if total_cpu_seconds > 0.0 else 0.0
+        rows.append(
+            [
+                process,
+                str(item["pid"]),
+                _format_float(cpu_seconds),
+                _format_float(mean_cores),
+                _format_float(item["max_cores"]),
+                f"{share:.1f}%",
+            ]
+        )
+    return _section(
+        "CPU Consumers",
+        _table(["Process", "PID", "CPU-seconds", "Mean cores", "Max cores", "Share of sampled process CPU"], rows)
+        + "<p>Process CPU is sampled at approximately 1 Hz; very short-lived processes may be missed.</p>",
+    )
 
 
 def _system_sample_table(records: Sequence[dict[str, Any]], *, manifest: dict[str, Any]) -> str:

@@ -526,6 +526,7 @@ def make_system_record(
     network: dict[str, Any] | None = None,
     onboard_battery: dict[str, Any] | None = None,
     lipo_battery: dict[str, Any] | None = None,
+    process_cpu: list[dict[str, object]] | None = None,
 ) -> dict[str, Any]:
     record: dict[str, Any] = {
         "schema_version": SCHEMA_VERSION,
@@ -544,6 +545,8 @@ def make_system_record(
         record["onboard_battery"] = onboard_battery
     if lipo_battery is not None:
         record["lipo_battery"] = lipo_battery
+    if process_cpu is not None:
+        record["process_cpu"] = process_cpu
     return record
 
 

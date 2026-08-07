@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import time
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
@@ -13,10 +14,13 @@ from omniseer_experiments.bundle import make_system_record
 DEFAULT_PROC_STAT = Path("/proc/stat")
 DEFAULT_PROC_MEMINFO = Path("/proc/meminfo")
 DEFAULT_PROC_NET_WIRELESS = Path("/proc/net/wireless")
+DEFAULT_PROC_ROOT = Path("/proc")
 DEFAULT_SYS_ROOT = Path("/sys")
 DEFAULT_THERMAL_ROOT = Path("/sys/class/thermal")
 
 TimeNs = Callable[[], int]
+MonotonicSeconds = Callable[[], float]
+CLK_TCK = int(os.sysconf("SC_CLK_TCK"))
 
 
 @dataclass(frozen=True)
@@ -29,6 +33,46 @@ class CpuSample:
 class MemorySample:
     used_mb: float
     available_mb: float
+
+
+@dataclass(frozen=True)
+class ProcessCpuSample:
+    """CPU counters read from one Linux process stat entry."""
+
+    pid: int
+    name: str
+    user_ticks: int
+    system_ticks: int
+    start_time_ticks: int
+
+
+def parse_proc_pid_stat(text: str) -> ProcessCpuSample | None:
+    """Parse the fields required for CPU attribution from /proc/<pid>/stat."""
+
+    opening = text.find("(")
+    closing = text.rfind(")")
+    if opening <= 0 or closing <= opening:
+        return None
+    try:
+        pid = int(text[:opening].strip())
+        fields = text[closing + 1 :].split()
+        # Fields after comm begin at stat field 3: utime=14, stime=15, starttime=22.
+        return ProcessCpuSample(
+            pid=pid,
+            name=text[opening + 1 : closing],
+            user_ticks=int(fields[11]),
+            system_ticks=int(fields[12]),
+            start_time_ticks=int(fields[19]),
+        )
+    except (IndexError, ValueError):
+        return None
+
+
+def _read_cmdline(path: Path) -> str:
+    try:
+        return path.read_bytes().rstrip(b"\0").replace(b"\0", b" ").decode("utf-8", errors="replace")
+    except OSError:
+        return ""
 
 
 def parse_proc_stat_cpu(text: str) -> CpuSample | None:
@@ -286,19 +330,26 @@ class SystemTelemetrySampler:
         proc_stat_path: Path = DEFAULT_PROC_STAT,
         proc_meminfo_path: Path = DEFAULT_PROC_MEMINFO,
         proc_net_wireless_path: Path = DEFAULT_PROC_NET_WIRELESS,
+        proc_root: Path = DEFAULT_PROC_ROOT,
         sys_root: Path = DEFAULT_SYS_ROOT,
         temperature_paths: Sequence[Path] | None = None,
         time_ns: TimeNs = time.time_ns,
+        monotonic: MonotonicSeconds = time.monotonic,
     ) -> None:
         self._proc_stat_path = proc_stat_path
         self._proc_meminfo_path = proc_meminfo_path
         self._proc_net_wireless_path = proc_net_wireless_path
+        self._proc_root = proc_root
         self._sys_root = sys_root
         self._temperature_paths = tuple(temperature_paths) if temperature_paths is not None else None
         self._time_ns = time_ns
+        self._monotonic = monotonic
         self._previous_cpu: CpuSample | None = None
+        self._previous_process_ticks: dict[tuple[int, int], int] = {}
+        self._previous_process_sample_time: float | None = None
 
     def sample(self) -> dict[str, object]:
+        process_cpu = self._read_process_cpu()
         current_cpu = self._read_cpu()
         cpu = cpu_percent(self._previous_cpu, current_cpu)
         if current_cpu is not None:
@@ -328,7 +379,52 @@ class SystemTelemetrySampler:
                 proc_net_wireless_path=self._proc_net_wireless_path,
             ),
             onboard_battery=read_onboard_battery_snapshot(self._sys_root),
+            process_cpu=process_cpu,
         )
+
+    def _read_process_cpu(self) -> list[dict[str, object]]:
+        now = self._monotonic()
+        previous_time = self._previous_process_sample_time
+        elapsed = None if previous_time is None else now - previous_time
+        current: dict[tuple[int, int], int] = {}
+        consumers: list[dict[str, object]] = []
+        try:
+            entries = tuple(self._proc_root.iterdir())
+        except OSError:
+            entries = ()
+        for entry in entries:
+            if not entry.name.isdigit():
+                continue
+            try:
+                stat_text = (entry / "stat").read_text(encoding="utf-8")
+            except OSError:
+                continue
+            sample = parse_proc_pid_stat(stat_text)
+            if sample is None:
+                continue
+            identity = (sample.pid, sample.start_time_ticks)
+            ticks = sample.user_ticks + sample.system_ticks
+            current[identity] = ticks
+            previous_ticks = self._previous_process_ticks.get(identity)
+            if previous_ticks is None or elapsed is None or elapsed <= 0.0:
+                continue
+            tick_delta = ticks - previous_ticks
+            if tick_delta <= 0:
+                continue
+            seconds_delta = tick_delta / CLK_TCK
+            consumers.append(
+                {
+                    "pid": sample.pid,
+                    "start_time_ticks": sample.start_time_ticks,
+                    "name": sample.name,
+                    "cmdline": _read_cmdline(entry / "cmdline"),
+                    "cpu_seconds_delta": seconds_delta,
+                    "cpu_cores": seconds_delta / elapsed,
+                }
+            )
+        self._previous_process_ticks = current
+        self._previous_process_sample_time = now
+        return consumers
 
     def _read_cpu(self) -> CpuSample | None:
         try:
@@ -346,10 +442,12 @@ class SystemTelemetrySampler:
 __all__ = [
     "CpuSample",
     "MemorySample",
+    "ProcessCpuSample",
     "SystemTelemetrySampler",
     "cpu_percent",
     "default_temperature_paths",
     "parse_proc_meminfo",
+    "parse_proc_pid_stat",
     "parse_proc_stat_cpu",
     "read_network_snapshot",
     "read_onboard_battery_snapshot",

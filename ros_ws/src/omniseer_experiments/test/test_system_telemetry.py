@@ -3,10 +3,12 @@ import unittest
 from pathlib import Path
 
 from omniseer_experiments.system_telemetry import (
+    CLK_TCK,
     CpuSample,
     SystemTelemetrySampler,
     cpu_percent,
     parse_proc_meminfo,
+    parse_proc_pid_stat,
     parse_proc_stat_cpu,
     read_network_snapshot,
     read_onboard_battery_snapshot,
@@ -15,7 +17,73 @@ from omniseer_experiments.system_telemetry import (
 )
 
 
+def _process_stat(pid: int, name: str, user_ticks: int, system_ticks: int, start_time_ticks: int) -> str:
+    fields = ["S", *(["0"] * 10), str(user_ticks), str(system_ticks), *(["0"] * 6), str(start_time_ticks)]
+    return f"{pid} ({name}) {' '.join(fields)}\n"
+
+
 class SystemTelemetryTests(unittest.TestCase):
+    def test_proc_pid_stat_parses_process_names_with_spaces(self) -> None:
+        sample = parse_proc_pid_stat(_process_stat(42, "worker process", 17, 8, 1234))
+
+        self.assertIsNotNone(sample)
+        assert sample is not None
+        self.assertEqual(sample.pid, 42)
+        self.assertEqual(sample.name, "worker process")
+        self.assertEqual(sample.user_ticks, 17)
+        self.assertEqual(sample.system_ticks, 8)
+        self.assertEqual(sample.start_time_ticks, 1234)
+
+    def test_process_cpu_uses_tick_delta_and_distinguishes_pid_reuse(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            proc_root = root / "proc"
+            process = proc_root / "42"
+            process.mkdir(parents=True)
+            proc_stat = root / "stat"
+            proc_meminfo = root / "meminfo"
+            proc_stat.write_text("cpu  100 0 50 850\n", encoding="utf-8")
+            proc_meminfo.write_text("MemTotal: 2048 kB\nMemAvailable: 1024 kB\n", encoding="utf-8")
+            clocks = iter((10.0, 12.0, 14.0))
+            sampler = SystemTelemetrySampler(
+                proc_stat_path=proc_stat,
+                proc_meminfo_path=proc_meminfo,
+                proc_root=proc_root,
+                sys_root=root / "sys",
+                monotonic=lambda: next(clocks),
+            )
+            process.joinpath("stat").write_text(_process_stat(42, "worker process", 100, 20, 500), encoding="utf-8")
+            process.joinpath("cmdline").write_bytes(b"python3\0worker.py\0")
+            self.assertEqual(sampler.sample()["process_cpu"], [])
+
+            process.joinpath("stat").write_text(_process_stat(42, "worker process", 150, 70, 500), encoding="utf-8")
+            record = sampler.sample()
+            self.assertEqual(len(record["process_cpu"]), 1)
+            consumer = record["process_cpu"][0]
+            self.assertEqual(consumer["cmdline"], "python3 worker.py")
+            self.assertEqual(consumer["cpu_seconds_delta"], 100 / CLK_TCK)
+            self.assertEqual(consumer["cpu_cores"], 50 / CLK_TCK)
+
+            process.joinpath("stat").write_text(_process_stat(42, "replacement", 400, 100, 900), encoding="utf-8")
+            self.assertEqual(sampler.sample()["process_cpu"], [])
+
+    def test_process_cpu_skips_disappearing_and_malformed_processes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            proc_root = root / "proc"
+            (proc_root / "10").mkdir(parents=True)
+            (proc_root / "10" / "stat").write_text("malformed", encoding="utf-8")
+            (proc_root / "11").mkdir()
+            sampler = SystemTelemetrySampler(
+                proc_stat_path=root / "missing_stat",
+                proc_meminfo_path=root / "missing_meminfo",
+                proc_root=proc_root,
+                sys_root=root / "sys",
+                monotonic=lambda: 1.0,
+            )
+
+            self.assertEqual(sampler.sample()["process_cpu"], [])
+
     def test_cpu_delta_calculates_busy_percent(self) -> None:
         previous = parse_proc_stat_cpu("cpu  100 0 50 850 0 0 0 0 0 0\n")
         current = parse_proc_stat_cpu("cpu  150 0 70 880 0 0 0 0 0 0\n")
@@ -128,6 +196,7 @@ class SystemTelemetryTests(unittest.TestCase):
         self.assertEqual(record["network"]["link_quality_percent"], 90)
         self.assertEqual(record["onboard_battery"]["voltage"], 8.3)
         self.assertEqual(record["onboard_battery"]["percentage"], 71.0)
+        self.assertEqual(record["process_cpu"], [])
 
     def test_platform_snapshot_helpers_return_unavailable_shapes(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

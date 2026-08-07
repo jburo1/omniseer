@@ -102,7 +102,7 @@ Common bundle files:
 | `detections.jsonl` | Yes for perception bundles | Typed `/yolo/detections` records, classes, scores, boxes, frame IDs, and timestamps | Perception outputs and class/score summaries |
 | `perf.jsonl` | Yes for perception bundles | `/vision/perf` records, producer/consumer rates, stage timing summaries, source age, processed counts, and error counters | Performance and health claims from ROS vision summaries |
 | `summary.json` | Expected after finalization | Final duration, message counts, detections by class, confidence summaries, performance summaries, errors, and dropped-record counts | Compact run status and inspection index |
-| `system.jsonl` | Optional | Low-rate CPU, memory, thermal, network, onboard battery, and `/battery` LiPo snapshots when sources are available | Resource and system-state context |
+| `system.jsonl` | Optional | Low-rate CPU, sampled per-process CPU attribution, memory, thermal, network, onboard battery, and `/battery` LiPo snapshots when sources are available | Resource and system-state context |
 | `pipeline_telemetry.jsonl` | Optional | Native producer/consumer stage telemetry when pipeline JSONL telemetry is enabled | Detailed native timing, freshness, and stage-status analysis |
 | `autonomy.jsonl` | Optional | Target-centering events when autonomy is launched and records events | Autonomy execution traces; absence must not be read as success or failure unless the manifest shows autonomy was requested |
 | `evidence/evidence.jsonl` | Optional | Metadata for captured evidence frames, including frame IDs, capture reasons, timing, and target metadata | Connects visual evidence to run context |

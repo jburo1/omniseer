@@ -781,6 +781,49 @@ class RunReportTests(unittest.TestCase):
             self.assertIn("No native pipeline telemetry recorded.", output)
             self.assertNotIn('class="chart"', output)
 
+    def test_report_ranks_sampled_cpu_consumers(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "demo_001"
+            writer = RunBundleWriter(_config(run_dir), started_at=STARTED_AT)
+            writer.write_detection_record(_detection_record())
+            writer.write_perf_record(_perf_record())
+            writer.write_system_record(
+                make_system_record(
+                    recv_ts_ns=100,
+                    cpu_percent=1.0,
+                    memory_used_mb=1.0,
+                    memory_available_mb=1.0,
+                    soc_temp_c=None,
+                    process_cpu=[
+                        {
+                            "pid": 20,
+                            "start_time_ticks": 200,
+                            "name": "python3",
+                            "cmdline": "python3 recorder.py",
+                            "cpu_seconds_delta": 2.0,
+                            "cpu_cores": 2.0,
+                        },
+                        {
+                            "pid": 10,
+                            "start_time_ticks": 100,
+                            "name": "vision_node",
+                            "cmdline": "",
+                            "cpu_seconds_delta": 5.0,
+                            "cpu_cores": 5.0,
+                        },
+                    ],
+                )
+            )
+            writer.finalize(ended_at=ENDED_AT)
+
+            output = write_run_report(run_dir).output_path.read_text(encoding="utf-8")
+
+            self.assertIn("<h2>CPU Consumers</h2>", output)
+            self.assertIn("Share of sampled process CPU", output)
+            self.assertLess(output.index("vision_node"), output.index("python3 — python3 recorder.py"))
+            self.assertIn("71.4%", output)
+            self.assertIn("approximately 1 Hz", output)
+
     def test_existing_report_requires_overwrite(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             run_dir = Path(tmp) / "demo_001"
