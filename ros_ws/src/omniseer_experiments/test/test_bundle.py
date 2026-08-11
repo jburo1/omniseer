@@ -316,11 +316,49 @@ class RunBundleWriterTests(unittest.TestCase):
             self.assertEqual(summary["duration_sec"], 60.0)
             self.assertEqual(summary["message_counts"], {"detections": 1, "perf": 2, "system": 1})
             self.assertEqual(summary["detections_by_class"], {"backpack": 1, "chair": 1})
-            self.assertEqual(summary["confidence_by_class"]["chair"], {"min": 0.8, "mean": 0.8, "max": 0.8})
+            self.assertEqual(
+                summary["confidence_by_class"]["chair"],
+                {"samples": 1, "min": 0.8, "mean": 0.8, "p50": 0.8, "p95": 0.8, "max": 0.8},
+            )
             self.assertEqual(summary["perf"]["producer_fps_mean"], 20.0)
             self.assertEqual(summary["perf"]["consumer_fps_mean"], 19.0)
             self.assertEqual(summary["perf"]["infer_ms_mean"], 10.0)
             self.assertEqual(summary["perf"]["infer_ms_p95"], 12.0)
+            self.assertEqual(
+                summary["perf"]["last_infer_ms"],
+                {"samples": 2, "min": 8.0, "mean": 10.0, "p50": 8.0, "p95": 12.0, "max": 12.0},
+            )
+            for field_name in (
+                "producer_fps",
+                "consumer_fps",
+                "last_preprocess_ms",
+                "last_postprocess_ms",
+                "last_publish_ms",
+                "last_producer_total_ms",
+                "last_consumer_total_ms",
+            ):
+                self.assertEqual(summary["perf"][field_name]["samples"], 2)
+            self.assertEqual(summary["perf"]["produced_count"], 10)
+            self.assertEqual(summary["perf"]["consumed_count"], 9)
+            self.assertEqual(summary["perf"]["consumed_ratio"], 0.9)
+            self.assertEqual(
+                summary["system"]["cpu_percent"],
+                {"samples": 1, "min": 38.2, "mean": 38.2, "p50": 38.2, "p95": 38.2, "max": 38.2},
+            )
+            self.assertEqual(
+                summary["system"]["soc_temp_c"],
+                {
+                    "samples": 1,
+                    "min": 61.4,
+                    "mean": 61.4,
+                    "p50": 61.4,
+                    "p95": 61.4,
+                    "max": 61.4,
+                    "first": 61.4,
+                    "last": 61.4,
+                },
+            )
+            self.assertIsNone(summary["system"]["throttled_any"])
             self.assertEqual(summary["errors"]["capture_retryable"], 1)
             self.assertEqual(summary["errors"]["capture_fatal"], 1)
             self.assertEqual(summary["errors"]["infer"], 2)
@@ -342,6 +380,13 @@ class RunBundleWriterTests(unittest.TestCase):
             self.assertEqual(summary["detections_by_class"], {})
             self.assertEqual(summary["confidence_by_class"], {})
             self.assertEqual(summary["perf"]["infer_ms_mean"], 0.0)
+            self.assertIsNone(summary["perf"]["last_infer_ms"])
+            self.assertIsNone(summary["perf"]["produced_count"])
+            self.assertIsNone(summary["perf"]["consumed_ratio"])
+            self.assertIsNone(summary["system"]["cpu_percent"])
+            self.assertIsNone(summary["system"]["soc_temp_c"])
+            self.assertIsNone(summary["system"]["throttled_any"])
+            self.assertEqual(summary["system"]["process_cpu"], [])
             self.assertTrue((run_dir / "summary.json").is_file())
 
     def test_existing_run_requires_overwrite(self) -> None:
@@ -507,6 +552,143 @@ class SummaryAccumulatorTests(unittest.TestCase):
         result = summary.build_summary(5.0)
         self.assertEqual(result["dropped_records"], {"detections": 2, "perf": 1})
         self.assertEqual(result["message_counts"], {"detections": 0, "perf": 0, "system": 0})
+
+    def test_summarizes_confidence_system_and_unavailable_values(self) -> None:
+        summary = SummaryAccumulator("demo_001")
+        summary.add_detection_record(
+            {"detections": [{"class_name": "chair", "score": value} for value in (0.1, 0.2, 0.3, 0.4)]}
+        )
+        summary.add_system_record(
+            {
+                "cpu_percent": None,
+                "memory_used_mb": None,
+                "memory_available_mb": None,
+                "soc_temp_c": None,
+                "thermal": {"throttled": None},
+            }
+        )
+        summary.add_system_record(
+            {
+                "cpu_percent": 10.0,
+                "memory_used_mb": 100.0,
+                "memory_available_mb": 900.0,
+                "soc_temp_c": 50.0,
+                "thermal": {"throttled": False},
+            }
+        )
+        summary.add_system_record(
+            {
+                "cpu_percent": 30.0,
+                "memory_used_mb": 300.0,
+                "memory_available_mb": 700.0,
+                "soc_temp_c": 70.0,
+                "thermal": {"throttled": True},
+            }
+        )
+
+        result = summary.build_summary(10.0)
+
+        self.assertEqual(
+            result["confidence_by_class"]["chair"],
+            {"samples": 4, "min": 0.1, "mean": 0.25, "p50": 0.3, "p95": 0.4, "max": 0.4},
+        )
+        self.assertEqual(
+            result["system"]["cpu_percent"],
+            {"samples": 2, "min": 10.0, "mean": 20.0, "p50": 10.0, "p95": 30.0, "max": 30.0},
+        )
+        self.assertEqual(
+            result["system"]["memory_used_mb"],
+            {"samples": 2, "min": 100.0, "mean": 200.0, "p50": 100.0, "p95": 300.0, "max": 300.0},
+        )
+        self.assertEqual(
+            result["system"]["memory_available_mb"],
+            {"samples": 2, "min": 700.0, "mean": 800.0, "p50": 700.0, "p95": 900.0, "max": 900.0},
+        )
+        self.assertEqual(result["system"]["soc_temp_c"]["first"], 50.0)
+        self.assertEqual(result["system"]["soc_temp_c"]["last"], 70.0)
+        self.assertTrue(result["system"]["throttled_any"])
+
+    def test_throttled_any_is_false_when_available_without_throttling(self) -> None:
+        summary = SummaryAccumulator("demo_001")
+        summary.add_system_record({"thermal": {"throttled": False}})
+        summary.add_perf_record({"produced_count": 0, "consumed_count": 0})
+
+        result = summary.build_summary(1.0)
+        self.assertFalse(result["system"]["throttled_any"])
+        self.assertIsNone(result["perf"]["consumed_ratio"])
+
+    def test_final_counts_and_process_cpu_use_pid_start_time_identity(self) -> None:
+        summary = SummaryAccumulator("demo_001")
+        summary.add_perf_record({"produced_count": 0, "consumed_count": 0})
+        summary.add_perf_record({"produced_count": 20, "consumed_count": 15})
+        summary.add_system_record(
+            {
+                "process_cpu": [
+                    {
+                        "pid": 5,
+                        "start_time_ticks": 10,
+                        "name": "worker",
+                        "cmdline": "worker --first",
+                        "cpu_seconds_delta": 2.0,
+                        "cpu_cores": 0.5,
+                    },
+                    {
+                        "pid": 5,
+                        "start_time_ticks": 20,
+                        "name": "worker-reused",
+                        "cmdline": "worker --second",
+                        "cpu_seconds_delta": 3.0,
+                        "cpu_cores": 1.0,
+                    },
+                    *[
+                        {
+                            "pid": 100 + index,
+                            "start_time_ticks": 1000 + index,
+                            "name": f"worker-{index}",
+                            "cmdline": "",
+                            "cpu_seconds_delta": float(index),
+                            "cpu_cores": float(index) / 10.0,
+                        }
+                        for index in range(1, 12)
+                    ],
+                ]
+            }
+        )
+        summary.add_system_record(
+            {
+                "process_cpu": [
+                    {
+                        "pid": 5,
+                        "start_time_ticks": 10,
+                        "name": "ignored replacement name",
+                        "cmdline": "ignored",
+                        "cpu_seconds_delta": 1.0,
+                        "cpu_cores": 1.5,
+                    }
+                ]
+            }
+        )
+
+        result = summary.build_summary(10.0)
+
+        self.assertEqual(result["perf"]["produced_count"], 20)
+        self.assertEqual(result["perf"]["consumed_count"], 15)
+        self.assertEqual(result["perf"]["consumed_ratio"], 0.75)
+        process_cpu = result["system"]["process_cpu"]
+        self.assertEqual(len(process_cpu), 10)
+        self.assertEqual(
+            [item["cpu_seconds"] for item in process_cpu],
+            [11.0, 10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 3.0],
+        )
+        reused_processes = [item for item in process_cpu if item["pid"] == 5]
+        self.assertEqual(len(reused_processes), 2)
+        first_process = next(item for item in reused_processes if item["start_time_ticks"] == 10)
+        replacement_process = next(item for item in reused_processes if item["start_time_ticks"] == 20)
+        self.assertEqual(first_process["name"], "worker")
+        self.assertEqual(first_process["cmdline"], "worker --first")
+        self.assertEqual(first_process["mean_cores"], 0.3)
+        self.assertEqual(first_process["max_cores"], 1.5)
+        self.assertEqual(replacement_process["name"], "worker-reused")
 
 
 def _load_jsonl(path: Path) -> list[dict]:

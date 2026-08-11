@@ -27,6 +27,24 @@ ERROR_FIELDS = (
     "infer",
 )
 
+PERF_NUMERIC_FIELDS = (
+    "producer_fps",
+    "consumer_fps",
+    "last_preprocess_ms",
+    "last_infer_ms",
+    "last_postprocess_ms",
+    "last_publish_ms",
+    "last_producer_total_ms",
+    "last_consumer_total_ms",
+)
+
+SYSTEM_NUMERIC_FIELDS = (
+    "cpu_percent",
+    "memory_used_mb",
+    "memory_available_mb",
+    "soc_temp_c",
+)
+
 
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
@@ -113,9 +131,12 @@ class SummaryAccumulator:
         self.system_message_count = 0
         self.detections_by_class: Counter[str] = Counter()
         self._confidence_by_class: dict[str, list[float]] = defaultdict(list)
-        self._producer_fps: list[float] = []
-        self._consumer_fps: list[float] = []
-        self._infer_ms: list[float] = []
+        self._perf_values: dict[str, list[float]] = {field_name: [] for field_name in PERF_NUMERIC_FIELDS}
+        self._produced_count: int | None = None
+        self._consumed_count: int | None = None
+        self._system_values: dict[str, list[float]] = {field_name: [] for field_name in SYSTEM_NUMERIC_FIELDS}
+        self._throttled_values: list[bool] = []
+        self._process_cpu: dict[tuple[int, int], dict[str, Any]] = {}
         self._errors: dict[str, int] = {field_name: 0 for field_name in ERROR_FIELDS}
         self._dropped_records: Counter[str] = Counter()
 
@@ -132,9 +153,14 @@ class SummaryAccumulator:
 
     def add_perf_record(self, record: dict[str, Any]) -> None:
         self.perf_message_count += 1
-        _append_float(self._producer_fps, record.get("producer_fps"))
-        _append_float(self._consumer_fps, record.get("consumer_fps"))
-        _append_float(self._infer_ms, record.get("last_infer_ms"))
+        for field_name, values in self._perf_values.items():
+            _append_float(values, record.get(field_name))
+        produced_count = _as_int(record.get("produced_count"))
+        if produced_count is not None:
+            self._produced_count = produced_count
+        consumed_count = _as_int(record.get("consumed_count"))
+        if consumed_count is not None:
+            self._consumed_count = consumed_count
 
         error_counts = record.get("error_counts", {})
         if isinstance(error_counts, dict):
@@ -143,14 +169,66 @@ class SummaryAccumulator:
                 if value is not None:
                     self._errors[field_name] = max(self._errors[field_name], value)
 
-    def add_system_record(self, _record: dict[str, Any]) -> None:
+    def add_system_record(self, record: dict[str, Any]) -> None:
         self.system_message_count += 1
+        for field_name, values in self._system_values.items():
+            _append_float(values, record.get(field_name))
+
+        thermal = record.get("thermal")
+        if isinstance(thermal, dict) and isinstance(thermal.get("throttled"), bool):
+            self._throttled_values.append(thermal["throttled"])
+
+        process_cpu = record.get("process_cpu")
+        if not isinstance(process_cpu, list):
+            return
+        for sample in process_cpu:
+            if not isinstance(sample, dict):
+                continue
+            pid = _as_int(sample.get("pid"))
+            start_time_ticks = _as_int(sample.get("start_time_ticks"))
+            cpu_seconds = _as_float(sample.get("cpu_seconds_delta"))
+            cpu_cores = _as_float(sample.get("cpu_cores"))
+            if pid is None or start_time_ticks is None or cpu_seconds is None or cpu_seconds <= 0.0:
+                continue
+            identity = (pid, start_time_ticks)
+            item = self._process_cpu.setdefault(
+                identity,
+                {
+                    "pid": pid,
+                    "start_time_ticks": start_time_ticks,
+                    "name": sample.get("name") if isinstance(sample.get("name"), str) else "unknown",
+                    "cmdline": sample.get("cmdline") if isinstance(sample.get("cmdline"), str) else "",
+                    "cpu_seconds": 0.0,
+                    "max_cores": 0.0,
+                },
+            )
+            item["cpu_seconds"] += cpu_seconds
+            item["max_cores"] = max(item["max_cores"], cpu_cores or 0.0)
 
     def record_drop(self, stream: str, count: int = 1) -> None:
         if count > 0:
             self._dropped_records[stream] += count
 
     def build_summary(self, duration_sec: float) -> dict[str, Any]:
+        perf = {field_name: _describe_numeric(values) for field_name, values in self._perf_values.items()}
+        infer_ms = self._perf_values["last_infer_ms"]
+        perf.update(
+            {
+                "producer_fps_mean": _mean_or_zero(self._perf_values["producer_fps"]),
+                "consumer_fps_mean": _mean_or_zero(self._perf_values["consumer_fps"]),
+                "infer_ms_mean": _mean_or_zero(infer_ms),
+                "infer_ms_p95": _p95_or_zero(infer_ms),
+                "produced_count": self._produced_count,
+                "consumed_count": self._consumed_count,
+                "consumed_ratio": (
+                    self._consumed_count / self._produced_count
+                    if self._produced_count is not None
+                    and self._produced_count > 0
+                    and self._consumed_count is not None
+                    else None
+                ),
+            }
+        )
         return {
             "schema_version": SCHEMA_VERSION,
             "run_id": self.run_id,
@@ -164,11 +242,14 @@ class SummaryAccumulator:
             "confidence_by_class": {
                 class_name: _describe_float(values) for class_name, values in sorted(self._confidence_by_class.items())
             },
-            "perf": {
-                "producer_fps_mean": _mean_or_zero(self._producer_fps),
-                "consumer_fps_mean": _mean_or_zero(self._consumer_fps),
-                "infer_ms_mean": _mean_or_zero(self._infer_ms),
-                "infer_ms_p95": _p95_or_zero(self._infer_ms),
+            "perf": perf,
+            "system": {
+                **{
+                    field_name: _describe_numeric(values, include_first_last=field_name == "soc_temp_c")
+                    for field_name, values in self._system_values.items()
+                },
+                "throttled_any": any(self._throttled_values) if self._throttled_values else None,
+                "process_cpu": _describe_process_cpu(self._process_cpu, duration_sec=duration_sec),
             },
             "errors": dict(self._errors),
             "dropped_records": dict(sorted(self._dropped_records.items())),
@@ -623,12 +704,50 @@ def _p95_or_zero(values: list[float]) -> float:
     return float(ordered[index])
 
 
-def _describe_float(values: list[float]) -> dict[str, float]:
-    return {
-        "min": min(values),
+def _describe_float(values: list[float]) -> dict[str, Any]:
+    summary = _describe_numeric(values)
+    assert summary is not None
+    return summary
+
+
+def _describe_numeric(values: list[float], *, include_first_last: bool = False) -> dict[str, Any] | None:
+    if not values:
+        return None
+    ordered = sorted(values)
+    summary: dict[str, Any] = {
+        "samples": len(values),
+        "min": ordered[0],
         "mean": float(statistics.fmean(values)),
-        "max": max(values),
+        "p50": _percentile(ordered, 50),
+        "p95": _percentile(ordered, 95),
+        "max": ordered[-1],
     }
+    if include_first_last:
+        summary["first"] = values[0]
+        summary["last"] = values[-1]
+    return summary
+
+
+def _percentile(ordered_values: list[float], percentile: int) -> float:
+    index = round((len(ordered_values) - 1) * (percentile / 100.0))
+    return float(ordered_values[index])
+
+
+def _describe_process_cpu(
+    process_cpu: dict[tuple[int, int], dict[str, Any]], *, duration_sec: float
+) -> list[dict[str, Any]]:
+    return [
+        {
+            "name": item["name"],
+            "cmdline": item["cmdline"],
+            "pid": item["pid"],
+            "start_time_ticks": item["start_time_ticks"],
+            "cpu_seconds": item["cpu_seconds"],
+            "mean_cores": item["cpu_seconds"] / duration_sec if duration_sec > 0.0 else 0.0,
+            "max_cores": item["max_cores"],
+        }
+        for item in sorted(process_cpu.values(), key=lambda value: value["cpu_seconds"], reverse=True)[:10]
+    ]
 
 
 def _sha256_file(path: Path) -> str:
