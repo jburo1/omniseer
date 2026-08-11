@@ -68,11 +68,38 @@ def parse_proc_pid_stat(text: str) -> ProcessCpuSample | None:
         return None
 
 
+def parse_proc_pid_status_rss_mb(text: str) -> float | None:
+    """Parse sampled resident memory from /proc/<pid>/status in MB."""
+
+    for line in text.splitlines():
+        if ":" not in line:
+            continue
+        key, raw_value = line.split(":", 1)
+        if key != "VmRSS":
+            continue
+        fields = raw_value.split()
+        if len(fields) != 2 or fields[1] != "kB":
+            return None
+        try:
+            value_kb = int(fields[0])
+        except ValueError:
+            return None
+        return value_kb / 1024.0 if value_kb >= 0 else None
+    return None
+
+
 def _read_cmdline(path: Path) -> str:
     try:
         return path.read_bytes().rstrip(b"\0").replace(b"\0", b" ").decode("utf-8", errors="replace")
     except OSError:
         return ""
+
+
+def _read_rss_mb(path: Path) -> float | None:
+    try:
+        return parse_proc_pid_status_rss_mb(path.read_text(encoding="utf-8"))
+    except OSError:
+        return None
 
 
 def parse_proc_stat_cpu(text: str) -> CpuSample | None:
@@ -420,6 +447,7 @@ class SystemTelemetrySampler:
                     "cmdline": _read_cmdline(entry / "cmdline"),
                     "cpu_seconds_delta": seconds_delta,
                     "cpu_cores": seconds_delta / elapsed,
+                    "rss_mb": _read_rss_mb(entry / "status"),
                 }
             )
         self._previous_process_ticks = current
@@ -448,6 +476,7 @@ __all__ = [
     "default_temperature_paths",
     "parse_proc_meminfo",
     "parse_proc_pid_stat",
+    "parse_proc_pid_status_rss_mb",
     "parse_proc_stat_cpu",
     "read_network_snapshot",
     "read_onboard_battery_snapshot",

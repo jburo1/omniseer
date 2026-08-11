@@ -9,6 +9,7 @@ from omniseer_experiments.system_telemetry import (
     cpu_percent,
     parse_proc_meminfo,
     parse_proc_pid_stat,
+    parse_proc_pid_status_rss_mb,
     parse_proc_stat_cpu,
     read_network_snapshot,
     read_onboard_battery_snapshot,
@@ -34,6 +35,15 @@ class SystemTelemetryTests(unittest.TestCase):
         self.assertEqual(sample.system_ticks, 8)
         self.assertEqual(sample.start_time_ticks, 1234)
 
+    def test_proc_pid_status_rss_mb_parses_kb_with_whitespace(self) -> None:
+        self.assertEqual(parse_proc_pid_status_rss_mb("Name:\tworker\nVmRSS:    262144 kB\n"), 256.0)
+
+    def test_proc_pid_status_rss_mb_rejects_missing_malformed_and_unsupported_values(self) -> None:
+        self.assertIsNone(parse_proc_pid_status_rss_mb("Name:\tworker\n"))
+        self.assertIsNone(parse_proc_pid_status_rss_mb("VmRSS: not-a-number kB\n"))
+        self.assertIsNone(parse_proc_pid_status_rss_mb("VmRSS: 1024 MB\n"))
+        self.assertIsNone(parse_proc_pid_status_rss_mb("VmRSS: 1024\n"))
+
     def test_process_cpu_uses_tick_delta_and_distinguishes_pid_reuse(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -54,6 +64,7 @@ class SystemTelemetryTests(unittest.TestCase):
             )
             process.joinpath("stat").write_text(_process_stat(42, "worker process", 100, 20, 500), encoding="utf-8")
             process.joinpath("cmdline").write_bytes(b"python3\0worker.py\0")
+            process.joinpath("status").write_text("Name:\tworker\nVmRSS:\t262144 kB\n", encoding="utf-8")
             self.assertEqual(sampler.sample()["process_cpu"], [])
 
             process.joinpath("stat").write_text(_process_stat(42, "worker process", 150, 70, 500), encoding="utf-8")
@@ -63,9 +74,31 @@ class SystemTelemetryTests(unittest.TestCase):
             self.assertEqual(consumer["cmdline"], "python3 worker.py")
             self.assertEqual(consumer["cpu_seconds_delta"], 100 / CLK_TCK)
             self.assertEqual(consumer["cpu_cores"], 50 / CLK_TCK)
+            self.assertEqual(consumer["rss_mb"], 256.0)
 
             process.joinpath("stat").write_text(_process_stat(42, "replacement", 400, 100, 900), encoding="utf-8")
             self.assertEqual(sampler.sample()["process_cpu"], [])
+
+    def test_process_cpu_keeps_sampling_when_status_disappears(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            proc_root = root / "proc"
+            process = proc_root / "42"
+            process.mkdir(parents=True)
+            clocks = iter((10.0, 12.0))
+            sampler = SystemTelemetrySampler(
+                proc_stat_path=root / "missing_stat",
+                proc_meminfo_path=root / "missing_meminfo",
+                proc_root=proc_root,
+                sys_root=root / "sys",
+                monotonic=lambda: next(clocks),
+            )
+            process.joinpath("stat").write_text(_process_stat(42, "worker", 100, 20, 500), encoding="utf-8")
+            self.assertEqual(sampler.sample()["process_cpu"], [])
+
+            process.joinpath("stat").write_text(_process_stat(42, "worker", 150, 20, 500), encoding="utf-8")
+            consumer = sampler.sample()["process_cpu"][0]
+            self.assertIsNone(consumer["rss_mb"])
 
     def test_process_cpu_skips_disappearing_and_malformed_processes(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

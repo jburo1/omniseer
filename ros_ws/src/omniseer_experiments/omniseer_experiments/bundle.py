@@ -188,6 +188,7 @@ class SummaryAccumulator:
             start_time_ticks = _as_int(sample.get("start_time_ticks"))
             cpu_seconds = _as_float(sample.get("cpu_seconds_delta"))
             cpu_cores = _as_float(sample.get("cpu_cores"))
+            rss_mb = _as_float(sample.get("rss_mb"))
             if pid is None or start_time_ticks is None or cpu_seconds is None or cpu_seconds <= 0.0:
                 continue
             identity = (pid, start_time_ticks)
@@ -200,10 +201,13 @@ class SummaryAccumulator:
                     "cmdline": sample.get("cmdline") if isinstance(sample.get("cmdline"), str) else "",
                     "cpu_seconds": 0.0,
                     "max_cores": 0.0,
+                    "rss_mb": [],
                 },
             )
             item["cpu_seconds"] += cpu_seconds
             item["max_cores"] = max(item["max_cores"], cpu_cores or 0.0)
+            if rss_mb is not None:
+                item["rss_mb"].append(rss_mb)
 
     def record_drop(self, stream: str, count: int = 1) -> None:
         if count > 0:
@@ -745,6 +749,7 @@ def _describe_process_cpu(
             "cpu_seconds": item["cpu_seconds"],
             "mean_cores": item["cpu_seconds"] / duration_sec if duration_sec > 0.0 else 0.0,
             "max_cores": item["max_cores"],
+            "rss_mb": _describe_numeric(item["rss_mb"]),
         }
         for item in sorted(process_cpu.values(), key=lambda value: value["cpu_seconds"], reverse=True)[:10]
     ]

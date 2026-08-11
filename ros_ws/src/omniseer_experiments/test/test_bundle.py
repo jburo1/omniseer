@@ -631,6 +631,7 @@ class SummaryAccumulatorTests(unittest.TestCase):
                         "cmdline": "worker --first",
                         "cpu_seconds_delta": 2.0,
                         "cpu_cores": 0.5,
+                        "rss_mb": 278.0,
                     },
                     {
                         "pid": 5,
@@ -639,6 +640,7 @@ class SummaryAccumulatorTests(unittest.TestCase):
                         "cmdline": "worker --second",
                         "cpu_seconds_delta": 3.0,
                         "cpu_cores": 1.0,
+                        "rss_mb": 310.0,
                     },
                     *[
                         {
@@ -664,6 +666,7 @@ class SummaryAccumulatorTests(unittest.TestCase):
                         "cmdline": "ignored",
                         "cpu_seconds_delta": 1.0,
                         "cpu_cores": 1.5,
+                        "rss_mb": 290.0,
                     }
                 ]
             }
@@ -688,7 +691,42 @@ class SummaryAccumulatorTests(unittest.TestCase):
         self.assertEqual(first_process["cmdline"], "worker --first")
         self.assertEqual(first_process["mean_cores"], 0.3)
         self.assertEqual(first_process["max_cores"], 1.5)
+        self.assertEqual(
+            first_process["rss_mb"],
+            {"samples": 2, "min": 278.0, "mean": 284.0, "p50": 278.0, "p95": 290.0, "max": 290.0},
+        )
         self.assertEqual(replacement_process["name"], "worker-reused")
+        self.assertEqual(
+            replacement_process["rss_mb"],
+            {"samples": 1, "min": 310.0, "mean": 310.0, "p50": 310.0, "p95": 310.0, "max": 310.0},
+        )
+
+    def test_process_cpu_rss_ignores_unavailable_samples(self) -> None:
+        summary = SummaryAccumulator("demo_001")
+        summary.add_system_record(
+            {
+                "process_cpu": [
+                    {
+                        "pid": 5,
+                        "start_time_ticks": 10,
+                        "cpu_seconds_delta": 1.0,
+                        "cpu_cores": 0.5,
+                        "rss_mb": None,
+                    },
+                    {
+                        "pid": 6,
+                        "start_time_ticks": 20,
+                        "cpu_seconds_delta": 1.0,
+                        "cpu_cores": 0.5,
+                    },
+                ]
+            }
+        )
+
+        process_cpu = summary.build_summary(1.0)["system"]["process_cpu"]
+
+        self.assertEqual(len(process_cpu), 2)
+        self.assertTrue(all(item["rss_mb"] is None for item in process_cpu))
 
 
 def _load_jsonl(path: Path) -> list[dict]:
