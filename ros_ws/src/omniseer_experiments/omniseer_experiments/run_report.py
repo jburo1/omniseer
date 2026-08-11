@@ -80,6 +80,16 @@ class _ReportSection:
     html_text: str
 
 
+@dataclass(frozen=True)
+class _TargetLossEpisode:
+    start_time_sec: float | None
+    end_time_sec: float | None
+    state: str
+    reason: str
+    missing_target_updates: int
+    recovered: bool
+
+
 def write_run_report(run_dir: Path, *, overwrite: bool = False) -> ReportSummary:
     inspection = inspect_run(run_dir)
     manifest = _read_manifest(run_dir / "manifest.yaml")
@@ -314,12 +324,10 @@ def _experiment_outcome_section(
             "Time to framed/success",
             _format_duration(_as_float(first_success.get("time_sec")) if first_success else None),
         ),
+        *_autonomy_phase_timing_rows(autonomy),
         ("Final centering error", _format_optional_float(_last_numeric_field(autonomy, "normalized_error"))),
         ("Final target area", _format_optional_float(_last_numeric_field(autonomy, "bbox_area_ratio"))),
-        (
-            "Target-loss count",
-            str(max((_as_int(record.get("target_loss_count")) or 0 for record in autonomy), default=0)),
-        ),
+        *_target_loss_summary_rows(autonomy),
         ("Consumer FPS", _format_optional_float(_p95_field(perf, "consumer_fps"))),
         ("Inference p95", _format_optional_ms(_p95_field(perf, "last_infer_ms"))),
     ]
@@ -335,18 +343,17 @@ def _key_metrics_section(
     autonomy: Sequence[dict[str, Any]],
 ) -> _ReportSection:
     superseded_frames = _superseded_frames(perf)
+    supersession_ratio = _supersession_ratio(perf)
+    loss_episodes = _target_loss_episodes(autonomy)
     metrics = (
         ("Consumer FPS p95", _p95_field(perf, "consumer_fps"), "fps"),
         ("Inference p95", _p95_field(perf, "last_infer_ms"), "ms"),
         ("Consumer total p95", _p95_field(perf, "last_consumer_total_ms"), "ms"),
         ("Source age p95", _p95_field(pipeline, "source_age_end_ns"), "ns"),
-        (
-            "Target-loss count",
-            float(max((_as_int(record.get("target_loss_count")) or 0 for record in autonomy), default=0)),
-            "count",
-        ),
+        ("Target-loss episodes", float(len(loss_episodes)), "count"),
         ("Dropped records", float(sum(inspection.dropped_records.values())), "count"),
         ("Frames superseded before inference", float(superseded_frames), "count"),
+        ("Latest-frame supersession", supersession_ratio * 100.0 if supersession_ratio is not None else None, "%"),
         ("Fatal vision errors", float(inspection.errors.get("capture_fatal", 0)), "count"),
     )
     rows = []
@@ -457,11 +464,14 @@ def _configuration_section(manifest: dict[str, Any]) -> str:
         ("Launch args", _join_or_dash(_display_launch_args(launch_args, manifest=manifest))),
         ("Runtime image ref", _provenance_value(_manifest_nested_string(manifest, "container", "image_ref"))),
         ("Runtime image digest", _provenance_value(_manifest_nested_string(manifest, "container", "image_digest"))),
+        ("Runtime image identity", _runtime_image_identity(manifest)),
         ("Experiment config", _manifest_nested_string(manifest, "experiment", "config")),
         ("Experiment parameters", _format_mapping(experiment_parameters)),
         ("Detector", _manifest_model_value(manifest, "detector")),
         ("Detector model", _path_basename(_manifest_model_value(manifest, "detector_model_path"))),
+        ("Detector model SHA256", _model_sha256(manifest, "detector_model")),
         ("CLIP model", _path_basename(_manifest_model_value(manifest, "clip_model_path"))),
+        ("CLIP model SHA256", _model_sha256(manifest, "clip_model")),
         ("CLIP vocab", _path_basename(_manifest_model_value(manifest, "clip_vocab_path"))),
         ("Classes file", _path_basename(_manifest_string(manifest, "classes_path"))),
         ("Detections topic", _manifest_topic_value(manifest, "detections")),
@@ -502,7 +512,6 @@ def _autonomy_section(records: Sequence[dict[str, Any]]) -> str:
     first_success = _first_matching_record(records, lambda record: record.get("event") == "succeeded")
     final_error = _last_numeric_field(records, "normalized_error")
     final_confidence = _last_target_confidence(records)
-    target_loss_count = max((_as_int(record.get("target_loss_count")) or 0 for record in records), default=0)
     terminal_state = _display(terminal.get("state") if terminal else "")
     failure_reason = "-"
     if terminal and terminal.get("state") == "failed":
@@ -520,9 +529,10 @@ def _autonomy_section(records: Sequence[dict[str, Any]]) -> str:
             "Time to framed/success",
             _format_duration(_as_float(first_success.get("time_sec")) if first_success else None),
         ),
+        *_autonomy_phase_timing_rows(records),
         ("Final error", _format_optional_float(final_error)),
         ("Final confidence", _format_optional_float(final_confidence)),
-        ("Target-loss count", str(target_loss_count)),
+        *_target_loss_summary_rows(records),
         ("Event records", str(len(records))),
     ]
     body = (
@@ -1133,6 +1143,10 @@ def _errors_section(inspection: RunInspection, *, perf: Sequence[dict[str, Any]]
         + _key_value_table(
             [
                 ("Frames superseded before inference", str(_superseded_frames(perf))),
+                (
+                    "Supersession ratio",
+                    _format_percentage(_supersession_ratio(perf)),
+                ),
                 ("Interpretation", "Normal latest-frame behavior; not an error or dropped telemetry record."),
             ]
         )
@@ -1332,6 +1346,21 @@ def _superseded_frames(records: Sequence[dict[str, Any]]) -> int:
     return max(differences, default=0)
 
 
+def _supersession_ratio(records: Sequence[dict[str, Any]]) -> float | None:
+    """Return latest-frame supersession as a share of produced frames."""
+
+    latest_counts: tuple[int, int] | None = None
+    for record in records:
+        produced = _as_int(record.get("produced_count"))
+        consumed = _as_int(record.get("consumed_count"))
+        if produced is not None and consumed is not None and produced > 0:
+            latest_counts = (produced, consumed)
+    if latest_counts is None:
+        return None
+    produced, consumed = latest_counts
+    return max(0, produced - consumed) / produced
+
+
 def _process_description(name: object, cmdline: object) -> str:
     process_name = name if isinstance(name, str) and name else "unknown"
     command = cmdline if isinstance(cmdline, str) else ""
@@ -1345,6 +1374,29 @@ def _process_description(name: object, cmdline: object) -> str:
 
 def _provenance_value(value: str) -> str:
     return value if value else "Unavailable (missing)"
+
+
+def _runtime_image_identity(manifest: dict[str, Any]) -> str:
+    digest = _manifest_nested_string(manifest, "container", "image_digest")
+    if digest:
+        return digest
+    ref = _manifest_nested_string(manifest, "container", "image_ref")
+    return ref if ref else "Unavailable"
+
+
+def _model_sha256(manifest: dict[str, Any], name: str) -> str:
+    provenance = manifest.get("provenance")
+    if not isinstance(provenance, dict):
+        return "Unavailable"
+    entry = provenance.get(name)
+    if not isinstance(entry, dict):
+        return "Unavailable"
+    value = entry.get("sha256")
+    return value if isinstance(value, str) and value else "Unavailable"
+
+
+def _format_percentage(value: float | None) -> str:
+    return f"{value * 100.0:.1f}%" if value is not None else "-"
 
 
 def _launch_arg_value(manifest: dict[str, Any], name: str) -> str:
@@ -1582,8 +1634,29 @@ def _autonomy_state_timeline(records: Sequence[dict[str, Any]]) -> str:
     return "<h3>State Timeline</h3>" + _table(["State", "Start", "End", "Duration", "Samples"], rows)
 
 
-def _autonomy_target_loss_table(records: Sequence[dict[str, Any]]) -> str:
-    loss_rows = []
+def _autonomy_phase_timing_rows(records: Sequence[dict[str, Any]]) -> list[tuple[str, str]]:
+    success = _first_matching_record(records, lambda record: record.get("event") == "succeeded")
+    success_time = _as_float(success.get("time_sec")) if success else None
+    if success_time is None:
+        return []
+
+    rows = []
+    for event, label in (
+        ("target_locked", "Lock → success"),
+        ("centered_first_frame", "Centered → success"),
+        ("framing_started", "Framing start → success"),
+    ):
+        start = _first_matching_record(records, lambda record, event=event: record.get("event") == event)
+        start_time = _as_float(start.get("time_sec")) if start else None
+        duration = _duration_between(start_time, success_time)
+        if duration is not None:
+            rows.append((label, _format_duration(duration)))
+    return rows
+
+
+def _target_loss_episodes(records: Sequence[dict[str, Any]]) -> tuple[_TargetLossEpisode, ...]:
+    """Collapse repeated missing-target updates until a target-recovery event."""
+
     recovery_events = {
         "target_locked",
         "centering_started",
@@ -1593,26 +1666,98 @@ def _autonomy_target_loss_table(records: Sequence[dict[str, Any]]) -> str:
         "centered_first_frame",
         "succeeded",
     }
-    for index, record in enumerate(records):
-        if record.get("event") != "target_lost":
-            continue
-        start_time = _as_float(record.get("time_sec"))
-        recovery = _first_matching_record(records[index + 1 :], lambda item: item.get("event") in recovery_events)
-        recovery_time = _as_float(recovery.get("time_sec")) if recovery else None
+    episodes = []
+    current: _TargetLossEpisode | None = None
+    last_time = None
+    for record in records:
+        time_sec = _as_float(record.get("time_sec"))
+        if time_sec is not None:
+            last_time = time_sec
+        event = record.get("event")
+        if event == "target_lost":
+            if current is None:
+                current = _TargetLossEpisode(
+                    start_time_sec=time_sec,
+                    end_time_sec=None,
+                    state=_display(record.get("state")),
+                    reason=_display(record.get("reason")),
+                    missing_target_updates=1,
+                    recovered=False,
+                )
+            else:
+                current = _TargetLossEpisode(
+                    start_time_sec=current.start_time_sec,
+                    end_time_sec=None,
+                    state=current.state,
+                    reason=current.reason,
+                    missing_target_updates=current.missing_target_updates + 1,
+                    recovered=False,
+                )
+        elif current is not None and event in recovery_events:
+            episodes.append(
+                _TargetLossEpisode(
+                    start_time_sec=current.start_time_sec,
+                    end_time_sec=time_sec,
+                    state=current.state,
+                    reason=current.reason,
+                    missing_target_updates=current.missing_target_updates,
+                    recovered=True,
+                )
+            )
+            current = None
+    if current is not None:
+        episodes.append(
+            _TargetLossEpisode(
+                start_time_sec=current.start_time_sec,
+                end_time_sec=last_time,
+                state=current.state,
+                reason=current.reason,
+                missing_target_updates=current.missing_target_updates,
+                recovered=False,
+            )
+        )
+    return tuple(episodes)
+
+
+def _target_loss_summary_rows(records: Sequence[dict[str, Any]]) -> list[tuple[str, str]]:
+    episodes = _target_loss_episodes(records)
+    durations = [
+        duration
+        for episode in episodes
+        if (duration := _duration_between(episode.start_time_sec, episode.end_time_sec)) is not None
+    ]
+    rows = [
+        ("Target-loss episodes", str(len(episodes))),
+        ("Missing-target updates", str(sum(episode.missing_target_updates for episode in episodes))),
+    ]
+    if durations:
+        rows.extend(
+            [
+                ("Target-loss duration max", _format_duration(max(durations))),
+                ("Target-loss duration median", _format_duration(statistics.median(durations))),
+                ("Target-loss duration p95", _format_duration(_percentile(durations, 95))),
+            ]
+        )
+    return rows
+
+
+def _autonomy_target_loss_table(records: Sequence[dict[str, Any]]) -> str:
+    loss_rows = []
+    for episode in _target_loss_episodes(records):
         loss_rows.append(
             [
-                _format_duration(start_time),
-                _format_duration(recovery_time),
-                _format_duration(_duration_between(start_time, recovery_time)),
-                _display(record.get("state")),
-                _display(record.get("reason")),
-                str(_as_int(record.get("target_loss_count")) or 0),
+                _format_duration(episode.start_time_sec),
+                _format_duration(episode.end_time_sec) if episode.recovered else "Run ended",
+                _format_duration(_duration_between(episode.start_time_sec, episode.end_time_sec)),
+                episode.state,
+                episode.reason,
+                str(episode.missing_target_updates),
             ]
         )
     if not loss_rows:
         return ""
-    return "<h3>Target Loss Events</h3>" + _table(
-        ["Lost At", "Recovered At", "Duration", "State", "Reason", "Loss Count"],
+    return "<h3>Target Loss Episodes</h3>" + _table(
+        ["Lost At", "Recovered At", "Duration", "State", "Reason", "Missing Updates"],
         loss_rows,
     )
 

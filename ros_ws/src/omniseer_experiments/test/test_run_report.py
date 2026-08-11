@@ -1,4 +1,5 @@
 import contextlib
+import hashlib
 import io
 import json
 import tempfile
@@ -617,7 +618,8 @@ class RunReportTests(unittest.TestCase):
             self.assertNotIn("Time to centered/framed", output)
             self.assertIn("<th>Final error</th><td>0.02</td>", output)
             self.assertIn("<th>Final confidence</th><td>0.87</td>", output)
-            self.assertIn("<th>Target-loss count</th><td>1</td>", output)
+            self.assertIn("<th>Target-loss episodes</th><td>1</td>", output)
+            self.assertIn("<th>Missing-target updates</th><td>1</td>", output)
             self.assertIn("Autonomy Error Over Time", output)
             self.assertIn("Target Confidence Over Time", output)
             self.assertIn("Target Loss Count Over Time", output)
@@ -625,7 +627,7 @@ class RunReportTests(unittest.TestCase):
             self.assertIn("Angular Command Over Time", output)
             self.assertIn("Command Summary", output)
             self.assertIn("State Timeline", output)
-            self.assertIn("Target Loss Events", output)
+            self.assertIn("Target Loss Episodes", output)
             self.assertIn("Event Timeline", output)
             self.assertIn("target_lost", output)
             self.assertIn('class="outcome-banner outcome-success"', output)
@@ -657,6 +659,7 @@ class RunReportTests(unittest.TestCase):
             self.assertIn("<th>Time to framed/success</th><td>70.0s</td>", output)
             self.assertIn("t+2.0s", output)
             self.assertIn("Frames superseded before inference", output)
+            self.assertIn("Supersession ratio</th><td>10.0%", output)
             self.assertIn("Normal latest-frame behavior; not an error", output)
 
     def test_report_marks_missing_runtime_provenance_unavailable(self) -> None:
@@ -670,6 +673,89 @@ class RunReportTests(unittest.TestCase):
 
             self.assertIn("<th>Runtime image ref</th><td>Unavailable (missing)</td>", output)
             self.assertIn("<th>Runtime image digest</th><td>Unavailable (missing)</td>", output)
+            self.assertIn("<th>Runtime image identity</th><td>Unavailable</td>", output)
+
+    def test_report_uses_runtime_image_ref_when_digest_is_unavailable(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "demo_001"
+            config = replace(_config(run_dir), container_image_digest="")
+            writer = RunBundleWriter(config, started_at=STARTED_AT)
+            writer.finalize(ended_at=ENDED_AT)
+
+            output = write_run_report(run_dir).output_path.read_text(encoding="utf-8")
+
+            self.assertIn("<th>Runtime image identity</th><td>ghcr.io/acme/omniseer:robot-v2</td>", output)
+
+    def test_report_collapses_target_loss_updates_into_episodes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "demo_001"
+            _write_completed_bundle(run_dir)
+            records = [
+                {"time_sec": 0.5, "state": "center", "event": "target_locked"},
+                {"time_sec": 1.0, "state": "center", "event": "target_lost", "reason": "no_target"},
+                {"time_sec": 1.5, "state": "center", "event": "target_lost", "reason": "no_target"},
+                {"time_sec": 2.0, "state": "center", "event": "target_lost", "reason": "no_target"},
+                {"time_sec": 5.0, "state": "frame", "event": "framing_started"},
+                {"time_sec": 7.0, "state": "frame", "event": "target_lost", "reason": "stale_target"},
+                {"time_sec": 8.0, "state": "frame", "event": "target_lost", "reason": "stale_target"},
+                {"time_sec": 9.0, "state": "failed", "event": "failed"},
+            ]
+            (run_dir / "autonomy.jsonl").write_text(
+                "\n".join(json.dumps(record) for record in records) + "\n", encoding="utf-8"
+            )
+
+            output = write_run_report(run_dir).output_path.read_text(encoding="utf-8")
+
+            self.assertIn("<th>Target-loss episodes</th><td>2</td>", output)
+            self.assertIn("<th>Missing-target updates</th><td>5</td>", output)
+            self.assertIn("<th>Target-loss duration max</th><td>4.0s</td>", output)
+            self.assertIn("<th>Target-loss duration median</th><td>3.0s</td>", output)
+            self.assertIn("<td>1.0s</td><td>5.0s</td><td>4.0s</td>", output)
+            self.assertIn("<td>7.0s</td><td>Run ended</td><td>2.0s</td>", output)
+
+    def test_report_adds_phase_timings_only_when_both_events_exist(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "demo_001"
+            _write_completed_bundle(run_dir)
+            records = [
+                {"time_sec": 1.0, "state": "lock", "event": "target_locked"},
+                {"time_sec": 2.0, "state": "center", "event": "centered_first_frame"},
+                {"time_sec": 3.0, "state": "frame", "event": "framing_started"},
+                {"time_sec": 5.0, "state": "success", "event": "succeeded"},
+            ]
+            (run_dir / "autonomy.jsonl").write_text(
+                "\n".join(json.dumps(record) for record in records) + "\n", encoding="utf-8"
+            )
+
+            output = write_run_report(run_dir).output_path.read_text(encoding="utf-8")
+
+            self.assertIn("<th>Lock → success</th><td>4.0s</td>", output)
+            self.assertIn("<th>Centered → success</th><td>3.0s</td>", output)
+            self.assertIn("<th>Framing start → success</th><td>2.0s</td>", output)
+
+            (run_dir / "autonomy.jsonl").write_text(
+                json.dumps({"time_sec": 5.0, "state": "success", "event": "succeeded"}) + "\n",
+                encoding="utf-8",
+            )
+            output = write_run_report(run_dir, overwrite=True).output_path.read_text(encoding="utf-8")
+            self.assertNotIn("Lock → success", output)
+            self.assertNotIn("Centered → success", output)
+            self.assertNotIn("Framing start → success", output)
+
+    def test_report_shows_hashed_model_artifact_provenance(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            model = root / "detector.rknn"
+            model.write_bytes(b"model artifact")
+            run_dir = root / "demo_001"
+            writer = RunBundleWriter(replace(_config(run_dir), detector_model_path=str(model)), started_at=STARTED_AT)
+            writer.finalize(ended_at=ENDED_AT)
+
+            output = write_run_report(run_dir).output_path.read_text(encoding="utf-8")
+
+            self.assertIn(
+                f"<th>Detector model SHA256</th><td>{hashlib.sha256(model.read_bytes()).hexdigest()}</td>", output
+            )
 
     def test_report_flags_missing_autonomy_jsonl_for_autonomy_launch(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
