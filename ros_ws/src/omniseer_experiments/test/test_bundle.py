@@ -29,6 +29,10 @@ def _config(out_dir: Path, *, overwrite: bool = False) -> RunBundleConfig:
         overwrite=overwrite,
         ros_distro="kilted",
         git_sha="abc123",
+        model_family="yolo-world",
+        model_variant="v2s",
+        model_precision="int8",
+        model_backend="rknn",
         vision_params_file="/configs/vision.yaml",
         detector_model_path="/models/detector.rknn",
         clip_model_path="/models/clip.rknn",
@@ -42,6 +46,9 @@ def _config(out_dir: Path, *, overwrite: bool = False) -> RunBundleConfig:
         container_image_digest="sha256:0123456789abcdef",
         experiment_config="experiments/container-smoke.yaml",
         experiment_parameters={"camera": "/dev/video11", "profile": "operator"},
+        comparison_id="yolo-world-v2s-baseline",
+        trial="03",
+        workload_id="warehouse-aisle-a",
     )
 
 
@@ -118,6 +125,10 @@ class RunBundleWriterTests(unittest.TestCase):
                 self.assertIn("ended_at: null", manifest)
                 self.assertIn('vision_params_file: "/configs/vision.yaml"', manifest)
                 self.assertIn('clip_vocab_path: "/models/clip_vocab.bpe"', manifest)
+                self.assertIn('family: "yolo-world"', manifest)
+                self.assertIn('variant: "v2s"', manifest)
+                self.assertIn('precision: "int8"', manifest)
+                self.assertIn('backend: "rknn"', manifest)
                 self.assertIn('classes_path: "/models/classes.txt"', manifest)
                 self.assertIn("launch:", manifest)
                 self.assertIn('command: "run real --profile operator bringup"', manifest)
@@ -128,6 +139,10 @@ class RunBundleWriterTests(unittest.TestCase):
                 self.assertIn('- "camera_device:=/dev/video11"', manifest)
                 self.assertIn("container:", manifest)
                 self.assertIn('image_ref: "ghcr.io/acme/omniseer:robot-v2"', manifest)
+                self.assertIn("comparison:", manifest)
+                self.assertIn('comparison_id: "yolo-world-v2s-baseline"', manifest)
+                self.assertIn('trial: "03"', manifest)
+                self.assertIn('workload_id: "warehouse-aisle-a"', manifest)
                 self.assertIn('image_digest: "sha256:0123456789abcdef"', manifest)
                 self.assertIn("experiment:", manifest)
                 self.assertIn('config: "experiments/container-smoke.yaml"', manifest)
@@ -206,6 +221,56 @@ class RunBundleWriterTests(unittest.TestCase):
                 )
                 self.assertFalse((run_dir / "provenance" / "detector_model.rknn").exists())
                 self.assertFalse((run_dir / "provenance" / "clip_model.rknn").exists())
+            finally:
+                writer.close()
+
+    def test_records_bridge_emitted_resolved_vision_config(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "runs" / "demo_001"
+            resolved_config = run_dir / "provenance" / "resolved_vision_config.yaml"
+            writer = RunBundleWriter(
+                RunBundleConfig(
+                    run_id="demo_001",
+                    out_dir=run_dir,
+                    git_sha="abc123",
+                    resolved_vision_config_path=str(resolved_config),
+                ),
+                started_at=STARTED_AT,
+            )
+            try:
+                resolved_config.write_text(
+                    'camera:\n  device: "/dev/video11"\nmodels:\n  detector_model_path: "/models/detector.rknn"\n',
+                    encoding="utf-8",
+                )
+                writer.finalize(ended_at=ENDED_AT)
+                manifest = (run_dir / "manifest.yaml").read_text(encoding="utf-8")
+                self.assertIn("resolved_vision_config:", manifest)
+                self.assertIn(f'path: "{resolved_config}"', manifest)
+                self.assertIn('bundle_copy: "provenance/resolved_vision_config.yaml"', manifest)
+                self.assertIn('copy_status: "emitted_by_vision_bridge"', manifest)
+                self.assertIn("available: true", manifest)
+                self.assertEqual(
+                    resolved_config.read_text(encoding="utf-8"),
+                    'camera:\n  device: "/dev/video11"\nmodels:\n  detector_model_path: "/models/detector.rknn"\n',
+                )
+            finally:
+                writer.close()
+
+    def test_omitted_comparison_metadata_is_explicitly_empty(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "runs" / "demo_001"
+            writer = RunBundleWriter(
+                RunBundleConfig(run_id="demo_001", out_dir=run_dir, git_sha="abc123"),
+                started_at=STARTED_AT,
+            )
+            try:
+                manifest = (run_dir / "manifest.yaml").read_text(encoding="utf-8")
+                self.assertIn("comparison:\n  comparison_id: null\n  trial: null\n  workload_id: null", manifest)
+                self.assertIn(
+                    'model:\n  detector: "yolo-world-rknn"\n'
+                    "  family: null\n  variant: null\n  precision: null\n  backend: null",
+                    manifest,
+                )
             finally:
                 writer.close()
 

@@ -12,6 +12,7 @@
 #include "omniseer/vision/detections_sink.hpp"
 #include "omniseer_msgs/msg/vision_perf_summary.hpp"
 #include "omniseer_msgs/srv/capture_frame.hpp"
+#include "omniseer_vision_bridge/resolved_vision_config.hpp"
 #include "omniseer_vision_bridge/vision_bridge_runtime.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "yolo_msgs/msg/detection.hpp"
@@ -91,6 +92,7 @@ namespace omniseer_vision_bridge
     {
       _config = declare_bridge_parameters();
       log_config(_config);
+      write_resolved_config(_config);
       _detections_publisher =
           create_publisher<yolo_msgs::msg::DetectionArray>("/yolo/detections", 10);
       _detections_sink = std::make_unique<RosYoloDetectionsSink>(
@@ -257,6 +259,8 @@ namespace omniseer_vision_bridge
 
       cfg.camera_frame_id =
           declare_parameter<std::string>("frames.camera_frame_id", cfg.camera_frame_id);
+      cfg.resolved_config_path = declare_parameter<std::string>("provenance.resolved_config_path",
+                                                                cfg.resolved_config_path);
       cfg.pipeline_telemetry_path = declare_parameter<std::string>("telemetry.pipeline_jsonl_path",
                                                                    cfg.pipeline_telemetry_path);
       cfg.evidence_dir = declare_parameter<std::string>("evidence.dir", cfg.evidence_dir);
@@ -292,7 +296,8 @@ namespace omniseer_vision_bridge
               << " postprocess.nms_iou_threshold=" << cfg.nms_iou_threshold
               << " postprocess.max_detections=" << cfg.max_detections
               << " frames.camera_frame_id=" << quote_or_placeholder(cfg.camera_frame_id)
-              << " telemetry.pipeline_jsonl_path="
+              << " provenance.resolved_config_path="
+              << quote_or_placeholder(cfg.resolved_config_path) << " telemetry.pipeline_jsonl_path="
               << quote_or_placeholder(cfg.pipeline_telemetry_path)
               << " evidence.dir=" << quote_or_placeholder(cfg.evidence_dir)
               << " evidence.interval_sec=" << cfg.evidence_interval_sec
@@ -309,6 +314,16 @@ namespace omniseer_vision_bridge
         return "<unset>";
       }
       return "\"" + value + "\"";
+    }
+
+    void write_resolved_config(const VisionBridgeRuntimeConfig& cfg) const
+    {
+      std::string error;
+      if (!write_resolved_vision_config(cfg, &error))
+      {
+        RCLCPP_WARN(get_logger(), "failed to write resolved vision configuration: %s",
+                    error.c_str());
+      }
     }
 
     VisionBridgeRuntimeConfig                                           _config{};

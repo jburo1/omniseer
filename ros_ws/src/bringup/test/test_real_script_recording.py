@@ -111,6 +111,20 @@ class RealScriptRecordingTests(unittest.TestCase):
                     str(run_dir),
                     "--record-classes",
                     "plant",
+                    "--record-model-family",
+                    "yolo-world",
+                    "--record-model-variant",
+                    "v2s",
+                    "--record-model-precision",
+                    "int8",
+                    "--record-model-backend",
+                    "rknn",
+                    "--record-comparison-id",
+                    "vision-compare-2026-08",
+                    "--record-trial",
+                    "03",
+                    "--record-workload-id",
+                    "warehouse-aisle-a",
                     "--record-overwrite",
                     "bringup",
                     "start_vision:=false",
@@ -126,6 +140,14 @@ class RealScriptRecordingTests(unittest.TestCase):
 
             args = ros_args_path.read_text(encoding="utf-8").splitlines()
             self.assertIn("experiment_overwrite:=true", args)
+            self.assertIn("experiment_model_family:=yolo-world", args)
+            self.assertIn("experiment_model_variant:=v2s", args)
+            self.assertIn("experiment_model_precision:=int8", args)
+            self.assertIn("experiment_model_backend:=rknn", args)
+            self.assertIn("experiment_comparison_id:=vision-compare-2026-08", args)
+            self.assertIn("experiment_trial:=03", args)
+            self.assertIn("experiment_workload_id:=warehouse-aisle-a", args)
+            self.assertIn(f"resolved_vision_config_path:={run_dir}/provenance/resolved_vision_config.yaml", args)
             self.assertEqual((run_dir / "classes.txt").read_text(encoding="utf-8"), "plant\n")
             self.assertEqual((run_dir / "logs" / "bringup.log").read_text(encoding="utf-8"), "fake launch output\n")
 

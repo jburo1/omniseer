@@ -52,6 +52,10 @@ class RecorderOptions:
     detections_topic: str = DEFAULT_DETECTIONS_TOPIC
     perf_topic: str = DEFAULT_PERF_TOPIC
     vision_params_file: Path | None = None
+    model_family: str = ""
+    model_variant: str = ""
+    model_precision: str = ""
+    model_backend: str = ""
     detector_model_path: str = ""
     clip_model_path: str = ""
     clip_vocab_path: str = ""
@@ -64,6 +68,10 @@ class RecorderOptions:
     container_image_digest: str = ""
     experiment_config: str = ""
     experiment_parameters: dict[str, str] | None = None
+    comparison_id: str = ""
+    trial: str = ""
+    workload_id: str = ""
+    resolved_vision_config_path: str = ""
     queue_size: int = DEFAULT_QUEUE_SIZE
     flush_interval_sec: float = 1.0
     battery_topic: str = "/battery"
@@ -206,6 +214,10 @@ class PerceptionRunRecorder(Node):
                 notes=options.notes,
                 overwrite=options.overwrite,
                 vision_params_file=str(options.vision_params_file or ""),
+                model_family=options.model_family,
+                model_variant=options.model_variant,
+                model_precision=options.model_precision,
+                model_backend=options.model_backend,
                 detector_model_path=options.detector_model_path,
                 clip_model_path=options.clip_model_path,
                 clip_vocab_path=options.clip_vocab_path,
@@ -218,6 +230,10 @@ class PerceptionRunRecorder(Node):
                 container_image_digest=options.container_image_digest,
                 experiment_config=options.experiment_config,
                 experiment_parameters=options.experiment_parameters or {},
+                comparison_id=options.comparison_id,
+                trial=options.trial,
+                workload_id=options.workload_id,
+                resolved_vision_config_path=options.resolved_vision_config_path,
                 detections_topic=options.detections_topic,
                 perf_topic=options.perf_topic,
             )
@@ -392,6 +408,10 @@ def options_from_args(argv: list[str] | None = None) -> RecorderOptions:
         detections_topic=args.detections_topic,
         perf_topic=args.perf_topic,
         vision_params_file=vision_params_file,
+        model_family=args.model_family,
+        model_variant=args.model_variant,
+        model_precision=args.model_precision,
+        model_backend=args.model_backend,
         detector_model_path=detector_model_path,
         clip_model_path=clip_model_path,
         clip_vocab_path=clip_vocab_path,
@@ -404,6 +424,10 @@ def options_from_args(argv: list[str] | None = None) -> RecorderOptions:
         container_image_digest=_env_fallback(args.container_image_digest, "OMNISEER_CONTAINER_IMAGE_DIGEST"),
         experiment_config=_env_fallback(args.experiment_config, "OMNISEER_EXPERIMENT_CONFIG"),
         experiment_parameters=experiment_parameters,
+        comparison_id=args.comparison_id,
+        trial=args.trial,
+        workload_id=args.workload_id,
+        resolved_vision_config_path=args.resolved_vision_config_path,
         queue_size=args.queue_size,
         flush_interval_sec=args.flush_interval_sec,
         battery_topic=args.battery_topic,
@@ -432,6 +456,10 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--detections-topic", default=DEFAULT_DETECTIONS_TOPIC)
     parser.add_argument("--perf-topic", default=DEFAULT_PERF_TOPIC)
     parser.add_argument("--vision-params-file", default="", help="vision bridge parameter file for metadata fallback")
+    parser.add_argument("--model-family", default="", help="explicit detector model family")
+    parser.add_argument("--model-variant", default="", help="explicit detector model variant")
+    parser.add_argument("--model-precision", default="", help="explicit detector model precision")
+    parser.add_argument("--model-backend", default="", help="explicit detector model backend")
     parser.add_argument("--detector-model-path", default="", help="detector model path or __from_config__")
     parser.add_argument("--clip-model-path", default="", help="CLIP text model path or __from_config__")
     parser.add_argument("--clip-vocab-path", default="", help="CLIP vocab path or __from_config__")
@@ -443,6 +471,14 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--container-image-ref", default="", help="container image reference for run provenance")
     parser.add_argument("--container-image-digest", default="", help="container image digest for run provenance")
     parser.add_argument("--experiment-config", default="", help="experiment config identifier or path for provenance")
+    parser.add_argument("--comparison-id", default="", help="optional comparison experiment identifier")
+    parser.add_argument("--trial", default="", help="optional comparison trial identifier")
+    parser.add_argument("--workload-id", default="", help="optional comparison workload identifier")
+    parser.add_argument(
+        "--resolved-vision-config-path",
+        default="",
+        help="vision bridge-emitted resolved configuration artifact",
+    )
     parser.add_argument(
         "--experiment-parameters",
         default="",

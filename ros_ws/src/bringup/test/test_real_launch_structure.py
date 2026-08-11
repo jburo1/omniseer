@@ -123,6 +123,10 @@ class RealLaunchStructureTests(unittest.TestCase):
         recorder_text = "".join(_flatten_launch_value(getattr(node, "_Node__arguments", [])) for node in recorder_nodes)
         self.assertIn("--run-id", recorder_text)
         self.assertIn("--vision-params-file", recorder_text)
+        self.assertIn("--model-family", recorder_text)
+        self.assertIn("--model-variant", recorder_text)
+        self.assertIn("--model-precision", recorder_text)
+        self.assertIn("--model-backend", recorder_text)
         self.assertIn("--detector-model-path", recorder_text)
         self.assertIn("--classes-path", recorder_text)
         self.assertIn("--container-image-ref", recorder_text)
@@ -133,6 +137,10 @@ class RealLaunchStructureTests(unittest.TestCase):
         self.assertIn("--launch-args", recorder_text)
         self.assertIn("--experiment-config", recorder_text)
         self.assertIn("--experiment-parameters", recorder_text)
+        self.assertIn("--comparison-id", recorder_text)
+        self.assertIn("--trial", recorder_text)
+        self.assertIn("--workload-id", recorder_text)
+        self.assertIn("--resolved-vision-config-path", recorder_text)
         self.assertIn("--system-interval-sec", recorder_text)
 
     def test_real_launch_includes_conditioned_rosbag_recorder(self) -> None:
@@ -252,6 +260,7 @@ class RealLaunchStructureTests(unittest.TestCase):
             if isinstance(entity, DeclareLaunchArgument)
         }
         self.assertIn("pipeline_telemetry_path", declared_names)
+        self.assertIn("resolved_vision_config_path", declared_names)
 
         include_text = "".join(
             str(getattr(entity, "launch_arguments", ""))
@@ -259,6 +268,7 @@ class RealLaunchStructureTests(unittest.TestCase):
             if isinstance(entity, IncludeLaunchDescription)
         )
         self.assertIn("pipeline_telemetry_path", include_text)
+        self.assertIn("resolved_vision_config_path", include_text)
         self.assertIn("evidence_dir", include_text)
         self.assertIn("evidence_interval_sec", include_text)
         self.assertIn("evidence_jpeg_quality", include_text)
@@ -275,6 +285,7 @@ class RealLaunchStructureTests(unittest.TestCase):
             if isinstance(entity, DeclareLaunchArgument)
         }
         self.assertIn("pipeline_telemetry_path", declared_names)
+        self.assertIn("resolved_vision_config_path", declared_names)
         self.assertIn("evidence_dir", declared_names)
         self.assertIn("evidence_interval_sec", declared_names)
         self.assertIn("evidence_jpeg_quality", declared_names)

@@ -260,11 +260,18 @@ Recording flags:
 --record-system-interval-sec <seconds>
 --record-notes <text>
 --record-classes <text>
+--record-model-family <text>
+--record-model-variant <text>
+--record-model-precision <text>
+--record-model-backend <text>
 --record-container-image-ref <ref>
 --record-container-image-digest <digest>
 --record-experiment-config <text>
 --record-experiment-parameters <items>
 --record-experiment-parameter <key=value>
+--record-comparison-id <text>
+--record-trial <text>
+--record-workload-id <text>
 --record-overwrite
 ```
 
@@ -281,6 +288,10 @@ the bundle-local log path. Containerized runs can provide provenance through the
 record flags or `OMNISEER_CONTAINER_IMAGE_REF`,
 `OMNISEER_CONTAINER_IMAGE_DIGEST`, `OMNISEER_GIT_SHA`,
 `OMNISEER_EXPERIMENT_CONFIG`, and `OMNISEER_EXPERIMENT_PARAMETERS`.
+Use the model flags to record the explicit family, variant, precision, and
+backend; they are never inferred from a filename. Recorded real runs also include
+the bridge-emitted `provenance/resolved_vision_config.yaml`, which captures the
+effective vision parameters after launch overrides.
 
 Examples:
 

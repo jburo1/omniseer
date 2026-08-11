@@ -98,7 +98,7 @@ Common bundle files:
 
 | Artifact | Required by format | What it records | Evidence use |
 | --- | --- | --- | --- |
-| `manifest.yaml` | Yes | Schema version, run ID, start/end time, configured classes, launch command/profile/mode/arguments, ROS distro, git SHA, container reference/digest, experiment metadata, topic names, and provenance hashes/copies when available | Provenance, configuration, run identity, and whether autonomy was requested |
+| `manifest.yaml` | Yes | Schema version, run ID, start/end time, configured classes, explicit model family/variant/precision/backend and model paths, optional comparison ID/trial/workload, launch command/profile/mode/arguments, ROS distro, git SHA, container reference/digest, experiment metadata, topic names, and provenance hashes/copies when available | Provenance, configuration, run identity, and whether autonomy was requested |
 | `detections.jsonl` | Yes for perception bundles | Typed `/yolo/detections` records, classes, scores, boxes, frame IDs, and timestamps | Perception outputs and class/score summaries |
 | `perf.jsonl` | Yes for perception bundles | `/vision/perf` records, producer/consumer rates, stage timing summaries, source age, processed counts, and error counters | Performance and health claims from ROS vision summaries |
 | `summary.json` | Expected after finalization | Final duration, message counts, detections by class, confidence summaries, performance summaries, errors, and dropped-record counts | Compact run status and inspection index |
@@ -108,7 +108,7 @@ Common bundle files:
 | `evidence/evidence.jsonl` | Optional | Metadata for captured evidence frames, including frame IDs, capture reasons, timing, and target metadata | Connects visual evidence to run context |
 | `evidence/frames/*.jpg` | Optional | Clean captured evidence frames | Visual inspection of scene and detections when paired with metadata |
 | `evidence/annotated/*.jpg` | Derived optional | Annotated copies generated from clean frames and evidence metadata | Human review convenience; derived from raw frame evidence |
-| `provenance/` | Optional | Small copied inputs such as vocabulary, class list, vision config, and experiment config when available and size-limited | Reproducibility context; model binaries are hashed but not copied by default |
+| `provenance/` | Optional | Small copied inputs such as vocabulary, class list, vision config, and experiment config when available and size-limited; real recorded runs add bridge-emitted `resolved_vision_config.yaml` | Reproducibility context; model binaries are hashed but not copied by default. The resolved artifact captures effective bridge settings after defaults and launch overrides. |
 | `logs/bringup.log` | Optional | ROS launch stdout/stderr for recorded runs | Startup, shutdown, and runtime diagnostics |
 | `report/index.html` | Derived optional | Static report generated from the raw bundle, annotated evidence, summaries, charts, issues, and artifact links | Human-readable review artifact; raw JSONL and manifest remain the primary evidence |
 

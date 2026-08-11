@@ -256,6 +256,22 @@ class RecordRunConversionTests(unittest.TestCase):
                 "sha256:0123456789abcdef",
                 "--experiment-config",
                 "experiments/container-smoke.yaml",
+                "--model-family",
+                "yolo-world",
+                "--model-variant",
+                "v2s",
+                "--model-precision",
+                "int8",
+                "--model-backend",
+                "rknn",
+                "--comparison-id",
+                "yolo-world-v2s-baseline",
+                "--trial",
+                "03",
+                "--workload-id",
+                "warehouse-aisle-a",
+                "--resolved-vision-config-path",
+                "/runs/demo_001/provenance/resolved_vision_config.yaml",
                 "--experiment-parameters",
                 "profile=operator,camera=/dev/video11",
                 "--experiment-parameter",
@@ -278,6 +294,17 @@ class RecordRunConversionTests(unittest.TestCase):
         self.assertEqual(options.container_image_ref, "ghcr.io/acme/omniseer:robot-v2")
         self.assertEqual(options.container_image_digest, "sha256:0123456789abcdef")
         self.assertEqual(options.experiment_config, "experiments/container-smoke.yaml")
+        self.assertEqual(options.model_family, "yolo-world")
+        self.assertEqual(options.model_variant, "v2s")
+        self.assertEqual(options.model_precision, "int8")
+        self.assertEqual(options.model_backend, "rknn")
+        self.assertEqual(options.comparison_id, "yolo-world-v2s-baseline")
+        self.assertEqual(options.trial, "03")
+        self.assertEqual(options.workload_id, "warehouse-aisle-a")
+        self.assertEqual(
+            options.resolved_vision_config_path,
+            "/runs/demo_001/provenance/resolved_vision_config.yaml",
+        )
         self.assertEqual(
             options.experiment_parameters,
             {"camera": "/dev/video11", "profile": "operator", "scenario": "smoke"},

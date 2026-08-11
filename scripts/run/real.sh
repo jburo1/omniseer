@@ -43,6 +43,10 @@ Recording flags:
   --record-system-interval-sec <s> Sample system/platform telemetry every s seconds. Default: 1.0.
   --record-notes <text>            Store notes in manifest.yaml.
   --record-classes <text>          Store configured class names in manifest.yaml.
+  --record-model-family <text>     Store explicit detector family in manifest.yaml.
+  --record-model-variant <text>    Store explicit detector variant in manifest.yaml.
+  --record-model-precision <text>  Store explicit detector precision in manifest.yaml.
+  --record-model-backend <text>    Store explicit detector backend in manifest.yaml.
   --record-container-image-ref <ref>
                                    Store container image reference in manifest.yaml.
   --record-container-image-digest <digest>
@@ -53,6 +57,9 @@ Recording flags:
                                    Store experiment parameters as JSON or key=value pairs.
   --record-experiment-parameter <key=value>
                                    Store one experiment parameter; may be repeated.
+  --record-comparison-id <text>    Store an optional comparison experiment ID.
+  --record-trial <text>            Store an optional comparison trial ID.
+  --record-workload-id <text>      Store an optional comparison workload ID.
   --record-overwrite               Replace an existing output directory.
   --record-video                   Record gateway camera video to video/source.ts.
   --record-rosbag                  Record the configured ROS topic allowlist to rosbag/.
@@ -218,6 +225,7 @@ append_recording_launch_args() {
     "experiment_overwrite:=${record_overwrite}"
     "pipeline_telemetry_path:=${record_out_dir}/pipeline_telemetry.jsonl"
     "evidence_dir:=${record_out_dir}/evidence"
+    "resolved_vision_config_path:=${record_out_dir}/provenance/resolved_vision_config.yaml"
     "experiment_launch_command:=${launch_command}"
     "experiment_launch_profile:=${resolved_profile}"
     "experiment_launch_mode:=${mode}"
@@ -239,6 +247,28 @@ append_recording_launch_args() {
 
   if [[ -n "${record_classes}" ]]; then
     target_args+=("experiment_classes:=${record_classes}")
+  fi
+
+  if [[ -n "${record_model_family}" ]]; then
+    target_args+=("experiment_model_family:=${record_model_family}")
+  fi
+  if [[ -n "${record_model_variant}" ]]; then
+    target_args+=("experiment_model_variant:=${record_model_variant}")
+  fi
+  if [[ -n "${record_model_precision}" ]]; then
+    target_args+=("experiment_model_precision:=${record_model_precision}")
+  fi
+  if [[ -n "${record_model_backend}" ]]; then
+    target_args+=("experiment_model_backend:=${record_model_backend}")
+  fi
+  if [[ -n "${record_comparison_id}" ]]; then
+    target_args+=("experiment_comparison_id:=${record_comparison_id}")
+  fi
+  if [[ -n "${record_trial}" ]]; then
+    target_args+=("experiment_trial:=${record_trial}")
+  fi
+  if [[ -n "${record_workload_id}" ]]; then
+    target_args+=("experiment_workload_id:=${record_workload_id}")
   fi
 
   local container_image_ref="${record_container_image_ref:-${OMNISEER_CONTAINER_IMAGE_REF:-}}"
@@ -522,10 +552,17 @@ record_out_dir=""
 record_system_interval_sec="1.0"
 record_notes=""
 record_classes=""
+record_model_family=""
+record_model_variant=""
+record_model_precision=""
+record_model_backend=""
 record_container_image_ref=""
 record_container_image_digest=""
 record_experiment_config=""
 record_experiment_parameters=()
+record_comparison_id=""
+record_trial=""
+record_workload_id=""
 record_overwrite="false"
 record_video="false"
 record_rosbag="false"
@@ -593,6 +630,30 @@ while [[ $# -gt 0 ]]; do
       record_classes="$2"
       shift 2
       ;;
+    --record-model-family)
+      [[ $# -ge 2 ]] || omni_die "--record-model-family requires text"
+      record_enabled=true
+      record_model_family="$2"
+      shift 2
+      ;;
+    --record-model-variant)
+      [[ $# -ge 2 ]] || omni_die "--record-model-variant requires text"
+      record_enabled=true
+      record_model_variant="$2"
+      shift 2
+      ;;
+    --record-model-precision)
+      [[ $# -ge 2 ]] || omni_die "--record-model-precision requires text"
+      record_enabled=true
+      record_model_precision="$2"
+      shift 2
+      ;;
+    --record-model-backend)
+      [[ $# -ge 2 ]] || omni_die "--record-model-backend requires text"
+      record_enabled=true
+      record_model_backend="$2"
+      shift 2
+      ;;
     --record-container-image-ref)
       [[ $# -ge 2 ]] || omni_die "--record-container-image-ref requires an image reference"
       record_enabled=true
@@ -621,6 +682,24 @@ while [[ $# -gt 0 ]]; do
       [[ $# -ge 2 ]] || omni_die "--record-experiment-parameter requires key=value"
       record_enabled=true
       record_experiment_parameters+=("$2")
+      shift 2
+      ;;
+    --record-comparison-id)
+      [[ $# -ge 2 ]] || omni_die "--record-comparison-id requires text"
+      record_enabled=true
+      record_comparison_id="$2"
+      shift 2
+      ;;
+    --record-trial)
+      [[ $# -ge 2 ]] || omni_die "--record-trial requires text"
+      record_enabled=true
+      record_trial="$2"
+      shift 2
+      ;;
+    --record-workload-id)
+      [[ $# -ge 2 ]] || omni_die "--record-workload-id requires text"
+      record_enabled=true
+      record_workload_id="$2"
       shift 2
       ;;
     --record-overwrite)

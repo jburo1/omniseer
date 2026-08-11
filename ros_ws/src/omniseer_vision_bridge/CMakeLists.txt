@@ -23,6 +23,7 @@ set(VISION_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../../../vision)
 
 add_library(omniseer_bridge_runtime STATIC
   src/evidence_frame_sink.cpp
+  src/resolved_vision_config.cpp
   src/vision_bridge_runtime.cpp
   ${VISION_ROOT}/src/class_list.cpp
   ${VISION_ROOT}/src/consumer_pipeline.cpp
@@ -103,6 +104,18 @@ if(BUILD_TESTING)
     ${VISION_ROOT}/include
   )
   target_link_libraries(test_evidence_frame_sink
+    omniseer_bridge_runtime
+  )
+
+  ament_add_gtest(test_resolved_vision_config
+    test/test_resolved_vision_config.cpp
+  )
+  target_compile_features(test_resolved_vision_config PUBLIC cxx_std_17)
+  target_include_directories(test_resolved_vision_config PRIVATE
+    include
+    ${VISION_ROOT}/include
+  )
+  target_link_libraries(test_resolved_vision_config
     omniseer_bridge_runtime
   )
 endif()

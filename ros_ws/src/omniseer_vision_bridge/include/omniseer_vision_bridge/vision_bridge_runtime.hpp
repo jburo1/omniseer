@@ -40,6 +40,7 @@ namespace omniseer_vision_bridge
     int64_t max_detections{100};
 
     std::string                        camera_frame_id{"camera_optical_frame"};
+    std::string                        resolved_config_path{};
     std::string                        pipeline_telemetry_path{};
     std::string                        evidence_dir{};
     double                             evidence_interval_sec{1.0};

@@ -78,6 +78,10 @@ class RunBundleConfig:
     ros_distro: str = field(default_factory=lambda: os.environ.get("ROS_DISTRO", "unknown"))
     git_sha: str = field(default_factory=resolve_git_sha)
     detector: str = "yolo-world-rknn"
+    model_family: str = ""
+    model_variant: str = ""
+    model_precision: str = ""
+    model_backend: str = ""
     vision_params_file: str = ""
     detector_model_path: str = ""
     clip_model_path: str = ""
@@ -91,6 +95,10 @@ class RunBundleConfig:
     container_image_digest: str = ""
     experiment_config: str = ""
     experiment_parameters: dict[str, Any] = field(default_factory=dict)
+    comparison_id: str = ""
+    trial: str = ""
+    workload_id: str = ""
+    resolved_vision_config_path: str = ""
     detections_topic: str = DEFAULT_DETECTIONS_TOPIC
     perf_topic: str = DEFAULT_PERF_TOPIC
 
@@ -260,6 +268,9 @@ class RunBundleWriter:
         duration_sec = max(0.0, (self.ended_at - self.started_at).total_seconds())
         summary = self.summary.build_summary(duration_sec)
         self.summary_path.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        # The vision bridge writes this artifact after its parameters have been resolved.
+        # Refresh provenance at close so the manifest records the artifact it actually emitted.
+        self._provenance = self._build_provenance_manifest()
         self._write_manifest()
         self._closed = True
         return summary
@@ -348,6 +359,10 @@ class RunBundleWriter:
             "ros_distro": self.config.ros_distro,
             "model": {
                 "detector": self.config.detector,
+                "family": _optional_string(self.config.model_family),
+                "variant": _optional_string(self.config.model_variant),
+                "precision": _optional_string(self.config.model_precision),
+                "backend": _optional_string(self.config.model_backend),
                 "vision_params_file": self.config.vision_params_file,
                 "detector_model_path": self.config.detector_model_path,
                 "clip_model_path": self.config.clip_model_path,
@@ -368,6 +383,11 @@ class RunBundleWriter:
             "experiment": {
                 "config": self.config.experiment_config,
                 "parameters": dict(sorted(self.config.experiment_parameters.items())),
+            },
+            "comparison": {
+                "comparison_id": _optional_string(self.config.comparison_id),
+                "trial": _optional_string(self.config.trial),
+                "workload_id": _optional_string(self.config.workload_id),
             },
             "provenance": self._provenance,
             "topics": {
@@ -406,16 +426,31 @@ class RunBundleWriter:
                 source_path=self.config.experiment_config,
                 copy_name=_copy_name("experiment_config", self.config.experiment_config),
             ),
+            "resolved_vision_config": self._provenance_entry(
+                source_path=self.config.resolved_vision_config_path,
+                copy_name="",
+                bundle_copy=_bundle_relative_path(self.config.resolved_vision_config_path, self.run_dir),
+                copy_status="emitted_by_vision_bridge",
+            ),
         }
 
-    def _provenance_entry(self, *, source_path: str, copy_name: str) -> dict[str, Any]:
+    def _provenance_entry(
+        self,
+        *,
+        source_path: str,
+        copy_name: str,
+        bundle_copy: str = "",
+        copy_status: str = "",
+    ) -> dict[str, Any]:
         entry: dict[str, Any] = {
             "path": source_path,
             "available": False,
             "sha256": "",
             "size_bytes": None,
-            "bundle_copy": "",
+            "bundle_copy": bundle_copy,
         }
+        if copy_status:
+            entry["copy_status"] = copy_status
         if not source_path:
             entry["error"] = "not_configured"
             return entry
@@ -609,6 +644,19 @@ def _copy_name(role: str, source_path: str) -> str:
         return ""
     suffix = Path(source_path).suffix
     return f"{role}{suffix}"
+
+
+def _bundle_relative_path(source_path: str, run_dir: Path) -> str:
+    if not source_path:
+        return ""
+    try:
+        return str(Path(source_path).relative_to(run_dir))
+    except ValueError:
+        return ""
+
+
+def _optional_string(value: str) -> str | None:
+    return value or None
 
 
 def _to_yaml(value: dict[str, Any]) -> str:
