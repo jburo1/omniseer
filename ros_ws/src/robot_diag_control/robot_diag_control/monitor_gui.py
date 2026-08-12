@@ -43,6 +43,7 @@ from robot_diag_control.run_artifacts import (
     retrieve_run_artifacts,
 )
 from robot_diag_control.run_commands import (
+    DEFAULT_RUNTIME_TAG,
     PREVIEW_ENCODER_LABELS,
     PREVIEW_ENCODER_ROCKCHIP,
     RUN_BACKEND_LABELS,
@@ -347,6 +348,7 @@ class RobotMonitorGui:
         remote_runs_root = parsed.remote_runs_root or default_remote_runs_root(parsed.remote_repo_root)
         self._remote_runs_root_var = tk.StringVar(value=remote_runs_root)
         self._local_import_root_var = tk.StringVar(value=parsed.local_import_root)
+        self._runtime_tag_var = tk.StringVar(value=DEFAULT_RUNTIME_TAG)
         self._devcontainer_exec_template_var = tk.StringVar(value=parsed.devcontainer_exec_template)
         self._run_id_var = tk.StringVar(value=_default_run_id())
         self._run_classes_var = tk.StringVar(value="person")
@@ -544,11 +546,12 @@ class RobotMonitorGui:
         self._add_labeled_entry(form, "Remote Repo", self._remote_repo_root_var, 1, 0)
         self._add_labeled_entry(form, "Remote Runs", self._remote_runs_root_var, 1, 2)
         self._add_labeled_entry(form, "Local Import", self._local_import_root_var, 2, 0)
-        self._add_labeled_entry(form, "Devcontainer Exec", self._devcontainer_exec_template_var, 2, 2)
+        self._add_labeled_entry(form, "Runtime tag", self._runtime_tag_var, 2, 2)
+        self._add_labeled_entry(form, "Devcontainer Exec", self._devcontainer_exec_template_var, 3, 0)
 
-        ttk.Separator(form).grid(row=3, column=0, columnspan=4, sticky=tk.EW, pady=(8, 0))
+        ttk.Separator(form).grid(row=4, column=0, columnspan=4, sticky=tk.EW, pady=(8, 0))
         experiment_holder = ttk.Frame(form)
-        experiment_holder.grid(row=4, column=0, columnspan=4, sticky=tk.EW, pady=(8, 0))
+        experiment_holder.grid(row=5, column=0, columnspan=4, sticky=tk.EW, pady=(8, 0))
         ttk.Label(experiment_holder, text="Experiment").grid(row=0, column=0, sticky=tk.W)
         run_type_box = ttk.Combobox(
             experiment_holder,
@@ -751,6 +754,7 @@ class RobotMonitorGui:
             run_type_label=self._run_type_var.get(),
             classes_text=self._run_classes_var.get(),
             notes=self._run_notes(),
+            runtime_tag=self._runtime_tag_var.get(),
             devcontainer_exec_template=self._devcontainer_exec_template_var.get(),
             autonomy_bbox_area_min_ratio=self._autonomy_bbox_area_min_ratio_var.get(),
             autonomy_approach_stop_area_percent=self._autonomy_approach_stop_area_percent_var.get(),

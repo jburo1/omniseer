@@ -36,7 +36,7 @@ class RunPreparationTests(unittest.TestCase):
             ["ssh", "radxa@10.0.0.2", "mkdir -p /home/radxa/apps/omniseer/runs/operator_001"],
         )
         self.assertEqual(start_command[0:3], ["ssh", "-tt", "radxa@10.0.0.2"])
-        self.assertIn("scripts/omni runtime record --run-id operator_001", start_command[3])
+        self.assertIn("scripts/omni runtime record --tag robot-verified --run-id operator_001", start_command[3])
 
     def test_prepare_remote_run_uploads_class_file_before_start_command(self):
         calls: list[tuple[str, list[str]]] = []

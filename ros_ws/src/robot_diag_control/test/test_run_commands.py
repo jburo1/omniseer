@@ -80,6 +80,7 @@ class RunCommandsTests(unittest.TestCase):
             run_config=RunConfig(
                 run_id="operator_001",
                 backend=RUN_BACKEND_RUNTIME,
+                runtime_tag="candidate-2026.08",
                 classes=("person", "fire extinguisher"),
                 notes="lighting changed",
                 devcontainer_exec_template="ignored {command}",
@@ -91,7 +92,7 @@ class RunCommandsTests(unittest.TestCase):
         )
 
         self.assertEqual(command[0:3], ["ssh", "-tt", "radxa@10.0.0.2"])
-        self.assertIn("scripts/omni runtime record", command[3])
+        self.assertIn("scripts/omni runtime record --tag candidate-2026.08", command[3])
         self.assertIn("--record-notes 'lighting changed'", command[3])
         self.assertIn("--record-classes 'person,fire extinguisher'", command[3])
         self.assertIn("--record-experiment-config 'Perception recording'", command[3])
@@ -181,6 +182,7 @@ class RunCommandsTests(unittest.TestCase):
         self.assertEqual(command[0:3], ["ssh", "-tt", "radxa@10.0.0.2"])
         self.assertIn("docker exec omniseer-dev bash -lc", command[3])
         self.assertIn("cd /omniseer && scripts/omni run real --profile operator", command[3])
+        self.assertNotIn("--tag", command[3])
         self.assertIn("--record-out /omniseer/runs/operator_001", command[3])
         self.assertIn("--record-classes", command[3])
         self.assertIn("person,fire extinguisher", command[3])

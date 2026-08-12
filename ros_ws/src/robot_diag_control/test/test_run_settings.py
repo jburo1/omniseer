@@ -2,6 +2,7 @@ import unittest
 from pathlib import Path
 
 from robot_diag_control.run_commands import (
+    DEFAULT_RUNTIME_TAG,
     PREVIEW_ENCODER_LABELS,
     PREVIEW_ENCODER_ROCKCHIP,
     PREVIEW_ENCODER_SOFTWARE,
@@ -41,6 +42,7 @@ def _values(**overrides: str) -> RunFormValues:
         "run_type_label": RUN_TYPE_LABELS[RUN_TYPE_PERCEPTION],
         "classes_text": "person, cup\nperson",
         "notes": "  trial notes  ",
+        "runtime_tag": " candidate-runtime ",
         "devcontainer_exec_template": "",
         "autonomy_bbox_area_min_ratio": " 0.10 ",
         "autonomy_approach_stop_area_percent": " 180 ",
@@ -114,6 +116,7 @@ class RunSettingsTests(unittest.TestCase):
         self.assertEqual(selection.run_config.backend, RUN_BACKEND_RUNTIME)
         self.assertEqual(selection.run_config.classes, ("person", "cup"))
         self.assertEqual(selection.run_config.notes, "trial notes")
+        self.assertEqual(selection.run_config.runtime_tag, "candidate-runtime")
         self.assertEqual(selection.run_config.run_type, RUN_TYPE_PERCEPTION)
         self.assertEqual(selection.run_config.experiment_config, "Perception recording")
         self.assertEqual(selection.run_config.devcontainer_exec_template, DEFAULT_DEVCONTAINER_EXEC_TEMPLATE)
@@ -137,6 +140,15 @@ class RunSettingsTests(unittest.TestCase):
         self.assertEqual(selection.artifact_context.repo_root, Path("/repo"))
         self.assertEqual(selection.artifact_context.connection, selection.connection)
         self.assertEqual(selection.artifact_context.local_import_root, Path("/repo/runs/imported"))
+
+    def test_resolve_run_form_uses_default_runtime_tag_when_blank(self):
+        selection = resolve_run_form(
+            _values(runtime_tag="  "),
+            repo_root=Path("/repo"),
+            default_run_id=lambda: "operator_default",
+        )
+
+        self.assertEqual(selection.run_config.runtime_tag, DEFAULT_RUNTIME_TAG)
 
     def test_resolve_autonomy_run_form_uses_ordered_class_list(self):
         selection = resolve_run_form(

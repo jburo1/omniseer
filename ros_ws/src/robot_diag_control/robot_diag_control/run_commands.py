@@ -31,6 +31,7 @@ PREVIEW_ENCODER_LABELS = {
     PREVIEW_ENCODER_ROCKCHIP: "Rockchip hardware",
     PREVIEW_ENCODER_SOFTWARE: "Software x264",
 }
+DEFAULT_RUNTIME_TAG = "robot-verified"
 
 
 @dataclass(frozen=True)
@@ -47,6 +48,7 @@ class RunConfig:
     backend: str
     classes: tuple[str, ...] = ()
     notes: str = ""
+    runtime_tag: str = DEFAULT_RUNTIME_TAG
     devcontainer_exec_template: str = ""
     run_type: str = RUN_TYPE_PERCEPTION
     experiment_config: str = ""
@@ -159,6 +161,8 @@ def _build_runtime_record_inner_command(
         "scripts/omni",
         "runtime",
         "record",
+        "--tag",
+        run_config.runtime_tag,
         "--run-id",
         run_id,
     ]

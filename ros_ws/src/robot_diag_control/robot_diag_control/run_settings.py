@@ -8,6 +8,7 @@ from pathlib import Path
 from robot_diag_control.run_artifacts import RunArtifactContext
 from robot_diag_control.run_commands import (
     DEFAULT_DEVCONTAINER_EXEC_TEMPLATE,
+    DEFAULT_RUNTIME_TAG,
     PREVIEW_ENCODER_LABELS,
     RUN_BACKEND_LABELS,
     RUN_TYPE_LABELS,
@@ -34,6 +35,7 @@ class RunFormValues:
     classes_text: str
     notes: str
     devcontainer_exec_template: str
+    runtime_tag: str = DEFAULT_RUNTIME_TAG
     autonomy_bbox_area_min_ratio: str = "0.08"
     autonomy_approach_stop_area_percent: str = "125"
     autonomy_bbox_area_max_ratio: str = "0.35"
@@ -202,6 +204,7 @@ def resolve_run_form(
         backend=selected_run_backend(values.backend_label),
         classes=tuple(parse_run_classes(values.classes_text)),
         notes=values.notes.strip(),
+        runtime_tag=values.runtime_tag.strip() or DEFAULT_RUNTIME_TAG,
         devcontainer_exec_template=values.devcontainer_exec_template.strip() or DEFAULT_DEVCONTAINER_EXEC_TEMPLATE,
         run_type=run_type,
         experiment_config=RUN_TYPE_LABELS[run_type],

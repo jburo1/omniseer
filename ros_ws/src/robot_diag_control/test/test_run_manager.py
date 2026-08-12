@@ -37,7 +37,7 @@ class RunManagerTests(unittest.TestCase):
 
         def process_starter(command: list[str], cwd: Path) -> RemoteRunProcess:
             events.append(f"start {cwd}")
-            self.assertIn("scripts/omni runtime record --run-id operator_001", command[3])
+            self.assertIn("scripts/omni runtime record --tag robot-verified --run-id operator_001", command[3])
             return RemoteRunProcess(_FakeProcess())  # type: ignore[arg-type]
 
         manager = RunManager(
