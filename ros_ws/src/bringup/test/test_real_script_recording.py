@@ -13,6 +13,7 @@ class RealScriptRecordingTests(unittest.TestCase):
         self.assertIn('kill -INT "${bringup_pid}"', source)
         self.assertIn("wait_for_recording_finalization", source)
         self.assertIn('summary_path="${record_out_dir}/summary.json"', source)
+        self.assertIn("trap - INT TERM", source)
 
     def test_autonomy_script_uses_first_class_as_target_and_records_full_class_list(self) -> None:
         repo_root = Path(__file__).resolve().parents[4]

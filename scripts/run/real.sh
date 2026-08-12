@@ -377,7 +377,13 @@ run_background_profile_bringup() {
   bringup_log="$(bringup_log_path "${profile_name}")"
   prepare_bringup_log_file "${bringup_log}"
 
-  ros2 launch bringup real.launch.py "${launch_args[@]}" "${extra_args[@]}" >>"${bringup_log}" 2>&1 &
+  (
+    # Bash backgrounds asynchronous commands with SIGINT ignored. Restore the
+    # default before exec so cleanup_background_bringup can request the normal
+    # ROS 2 graceful shutdown path.
+    trap - INT TERM
+    exec ros2 launch bringup real.launch.py "${launch_args[@]}" "${extra_args[@]}"
+  ) >>"${bringup_log}" 2>&1 &
   bringup_pid=$!
 
   sleep "${bringup_delay_sec}"
