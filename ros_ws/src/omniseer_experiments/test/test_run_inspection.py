@@ -194,6 +194,17 @@ class RunInspectionTests(unittest.TestCase):
         self.assertEqual(payload["message_counts"], {"detections": 1, "perf": 1, "system": 0})
         self.assertEqual(payload["configured_classes"], ["chair", "backpack"])
 
+    def test_require_complete_rejects_incomplete_bundle(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "demo_001"
+            _write_completed_bundle(run_dir)
+            (run_dir / "summary.json").unlink()
+
+            with self.assertRaises(SystemExit) as raised:
+                inspect_run_main([str(run_dir), "--require-complete"])
+
+        self.assertEqual(raised.exception.code, 1)
+
     def test_missing_summary_after_finalized_manifest_is_incomplete(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             run_dir = Path(tmp) / "demo_001"

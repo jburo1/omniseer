@@ -234,6 +234,11 @@ def inspect_run_main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Inspect one local Omniseer perception run bundle.")
     parser.add_argument("run_dir", help="path to a runs/<run_id> bundle")
     parser.add_argument("--json", action="store_true", help="emit a stable JSON object")
+    parser.add_argument(
+        "--require-complete",
+        action="store_true",
+        help="exit nonzero unless the bundle is complete",
+    )
     args = parser.parse_args(argv)
 
     inspection = inspect_run(Path(args.run_dir))
@@ -241,6 +246,8 @@ def inspect_run_main(argv: list[str] | None = None) -> None:
         print(json.dumps(inspection.to_json(), indent=2, sort_keys=True))
     else:
         print(format_run_summary(inspection))
+    if args.require_complete and inspection.state != STATE_COMPLETE:
+        raise SystemExit(1)
 
 
 def list_runs_main(argv: list[str] | None = None) -> None:

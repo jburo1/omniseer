@@ -571,7 +571,28 @@ runtime_verify_full() {
     --record-out "/runs/${run_id}" \
     --record-experiment-config runtime-container-full \
     --record-experiment-parameter "stage=full" \
-    smoke
+    --record-video \
+    smoke \
+    gateway_preview_encoder:=rockchip
+}
+
+runtime_verify_full_run_bundle() {
+  local run_id="$1"
+  local run_dir video_path codec
+  run_dir="$(runtime_runs_bind_root)/${run_id}"
+  video_path="${run_dir}/video/source.ts"
+
+  "$(omni_repo_root)/scripts/omni" runs inspect "${run_dir}" --require-complete
+
+  [[ -s "${video_path}" ]] \
+    || omni_die "full runtime verification video is missing or empty: ${video_path}"
+  omni_command_available ffprobe \
+    || omni_die "full runtime verification requires ffprobe to validate ${video_path}"
+  codec="$(ffprobe -v error -select_streams v:0 -show_entries stream=codec_name \
+    -of default=noprint_wrappers=1:nokey=1 "${video_path}")" \
+    || omni_die "full runtime verification could not probe video: ${video_path}"
+  [[ "${codec}" == "h264" ]] \
+    || omni_die "full runtime verification expected H.264 video at ${video_path}, got ${codec:-<none>}"
 }
 
 runtime_write_verify_metadata() {
@@ -664,6 +685,7 @@ runtime_verify() {
     runtime_verify_smoke "${image_base}" "${tag}"
   else
     runtime_verify_full "${image_ref}" "${run_id}"
+    runtime_verify_full_run_bundle "${run_id}"
   fi
 
   runtime_write_verify_metadata "${tag}" "${image_base}" "${image_ref}" "${stage}" "${run_id}" "passed"

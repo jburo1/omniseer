@@ -15,6 +15,17 @@ def _write_fake_docker(path: Path) -> None:
                 'printf "docker" >>"${DOCKER_LOG}"',
                 'for arg in "$@"; do printf " %q" "${arg}" >>"${DOCKER_LOG}"; done',
                 'printf "\\n" >>"${DOCKER_LOG}"',
+                'if [[ "${OMNISEER_FAKE_RUNTIME_FULL_VIDEO:-0}" == "1" && "${1:-}" == "run" ]]; then',
+                '  args=("$@")',
+                "  for ((index = 0; index < ${#args[@]}; index++)); do",
+                '    if [[ "${args[index]}" == "--record-out" ]]; then',
+                '      run_dir="${OMNISEER_RUNTIME_RUNS_HOST_ROOT}/${args[index + 1]#/runs/}"',
+                '      mkdir -p "${run_dir}/video"',
+                '      printf "fake transport stream\\n" >"${run_dir}/video/source.ts"',
+                "      break",
+                "    fi",
+                "  done",
+                "fi",
                 'if [[ "${1:-}" == "buildx" && "${2:-}" == "imagetools" && "${3:-}" == "inspect" ]]; then',
                 '  printf "sha256:registry_digest\\n"',
                 "  exit 0",
@@ -94,16 +105,39 @@ def _runtime_env(tmp_path: Path) -> dict[str, str]:
     rknn_lib = tmp_path / "librknnrt.so"
     rknn_include.write_text("// fake RKNN header\n", encoding="utf-8")
     rknn_lib.write_text("fake RKNN runtime\n", encoding="utf-8")
+    ros_setup = tmp_path / "ros_setup.bash"
+    ros_setup.write_text("\n", encoding="utf-8")
+    ws_setup = tmp_path / "ws_setup.bash"
+    ws_setup.write_text("\n", encoding="utf-8")
+    ros2 = tmp_path / "ros2"
+    ros2.write_text(
+        "#!/usr/bin/env bash\n"
+        "set -euo pipefail\n"
+        'printf "ros2 %q\\n" "$*" >>"${ROS2_LOG}"\n'
+        'exit "${OMNISEER_FAKE_INSPECT_STATUS:-0}"\n',
+        encoding="utf-8",
+    )
+    ros2.chmod(0o755)
+    ffprobe = tmp_path / "ffprobe"
+    ffprobe.write_text(
+        '#!/usr/bin/env bash\nset -euo pipefail\nprintf "%s\\n" "${OMNISEER_FAKE_FFPROBE_CODEC:-h264}"\n',
+        encoding="utf-8",
+    )
+    ffprobe.chmod(0o755)
+    runs_root = tmp_path / "runs"
 
     env = os.environ.copy()
     env["PATH"] = f"{tmp_path}:{env['PATH']}"
     env["DOCKER_LOG"] = str(tmp_path / "docker.log")
+    env["ROS2_LOG"] = str(tmp_path / "ros2.log")
     env["OMNISEER_FAKE_GIT_SHA"] = FAKE_GIT_SHA
     env["OMNISEER_RUNTIME_METADATA_DIR"] = str(tmp_path / "metadata")
     env["OMNISEER_RKNN_INCLUDE"] = str(rknn_include)
     env["OMNISEER_RKNN_LIB"] = str(rknn_lib)
     env["OMNISEER_RUNTIME_SAFE_SMOKE_SEC"] = "1"
-    env["OMNISEER_RUNTIME_RUNS_HOST_ROOT"] = f"{REPO_ROOT}/runs"
+    env["OMNISEER_ROS_SETUP"] = str(ros_setup)
+    env["OMNISEER_WS_SETUP"] = str(ws_setup)
+    env["OMNISEER_RUNTIME_RUNS_HOST_ROOT"] = str(runs_root)
     return env
 
 
@@ -234,7 +268,7 @@ def test_runtime_run_uses_robot_container_flags_and_provenance(tmp_path: Path) -
     assert "--ipc=host" in log
     assert "/dev:/dev" in log
     assert "/run/udev:/run/udev:ro" in log
-    assert f"{REPO_ROOT}/runs:/runs" in log
+    assert f"{env['OMNISEER_RUNTIME_RUNS_HOST_ROOT']}:/runs" in log
     assert "OMNISEER_CONTAINER_IMAGE_REF=ghcr.io/jburo1/omniseer-robot-runtime:runtime-test" in log
     assert (
         "OMNISEER_CONTAINER_IMAGE_DIGEST=ghcr.io/jburo1/omniseer-robot-runtime:runtime-test@sha256:repo_digest" in log
@@ -447,6 +481,7 @@ def test_runtime_verify_safe_smoke_treats_timeout_as_pass(tmp_path: Path) -> Non
 def test_runtime_verify_full_records_run_with_provenance(tmp_path: Path) -> None:
     env = _runtime_env(tmp_path)
     env["OMNISEER_RUNTIME_DOCKER_TTY"] = "always"
+    env["OMNISEER_FAKE_RUNTIME_FULL_VIDEO"] = "1"
 
     result = subprocess.run(
         ["scripts/omni", "runtime", "verify", "--tag", "runtime-test", "--stage", "full"],
@@ -465,9 +500,56 @@ def test_runtime_verify_full_records_run_with_provenance(tmp_path: Path) -> None
     assert "--record-out /runs/runtime_full_" in log
     assert "--record-experiment-config runtime-container-full" in log
     assert "--record-experiment-parameter stage=full" in log
-    assert (Path(env["OMNISEER_RUNTIME_METADATA_DIR"]) / "verify-full-runtime-test.env").is_file()
-    metadata = (Path(env["OMNISEER_RUNTIME_METADATA_DIR"]) / "verify-full-runtime-test.env").read_text(encoding="utf-8")
+    assert "--record-video" in log
+    assert "gateway_preview_encoder:=rockchip" in log
+    assert "omniseer_experiments\\ inspect_run" in Path(env["ROS2_LOG"]).read_text(encoding="utf-8")
+    assert "--require-complete" in Path(env["ROS2_LOG"]).read_text(encoding="utf-8")
+    metadata_file = Path(env["OMNISEER_RUNTIME_METADATA_DIR"]) / "verify-full-runtime-test.env"
+    assert metadata_file.is_file()
+    metadata = metadata_file.read_text(encoding="utf-8")
+    assert "IMAGE_REF=ghcr.io/jburo1/omniseer-robot-runtime:runtime-test" in metadata
+    assert "TAG=runtime-test" in metadata
+    assert "IMAGE_ID=sha256:local_image_id" in metadata
     assert f"GIT_SHA={FAKE_GIT_SHA}" in metadata
+
+
+def test_runtime_verify_full_fails_when_runbundle_inspection_fails(tmp_path: Path) -> None:
+    env = _runtime_env(tmp_path)
+    env["OMNISEER_FAKE_RUNTIME_FULL_VIDEO"] = "1"
+    env["OMNISEER_FAKE_INSPECT_STATUS"] = "1"
+
+    result = subprocess.run(
+        ["scripts/omni", "runtime", "verify", "--tag", "runtime-test", "--stage", "full"],
+        cwd=REPO_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode != 0
+    assert not (Path(env["OMNISEER_RUNTIME_METADATA_DIR"]) / "verify-full-runtime-test.env").exists()
+
+
+def test_runtime_verify_full_fails_when_video_is_missing_or_not_h264(tmp_path: Path) -> None:
+    for video_enabled, codec in ((False, "h264"), (True, "hevc")):
+        case_dir = tmp_path / f"video_{video_enabled}_{codec}"
+        case_dir.mkdir()
+        env = _runtime_env(case_dir)
+        env["OMNISEER_FAKE_RUNTIME_FULL_VIDEO"] = "1" if video_enabled else "0"
+        env["OMNISEER_FAKE_FFPROBE_CODEC"] = codec
+
+        result = subprocess.run(
+            ["scripts/omni", "runtime", "verify", "--tag", "runtime-test", "--stage", "full"],
+            cwd=REPO_ROOT,
+            env=env,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        assert result.returncode != 0
+        assert not (Path(env["OMNISEER_RUNTIME_METADATA_DIR"]) / "verify-full-runtime-test.env").exists()
 
 
 def test_runtime_push_requires_full_verification_metadata(tmp_path: Path) -> None:

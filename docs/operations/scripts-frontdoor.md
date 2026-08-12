@@ -144,9 +144,12 @@ Behavior and constraints:
   `summary.json`, and `logs/bringup.log` are finalized.
 - `runtime verify` defaults to `--stage smoke`, a bounded container smoke check
   with hardware-dependent launch components disabled.
-- `runtime verify --stage full` runs the real operator smoke path with recording
-  and image provenance; it requires the robot runtime environment and target
-  hardware dependencies.
+- `runtime verify --stage full` runs the real operator smoke path with RunBundle
+  recording (`--record-video` and the Rockchip preview encoder), then requires
+  `runs inspect --require-complete` to accept the finalized bundle and
+  `ffprobe` to identify its non-empty `video/source.ts` as H.264. It writes
+  passed metadata only after those checks, and requires the robot runtime
+  environment and target hardware dependencies.
 - `runtime push` requires a clean git tree, passed full verification for the
   same local image ID, and matching verification/current git commits. It
   promotes to immutable `robot-verified-g<full-commit-sha>`, optional
@@ -363,7 +366,7 @@ scripts/omni run teleop
 Inspects local RunBundles and retrieves robot-side RunBundles.
 
 ```bash
-scripts/omni runs inspect <run_dir> [--json]
+scripts/omni runs inspect <run_dir> [--json] [--require-complete]
 scripts/omni runs annotate <run_dir> [--overwrite]
 scripts/omni runs report <run_dir> [--overwrite]
 scripts/omni runs local-list [--root <local-runs-root>]
