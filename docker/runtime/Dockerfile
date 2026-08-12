@@ -241,6 +241,7 @@ RUN set -eux; \
     libv4l-0t64 \
     libv4l2rds0t64 \
     libv4lconvert0t64 \
+    gstreamer1.0-rockchip1 \
     librga2 \
     v4l-utils \
     ros-${ROS_DISTRO}-rplidar-ros; \
