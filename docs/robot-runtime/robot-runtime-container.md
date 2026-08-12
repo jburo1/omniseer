@@ -184,9 +184,12 @@ container, leave the local default (`<repo>/runs`) or set
 `runtime verify` defaults to a safe smoke stage. It starts the container with
 vision, Teensy, LiDAR, boundary-topic waits, and pre-launch cleanup disabled; a
 launch that survives until the smoke timeout is treated as a pass. Full
-verification runs the container's existing real operator smoke path with run
-recording enabled. Verification runs Docker without an interactive TTY so it can
-be used under `sudo`, SSH automation, and other non-interactive launch paths.
+verification runs the container's existing real operator smoke path with the
+Rockchip H.264 preview encoder and writes a preview verification artifact
+directly under the mounted `/runs` directory. It passes only after `ffprobe`
+confirms that the non-empty artifact is H.264; it does not record or inspect a
+RunBundle. Verification runs Docker without an interactive TTY so it can be used
+under `sudo`, SSH automation, and other non-interactive launch paths.
 Direct `runtime run` and manual `runtime record` commands allocate a TTY only
 when attached to one by default; override that with
 `OMNISEER_RUNTIME_DOCKER_TTY=always` or `never`.

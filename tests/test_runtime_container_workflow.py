@@ -18,15 +18,15 @@ def _write_fake_docker(path: Path) -> None:
                 'if [[ "${OMNISEER_FAKE_RUNTIME_FULL_VIDEO:-0}" == "1" && "${1:-}" == "run" ]]; then',
                 '  args=("$@")',
                 "  for ((index = 0; index < ${#args[@]}; index++)); do",
-                '    if [[ "${args[index]}" == "--record-out" ]]; then',
-                '      run_dir="${OMNISEER_RUNTIME_RUNS_HOST_ROOT}/${args[index + 1]#/runs/}"',
+                '    if [[ "${args[index]}" == gateway_preview_record_path:=/runs/* ]]; then',
+                '      preview_path="${args[index]#gateway_preview_record_path:=/runs/}"',
                 '      runs_roots=("${OMNISEER_RUNTIME_RUNS_HOST_ROOT}")',
                 '      runs_roots+=("${OMNISEER_RUNTIME_RUNS_LOCAL_ROOT:-}")',
                 '      for runs_root in "${runs_roots[@]}"; do',
                 '        [[ -n "${runs_root}" ]] || continue',
-                '        run_dir="${runs_root}/${args[index + 1]#/runs/}"',
-                '        mkdir -p "${run_dir}/video"',
-                '        printf "fake transport stream\\n" >"${run_dir}/video/source.ts"',
+                '        output_path="${runs_root}/${preview_path}"',
+                '        mkdir -p "$(dirname "${output_path}")"',
+                '        printf "fake transport stream\\n" >"${output_path}"',
                 "      done",
                 "      break",
                 "    fi",
@@ -485,7 +485,7 @@ def test_runtime_verify_safe_smoke_treats_timeout_as_pass(tmp_path: Path) -> Non
     assert (Path(env["OMNISEER_RUNTIME_METADATA_DIR"]) / "verify-smoke-runtime-test.env").is_file()
 
 
-def test_runtime_verify_full_records_run_with_provenance(tmp_path: Path) -> None:
+def test_runtime_verify_full_records_rockchip_preview_artifact(tmp_path: Path) -> None:
     env = _runtime_env(tmp_path)
     env["OMNISEER_RUNTIME_DOCKER_TTY"] = "always"
     env["OMNISEER_FAKE_RUNTIME_FULL_VIDEO"] = "1"
@@ -503,15 +503,16 @@ def test_runtime_verify_full_records_run_with_provenance(tmp_path: Path) -> None
     log = _docker_log(env)
     assert "docker run" in log
     assert "-it" not in log
-    assert "--record-run" in log
-    assert "--record-out /runs/runtime_full_" in log
-    assert "--record-experiment-config runtime-container-full" in log
-    assert "--record-experiment-parameter stage=full" in log
-    assert "--record-video" in log
+    assert "--record-run" not in log
+    assert "--record-out" not in log
+    assert "--record-video" not in log
+    assert "--record-experiment-config" not in log
     assert "gateway_preview_encoder:=rockchip" in log
-    assert "omniseer_experiments\\ inspect_run" in Path(env["ROS2_LOG"]).read_text(encoding="utf-8")
-    assert str(Path(env["OMNISEER_RUNTIME_RUNS_LOCAL_ROOT"])) in Path(env["ROS2_LOG"]).read_text(encoding="utf-8")
-    assert "--require-complete" in Path(env["ROS2_LOG"]).read_text(encoding="utf-8")
+    assert "gateway_preview_record_path:=/runs/runtime_full_" in log
+    assert not Path(env["ROS2_LOG"]).exists()
+    preview_artifacts = list(Path(env["OMNISEER_RUNTIME_RUNS_LOCAL_ROOT"]).glob("runtime_full_*.ts"))
+    assert len(preview_artifacts) == 1
+    assert preview_artifacts[0].stat().st_size > 0
     metadata_file = Path(env["OMNISEER_RUNTIME_METADATA_DIR"]) / "verify-full-runtime-test.env"
     assert metadata_file.is_file()
     metadata = metadata_file.read_text(encoding="utf-8")
@@ -519,9 +520,10 @@ def test_runtime_verify_full_records_run_with_provenance(tmp_path: Path) -> None
     assert "TAG=runtime-test" in metadata
     assert "IMAGE_ID=sha256:local_image_id" in metadata
     assert f"GIT_SHA={FAKE_GIT_SHA}" in metadata
+    assert f"PREVIEW_ARTIFACT={preview_artifacts[0]}" in metadata
 
 
-def test_runtime_verify_full_inspects_caller_visible_runs_directory(tmp_path: Path) -> None:
+def test_runtime_verify_full_validates_caller_visible_preview_artifact(tmp_path: Path) -> None:
     env = _runtime_env(tmp_path)
     host_runs_root = tmp_path / "docker-host-runs"
     local_runs_root = tmp_path / "workspace-runs"
@@ -539,12 +541,13 @@ def test_runtime_verify_full_inspects_caller_visible_runs_directory(tmp_path: Pa
     )
 
     assert result.returncode == 0, result.stderr
-    inspect_log = Path(env["ROS2_LOG"]).read_text(encoding="utf-8")
-    assert str(local_runs_root) in inspect_log
-    assert str(host_runs_root) not in inspect_log
+    preview_artifacts = list(local_runs_root.glob("runtime_full_*.ts"))
+    assert len(preview_artifacts) == 1
+    assert preview_artifacts[0].stat().st_size > 0
+    assert not Path(env["ROS2_LOG"]).exists()
 
 
-def test_runtime_verify_full_fails_when_runbundle_inspection_fails(tmp_path: Path) -> None:
+def test_runtime_verify_full_does_not_depend_on_runbundle_inspection(tmp_path: Path) -> None:
     env = _runtime_env(tmp_path)
     env["OMNISEER_FAKE_RUNTIME_FULL_VIDEO"] = "1"
     env["OMNISEER_FAKE_INSPECT_STATUS"] = "1"
@@ -558,11 +561,29 @@ def test_runtime_verify_full_fails_when_runbundle_inspection_fails(tmp_path: Pat
         check=False,
     )
 
-    assert result.returncode != 0
-    assert not (Path(env["OMNISEER_RUNTIME_METADATA_DIR"]) / "verify-full-runtime-test.env").exists()
+    assert result.returncode == 0, result.stderr
+    assert (Path(env["OMNISEER_RUNTIME_METADATA_DIR"]) / "verify-full-runtime-test.env").exists()
+    assert not Path(env["ROS2_LOG"]).exists()
 
 
-def test_runtime_verify_full_fails_when_video_is_missing_or_not_h264(tmp_path: Path) -> None:
+def test_runtime_verify_full_accepts_first_h264_codec_from_duplicate_ffprobe_output(tmp_path: Path) -> None:
+    env = _runtime_env(tmp_path)
+    env["OMNISEER_FAKE_RUNTIME_FULL_VIDEO"] = "1"
+    env["OMNISEER_FAKE_FFPROBE_CODEC"] = "h264\nh264"
+
+    result = subprocess.run(
+        ["scripts/omni", "runtime", "verify", "--tag", "runtime-test", "--stage", "full"],
+        cwd=REPO_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+
+
+def test_runtime_verify_full_fails_when_preview_artifact_is_missing_or_not_h264(tmp_path: Path) -> None:
     for video_enabled, codec in ((False, "h264"), (True, "hevc")):
         case_dir = tmp_path / f"video_{video_enabled}_{codec}"
         case_dir.mkdir()

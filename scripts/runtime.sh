@@ -572,43 +572,29 @@ runtime_verify_smoke() {
 
 runtime_verify_full() {
   local image_ref="$1"
-  local run_id="$2"
+  local verify_id="$2"
   OMNISEER_RUNTIME_DOCKER_TTY=never runtime_docker_run "${image_ref}" \
     run real \
     --profile operator \
-    --record-run "${run_id}" \
-    --record-out "/runs/${run_id}" \
-    --record-experiment-config runtime-container-full \
-    --record-experiment-parameter "stage=full" \
-    --record-video \
     smoke \
-    gateway_preview_encoder:=rockchip
+    gateway_preview_encoder:=rockchip \
+    gateway_preview_record_path:=/runs/${verify_id}.ts
 }
 
-runtime_verify_full_run_bundle() {
-  local run_id="$1"
-  local run_dir bringup_log video_path codec
-  run_dir="$(runtime_runs_local_root)/${run_id}"
-  bringup_log="${run_dir}/logs/bringup.log"
-  video_path="${run_dir}/video/source.ts"
+runtime_verify_full_preview() {
+  local verify_id="$1"
+  local preview_path codec
+  preview_path="$(runtime_runs_local_root)/${verify_id}.ts"
 
-  if ! "$(omni_repo_root)/scripts/omni" runs inspect "${run_dir}" --require-complete; then
-    if [[ -f "${bringup_log}" ]]; then
-      omni_error "full runtime verification recorder/bringup log (last 80 lines): ${bringup_log}"
-      tail -n 80 "${bringup_log}" >&2 || true
-    fi
-    return 1
-  fi
-
-  [[ -s "${video_path}" ]] \
-    || omni_die "full runtime verification video is missing or empty: ${video_path}"
+  [[ -s "${preview_path}" ]] \
+    || omni_die "full runtime verification preview artifact is missing or empty: ${preview_path}"
   omni_command_available ffprobe \
-    || omni_die "full runtime verification requires ffprobe to validate ${video_path}"
+    || omni_die "full runtime verification requires ffprobe to validate ${preview_path}"
   codec="$(ffprobe -v error -select_streams v:0 -show_entries stream=codec_name \
-    -of default=noprint_wrappers=1:nokey=1 "${video_path}")" \
-    || omni_die "full runtime verification could not probe video: ${video_path}"
+    -of default=noprint_wrappers=1:nokey=1 "${preview_path}" | head -n 1)" \
+    || omni_die "full runtime verification could not probe preview artifact: ${preview_path}"
   [[ "${codec}" == "h264" ]] \
-    || omni_die "full runtime verification expected H.264 video at ${video_path}, got ${codec:-<none>}"
+    || omni_die "full runtime verification expected H.264 preview artifact at ${preview_path}, got ${codec:-<none>}"
 }
 
 runtime_write_verify_metadata() {
@@ -618,11 +604,14 @@ runtime_write_verify_metadata() {
   local stage="$4"
   local run_id="$5"
   local status="$6"
-  local git_sha image_id timestamp verify_file
+  local git_sha image_id timestamp verify_file preview_artifact=""
   git_sha="$(runtime_git_sha)"
   image_id="$(runtime_image_id "${image_ref}")"
   timestamp="$(runtime_timestamp)"
   verify_file="$(runtime_metadata_file "verify-${stage}" "${tag}")"
+  if [[ "${stage}" == "full" ]]; then
+    preview_artifact="$(runtime_runs_local_root)/${run_id}.ts"
+  fi
   runtime_write_env_file \
     "${verify_file}" \
     "IMAGE_BASE=${image_base}" \
@@ -633,7 +622,7 @@ runtime_write_verify_metadata() {
     "STAGE=${stage}" \
     "STATUS=${status}" \
     "RUN_ID=${run_id}" \
-    "RUN_DIR=$(omni_repo_root)/runs/${run_id}" \
+    "PREVIEW_ARTIFACT=${preview_artifact}" \
     "VERIFIED_AT=${timestamp}"
   omni_info "Verify metadata: ${verify_file}"
 }
@@ -701,7 +690,7 @@ runtime_verify() {
     runtime_verify_smoke "${image_base}" "${tag}"
   else
     runtime_verify_full "${image_ref}" "${run_id}"
-    runtime_verify_full_run_bundle "${run_id}"
+    runtime_verify_full_preview "${run_id}"
   fi
 
   runtime_write_verify_metadata "${tag}" "${image_base}" "${image_ref}" "${stage}" "${run_id}" "passed"

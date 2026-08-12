@@ -144,12 +144,13 @@ Behavior and constraints:
   `summary.json`, and `logs/bringup.log` are finalized.
 - `runtime verify` defaults to `--stage smoke`, a bounded container smoke check
   with hardware-dependent launch components disabled.
-- `runtime verify --stage full` runs the real operator smoke path with RunBundle
-  recording (`--record-video` and the Rockchip preview encoder), then requires
-  `runs inspect --require-complete` to accept the finalized bundle and
-  `ffprobe` to identify its non-empty `video/source.ts` as H.264. It writes
-  passed metadata only after those checks, and requires the robot runtime
-  environment and target hardware dependencies.
+- `runtime verify --stage full` runs the real operator smoke path with the
+  Rockchip preview encoder and records its preview directly to a small
+  verification artifact under the mounted `/runs` directory. It passes only
+  when the operator acceptance checks succeed and `ffprobe` identifies the
+  non-empty artifact as H.264. It writes passed metadata only after those
+  checks, and requires the robot runtime environment and target hardware
+  dependencies.
 - `runtime push` requires a clean git tree, passed full verification for the
   same local image ID, and matching verification/current git commits. It
   promotes to immutable `robot-verified-g<full-commit-sha>`, optional
