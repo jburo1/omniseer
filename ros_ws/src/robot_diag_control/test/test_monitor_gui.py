@@ -19,6 +19,7 @@ from robot_diag_control.monitor_gui import (
     _resolved_preview_host,
     _teleop_command_for_action,
 )
+from robot_diag_control.run_artifacts import RunArtifactResult
 from robot_diag_control.run_commands import RUN_BACKEND_LABELS, RobotConnection
 from robot_diag_control.run_lifecycle import RemoteRunProcess, RunPhase, run_state
 from robot_diag_control.run_manager import RunStopResult
@@ -417,9 +418,19 @@ class MonitorGuiTests(unittest.TestCase):
         root.withdraw()
         try:
             gui = RobotMonitorGui(root, _build_parser().parse_args([]))
-            self.assertEqual(set(gui._sections), {"connection", "actions", "teleop", "run", "status", "log"})
+            self.assertEqual(
+                set(gui._sections),
+                {
+                    "advanced_connection",
+                    "advanced_experiment_overrides",
+                    "teleop",
+                    "run",
+                    "status",
+                    "log",
+                },
+            )
 
-            for section_name in ("actions", "teleop"):
+            for section_name in ("advanced_connection", "advanced_experiment_overrides", "teleop"):
                 section = gui._sections[section_name]
                 self.assertFalse(section.expanded)
                 self.assertEqual(section.body.winfo_manager(), "")
@@ -442,7 +453,7 @@ class MonitorGuiTests(unittest.TestCase):
             root.destroy()
 
     @unittest.skipIf(tk is None, "tkinter is unavailable")
-    def test_gui_run_actions_do_not_include_standalone_generate_report(self):
+    def test_gui_run_actions_use_combined_retrieve_and_report(self):
         assert tk is not None
         root = tk.Tk()
         root.withdraw()
@@ -456,12 +467,25 @@ class MonitorGuiTests(unittest.TestCase):
                     "start",
                     "stop",
                     "retrieve",
-                    "open_report",
-                    "build_video",
-                    "open_source_video",
-                    "open_overlay_video",
                 },
             )
+            self.assertEqual(gui._run_buttons["retrieve"].cget("text"), "Retrieve & Open Report")
+
+            texts = _widget_texts(root)
+            self.assertTrue(any("Advanced Connection" in text for text in texts))
+            self.assertTrue(any("Advanced Experiment Overrides" in text for text in texts))
+            for removed_label in (
+                "Refresh",
+                "Start Watch",
+                "Stop Watch",
+                "Preview On",
+                "Preview Off",
+                "Open Report",
+                "Build Videos",
+                "Open Source Video",
+                "Open Overlay Video",
+            ):
+                self.assertNotIn(removed_label, texts)
         finally:
             root.destroy()
 
@@ -486,7 +510,7 @@ class MonitorGuiTests(unittest.TestCase):
             root.destroy()
 
     @unittest.skipIf(tk is None, "tkinter is unavailable")
-    def test_gui_user_actions_write_clear_activity_messages(self):
+    def test_gui_watch_helpers_write_clear_activity_messages(self):
         assert tk is not None
         root = tk.Tk()
         root.withdraw()
@@ -500,6 +524,23 @@ class MonitorGuiTests(unittest.TestCase):
             self.assertIn("stop watch requested", activity)
             self.assertIn("watch not running", activity)
             self.assertIn("new run id generated", activity)
+        finally:
+            root.destroy()
+
+    @unittest.skipIf(tk is None, "tkinter is unavailable")
+    def test_gui_starts_status_polling_when_opened(self):
+        assert tk is not None
+        root = tk.Tk()
+        root.withdraw()
+        try:
+            with patch.object(RobotMonitorGui, "refresh_status") as refresh_status:
+                gui = RobotMonitorGui(root, _build_parser().parse_args([]))
+                root.after(75, root.quit)
+                root.mainloop()
+
+            refresh_status.assert_called_once()
+            self.assertIsNotNone(gui._watch_after_id)
+            gui.stop_watch()
         finally:
             root.destroy()
 
@@ -527,6 +568,46 @@ class MonitorGuiTests(unittest.TestCase):
             self.assertEqual(activity.strip(), "")
         finally:
             root.destroy()
+
+    @unittest.skipIf(tk is None, "tkinter is unavailable")
+    def test_gui_retrieve_and_open_report_builds_recorded_video(self):
+        assert tk is not None
+        with tempfile.TemporaryDirectory() as repo_root:
+            root = tk.Tk()
+            root.withdraw()
+            try:
+                gui = RobotMonitorGui(root, _build_parser().parse_args(["--repo-root", repo_root]))
+                gui._run_id_var.set("operator_001")
+                run_dir = Path(repo_root) / "runs" / "imported" / "operator_001"
+
+                def retrieve(*_args, **_kwargs):
+                    (run_dir / "video").mkdir(parents=True)
+                    (run_dir / "video" / "source.ts").write_bytes(b"recorded")
+                    return RunArtifactResult(command=["pull"], success=True, message="retrieved")
+
+                with (
+                    patch(
+                        "robot_diag_control.monitor_gui.retrieve_run_artifacts",
+                        side_effect=retrieve,
+                    ) as retrieve_mock,
+                    patch(
+                        "robot_diag_control.monitor_gui.build_run_videos",
+                        return_value=RunArtifactResult(command=["video"], success=True, message="videos built"),
+                    ) as build_mock,
+                    patch(
+                        "robot_diag_control.monitor_gui.generate_run_report",
+                        return_value=RunArtifactResult(command=["report"], success=True, message="report generated"),
+                    ) as report_mock,
+                    patch.object(gui, "_open_report") as open_report,
+                ):
+                    gui.retrieve_and_open_report()
+
+                retrieve_mock.assert_called_once()
+                build_mock.assert_called_once()
+                report_mock.assert_called_once()
+                open_report.assert_called_once()
+            finally:
+                root.destroy()
 
     @unittest.skipIf(tk is None, "tkinter is unavailable")
     def test_gui_open_report_logs_artifact_warnings_for_incomplete_bundle(self):
@@ -561,10 +642,9 @@ class MonitorGuiTests(unittest.TestCase):
                 gui._run_id_var.set("operator_001")
 
                 with patch("robot_diag_control.monitor_gui.webbrowser.open") as browser_open:
-                    gui.open_report()
+                    gui._open_report(gui._artifact_context(), "operator_001")
 
                 activity = gui._log_text.get("1.0", tk.END)
-                self.assertIn("open report requested", activity)
                 self.assertIn("artifact warning: run_open: manifest ended_at is null; run did not finalize", activity)
                 self.assertIn("artifact warning: missing_summary: summary.json is missing", activity)
                 browser_open.assert_called_once_with(report.as_uri())

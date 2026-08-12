@@ -13,6 +13,7 @@ The operator monitor is the laptop-side interface for remote perception runs. It
 - streams the remote run log back into the GUI
 - requests graceful stop, then falls back to runtime-container stop when needed
 - retrieves the completed run bundle
+- builds recorded videos when the retrieved bundle contains `video/source.ts`
 - generates and opens the local HTML report
 
 The monitor remains laptop-side tooling. Robot behavior belongs to `robot-core`
@@ -84,11 +85,14 @@ needs it to write final metadata such as `manifest.yaml` and `summary.json`.
 
 ## Artifact Sequence
 
-1. `monitor_gui.py` calls `retrieve_run_artifacts(...)`.
-2. `run_artifacts.py` executes the `scripts/omni runs pull <run_id>` command.
-3. On success, the GUI calls `generate_run_report(...)`.
-4. `run_artifacts.py` executes `scripts/omni runs report <imported_run>`.
-5. The GUI opens `runs/imported/<run_id>/report/index.html` when present.
+The GUI's **Retrieve & Open Report** action:
+
+1. calls `retrieve_run_artifacts(...)`.
+2. executes `scripts/omni runs pull <run_id>`.
+3. builds videos with `build_run_videos(...)` when the retrieved bundle contains
+   `video/source.ts`.
+4. regenerates the report with `generate_run_report(...)`.
+5. opens `runs/imported/<run_id>/report/index.html` when present.
 
 Artifact operations are local laptop actions after the robot run has completed.
 They stay separate from robot process lifecycle and do not change robot-side
@@ -96,8 +100,9 @@ behavior.
 
 ## Detector Tuning
 
-The Run form exposes detector controls that operators can adjust between runs
-without changing hardware or model assumptions:
+The collapsed **Advanced Experiment Overrides** section exposes detector controls
+that operators can adjust between runs without changing hardware or model
+assumptions:
 
 - `Score Threshold` -> `postprocess.score_threshold`
 - `NMS IoU` -> `postprocess.nms_iou_threshold`
@@ -112,10 +117,10 @@ device, capture size, model input size, class padding, and runner warmup remain
 launch/config-file controls.
 
 For a recorded camera stream, select **Record video** before starting the run.
-This is off by default. After retrieving the RunBundle, use **Build Videos** to
-create `video/source.mp4` and the approximate detection overlay
-`video/overlay.mp4`; source preview and inference use separate camera paths, so
-the overlay is not pixel-perfect synchronized.
+This is off by default. **Retrieve & Open Report** creates `video/source.mp4`
+and the approximate detection overlay `video/overlay.mp4` before regenerating
+the report; source preview and inference use separate camera paths, so the
+overlay is not pixel-perfect synchronized.
 
 Select **Record rosbag** to add the configured ROS topic allowlist to the same
 RunBundle. This is also off by default and creates the standard ROS 2 bag layout:

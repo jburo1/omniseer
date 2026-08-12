@@ -157,7 +157,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--refresh-on-start",
         action="store_true",
-        help="fetch status once immediately after the window opens",
+        help="deprecated; the GUI polls status automatically while open",
     )
     parser.add_argument(
         "--auto-close-seconds",
@@ -316,6 +316,7 @@ class RobotMonitorGui:
         self._parsed = parsed
         self._run_manager = RunManager(repo_root=self._repo_root())
         self._watch_after_id: str | None = None
+        self._watch_start_after_id: str | None = None
         self._viewer_process: subprocess.Popen[str] | None = None
         self._run_process: RemoteRunProcess | None = None
         self._run_state: RunState = run_state(RunPhase.IDLE)
@@ -380,9 +381,7 @@ class RobotMonitorGui:
         self._build_layout()
         self._sync_run_experiment_fields()
         self._update_run_controls()
-
-        if parsed.refresh_on_start:
-            self._root.after(50, self.refresh_status)
+        self._watch_start_after_id = self._root.after(50, self._start_watch)
         if parsed.auto_close_seconds is not None:
             self._root.after(int(parsed.auto_close_seconds * 1000), self._root.destroy)
 
@@ -407,10 +406,12 @@ class RobotMonitorGui:
             fill=tk.X,
             expand=True,
         )
+        ttk.Button(header, text="Open Viewer", command=self.open_viewer).pack(side=tk.RIGHT)
+        ttk.Button(header, text="Open Overlay", command=self.open_overlay).pack(side=tk.RIGHT, padx=(0, 8))
 
-        connection_section = CollapsibleSection(container, "Connection", padding=10)
+        connection_section = CollapsibleSection(container, "Advanced Connection", padding=10, expanded=False)
         connection_section.pack(fill=tk.X, pady=(12, 10))
-        self._sections["connection"] = connection_section
+        self._sections["advanced_connection"] = connection_section
         connection_frame = connection_section.body
         self._add_labeled_entry(connection_frame, "Host", self._host_var, 0, 0)
         self._add_labeled_entry(connection_frame, "Port", self._port_var, 0, 2, width=10)
@@ -428,21 +429,15 @@ class RobotMonitorGui:
             width=18,
         )
         profile_box.grid(row=3, column=3, sticky=tk.W, padx=(8, 0), pady=(8, 0))
+        self._add_labeled_entry(connection_frame, "SSH User", self._ssh_user_var, 4, 0, width=12)
+        self._add_labeled_entry(connection_frame, "Remote Repo", self._remote_repo_root_var, 4, 2)
+        self._add_labeled_entry(connection_frame, "Remote Runs", self._remote_runs_root_var, 5, 0)
+        self._add_labeled_entry(connection_frame, "Local Import", self._local_import_root_var, 5, 2)
+        self._add_labeled_entry(connection_frame, "Runtime tag", self._runtime_tag_var, 6, 0)
+        self._add_labeled_entry(connection_frame, "Devcontainer Exec", self._devcontainer_exec_template_var, 6, 2)
 
         for column in range(4):
             connection_frame.columnconfigure(column, weight=1 if column in {1, 3} else 0)
-
-        actions_section = CollapsibleSection(container, "Actions", padding=8, expanded=False)
-        actions_section.pack(fill=tk.X, pady=(0, 10))
-        self._sections["actions"] = actions_section
-        controls = actions_section.body
-        ttk.Button(controls, text="Refresh", command=self.refresh_status).pack(side=tk.LEFT)
-        ttk.Button(controls, text="Start Watch", command=self.start_watch).pack(side=tk.LEFT, padx=(8, 0))
-        ttk.Button(controls, text="Stop Watch", command=self.stop_watch).pack(side=tk.LEFT, padx=(8, 0))
-        ttk.Button(controls, text="Preview On", command=self.preview_on).pack(side=tk.LEFT, padx=(24, 0))
-        ttk.Button(controls, text="Preview Off", command=self.preview_off).pack(side=tk.LEFT, padx=(8, 0))
-        ttk.Button(controls, text="Open Viewer", command=self.open_viewer).pack(side=tk.LEFT, padx=(24, 0))
-        ttk.Button(controls, text="Open Overlay", command=self.open_overlay).pack(side=tk.LEFT, padx=(8, 0))
 
         body = ttk.Panedwindow(container, orient=tk.HORIZONTAL)
         body.pack(fill=tk.BOTH, expand=True)
@@ -542,16 +537,8 @@ class RobotMonitorGui:
             state="readonly",
         )
         backend_box.grid(row=0, column=1, sticky=tk.EW, padx=(8, 0), pady=(8, 0))
-        self._add_labeled_entry(form, "SSH User", self._ssh_user_var, 0, 2, width=12)
-        self._add_labeled_entry(form, "Remote Repo", self._remote_repo_root_var, 1, 0)
-        self._add_labeled_entry(form, "Remote Runs", self._remote_runs_root_var, 1, 2)
-        self._add_labeled_entry(form, "Local Import", self._local_import_root_var, 2, 0)
-        self._add_labeled_entry(form, "Runtime tag", self._runtime_tag_var, 2, 2)
-        self._add_labeled_entry(form, "Devcontainer Exec", self._devcontainer_exec_template_var, 3, 0)
-
-        ttk.Separator(form).grid(row=4, column=0, columnspan=4, sticky=tk.EW, pady=(8, 0))
         experiment_holder = ttk.Frame(form)
-        experiment_holder.grid(row=5, column=0, columnspan=4, sticky=tk.EW, pady=(8, 0))
+        experiment_holder.grid(row=1, column=0, columnspan=4, sticky=tk.EW, pady=(8, 0))
         ttk.Label(experiment_holder, text="Experiment").grid(row=0, column=0, sticky=tk.W)
         run_type_box = ttk.Combobox(
             experiment_holder,
@@ -576,33 +563,23 @@ class RobotMonitorGui:
         ttk.Checkbutton(experiment_holder, text="Record rosbag", variable=self._record_rosbag_var).grid(
             row=2, column=3, sticky=tk.W, pady=(8, 0)
         )
-        self._add_labeled_entry(
-            experiment_holder,
-            "Score Threshold",
-            self._detector_score_threshold_var,
-            3,
-            0,
-            width=8,
-        )
-        self._add_labeled_entry(
-            experiment_holder,
-            "NMS IoU",
-            self._detector_nms_iou_threshold_var,
-            3,
-            2,
-            width=8,
-        )
-        self._add_labeled_entry(
-            experiment_holder,
-            "Max Detections",
-            self._detector_max_detections_var,
-            4,
-            0,
-            width=8,
-        )
 
-        experiment_fields = ttk.Frame(experiment_holder)
-        experiment_fields.grid(row=5, column=0, columnspan=4, sticky=tk.EW)
+        overrides_section = CollapsibleSection(
+            experiment_holder,
+            "Advanced Experiment Overrides",
+            padding=0,
+            expanded=False,
+        )
+        overrides_section.body.configure(padding=0)
+        overrides_section.grid(row=3, column=0, columnspan=4, sticky=tk.EW, pady=(8, 0))
+        self._sections["advanced_experiment_overrides"] = overrides_section
+        overrides = overrides_section.body
+        self._add_labeled_entry(overrides, "Score Threshold", self._detector_score_threshold_var, 0, 0, width=8)
+        self._add_labeled_entry(overrides, "NMS IoU", self._detector_nms_iou_threshold_var, 0, 2, width=8)
+        self._add_labeled_entry(overrides, "Max Detections", self._detector_max_detections_var, 1, 0, width=8)
+
+        experiment_fields = ttk.Frame(overrides)
+        experiment_fields.grid(row=2, column=0, columnspan=4, sticky=tk.EW)
         perception_frame = ttk.Frame(experiment_fields)
         perception_frame.columnconfigure(1, weight=1)
         self._run_experiment_frames[RUN_TYPE_PERCEPTION] = perception_frame
@@ -661,10 +638,10 @@ class RobotMonitorGui:
         for column in range(4):
             experiment_holder.columnconfigure(column, weight=1 if column in {1, 3} else 0)
 
-        self._add_labeled_entry(form, "Run ID", self._run_id_var, 5, 0)
-        ttk.Label(form, text="Notes").grid(row=6, column=0, sticky=tk.NW, pady=(8, 0))
+        self._add_labeled_entry(form, "Run ID", self._run_id_var, 2, 0)
+        ttk.Label(form, text="Notes").grid(row=3, column=0, sticky=tk.NW, pady=(8, 0))
         self._run_notes_text = tk.Text(form, height=3, width=40, wrap=tk.WORD)
-        self._run_notes_text.grid(row=6, column=1, columnspan=3, sticky=tk.EW, padx=(8, 0), pady=(8, 0))
+        self._run_notes_text.grid(row=3, column=1, columnspan=3, sticky=tk.EW, padx=(8, 0), pady=(8, 0))
         for column in range(4):
             form.columnconfigure(column, weight=1 if column in {1, 3} else 0)
 
@@ -676,20 +653,12 @@ class RobotMonitorGui:
         self._run_buttons["start"].pack(fill=tk.X, pady=(8, 0))
         self._run_buttons["stop"] = ttk.Button(actions, text="Stop Run", command=self.stop_run)
         self._run_buttons["stop"].pack(fill=tk.X, pady=(8, 0))
-        self._run_buttons["retrieve"] = ttk.Button(actions, text="Retrieve Results", command=self.retrieve_results)
+        self._run_buttons["retrieve"] = ttk.Button(
+            actions,
+            text="Retrieve & Open Report",
+            command=self.retrieve_and_open_report,
+        )
         self._run_buttons["retrieve"].pack(fill=tk.X, pady=(18, 0))
-        self._run_buttons["open_report"] = ttk.Button(actions, text="Open Report", command=self.open_report)
-        self._run_buttons["open_report"].pack(fill=tk.X, pady=(8, 0))
-        self._run_buttons["build_video"] = ttk.Button(actions, text="Build Videos", command=self.build_videos)
-        self._run_buttons["build_video"].pack(fill=tk.X, pady=(8, 0))
-        self._run_buttons["open_source_video"] = ttk.Button(
-            actions, text="Open Source Video", command=self.open_source_video
-        )
-        self._run_buttons["open_source_video"].pack(fill=tk.X, pady=(8, 0))
-        self._run_buttons["open_overlay_video"] = ttk.Button(
-            actions, text="Open Overlay Video", command=self.open_overlay_video
-        )
-        self._run_buttons["open_overlay_video"].pack(fill=tk.X, pady=(8, 0))
 
     def _sync_run_experiment_fields(self) -> None:
         try:
@@ -841,10 +810,6 @@ class RobotMonitorGui:
             "start": availability.start,
             "stop": availability.stop,
             "retrieve": availability.retrieve,
-            "open_report": availability.open_report,
-            "build_video": availability.open_report,
-            "open_source_video": availability.open_report,
-            "open_overlay_video": availability.open_report,
         }
         for name, enabled in states.items():
             button = self._run_buttons.get(name)
@@ -1065,33 +1030,31 @@ class RobotMonitorGui:
         self._append_log(completion.log_message)
         self._run_process = None
 
-    def retrieve_results(self) -> None:
-        self._append_log("retrieve results requested")
-        run_id = self._current_run_id()
-        result = retrieve_run_artifacts(
-            self._artifact_context(),
-            run_id=run_id,
-            overwrite=True,
-        )
-        self._append_artifact_result(result)
-        if not result.success:
-            return
-        self._generate_and_open_report()
-
-    def _generate_and_open_report(self) -> None:
-        self._append_log("generating report after retrieval")
-        run_id = self._current_run_id()
-        result = generate_run_report(self._artifact_context(), run_id=run_id, overwrite=True)
-        self._append_artifact_result(result)
-        if not result.success:
-            return
-
-        self.open_report()
-
-    def open_report(self) -> None:
-        self._append_log("open report requested")
+    def retrieve_and_open_report(self) -> None:
+        self._append_log("retrieve and open report requested")
         run_id = self._current_run_id()
         context = self._artifact_context()
+        result = retrieve_run_artifacts(context, run_id=run_id, overwrite=True)
+        self._append_artifact_result(result)
+        if not result.success:
+            return
+
+        if (context.local_import_root / run_id / "video" / "source.ts").is_file():
+            self._append_log("building recorded videos after retrieval")
+            result = build_run_videos(context, run_id=run_id)
+            self._append_artifact_result(result)
+            if not result.success:
+                return
+
+        self._append_log("generating report after retrieval")
+        result = generate_run_report(context, run_id=run_id, overwrite=True)
+        self._append_artifact_result(result)
+        if not result.success:
+            return
+
+        self._open_report(context, run_id)
+
+    def _open_report(self, context: RunArtifactContext, run_id: str) -> None:
         inspection = inspect_run_artifacts(context, run_id, require_report=True)
         self._append_artifact_warnings(inspection.issues)
         path = report_path(context, run_id)
@@ -1099,27 +1062,6 @@ class RobotMonitorGui:
             return
         webbrowser.open(path.as_uri())
         self._append_log(f"report opened: {path}")
-
-    def build_videos(self) -> None:
-        run_id = self._current_run_id()
-        result = build_run_videos(self._artifact_context(), run_id=run_id)
-        self._append_artifact_result(result)
-        if result.success:
-            self._append_artifact_result(generate_run_report(self._artifact_context(), run_id=run_id, overwrite=True))
-
-    def _open_video(self, name: str) -> None:
-        path = self._artifact_context().local_import_root / self._current_run_id() / "video" / name
-        if not path.is_file():
-            self._append_log(f"video not found: {path}")
-            return
-        webbrowser.open(path.as_uri())
-        self._append_log(f"video opened: {path}")
-
-    def open_source_video(self) -> None:
-        self._open_video("source.mp4")
-
-    def open_overlay_video(self) -> None:
-        self._open_video("overlay.mp4")
 
     def refresh_status(self) -> None:
         self._append_log("status refresh requested")
@@ -1148,6 +1090,10 @@ class RobotMonitorGui:
             return
         self._append_log("watch started")
         self._watch_tick()
+
+    def _start_watch(self) -> None:
+        self._watch_start_after_id = None
+        self.start_watch()
 
     def _watch_tick(self) -> None:
         self.refresh_status()
@@ -1237,6 +1183,10 @@ class RobotMonitorGui:
         self.refresh_status()
 
     def close(self) -> None:
+        if self._watch_start_after_id is not None:
+            self._root.after_cancel(self._watch_start_after_id)
+            self._watch_start_after_id = None
+        self.stop_watch()
         self._request_run_stop(finalize_runtime_stop=False)
         try:
             settings = self._connection_settings()
@@ -1314,7 +1264,6 @@ def main(args: list[str] | None = None) -> int:
     app = RobotMonitorGui(root, parsed)
     root.protocol("WM_DELETE_WINDOW", app.close)
     root.mainloop()
-    app.stop_watch() if app._watch_after_id is not None else None
     if app._viewer_process is not None and app._viewer_process.poll() is None:
         app._viewer_process.terminate()
     return 0

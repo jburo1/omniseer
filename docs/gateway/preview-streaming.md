@@ -43,8 +43,8 @@ Implemented host-side consumers:
   live video
 - `robot_monitor_shell` polls gateway status, runs short watch loops, and
   launches `robot_preview_viewer`
-- `robot_monitor_gui` refreshes status, toggles preview, and launches
-  `robot_preview_viewer` from a desktop GUI
+- `robot_monitor_gui` polls status automatically and launches the preview or
+  overlay viewer from a desktop GUI; the viewers manage preview lifecycle
 
 Transport/runtime checks completed on the target SBC:
 
