@@ -394,8 +394,30 @@ run_background_profile_bringup() {
 
 cleanup_background_bringup() {
   if [[ -n "${bringup_pid:-}" ]] && kill -0 "${bringup_pid}" 2>/dev/null; then
-    kill "${bringup_pid}" 2>/dev/null || true
+    # ros2 launch handles SIGINT as an orderly shutdown and gives recorder nodes
+    # a chance to flush their final RunBundle manifest and summary.
+    kill -INT "${bringup_pid}" 2>/dev/null || true
     wait "${bringup_pid}" 2>/dev/null || true
+  fi
+
+  wait_for_recording_finalization
+}
+
+wait_for_recording_finalization() {
+  if ! recording_requested; then
+    return
+  fi
+
+  resolve_recording_defaults
+  local summary_path="${record_out_dir}/summary.json"
+  local timeout_sec="${OMNISEER_RECORD_FINALIZE_TIMEOUT_SEC:-10}"
+  local deadline=$((SECONDS + timeout_sec))
+  while [[ ! -f "${summary_path}" && ${SECONDS} -lt ${deadline} ]]; do
+    sleep 0.1
+  done
+
+  if [[ ! -f "${summary_path}" ]]; then
+    omni_warn "RunBundle did not finalize within ${timeout_sec}s: ${summary_path}"
   fi
 }
 

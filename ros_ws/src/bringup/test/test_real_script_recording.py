@@ -6,6 +6,14 @@ from pathlib import Path
 
 
 class RealScriptRecordingTests(unittest.TestCase):
+    def test_background_recording_shutdown_uses_graceful_finalize_path(self) -> None:
+        script_path = Path(__file__).resolve().parents[4] / "scripts" / "run" / "real.sh"
+        source = script_path.read_text(encoding="utf-8")
+
+        self.assertIn('kill -INT "${bringup_pid}"', source)
+        self.assertIn("wait_for_recording_finalization", source)
+        self.assertIn('summary_path="${record_out_dir}/summary.json"', source)
+
     def test_autonomy_script_uses_first_class_as_target_and_records_full_class_list(self) -> None:
         repo_root = Path(__file__).resolve().parents[4]
 
