@@ -5,8 +5,11 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 firmware_dir="$(cd "${script_dir}/.." && pwd)"
 repo_root="$(cd "${firmware_dir}/.." && pwd)"
 
+# shellcheck disable=SC1091
+source "${repo_root}/scripts/lib/common.sh"
+
 pio_env="${PIO_ENV:-teensy41}"
-pio_bin="${PIO_BIN:-$(command -v pio || true)}"
+pio_bin="${PIO_BIN:-$(omni_platformio_bin || true)}"
 penv_python="${PLATFORMIO_PYTHON:-${HOME}/.platformio/penv/bin/python}"
 teensy_ports_bin="${HOME}/.platformio/packages/tool-teensy/teensy_ports"
 teensy_loader_cli_bin="${HOME}/.platformio/packages/tool-teensy/teensy_loader_cli"
@@ -26,7 +29,7 @@ if [[ -f /opt/venv/bin/activate ]]; then
 fi
 
 if [[ -z "${pio_bin}" ]]; then
-  echo "pio not found in PATH" >&2
+  echo "PlatformIO not found; set PIO_BIN or PLATFORMIO_BIN, or install PlatformIO" >&2
   exit 2
 fi
 

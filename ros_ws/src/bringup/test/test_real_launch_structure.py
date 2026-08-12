@@ -143,6 +143,10 @@ class RealLaunchStructureTests(unittest.TestCase):
         self.assertIn("--resolved-vision-config-path", recorder_text)
         self.assertIn("--system-interval-sec", recorder_text)
 
+        launch_source = (Path(__file__).resolve().parents[1] / "launch" / "real.launch.py").read_text(encoding="utf-8")
+        self.assertIn("target_action=experiment_recorder_node", launch_source)
+        self.assertIn('"experiment recorder exited unexpectedly"', launch_source)
+
     def test_real_launch_includes_conditioned_rosbag_recorder(self) -> None:
         module = _load_launch_module("real.launch.py")
         launch_description = module.generate_launch_description()

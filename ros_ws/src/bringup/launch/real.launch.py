@@ -290,6 +290,18 @@ def _build_real_bringup_actions(*, pkg_bringup, config):
         condition=IfCondition(config["start_experiment_recording"]),
     )
 
+    recorder_exit_handler = RegisterEventHandler(
+        OnProcessExit(
+            target_action=experiment_recorder_node,
+            on_exit=_handle_required_process_exit(
+                "experiment recorder",
+                [],
+                "experiment recorder exited unexpectedly",
+            ),
+        ),
+        condition=IfCondition(config["start_experiment_recording"]),
+    )
+
     rosbag_recorder = ExecuteProcess(
         cmd=[
             "ros2",
@@ -435,6 +447,7 @@ def _build_real_bringup_actions(*, pkg_bringup, config):
         real_io_launch,
         real_vision_launch,
         experiment_recorder_node,
+        recorder_exit_handler,
         rosbag_recorder,
         autonomy_node,
         autonomy_completion_shutdown,

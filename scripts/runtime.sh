@@ -578,11 +578,18 @@ runtime_verify_full() {
 
 runtime_verify_full_run_bundle() {
   local run_id="$1"
-  local run_dir video_path codec
+  local run_dir bringup_log video_path codec
   run_dir="$(runtime_runs_bind_root)/${run_id}"
+  bringup_log="${run_dir}/logs/bringup.log"
   video_path="${run_dir}/video/source.ts"
 
-  "$(omni_repo_root)/scripts/omni" runs inspect "${run_dir}" --require-complete
+  if ! "$(omni_repo_root)/scripts/omni" runs inspect "${run_dir}" --require-complete; then
+    if [[ -f "${bringup_log}" ]]; then
+      omni_error "full runtime verification recorder/bringup log (last 80 lines): ${bringup_log}"
+      tail -n 80 "${bringup_log}" >&2 || true
+    fi
+    return 1
+  fi
 
   [[ -s "${video_path}" ]] \
     || omni_die "full runtime verification video is missing or empty: ${video_path}"
