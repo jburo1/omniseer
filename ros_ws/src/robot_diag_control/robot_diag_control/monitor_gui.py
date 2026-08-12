@@ -43,6 +43,8 @@ from robot_diag_control.run_artifacts import (
     retrieve_run_artifacts,
 )
 from robot_diag_control.run_commands import (
+    PREVIEW_ENCODER_LABELS,
+    PREVIEW_ENCODER_ROCKCHIP,
     RUN_BACKEND_LABELS,
     RUN_BACKEND_RUNTIME,
     RUN_TYPE_AUTONOMY_CENTER,
@@ -339,6 +341,7 @@ class RobotMonitorGui:
         self._teleop_angular_step_var = tk.StringVar(value="0.35")
         self._run_backend_var = tk.StringVar(value=RUN_BACKEND_LABELS[parsed.run_backend])
         self._run_type_var = tk.StringVar(value=RUN_TYPE_LABELS[RUN_TYPE_PERCEPTION])
+        self._preview_encoder_var = tk.StringVar(value=PREVIEW_ENCODER_LABELS[PREVIEW_ENCODER_ROCKCHIP])
         self._ssh_user_var = tk.StringVar(value=parsed.ssh_user)
         self._remote_repo_root_var = tk.StringVar(value=parsed.remote_repo_root)
         remote_runs_root = parsed.remote_runs_root or default_remote_runs_root(parsed.remote_repo_root)
@@ -557,17 +560,24 @@ class RobotMonitorGui:
         run_type_box.bind("<<ComboboxSelected>>", lambda _event: self._sync_run_experiment_fields())
 
         self._add_labeled_entry(experiment_holder, "Class List", self._run_classes_var, 1, 0)
+        ttk.Label(experiment_holder, text="Preview encoder").grid(row=1, column=2, sticky=tk.W, pady=(8, 0))
+        ttk.Combobox(
+            experiment_holder,
+            textvariable=self._preview_encoder_var,
+            values=tuple(PREVIEW_ENCODER_LABELS.values()),
+            state="readonly",
+        ).grid(row=1, column=3, sticky=tk.EW, padx=(8, 0), pady=(8, 0))
         ttk.Checkbutton(experiment_holder, text="Record video", variable=self._record_video_var).grid(
-            row=1, column=2, sticky=tk.W, pady=(8, 0)
+            row=2, column=2, sticky=tk.W, pady=(8, 0)
         )
         ttk.Checkbutton(experiment_holder, text="Record rosbag", variable=self._record_rosbag_var).grid(
-            row=1, column=3, sticky=tk.W, pady=(8, 0)
+            row=2, column=3, sticky=tk.W, pady=(8, 0)
         )
         self._add_labeled_entry(
             experiment_holder,
             "Score Threshold",
             self._detector_score_threshold_var,
-            2,
+            3,
             0,
             width=8,
         )
@@ -575,7 +585,7 @@ class RobotMonitorGui:
             experiment_holder,
             "NMS IoU",
             self._detector_nms_iou_threshold_var,
-            2,
+            3,
             2,
             width=8,
         )
@@ -583,13 +593,13 @@ class RobotMonitorGui:
             experiment_holder,
             "Max Detections",
             self._detector_max_detections_var,
-            3,
+            4,
             0,
             width=8,
         )
 
         experiment_fields = ttk.Frame(experiment_holder)
-        experiment_fields.grid(row=4, column=0, columnspan=4, sticky=tk.EW)
+        experiment_fields.grid(row=5, column=0, columnspan=4, sticky=tk.EW)
         perception_frame = ttk.Frame(experiment_fields)
         perception_frame.columnconfigure(1, weight=1)
         self._run_experiment_frames[RUN_TYPE_PERCEPTION] = perception_frame
@@ -757,6 +767,7 @@ class RobotMonitorGui:
             detector_score_threshold=self._detector_score_threshold_var.get(),
             detector_nms_iou_threshold=self._detector_nms_iou_threshold_var.get(),
             detector_max_detections=self._detector_max_detections_var.get(),
+            preview_encoder_label=self._preview_encoder_var.get(),
             record_video=bool(self._record_video_var.get()),
             record_rosbag=bool(self._record_rosbag_var.get()),
         )

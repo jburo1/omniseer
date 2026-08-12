@@ -2,6 +2,9 @@ import unittest
 from pathlib import Path
 
 from robot_diag_control.run_commands import (
+    PREVIEW_ENCODER_LABELS,
+    PREVIEW_ENCODER_ROCKCHIP,
+    PREVIEW_ENCODER_SOFTWARE,
     RUN_BACKEND_DEVCONTAINER,
     RUN_BACKEND_LABELS,
     RUN_BACKEND_RUNTIME,
@@ -20,6 +23,7 @@ from robot_diag_control.run_settings import (
     normalized_remote_runs_root,
     resolve_run_form,
     resolved_run_id,
+    selected_preview_encoder,
     selected_run_backend,
     selected_run_type,
 )
@@ -53,6 +57,7 @@ def _values(**overrides: str) -> RunFormValues:
         "detector_score_threshold": " 0.31 ",
         "detector_nms_iou_threshold": " 0.52 ",
         "detector_max_detections": " 42 ",
+        "preview_encoder_label": PREVIEW_ENCODER_LABELS[PREVIEW_ENCODER_SOFTWARE],
     }
     values.update(overrides)
     return RunFormValues(**values)
@@ -72,6 +77,10 @@ class RunSettingsTests(unittest.TestCase):
     def test_selected_run_type_rejects_unknown_label(self):
         with self.assertRaisesRegex(ValueError, "unsupported run type"):
             selected_run_type("unknown run type")
+
+    def test_selected_preview_encoder_maps_display_label_to_encoder_id(self):
+        for encoder in (PREVIEW_ENCODER_ROCKCHIP, PREVIEW_ENCODER_SOFTWARE):
+            self.assertEqual(selected_preview_encoder(PREVIEW_ENCODER_LABELS[encoder]), encoder)
 
     def test_normalized_remote_paths_use_defaults_and_strip_trailing_slashes(self):
         self.assertEqual(normalized_remote_repo_root(""), DEFAULT_REMOTE_REPO_ROOT)
@@ -123,6 +132,7 @@ class RunSettingsTests(unittest.TestCase):
         self.assertEqual(selection.run_config.detector_score_threshold, "0.31")
         self.assertEqual(selection.run_config.detector_nms_iou_threshold, "0.52")
         self.assertEqual(selection.run_config.detector_max_detections, "42")
+        self.assertEqual(selection.run_config.preview_encoder, PREVIEW_ENCODER_SOFTWARE)
         self.assertFalse(selection.run_config.record_rosbag)
         self.assertEqual(selection.artifact_context.repo_root, Path("/repo"))
         self.assertEqual(selection.artifact_context.connection, selection.connection)

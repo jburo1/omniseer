@@ -25,6 +25,12 @@ RUN_TYPE_LABELS = {
     RUN_TYPE_PERCEPTION: "Perception recording",
     RUN_TYPE_AUTONOMY_CENTER: "Autonomy: frame and capture target",
 }
+PREVIEW_ENCODER_ROCKCHIP = "rockchip"
+PREVIEW_ENCODER_SOFTWARE = "software"
+PREVIEW_ENCODER_LABELS = {
+    PREVIEW_ENCODER_ROCKCHIP: "Rockchip hardware",
+    PREVIEW_ENCODER_SOFTWARE: "Software x264",
+}
 
 
 @dataclass(frozen=True)
@@ -59,6 +65,7 @@ class RunConfig:
     detector_score_threshold: str = "0.25"
     detector_nms_iou_threshold: str = "0.45"
     detector_max_detections: str = "100"
+    preview_encoder: str = PREVIEW_ENCODER_ROCKCHIP
     record_video: bool = False
     record_rosbag: bool = False
 
@@ -167,6 +174,7 @@ def _build_runtime_record_inner_command(
     command.extend(_detector_experiment_parameters(run_config))
     command.append("--")
     command.append("experiment_overwrite:=true")
+    command.append(f"gateway_preview_encoder:={run_config.preview_encoder}")
     if classes:
         command.append(f"classes_path:={_runtime_container_class_list_path(run_id)}")
     command.extend(_detector_parameter_launch_args(run_config))
@@ -215,6 +223,7 @@ def _build_devcontainer_record_inner_command(
     command.extend(_detector_experiment_parameters(run_config))
     command.append("bringup")
     command.append("experiment_overwrite:=true")
+    command.append(f"gateway_preview_encoder:={run_config.preview_encoder}")
     if classes:
         command.append(f"classes_path:={remote_class_list_path_for(container_repo_root, run_id)}")
     command.extend(_detector_parameter_launch_args(run_config))
@@ -233,6 +242,8 @@ def _detector_parameter_launch_args(run_config: RunConfig) -> list[str]:
 
 def _detector_experiment_parameters(run_config: RunConfig) -> list[str]:
     return [
+        "--record-experiment-parameter",
+        f"preview.encoder={run_config.preview_encoder}",
         "--record-experiment-parameter",
         f"postprocess.score_threshold={run_config.detector_score_threshold}",
         "--record-experiment-parameter",

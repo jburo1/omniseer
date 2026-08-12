@@ -321,6 +321,7 @@ class MonitorGuiTests(unittest.TestCase):
                 self.assertEqual(selection.run_config.detector_score_threshold, "0.31")
                 self.assertEqual(selection.run_config.detector_nms_iou_threshold, "0.52")
                 self.assertEqual(selection.run_config.detector_max_detections, "42")
+                self.assertEqual(selection.run_config.preview_encoder, "rockchip")
                 self.assertEqual(selection.artifact_context.repo_root, Path(repo_root).resolve())
                 self.assertEqual(
                     selection.artifact_context.local_import_root,
@@ -359,6 +360,7 @@ class MonitorGuiTests(unittest.TestCase):
             self.assertIn("Class List", texts)
             self.assertIn("Record video", texts)
             self.assertIn("Record rosbag", texts)
+            self.assertIn("Preview encoder", texts)
             self.assertNotIn("Object to Search For", texts)
             self.assertNotIn("Target Class", texts)
         finally:

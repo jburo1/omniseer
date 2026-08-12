@@ -3,6 +3,8 @@ from pathlib import Path
 
 from robot_diag_control.run_commands import (
     DEFAULT_DEVCONTAINER_EXEC_TEMPLATE,
+    PREVIEW_ENCODER_ROCKCHIP,
+    PREVIEW_ENCODER_SOFTWARE,
     RUN_BACKEND_DEVCONTAINER,
     RUN_BACKEND_RUNTIME,
     RUN_TYPE_AUTONOMY_CENTER,
@@ -84,6 +86,7 @@ class RunCommandsTests(unittest.TestCase):
                 detector_score_threshold="0.31",
                 detector_nms_iou_threshold="0.52",
                 detector_max_detections="42",
+                preview_encoder=PREVIEW_ENCODER_SOFTWARE,
             ),
         )
 
@@ -95,7 +98,9 @@ class RunCommandsTests(unittest.TestCase):
         self.assertIn("--record-experiment-parameter postprocess.score_threshold=0.31", command[3])
         self.assertIn("--record-experiment-parameter postprocess.nms_iou_threshold=0.52", command[3])
         self.assertIn("--record-experiment-parameter postprocess.max_detections=42", command[3])
+        self.assertIn("--record-experiment-parameter preview.encoder=software", command[3])
         self.assertIn("experiment_overwrite:=true", command[3])
+        self.assertIn("gateway_preview_encoder:=software", command[3])
         self.assertIn("classes_path:=/runs/operator_001/classes.txt", command[3])
         self.assertIn("postprocess_score_threshold:=0.31", command[3])
         self.assertIn("postprocess_nms_iou_threshold:=0.52", command[3])
@@ -169,6 +174,7 @@ class RunCommandsTests(unittest.TestCase):
                 detector_score_threshold="0.31",
                 detector_nms_iou_threshold="0.52",
                 detector_max_detections="42",
+                preview_encoder=PREVIEW_ENCODER_SOFTWARE,
             ),
         )
 
@@ -181,7 +187,9 @@ class RunCommandsTests(unittest.TestCase):
         self.assertIn("--record-experiment-config", command[3])
         self.assertIn("Perception recording", command[3])
         self.assertIn("--record-experiment-parameter postprocess.score_threshold=0.31", command[3])
+        self.assertIn("--record-experiment-parameter preview.encoder=software", command[3])
         self.assertIn("experiment_overwrite:=true", command[3])
+        self.assertIn("gateway_preview_encoder:=software", command[3])
         class_path = remote_class_list_path_for("/omniseer", "operator_001")
         self.assertIn(f"classes_path:={class_path}", command[3])
         self.assertIn("postprocess_score_threshold:=0.31", command[3])
@@ -210,6 +218,17 @@ class RunCommandsTests(unittest.TestCase):
         self.assertIn("experiment_overwrite:=true", command[3])
         self.assertIn("classes_path:=/omniseer/runs/operator_001/classes.txt", command[3])
         self.assertNotIn("devcontainer exec", command[3])
+
+    def test_preview_encoder_is_forwarded_and_recorded_for_both_backends(self):
+        for backend in (RUN_BACKEND_RUNTIME, RUN_BACKEND_DEVCONTAINER):
+            for encoder in (PREVIEW_ENCODER_ROCKCHIP, PREVIEW_ENCODER_SOFTWARE):
+                command = build_remote_start_command(
+                    connection=_connection(),
+                    run_config=RunConfig(run_id="operator_001", backend=backend, preview_encoder=encoder),
+                )
+
+                self.assertIn(f"gateway_preview_encoder:={encoder}", command[3])
+                self.assertIn(f"--record-experiment-parameter preview.encoder={encoder}", command[3])
 
     def test_runtime_stop_command_targets_named_runtime_record_container(self):
         command = build_remote_runtime_stop_command(

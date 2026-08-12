@@ -8,6 +8,7 @@ from pathlib import Path
 from robot_diag_control.run_artifacts import RunArtifactContext
 from robot_diag_control.run_commands import (
     DEFAULT_DEVCONTAINER_EXEC_TEMPLATE,
+    PREVIEW_ENCODER_LABELS,
     RUN_BACKEND_LABELS,
     RUN_TYPE_LABELS,
     RobotConnection,
@@ -48,6 +49,7 @@ class RunFormValues:
     detector_score_threshold: str = "0.25"
     detector_nms_iou_threshold: str = "0.45"
     detector_max_detections: str = "100"
+    preview_encoder_label: str = "Rockchip hardware"
     record_video: bool = False
     record_rosbag: bool = False
 
@@ -76,6 +78,13 @@ def selected_run_type(selected_label: str) -> str:
         if selected_label == label:
             return run_type
     raise ValueError(f"unsupported run type: {selected_label}")
+
+
+def selected_preview_encoder(selected_label: str) -> str:
+    for encoder, label in PREVIEW_ENCODER_LABELS.items():
+        if selected_label == label:
+            return encoder
+    raise ValueError(f"unsupported preview encoder: {selected_label}")
 
 
 def normalized_remote_repo_root(value: str) -> str:
@@ -239,6 +248,7 @@ def resolve_run_form(
             name="max detections",
             default="100",
         ),
+        preview_encoder=selected_preview_encoder(values.preview_encoder_label),
         record_video=values.record_video,
         record_rosbag=values.record_rosbag,
     )
