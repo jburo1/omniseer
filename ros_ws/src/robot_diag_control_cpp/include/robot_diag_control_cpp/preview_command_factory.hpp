@@ -16,6 +16,7 @@ namespace robot_diag_control_cpp
     int         srt_port{7100};
     int         srt_latency_ms{125};
     std::string record_path{};
+    std::string encoder{"software"};
   };
 
   PreviewCommandFactory make_fixed_preview_command_factory(PreviewProcessCommand command);

@@ -1,6 +1,6 @@
 # Preview Streaming
 
-_Status: software x264/SRT bring-up path implemented_
+_Status: Rockchip H.264/SRT path implemented; software x264 remains selectable._
 
 This page is the current implementation reference for the optional operator
 preview export path from the robot SBC to the operator laptop.
@@ -28,7 +28,7 @@ rkisp_mainpath (/dev/video11, NV12)
      GStreamer preview worker
             |
             v
-     software x264 encode
+  selected H.264 encode
             |
             v
         MPEG-TS / SRT
@@ -56,6 +56,15 @@ Transport/runtime checks completed on the target SBC:
   preview worker
 - packaged Python host tools request preview over gRPC and consume the SRT
   stream
+
+The gateway `preview_encoder` parameter has two explicit values:
+
+- `software` uses the existing `x264enc` path and is the portable fallback/A-B option.
+- `rockchip` uses `mpph264enc` with each profile's bitrate, one-second GOP, and
+  SPS/PPS headers at each IDR.
+
+Real-hardware bringup defaults `gateway_preview_encoder` to `rockchip`.
+The gateway does not fall back when the selected encoder fails to start.
 
 ## Current contract
 
@@ -118,7 +127,7 @@ Wi-Fi conditions.
 
 ## Limitations
 
-- Robot-side preview currently uses software x264.
+- The software x264 backend remains available for portable operation and controlled A/B comparison.
 - Hardware H.265 encode is not exposed through the installed userspace stack on
   the current image.
 - FFmpeg exposes `hevc_v4l2m2m`, but encode failed with `Could not find a valid

@@ -97,28 +97,51 @@ namespace robot_diag_control_cpp
         };
       }
 
-      arguments.insert(arguments.end(),
-                       {
-                           "!",
-                           caps,
-                           "!",
-                           "queue",
-                           "leaky=downstream",
-                           "max-size-buffers=2",
-                           "max-size-bytes=0",
-                           "max-size-time=0",
-                           "!",
-                           "x264enc",
-                           "tune=zerolatency",
-                           "speed-preset=veryfast",
-                           "bitrate=" + std::to_string(profile_settings.bitrate_kbps),
-                           "key-int-max=" + std::to_string(profile_settings.fps),
-                           "bframes=0",
-                           "byte-stream=true",
-                           "!",
-                           "h264parse",
-                           "config-interval=-1",
-                       });
+      arguments.insert(arguments.end(), {
+                                            "!",
+                                            caps,
+                                            "!",
+                                            "queue",
+                                            "leaky=downstream",
+                                            "max-size-buffers=2",
+                                            "max-size-bytes=0",
+                                            "max-size-time=0",
+                                            "!",
+                                        });
+
+      if (config.encoder == "software")
+      {
+        arguments.insert(arguments.end(),
+                         {
+                             "x264enc",
+                             "tune=zerolatency",
+                             "speed-preset=veryfast",
+                             "bitrate=" + std::to_string(profile_settings.bitrate_kbps),
+                             "key-int-max=" + std::to_string(profile_settings.fps),
+                             "bframes=0",
+                             "byte-stream=true",
+                         });
+      }
+      else if (config.encoder == "rockchip")
+      {
+        arguments.insert(arguments.end(),
+                         {
+                             "mpph264enc",
+                             "bps=" + std::to_string(profile_settings.bitrate_kbps * 1000),
+                             "gop=" + std::to_string(profile_settings.fps),
+                             "header-mode=each-idr",
+                         });
+      }
+      else
+      {
+        return PreviewCommandResolution{
+            false,
+            "unsupported preview encoder backend: " + config.encoder,
+            {},
+        };
+      }
+
+      arguments.insert(arguments.end(), {"!", "h264parse", "config-interval=-1"});
 
       if (!config.record_path.empty())
       {

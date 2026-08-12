@@ -51,6 +51,7 @@ _REAL_ARGUMENT_DEFAULTS = [
     ("gateway_preview_source_kind", "camera"),
     ("gateway_preview_device", "/dev/video11"),
     ("gateway_preview_record_path", ""),
+    ("gateway_preview_encoder", "rockchip"),
     ("start_autonomy", "false"),
     ("autonomy_target_class", ""),
     ("autonomy_run_dir", ""),
@@ -178,6 +179,7 @@ _COMMON_FORWARD_ARGS = [
     "gateway_preview_source_kind",
     "gateway_preview_device",
     "gateway_preview_record_path",
+    "gateway_preview_encoder",
 ]
 
 

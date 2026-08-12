@@ -106,6 +106,7 @@ def generate_launch_description():
             "start_gateway": start_gateway,
             "gateway_preview_source_kind": "videotest",
             "gateway_preview_device": "/dev/video11",
+            "gateway_preview_encoder": "software",
         }.items(),
     )
 

@@ -47,6 +47,7 @@ def generate_launch_description():
         DeclareLaunchArgument("gateway_preview_source_kind", default_value="camera"),
         DeclareLaunchArgument("gateway_preview_device", default_value="/dev/video11"),
         DeclareLaunchArgument("gateway_preview_record_path", default_value=""),
+        DeclareLaunchArgument("gateway_preview_encoder", default_value="software"),
     ]
 
     use_sim_time = LaunchConfiguration("use_sim_time")
@@ -74,6 +75,7 @@ def generate_launch_description():
     gateway_preview_source_kind = LaunchConfiguration("gateway_preview_source_kind")
     gateway_preview_device = LaunchConfiguration("gateway_preview_device")
     gateway_preview_record_path = LaunchConfiguration("gateway_preview_record_path")
+    gateway_preview_encoder = LaunchConfiguration("gateway_preview_encoder")
 
     description_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([PathJoinSubstitution([pkg_bringup, "launch", "description.launch.py"])]),
@@ -174,6 +176,7 @@ def generate_launch_description():
                 "preview_source_kind": gateway_preview_source_kind,
                 "preview_device": gateway_preview_device,
                 "preview_record_path": gateway_preview_record_path,
+                "preview_encoder": gateway_preview_encoder,
             }
         ],
         condition=IfCondition(start_gateway),
