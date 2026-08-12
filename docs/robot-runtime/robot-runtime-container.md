@@ -176,7 +176,10 @@ When launched from a devcontainer, the runtime wrapper resolves the host-side
 workspace bind path before starting Docker so the runtime container writes back
 into this checkout's `runs/` directory instead of a separate `/omniseer/runs`
 directory on the Docker host. Override that detection with
-`OMNISEER_RUNTIME_RUNS_HOST_ROOT=/host/path/to/omniseer/runs` if needed.
+`OMNISEER_RUNTIME_RUNS_HOST_ROOT=/host/path/to/omniseer/runs` if needed. When
+running inside a devcontainer whose Docker host paths are unavailable in the
+container, leave the local default (`<repo>/runs`) or set
+`OMNISEER_RUNTIME_RUNS_LOCAL_ROOT` to the caller-visible RunBundle directory.
 
 `runtime verify` defaults to a safe smoke stage. It starts the container with
 vision, Teensy, LiDAR, boundary-topic waits, and pre-launch cleanup disabled; a

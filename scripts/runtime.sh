@@ -238,6 +238,14 @@ runtime_runs_bind_root() {
   printf '%s/runs\n' "$(runtime_docker_bind_repo_root)"
 }
 
+runtime_runs_local_root() {
+  if [[ -n "${OMNISEER_RUNTIME_RUNS_LOCAL_ROOT:-}" ]]; then
+    printf '%s\n' "${OMNISEER_RUNTIME_RUNS_LOCAL_ROOT}"
+    return 0
+  fi
+  printf '%s/runs\n' "$(omni_repo_root)"
+}
+
 runtime_common_docker_args() {
   local image_ref="$1"
   local image_digest="$2"
@@ -369,7 +377,7 @@ runtime_run() {
 
 runtime_record() {
   local image_base tag image_ref run_id system_interval_sec experiment_config status record_video record_rosbag
-  local repo_root runs_bind_root host_run_dir
+  local repo_root runs_bind_root local_runs_root host_run_dir
   local experiment_parameters=()
   local launch_args=()
   local notes=""
@@ -446,7 +454,8 @@ runtime_record() {
   image_ref="$(runtime_image_ref "${image_base}" "${tag}")"
   repo_root="$(omni_repo_root)"
   runs_bind_root="$(runtime_runs_bind_root)"
-  host_run_dir="${runs_bind_root}/${run_id}"
+  local_runs_root="$(runtime_runs_local_root)"
+  host_run_dir="${local_runs_root}/${run_id}"
 
   local command=(
     run real
@@ -486,7 +495,7 @@ runtime_record() {
 
   omni_info "Recording runtime operator run ${run_id}"
   omni_info "Run bundle path: ${host_run_dir}"
-  if [[ "${runs_bind_root}" != "${repo_root}/runs" ]]; then
+  if [[ "${runs_bind_root}" != "${local_runs_root}" ]]; then
     omni_info "Docker host run bind: ${runs_bind_root}/${run_id}"
   fi
   runtime_docker_extra_args=(
@@ -579,7 +588,7 @@ runtime_verify_full() {
 runtime_verify_full_run_bundle() {
   local run_id="$1"
   local run_dir bringup_log video_path codec
-  run_dir="$(runtime_runs_bind_root)/${run_id}"
+  run_dir="$(runtime_runs_local_root)/${run_id}"
   bringup_log="${run_dir}/logs/bringup.log"
   video_path="${run_dir}/video/source.ts"
 

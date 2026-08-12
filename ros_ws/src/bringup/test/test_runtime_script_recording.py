@@ -51,6 +51,7 @@ class RuntimeScriptRecordingTests(unittest.TestCase):
             env["PATH"] = f"{bin_dir}{os.pathsep}{env['PATH']}"
             env["OMNISEER_RUNTIME_METADATA_DIR"] = str(latest_dir)
             env["OMNISEER_RUNTIME_RUNS_HOST_ROOT"] = str(run_root)
+            env["OMNISEER_RUNTIME_RUNS_LOCAL_ROOT"] = str(run_root)
             env["OMNISEER_RUNTIME_DOCKER_TTY"] = "never"
 
             subprocess.run(

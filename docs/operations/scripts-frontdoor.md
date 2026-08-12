@@ -497,6 +497,7 @@ Use `scripts/omni env` to see resolved values for the current shell.
 | `OMNISEER_ROBOT_HOST`, `OMNISEER_ROBOT_USER`, `OMNISEER_ROBOT_RUNS_ROOT` | Override robot RunBundle retrieval target. |
 | `OMNISEER_RUNTIME_IMAGE`, `OMNISEER_RUNTIME_METADATA_DIR` | Override runtime image base and metadata directory. |
 | `OMNISEER_RUNTIME_HOST_REPO_ROOT`, `OMNISEER_RUNTIME_RUNS_HOST_ROOT` | Override runtime Docker host bind paths. |
+| `OMNISEER_RUNTIME_RUNS_LOCAL_ROOT` | Override the caller-visible RunBundle directory used for recording setup and verification. Defaults to `<repo>/runs`; set it when the Docker host bind path is unavailable inside a devcontainer. |
 | `OMNISEER_RUNTIME_DOCKER_TTY`, `OMNISEER_RUNTIME_SAFE_SMOKE_SEC` | Override runtime Docker TTY mode and smoke timeout. |
 | `OMNISEER_CONTAINER_IMAGE_REF`, `OMNISEER_CONTAINER_IMAGE_DIGEST`, `OMNISEER_EXPERIMENT_CONFIG`, `OMNISEER_EXPERIMENT_PARAMETERS` | Record container and experiment provenance. |
 | `OMNISEER_D2_BIN` | Override D2 renderer path for diagram commands. |

@@ -20,8 +20,14 @@ def _write_fake_docker(path: Path) -> None:
                 "  for ((index = 0; index < ${#args[@]}; index++)); do",
                 '    if [[ "${args[index]}" == "--record-out" ]]; then',
                 '      run_dir="${OMNISEER_RUNTIME_RUNS_HOST_ROOT}/${args[index + 1]#/runs/}"',
-                '      mkdir -p "${run_dir}/video"',
-                '      printf "fake transport stream\\n" >"${run_dir}/video/source.ts"',
+                '      runs_roots=("${OMNISEER_RUNTIME_RUNS_HOST_ROOT}")',
+                '      runs_roots+=("${OMNISEER_RUNTIME_RUNS_LOCAL_ROOT:-}")',
+                '      for runs_root in "${runs_roots[@]}"; do',
+                '        [[ -n "${runs_root}" ]] || continue',
+                '        run_dir="${runs_root}/${args[index + 1]#/runs/}"',
+                '        mkdir -p "${run_dir}/video"',
+                '        printf "fake transport stream\\n" >"${run_dir}/video/source.ts"',
+                "      done",
                 "      break",
                 "    fi",
                 "  done",
@@ -138,6 +144,7 @@ def _runtime_env(tmp_path: Path) -> dict[str, str]:
     env["OMNISEER_ROS_SETUP"] = str(ros_setup)
     env["OMNISEER_WS_SETUP"] = str(ws_setup)
     env["OMNISEER_RUNTIME_RUNS_HOST_ROOT"] = str(runs_root)
+    env["OMNISEER_RUNTIME_RUNS_LOCAL_ROOT"] = str(runs_root)
     return env
 
 
@@ -503,6 +510,7 @@ def test_runtime_verify_full_records_run_with_provenance(tmp_path: Path) -> None
     assert "--record-video" in log
     assert "gateway_preview_encoder:=rockchip" in log
     assert "omniseer_experiments\\ inspect_run" in Path(env["ROS2_LOG"]).read_text(encoding="utf-8")
+    assert str(Path(env["OMNISEER_RUNTIME_RUNS_LOCAL_ROOT"])) in Path(env["ROS2_LOG"]).read_text(encoding="utf-8")
     assert "--require-complete" in Path(env["ROS2_LOG"]).read_text(encoding="utf-8")
     metadata_file = Path(env["OMNISEER_RUNTIME_METADATA_DIR"]) / "verify-full-runtime-test.env"
     assert metadata_file.is_file()
@@ -511,6 +519,29 @@ def test_runtime_verify_full_records_run_with_provenance(tmp_path: Path) -> None
     assert "TAG=runtime-test" in metadata
     assert "IMAGE_ID=sha256:local_image_id" in metadata
     assert f"GIT_SHA={FAKE_GIT_SHA}" in metadata
+
+
+def test_runtime_verify_full_inspects_caller_visible_runs_directory(tmp_path: Path) -> None:
+    env = _runtime_env(tmp_path)
+    host_runs_root = tmp_path / "docker-host-runs"
+    local_runs_root = tmp_path / "workspace-runs"
+    env["OMNISEER_RUNTIME_RUNS_HOST_ROOT"] = str(host_runs_root)
+    env["OMNISEER_RUNTIME_RUNS_LOCAL_ROOT"] = str(local_runs_root)
+    env["OMNISEER_FAKE_RUNTIME_FULL_VIDEO"] = "1"
+
+    result = subprocess.run(
+        ["scripts/omni", "runtime", "verify", "--tag", "runtime-test", "--stage", "full"],
+        cwd=REPO_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    inspect_log = Path(env["ROS2_LOG"]).read_text(encoding="utf-8")
+    assert str(local_runs_root) in inspect_log
+    assert str(host_runs_root) not in inspect_log
 
 
 def test_runtime_verify_full_fails_when_runbundle_inspection_fails(tmp_path: Path) -> None:
