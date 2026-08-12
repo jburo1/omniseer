@@ -66,7 +66,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
  && if [ "$(dpkg --print-architecture)" = "arm64" ]; then \
       add-apt-repository -y ppa:jjriek/rockchip-multimedia; \
       apt-get update; \
-      apt-get install -y --no-install-recommends librga2 librga-dev; \
+      apt-get install -y --no-install-recommends librga2 librga-dev gstreamer1.0-rockchip1; \
     else \
       echo "Skipping Rockchip RGA packages on $(dpkg --print-architecture)"; \
     fi \
