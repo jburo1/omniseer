@@ -41,6 +41,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   ipython3 python3-venv python3-rosdep python3-lark python3-pip python3-dev python3-numpy build-essential \
   python3-tk xvfb xauth \
   git git-lfs curl wget gnupg gdb lsb-release ca-certificates software-properties-common \
+  docker.io docker-buildx \
   htop less nano openssh-client rsync tmux tree xclip ripgrep fd-find fzf bat bash-completion less \
   protobuf-compiler protobuf-compiler-grpc libprotobuf-dev libgrpc++-dev \
   libglvnd0 libgl1 libglx0 libegl1 \
