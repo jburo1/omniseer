@@ -117,7 +117,7 @@ namespace robot_diag_control_cpp
     _has_odometry = true;
     _odometry     = StoredOdometry{
         std::hypot(static_cast<double>(msg.twist.twist.linear.x),
-                       static_cast<double>(msg.twist.twist.linear.y)),
+                   static_cast<double>(msg.twist.twist.linear.y)),
         static_cast<double>(msg.twist.twist.angular.z),
         static_cast<double>(msg.twist.twist.linear.x),
         static_cast<double>(msg.twist.twist.linear.y),
@@ -469,8 +469,8 @@ namespace robot_diag_control_cpp
 
     const auto& onboard            = platform.power.onboard_battery;
     const bool  onboard_low_active = onboard.available && !onboard.stale &&
-                                    onboard.percentage_available &&
-                                    onboard.percentage <= kLowOnboardBatteryPercent;
+                                     onboard.percentage_available &&
+                                     onboard.percentage <= kLowOnboardBatteryPercent;
     if (_last_onboard_low_active.has_value() && *_last_onboard_low_active != onboard_low_active)
     {
       append_operator_event_locked(onboard_low_active ? "onboard battery low"

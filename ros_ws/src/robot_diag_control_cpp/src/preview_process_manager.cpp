@@ -34,8 +34,8 @@ namespace robot_diag_control_cpp
       {
         return false;
       }
-      const auto timestamp_ns = static_cast<long long>(timestamp.tv_sec) * 1'000'000'000LL +
-                                static_cast<long long>(timestamp.tv_nsec);
+      const auto        timestamp_ns = static_cast<long long>(timestamp.tv_sec) * 1'000'000'000LL +
+                                       static_cast<long long>(timestamp.tv_nsec);
       const std::string content =
           "{\n  \"video_start_time_ns\": " + std::to_string(timestamp_ns) + "\n}\n";
       const int fd = open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);

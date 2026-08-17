@@ -241,8 +241,8 @@ namespace omniseer::vision
 
     const int    src_wstride_px = static_cast<int>(y.stride);
     const int    dst_wstride_px = static_cast<int>(p.stride / 3u);
-    rga_buffer_t src_buf        = wrapbuffer_fd(y.fd, src.size.w, src.size.h,
-                                                rga_format(PixelFormat::NV12), src_wstride_px, src.size.h);
+    rga_buffer_t src_buf = wrapbuffer_fd(y.fd, src.size.w, src.size.h,
+                                         rga_format(PixelFormat::NV12), src_wstride_px, src.size.h);
     rga_buffer_t dst_buf =
         wrapbuffer_fd(p.fd, _cfg.dst_w, _cfg.dst_h, rga_format(PixelFormat::RGB888), dst_wstride_px,
                       _cfg.dst_h);
