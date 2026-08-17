@@ -711,8 +711,8 @@ int main(int argc, char** argv)
     ConsoleDetectionsSink                            sink(prepared.class_names);
 
     omniseer::vision::RknnRunner       runner({
-              .model_path  = cfg.detector_model_path,
-              .warmup_runs = cfg.warmup_runs,
+        .model_path  = cfg.detector_model_path,
+        .warmup_runs = cfg.warmup_runs,
     });
     omniseer::vision::ConsumerPipeline consumer(pool, runner, telemetry_sink, &sink,
                                                 {
