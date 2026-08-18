@@ -1249,7 +1249,7 @@ detected.</p>
 <h2 id="local-inputs">Local inputs<a class="headerlink" href="#local-inputs" title="Permanent link">&para;</a></h2>
 <p>Do not commit or download weights through these commands. Place the supplied
 detector checkpoint here (or another path under this checkout):</p>
-<div class="highlight"><pre><span></span><code>models/source/yolo_world/yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth
+<div class="highlight"><pre><span></span><code>models/source/yolo_world/v2s/yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth
 </code></pre></div>
 <p>Rockchip's exporter also instantiates the CLIP text encoder in order to
 reparameterize the supplied COCO text prompts. To keep exports offline and
@@ -1265,10 +1265,11 @@ reproducible, manually place a complete official
 offline mode. Use <code>--clip-model &lt;directory&gt;</code> to choose another local snapshot.</p>
 <h2 id="export-onnx">Export ONNX<a class="headerlink" href="#export-onnx" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>model<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--weights<span class="w"> </span>models/source/yolo_world/yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth
+<span class="w">  </span>--weights<span class="w"> </span>models/source/yolo_world/v2s/yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth
 </code></pre></div>
 <p>This invokes Rockchip's <code>deploy/export_onnx.py</code>, its matching v2-S 640 config,
-and the checked-in 80 COCO prompt list. It validates ONNX with <code>onnx.checker</code>
+ONNX opset 12 (required for this graph's <code>einsum</code> operator), and the checked-in
+80 COCO prompt list. It validates ONNX with <code>onnx.checker</code>
 and rejects any model not having exactly the native runtime interface:</p>
 <ul>
 <li><code>images</code>: <code>[1,3,640,640]</code>;</li>
@@ -1304,7 +1305,7 @@ normalization <code>mean=[0,0,0]</code>, <code>std=[255,255,255]</code>, and fix
 <p>After the builder image, detector checkpoint, and local CLIP snapshot are in
 place, run:</p>
 <div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>model<span class="w"> </span>build<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--weights<span class="w"> </span>models/source/yolo_world/yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--weights<span class="w"> </span>models/source/yolo_world/v2s/yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--precision<span class="w"> </span>int8
 </code></pre></div>
 <p>Use <code>--precision fp</code> for a non-quantized model. Existing generated artifacts
@@ -1333,7 +1334,7 @@ tools run if a generated artifact is missing or empty.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 18, 2026 22:47:05 UTC">August 18, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 18, 2026 23:36:48 UTC">August 18, 2026</span>
   </span>
 
     
