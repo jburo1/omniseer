@@ -40,7 +40,7 @@ Do not commit or download weights through these commands. Place the supplied
 detector checkpoint here (or another path under this checkout):
 
 ```text
-models/source/yolo_world/yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth
+models/source/yolo_world/v2s/yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth
 ```
 
 Rockchip's exporter also instantiates the CLIP text encoder in order to
@@ -63,11 +63,12 @@ offline mode. Use `--clip-model <directory>` to choose another local snapshot.
 
 ```bash
 scripts/omni model export \
-  --weights models/source/yolo_world/yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth
+  --weights models/source/yolo_world/v2s/yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth
 ```
 
 This invokes Rockchip's `deploy/export_onnx.py`, its matching v2-S 640 config,
-and the checked-in 80 COCO prompt list. It validates ONNX with `onnx.checker`
+ONNX opset 12 (required for this graph's `einsum` operator), and the checked-in
+80 COCO prompt list. It validates ONNX with `onnx.checker`
 and rejects any model not having exactly the native runtime interface:
 
 - `images`: `[1,3,640,640]`;
@@ -118,7 +119,7 @@ place, run:
 
 ```bash
 scripts/omni model build \
-  --weights models/source/yolo_world/yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth \
+  --weights models/source/yolo_world/v2s/yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth \
   --precision int8
 ```
 

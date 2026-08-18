@@ -126,13 +126,16 @@ model_require_clip_model() {
 }
 
 model_require_calibration() {
-  local calibration_dir="$1"
+  local calibration_dir="$1" npy_magic
   [[ -s "${calibration_dir}/dataset.txt" ]] \
     || omni_die "INT8 calibration dataset.txt is missing or empty: ${calibration_dir}/dataset.txt"
   [[ -s "${calibration_dir}/bus.jpg" ]] \
     || omni_die "Rockchip INT8 calibration image is missing: ${calibration_dir}/bus.jpg"
   [[ -s "${calibration_dir}/coco_text_outp.npy" ]] \
     || omni_die "Rockchip INT8 text embedding is missing: ${calibration_dir}/coco_text_outp.npy"
+  npy_magic="$(od -An -tx1 -N6 "${calibration_dir}/coco_text_outp.npy" | tr -d '[:space:]')"
+  [[ "${npy_magic}" == "934e554d5059" ]] \
+    || omni_die "Rockchip INT8 text embedding is not a NumPy .npy file: ${calibration_dir}/coco_text_outp.npy"
 }
 
 model_image() {
@@ -198,13 +201,17 @@ model_export() {
     config=/tmp/omniseer-yolo-world-v2-s-export.py
     sed -e "s|../../third_party/mmyolo|/opt/yolo-world/third_party/mmyolo|" \
         -e "s|openai/clip-vit-base-patch32|${4}|" "${source_config}" >"${config}"
+    # init_detector only needs this dataset for palette metadata. Avoid making
+    # the host provide the pretraining config LVIS evaluation annotations.
+    printf "\\ntest_dataloader = dict(dataset=dict(_delete_=True, type=\\\"mmdet.CocoDataset\\\", ann_file=\\\"\\\", data_root=\\\"\\\", data_prefix=dict(img=\\\"\\\"), pipeline=[]))\\n" >>"${config}"
     cd /opt/yolo-world
-    PYTHONPATH=./ HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 python deploy/export_onnx.py \
-      "${1}" "${config}" \
-      --custom-text "${2}" --opset 11 --model-only --work-dir "$(dirname "${3}")" --device cpu
+    PYTHONPATH=./ HF_HOME=/tmp/huggingface MPLCONFIGDIR=/tmp/matplotlib \
+      HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 python deploy/export_onnx.py \
+      "${config}" "${1}" \
+      --custom-text "${2}" --opset 12 --model-only --work-dir "$(dirname "${3}")" --device cpu
     mv "$(dirname "${3}")/yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.onnx" "${3}"
   ' omniseer-model-export "${weights_in_container}" "${texts_in_container}" "${output_in_container}" "${clip_in_container}"
-  model_docker_run "${image}" python /workspace/tools/model/validate_yolo_world_onnx.py "${output_in_container}"
+  model_docker_run "${image}" python /workspace/tools/model/validate_yolo_world_onnx.py --set-output-shapes "${output_in_container}"
   [[ -s "${output}" ]] || omni_die "ONNX export did not produce a non-empty artifact: ${output}"
   printf 'ONNX artifact: %s\n' "${output}"
 }
