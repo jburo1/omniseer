@@ -41,3 +41,11 @@ def test_model_builder_pins_rockchip_revisions_and_keeps_runtime_separate() -> N
     assert "deaba85fc437a28db0b0c29f27d8929f4c5816a1" in dockerfile
     assert "rknn_toolkit2-2.1.0+708089d1" in dockerfile
     assert "deploy/export_onnx.py" not in runtime_dockerfile
+
+
+def test_model_deployment_documents_calibration_embedding_provenance() -> None:
+    deployment_doc = (REPO_ROOT / "docs" / "perception" / "yolo-world-model-deployment.md").read_text(encoding="utf-8")
+
+    assert "c2b7d00714b4e5d21266ab3003f3ca687ba0d57b" in deployment_doc
+    assert "bad6c7334531becaf90a561988519b7bec34d0ab" in deployment_doc
+    assert "examples/yolo_world/model/coco_text_outp.npy" in deployment_doc

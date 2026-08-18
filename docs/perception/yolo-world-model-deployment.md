@@ -87,15 +87,20 @@ scripts/omni model compile \
   --precision fp
 ```
 
-For INT8, reuse the documented Rockchip YOLO-World v2.1.0 calibration directory
-without changing its format. Copy these assets from that model-zoo release / its
-official model package, preserving the dataset line exactly:
+For INT8, keep the Rockchip YOLO-World v2.1.0 calibration directory and dataset
+format unchanged. The pinned Model Zoo conversion contract is commit
+`c2b7d00714b4e5d21266ab3003f3ca687ba0d57b`; it references
+`coco_text_outp.npy` but does not contain that file. Source only that missing
+calibration embedding from Rockchip Model Zoo commit
+`bad6c7334531becaf90a561988519b7bec34d0ab`
+(`examples/yolo_world/model/coco_text_outp.npy`). Keep it local and ignored,
+alongside the calibration image, preserving the dataset line exactly:
 
 ```text
 models/source/yolo_world/calibration/
   dataset.txt             # contains: bus.jpg coco_text_outp.npy
   bus.jpg
-  coco_text_outp.npy      # clip_text output for the 80 COCO prompts
+  coco_text_outp.npy      # Rockchip commit bad6c733...; [1,80,512] CLIP output
 ```
 
 Then compile:

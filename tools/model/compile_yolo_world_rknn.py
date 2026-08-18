@@ -5,6 +5,7 @@ import argparse
 import sys
 from pathlib import Path
 
+import numpy as np
 from rknn.api import RKNN
 
 IMAGE_INPUT_SHAPE = [1, 3, 640, 640]
@@ -31,6 +32,20 @@ def require_nonempty(path: Path, description: str) -> None:
         raise ValueError(f"{description} is missing or empty: {path}")
 
 
+def require_text_embedding(dataset: Path) -> None:
+    """Validate the fixed Rockchip calibration input before RKNN consumes it."""
+    embedding = dataset.parent / "coco_text_outp.npy"
+    require_nonempty(embedding, "INT8 text embedding")
+    try:
+        values = np.load(embedding, allow_pickle=False)
+    except (OSError, ValueError) as exc:
+        raise ValueError(f"INT8 text embedding is not a valid NumPy file: {embedding}") from exc
+    if list(values.shape) != TEXT_INPUT_SHAPE:
+        raise ValueError(
+            f"INT8 text embedding has shape {list(values.shape)}, expected {TEXT_INPUT_SHAPE}: {embedding}"
+        )
+
+
 def main() -> int:
     args = parse_args()
     try:
@@ -39,6 +54,7 @@ def main() -> int:
             if args.dataset is None:
                 raise ValueError("--dataset is required for --precision i8")
             require_nonempty(args.dataset, "INT8 calibration dataset")
+            require_text_embedding(args.dataset)
 
         args.output.parent.mkdir(parents=True, exist_ok=True)
         if args.output.exists():
