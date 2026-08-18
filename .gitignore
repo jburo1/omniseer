@@ -36,7 +36,7 @@ lib/
 msg_gen/
 srv_gen/
 
-# Also catch nested workspaces
+# Nested workspaces
 /**/build/
 /**/install/
 /**/log/
