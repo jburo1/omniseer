@@ -897,6 +897,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../perception/yolo-world-model-deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    YOLO-World v2-S Model Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../perception/vision-telemetry/" class="md-nav__link">
         
   
@@ -1258,11 +1286,11 @@ serial devices, camera nodes, DMA heaps, RGA, and RKNN runtime paths:</p>
 <span class="w">  </span>--ipc<span class="o">=</span>host<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-v<span class="w"> </span>/dev:/dev<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-v<span class="w"> </span>/run/udev:/run/udev:ro<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">/runs:/runs&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-v<span class="w"> </span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">/runs:/runs"</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>omniseer/robot-runtime:v2
 </code></pre></div>
 <p>Additional launch arguments pass through to <code>scripts/omni</code>:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>--privileged<span class="w"> </span>--network<span class="o">=</span>host<span class="w"> </span>-v<span class="w"> </span>/dev:/dev<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">/runs:/runs&quot;</span><span class="w"> </span>omniseer/robot-runtime:v2<span class="w"> </span><span class="se">\</span>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>--privileged<span class="w"> </span>--network<span class="o">=</span>host<span class="w"> </span>-v<span class="w"> </span>/dev:/dev<span class="w"> </span>-v<span class="w"> </span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">/runs:/runs"</span><span class="w"> </span>omniseer/robot-runtime:v2<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>run<span class="w"> </span>real<span class="w"> </span>--profile<span class="w"> </span>operator<span class="w"> </span>--record-run<span class="w"> </span>container_smoke<span class="w"> </span>--record-out<span class="w"> </span>/runs/container_smoke<span class="w"> </span>bringup
 </code></pre></div>
 <p>Runtime builds embed the source revision in <code>OMNISEER_GIT_SHA</code> and the
@@ -1275,7 +1303,7 @@ also pass image and experiment metadata through environment variables or matchin
 <span class="w">  </span>-e<span class="w"> </span><span class="nv">OMNISEER_EXPERIMENT_CONFIG</span><span class="o">=</span>experiments/container-smoke.yaml<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-e<span class="w"> </span><span class="nv">OMNISEER_EXPERIMENT_PARAMETERS</span><span class="o">=</span><span class="nv">profile</span><span class="o">=</span>operator,scenario<span class="o">=</span>container_smoke<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-v<span class="w"> </span>/dev:/dev<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">/runs:/runs&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-v<span class="w"> </span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">/runs:/runs"</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>omniseer/robot-runtime:v2<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>run<span class="w"> </span>real<span class="w"> </span>--profile<span class="w"> </span>operator<span class="w"> </span>--record-run<span class="w"> </span>container_smoke<span class="w"> </span>--record-out<span class="w"> </span>/runs/container_smoke<span class="w"> </span>bringup
 </code></pre></div>
@@ -1299,9 +1327,9 @@ scripts/omni<span class="w"> </span>runtime<span class="w"> </span>push
 sudo<span class="w"> </span>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>build
 sudo<span class="w"> </span>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>record
 
-<span class="nv">RUN_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>ls<span class="w"> </span>-dt<span class="w"> </span>runs/operator_*<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-n<span class="w"> </span><span class="m">1</span><span class="k">)</span><span class="s2">&quot;</span>
-scripts/omni<span class="w"> </span>runs<span class="w"> </span>inspect<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">RUN_DIR</span><span class="si">}</span><span class="s2">&quot;</span>
-scripts/omni<span class="w"> </span>runs<span class="w"> </span>report<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">RUN_DIR</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span>--overwrite
+<span class="nv">RUN_DIR</span><span class="o">=</span><span class="s2">"</span><span class="k">$(</span>ls<span class="w"> </span>-dt<span class="w"> </span>runs/operator_*<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-n<span class="w"> </span><span class="m">1</span><span class="k">)</span><span class="s2">"</span>
+scripts/omni<span class="w"> </span>runs<span class="w"> </span>inspect<span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">RUN_DIR</span><span class="si">}</span><span class="s2">"</span>
+scripts/omni<span class="w"> </span>runs<span class="w"> </span>report<span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">RUN_DIR</span><span class="si">}</span><span class="s2">"</span><span class="w"> </span>--overwrite
 
 sudo<span class="w"> </span>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>verify
 sudo<span class="w"> </span>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>verify<span class="w"> </span>--stage<span class="w"> </span>full

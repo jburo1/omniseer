@@ -655,6 +655,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#runtime" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1046,6 +1057,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../perception/yolo-world-model-deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    YOLO-World v2-S Model Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../perception/vision-telemetry/" class="md-nav__link">
         
   
@@ -1289,6 +1328,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#runtime" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1492,8 +1542,8 @@
 
 <h1 id="scripts-front-door">Scripts Front Door<a class="headerlink" href="#scripts-front-door" title="Permanent link">&para;</a></h1>
 <p><code>scripts/omni</code> is the supported human-facing entrypoint for common Omniseer
-setup, build, verification, run, runtime-container, RunBundle, docs, flashing,
-environment, and cleanup tasks.</p>
+setup, build, model deployment, verification, run, runtime-container, RunBundle,
+docs, flashing, environment, and cleanup tasks.</p>
 <div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>&lt;command&gt;<span class="w"> </span><span class="o">[</span>subcommand<span class="o">]</span><span class="w"> </span><span class="o">[</span>args...<span class="o">]</span>
 scripts/omni<span class="w"> </span>--help
 scripts/omni<span class="w"> </span>&lt;command&gt;<span class="w"> </span>--help
@@ -1520,6 +1570,10 @@ scripts/omni<span class="w"> </span>doctor
 <tr>
 <td><code>runtime</code></td>
 <td>Build, run, record, verify, push, and pull robot runtime container checkpoints.</td>
+</tr>
+<tr>
+<td><code>model</code></td>
+<td>Export and compile host-side YOLO-World v2-S RKNN artifacts.</td>
 </tr>
 <tr>
 <td><code>test</code></td>
@@ -1605,6 +1659,16 @@ scripts/omni<span class="w"> </span>build<span class="w"> </span>runtime-contain
 scripts/omni<span class="w"> </span>build<span class="w"> </span>runtime-container<span class="w"> </span>--target<span class="w"> </span>portable-runtime<span class="w"> </span>--image<span class="w"> </span>omniseer/robot-runtime:portable
 </code></pre></div>
 <p>See <a href="../../robot-runtime/robot-runtime-container/">Robot Runtime Container</a>.</p>
+<h2 id="model"><code>model</code><a class="headerlink" href="#model" title="Permanent link">&para;</a></h2>
+<p>Builds host-side YOLO-World v2-S deployment artifacts without adding any model
+building dependency to the robot runtime image.</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>model<span class="w"> </span>image
+scripts/omni<span class="w"> </span>model<span class="w"> </span><span class="nb">export</span><span class="w"> </span>--weights<span class="w"> </span>&lt;v2-s.pth&gt;
+scripts/omni<span class="w"> </span>model<span class="w"> </span>compile<span class="w"> </span>--onnx<span class="w"> </span>artifacts/models/yolo_world_v2_s.onnx<span class="w"> </span>--precision<span class="w"> </span>fp
+scripts/omni<span class="w"> </span>model<span class="w"> </span>build<span class="w"> </span>--weights<span class="w"> </span>&lt;v2-s.pth&gt;<span class="w"> </span>--precision<span class="w"> </span>int8
+</code></pre></div>
+<p>See <a href="../../perception/yolo-world-model-deployment/">YOLO-World v2-S Model Deployment</a>
+for the pinned builder, local inputs, artifacts, and calibration assets.</p>
 <h2 id="runtime"><code>runtime</code><a class="headerlink" href="#runtime" title="Permanent link">&para;</a></h2>
 <p>Manages robot-local runtime container checkpoints and evidence runs.</p>
 <div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>build<span class="w"> </span><span class="o">[</span>--image<span class="w"> </span>&lt;base&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>--tag<span class="w"> </span>&lt;tag&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>build<span class="w"> </span>args...<span class="o">]</span>
@@ -2021,7 +2085,7 @@ runbooks. New operator commands should use
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 12, 2026 19:14:14 UTC">August 12, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 18, 2026 22:47:05 UTC">August 18, 2026</span>
   </span>
 
     
