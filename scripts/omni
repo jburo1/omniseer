@@ -32,6 +32,7 @@ Commands:
   test    Targeted local verification helpers. Defaults to ROS.
   run     Operator-facing run commands for sim, real, autonomy, monitor, and teleop.
   runtime Build, record, verify, push, and pull robot runtime container checkpoints.
+  model   Export and compile host-side YOLO-World v2-S RKNN artifacts.
   runs    Inspect, retrieve, report, and build RunBundle videos.
   check   Passive verification helpers.
   doctor  Report local build, runtime, and robot dependency state.
@@ -63,6 +64,8 @@ Examples:
   scripts/omni runtime record
   scripts/omni runtime verify --stage full
   scripts/omni runtime push
+  scripts/omni model image
+  scripts/omni model build --weights models/source/yolo_world/yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth --precision int8
   scripts/omni check real-perception
   scripts/omni flash teensy
   scripts/omni docs build
@@ -300,6 +303,9 @@ EOF
     ;;
   runtime)
     exec "${script_dir}/runtime.sh" "$@"
+    ;;
+  model)
+    exec "${script_dir}/model.sh" "$@"
     ;;
   runs)
     subcommand="${1:-help}"

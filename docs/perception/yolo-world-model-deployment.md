@@ -1,0 +1,131 @@
+# YOLO-World v2-S Model Deployment
+
+This host-only workflow produces the detector model consumed by Omniseer's
+native RKNN vision path:
+
+```text
+YOLO-World v2-S .pth -> ONNX (images + texts) -> RK3588 .rknn
+```
+
+It does not add training, export, ONNX, or RKNN Toolkit dependencies to
+`docker/runtime/Dockerfile`. The checked-in runtime model remains unchanged.
+
+## Pinned builder
+
+Build the dedicated host-side image once from the checkout:
+
+```bash
+scripts/omni model image
+```
+
+The image pins:
+
+- `airockchip/YOLO-World` commit
+  `b8b0fe9beffa9564306a798f6e443c9fe88057af` (the Rockchip RKNN exporter);
+- `airockchip/rknn-toolkit2` v2.1.0 commit
+  `deaba85fc437a28db0b0c29f27d8929f4c5816a1`, including
+  `rknn_toolkit2-2.1.0+708089d1` for CPython 3.8;
+- the Rockchip model-zoo v2.1.0 commit
+  `c2b7d00714b4e5d21266ab3003f3ca687ba0d57b` conversion contract:
+  `images=[1,3,640,640]` and `texts=[1,80,512]` for `rk3588`.
+
+Docker is run against the host daemon. When invoked in a devcontainer the
+wrapper derives the host repository bind path; set
+`OMNISEER_MODEL_HOST_REPO_ROOT=/host/path/to/omniseer` if that mount cannot be
+detected.
+
+## Local inputs
+
+Do not commit or download weights through these commands. Place the supplied
+detector checkpoint here (or another path under this checkout):
+
+```text
+models/source/yolo_world/yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth
+```
+
+Rockchip's exporter also instantiates the CLIP text encoder in order to
+reparameterize the supplied COCO text prompts. To keep exports offline and
+reproducible, manually place a complete official
+`openai/clip-vit-base-patch32` Hugging Face snapshot at:
+
+```text
+models/source/clip-vit-base-patch32/
+  config.json
+  pytorch_model.bin
+  tokenizer_config.json
+  tokenizer.json or vocab.json + merges.txt
+```
+
+The wrapper checks the model configuration and weights and forces Hugging Face
+offline mode. Use `--clip-model <directory>` to choose another local snapshot.
+
+## Export ONNX
+
+```bash
+scripts/omni model export \
+  --weights models/source/yolo_world/yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth
+```
+
+This invokes Rockchip's `deploy/export_onnx.py`, its matching v2-S 640 config,
+and the checked-in 80 COCO prompt list. It validates ONNX with `onnx.checker`
+and rejects any model not having exactly the native runtime interface:
+
+- `images`: `[1,3,640,640]`;
+- `texts`: `[1,80,512]`;
+- six NCHW outputs: 80-class and 4-box tensors at 80x80, 40x40, and 20x20.
+
+The result is `artifacts/models/yolo_world_v2_s.onnx` by default.
+
+## Compile RKNN
+
+FP/non-quantized RKNN needs only the validated ONNX:
+
+```bash
+scripts/omni model compile \
+  --onnx artifacts/models/yolo_world_v2_s.onnx \
+  --precision fp
+```
+
+For INT8, reuse the documented Rockchip YOLO-World v2.1.0 calibration directory
+without changing its format. Copy these assets from that model-zoo release / its
+official model package, preserving the dataset line exactly:
+
+```text
+models/source/yolo_world/calibration/
+  dataset.txt             # contains: bus.jpg coco_text_outp.npy
+  bus.jpg
+  coco_text_outp.npy      # clip_text output for the 80 COCO prompts
+```
+
+Then compile:
+
+```bash
+scripts/omni model compile \
+  --onnx artifacts/models/yolo_world_v2_s.onnx \
+  --precision int8
+```
+
+This is the Rockchip converter configuration: `target_platform=rk3588`, RGB
+normalization `mean=[0,0,0]`, `std=[255,255,255]`, and fixed named inputs
+`images` and `texts`. The FP output is
+`artifacts/models/yolo_world_v2_s_fp.rknn`; the INT8 output is
+`artifacts/models/yolo_world_v2_s_i8.rknn`.
+
+## Full build
+
+After the builder image, detector checkpoint, and local CLIP snapshot are in
+place, run:
+
+```bash
+scripts/omni model build \
+  --weights models/source/yolo_world/yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth \
+  --precision int8
+```
+
+Use `--precision fp` for a non-quantized model. Existing generated artifacts
+are deliberately not overwritten; choose a new `--output` / `--onnx-output` or
+remove the exact generated artifact intentionally before rebuilding.
+
+The commands fail before compilation for a missing checkpoint, local CLIP
+snapshot, calibration asset, or incompatible ONNX contract, and fail after the
+tools run if a generated artifact is missing or empty.

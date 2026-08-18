@@ -117,3 +117,10 @@ docs/software/project_journey.md
 # --- Local experiment artifacts ---
 runs/
 .omniseer/
+
+
+# --- Model weights
+models/
+
+# --- Generated model build artifacts ---
+artifacts/models/

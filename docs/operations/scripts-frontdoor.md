@@ -1,8 +1,8 @@
 # Scripts Front Door
 
 `scripts/omni` is the supported human-facing entrypoint for common Omniseer
-setup, build, verification, run, runtime-container, RunBundle, docs, flashing,
-environment, and cleanup tasks.
+setup, build, model deployment, verification, run, runtime-container, RunBundle,
+docs, flashing, environment, and cleanup tasks.
 
 ```bash
 scripts/omni <command> [subcommand] [args...]
@@ -19,6 +19,7 @@ Command groups:
 | `setup` | Install local development dependencies. |
 | `build` | Build ROS, native vision, firmware, and runtime-container artifacts. |
 | `runtime` | Build, run, record, verify, push, and pull robot runtime container checkpoints. |
+| `model` | Export and compile host-side YOLO-World v2-S RKNN artifacts. |
 | `test` | Run targeted local verification checks. |
 | `run` | Launch sim, real robot profiles, autonomy, monitor, and teleop surfaces. |
 | `runs` | Inspect, annotate, report, build videos, list, and retrieve RunBundles. |
@@ -96,6 +97,21 @@ scripts/omni build runtime-container --target portable-runtime --image omniseer/
 ```
 
 See [Robot Runtime Container](../robot-runtime/robot-runtime-container.md).
+
+## `model`
+
+Builds host-side YOLO-World v2-S deployment artifacts without adding any model
+building dependency to the robot runtime image.
+
+```bash
+scripts/omni model image
+scripts/omni model export --weights <v2-s.pth>
+scripts/omni model compile --onnx artifacts/models/yolo_world_v2_s.onnx --precision fp
+scripts/omni model build --weights <v2-s.pth> --precision int8
+```
+
+See [YOLO-World v2-S Model Deployment](../perception/yolo-world-model-deployment.md)
+for the pinned builder, local inputs, artifacts, and calibration assets.
 
 ## `runtime`
 
