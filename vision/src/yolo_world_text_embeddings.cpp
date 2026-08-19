@@ -4,6 +4,7 @@
 #include <cctype>
 #include <codecvt>
 #include <cstdint>
+#include <cstring>
 #include <fstream>
 #include <locale>
 #include <map>
@@ -14,6 +15,8 @@
 #include <string>
 #include <utility>
 #include <vector>
+
+#include "omniseer/vision/yolo_world_text_input.hpp"
 
 namespace omniseer::vision
 {
@@ -451,9 +454,8 @@ namespace omniseer::vision
     if (text_input.n_dims < 3 || text_input.dims[0] != 1)
       throw std::runtime_error(
           "YoloWorldTextEmbeddingsBuilder::build: unsupported detector texts tensor shape");
-    if (text_input.type != RKNN_TENSOR_INT8 || text_input.scale <= 0.0F)
-      throw std::runtime_error(
-          "YoloWorldTextEmbeddingsBuilder::build: detector texts tensor is not affine INT8");
+    const YoloWorldTextInputFormat text_input_format =
+        resolve_yolo_world_text_input_format(text_input);
 
     const uint32_t sequence_len    = clip_input.dims[clip_input.n_dims - 1];
     const uint32_t class_capacity  = text_input.dims[1];
@@ -469,8 +471,16 @@ namespace omniseer::vision
                                "match detector texts width");
 
     PreparedTextEmbeddings prepared{};
-    prepared.class_names = class_names;
-    prepared.text_i8.assign(tensor_bytes(text_input), static_cast<int8_t>(text_input.zp));
+    prepared.class_names             = class_names;
+    const size_t required_text_bytes = tensor_bytes(text_input);
+    const size_t logical_text_bytes =
+        static_cast<size_t>(class_capacity) * embedding_width *
+        ((text_input_format == YoloWorldTextInputFormat::AffineInt8) ? sizeof(int8_t)
+                                                                     : sizeof(float));
+    if (required_text_bytes < logical_text_bytes)
+      throw std::runtime_error(
+          "YoloWorldTextEmbeddingsBuilder::build: detector texts tensor byte size is too small");
+    prepared.text_bytes.assign(required_text_bytes, static_cast<uint8_t>(text_input.zp));
 
     std::vector<std::string> embedding_rows{};
     embedding_rows.reserve(class_capacity);
@@ -548,10 +558,19 @@ namespace omniseer::vision
         throw make_rknn_error("rknn_outputs_release", rc_release);
 
       const size_t base = class_index * embedding_width;
-      for (size_t i = 0; i < embedding.size(); ++i)
+      if (text_input_format == YoloWorldTextInputFormat::AffineInt8)
       {
-        prepared.text_i8[base + i] =
-            quantize_affine_i8(embedding[i], text_input.zp, text_input.scale);
+        for (size_t i = 0; i < embedding.size(); ++i)
+        {
+          const int8_t quantized =
+              quantize_affine_i8(embedding[i], text_input.zp, text_input.scale);
+          std::memcpy(prepared.text_bytes.data() + base + i, &quantized, sizeof(quantized));
+        }
+      }
+      else
+      {
+        copy_float32_yolo_world_text_embedding(prepared.text_bytes, base, embedding.data(),
+                                               embedding.size());
       }
     }
 

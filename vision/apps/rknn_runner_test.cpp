@@ -271,6 +271,17 @@ TEST_F(RknnRunnerSmokeTest, PreflightArmsRunner)
   }
 }
 
+TEST_F(RknnRunnerSmokeTest, PreflightRejectsIncorrectTextByteCount)
+{
+  omniseer::vision::RknnRunnerConfig cfg{};
+  cfg.model_path  = model_path_;
+  cfg.warmup_runs = 0;
+  omniseer::vision::RknnRunner runner(cfg);
+
+  ASSERT_GT(text_i8_.size(), 1u);
+  EXPECT_THROW(runner.preflight(pool_, text_i8_.data(), text_i8_.size() - 1), std::runtime_error);
+}
+
 TEST_F(RknnRunnerSmokeTest, InferObservesInputChanges)
 {
   omniseer::vision::RknnRunnerConfig cfg{};

@@ -82,14 +82,14 @@ namespace omniseer::vision
    *
    * Typical flow:
    * - Construct with RknnRunnerConfig.
-   * - preflight(pool, text_i8, text_bytes) once at startup.
+   * - preflight(pool, text_data, text_bytes) once at startup.
    * - infer(pool_index) per frame on the hot path.
    * - Read outputs() and output_descs() after successful preflight.
    *
    * Implementation contract:
    * - Model contract is two inputs: image + text embeddings.
    * - Image binding uses rknn_create_mem_from_fd + rknn_set_io_mem.
-   * - Text binding uses one prequantized int8 tensor provided at preflight().
+   * - Text binding uses one detector-native tensor byte buffer provided at preflight().
    * - preflight() pre-binds every ImageBufferPool slot and static text input.
    * - infer() performs no mmap()/rknn_create_mem_from_fd/quantization work.
    * - Output storage is preallocated during preflight.
@@ -116,7 +116,7 @@ namespace omniseer::vision
      * 3) queries model input/output tensor attributes,
      * 4) resolves image/text input roles and validates the model contract,
      * 5) pre-binds every ImageBufferPool slot as RKNN image input memory,
-     * 6) binds one static prequantized int8 text-embedding tensor,
+     * 6) binds one static detector-native text-embedding tensor,
      * 7) preallocates output storage/descriptors,
      * 8) runs warmup inference passes.
      *
@@ -124,12 +124,12 @@ namespace omniseer::vision
      * mapping/allocation work.
      *
      * Notes:
-     * - @p text_i8 must point to contiguous prequantized int8 embeddings matching
+     * - @p text_data must point to contiguous detector-native embedding bytes matching
      *   the model text-input byte size.
      *
      * @throws std::runtime_error on model/runtime/IO setup failures.
      */
-    void preflight(const ImageBufferPool& pool, const int8_t* text_i8, size_t text_bytes);
+    void preflight(const ImageBufferPool& pool, const void* text_data, size_t text_bytes);
 
     /**
      * @brief Run one inference using one pre-bound pool slot index.
@@ -186,8 +186,8 @@ namespace omniseer::vision
     void _resolve_input_roles();
     /// @brief Pre-bind every pool slot as RKNN image-input memory.
     void _prebind_all_image_slots(const ImageBufferPool& pool);
-    /// @brief Bind one static prequantized int8 text-input tensor.
-    void _bind_static_text_input(const int8_t* text_i8, size_t text_bytes);
+    /// @brief Bind one static detector-native text-input tensor.
+    void _bind_static_text_input(const void* text_data, size_t text_bytes);
     /// @brief Preallocate output buffers and rknn_output descriptors.
     void _prepare_outputs();
     /// @brief Run startup warmup passes on one pre-bound image slot.

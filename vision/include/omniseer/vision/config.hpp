@@ -8,12 +8,12 @@
 namespace omniseer::vision
 {
   /**
-   * @brief Immutable view over prepared, quantized text embeddings for YOLO-World startup.
+   * @brief Immutable view over prepared detector text-input bytes for YOLO-World startup.
    */
   struct PreparedTextEmbeddingsView
   {
-    /// @brief Pointer to contiguous int8 embedding bytes.
-    const int8_t* data{nullptr};
+    /// @brief Pointer to contiguous embedding storage in the detector input's native precision.
+    const void* data{nullptr};
     /// @brief Byte count available at @ref data.
     size_t bytes{0};
     /// @brief Number of active classes encoded into the prepared text tensor.
@@ -71,7 +71,7 @@ namespace omniseer::vision
   {
     /// @brief Immutable letterbox/remap geometry discovered during producer preflight.
     PipelineRemapConfig remap{};
-    /// @brief Prepared quantized text embeddings for the RKNN text input.
+    /// @brief Prepared text embeddings for the RKNN text input.
     PreparedTextEmbeddingsView text_embeddings{};
   };
 

@@ -85,7 +85,7 @@ namespace omniseer::vision
     return _output_descs;
   }
 
-  void RknnRunner::preflight(const ImageBufferPool& pool, const int8_t* text_i8, size_t text_bytes)
+  void RknnRunner::preflight(const ImageBufferPool& pool, const void* text_data, size_t text_bytes)
   {
     _shutdown();
 
@@ -96,7 +96,7 @@ namespace omniseer::vision
       _query_model_io();
       _resolve_input_roles();
       _prebind_all_image_slots(pool);
-      _bind_static_text_input(text_i8, text_bytes);
+      _bind_static_text_input(text_data, text_bytes);
       _prepare_outputs();
       _run_warmup();
 
@@ -233,10 +233,10 @@ namespace omniseer::vision
     }
   }
 
-  void RknnRunner::_bind_static_text_input(const int8_t* text_i8, size_t text_bytes)
+  void RknnRunner::_bind_static_text_input(const void* text_data, size_t text_bytes)
   {
-    if (text_i8 == nullptr)
-      throw std::invalid_argument("RknnRunner::preflight: text_i8 is null");
+    if (text_data == nullptr)
+      throw std::invalid_argument("RknnRunner::preflight: text_data is null");
     if (_text_input_index < 0 || static_cast<size_t>(_text_input_index) >= _input_attrs.size())
       throw std::runtime_error("RknnRunner::preflight: invalid text input index");
 
@@ -250,7 +250,7 @@ namespace omniseer::vision
     _text_mem = rknn_create_mem(_ctx, required);
     if (_text_mem == nullptr)
       throw std::runtime_error("RknnRunner::preflight: rknn_create_mem(text) returned nullptr");
-    std::memcpy(_text_mem->virt_addr, text_i8, static_cast<size_t>(required));
+    std::memcpy(_text_mem->virt_addr, text_data, static_cast<size_t>(required));
 
     rknn_tensor_attr bind_attr = text_attr;
     bind_attr.pass_through     = 1;

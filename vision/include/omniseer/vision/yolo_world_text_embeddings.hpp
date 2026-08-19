@@ -13,13 +13,13 @@ namespace omniseer::vision
   struct PreparedTextEmbeddings
   {
     std::vector<std::string> class_names{};
-    std::vector<int8_t>      text_i8{};
+    std::vector<uint8_t>     text_bytes{};
 
     PreparedTextEmbeddingsView view() const noexcept
     {
       PreparedTextEmbeddingsView out{};
-      out.data               = text_i8.data();
-      out.bytes              = text_i8.size();
+      out.data               = text_bytes.data();
+      out.bytes              = text_bytes.size();
       out.active_class_count = static_cast<uint32_t>(class_names.size());
       return out;
     }
@@ -41,10 +41,10 @@ namespace omniseer::vision
   };
 
   /**
-   * @brief Build quantized YOLO-World text input tensors from user class names.
+   * @brief Build YOLO-World text input tensors from user class names.
    *
    * This is a startup-only helper. It owns tokenization, CLIP text inference, and
-   * quantization into the detector model's `texts` input format.
+   * conversion into the detector model's `texts` input format.
    */
   class YoloWorldTextEmbeddingsBuilder
   {
