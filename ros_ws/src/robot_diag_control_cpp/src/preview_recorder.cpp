@@ -1,10 +1,9 @@
-#include <gst/gst.h>
-
 #include <atomic>
 #include <cerrno>
 #include <csignal>
 #include <cstdio>
 #include <fcntl.h>
+#include <gst/gst.h>
 #include <string>
 #include <unistd.h>
 #include <utility>
@@ -28,24 +27,24 @@ namespace
     const auto realtime_ns = static_cast<long long>(realtime.tv_sec) * 1'000'000'000LL +
                              static_cast<long long>(realtime.tv_nsec);
     const std::string temporary_path = path + ".tmp";
-    const std::string content = "{\n  \"anchor_video_time_ns\": " +
+    const std::string content        = "{\n  \"anchor_video_time_ns\": " +
                                 std::to_string(static_cast<unsigned long long>(video_pts)) +
-                                ",\n  \"anchor_robot_time_ns\": " +
-                                std::to_string(realtime_ns) + "\n}\n";
+                                ",\n  \"anchor_robot_time_ns\": " + std::to_string(realtime_ns) +
+                                "\n}\n";
     const int fd = open(temporary_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (fd < 0)
     {
       return false;
     }
-    const auto written = write(fd, content.data(), content.size());
-    const bool complete = written == static_cast<ssize_t>(content.size()) && fsync(fd) == 0;
-    const int close_result = close(fd);
+    const auto written      = write(fd, content.data(), content.size());
+    const bool complete     = written == static_cast<ssize_t>(content.size()) && fsync(fd) == 0;
+    const int  close_result = close(fd);
     return complete && close_result == 0 && rename(temporary_path.c_str(), path.c_str()) == 0;
   }
 
   GstPadProbeReturn first_recorded_buffer(GstPad*, GstPadProbeInfo* info, gpointer user_data)
   {
-    auto* timing = static_cast<std::pair<std::string, std::atomic_bool*>*>(user_data);
+    auto*      timing = static_cast<std::pair<std::string, std::atomic_bool*>*>(user_data);
     GstBuffer* buffer = GST_PAD_PROBE_INFO_BUFFER(info);
     if (buffer == nullptr || !GST_BUFFER_PTS_IS_VALID(buffer) || timing->second->exchange(true))
     {
@@ -87,11 +86,12 @@ int main(int argc, char** argv)
   }
 
   gst_init(&argc, &argv);
-  GError* error = nullptr;
+  GError*     error    = nullptr;
   GstElement* pipeline = gst_parse_launch(pipeline_description.c_str(), &error);
   if (pipeline == nullptr)
   {
-    g_printerr("failed to parse preview pipeline: %s\n", error == nullptr ? "unknown error" : error->message);
+    g_printerr("failed to parse preview pipeline: %s\n",
+               error == nullptr ? "unknown error" : error->message);
     g_clear_error(&error);
     return 1;
   }
@@ -102,9 +102,9 @@ int main(int argc, char** argv)
     gst_object_unref(pipeline);
     return 1;
   }
-  GstPad* timing_pad = gst_element_get_static_pad(timing_probe, "src");
+  GstPad*          timing_pad = gst_element_get_static_pad(timing_probe, "src");
   std::atomic_bool timing_written{false};
-  auto timing = std::make_pair(timing_path, &timing_written);
+  auto             timing = std::make_pair(timing_path, &timing_written);
   gst_pad_add_probe(timing_pad, GST_PAD_PROBE_TYPE_BUFFER, first_recorded_buffer, &timing, nullptr);
   gst_object_unref(timing_pad);
   gst_object_unref(timing_probe);
@@ -112,12 +112,13 @@ int main(int argc, char** argv)
   std::signal(SIGINT, request_stop);
   std::signal(SIGTERM, request_stop);
   gst_element_set_state(pipeline, GST_STATE_PLAYING);
-  GstBus* bus = gst_element_get_bus(pipeline);
-  int result = 0;
+  GstBus* bus    = gst_element_get_bus(pipeline);
+  int     result = 0;
   while (!stop_requested)
   {
-    GstMessage* message = gst_bus_timed_pop_filtered(
-        bus, 100 * GST_MSECOND, static_cast<GstMessageType>(GST_MESSAGE_ERROR | GST_MESSAGE_EOS));
+    GstMessage* message = gst_bus_timed_pop_filtered(bus, 100 * GST_MSECOND,
+                                                     static_cast<GstMessageType>(GST_MESSAGE_ERROR |
+                                                                                 GST_MESSAGE_EOS));
     if (message == nullptr)
     {
       continue;
@@ -125,7 +126,7 @@ int main(int argc, char** argv)
     if (GST_MESSAGE_TYPE(message) == GST_MESSAGE_ERROR)
     {
       GError* pipeline_error = nullptr;
-      gchar* debug = nullptr;
+      gchar*  debug          = nullptr;
       gst_message_parse_error(message, &pipeline_error, &debug);
       g_printerr("preview pipeline error: %s\n", pipeline_error->message);
       g_clear_error(&pipeline_error);
@@ -138,8 +139,9 @@ int main(int argc, char** argv)
   if (stop_requested)
   {
     gst_element_send_event(pipeline, gst_event_new_eos());
-    GstMessage* message = gst_bus_timed_pop_filtered(
-        bus, 5 * GST_SECOND, static_cast<GstMessageType>(GST_MESSAGE_ERROR | GST_MESSAGE_EOS));
+    GstMessage* message = gst_bus_timed_pop_filtered(bus, 5 * GST_SECOND,
+                                                     static_cast<GstMessageType>(GST_MESSAGE_ERROR |
+                                                                                 GST_MESSAGE_EOS));
     if (message != nullptr)
     {
       if (GST_MESSAGE_TYPE(message) == GST_MESSAGE_ERROR)

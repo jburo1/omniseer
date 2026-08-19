@@ -4,7 +4,6 @@
 #include <cstdint>
 #include <cstring>
 #include <rknn_api.h>
-
 #include <stdexcept>
 #include <vector>
 
@@ -18,8 +17,7 @@ namespace omniseer::vision
   };
 
   /** @brief Validate and classify the detector `texts` input storage contract. */
-  inline YoloWorldTextInputFormat resolve_yolo_world_text_input_format(
-      const rknn_tensor_attr& attr)
+  inline YoloWorldTextInputFormat resolve_yolo_world_text_input_format(const rknn_tensor_attr& attr)
   {
     if (attr.type == RKNN_TENSOR_INT8)
     {
@@ -39,9 +37,8 @@ namespace omniseer::vision
 
   /** @brief Copy one FP32 CLIP embedding into its detector text-input byte slot. */
   inline void copy_float32_yolo_world_text_embedding(std::vector<uint8_t>& storage,
-                                                      size_t element_offset,
-                                                      const float* values,
-                                                      size_t value_count)
+                                                     size_t element_offset, const float* values,
+                                                     size_t value_count)
   {
     if (values == nullptr)
       throw std::invalid_argument("YOLO-World FLOAT32 text embedding is null");
