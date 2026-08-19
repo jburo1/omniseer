@@ -9,9 +9,12 @@ from robot_diag_control.run_artifacts import RunArtifactContext
 from robot_diag_control.run_commands import (
     DEFAULT_DEVCONTAINER_EXEC_TEMPLATE,
     DEFAULT_RUNTIME_TAG,
+    DETECTOR_MODEL_CHOICES,
     PREVIEW_ENCODER_LABELS,
     RUN_BACKEND_LABELS,
     RUN_TYPE_LABELS,
+    RUNTIME_DEFAULT_MODEL_LABEL,
+    DetectorModelChoice,
     RobotConnection,
     RunConfig,
     parse_run_classes,
@@ -51,6 +54,7 @@ class RunFormValues:
     detector_score_threshold: str = "0.25"
     detector_nms_iou_threshold: str = "0.45"
     detector_max_detections: str = "100"
+    detector_model_label: str = RUNTIME_DEFAULT_MODEL_LABEL
     preview_encoder_label: str = "Rockchip hardware"
     record_video: bool = False
     record_rosbag: bool = False
@@ -87,6 +91,13 @@ def selected_preview_encoder(selected_label: str) -> str:
         if selected_label == label:
             return encoder
     raise ValueError(f"unsupported preview encoder: {selected_label}")
+
+
+def selected_detector_model(selected_label: str) -> DetectorModelChoice | None:
+    try:
+        return DETECTOR_MODEL_CHOICES[selected_label]
+    except KeyError as exc:
+        raise ValueError(f"unsupported detector model: {selected_label}") from exc
 
 
 def normalized_remote_repo_root(value: str) -> str:
@@ -199,6 +210,7 @@ def resolve_run_form(
     )
     autonomy_bbox_area_min_ratio = values.autonomy_bbox_area_min_ratio.strip() or "0.08"
     autonomy_bbox_area_max_ratio = values.autonomy_bbox_area_max_ratio.strip() or "0.35"
+    detector_model = selected_detector_model(values.detector_model_label)
     run_config = RunConfig(
         run_id=run_id,
         backend=selected_run_backend(values.backend_label),
@@ -251,6 +263,11 @@ def resolve_run_form(
             name="max detections",
             default="100",
         ),
+        detector_model_artifact=detector_model.artifact_filename if detector_model else "",
+        experiment_model_family=detector_model.family if detector_model else "",
+        experiment_model_variant=detector_model.variant if detector_model else "",
+        experiment_model_precision=detector_model.precision if detector_model else "",
+        experiment_model_backend=detector_model.backend if detector_model else "",
         preview_encoder=selected_preview_encoder(values.preview_encoder_label),
         record_video=values.record_video,
         record_rosbag=values.record_rosbag,

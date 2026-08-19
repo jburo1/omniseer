@@ -3,6 +3,7 @@ from pathlib import Path
 
 from robot_diag_control.run_commands import (
     DEFAULT_RUNTIME_TAG,
+    DETECTOR_MODEL_CHOICES,
     PREVIEW_ENCODER_LABELS,
     PREVIEW_ENCODER_ROCKCHIP,
     PREVIEW_ENCODER_SOFTWARE,
@@ -24,6 +25,7 @@ from robot_diag_control.run_settings import (
     normalized_remote_runs_root,
     resolve_run_form,
     resolved_run_id,
+    selected_detector_model,
     selected_preview_encoder,
     selected_run_backend,
     selected_run_type,
@@ -84,6 +86,18 @@ class RunSettingsTests(unittest.TestCase):
         for encoder in (PREVIEW_ENCODER_ROCKCHIP, PREVIEW_ENCODER_SOFTWARE):
             self.assertEqual(selected_preview_encoder(PREVIEW_ENCODER_LABELS[encoder]), encoder)
 
+    def test_selected_detector_models_resolve_to_expected_artifacts(self):
+        expected = {
+            "YOLO-World v2-S INT8": "yolo_world_v2_s_i8.rknn",
+            "YOLO-World v2-S FP": "yolo_world_v2_s_fp.rknn",
+            "YOLO-World v2-M INT8": "yolo_world_v2_m_i8.rknn",
+            "YOLO-World v2-M FP": "yolo_world_v2_m_fp.rknn",
+        }
+        self.assertIsNone(selected_detector_model("Runtime default"))
+        for label, artifact in expected.items():
+            self.assertEqual(DETECTOR_MODEL_CHOICES[label].artifact_filename, artifact)
+            self.assertEqual(selected_detector_model(label).artifact_filename, artifact)
+
     def test_normalized_remote_paths_use_defaults_and_strip_trailing_slashes(self):
         self.assertEqual(normalized_remote_repo_root(""), DEFAULT_REMOTE_REPO_ROOT)
         self.assertEqual(normalized_remote_repo_root("/robot/repo/"), "/robot/repo")
@@ -135,11 +149,33 @@ class RunSettingsTests(unittest.TestCase):
         self.assertEqual(selection.run_config.detector_score_threshold, "0.31")
         self.assertEqual(selection.run_config.detector_nms_iou_threshold, "0.52")
         self.assertEqual(selection.run_config.detector_max_detections, "42")
+        self.assertEqual(selection.run_config.detector_model_artifact, "")
+        self.assertEqual(selection.run_config.experiment_model_family, "")
         self.assertEqual(selection.run_config.preview_encoder, PREVIEW_ENCODER_SOFTWARE)
         self.assertFalse(selection.run_config.record_rosbag)
         self.assertEqual(selection.artifact_context.repo_root, Path("/repo"))
         self.assertEqual(selection.artifact_context.connection, selection.connection)
         self.assertEqual(selection.artifact_context.local_import_root, Path("/repo/runs/imported"))
+
+    def test_resolve_run_form_maps_detector_choice_to_provenance(self):
+        expected = {
+            "YOLO-World v2-S INT8": ("yolo_world_v2_s_i8.rknn", "v2s", "int8"),
+            "YOLO-World v2-S FP": ("yolo_world_v2_s_fp.rknn", "v2s", "fp"),
+            "YOLO-World v2-M INT8": ("yolo_world_v2_m_i8.rknn", "v2m", "int8"),
+            "YOLO-World v2-M FP": ("yolo_world_v2_m_fp.rknn", "v2m", "fp"),
+        }
+        for label, (artifact, variant, precision) in expected.items():
+            selection = resolve_run_form(
+                _values(detector_model_label=label),
+                repo_root=Path("/repo"),
+                default_run_id=lambda: "operator_default",
+            )
+
+            self.assertEqual(selection.run_config.detector_model_artifact, artifact)
+            self.assertEqual(selection.run_config.experiment_model_family, "yolo-world")
+            self.assertEqual(selection.run_config.experiment_model_variant, variant)
+            self.assertEqual(selection.run_config.experiment_model_precision, precision)
+            self.assertEqual(selection.run_config.experiment_model_backend, "rknn")
 
     def test_resolve_run_form_uses_default_runtime_tag_when_blank(self):
         selection = resolve_run_form(

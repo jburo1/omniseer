@@ -98,7 +98,14 @@ Artifact operations are local laptop actions after the robot run has completed.
 They stay separate from robot process lifecycle and do not change robot-side
 behavior.
 
-## Detector Tuning
+## Detector Selection and Tuning
+
+Before selecting an external detector model, copy its generated RKNN artifact to
+the robot repository's `runs/model_artifacts/` directory. The normal Experiment
+controls expose `Runtime default`, YOLO-World v2-S/v2-M, and FP/INT8 choices.
+An explicit choice uses the staged artifact for that run; `Runtime default`
+continues to use the detector configured by the runtime image or config. The
+selector does not upload or discover model files.
 
 The collapsed **Advanced Experiment Overrides** section exposes detector controls
 that operators can adjust between runs without changing hardware or model

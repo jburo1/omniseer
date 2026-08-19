@@ -32,6 +32,25 @@ PREVIEW_ENCODER_LABELS = {
     PREVIEW_ENCODER_SOFTWARE: "Software x264",
 }
 DEFAULT_RUNTIME_TAG = "robot-verified"
+RUNTIME_DEFAULT_MODEL_LABEL = "Runtime default"
+
+
+@dataclass(frozen=True)
+class DetectorModelChoice:
+    variant: str
+    precision: str
+    artifact_filename: str
+    family: str = "yolo-world"
+    backend: str = "rknn"
+
+
+DETECTOR_MODEL_CHOICES: dict[str, DetectorModelChoice | None] = {
+    RUNTIME_DEFAULT_MODEL_LABEL: None,
+    "YOLO-World v2-S INT8": DetectorModelChoice("v2s", "int8", "yolo_world_v2_s_i8.rknn"),
+    "YOLO-World v2-S FP": DetectorModelChoice("v2s", "fp", "yolo_world_v2_s_fp.rknn"),
+    "YOLO-World v2-M INT8": DetectorModelChoice("v2m", "int8", "yolo_world_v2_m_i8.rknn"),
+    "YOLO-World v2-M FP": DetectorModelChoice("v2m", "fp", "yolo_world_v2_m_fp.rknn"),
+}
 
 
 @dataclass(frozen=True)
@@ -67,6 +86,11 @@ class RunConfig:
     detector_score_threshold: str = "0.25"
     detector_nms_iou_threshold: str = "0.45"
     detector_max_detections: str = "100"
+    detector_model_artifact: str = ""
+    experiment_model_family: str = ""
+    experiment_model_variant: str = ""
+    experiment_model_precision: str = ""
+    experiment_model_backend: str = ""
     preview_encoder: str = PREVIEW_ENCODER_ROCKCHIP
     record_video: bool = False
     record_rosbag: bool = False
@@ -112,6 +136,22 @@ def _runtime_container_class_list_path(run_id: str) -> str:
 
 def _runtime_container_run_dir(run_id: str) -> str:
     return f"/runs/{run_id}"
+
+
+def _runtime_container_model_path(artifact_filename: str) -> str:
+    return f"/runs/model_artifacts/{artifact_filename}"
+
+
+def _model_launch_args(run_config: RunConfig, *, model_path: str) -> list[str]:
+    if not run_config.detector_model_artifact:
+        return []
+    return [
+        f"detector_model_path:={model_path}",
+        f"experiment_model_family:={run_config.experiment_model_family}",
+        f"experiment_model_variant:={run_config.experiment_model_variant}",
+        f"experiment_model_precision:={run_config.experiment_model_precision}",
+        f"experiment_model_backend:={run_config.experiment_model_backend}",
+    ]
 
 
 def _omni_command(repo_root: Path) -> str:
@@ -181,6 +221,12 @@ def _build_runtime_record_inner_command(
     command.append(f"gateway_preview_encoder:={run_config.preview_encoder}")
     if classes:
         command.append(f"classes_path:={_runtime_container_class_list_path(run_id)}")
+    command.extend(
+        _model_launch_args(
+            run_config,
+            model_path=_runtime_container_model_path(run_config.detector_model_artifact),
+        )
+    )
     command.extend(_detector_parameter_launch_args(run_config))
     command.extend(
         _autonomy_launch_args(
@@ -230,6 +276,12 @@ def _build_devcontainer_record_inner_command(
     command.append(f"gateway_preview_encoder:={run_config.preview_encoder}")
     if classes:
         command.append(f"classes_path:={remote_class_list_path_for(container_repo_root, run_id)}")
+    command.extend(
+        _model_launch_args(
+            run_config,
+            model_path=f"{container_repo_root}/runs/model_artifacts/{run_config.detector_model_artifact}",
+        )
+    )
     command.extend(_detector_parameter_launch_args(run_config))
     command.extend(_autonomy_launch_args(classes=classes, run_type=run_config.run_type, run_dir=container_run_dir))
     command.extend(_autonomy_parameter_launch_args(run_config))

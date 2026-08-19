@@ -111,6 +111,50 @@ class RunCommandsTests(unittest.TestCase):
         self.assertGreater(command[3].index("postprocess_score_threshold:=0.31"), command[3].index(" -- "))
         self.assertNotIn("start_autonomy:=true", command[3])
 
+    def test_runtime_default_does_not_add_detector_model_override(self):
+        command = build_remote_start_command(
+            connection=_connection(), run_config=RunConfig(run_id="operator_001", backend=RUN_BACKEND_RUNTIME)
+        )
+
+        self.assertNotIn("detector_model_path:=", command[3])
+        self.assertNotIn("experiment_model_family:=", command[3])
+
+    def test_explicit_model_uses_runtime_path_and_provenance(self):
+        command = build_remote_start_command(
+            connection=_connection(),
+            run_config=RunConfig(
+                run_id="operator_001",
+                backend=RUN_BACKEND_RUNTIME,
+                detector_model_artifact="yolo_world_v2_s_i8.rknn",
+                experiment_model_family="yolo-world",
+                experiment_model_variant="v2s",
+                experiment_model_precision="int8",
+                experiment_model_backend="rknn",
+            ),
+        )
+
+        self.assertIn("detector_model_path:=/runs/model_artifacts/yolo_world_v2_s_i8.rknn", command[3])
+        self.assertIn("experiment_model_family:=yolo-world", command[3])
+        self.assertIn("experiment_model_variant:=v2s", command[3])
+        self.assertIn("experiment_model_precision:=int8", command[3])
+        self.assertIn("experiment_model_backend:=rknn", command[3])
+
+    def test_explicit_model_uses_devcontainer_workspace_path(self):
+        command = build_remote_start_command(
+            connection=_connection(),
+            run_config=RunConfig(
+                run_id="operator_001",
+                backend=RUN_BACKEND_DEVCONTAINER,
+                detector_model_artifact="yolo_world_v2_m_fp.rknn",
+                experiment_model_family="yolo-world",
+                experiment_model_variant="v2m",
+                experiment_model_precision="fp",
+                experiment_model_backend="rknn",
+            ),
+        )
+
+        self.assertIn("detector_model_path:=/omniseer/runs/model_artifacts/yolo_world_v2_m_fp.rknn", command[3])
+
     def test_runtime_backend_adds_autonomy_launch_args_for_centering_run(self):
         command = build_remote_start_command(
             connection=_connection(),
