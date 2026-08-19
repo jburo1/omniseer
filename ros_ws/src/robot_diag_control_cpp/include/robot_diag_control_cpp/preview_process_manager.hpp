@@ -16,6 +16,9 @@ namespace robot_diag_control_cpp
   {
     std::string              executable{};
     std::vector<std::string> arguments{};
+    // The recorder helper receives the RunBundle timing path from the manager and
+    // writes it only after observing the first encoded buffer.
+    bool writes_first_buffer_timing{false};
   };
 
   struct PreviewControlResult

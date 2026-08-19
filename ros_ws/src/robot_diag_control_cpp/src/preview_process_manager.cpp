@@ -5,6 +5,7 @@
 #include <csignal>
 #include <cstring>
 #include <fcntl.h>
+#include <filesystem>
 #include <string>
 #include <sys/wait.h>
 #include <thread>
@@ -22,32 +23,6 @@ namespace robot_diag_control_cpp
       return store.set_preview_disabled(profile, last_error);
     }
 
-    bool write_video_timing(const std::string& path)
-    {
-      if (path.empty())
-      {
-        return true;
-      }
-
-      timespec timestamp{};
-      if (clock_gettime(CLOCK_REALTIME, &timestamp) != 0)
-      {
-        return false;
-      }
-      const auto timestamp_ns = static_cast<long long>(timestamp.tv_sec) * 1'000'000'000LL +
-                                static_cast<long long>(timestamp.tv_nsec);
-      const std::string content =
-          "{\n  \"video_start_time_ns\": " + std::to_string(timestamp_ns) + "\n}\n";
-      const int fd = open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
-      if (fd < 0)
-      {
-        return false;
-      }
-      const auto written      = write(fd, content.data(), content.size());
-      const bool complete     = written == static_cast<ssize_t>(content.size());
-      const int  close_result = close(fd);
-      return complete && close_result == 0;
-    }
   } // namespace
 
   PreviewProcessManager::PreviewProcessManager(GatewayStateStore&        store,
@@ -123,6 +98,18 @@ namespace robot_diag_control_cpp
       return PreviewControlResult{false, resolution.message, preview};
     }
 
+    if (resolution.command.writes_first_buffer_timing && !_video_timing_path.empty())
+    {
+      std::error_code error;
+      std::filesystem::remove(_video_timing_path, error);
+      if (error)
+      {
+        const auto message = "failed to clear previous video timing: " + error.message();
+        const auto preview = preview_disabled(_store, target_profile, message);
+        return PreviewControlResult{false, message, preview};
+      }
+    }
+
     int exec_error_pipe[2];
     if (pipe(exec_error_pipe) != 0)
     {
@@ -183,17 +170,14 @@ namespace robot_diag_control_cpp
         close(devnull_fd);
       }
 
-      if (!write_video_timing(_video_timing_path))
-      {
-        const int  saved_errno = errno;
-        const auto written     = write(exec_error_pipe[1], &saved_errno, sizeof(saved_errno));
-        (void) written;
-        _exit(127);
-      }
-
       std::vector<std::string> argv_storage;
-      argv_storage.reserve(1 + resolution.command.arguments.size());
+      argv_storage.reserve(3 + resolution.command.arguments.size());
       argv_storage.push_back(resolution.command.executable);
+      if (resolution.command.writes_first_buffer_timing && !_video_timing_path.empty())
+      {
+        argv_storage.push_back("--timing-path");
+        argv_storage.push_back(_video_timing_path);
+      }
       argv_storage.insert(argv_storage.end(), resolution.command.arguments.begin(),
                           resolution.command.arguments.end());
 

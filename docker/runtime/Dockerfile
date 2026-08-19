@@ -105,6 +105,7 @@ RUN set -eux; \
     cmake \
     git \
     libgrpc++-dev \
+    libgstreamer1.0-dev \
     libjpeg-dev \
     libopencv-dev \
     libprotobuf-dev \

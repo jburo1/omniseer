@@ -6,10 +6,12 @@ from omniseer_experiments.run_video import (
     NON_TARGET_COLOR,
     TARGET_COLOR,
     TimedDetections,
+    VideoTimingAnchor,
     _draw_detections,
     _target_class_from_manifest,
     frame_robot_time,
     load_video_start_time,
+    load_video_timing_anchor,
     nearest_detections,
     remux_source_video,
     transcode_overlay_video,
@@ -115,8 +117,32 @@ class RunVideoTests(unittest.TestCase):
 
             self.assertEqual(load_video_start_time(timing_path), 1786061000.1234567)
 
-    def test_converts_video_relative_time_to_robot_realtime(self):
-        self.assertEqual(video_relative_to_robot_time(1786061000.0, 0.125), 1786061000.125)
+    def test_loads_first_recorded_buffer_timing_anchor(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            timing_path = Path(temp_dir) / "timing.json"
+            timing_path.write_text(
+                '{"anchor_video_time_ns": 125000000, "anchor_robot_time_ns": 1786061000123456789}',
+                encoding="utf-8",
+            )
+
+            self.assertEqual(
+                load_video_timing_anchor(timing_path),
+                VideoTimingAnchor(0.125, 1786061000.1234567),
+            )
+
+    def test_maps_video_time_from_first_recorded_buffer_to_robot_realtime(self):
+        anchor = VideoTimingAnchor(0.125, 1786061000.0)
+        self.assertEqual(video_relative_to_robot_time(anchor, 0.250), 1786061000.125)
+
+    def test_frame_time_uses_first_recorded_buffer_anchor(self):
+        records = [TimedDetections(100.0, ()), TimedDetections(100.08, ())]
+        frame_time = frame_robot_time(
+            0.125,
+            records,
+            timing_anchor=VideoTimingAnchor(0.050, 99.925),
+        )
+
+        self.assertEqual(frame_time, 100.0)
 
     def test_timestamp_matching_selects_nearest_detection_before_frame(self):
         records = [TimedDetections(100.02, ()), TimedDetections(100.09, ())]

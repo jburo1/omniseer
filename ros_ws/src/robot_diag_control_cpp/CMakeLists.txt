@@ -14,6 +14,8 @@ find_package(nav_msgs REQUIRED)
 find_package(omniseer_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(yolo_msgs REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(GSTREAMER REQUIRED IMPORTED_TARGET gstreamer-1.0)
 
 set(robot_gateway_proto_root "${CMAKE_CURRENT_SOURCE_DIR}/../robot_diag_control")
 set(robot_gateway_proto "${robot_gateway_proto_root}/robot_diag_control/api/robot_gateway.proto")
@@ -101,6 +103,12 @@ add_executable(robot_diag_control_cpp_node
   src/robot_diag_control_cpp_node.cpp
 )
 
+add_executable(robot_diag_preview_recorder
+  src/preview_recorder.cpp
+)
+target_compile_features(robot_diag_preview_recorder PRIVATE cxx_std_17)
+target_link_libraries(robot_diag_preview_recorder PRIVATE PkgConfig::GSTREAMER)
+
 target_compile_features(robot_diag_control_cpp_node PUBLIC cxx_std_17)
 target_link_libraries(robot_diag_control_cpp_node PRIVATE
   ${geometry_msgs_TARGETS}
@@ -120,6 +128,10 @@ install(TARGETS
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}
+)
+
+install(TARGETS robot_diag_preview_recorder
+  RUNTIME DESTINATION bin
 )
 
 install(DIRECTORY include/

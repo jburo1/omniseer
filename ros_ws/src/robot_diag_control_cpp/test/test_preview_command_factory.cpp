@@ -71,12 +71,18 @@ namespace robot_diag_control_cpp
           make_gstreamer_preview_command_factory(config)(PreviewProfile::Balanced);
 
       ASSERT_TRUE(resolution.ok);
-      EXPECT_TRUE(has_argument(resolution, "h264parse"));
-      EXPECT_TRUE(has_argument(resolution, "tee"));
-      EXPECT_TRUE(has_argument(resolution, "filesink"));
-      EXPECT_TRUE(has_argument(resolution, "location=/runs/demo/video/source.ts"));
-      EXPECT_TRUE(has_argument(resolution, "encoded."));
-      EXPECT_TRUE(has_argument(resolution, "srtsink"));
+      EXPECT_EQ(resolution.command.executable, "robot_diag_preview_recorder");
+      EXPECT_TRUE(resolution.command.writes_first_buffer_timing);
+      EXPECT_TRUE(has_argument(resolution, "--pipeline"));
+      ASSERT_EQ(resolution.command.arguments.size(), 2U);
+      EXPECT_NE(resolution.command.arguments[1].find("h264parse"), std::string::npos);
+      EXPECT_NE(resolution.command.arguments[1].find("identity name=timing_probe"),
+                std::string::npos);
+      EXPECT_NE(resolution.command.arguments[1].find("tee name=encoded"), std::string::npos);
+      EXPECT_NE(resolution.command.arguments[1].find(
+                    "filesink location=/runs/demo/video/source.ts"),
+                std::string::npos);
+      EXPECT_NE(resolution.command.arguments[1].find("srtsink"), std::string::npos);
     }
 
     TEST(PreviewCommandFactoryTest, BuildsRockchipPipelineForBalancedProfile)

@@ -1,5 +1,6 @@
 #include "robot_diag_control_cpp/preview_command_factory.hpp"
 
+#include <sstream>
 #include <utility>
 #include <vector>
 
@@ -7,6 +8,24 @@ namespace robot_diag_control_cpp
 {
   namespace
   {
+    std::string pipeline_description(const std::vector<std::string>& arguments)
+    {
+      std::ostringstream pipeline;
+      for (const auto& argument : arguments)
+      {
+        if (argument == "-q" || argument == "-e")
+        {
+          continue;
+        }
+        if (pipeline.tellp() > 0)
+        {
+          pipeline << ' ';
+        }
+        pipeline << argument;
+      }
+      return pipeline.str();
+    }
+
     struct ProfileSettings
     {
       int fps{30};
@@ -146,9 +165,10 @@ namespace robot_diag_control_cpp
       if (!config.record_path.empty())
       {
         arguments.insert(arguments.end(),
-                         {"!", "tee", "name=encoded", "encoded.", "!", "queue", "!", "mpegtsmux",
-                          "alignment=7", "!", "filesink", "location=" + config.record_path,
-                          "encoded.", "!", "queue", "!"});
+                         {"!", "identity", "name=timing_probe", "!", "tee", "name=encoded",
+                          "encoded.", "!", "queue", "!", "mpegtsmux", "alignment=7", "!",
+                          "filesink", "location=" + config.record_path, "encoded.", "!", "queue",
+                          "!"});
       }
       else
       {
@@ -160,6 +180,19 @@ namespace robot_diag_control_cpp
                         "localaddress=" + config.srt_bind_address,
                         "localport=" + std::to_string(config.srt_port), "wait-for-connection=false",
                         "latency=" + std::to_string(config.srt_latency_ms)});
+
+      if (!config.record_path.empty())
+      {
+        return PreviewCommandResolution{
+            true,
+            "",
+            PreviewProcessCommand{
+                "robot_diag_preview_recorder",
+                {"--pipeline", pipeline_description(arguments)},
+                true,
+            },
+        };
+      }
 
       return PreviewCommandResolution{
           true,

@@ -26,6 +26,14 @@ class TimedDetections:
     target_class: str = ""
 
 
+@dataclass(frozen=True)
+class VideoTimingAnchor:
+    """Robot realtime and media timestamp of the first recorded video buffer."""
+
+    video_time_sec: float
+    robot_time_sec: float
+
+
 def detection_header_timestamp(record: dict[str, Any]) -> float | None:
     stamp = record.get("header_stamp")
     if not isinstance(stamp, dict):
@@ -58,8 +66,30 @@ def read_timed_detections(path: Path, *, target_class: str = "") -> list[TimedDe
     return sorted(records, key=lambda item: item.timestamp_sec)
 
 
+def load_video_timing_anchor(timing_path: Path) -> VideoTimingAnchor | None:
+    """Load the first-recorded-buffer video-to-robot-realtime mapping."""
+    try:
+        timing = json.loads(timing_path.read_text(encoding="utf-8"))
+    except (FileNotFoundError, OSError, json.JSONDecodeError):
+        return None
+    if not isinstance(timing, dict):
+        return None
+    video_time_ns = timing.get("anchor_video_time_ns")
+    robot_time_ns = timing.get("anchor_robot_time_ns")
+    if (
+        isinstance(video_time_ns, bool)
+        or isinstance(robot_time_ns, bool)
+        or not isinstance(video_time_ns, int)
+        or not isinstance(robot_time_ns, int)
+        or video_time_ns < 0
+        or robot_time_ns < 0
+    ):
+        return None
+    return VideoTimingAnchor(video_time_ns / 1_000_000_000, robot_time_ns / 1_000_000_000)
+
+
 def load_video_start_time(timing_path: Path) -> float | None:
-    """Load the robot realtime timestamp corresponding to video time zero."""
+    """Load the legacy video-zero timestamp from an older RunBundle."""
     try:
         timing = json.loads(timing_path.read_text(encoding="utf-8"))
     except (FileNotFoundError, OSError, json.JSONDecodeError):
@@ -72,18 +102,21 @@ def load_video_start_time(timing_path: Path) -> float | None:
     return timestamp_ns / 1_000_000_000
 
 
-def video_relative_to_robot_time(video_start_time_sec: float, video_relative_time_sec: float) -> float:
-    return video_start_time_sec + video_relative_time_sec
+def video_relative_to_robot_time(timing_anchor: VideoTimingAnchor, video_time_sec: float) -> float:
+    return timing_anchor.robot_time_sec + (video_time_sec - timing_anchor.video_time_sec)
 
 
 def frame_robot_time(
     video_relative_time_sec: float,
     records: Sequence[TimedDetections],
     *,
+    timing_anchor: VideoTimingAnchor | None = None,
     video_start_time_sec: float | None = None,
 ) -> float:
+    if timing_anchor is not None:
+        return video_relative_to_robot_time(timing_anchor, video_relative_time_sec)
     if video_start_time_sec is not None:
-        return video_relative_to_robot_time(video_start_time_sec, video_relative_time_sec)
+        return video_start_time_sec + video_relative_time_sec
     return records[0].timestamp_sec + video_relative_time_sec if records else video_relative_time_sec
 
 
@@ -181,10 +214,18 @@ def build_run_video(
         raise FileNotFoundError(f"detections not found: {detections_path}")
 
     video_dir.mkdir(exist_ok=True)
-    video_start_time_sec = load_video_start_time(video_dir / "timing.json")
-    if video_start_time_sec is None:
+    timing_path = video_dir / "timing.json"
+    timing_anchor = load_video_timing_anchor(timing_path)
+    video_start_time_sec = None if timing_anchor is not None else load_video_start_time(timing_path)
+    if timing_anchor is None and video_start_time_sec is None:
         warnings.warn(
-            "video/timing.json is missing or invalid; using legacy first-detection-relative overlay timing",
+            "video/timing.json has no usable timing anchor; using legacy first-detection-relative overlay timing",
+            RuntimeWarning,
+            stacklevel=2,
+        )
+    elif timing_anchor is None:
+        warnings.warn(
+            "video/timing.json uses the legacy pre-recording video-zero anchor; overlay timing may have startup offset",
             RuntimeWarning,
             stacklevel=2,
         )
@@ -197,6 +238,7 @@ def build_run_video(
             detections_path,
             target_class=_target_class_from_manifest(run_dir / "manifest.yaml"),
         ),
+        timing_anchor=timing_anchor,
         video_start_time_sec=video_start_time_sec,
         runner=runner,
         cv2_module=cv2_module,
@@ -208,6 +250,7 @@ def render_overlay(
     overlay_mp4: Path,
     records: Sequence[TimedDetections],
     *,
+    timing_anchor: VideoTimingAnchor | None = None,
     video_start_time_sec: float | None = None,
     runner: Callable[..., Any] = subprocess.run,
     cv2_module: Any | None = None,
@@ -218,6 +261,7 @@ def render_overlay(
             source_mp4,
             rendered_overlay_mp4,
             records,
+            timing_anchor=timing_anchor,
             video_start_time_sec=video_start_time_sec,
             cv2_module=cv2_module,
         )
@@ -231,6 +275,7 @@ def render_overlay_frames(
     rendered_overlay_mp4: Path,
     records: Sequence[TimedDetections],
     *,
+    timing_anchor: VideoTimingAnchor | None = None,
     video_start_time_sec: float | None = None,
     max_output_width: int = 640,
     max_output_fps: float = 30.0,
@@ -269,6 +314,7 @@ def render_overlay_frames(
             frame_robot_time_sec = frame_robot_time(
                 video_relative_time_sec,
                 records,
+                timing_anchor=timing_anchor,
                 video_start_time_sec=video_start_time_sec,
             )
             match = nearest_detections(records, frame_robot_time_sec=frame_robot_time_sec)
