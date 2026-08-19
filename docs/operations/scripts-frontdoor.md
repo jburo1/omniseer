@@ -100,17 +100,17 @@ See [Robot Runtime Container](../robot-runtime/robot-runtime-container.md).
 
 ## `model`
 
-Builds host-side YOLO-World v2-S deployment artifacts without adding any model
+Builds host-side YOLO-World v2-S or v2-M deployment artifacts without adding any model
 building dependency to the robot runtime image.
 
 ```bash
 scripts/omni model image
-scripts/omni model export --weights <v2-s.pth>
-scripts/omni model compile --onnx artifacts/models/yolo_world_v2_s.onnx --precision fp
-scripts/omni model build --weights <v2-s.pth> --precision int8
+scripts/omni model export --variant v2s --weights <v2-s.pth>
+scripts/omni model compile --variant v2s --onnx artifacts/models/yolo_world_v2_s.onnx --precision fp
+scripts/omni model build --variant v2m --weights <v2-m.pth> --precision int8
 ```
 
-See [YOLO-World v2-S Model Deployment](../perception/yolo-world-model-deployment.md)
+See [YOLO-World v2 Model Deployment](../perception/yolo-world-model-deployment.md)
 for the pinned builder, local inputs, artifacts, and calibration assets.
 
 ## `runtime`

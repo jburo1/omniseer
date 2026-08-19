@@ -1,4 +1,4 @@
-# Host-only YOLO-World v2-S exporter and RKNN compiler. This image is never
+# Host-only YOLO-World v2 exporter and RKNN compiler. This image is never
 # used by the robot runtime image.
 # This is the linux/amd64 child manifest rather than the multi-architecture
 # index: legacy Docker builders otherwise can select an incompatible child.

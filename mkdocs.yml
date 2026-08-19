@@ -47,7 +47,7 @@ nav:
     - ROS Packages and Sim/Real Boundary: robot-runtime/ros-packages.md
     - Firmware & Robot I/O: firmware/overview.md
     - Vision Pipeline: perception/vision-pipeline.md
-    - YOLO-World v2-S Model Deployment: perception/yolo-world-model-deployment.md
+    - YOLO-World v2 Model Deployment: perception/yolo-world-model-deployment.md
     - Vision Telemetry: perception/vision-telemetry.md
     - Robot Gateway: gateway/robot-gateway.md
     - Gateway API: gateway/gateway-api.md

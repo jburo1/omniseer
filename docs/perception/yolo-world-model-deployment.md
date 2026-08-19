@@ -1,10 +1,10 @@
-# YOLO-World v2-S Model Deployment
+# YOLO-World v2 Model Deployment
 
 This host-only workflow produces the detector model consumed by Omniseer's
 native RKNN vision path:
 
 ```text
-YOLO-World v2-S .pth -> ONNX (images + texts) -> RK3588 .rknn
+YOLO-World v2-S or v2-M `.pth` -> ONNX (images + texts) -> RK3588 `.rknn`
 ```
 
 It does not add training, export, ONNX, or RKNN Toolkit dependencies to
@@ -37,10 +37,16 @@ detected.
 ## Local inputs
 
 Do not commit or download weights through these commands. Place the supplied
-detector checkpoint here (or another path under this checkout):
+detector checkpoint under this checkout. The only variant-specific mapping is:
+
+| Variant | Checkpoint | Rockchip export config | Artifact stem |
+| --- | --- | --- | --- |
+| `v2s` | `yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth` | `configs/pretrain/yolo_world_v2_s_vlpan_bn_2e-3_100e_4x8gpus_obj365v1_goldg_train_lvis_minival.py` | `yolo_world_v2_s` |
+| `v2m` | `yolo_world_v2_m_obj365v1_goldg_pretrain-c6237d5b.pth` | `configs/pretrain/yolo_world_v2_m_vlpan_bn_2e-3_100e_4x8gpus_obj365v1_goldg_train_lvis_minival.py` | `yolo_world_v2_m` |
 
 ```text
 models/source/yolo_world/v2s/yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth
+models/source/yolo_world/v2m/yolo_world_v2_m_obj365v1_goldg_pretrain-c6237d5b.pth
 ```
 
 Rockchip's exporter also instantiates the CLIP text encoder in order to
@@ -63,11 +69,20 @@ offline mode. Use `--clip-model <directory>` to choose another local snapshot.
 
 ```bash
 scripts/omni model export \
+  --variant v2s \
   --weights models/source/yolo_world/v2s/yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth
 ```
 
-This invokes Rockchip's `deploy/export_onnx.py`, its matching v2-S 640 config,
-ONNX opset 12 (required for this graph's `einsum` operator), and the checked-in
+For v2-M, use its matching pinned Rockchip config through the same command:
+
+```bash
+scripts/omni model export \
+  --variant v2m \
+  --weights models/source/yolo_world/v2m/yolo_world_v2_m_obj365v1_goldg_pretrain-c6237d5b.pth
+```
+
+This invokes Rockchip's `deploy/export_onnx.py`, the matching 640 config, ONNX
+opset 12 (required for this graph's `einsum` operator), and the checked-in
 80 COCO prompt list. It validates ONNX with `onnx.checker`
 and rejects any model not having exactly the native runtime interface:
 
@@ -75,7 +90,9 @@ and rejects any model not having exactly the native runtime interface:
 - `texts`: `[1,80,512]`;
 - six NCHW outputs: 80-class and 4-box tensors at 80x80, 40x40, and 20x20.
 
-The result is `artifacts/models/yolo_world_v2_s.onnx` by default.
+The default results are `artifacts/models/yolo_world_v2_s.onnx` and
+`artifacts/models/yolo_world_v2_m.onnx`, respectively. `--variant` defaults to
+`v2s` for backward compatibility.
 
 ## Compile RKNN
 
@@ -83,6 +100,7 @@ FP/non-quantized RKNN needs only the validated ONNX:
 
 ```bash
 scripts/omni model compile \
+  --variant v2s \
   --onnx artifacts/models/yolo_world_v2_s.onnx \
   --precision fp
 ```
@@ -107,6 +125,7 @@ Then compile:
 
 ```bash
 scripts/omni model compile \
+  --variant v2s \
   --onnx artifacts/models/yolo_world_v2_s.onnx \
   --precision int8
 ```
@@ -115,7 +134,9 @@ This is the Rockchip converter configuration: `target_platform=rk3588`, RGB
 normalization `mean=[0,0,0]`, `std=[255,255,255]`, and fixed named inputs
 `images` and `texts`. The FP output is
 `artifacts/models/yolo_world_v2_s_fp.rknn`; the INT8 output is
-`artifacts/models/yolo_world_v2_s_i8.rknn`.
+`artifacts/models/yolo_world_v2_s_i8.rknn`. With `--variant v2m`, the same
+defaults are `artifacts/models/yolo_world_v2_m_fp.rknn` and
+`artifacts/models/yolo_world_v2_m_i8.rknn`.
 
 ## Full build
 
@@ -124,7 +145,15 @@ place, run:
 
 ```bash
 scripts/omni model build \
+  --variant v2s \
   --weights models/source/yolo_world/v2s/yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth \
+  --precision int8
+```
+
+```bash
+scripts/omni model build \
+  --variant v2m \
+  --weights models/source/yolo_world/v2m/yolo_world_v2_m_obj365v1_goldg_pretrain-c6237d5b.pth \
   --precision int8
 ```
 

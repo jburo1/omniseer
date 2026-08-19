@@ -9,23 +9,45 @@ source "${script_dir}/lib/log.sh"
 source "${script_dir}/lib/common.sh"
 
 readonly model_builder_default_image="omniseer/model-builder:yolo-world-v2s-rknn-toolkit2-2.1.0"
-readonly model_checkpoint_name="yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth"
-readonly model_onnx_name="yolo_world_v2_s.onnx"
+readonly model_default_variant="v2s"
+
+# Keep this deliberately small: all supported variants use the same exporter,
+# validator, RKNN settings, calibration data, and target. Only these values
+# differ between the Rockchip YOLO-World v2 checkpoints.
+model_select_variant() {
+  local variant="${1:-${model_default_variant}}"
+  case "${variant}" in
+    v2s)
+      model_variant="v2s"
+      model_checkpoint_name="yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth"
+      model_config_path="configs/pretrain/yolo_world_v2_s_vlpan_bn_2e-3_100e_4x8gpus_obj365v1_goldg_train_lvis_minival.py"
+      model_artifact_stem="yolo_world_v2_s"
+      ;;
+    v2m)
+      model_variant="v2m"
+      model_checkpoint_name="yolo_world_v2_m_obj365v1_goldg_pretrain-c6237d5b.pth"
+      model_config_path="configs/pretrain/yolo_world_v2_m_vlpan_bn_2e-3_100e_4x8gpus_obj365v1_goldg_train_lvis_minival.py"
+      model_artifact_stem="yolo_world_v2_m"
+      ;;
+    *) omni_die "unsupported YOLO-World model variant: ${variant}; expected v2s or v2m" ;;
+  esac
+}
 
 model_usage() {
   cat <<'EOF'
 Usage:
   scripts/omni model image [--image <name>] [docker build args...]
-  scripts/omni model export --weights <v2-s.pth> [--output <v2-s.onnx>] [--clip-model <dir>] [--image <name>]
-  scripts/omni model compile --onnx <v2-s.onnx> --precision fp|int8 [--output <v2-s.rknn>] [--calibration-dir <dir>] [--image <name>]
-  scripts/omni model build --weights <v2-s.pth> --precision fp|int8 [--onnx-output <v2-s.onnx>] [--output <v2-s.rknn>] [--clip-model <dir>] [--calibration-dir <dir>] [--image <name>]
+  scripts/omni model export [--variant v2s|v2m] --weights <checkpoint.pth> [--output <model.onnx>] [--clip-model <dir>] [--image <name>]
+  scripts/omni model compile [--variant v2s|v2m] --onnx <model.onnx> --precision fp|int8 [--output <model.rknn>] [--calibration-dir <dir>] [--image <name>]
+  scripts/omni model build [--variant v2s|v2m] --weights <checkpoint.pth> --precision fp|int8 [--onnx-output <model.onnx>] [--output <model.rknn>] [--clip-model <dir>] [--calibration-dir <dir>] [--image <name>]
 
 Defaults:
   image             omniseer/model-builder:yolo-world-v2s-rknn-toolkit2-2.1.0
+  variant           v2s (default); supported: v2s, v2m
   clip model        models/source/clip-vit-base-patch32
-  ONNX output       artifacts/models/yolo_world_v2_s.onnx
-  FP RKNN output    artifacts/models/yolo_world_v2_s_fp.rknn
-  INT8 RKNN output  artifacts/models/yolo_world_v2_s_i8.rknn
+  ONNX output       artifacts/models/yolo_world_v2_<s|m>.onnx
+  FP RKNN output    artifacts/models/yolo_world_v2_<s|m>_fp.rknn
+  INT8 RKNN output  artifacts/models/yolo_world_v2_<s|m>_i8.rknn
   calibration dir   models/source/yolo_world/calibration
 EOF
 }
@@ -113,7 +135,7 @@ model_docker_run() {
 
 model_require_checkpoint() {
   local weights="$1"
-  [[ -f "${weights}" && -s "${weights}" ]] || omni_die "YOLO-World v2-S checkpoint is missing or empty: ${weights}"
+  [[ -f "${weights}" && -s "${weights}" ]] || omni_die "YOLO-World ${model_variant} checkpoint is missing or empty: ${weights}"
   [[ "$(basename "${weights}")" == "${model_checkpoint_name}" ]] \
     || omni_die "unsupported checkpoint; expected ${model_checkpoint_name}, got $(basename "${weights}")"
 }
@@ -158,13 +180,15 @@ model_image() {
 }
 
 model_export() {
-  local image output clip_model
+  local image output clip_model variant
   image="$(model_image_name)"
+  variant="${model_default_variant}"
   local weights=""
-  output="$(omni_repo_root)/artifacts/models/${model_onnx_name}"
   clip_model="$(omni_repo_root)/models/source/clip-vit-base-patch32"
   while [[ $# -gt 0 ]]; do
     case "$1" in
+      --variant) [[ $# -ge 2 ]] || omni_die "--variant requires v2s or v2m"; variant="$2"; shift 2 ;;
+      --variant=*) variant="${1#--variant=}"; shift ;;
       --weights) [[ $# -ge 2 ]] || omni_die "--weights requires a path"; weights="$2"; shift 2 ;;
       --weights=*) weights="${1#--weights=}"; shift ;;
       --output) [[ $# -ge 2 ]] || omni_die "--output requires a path"; output="$2"; shift 2 ;;
@@ -177,6 +201,8 @@ model_export() {
       *) omni_die "unknown model export option: $1" ;;
     esac
   done
+  model_select_variant "${variant}"
+  output="${output:-$(omni_repo_root)/artifacts/models/${model_artifact_stem}.onnx}"
   [[ -n "${weights}" ]] || omni_die "model export requires --weights"
   weights="$(model_existing_path "${weights}")"
   clip_model="$(model_existing_path "${clip_model}")"
@@ -190,15 +216,16 @@ model_export() {
   model_require_docker
   mkdir -p "$(dirname "${output}")"
 
-  local weights_in_container output_in_container clip_in_container texts_in_container
+  local weights_in_container output_in_container clip_in_container texts_in_container config_in_container
   weights_in_container="$(model_container_path "${weights}")"
   output_in_container="$(model_container_path "${output}")"
   clip_in_container="$(model_container_path "${clip_model}")"
   texts_in_container="$(model_container_path "$(omni_repo_root)/tools/model/yolo_world_v2_s_coco_texts.json")"
-  # shellcheck disable=SC2016 # ${1..4} expand in the container's bash, not here.
+  config_in_container="/opt/yolo-world/${model_config_path}"
+  # shellcheck disable=SC2016 # ${1..5} expand in the container's bash, not here.
   model_docker_run "${image}" /bin/bash -euc '
-    source_config=/opt/yolo-world/configs/pretrain/yolo_world_v2_s_vlpan_bn_2e-3_100e_4x8gpus_obj365v1_goldg_train_lvis_minival.py
-    config=/tmp/omniseer-yolo-world-v2-s-export.py
+    source_config="${5}"
+    config=/tmp/omniseer-yolo-world-export.py
     sed -e "s|../../third_party/mmyolo|/opt/yolo-world/third_party/mmyolo|" \
         -e "s|openai/clip-vit-base-patch32|${4}|" "${source_config}" >"${config}"
     # init_detector only needs this dataset for palette metadata. Avoid making
@@ -209,22 +236,25 @@ model_export() {
       HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 python deploy/export_onnx.py \
       "${config}" "${1}" \
       --custom-text "${2}" --opset 12 --model-only --work-dir "$(dirname "${3}")" --device cpu
-    mv "$(dirname "${3}")/yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.onnx" "${3}"
-  ' omniseer-model-export "${weights_in_container}" "${texts_in_container}" "${output_in_container}" "${clip_in_container}"
+    mv "$(dirname "${3}")/$(basename "${1%.pth}").onnx" "${3}"
+  ' omniseer-model-export "${weights_in_container}" "${texts_in_container}" "${output_in_container}" "${clip_in_container}" "${config_in_container}"
   model_docker_run "${image}" python /workspace/tools/model/validate_yolo_world_onnx.py --set-output-shapes "${output_in_container}"
   [[ -s "${output}" ]] || omni_die "ONNX export did not produce a non-empty artifact: ${output}"
   printf 'ONNX artifact: %s\n' "${output}"
 }
 
 model_compile() {
-  local image calibration_dir
+  local image calibration_dir variant
   image="$(model_image_name)"
+  variant="${model_default_variant}"
   local onnx=""
   local precision=""
   local output=""
   calibration_dir="$(omni_repo_root)/models/source/yolo_world/calibration"
   while [[ $# -gt 0 ]]; do
     case "$1" in
+      --variant) [[ $# -ge 2 ]] || omni_die "--variant requires v2s or v2m"; variant="$2"; shift 2 ;;
+      --variant=*) variant="${1#--variant=}"; shift ;;
       --onnx) [[ $# -ge 2 ]] || omni_die "--onnx requires a path"; onnx="$2"; shift 2 ;;
       --onnx=*) onnx="${1#--onnx=}"; shift ;;
       --precision) [[ $# -ge 2 ]] || omni_die "--precision requires fp or int8"; precision="$2"; shift 2 ;;
@@ -239,12 +269,13 @@ model_compile() {
       *) omni_die "unknown model compile option: $1" ;;
     esac
   done
+  model_select_variant "${variant}"
   [[ -n "${onnx}" ]] || omni_die "model compile requires --onnx"
   case "${precision}" in fp|int8) ;; *) omni_die "--precision must be fp or int8" ;; esac
   onnx="$(model_existing_path "${onnx}")"
   model_require_in_repo "${onnx}"
   if [[ -z "${output}" ]]; then
-    if [[ "${precision}" == int8 ]]; then output="$(omni_repo_root)/artifacts/models/yolo_world_v2_s_i8.rknn"; else output="$(omni_repo_root)/artifacts/models/yolo_world_v2_s_fp.rknn"; fi
+    if [[ "${precision}" == int8 ]]; then output="$(omni_repo_root)/artifacts/models/${model_artifact_stem}_i8.rknn"; else output="$(omni_repo_root)/artifacts/models/${model_artifact_stem}_fp.rknn"; fi
   fi
   output="$(model_output_path "${output}")"
   model_require_in_repo "${output}"
@@ -268,10 +299,13 @@ model_compile() {
 }
 
 model_build() {
-  local weights="" precision="" image onnx_output="" output="" clip_model="" calibration_dir=""
+  local weights="" precision="" image onnx_output="" output="" clip_model="" calibration_dir="" variant
   image="$(model_image_name)"
+  variant="${model_default_variant}"
   while [[ $# -gt 0 ]]; do
     case "$1" in
+      --variant) [[ $# -ge 2 ]] || omni_die "--variant requires v2s or v2m"; variant="$2"; shift 2 ;;
+      --variant=*) variant="${1#--variant=}"; shift ;;
       --weights) [[ $# -ge 2 ]] || omni_die "--weights requires a path"; weights="$2"; shift 2 ;;
       --weights=*) weights="${1#--weights=}"; shift ;;
       --precision) [[ $# -ge 2 ]] || omni_die "--precision requires fp or int8"; precision="$2"; shift 2 ;;
@@ -290,25 +324,32 @@ model_build() {
       *) omni_die "unknown model build option: $1" ;;
     esac
   done
+  model_select_variant "${variant}"
   [[ -n "${weights}" && -n "${precision}" ]] || omni_die "model build requires --weights and --precision"
-  local export_args=(--weights "${weights}" --image "${image}")
+  local export_args=(--variant "${model_variant}" --weights "${weights}" --image "${image}")
   [[ -n "${onnx_output}" ]] && export_args+=(--output "${onnx_output}")
   [[ -n "${clip_model}" ]] && export_args+=(--clip-model "${clip_model}")
   model_export "${export_args[@]}"
-  local compiled_onnx="${onnx_output:-$(omni_repo_root)/artifacts/models/${model_onnx_name}}"
-  local compile_args=(--onnx "${compiled_onnx}" --precision "${precision}" --image "${image}")
+  local compiled_onnx="${onnx_output:-$(omni_repo_root)/artifacts/models/${model_artifact_stem}.onnx}"
+  local compile_args=(--variant "${model_variant}" --onnx "${compiled_onnx}" --precision "${precision}" --image "${image}")
   [[ -n "${output}" ]] && compile_args+=(--output "${output}")
   [[ -n "${calibration_dir}" ]] && compile_args+=(--calibration-dir "${calibration_dir}")
   model_compile "${compile_args[@]}"
 }
 
-subcommand="${1:-help}"
-if [[ $# -gt 0 ]]; then shift; fi
-case "${subcommand}" in
-  image) model_image "$@" ;;
-  export) model_export "$@" ;;
-  compile) model_compile "$@" ;;
-  build) model_build "$@" ;;
-  help|-h|--help) model_usage ;;
-  *) omni_die "unknown model subcommand: ${subcommand}" ;;
-esac
+model_main() {
+  local subcommand="${1:-help}"
+  if [[ $# -gt 0 ]]; then shift; fi
+  case "${subcommand}" in
+    image) model_image "$@" ;;
+    export) model_export "$@" ;;
+    compile) model_compile "$@" ;;
+    build) model_build "$@" ;;
+    help|-h|--help) model_usage ;;
+    *) omni_die "unknown model subcommand: ${subcommand}" ;;
+  esac
+}
+
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  model_main "$@"
+fi

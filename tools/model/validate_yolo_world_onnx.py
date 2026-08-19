@@ -23,7 +23,7 @@ EXPECTED_OUTPUTS = [
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Validate the Omniseer YOLO-World v2-S ONNX interface.")
+    parser = argparse.ArgumentParser(description="Validate the Omniseer YOLO-World v2 ONNX interface.")
     parser.add_argument("onnx", type=Path)
     parser.add_argument(
         "--set-output-shapes",

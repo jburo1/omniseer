@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compile the fixed YOLO-World v2-S detector contract with RKNN Toolkit2."""
+"""Compile the fixed YOLO-World v2 detector contract with RKNN Toolkit2."""
 
 import argparse
 import sys
@@ -13,9 +13,7 @@ TEXT_INPUT_SHAPE = [1, 80, 512]
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Compile an Omniseer-compatible YOLO-World v2-S ONNX model for RK3588."
-    )
+    parser = argparse.ArgumentParser(description="Compile an Omniseer-compatible YOLO-World v2 ONNX model for RK3588.")
     parser.add_argument("onnx", type=Path)
     parser.add_argument("output", type=Path)
     parser.add_argument("--precision", choices=("fp", "i8"), required=True)
