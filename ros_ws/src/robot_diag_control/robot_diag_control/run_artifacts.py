@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from omniseer_experiments.run_inspection import STATE_COMPLETE, InspectionIssue, inspect_run
+from omniseer_experiments.run_retrieval import RsyncProgress, parse_rsync_progress_event
 
 from robot_diag_control.run_commands import (
     RobotConnection,
@@ -20,6 +21,8 @@ from robot_diag_control.run_commands import (
 )
 
 CommandExecutor = Callable[[list[str], Path], subprocess.CompletedProcess[str]]
+ProgressCommandExecutor = Callable[[list[str], Path, Callable[[str], None]], subprocess.CompletedProcess[str]]
+ProgressCallback = Callable[[RsyncProgress], None]
 
 
 @dataclass(frozen=True)
@@ -59,6 +62,27 @@ def _default_command_executor(command: list[str], cwd: Path) -> subprocess.Compl
         capture_output=True,
         text=True,
     )
+
+
+def _default_progress_command_executor(
+    command: list[str],
+    cwd: Path,
+    on_output: Callable[[str], None],
+) -> subprocess.CompletedProcess[str]:
+    process = subprocess.Popen(
+        command,
+        cwd=cwd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        bufsize=1,
+    )
+    output: list[str] = []
+    assert process.stdout is not None
+    for line in process.stdout:
+        output.append(line)
+        on_output(line)
+    return subprocess.CompletedProcess(command, process.wait(), stdout="".join(output), stderr="")
 
 
 def _completed_detail(completed: subprocess.CompletedProcess[str]) -> str:
@@ -113,14 +137,18 @@ def build_pull_command(
     *,
     run_id: str,
     overwrite: bool = True,
+    progress: bool = False,
 ) -> list[str]:
-    return build_pull_run_command(
+    command = build_pull_run_command(
         repo_root=context.repo_root,
         connection=context.connection,
         local_import_root=context.local_import_root,
         run_id=run_id,
         overwrite=overwrite,
     )
+    if progress:
+        command.append("--progress")
+    return command
 
 
 def build_report_command(
@@ -175,11 +203,22 @@ def retrieve_run_artifacts(
     run_id: str,
     overwrite: bool = True,
     command_executor: CommandExecutor = _default_command_executor,
+    progress_callback: ProgressCallback | None = None,
+    progress_command_executor: ProgressCommandExecutor = _default_progress_command_executor,
 ) -> RunArtifactResult:
-    command = build_pull_command(context, run_id=run_id, overwrite=overwrite)
+    command = build_pull_command(context, run_id=run_id, overwrite=overwrite, progress=progress_callback is not None)
     path = imported_run_dir(context, run_id)
     try:
-        completed = command_executor(command, context.repo_root)
+        if progress_callback is None:
+            completed = command_executor(command, context.repo_root)
+        else:
+
+            def _on_output(output: str) -> None:
+                progress = parse_rsync_progress_event(output)
+                if progress is not None:
+                    progress_callback(progress)
+
+            completed = progress_command_executor(command, context.repo_root, _on_output)
     except OSError as error:
         return RunArtifactResult(command=command, success=False, message=f"retrieve failed: {error}")
 

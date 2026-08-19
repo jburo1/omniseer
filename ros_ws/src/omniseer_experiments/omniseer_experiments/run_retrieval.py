@@ -6,6 +6,7 @@ import argparse
 import contextlib
 import json
 import os
+import re
 import shlex
 import shutil
 import subprocess
@@ -23,10 +24,20 @@ DEFAULT_IMPORT_ROOT = "runs/imported"
 UNKNOWN_VALUE = "-"
 
 CommandRunner = Callable[[Sequence[str]], subprocess.CompletedProcess[str]]
+ProgressCallback = Callable[["RsyncProgress"], None]
+ProgressCommandRunner = Callable[[Sequence[str], Callable[[str], None]], subprocess.CompletedProcess[str]]
+RSYNC_PROGRESS_EVENT_PREFIX = "OMNISEER_RSYNC_PROGRESS"
 
 
 class RetrievalError(RuntimeError):
     """Raised when a retrieval operation cannot be completed."""
+
+
+@dataclass(frozen=True)
+class RsyncProgress:
+    transferred_bytes: int
+    total_bytes: int | None
+    percent: int
 
 
 @dataclass(frozen=True)
@@ -123,18 +134,80 @@ def build_ssh_command(config: RemoteConfig, remote_command: str) -> list[str]:
     return ["ssh", *config.ssh_args, config.target, remote_command]
 
 
-def build_rsync_command(config: RemoteConfig, run_id: str, destination: Path) -> list[str]:
+def build_rsync_command(
+    config: RemoteConfig,
+    run_id: str,
+    destination: Path,
+    *,
+    progress: bool = False,
+) -> list[str]:
     remote_path = remote_run_path(config.remote_root, run_id).rstrip("/") + "/"
     source = f"{config.target}:{shlex.quote(remote_path)}"
     args = ["rsync", "-a"]
+    if progress:
+        args.append("--info=progress2")
     if config.ssh_args:
         args.extend(["-e", shlex.join(["ssh", *config.ssh_args])])
     args.extend([source, f"{destination}/"])
     return args
 
 
+def parse_rsync_progress(output: str) -> RsyncProgress | None:
+    """Parse an aggregate ``rsync --info=progress2`` transfer line."""
+
+    matches = list(re.finditer(r"(?P<bytes>[\d,]+)\s+(?P<percent>\d{1,3})%", output))
+    if not matches:
+        return None
+    match = matches[-1]
+    transferred_bytes = int(match.group("bytes").replace(",", ""))
+    percent = int(match.group("percent"))
+    if percent > 100:
+        return None
+    total_bytes = round(transferred_bytes * 100 / percent) if percent else None
+    return RsyncProgress(transferred_bytes=transferred_bytes, total_bytes=total_bytes, percent=percent)
+
+
+def format_rsync_progress_event(progress: RsyncProgress) -> str:
+    total_bytes = "" if progress.total_bytes is None else f" {progress.total_bytes}"
+    return f"{RSYNC_PROGRESS_EVENT_PREFIX} {progress.percent} {progress.transferred_bytes}{total_bytes}"
+
+
+def parse_rsync_progress_event(output: str) -> RsyncProgress | None:
+    fields = output.strip().split()
+    if len(fields) not in {3, 4} or fields[0] != RSYNC_PROGRESS_EVENT_PREFIX:
+        return None
+    try:
+        percent = int(fields[1])
+        transferred_bytes = int(fields[2])
+        total_bytes = int(fields[3]) if len(fields) == 4 else None
+    except ValueError:
+        return None
+    if not 0 <= percent <= 100 or transferred_bytes < 0 or (total_bytes is not None and total_bytes < 0):
+        return None
+    return RsyncProgress(transferred_bytes=transferred_bytes, total_bytes=total_bytes, percent=percent)
+
+
 def run_process(args: Sequence[str]) -> subprocess.CompletedProcess[str]:
     return subprocess.run(args, check=False, capture_output=True, text=True, timeout=60.0)
+
+
+def run_process_with_progress(
+    args: Sequence[str],
+    on_output: Callable[[str], None],
+) -> subprocess.CompletedProcess[str]:
+    process = subprocess.Popen(
+        args,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        bufsize=1,
+    )
+    output: list[str] = []
+    assert process.stdout is not None
+    for line in process.stdout:
+        output.append(line)
+        on_output(line)
+    return subprocess.CompletedProcess(args, process.wait(), stdout="".join(output), stderr="")
 
 
 def require_command(name: str) -> None:
@@ -181,6 +254,8 @@ def pull_remote_run(
     out: Path | None = None,
     overwrite: bool = False,
     runner: CommandRunner = run_process,
+    progress_callback: ProgressCallback | None = None,
+    progress_runner: ProgressCommandRunner = run_process_with_progress,
 ) -> PullResult:
     normalized_run_id = validate_run_id(run_id)
     remote_path = remote_run_path(config.remote_root, normalized_run_id)
@@ -189,7 +264,24 @@ def pull_remote_run(
 
     destination = out if out is not None else import_root / normalized_run_id
     prepare_destination(destination, overwrite=overwrite)
-    _run_checked(build_rsync_command(config, normalized_run_id, destination), runner=runner, action="copy remote run")
+    rsync_command = build_rsync_command(
+        config,
+        normalized_run_id,
+        destination,
+        progress=progress_callback is not None,
+    )
+    if progress_callback is None:
+        _run_checked(rsync_command, runner=runner, action="copy remote run")
+    else:
+
+        def _on_rsync_output(output: str) -> None:
+            progress = parse_rsync_progress(output)
+            if progress is not None:
+                progress_callback(progress)
+
+        _run_checked_progress(
+            rsync_command, runner=progress_runner, on_output=_on_rsync_output, action="copy remote run"
+        )
     inspection = inspect_run(destination)
     return PullResult(
         run_id=inspection.run_id,
@@ -259,6 +351,9 @@ def main(argv: list[str] | None = None) -> int:
                     import_root=Path(args.import_root),
                     out=Path(args.out) if args.out else None,
                     overwrite=args.overwrite,
+                    progress_callback=(lambda progress: print(format_rsync_progress_event(progress), flush=True))
+                    if args.progress
+                    else None,
                 )
             print(format_pull_result(result))
             return 0
@@ -301,6 +396,23 @@ def _run_checked(args: Sequence[str], *, runner: CommandRunner, action: str) -> 
     raise RetrievalError(message)
 
 
+def _run_checked_progress(
+    args: Sequence[str],
+    *,
+    runner: ProgressCommandRunner,
+    on_output: Callable[[str], None],
+    action: str,
+) -> subprocess.CompletedProcess[str]:
+    result = runner(args, on_output)
+    if result.returncode == 0:
+        return result
+    detail = (result.stderr or result.stdout).strip()
+    message = f"failed to {action}: {shlex.join(args)}"
+    if detail:
+        message = f"{message}\n{detail}"
+    raise RetrievalError(message)
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Retrieve Omniseer perception run bundles from a robot.")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -314,6 +426,7 @@ def _build_parser() -> argparse.ArgumentParser:
     pull_parser.add_argument("--import-root", default=DEFAULT_IMPORT_ROOT, help="local root for imported runs")
     pull_parser.add_argument("--out", default="", help="exact local destination directory")
     pull_parser.add_argument("--overwrite", action="store_true", help="replace a non-empty local destination")
+    pull_parser.add_argument("--progress", action="store_true", help="emit machine-readable rsync progress events")
     return parser
 
 
@@ -356,6 +469,7 @@ __all__ = [
     "RemoteConfig",
     "RemoteRun",
     "RetrievalError",
+    "RsyncProgress",
     "build_remote_inspect_command",
     "build_remote_list_command",
     "build_remote_root_check_command",
@@ -364,8 +478,11 @@ __all__ = [
     "build_ssh_command",
     "format_pull_result",
     "format_remote_run_list",
+    "format_rsync_progress_event",
     "list_remote_runs",
     "main",
+    "parse_rsync_progress",
+    "parse_rsync_progress_event",
     "prepare_destination",
     "pull_remote_run",
     "remote_run_path",

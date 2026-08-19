@@ -129,6 +129,7 @@ Retrieval args:
   --import-root <local-import-root>
   --out <local-run-dir>
   --overwrite
+  --progress              Emit machine-readable rsync transfer progress events
 
 Defaults:
   --host 192.168.1.178, override with OMNISEER_ROBOT_HOST

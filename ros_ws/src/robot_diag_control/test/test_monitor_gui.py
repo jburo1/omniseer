@@ -5,6 +5,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import grpc
+from omniseer_experiments.run_retrieval import RsyncProgress
 from robot_diag_control.monitor_gui import (
     DEFAULT_ROBOT_HOST,
     DEFAULT_ROBOT_USER,
@@ -233,6 +234,7 @@ class MonitorGuiTests(unittest.TestCase):
         gui._run_poll_after_id = "poll-old"
         gui._runtime_stop_pending_run_id = None
         gui._run_generation = 7
+        gui._background_operation = None
         gui._run_buttons = {}
         gui._run_backend_var = _FakeTkVar(RUN_BACKEND_LABELS[RUN_BACKEND_RUNTIME])
         gui._run_id_var = _FakeTkVar("operator_001")
@@ -243,7 +245,7 @@ class MonitorGuiTests(unittest.TestCase):
             remote_repo_root="/robot/repo",
             remote_runs_root="/robot/repo/runs",
         )
-        gui._append_log = logs.append
+        gui._append_log = lambda message, **_kwargs: logs.append(message)
         gui._append_log_threadsafe = logs.append
 
         self.assertTrue(gui._request_run_stop())
@@ -616,6 +618,17 @@ class MonitorGuiTests(unittest.TestCase):
                     patch.object(gui, "_open_report") as open_report,
                 ):
                     gui.retrieve_and_open_report()
+                    attempts = [0]
+
+                    def wait_for_completion() -> None:
+                        attempts[0] += 1
+                        if open_report.called or attempts[0] >= 100:
+                            root.quit()
+                        else:
+                            root.after(10, wait_for_completion)
+
+                    root.after(10, wait_for_completion)
+                    root.mainloop()
 
                 retrieve_mock.assert_called_once()
                 build_mock.assert_called_once()
@@ -623,6 +636,36 @@ class MonitorGuiTests(unittest.TestCase):
                 open_report.assert_called_once()
             finally:
                 root.destroy()
+
+    @unittest.skipIf(tk is None, "tkinter is unavailable")
+    def test_gui_activity_tags_and_transfer_progress_replace_one_line(self):
+        assert tk is not None
+        root = tk.Tk()
+        root.withdraw()
+        try:
+            gui = RobotMonitorGui(root, _build_parser().parse_args([]))
+
+            gui._append_action("Retrieve & Open Report requested")
+            gui._set_run_state(RunPhase.PREPARING, run_id="operator_001")
+            gui._append_log("artifact warning: incomplete run", tag="activity_warning")
+            gui._update_transfer_progress(
+                RsyncProgress(transferred_bytes=851_443_712, total_bytes=1_270_811_510, percent=67)
+            )
+            gui._update_transfer_progress(
+                RsyncProgress(transferred_bytes=1_270_811_510, total_bytes=1_270_811_510, percent=100)
+            )
+
+            activity = gui._log_text.get("1.0", tk.END)
+            self.assertIn("ACTION → Retrieve & Open Report requested", activity)
+            self.assertIn("MODE → preparing operator_001", activity)
+            self.assertIn("TRANSFER → [████████████] 100%", activity)
+            self.assertEqual(activity.count("TRANSFER →"), 1)
+            self.assertTrue(gui._log_text.tag_ranges("activity_action"))
+            self.assertTrue(gui._log_text.tag_ranges("activity_mode"))
+            self.assertTrue(gui._log_text.tag_ranges("activity_warning"))
+            self.assertTrue(gui._log_text.tag_ranges("activity_transfer"))
+        finally:
+            root.destroy()
 
     @unittest.skipIf(tk is None, "tkinter is unavailable")
     def test_gui_open_report_logs_artifact_warnings_for_incomplete_bundle(self):

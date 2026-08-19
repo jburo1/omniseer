@@ -17,6 +17,7 @@ from omniseer_experiments.run_retrieval import (
     build_rsync_command,
     format_remote_run_list,
     list_remote_runs,
+    parse_rsync_progress,
     prepare_destination,
     pull_remote_run,
     remote_run_path,
@@ -111,6 +112,26 @@ class RunRetrievalTests(unittest.TestCase):
             build_rsync_command(config, "demo_001", Path("runs/imported/demo_001")),
             ["rsync", "-a", "robot@192.0.2.10:/omniseer/runs/demo_001/", "runs/imported/demo_001/"],
         )
+        self.assertEqual(
+            build_rsync_command(config, "demo_001", Path("runs/imported/demo_001"), progress=True),
+            [
+                "rsync",
+                "-a",
+                "--info=progress2",
+                "robot@192.0.2.10:/omniseer/runs/demo_001/",
+                "runs/imported/demo_001/",
+            ],
+        )
+
+    def test_parse_rsync_progress_uses_transferred_bytes_and_overall_percent(self) -> None:
+        progress = parse_rsync_progress("\r  851,443,712  67%   24.80MB/s    0:00:20 (xfr#18, to-chk=4/23)")
+
+        self.assertIsNotNone(progress)
+        assert progress is not None
+        self.assertEqual(progress.transferred_bytes, 851_443_712)
+        self.assertEqual(progress.percent, 67)
+        self.assertEqual(progress.total_bytes, round(851_443_712 * 100 / 67))
+        self.assertIsNone(parse_rsync_progress("receiving incremental file list\n"))
 
     def test_builds_commands_with_ssh_reuse_args(self) -> None:
         config = RemoteConfig(
@@ -237,6 +258,33 @@ class RunRetrievalTests(unittest.TestCase):
                 "preserved",
             )
             self.assertEqual(runner.calls[-1][0], "rsync")
+
+    def test_pull_reports_rsync_progress_to_optional_callback(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "remote" / "demo_001"
+            destination = Path(tmp) / "runs" / "imported" / "demo_001"
+            _write_completed_bundle(source)
+            runner = FakePullRunner(source)
+            progress_values = []
+
+            def progress_runner(args, on_output):
+                self.assertIn("--info=progress2", args)
+                shutil.copytree(source, Path(args[-1]), dirs_exist_ok=True)
+                on_output("\r  851,443,712  67%   24.80MB/s    0:00:20 (xfr#18, to-chk=4/23)\r")
+                on_output("\r1,270,811,510 100%   30.00MB/s    0:00:42 (xfr#23, to-chk=0/23)\n")
+                return _completed_process(list(args))
+
+            pull_remote_run(
+                RemoteConfig(host="robot.local", user="robot", remote_root="/omniseer/runs"),
+                "demo_001",
+                out=destination,
+                runner=runner,
+                progress_callback=progress_values.append,
+                progress_runner=progress_runner,
+            )
+
+        self.assertEqual([progress.percent for progress in progress_values], [67, 100])
+        self.assertEqual(progress_values[-1].transferred_bytes, 1_270_811_510)
 
     def test_pull_reports_missing_remote_run(self) -> None:
         config = RemoteConfig(host="robot.local", user="robot", remote_root="/omniseer/runs")

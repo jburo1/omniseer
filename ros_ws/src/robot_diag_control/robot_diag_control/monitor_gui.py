@@ -4,12 +4,14 @@ import argparse
 import os
 import subprocess
 import sys
+import threading
 import webbrowser
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 import grpc
+from omniseer_experiments.run_retrieval import RsyncProgress
 
 from robot_diag_control.api import robot_gateway_pb2
 from robot_diag_control.gateway_client import (
@@ -67,7 +69,7 @@ from robot_diag_control.run_lifecycle import (
     run_state,
     start_remote_run_log_reader,
 )
-from robot_diag_control.run_manager import RunManager
+from robot_diag_control.run_manager import RunManager, RunStartResult
 from robot_diag_control.run_settings import (
     DEFAULT_DEVCONTAINER_EXEC_TEMPLATE,
     DEFAULT_LOCAL_IMPORT_ROOT,
@@ -327,6 +329,8 @@ class RobotMonitorGui:
         self._run_poll_after_id: str | None = None
         self._runtime_stop_pending_run_id: str | None = None
         self._run_generation = 0
+        self._background_operation: str | None = None
+        self._transfer_progress_active = False
         self._run_buttons: dict[str, Any] = {}
         self._sections: dict[str, CollapsibleSection] = {}
         self._teleop_enabled = False
@@ -480,6 +484,7 @@ class RobotMonitorGui:
             state=tk.DISABLED,
         )
         self._log_text.pack(fill=tk.BOTH, expand=True)
+        self._configure_activity_tags()
         log_section.pack(fill=tk.BOTH, expand=True, pady=(8, 0))
 
         self._root.bind("<KeyPress-w>", lambda _event: self.send_teleop_action("forward"))
@@ -783,19 +788,73 @@ class RobotMonitorGui:
         channel = grpc.insecure_channel(target_for(settings.host, settings.port))
         return channel, create_stub(channel)
 
-    def _append_log(self, message: str) -> None:
+    def _configure_activity_tags(self) -> None:
+        self._log_text.tag_configure("activity_mode", foreground="#1D4ED8", font=("TkDefaultFont", 10, "bold"))
+        self._log_text.tag_configure("activity_action", font=("TkDefaultFont", 10, "bold"))
+        self._log_text.tag_configure("activity_warning", foreground="#B45309")
+        self._log_text.tag_configure("activity_error", foreground="#B91C1C")
+        self._log_text.tag_configure("activity_transfer", foreground="#047857", font=("TkDefaultFont", 10, "bold"))
+
+    def _append_log(self, message: str, *, tag: str | None = None) -> None:
         self._log_text.configure(state=tk.NORMAL)
-        self._log_text.insert(tk.END, message + "\n")
+        if tag is None:
+            self._log_text.insert(tk.END, message + "\n")
+        else:
+            self._log_text.insert(tk.END, message + "\n", tag)
+        self._log_text.see(tk.END)
+        self._log_text.configure(state=tk.DISABLED)
+
+    def _append_action(self, message: str) -> None:
+        self._append_log(f"ACTION → {message}", tag="activity_action")
+
+    def _append_stage(self, message: str) -> None:
+        self._append_log(f"STAGE → {message}", tag="activity_mode")
+
+    def _append_error(self, message: str) -> None:
+        self._append_log(message, tag="activity_error")
+
+    def _format_transfer_progress(self, progress: RsyncProgress) -> str:
+        percent = max(0, min(progress.percent, 100))
+        filled = round(percent * 12 / 100)
+        progress_bar = "█" * filled + "░" * (12 - filled)
+        transferred = self._format_transfer_bytes(progress.transferred_bytes)
+        if progress.total_bytes is None:
+            details = f"{transferred} transferred"
+        else:
+            details = f"{transferred} / {self._format_transfer_bytes(progress.total_bytes)}"
+        return f"TRANSFER → [{progress_bar}] {percent}% | {details}"
+
+    @staticmethod
+    def _format_transfer_bytes(value: int) -> str:
+        units = ("B", "KiB", "MiB", "GiB", "TiB")
+        amount = float(value)
+        for unit in units:
+            if amount < 1024 or unit == units[-1]:
+                return f"{amount:.0f} {unit}" if unit == "B" else f"{amount:.1f} {unit}"
+            amount /= 1024
+        raise AssertionError("unreachable")
+
+    def _update_transfer_progress(self, progress: RsyncProgress) -> None:
+        message = self._format_transfer_progress(progress)
+        self._log_text.configure(state=tk.NORMAL)
+        if not self._transfer_progress_active:
+            self._log_text.mark_set("transfer_progress_start", "end-1c")
+            self._log_text.mark_set("transfer_progress_end", "end-1c")
+            self._log_text.mark_gravity("transfer_progress_start", tk.LEFT)
+            self._log_text.mark_gravity("transfer_progress_end", tk.RIGHT)
+            self._transfer_progress_active = True
+        self._log_text.delete("transfer_progress_start", "transfer_progress_end")
+        self._log_text.insert("transfer_progress_start", message + "\n", "activity_transfer")
         self._log_text.see(tk.END)
         self._log_text.configure(state=tk.DISABLED)
 
     def _append_artifact_warnings(self, issues: tuple[str, ...]) -> None:
         for issue in issues:
-            self._append_log(f"artifact warning: {issue}")
+            self._append_log(f"artifact warning: {issue}", tag="activity_warning")
 
     def _append_artifact_result(self, result: RunArtifactResult) -> None:
         self._append_log("$ " + shell_join(result.command))
-        self._append_log(result.message)
+        self._append_log(result.message, tag="activity_error" if not result.success else None)
         self._append_artifact_warnings(result.issues)
 
     def _format_run_mode(self, state: RunState) -> str:
@@ -807,9 +866,12 @@ class RobotMonitorGui:
         return label
 
     def _set_run_state(self, phase: RunPhase, *, run_id: str = "", message: str = "") -> None:
+        previous_state = self._run_state
         self._run_state = run_state(phase, run_id=run_id, message=message)
         self._update_run_controls()
         self._mode_var.set(self._format_run_mode(self._run_state))
+        if self._run_state != previous_state:
+            self._append_log(f"MODE → {self._format_run_mode(self._run_state)}", tag="activity_mode")
 
     def _update_teleop_enabled(self, enabled: bool) -> None:
         self._teleop_enabled = enabled
@@ -822,6 +884,10 @@ class RobotMonitorGui:
             "stop": availability.stop,
             "retrieve": availability.retrieve,
         }
+        if self._background_operation is not None:
+            states["new_id"] = False
+            states["start"] = False
+            states["retrieve"] = False
         for name, enabled in states.items():
             button = self._run_buttons.get(name)
             if button is not None:
@@ -862,33 +928,55 @@ class RobotMonitorGui:
 
     def new_run_id(self) -> None:
         self._run_id_var.set(_default_run_id())
-        self._append_log("new run id generated")
+        self._append_action("New run ID generated")
 
     def start_run(self) -> None:
-        self._append_log("start run requested")
+        self._append_action("Start Run requested")
         if remote_run_is_running(self._run_process):
-            self._append_log("run already running")
+            self._append_log("run already running", tag="activity_warning")
             return
 
         try:
             connection = self._robot_connection()
             run_config = self._run_config()
-            self._set_run_state(RunPhase.PREPARING, run_id=run_config.run_id)
+        except ValueError as error:
+            self._set_run_state(RunPhase.FAILED, message=str(error))
+            self._append_error(f"failed to prepare run: {error}")
+            return
+
+        self._background_operation = "start"
+        self._set_run_state(RunPhase.PREPARING, run_id=run_config.run_id)
+        threading.Thread(
+            target=self._start_run_worker,
+            args=(connection, run_config),
+            name="omniseer_start_run",
+            daemon=True,
+        ).start()
+
+    def _start_run_worker(self, connection: RobotConnection, run_config: RunConfig) -> None:
+        try:
             start_result = self._run_manager.start(
                 connection=connection,
                 run_config=run_config,
-                before_process_start=lambda _command: self._set_run_state(
-                    RunPhase.STARTING,
-                    run_id=run_config.run_id,
+                before_process_start=lambda _command: self._root.after(
+                    0,
+                    lambda: self._set_run_state(RunPhase.STARTING, run_id=run_config.run_id),
                 ),
             )
         except (OSError, ValueError) as error:
-            failed_run_id = run_config.run_id if "run_config" in locals() else ""
-            failed_action = "start" if self._run_state.phase == RunPhase.STARTING else "prepare"
-            self._set_run_state(RunPhase.FAILED, run_id=failed_run_id, message=str(error))
-            self._append_log(f"failed to {failed_action} run: {error}")
+            self._root.after(0, lambda error=error: self._complete_start_run_failure(run_config.run_id, error))
             return
 
+        self._root.after(0, lambda: self._complete_start_run(start_result, run_config))
+
+    def _complete_start_run_failure(self, run_id: str, error: OSError | ValueError) -> None:
+        failed_action = "start" if self._run_state.phase == RunPhase.STARTING else "prepare"
+        self._background_operation = None
+        self._set_run_state(RunPhase.FAILED, run_id=run_id, message=str(error))
+        self._append_error(f"failed to {failed_action} run: {error}")
+
+    def _complete_start_run(self, start_result: RunStartResult, run_config: RunConfig) -> None:
+        self._background_operation = None
         self._run_process = start_result.remote_run
         self._active_run_id = run_config.run_id
         self._run_generation += 1
@@ -919,14 +1007,14 @@ class RobotMonitorGui:
         start_remote_run_log_reader(remote_run, self._append_log_threadsafe)
 
     def stop_run(self) -> None:
-        self._append_log("stop run requested")
+        self._append_action("Stop Run requested")
         if not self._request_run_stop():
             runtime_stop_requested = self._request_remote_runtime_stop(finalize_on_success=True)
             if runtime_stop_requested and self._run_state.phase != RunPhase.STOPPED:
                 run_id = self._active_run_id or sanitize_run_id(self._run_id_var.get())
                 self._set_run_state(RunPhase.STOPPING, run_id=run_id)
             if not runtime_stop_requested:
-                self._append_log("run not running")
+                self._append_log("run not running", tag="activity_warning")
                 return
             self._append_log("waiting for remote run shutdown")
             return
@@ -1042,28 +1130,71 @@ class RobotMonitorGui:
         self._run_process = None
 
     def retrieve_and_open_report(self) -> None:
-        self._append_log("retrieve and open report requested")
-        run_id = self._current_run_id()
-        context = self._artifact_context()
-        result = retrieve_run_artifacts(context, run_id=run_id, overwrite=True)
-        self._append_artifact_result(result)
-        if not result.success:
+        self._append_action("Retrieve & Open Report requested")
+        try:
+            run_id = self._current_run_id()
+            context = self._artifact_context()
+        except ValueError as error:
+            self._append_error(f"failed to prepare retrieval: {error}")
             return
 
-        if (context.local_import_root / run_id / "video" / "source.ts").is_file():
-            self._append_log("building recorded videos after retrieval")
-            result = build_run_videos(context, run_id=run_id)
-            self._append_artifact_result(result)
+        self._background_operation = "retrieve"
+        self._transfer_progress_active = False
+        self._update_run_controls()
+        self._append_stage("Retrieving run bundle")
+        threading.Thread(
+            target=self._retrieve_and_open_report_worker,
+            args=(context, run_id),
+            name="omniseer_retrieve_run",
+            daemon=True,
+        ).start()
+
+    def _retrieve_and_open_report_worker(self, context: RunArtifactContext, run_id: str) -> None:
+        try:
+            result = retrieve_run_artifacts(
+                context,
+                run_id=run_id,
+                overwrite=True,
+                progress_callback=lambda progress: self._root.after(
+                    0,
+                    lambda progress=progress: self._update_transfer_progress(progress),
+                ),
+            )
+            self._root.after(0, lambda result=result: self._append_artifact_result(result))
             if not result.success:
+                self._root.after(0, self._finish_artifact_operation)
                 return
 
-        self._append_log("generating report after retrieval")
-        result = generate_run_report(context, run_id=run_id, overwrite=True)
-        self._append_artifact_result(result)
-        if not result.success:
+            self._root.after(0, lambda: self._append_stage("Transfer complete"))
+            if (context.local_import_root / run_id / "video" / "source.ts").is_file():
+                self._root.after(0, lambda: self._append_stage("Building recorded videos"))
+                result = build_run_videos(context, run_id=run_id)
+                self._root.after(0, lambda result=result: self._append_artifact_result(result))
+                if not result.success:
+                    self._root.after(0, self._finish_artifact_operation)
+                    return
+
+            self._root.after(0, lambda: self._append_stage("Generating report"))
+            result = generate_run_report(context, run_id=run_id, overwrite=True)
+            self._root.after(0, lambda result=result: self._append_artifact_result(result))
+            if not result.success:
+                self._root.after(0, self._finish_artifact_operation)
+                return
+        except OSError as error:
+            self._root.after(0, lambda error=error: self._append_error(f"artifact operation failed: {error}"))
+            self._root.after(0, self._finish_artifact_operation)
             return
 
+        self._root.after(0, lambda: self._complete_artifact_operation(context, run_id))
+
+    def _complete_artifact_operation(self, context: RunArtifactContext, run_id: str) -> None:
+        self._append_stage("Opening report")
         self._open_report(context, run_id)
+        self._finish_artifact_operation()
+
+    def _finish_artifact_operation(self) -> None:
+        self._background_operation = None
+        self._update_run_controls()
 
     def _open_report(self, context: RunArtifactContext, run_id: str) -> None:
         inspection = inspect_run_artifacts(context, run_id, require_report=True)

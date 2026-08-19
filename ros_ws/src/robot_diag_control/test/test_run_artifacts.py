@@ -151,6 +151,29 @@ class RunArtifactsTests(unittest.TestCase):
         self.assertEqual(result.message, f"retrieved run: {Path(tmp) / 'runs' / 'imported' / 'operator_001'}")
         self.assertEqual(result.issues, ())
 
+    def test_retrieve_run_artifacts_forwards_optional_progress_callback(self):
+        progress_values = []
+
+        def progress_command_executor(command: list[str], cwd: Path, on_output):
+            self.assertIn("--progress", command)
+            _write_completed_bundle(cwd / "runs" / "imported" / "operator_001")
+            on_output("OMNISEER_RSYNC_PROGRESS 67 851443712 1270811510\n")
+            return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            context = _context_for_repo(Path(tmp))
+            result = retrieve_run_artifacts(
+                context,
+                run_id="operator_001",
+                progress_callback=progress_values.append,
+                progress_command_executor=progress_command_executor,
+            )
+
+        self.assertTrue(result.success)
+        self.assertEqual(len(progress_values), 1)
+        self.assertEqual(progress_values[0].percent, 67)
+        self.assertEqual(progress_values[0].transferred_bytes, 851_443_712)
+
     def test_inspect_run_artifacts_reports_incomplete_bundle_with_existing_report(self):
         with tempfile.TemporaryDirectory() as tmp:
             context = _context_for_repo(Path(tmp))
