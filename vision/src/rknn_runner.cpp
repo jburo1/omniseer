@@ -141,8 +141,17 @@ namespace omniseer::vision
 
       errno                       = 0;
       rknn_tensor_attr image_attr = _input_attrs[static_cast<size_t>(_image_input_index)];
-      image_attr.pass_through     = 1;
-      const int rc_set            = rknn_set_io_mem(_ctx, binding.mem, &image_attr);
+      if (image_attr.type == RKNN_TENSOR_FLOAT16 || image_attr.type == RKNN_TENSOR_FLOAT32)
+      {
+        image_attr.type         = RKNN_TENSOR_UINT8;
+        image_attr.fmt          = RKNN_TENSOR_NHWC;
+        image_attr.pass_through = 0;
+      }
+      else
+      {
+        image_attr.pass_through = 1;
+      }
+      const int rc_set = rknn_set_io_mem(_ctx, binding.mem, &image_attr);
       if (rc_set != RKNN_SUCC)
         return fail(InferStatus::RknnError, rc_set, (errno != 0) ? errno : EIO);
       _active_image_slot = pool_index;
@@ -325,8 +334,17 @@ namespace omniseer::vision
     ImageInputBinding& warm_binding = _image_bindings[0];
 
     rknn_tensor_attr image_attr = _input_attrs[static_cast<size_t>(_image_input_index)];
-    image_attr.pass_through     = 1;
-    int rc                      = rknn_set_io_mem(_ctx, warm_binding.mem, &image_attr);
+    if (image_attr.type == RKNN_TENSOR_FLOAT16 || image_attr.type == RKNN_TENSOR_FLOAT32)
+    {
+      image_attr.type         = RKNN_TENSOR_UINT8;
+      image_attr.fmt          = RKNN_TENSOR_NHWC;
+      image_attr.pass_through = 0;
+    }
+    else
+    {
+      image_attr.pass_through = 1;
+    }
+    int rc = rknn_set_io_mem(_ctx, warm_binding.mem, &image_attr);
     if (rc != RKNN_SUCC)
       throw make_rknn_error("rknn_set_io_mem(image warmup)", rc);
     _active_image_slot = warm_binding.pool_index;
@@ -362,8 +380,11 @@ namespace omniseer::vision
     if (p.stride == 0)
       return false;
 
-    const rknn_tensor_attr& image_attr     = _input_attrs[static_cast<size_t>(_image_input_index)];
-    const uint32_t          required_bytes = tensor_bytes_for_attr(image_attr);
+    const rknn_tensor_attr& image_attr = _input_attrs[static_cast<size_t>(_image_input_index)];
+    const bool              fp_image =
+        image_attr.type == RKNN_TENSOR_FLOAT16 || image_attr.type == RKNN_TENSOR_FLOAT32;
+    const uint32_t required_bytes = fp_image ? p.stride * static_cast<uint32_t>(input.size.h)
+                                             : tensor_bytes_for_attr(image_attr);
     if (required_bytes == 0)
       return false;
 
@@ -396,10 +417,13 @@ namespace omniseer::vision
     if (p.offset > static_cast<uint32_t>(std::numeric_limits<int32_t>::max()))
       throw std::runtime_error("RknnRunner::preflight: input offset exceeds int32 range");
 
-    const rknn_tensor_attr& image_attr  = _input_attrs[static_cast<size_t>(_image_input_index)];
-    const uint32_t          input_bytes = tensor_bytes_for_attr(image_attr);
-    const size_t            map_size    = map_size_for_input(input);
-    void* mapped = ::mmap(nullptr, map_size, PROT_READ | PROT_WRITE, MAP_SHARED, p.fd, 0);
+    const rknn_tensor_attr& image_attr = _input_attrs[static_cast<size_t>(_image_input_index)];
+    const uint32_t          input_bytes =
+        (image_attr.type == RKNN_TENSOR_FLOAT16 || image_attr.type == RKNN_TENSOR_FLOAT32)
+                     ? p.stride * static_cast<uint32_t>(input.size.h)
+                     : tensor_bytes_for_attr(image_attr);
+    const size_t map_size = map_size_for_input(input);
+    void*        mapped   = ::mmap(nullptr, map_size, PROT_READ | PROT_WRITE, MAP_SHARED, p.fd, 0);
     if (mapped == MAP_FAILED)
     {
       throw std::runtime_error("RknnRunner::preflight: mmap input failed: " +

@@ -16,7 +16,8 @@
 
 namespace
 {
-  constexpr const char* kModelRelPath = "/testdata/rknn_runner/yolo_world_v2s_i8.rknn";
+  constexpr const char* kModelRelPath   = "/testdata/rknn_runner/yolo_world_v2s_i8.rknn";
+  constexpr const char* kFpModelRelPath = "/../runs/model_artifacts/yolo_world_v2_s_fp.rknn";
 
   std::string make_rknn_error(const char* where, int code)
   {
@@ -48,6 +49,11 @@ namespace
   std::string model_path()
   {
     return std::string(VISION_SOURCE_DIR) + kModelRelPath;
+  }
+
+  std::string fp_model_path()
+  {
+    return std::string(VISION_SOURCE_DIR) + kFpModelRelPath;
   }
 
   std::vector<int8_t> make_zero_text_blob(const std::string& model)
@@ -268,6 +274,33 @@ TEST_F(RknnRunnerSmokeTest, PreflightArmsRunner)
     const auto& output = outputs[i];
     EXPECT_NE(output.data, nullptr);
     EXPECT_GT(output.bytes, 0u);
+  }
+}
+
+TEST(RknnRunnerFpSmokeTest, PreflightAcceptsRgb8DmaBuffer)
+{
+  const std::string model = fp_model_path();
+  if (::access(model.c_str(), R_OK) != 0)
+    GTEST_SKIP() << "missing FP model asset: " << model;
+
+  try
+  {
+    omniseer::vision::DmaHeapAllocator allocator;
+    omniseer::vision::ImageBufferPool  pool;
+    pool.allocate_all(allocator, 640, 640, omniseer::vision::PixelFormat::RGB888);
+
+    const std::vector<int8_t>          text = make_zero_text_blob(model);
+    omniseer::vision::RknnRunnerConfig cfg{};
+    cfg.model_path  = model;
+    cfg.warmup_runs = 0;
+    omniseer::vision::RknnRunner runner(cfg);
+
+    ASSERT_NO_THROW(runner.preflight(pool, text.data(), text.size()));
+    EXPECT_TRUE(runner.is_armed());
+  }
+  catch (const std::exception& e)
+  {
+    GTEST_SKIP() << e.what();
   }
 }
 
