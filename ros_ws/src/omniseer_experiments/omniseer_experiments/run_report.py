@@ -222,41 +222,36 @@ def _render_report(
         evidence_items=evidence_items,
     )
     sections = [
-        _experiment_outcome_section(
+        _run_overview_section(
             inspection=inspection,
             manifest=manifest,
             autonomy=autonomy,
             perf=perf,
-            evidence_items=evidence_items,
+            pipeline=pipeline,
             duration_sec=experiment_duration_sec,
         ),
         _video_section(inspection.path, inspection.path / "report"),
-        _key_metrics_section(inspection=inspection, perf=perf, pipeline=pipeline, autonomy=autonomy),
-        _evidence_summary_section(
-            inspection=inspection,
-            manifest=manifest,
+        _behavior_section(
+            autonomy=autonomy,
             detections=detections,
+            configured_classes=inspection.configured_classes,
+        ),
+        _performance_section(
+            inspection=inspection,
             perf=perf,
-            evidence_items=evidence_items,
-            issues=issues,
+            pipeline=pipeline,
+            system=system,
+            experiment_start_ns=experiment_start_ns,
             duration_sec=experiment_duration_sec,
         ),
-        _summary_section(inspection, manifest=manifest, duration_sec=experiment_duration_sec),
-        _health_section(inspection, evidence_items=evidence_items, pipeline=pipeline, issues=issues),
-        _autonomy_section(autonomy),
-        _detections_section(
-            detections,
+        _evidence_provenance_section(
+            run_dir=inspection.path,
+            report_dir=inspection.path / "report",
+            manifest=manifest,
+            autonomy=autonomy,
             configured_classes=inspection.configured_classes,
-            experiment_start_ns=experiment_start_ns,
+            evidence_items=evidence_items,
         ),
-        _perf_section("Performance", perf, experiment_start_ns=experiment_start_ns),
-        _pipeline_section(pipeline, experiment_start_ns=experiment_start_ns),
-        _system_section(system, manifest=manifest, experiment_start_ns=experiment_start_ns),
-        _cpu_consumers_section(system, duration_sec=experiment_duration_sec),
-        _errors_section(inspection, perf=perf),
-        _configuration_section(manifest),
-        _evidence_section(evidence_items),
-        _artifacts_section(inspection.path, inspection.path / "report"),
         _issues_section(issues),
     ]
     rendered_sections = tuple(section for section in sections if isinstance(section, _ReportSection))
@@ -290,49 +285,279 @@ def _render_report(
     )
 
 
-def _experiment_outcome_section(
+def _run_overview_section(
     *,
     inspection: RunInspection,
     manifest: dict[str, Any],
     autonomy: Sequence[dict[str, Any]],
     perf: Sequence[dict[str, Any]],
-    evidence_items: Sequence[_EvidenceItem],
+    pipeline: Sequence[dict[str, Any]],
     duration_sec: float,
 ) -> _ReportSection:
     terminal = _last_matching_record(autonomy, lambda record: record.get("state") in {"success", "failed"})
-    terminal_state = _display(terminal.get("state") if terminal else "")
+    terminal_state = _display(terminal.get("state") if terminal else inspection.state)
     status_class = f" outcome-{terminal_state}" if terminal_state in {"success", "failed"} else ""
     first_detection = _first_matching_record(autonomy, lambda record: record.get("event") == "first_detection")
-    first_centered = _first_matching_record(autonomy, lambda record: record.get("event") == "centered_first_frame")
     first_success = _first_matching_record(autonomy, lambda record: record.get("event") == "succeeded")
-    capture = _last_matching_record(autonomy, lambda record: record.get("event") == "capture_result")
     target_class = _last_autonomy_target_class(autonomy) or _launch_arg_value(manifest, "autonomy_target_class")
+    source_age_p95_ns = _p95_field(pipeline, "source_age_end_ns")
     rows = [
-        ("Failure reason", _display(terminal.get("reason") if terminal_state == "failed" and terminal else "")),
         ("Target class", _display(target_class)),
-        ("Capture occurred", _capture_outcome(capture, evidence_items)),
-        ("Run duration", _format_duration(duration_sec)),
+        ("Model identity", _model_identity(manifest)),
+        ("Duration", _format_duration(duration_sec)),
         (
             "Time to first detection",
             _format_duration(_as_float(first_detection.get("time_sec")) if first_detection else None),
         ),
         (
-            "Time to centered",
-            _format_duration(_as_float(first_centered.get("time_sec")) if first_centered else None),
-        ),
-        (
-            "Time to framed/success",
+            "Time to success",
             _format_duration(_as_float(first_success.get("time_sec")) if first_success else None),
         ),
-        *_autonomy_phase_timing_rows(autonomy),
         ("Final centering error", _format_optional_float(_last_numeric_field(autonomy, "normalized_error"))),
         ("Final target area", _format_optional_float(_last_numeric_field(autonomy, "bbox_area_ratio"))),
-        *_target_loss_summary_rows(autonomy),
-        ("Consumer FPS", _format_optional_float(_p95_field(perf, "consumer_fps"))),
+        ("Target-loss episodes", str(len(_target_loss_episodes(autonomy)))),
+        ("Consumer FPS p95", _format_optional_float(_p95_field(perf, "consumer_fps"))),
         ("Inference p95", _format_optional_ms(_p95_field(perf, "last_infer_ms"))),
+        (
+            "Source-age p95",
+            _format_optional_ms(source_age_p95_ns / 1_000_000.0 if source_age_p95_ns is not None else None),
+        ),
     ]
-    banner = f'<p class="outcome-banner{status_class}">Terminal state: <strong>{_esc(terminal_state)}</strong></p>'
-    return _section("Experiment Outcome", banner + _key_value_table(rows), open_by_default=True)
+    if terminal_state == "failed" and terminal:
+        rows.insert(0, ("Failure reason", _display(terminal.get("reason"))))
+    banner = f'<p class="outcome-banner{status_class}">Outcome: <strong>{_esc(terminal_state)}</strong></p>'
+    return _section("Run Overview", banner + _key_value_table(rows), open_by_default=True)
+
+
+def _behavior_section(
+    *,
+    autonomy: Sequence[dict[str, Any]],
+    detections: Sequence[dict[str, Any]],
+    configured_classes: Sequence[str],
+) -> _ReportSection | str:
+    """Render only the behavior evidence needed to explain the run outcome."""
+
+    parts = []
+    if autonomy:
+        parts.extend(
+            [
+                _autonomy_state_timeline(autonomy),
+                _line_chart(
+                    "Target Confidence and Centering Error",
+                    (
+                        _autonomy_target_confidence_series(autonomy),
+                        _autonomy_series(autonomy, "normalized_error", name="centering error"),
+                    ),
+                    "confidence / normalized error",
+                    zero_floor=True,
+                ),
+                _autonomy_target_loss_table(autonomy),
+            ]
+        )
+    detection_summary = _class_detection_summary(detections, configured_classes=configured_classes)
+    if detection_summary:
+        parts.append(detection_summary)
+    if not parts:
+        return ""
+    return _section("Behavior", "".join(part for part in parts if part), open_by_default=True)
+
+
+def _class_detection_summary(records: Sequence[dict[str, Any]], *, configured_classes: Sequence[str]) -> str:
+    counts: Counter[str] = Counter()
+    scores_by_class: dict[str, list[float]] = defaultdict(list)
+    for detection in _iter_detections(records):
+        class_name = _class_name(detection)
+        counts[class_name] += 1
+        score = _as_float(detection.get("score"))
+        if score is not None:
+            scores_by_class[class_name].append(score)
+    if not counts:
+        return ""
+
+    rows = []
+    for class_name, count in sorted(counts.items()):
+        scores = scores_by_class[class_name]
+        rows.append(
+            [
+                class_name,
+                str(count),
+                _format_float(statistics.fmean(scores)) if scores else "-",
+                _format_float(max(scores)) if scores else "-",
+            ]
+        )
+    configured_note = _join_or_dash(configured_classes)
+    return (
+        "<h3>Detections by Class</h3>"
+        f'<p class="table-note">Configured classes: {_esc(configured_note)}</p>'
+        + _table(["Class", "Detections", "Mean confidence", "Max confidence"], rows)
+    )
+
+
+def _performance_section(
+    *,
+    inspection: RunInspection,
+    perf: Sequence[dict[str, Any]],
+    pipeline: Sequence[dict[str, Any]],
+    system: Sequence[dict[str, Any]],
+    experiment_start_ns: int | None,
+    duration_sec: float,
+) -> _ReportSection:
+    latency_rows = _latency_summary_rows(perf, pipeline)
+    body_parts = []
+    if latency_rows:
+        body_parts.append("<h3>Latency Summary</h3>" + _table(["Metric", "p50 ms", "p95 ms", "Max ms"], latency_rows))
+        body_parts.append(_latency_chart(perf, experiment_start_ns=experiment_start_ns))
+    body_parts.append(_supersession_summary(perf))
+    system_summary = _compact_system_summary(system)
+    if system_summary:
+        body_parts.append(system_summary)
+    cpu_consumers = _compact_cpu_consumers(system, duration_sec=duration_sec)
+    if cpu_consumers:
+        body_parts.append(cpu_consumers)
+    runtime_errors = _nonzero_runtime_errors(inspection)
+    if runtime_errors:
+        body_parts.append(runtime_errors)
+    if not body_parts:
+        body_parts.append("<p>No performance telemetry recorded.</p>")
+    return _section("Performance", "".join(body_parts), open_by_default=True)
+
+
+def _latency_summary_rows(perf: Sequence[dict[str, Any]], pipeline: Sequence[dict[str, Any]]) -> list[list[str]]:
+    fields: list[tuple[str, Sequence[dict[str, Any]], str, float]] = [
+        ("Preprocess", perf, "last_preprocess_ms", 1.0),
+        ("Inference", perf, "last_infer_ms", 1.0),
+        ("Postprocess", perf, "last_postprocess_ms", 1.0),
+        ("Publish", perf, "last_publish_ms", 1.0),
+        ("Consumer total", perf, "last_consumer_total_ms", 1.0),
+        ("Source age at consumer end", pipeline, "source_age_end_ns", 1 / 1_000_000.0),
+    ]
+    rows = []
+    for label, records, field_name, scale in fields:
+        values = [
+            value * scale for value in (_as_float(record.get(field_name)) for record in records) if value is not None
+        ]
+        if values:
+            rows.append(
+                [
+                    label,
+                    _format_float(_percentile(values, 50)),
+                    _format_float(_percentile(values, 95)),
+                    _format_float(max(values)),
+                ]
+            )
+    return rows
+
+
+def _latency_chart(records: Sequence[dict[str, Any]], *, experiment_start_ns: int | None) -> str:
+    base_ts = experiment_start_ns or _first_valid_timestamp(records, ("recv_ts_ns",))
+    return _line_chart(
+        "Latency Over Time",
+        (
+            _series_from_records(records, "recv_ts_ns", "last_infer_ms", base_ts_ns=base_ts),
+            _series_from_records(records, "recv_ts_ns", "last_consumer_total_ms", base_ts_ns=base_ts),
+        ),
+        "ms",
+        zero_floor=True,
+    )
+
+
+def _supersession_summary(records: Sequence[dict[str, Any]]) -> str:
+    ratio = _supersession_ratio(records)
+    if ratio is None and not records:
+        return ""
+    return "<h3>Latest-frame Supersession</h3>" + _key_value_table(
+        [
+            ("Frames superseded before inference", str(_superseded_frames(records))),
+            ("Supersession ratio", _format_percentage(ratio)),
+            ("Interpretation", "Normal latest-frame behavior; not an error."),
+        ]
+    )
+
+
+def _compact_system_summary(records: Sequence[dict[str, Any]]) -> str:
+    fields = (
+        ("CPU", "cpu_percent", "%"),
+        ("Memory used", "memory_used_mb", "MB"),
+        ("SoC temperature", "soc_temp_c", "C"),
+    )
+    rows = []
+    for label, field_name, unit in fields:
+        values = [value for value in (_as_float(record.get(field_name)) for record in records) if value is not None]
+        if values:
+            rows.append(
+                [
+                    label,
+                    _format_float(_percentile(values, 50)),
+                    _format_float(_percentile(values, 95)),
+                    _format_float(max(values)),
+                    unit,
+                ]
+            )
+    throttled = [thermal.get("throttled") for record in records if isinstance((thermal := record.get("thermal")), dict)]
+    if not rows and not throttled:
+        return ""
+    throttle_summary = _count_display(throttled) if throttled else "-"
+    return (
+        "<h3>System Summary</h3>"
+        + _key_value_table([("Thermal throttling", throttle_summary)])
+        + (_table(["Metric", "p50", "p95", "Max", "Unit"], rows) if rows else "")
+    )
+
+
+def _compact_cpu_consumers(records: Sequence[dict[str, Any]], *, duration_sec: float) -> str:
+    consumers: dict[tuple[int, int], dict[str, Any]] = {}
+    total_cpu_seconds = 0.0
+    for record in records:
+        samples = record.get("process_cpu")
+        if not isinstance(samples, list):
+            continue
+        for sample in samples:
+            if not isinstance(sample, dict):
+                continue
+            pid = _as_int(sample.get("pid"))
+            start_time_ticks = _as_int(sample.get("start_time_ticks"))
+            cpu_seconds = _as_float(sample.get("cpu_seconds_delta"))
+            if pid is None or start_time_ticks is None or cpu_seconds is None or cpu_seconds <= 0.0:
+                continue
+            item = consumers.setdefault(
+                (pid, start_time_ticks),
+                {
+                    "pid": pid,
+                    "name": sample.get("name") if isinstance(sample.get("name"), str) else "unknown",
+                    "cmdline": sample.get("cmdline") if isinstance(sample.get("cmdline"), str) else "",
+                    "cpu_seconds": 0.0,
+                },
+            )
+            item["cpu_seconds"] += cpu_seconds
+            total_cpu_seconds += cpu_seconds
+    if not consumers:
+        return ""
+
+    rows = []
+    for item in sorted(consumers.values(), key=lambda value: value["cpu_seconds"], reverse=True)[:5]:
+        cpu_seconds = item["cpu_seconds"]
+        rows.append(
+            [
+                _process_description(item["name"], item["cmdline"]),
+                _format_float(cpu_seconds / duration_sec if duration_sec > 0.0 else 0.0),
+                _format_percentage(cpu_seconds / total_cpu_seconds if total_cpu_seconds > 0.0 else None),
+            ]
+        )
+    return (
+        '<details class="nested-details"><summary>Top CPU consumers (sampled)</summary>'
+        + _table(["Process", "Mean cores", "CPU share"], rows)
+        + "<p>Sampled process CPU share is not total machine utilization.</p></details>"
+    )
+
+
+def _nonzero_runtime_errors(inspection: RunInspection) -> str:
+    rows = [[name, str(count)] for name, count in sorted(inspection.errors.items()) if count > 0]
+    rows.extend(
+        [[f"Dropped {name}", str(count)] for name, count in sorted(inspection.dropped_records.items()) if count > 0]
+    )
+    if not rows:
+        return ""
+    return '<h3 class="present-issues">Recorded Errors</h3>' + _table(["Counter", "Count"], rows)
 
 
 def _key_metrics_section(
@@ -434,6 +659,56 @@ def _artifacts_section(run_dir: Path, report_dir: Path) -> str:
     if not artifact_rows:
         return ""
     return _section("Run Artifacts", _artifact_links_table(artifact_rows), open_by_default=True)
+
+
+def _evidence_provenance_section(
+    *,
+    run_dir: Path,
+    report_dir: Path,
+    manifest: dict[str, Any],
+    autonomy: Sequence[dict[str, Any]],
+    configured_classes: Sequence[str],
+    evidence_items: Sequence[_EvidenceItem],
+) -> _ReportSection:
+    target_class = _last_autonomy_target_class(autonomy) or _launch_arg_value(manifest, "autonomy_target_class")
+    provenance_rows = [
+        ("Git SHA", _display(_manifest_string(manifest, "git_sha"))),
+        ("SBC", _display(_manifest_string(manifest, "sbc"))),
+        ("Runtime image ref", _provenance_value(_manifest_nested_string(manifest, "container", "image_ref"))),
+        ("Runtime image digest", _provenance_value(_manifest_nested_string(manifest, "container", "image_digest"))),
+        ("Experiment config", _display(_manifest_nested_string(manifest, "experiment", "config"))),
+        (
+            "Experiment overrides",
+            _display(_format_mapping(_manifest_nested_dict(manifest, "experiment", "parameters"))),
+        ),
+        ("Model", _model_identity(manifest)),
+        ("Configured target", _display(target_class)),
+        ("Configured classes", _join_or_dash(configured_classes)),
+    ]
+    artifact_rows = _all_run_artifact_rows(run_dir, report_dir)
+    artifacts = ""
+    if artifact_rows:
+        artifacts = (
+            f'<details class="nested-details"><summary>All RunBundle artifacts ({len(artifact_rows)})</summary>'
+            + _artifact_links_table(artifact_rows)
+            + "</details>"
+        )
+    return _section(
+        "Evidence & Provenance",
+        _evidence_gallery(evidence_items) + "<h3>Provenance</h3>" + _key_value_table(provenance_rows) + artifacts,
+        open_by_default=True,
+    )
+
+
+def _all_run_artifact_rows(run_dir: Path, report_dir: Path) -> list[tuple[str, str, str]]:
+    rows = []
+    for path in sorted(run_dir.rglob("*")):
+        if not path.is_file() or report_dir in path.parents:
+            continue
+        relative_path = path.relative_to(run_dir).as_posix()
+        href = _relative_href(report_dir, path)
+        rows.append((relative_path, relative_path, href))
+    return rows
 
 
 def _video_section(run_dir: Path, report_dir: Path) -> str:
@@ -1154,12 +1429,12 @@ def _errors_section(inspection: RunInspection, *, perf: Sequence[dict[str, Any]]
     return _section("Errors And Drops", body, open_by_default=has_errors_or_drops)
 
 
-def _evidence_section(items: Sequence[_EvidenceItem]) -> str:
+def _evidence_gallery(items: Sequence[_EvidenceItem], *, max_items: int = 12) -> str:
     if not items:
-        return _section("Evidence", "<p>No evidence images recorded.</p>")
+        return "<p>No evidence images recorded.</p>"
 
     cards = []
-    for item in items:
+    for item in items[:max_items]:
         label_text = _join_or_dash(item.labels)
         source_note = "annotated" if item.uses_annotation else "clean frame"
         cards.append(
@@ -1180,12 +1455,15 @@ def _evidence_section(items: Sequence[_EvidenceItem]) -> str:
         "<p>Annotated images are derived review artifacts. Clean frames are the canonical captured evidence; "
         "boxes are projected back into source image coordinates.</p>"
     )
-    return _section("Evidence", f'{intro}<div class="evidence-grid">{"".join(cards)}</div>', open_by_default=True)
+    cap_note = ""
+    if len(items) > max_items:
+        cap_note = f'<p class="table-note">Showing {max_items} of {len(items)} evidence frames.</p>'
+    return f'{intro}{cap_note}<div class="evidence-grid">{"".join(cards)}</div>'
 
 
 def _issues_section(issues: Sequence[str]) -> str:
     if not issues:
-        return _section("Issues", "<p>No issues found by local report inputs.</p>")
+        return ""
     items = "".join(f"<li>{_esc(issue)}</li>" for issue in issues)
     return _section("Issues", f"<ul>{items}</ul>", open_by_default=True)
 
@@ -1382,6 +1660,16 @@ def _runtime_image_identity(manifest: dict[str, Any]) -> str:
         return digest
     ref = _manifest_nested_string(manifest, "container", "image_ref")
     return ref if ref else "Unavailable"
+
+
+def _model_identity(manifest: dict[str, Any]) -> str:
+    detector = _manifest_model_value(manifest, "detector")
+    model_path = _manifest_model_value(manifest, "detector_model_path")
+    model_hash = _model_sha256(manifest, "detector_model")
+    parts = [part for part in (detector, _path_basename(model_path)) if part]
+    if model_hash and model_hash != "Unavailable":
+        parts.append(model_hash)
+    return " · ".join(parts) if parts else "-"
 
 
 def _model_sha256(manifest: dict[str, Any], name: str) -> str:
@@ -2484,14 +2772,15 @@ def _table_of_contents(
     items = "".join(
         f'<li><a href="#{_attr(section.section_id)}">{_esc(section.title)}</a></li>' for section in sections
     )
+    status_values = [
+        ("State", inspection.state),
+        ("Evidence", str(len(evidence_items))),
+        ("Duration", _format_duration(duration_sec)),
+    ]
+    if issues:
+        status_values.insert(1, ("Issues", str(len(issues))))
     status_items = "".join(
-        f'<span class="toc-chip"><strong>{_esc(label)}</strong>{_esc(value)}</span>'
-        for label, value in (
-            ("State", inspection.state),
-            ("Issues", str(len(issues))),
-            ("Evidence", str(len(evidence_items))),
-            ("Duration", _format_duration(duration_sec)),
-        )
+        f'<span class="toc-chip"><strong>{_esc(label)}</strong>{_esc(value)}</span>' for label, value in status_values
     )
     return (
         '    <nav class="toc" aria-labelledby="toc-heading">\n'
@@ -2633,29 +2922,6 @@ th, td { padding: 8px 10px; border-bottom: 1px solid #e6eaf0; text-align: left; 
 th { color: #3d4a5c; font-weight: 700; background: #f1f4f8; }
 tbody tr:last-child th, tbody tr:last-child td { border-bottom: 0; }
 .kv th { width: 220px; }
-.metric-bars { margin: 0 0 12px; }
-.metric-bars caption {
-  padding: 0 0 8px;
-  text-align: left;
-  font-size: 13px;
-  font-weight: 700;
-  color: #526173;
-}
-.metric-bars td:nth-child(4) { min-width: 170px; }
-.metric-bar {
-  position: relative;
-  height: 12px;
-  overflow: hidden;
-  border-radius: 3px;
-  background: #e6eaf0;
-}
-.metric-bar-fill {
-  display: block;
-  height: 100%;
-  min-width: 2px;
-  border-radius: inherit;
-  background: #3b6ea8;
-}
 .outcome-banner {
   margin: 0 0 14px;
   padding: 10px 12px;
