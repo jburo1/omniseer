@@ -510,7 +510,7 @@ class MonitorGuiTests(unittest.TestCase):
             root.destroy()
 
     @unittest.skipIf(tk is None, "tkinter is unavailable")
-    def test_gui_watch_helpers_write_clear_activity_messages(self):
+    def test_gui_watch_helpers_are_silent(self):
         assert tk is not None
         root = tk.Tk()
         root.withdraw()
@@ -518,12 +518,9 @@ class MonitorGuiTests(unittest.TestCase):
             gui = RobotMonitorGui(root, _build_parser().parse_args([]))
 
             gui.stop_watch()
-            gui.new_run_id()
 
             activity = gui._log_text.get("1.0", tk.END)
-            self.assertIn("stop watch requested", activity)
-            self.assertIn("watch not running", activity)
-            self.assertIn("new run id generated", activity)
+            self.assertEqual(activity.strip(), "")
         finally:
             root.destroy()
 
@@ -541,6 +538,24 @@ class MonitorGuiTests(unittest.TestCase):
             refresh_status.assert_called_once()
             self.assertIsNotNone(gui._watch_after_id)
             gui.stop_watch()
+        finally:
+            root.destroy()
+
+    @unittest.skipIf(tk is None, "tkinter is unavailable")
+    def test_gui_status_refresh_failure_is_silent(self):
+        assert tk is not None
+        root = tk.Tk()
+        root.withdraw()
+        try:
+            gui = RobotMonitorGui(root, _build_parser().parse_args([]))
+            with patch(
+                "robot_diag_control.monitor_gui.get_system_status",
+                side_effect=_FakeRpcError(),
+            ):
+                gui.refresh_status()
+
+            activity = gui._log_text.get("1.0", tk.END)
+            self.assertEqual(activity.strip(), "")
         finally:
             root.destroy()
 

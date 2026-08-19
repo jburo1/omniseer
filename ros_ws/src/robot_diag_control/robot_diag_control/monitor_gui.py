@@ -1075,13 +1075,11 @@ class RobotMonitorGui:
         self._append_log(f"report opened: {path}")
 
     def refresh_status(self) -> None:
-        self._append_log("status refresh requested")
         try:
             settings = self._connection_settings()
             with grpc.insecure_channel(target_for(settings.host, settings.port)) as channel:
                 status = get_system_status(create_stub(channel))
-        except (grpc.RpcError, ValueError) as error:
-            self._append_log(_format_request_error("status refresh", error))
+        except (grpc.RpcError, ValueError):
             return
 
         self._last_status = status
@@ -1092,14 +1090,10 @@ class RobotMonitorGui:
         if fault_line and fault_line != "FAULT none" and fault_line != self._last_fault_line:
             self._append_log(fault_line)
         self._last_fault_line = fault_line
-        self._append_log("status refreshed")
 
     def start_watch(self) -> None:
-        self._append_log("start watch requested")
         if self._watch_after_id is not None:
-            self._append_log("watch already running")
             return
-        self._append_log("watch started")
         self._watch_tick()
 
     def _start_watch(self) -> None:
@@ -1112,13 +1106,10 @@ class RobotMonitorGui:
         self._watch_after_id = self._root.after(max(interval_ms, 100), self._watch_tick)
 
     def stop_watch(self) -> None:
-        self._append_log("stop watch requested")
         if self._watch_after_id is None:
-            self._append_log("watch not running")
             return
         self._root.after_cancel(self._watch_after_id)
         self._watch_after_id = None
-        self._append_log("watch stopped")
 
     def preview_on(self) -> None:
         self._append_log("preview on requested")
