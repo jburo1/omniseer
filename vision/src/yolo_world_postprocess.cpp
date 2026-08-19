@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <cstring>
 #include <limits>
 #include <stdexcept>
 #include <vector>
@@ -39,6 +40,39 @@ namespace omniseer::vision
     float dequantize_i8(int8_t value, int32_t zp, float scale) noexcept
     {
       return (static_cast<float>(value) - static_cast<float>(zp)) * scale;
+    }
+
+    float float16_to_float32(uint16_t value) noexcept
+    {
+      const uint32_t sign     = static_cast<uint32_t>(value & 0x8000U) << 16;
+      const uint32_t exponent = (value >> 10) & 0x1fU;
+      uint32_t       mantissa = value & 0x03ffU;
+
+      uint32_t bits = 0;
+      if (exponent == 0)
+      {
+        if (mantissa != 0)
+        {
+          uint32_t shift = 0;
+          while ((mantissa & 0x0400U) == 0)
+          {
+            mantissa <<= 1;
+            ++shift;
+          }
+          mantissa &= 0x03ffU;
+          bits = sign | ((127U - 14U - shift) << 23) | (mantissa << 13);
+        }
+        else
+          bits = sign;
+      }
+      else if (exponent == 0x1fU)
+        bits = sign | 0x7f800000U | (mantissa << 13);
+      else
+        bits = sign | ((exponent + 112U) << 23) | (mantissa << 13);
+
+      float result = 0.0F;
+      std::memcpy(&result, &bits, sizeof(result));
+      return result;
     }
 
     size_t find_grid_scale_index(uint32_t grid_size)
@@ -168,6 +202,66 @@ namespace omniseer::vision
           const float top    = box_tensor[cell_offset + 1u * grid_len];
           const float right  = box_tensor[cell_offset + 2u * grid_len];
           const float bottom = box_tensor[cell_offset + 3u * grid_len];
+
+          const float center_x = (static_cast<float>(x) + 0.5F) * stride;
+          const float center_y = (static_cast<float>(y) + 0.5F) * stride;
+
+          Candidate candidate{};
+          candidate.class_id = static_cast<uint16_t>(best_class);
+          candidate.score    = max_score;
+          candidate.x1       = center_x - left * stride;
+          candidate.y1       = center_y - top * stride;
+          candidate.x2       = center_x + right * stride;
+          candidate.y2       = center_y + bottom * stride;
+          candidates.push_back(candidate);
+        }
+      }
+    }
+
+    void collect_fp16_candidates(const uint16_t* box_tensor, const RknnOutputDesc& box_desc,
+                                 const uint16_t* class_tensor, const RknnOutputDesc& class_desc,
+                                 uint32_t model_input_size, uint32_t active_class_count,
+                                 float score_threshold, std::vector<Candidate>& candidates) noexcept
+    {
+      (void) class_desc;
+      if (box_tensor == nullptr || class_tensor == nullptr)
+        return;
+
+      const uint32_t grid_h   = box_desc.dims[2];
+      const uint32_t grid_w   = box_desc.dims[3];
+      const size_t   grid_len = static_cast<size_t>(grid_h) * static_cast<size_t>(grid_w);
+      const float    stride =
+          (grid_h == 0) ? 0.0F : static_cast<float>(model_input_size) / static_cast<float>(grid_h);
+      if (grid_len == 0 || stride <= 0.0F)
+        return;
+
+      for (uint32_t y = 0; y < grid_h; ++y)
+      {
+        for (uint32_t x = 0; x < grid_w; ++x)
+        {
+          const size_t cell_offset = static_cast<size_t>(y) * grid_w + x;
+
+          float    max_score  = score_threshold;
+          uint32_t best_class = 0;
+          bool     found      = false;
+          for (uint32_t class_id = 0; class_id < active_class_count; ++class_id)
+          {
+            const float score = float16_to_float32(
+                class_tensor[cell_offset + static_cast<size_t>(class_id) * grid_len]);
+            if (score > score_threshold && (!found || score > max_score))
+            {
+              max_score  = score;
+              best_class = class_id;
+              found      = true;
+            }
+          }
+          if (!found)
+            continue;
+
+          const float left   = float16_to_float32(box_tensor[cell_offset + 0u * grid_len]);
+          const float top    = float16_to_float32(box_tensor[cell_offset + 1u * grid_len]);
+          const float right  = float16_to_float32(box_tensor[cell_offset + 2u * grid_len]);
+          const float bottom = float16_to_float32(box_tensor[cell_offset + 3u * grid_len]);
 
           const float center_x = (static_cast<float>(x) + 0.5F) * stride;
           const float center_y = (static_cast<float>(y) + 0.5F) * stride;
@@ -319,6 +413,15 @@ namespace omniseer::vision
       {
         collect_fp32_candidates(static_cast<const float*>(outputs[box_index].data), box_desc,
                                 static_cast<const float*>(outputs[class_index].data), class_desc,
+                                remap.model_input_size.h, active_class_count, cfg.score_threshold,
+                                candidates);
+        continue;
+      }
+
+      if (class_desc.type == RKNN_TENSOR_FLOAT16 && box_desc.type == RKNN_TENSOR_FLOAT16)
+      {
+        collect_fp16_candidates(static_cast<const uint16_t*>(outputs[box_index].data), box_desc,
+                                static_cast<const uint16_t*>(outputs[class_index].data), class_desc,
                                 remap.model_input_size.h, active_class_count, cfg.score_threshold,
                                 candidates);
         continue;
