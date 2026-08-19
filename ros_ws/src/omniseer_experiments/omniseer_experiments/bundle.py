@@ -109,8 +109,10 @@ class RunBundleConfig:
     launch_profile: str = ""
     launch_mode: str = ""
     launch_args: tuple[str, ...] = ()
+    runtime_backend: str = ""
     container_image_ref: str = ""
     container_image_digest: str = ""
+    container_image_id: str = ""
     experiment_config: str = ""
     experiment_parameters: dict[str, Any] = field(default_factory=dict)
     comparison_id: str = ""
@@ -462,8 +464,10 @@ class RunBundleWriter:
                 "args": list(self.config.launch_args),
             },
             "container": {
+                "runtime_backend": self.config.runtime_backend,
                 "image_ref": self.config.container_image_ref,
                 "image_digest": self.config.container_image_digest,
+                "image_id": self.config.container_image_id,
             },
             "experiment": {
                 "config": self.config.experiment_config,
@@ -507,10 +511,7 @@ class RunBundleWriter:
                 source_path=self.config.vision_params_file,
                 copy_name=_copy_name("vision_config", self.config.vision_params_file),
             ),
-            "experiment_config": self._provenance_entry(
-                source_path=self.config.experiment_config,
-                copy_name=_copy_name("experiment_config", self.config.experiment_config),
-            ),
+            "experiment_config": self._experiment_config_provenance(),
             "resolved_vision_config": self._provenance_entry(
                 source_path=self.config.resolved_vision_config_path,
                 copy_name="",
@@ -518,6 +519,19 @@ class RunBundleWriter:
                 copy_status="emitted_by_vision_bridge",
             ),
         }
+
+    def _experiment_config_provenance(self) -> dict[str, Any]:
+        """Fingerprint file-backed configs, while preserving human-readable config labels as values."""
+
+        config = self.config.experiment_config
+        if config and Path(config).is_file():
+            return self._provenance_entry(
+                source_path=config,
+                copy_name=_copy_name("experiment_config", config),
+            )
+        if config:
+            return {"value": config, "kind": "identifier"}
+        return {"value": "", "kind": "identifier", "error": "not_configured"}
 
     def _provenance_entry(
         self,

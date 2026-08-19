@@ -376,7 +376,7 @@ runtime_run() {
 }
 
 runtime_record() {
-  local image_base tag image_ref run_id system_interval_sec experiment_config status record_video record_rosbag
+  local image_base tag image_ref image_digest image_id run_id system_interval_sec experiment_config status record_video record_rosbag
   local repo_root runs_bind_root local_runs_root host_run_dir
   local experiment_parameters=()
   local launch_args=()
@@ -452,6 +452,8 @@ runtime_record() {
 
   tag="$(runtime_resolve_existing_tag "${tag}")"
   image_ref="$(runtime_image_ref "${image_base}" "${tag}")"
+  image_digest="$(runtime_image_digest "${image_ref}")"
+  image_id="$(runtime_image_id "${image_ref}")"
   repo_root="$(omni_repo_root)"
   runs_bind_root="$(runtime_runs_bind_root)"
   local_runs_root="$(runtime_runs_local_root)"
@@ -465,6 +467,10 @@ runtime_record() {
     --record-overwrite
     --record-system-interval-sec "${system_interval_sec}"
     --record-experiment-config "${experiment_config}"
+    --record-runtime-backend "robot_runtime_container"
+    --record-container-image-ref "${image_ref}"
+    --record-container-image-digest "${image_digest}"
+    --record-container-image-id "${image_id}"
   )
   if [[ -n "${notes}" ]]; then
     command+=(--record-notes "${notes}")

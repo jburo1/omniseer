@@ -77,6 +77,13 @@ class RuntimeScriptRecordingTests(unittest.TestCase):
             args = docker_args_path.read_text(encoding="utf-8").splitlines()
             self.assertIn("run", args)
             self.assertIn("--record-overwrite", args)
+            self.assertIn("--record-runtime-backend", args)
+            self.assertIn("robot_runtime_container", args)
+            self.assertIn("--record-container-image-ref", args)
+            self.assertIn("ghcr.io/jburo1/omniseer-robot-runtime:robot-test", args)
+            self.assertIn("--record-container-image-digest", args)
+            self.assertIn("--record-container-image-id", args)
+            self.assertIn("sha256:test", args)
             self.assertIn("classes_path:=/runs/autonomy_v2/classes.txt", args)
             self.assertEqual((run_root / "autonomy_v2" / "classes.txt").read_text(encoding="utf-8"), "plant\n")
 

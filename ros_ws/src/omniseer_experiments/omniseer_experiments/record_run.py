@@ -64,8 +64,10 @@ class RecorderOptions:
     launch_profile: str = ""
     launch_mode: str = ""
     launch_args: tuple[str, ...] = ()
+    runtime_backend: str = ""
     container_image_ref: str = ""
     container_image_digest: str = ""
+    container_image_id: str = ""
     experiment_config: str = ""
     experiment_parameters: dict[str, str] | None = None
     comparison_id: str = ""
@@ -226,8 +228,10 @@ class PerceptionRunRecorder(Node):
                 launch_profile=options.launch_profile,
                 launch_mode=options.launch_mode,
                 launch_args=options.launch_args,
+                runtime_backend=options.runtime_backend,
                 container_image_ref=options.container_image_ref,
                 container_image_digest=options.container_image_digest,
+                container_image_id=options.container_image_id,
                 experiment_config=options.experiment_config,
                 experiment_parameters=options.experiment_parameters or {},
                 comparison_id=options.comparison_id,
@@ -420,8 +424,10 @@ def options_from_args(argv: list[str] | None = None) -> RecorderOptions:
         launch_profile=args.launch_profile,
         launch_mode=args.launch_mode,
         launch_args=tuple(shlex.split(args.launch_args)) if args.launch_args else (),
+        runtime_backend=args.runtime_backend,
         container_image_ref=_env_fallback(args.container_image_ref, "OMNISEER_CONTAINER_IMAGE_REF"),
         container_image_digest=_env_fallback(args.container_image_digest, "OMNISEER_CONTAINER_IMAGE_DIGEST"),
+        container_image_id=_env_fallback(args.container_image_id, "OMNISEER_CONTAINER_IMAGE_ID"),
         experiment_config=_env_fallback(args.experiment_config, "OMNISEER_EXPERIMENT_CONFIG"),
         experiment_parameters=experiment_parameters,
         comparison_id=args.comparison_id,
@@ -468,8 +474,10 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--launch-profile", default="", help="resolved real profile used for the run")
     parser.add_argument("--launch-mode", default="", help="resolved real mode used for the run")
     parser.add_argument("--launch-args", default="", help="shell-quoted real.launch.py key:=value arguments")
+    parser.add_argument("--runtime-backend", default="", help="runtime backend used for this run")
     parser.add_argument("--container-image-ref", default="", help="container image reference for run provenance")
     parser.add_argument("--container-image-digest", default="", help="container image digest for run provenance")
+    parser.add_argument("--container-image-id", default="", help="local container image ID for run provenance")
     parser.add_argument("--experiment-config", default="", help="experiment config identifier or path for provenance")
     parser.add_argument("--comparison-id", default="", help="optional comparison experiment identifier")
     parser.add_argument("--trial", default="", help="optional comparison trial identifier")
