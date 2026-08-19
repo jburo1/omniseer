@@ -79,20 +79,22 @@ TEST(YoloWorldTextEmbeddingsBuilderTest, AcceptsFloat32DetectorTextInput)
   EXPECT_EQ(std::memcmp(view.data, clip_embedding.data(), view.bytes), 0);
 }
 
-TEST(YoloWorldTextEmbeddingsBuilderTest, RejectsUnsupportedDetectorTextInputType)
+TEST(YoloWorldTextEmbeddingsBuilderTest, AcceptsAndPacksFloat16DetectorTextInput)
 {
   rknn_tensor_attr attr{};
   attr.type = RKNN_TENSOR_FLOAT16;
 
-  try
-  {
-    (void) omniseer::vision::resolve_yolo_world_text_input_format(attr);
-    FAIL() << "FLOAT16 detector texts input unexpectedly accepted";
-  }
-  catch (const std::runtime_error& error)
-  {
-    EXPECT_NE(std::string(error.what()).find("affine INT8 and FLOAT32"), std::string::npos);
-  }
+  EXPECT_EQ(omniseer::vision::resolve_yolo_world_text_input_format(attr),
+            omniseer::vision::YoloWorldTextInputFormat::Float16);
+
+  const std::vector<float> clip_embedding{0.0F, 1.0F, -2.0F, 65504.0F};
+  std::vector<uint8_t>     packed(clip_embedding.size() * sizeof(uint16_t));
+  omniseer::vision::copy_float16_yolo_world_text_embedding(packed, 0, clip_embedding.data(),
+                                                           clip_embedding.size());
+
+  const std::vector<uint16_t> expected{0x0000U, 0x3c00U, 0xc000U, 0x7bffU};
+  ASSERT_EQ(packed.size(), expected.size() * sizeof(uint16_t));
+  EXPECT_EQ(std::memcmp(packed.data(), expected.data(), packed.size()), 0);
 }
 
 TEST(YoloWorldTextEmbeddingsBuilderTest, AcceptsAffineInt8DetectorTextInput)

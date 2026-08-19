@@ -473,10 +473,13 @@ namespace omniseer::vision
     PreparedTextEmbeddings prepared{};
     prepared.class_names             = class_names;
     const size_t required_text_bytes = tensor_bytes(text_input);
+    const size_t text_element_bytes =
+        (text_input_format == YoloWorldTextInputFormat::AffineInt8)
+            ? sizeof(int8_t)
+            : ((text_input_format == YoloWorldTextInputFormat::Float16) ? sizeof(uint16_t)
+                                                                        : sizeof(float));
     const size_t logical_text_bytes =
-        static_cast<size_t>(class_capacity) * embedding_width *
-        ((text_input_format == YoloWorldTextInputFormat::AffineInt8) ? sizeof(int8_t)
-                                                                     : sizeof(float));
+        static_cast<size_t>(class_capacity) * embedding_width * text_element_bytes;
     if (required_text_bytes < logical_text_bytes)
       throw std::runtime_error(
           "YoloWorldTextEmbeddingsBuilder::build: detector texts tensor byte size is too small");
@@ -566,6 +569,11 @@ namespace omniseer::vision
               quantize_affine_i8(embedding[i], text_input.zp, text_input.scale);
           std::memcpy(prepared.text_bytes.data() + base + i, &quantized, sizeof(quantized));
         }
+      }
+      else if (text_input_format == YoloWorldTextInputFormat::Float16)
+      {
+        copy_float16_yolo_world_text_embedding(prepared.text_bytes, base, embedding.data(),
+                                               embedding.size());
       }
       else
       {
