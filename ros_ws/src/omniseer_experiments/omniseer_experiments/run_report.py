@@ -46,6 +46,7 @@ class _EvidenceItem:
     detection_count: int
     top_score: str
     uses_annotation: bool
+    is_action_capture: bool
 
 
 @dataclass(frozen=True)
@@ -798,12 +799,21 @@ def _evidence_provenance_section(
         ("Configured classes", _join_or_dash(configured_classes)),
     ]
     provenance_rows[2:2] = _runtime_provenance_rows(manifest)
-    artifact_rows = _all_run_artifact_rows(run_dir, report_dir)
+    artifact_rows, captured_frame_rows = _all_run_artifact_rows(run_dir, report_dir)
     artifacts = ""
-    if artifact_rows:
+    if artifact_rows or captured_frame_rows:
+        artifact_count = len(artifact_rows) + len(captured_frame_rows)
+        captured_frames = ""
+        if captured_frame_rows:
+            captured_frames = (
+                f'<details class="nested-details"><summary>Captured frame files ({len(captured_frame_rows)})</summary>'
+                + _artifact_links_table(captured_frame_rows)
+                + "</details>"
+            )
         artifacts = (
-            f'<details class="nested-details"><summary>All RunBundle artifacts ({len(artifact_rows)})</summary>'
+            f'<details class="nested-details"><summary>All RunBundle artifacts ({artifact_count})</summary>'
             + _artifact_links_table(artifact_rows)
+            + captured_frames
             + "</details>"
         )
     return _section(
@@ -817,15 +827,22 @@ def _evidence_provenance_section(
     )
 
 
-def _all_run_artifact_rows(run_dir: Path, report_dir: Path) -> list[tuple[str, str, str]]:
+def _all_run_artifact_rows(
+    run_dir: Path, report_dir: Path
+) -> tuple[list[tuple[str, str, str]], list[tuple[str, str, str]]]:
     rows = []
+    captured_frame_rows = []
     for path in sorted(run_dir.rglob("*")):
         if not path.is_file() or report_dir in path.parents:
             continue
         relative_path = path.relative_to(run_dir).as_posix()
         href = _relative_href(report_dir, path)
-        rows.append((relative_path, relative_path, href))
-    return rows
+        row = (relative_path, relative_path, href)
+        if relative_path.startswith(("evidence/frames/", "evidence/annotated/")):
+            captured_frame_rows.append(row)
+        else:
+            rows.append(row)
+    return rows, captured_frame_rows
 
 
 def _video_section(run_dir: Path, report_dir: Path) -> str:
@@ -1551,10 +1568,10 @@ def _evidence_gallery(items: Sequence[_EvidenceItem], *, representative_count: i
         return "<p>No evidence images recorded.</p>"
 
     representative = ""
-    if representative_count > 0:
+    representative_items = _representative_evidence_items(items, representative_count)
+    if representative_items:
         representative = (
-            "<h3>Representative Frames</h3>"
-            f'<div class="evidence-grid">{_evidence_cards(items[:representative_count])}</div>'
+            f'<h3>Representative Frames</h3><div class="evidence-grid">{_evidence_cards(representative_items)}</div>'
         )
     full_gallery = (
         f'<details class="nested-details"><summary>All captured frames ({len(items)})</summary>'
@@ -1565,6 +1582,18 @@ def _evidence_gallery(items: Sequence[_EvidenceItem], *, representative_count: i
         "<p>Annotated images are derived review artifacts. Clean frames are the canonical captured evidence; "
         "boxes are projected back into source image coordinates.</p>" + representative + full_gallery
     )
+
+
+def _representative_evidence_items(
+    items: Sequence[_EvidenceItem], representative_count: int
+) -> tuple[_EvidenceItem, ...]:
+    """Return review-worthy frames, preferring explicit autonomy captures."""
+
+    if representative_count <= 0:
+        return ()
+    action_captures = [item for item in items if item.is_action_capture]
+    detection_captures = [item for item in items if item.detection_count > 0 and item not in action_captures]
+    return tuple((action_captures + detection_captures)[:representative_count])
 
 
 def _evidence_cards(items: Sequence[_EvidenceItem]) -> str:
@@ -1631,12 +1660,13 @@ def _evidence_items(
             continue
         detections = record.get("detections")
         detection_count = len(detections) if isinstance(detections, list) else 0
+        capture_reason = str(record.get("capture_reason", "-"))
         capture_ts = _as_float(record.get("capture_ts_real_ns"))
         items.append(
             _EvidenceItem(
                 frame_id=str(record.get("frame_id", "-")),
                 sequence=str(record.get("sequence", "-")),
-                capture_reason=str(record.get("capture_reason", "-")),
+                capture_reason=capture_reason,
                 relative_time=_relative_time(capture_ts, base_capture_ts),
                 relative_time_sec=_relative_seconds(capture_ts, base_capture_ts),
                 image_href=_relative_href(report_dir, display_path),
@@ -1645,9 +1675,16 @@ def _evidence_items(
                 detection_count=detection_count,
                 top_score=_top_score(record.get("detections")),
                 uses_annotation=display_path == annotated_path,
+                is_action_capture=_is_action_capture(record, capture_reason),
             )
         )
     return tuple(items)
+
+
+def _is_action_capture(record: dict[str, Any], capture_reason: str) -> bool:
+    if isinstance(record.get("target_capture"), dict):
+        return True
+    return capture_reason.strip().lower() not in {"", "-", "periodic"}
 
 
 def _read_manifest(path: Path) -> dict[str, Any]:
