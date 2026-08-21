@@ -119,8 +119,8 @@ docker run --rm -it --privileged --network=host \
 
 The generated run report surfaces the recorded source revision, image reference,
 image digest, launch command/profile/arguments, experiment config, experiment
-parameters, and the latest platform snapshots from `manifest.yaml` and
-`system.jsonl`.
+parameters, the final centered-target capture when autonomy records one, and
+the latest platform snapshots from `manifest.yaml` and `system.jsonl`.
 
 Use the portable image only for launch and entrypoint checks; it defaults to
 `start_vision:=false` and is not a full robot runtime.

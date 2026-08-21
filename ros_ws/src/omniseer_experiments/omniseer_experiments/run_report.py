@@ -47,6 +47,7 @@ class _EvidenceItem:
     top_score: str
     uses_annotation: bool
     is_action_capture: bool
+    is_target_capture: bool
 
 
 @dataclass(frozen=True)
@@ -1567,6 +1568,14 @@ def _evidence_gallery(items: Sequence[_EvidenceItem], *, representative_count: i
     if not items:
         return "<p>No evidence images recorded.</p>"
 
+    final_target_capture = _final_target_capture(items)
+    featured_target_capture = ""
+    if final_target_capture is not None:
+        featured_target_capture = (
+            "<h3>Final Centered Target</h3>"
+            "<p>Captured after the target-centering action completed.</p>"
+            f'<div class="evidence-grid">{_evidence_cards((final_target_capture,))}</div>'
+        )
     representative = ""
     representative_items = _representative_evidence_items(items, representative_count)
     if representative_items:
@@ -1580,18 +1589,30 @@ def _evidence_gallery(items: Sequence[_EvidenceItem], *, representative_count: i
     )
     return (
         "<p>Annotated images are derived review artifacts. Clean frames are the canonical captured evidence; "
-        "boxes are projected back into source image coordinates.</p>" + representative + full_gallery
+        "boxes are projected back into source image coordinates.</p>"
+        + featured_target_capture
+        + representative
+        + full_gallery
     )
+
+
+def _final_target_capture(items: Sequence[_EvidenceItem]) -> _EvidenceItem | None:
+    """Return the final frame explicitly captured by target-centering autonomy."""
+
+    for item in reversed(items):
+        if item.is_target_capture:
+            return item
+    return None
 
 
 def _representative_evidence_items(
     items: Sequence[_EvidenceItem], representative_count: int
 ) -> tuple[_EvidenceItem, ...]:
-    """Return review-worthy frames, preferring explicit autonomy captures."""
+    """Return review-worthy frames, excluding a separately featured target capture."""
 
     if representative_count <= 0:
         return ()
-    action_captures = [item for item in items if item.is_action_capture]
+    action_captures = [item for item in items if item.is_action_capture and not item.is_target_capture]
     detection_captures = [item for item in items if item.detection_count > 0 and item not in action_captures]
     return tuple((action_captures + detection_captures)[:representative_count])
 
@@ -1676,6 +1697,7 @@ def _evidence_items(
                 top_score=_top_score(record.get("detections")),
                 uses_annotation=display_path == annotated_path,
                 is_action_capture=_is_action_capture(record, capture_reason),
+                is_target_capture=isinstance(record.get("target_capture"), dict),
             )
         )
     return tuple(items)

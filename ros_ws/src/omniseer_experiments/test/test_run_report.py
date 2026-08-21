@@ -324,7 +324,7 @@ class RunReportTests(unittest.TestCase):
             self.assertNotIn("evidence/frames/frame_0.jpg", artifact_list)
             self.assertNotIn("evidence/annotated/frame_0.jpg", artifact_list)
 
-    def test_representative_frames_only_include_detections_or_action_captures(self) -> None:
+    def test_features_final_centered_target_capture_separately_from_representative_frames(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             run_dir = Path(tmp) / "demo_001"
             _write_completed_bundle(run_dir)
@@ -339,11 +339,17 @@ class RunReportTests(unittest.TestCase):
             evidence_path.write_text("\n".join(json.dumps(record) for record in records) + "\n", encoding="utf-8")
 
             output = write_run_report(run_dir).output_path.read_text(encoding="utf-8")
+            featured_target = output.split("<h3>Final Centered Target</h3>", maxsplit=1)[1].split(
+                "<h3>Representative Frames</h3>", maxsplit=1
+            )[0]
+            self.assertIn("Captured after the target-centering action completed.", featured_target)
+            self.assertIn("Frame 3", featured_target)
+            self.assertIn('href="../evidence/frames/frame_3.jpg"', featured_target)
             representative = output.split("<h3>Representative Frames</h3>", maxsplit=1)[1].split(
                 "<summary>All captured frames", maxsplit=1
             )[0]
             self.assertIn("Frame 1", representative)
-            self.assertIn("Frame 3", representative)
+            self.assertNotIn("Frame 3", representative)
             self.assertNotIn("Frame 0", representative)
             self.assertNotIn("Frame 2", representative)
             self.assertNotIn("Frame 4", representative)
