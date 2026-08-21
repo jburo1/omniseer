@@ -47,7 +47,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   libglvnd0 libgl1 libglx0 libegl1 \
   libx11-6 libxext6 libxrender1 libxrandr2 libxi6 mesa-utils \
   libopencv-dev python3-opencv \
-  v4l-utils ffmpeg gstreamer1.0-tools \
+  v4l-utils ffmpeg libgstreamer1.0-dev gstreamer1.0-tools \
   gstreamer1.0-plugins-base \
   gstreamer1.0-plugins-good \
   gstreamer1.0-plugins-ugly \
