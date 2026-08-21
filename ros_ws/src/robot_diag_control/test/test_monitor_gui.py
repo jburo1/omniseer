@@ -668,6 +668,25 @@ class MonitorGuiTests(unittest.TestCase):
             root.destroy()
 
     @unittest.skipIf(tk is None, "tkinter is unavailable")
+    def test_gui_marks_autonomy_success_transition_in_activity(self):
+        assert tk is not None
+        root = tk.Tk()
+        root.withdraw()
+        try:
+            gui = RobotMonitorGui(root, _build_parser().parse_args([]))
+
+            gui._append_log("autonomy state reached: success event=succeeded previous_state=frame")
+            gui._append_log("remote run exited with code 0: operator_001")
+
+            activity = gui._log_text.get("1.0", tk.END)
+            self.assertIn("✓ SUCCESS → autonomy state reached: success event=succeeded", activity)
+            self.assertIn("remote run exited with code 0: operator_001", activity)
+            self.assertTrue(gui._log_text.tag_ranges("activity_success"))
+            self.assertFalse(gui._log_text.tag_nextrange("activity_success", "2.0", tk.END))
+        finally:
+            root.destroy()
+
+    @unittest.skipIf(tk is None, "tkinter is unavailable")
     def test_gui_open_report_logs_artifact_warnings_for_incomplete_bundle(self):
         assert tk is not None
         with tempfile.TemporaryDirectory() as repo_root:

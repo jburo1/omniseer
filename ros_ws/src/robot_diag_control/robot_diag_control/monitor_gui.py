@@ -790,11 +790,20 @@ class RobotMonitorGui:
     def _configure_activity_tags(self) -> None:
         self._log_text.tag_configure("activity_mode", foreground="#1D4ED8", font=("TkDefaultFont", 10, "bold"))
         self._log_text.tag_configure("activity_action", font=("TkDefaultFont", 10, "bold"))
+        self._log_text.tag_configure(
+            "activity_success",
+            background="#DCFCE7",
+            foreground="#166534",
+            font=("TkDefaultFont", 10, "bold"),
+        )
         self._log_text.tag_configure("activity_warning", foreground="#B45309")
         self._log_text.tag_configure("activity_error", foreground="#B91C1C")
         self._log_text.tag_configure("activity_transfer", foreground="#047857", font=("TkDefaultFont", 10, "bold"))
 
     def _append_log(self, message: str, *, tag: str | None = None) -> None:
+        if tag is None and "autonomy state reached: success event=succeeded" in message:
+            message = f"✓ SUCCESS → {message}"
+            tag = "activity_success"
         self._log_text.configure(state=tk.NORMAL)
         if tag is None:
             self._log_text.insert(tk.END, message + "\n")
