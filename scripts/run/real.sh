@@ -47,10 +47,12 @@ Recording flags:
   --record-model-variant <text>    Store explicit detector variant in manifest.yaml.
   --record-model-precision <text>  Store explicit detector precision in manifest.yaml.
   --record-model-backend <text>    Store explicit detector backend in manifest.yaml.
+  --record-runtime-backend <text>  Store runtime backend in manifest.yaml.
   --record-container-image-ref <ref>
                                    Store container image reference in manifest.yaml.
   --record-container-image-digest <digest>
                                    Store container image digest in manifest.yaml.
+  --record-container-image-id <id> Store local container image ID in manifest.yaml.
   --record-experiment-config <text>
                                    Store experiment config identifier or path in manifest.yaml.
   --record-experiment-parameters <items>
@@ -261,6 +263,9 @@ append_recording_launch_args() {
   if [[ -n "${record_model_backend}" ]]; then
     target_args+=("experiment_model_backend:=${record_model_backend}")
   fi
+  if [[ -n "${record_runtime_backend}" ]]; then
+    target_args+=("experiment_runtime_backend:=${record_runtime_backend}")
+  fi
   if [[ -n "${record_comparison_id}" ]]; then
     target_args+=("experiment_comparison_id:=${record_comparison_id}")
   fi
@@ -273,6 +278,7 @@ append_recording_launch_args() {
 
   local container_image_ref="${record_container_image_ref:-${OMNISEER_CONTAINER_IMAGE_REF:-}}"
   local container_image_digest="${record_container_image_digest:-${OMNISEER_CONTAINER_IMAGE_DIGEST:-}}"
+  local container_image_id="${record_container_image_id:-${OMNISEER_CONTAINER_IMAGE_ID:-}}"
   local experiment_config="${record_experiment_config:-${OMNISEER_EXPERIMENT_CONFIG:-}}"
   local experiment_parameters="${OMNISEER_EXPERIMENT_PARAMETERS:-}"
   local parameter_item
@@ -293,6 +299,9 @@ append_recording_launch_args() {
 
   if [[ -n "${container_image_digest}" ]]; then
     target_args+=("experiment_container_image_digest:=${container_image_digest}")
+  fi
+  if [[ -n "${container_image_id}" ]]; then
+    target_args+=("experiment_container_image_id:=${container_image_id}")
   fi
 
   if [[ -n "${experiment_config}" ]]; then
@@ -584,8 +593,10 @@ record_model_family=""
 record_model_variant=""
 record_model_precision=""
 record_model_backend=""
+record_runtime_backend=""
 record_container_image_ref=""
 record_container_image_digest=""
+record_container_image_id=""
 record_experiment_config=""
 record_experiment_parameters=()
 record_comparison_id=""
@@ -682,6 +693,12 @@ while [[ $# -gt 0 ]]; do
       record_model_backend="$2"
       shift 2
       ;;
+    --record-runtime-backend)
+      [[ $# -ge 2 ]] || omni_die "--record-runtime-backend requires text"
+      record_enabled=true
+      record_runtime_backend="$2"
+      shift 2
+      ;;
     --record-container-image-ref)
       [[ $# -ge 2 ]] || omni_die "--record-container-image-ref requires an image reference"
       record_enabled=true
@@ -692,6 +709,12 @@ while [[ $# -gt 0 ]]; do
       [[ $# -ge 2 ]] || omni_die "--record-container-image-digest requires an image digest"
       record_enabled=true
       record_container_image_digest="$2"
+      shift 2
+      ;;
+    --record-container-image-id)
+      [[ $# -ge 2 ]] || omni_die "--record-container-image-id requires an image ID"
+      record_enabled=true
+      record_container_image_id="$2"
       shift 2
       ;;
     --record-experiment-config)

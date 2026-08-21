@@ -17,6 +17,17 @@ from omniseer_experiments.run_report import report_run_main, write_run_report
 
 STARTED_AT = datetime(2026, 7, 19, 12, 0, 0, tzinfo=timezone.utc)
 ENDED_AT = datetime(2026, 7, 19, 12, 1, 5, tzinfo=timezone.utc)
+AUTONOMY_LAUNCH_ARGS = (
+    "start_autonomy:=true",
+    "autonomy_target_class:=chair",
+    "autonomy_min_target_confidence:=0.75",
+    "autonomy_bbox_area_min_ratio:=0.08",
+    "autonomy_approach_stop_area_ratio:=0.10",
+    "autonomy_bbox_area_max_ratio:=0.35",
+    "autonomy_stable_framed_frames:=10",
+    "autonomy_success_miss_tolerance_updates:=2",
+    "autonomy_max_target_center_jump_ratio:=0.20",
+)
 
 
 def _config(out_dir: Path, *, launch_args: tuple[str, ...] = ()) -> RunBundleConfig:
@@ -30,12 +41,18 @@ def _config(out_dir: Path, *, launch_args: tuple[str, ...] = ()) -> RunBundleCon
         launch_profile="operator",
         launch_mode="bringup",
         launch_args=launch_args,
+        runtime_backend="robot_runtime_container",
         detector_model_path="/models/detector.rknn",
         classes_path="/models/classes.txt",
         container_image_ref="ghcr.io/acme/omniseer:robot-v2",
         container_image_digest="ghcr.io/acme/omniseer@sha256:0123456789abcdef",
+        container_image_id="sha256:local-image-id",
         experiment_config="runtime-container-full",
         experiment_parameters={"profile": "operator", "stage": "full"},
+        model_family="yolo-world",
+        model_variant="v2m",
+        model_precision="int8",
+        model_backend="rknn",
     )
 
 
@@ -92,8 +109,8 @@ def _system_record(*, process_cpu: list[dict] | None = None) -> dict:
     )
 
 
-def _write_completed_bundle(run_dir: Path) -> None:
-    writer = RunBundleWriter(_config(run_dir), started_at=STARTED_AT)
+def _write_completed_bundle(run_dir: Path, *, launch_args: tuple[str, ...] = ()) -> None:
+    writer = RunBundleWriter(_config(run_dir, launch_args=launch_args), started_at=STARTED_AT)
     writer.write_detection_record(_detection_record())
     writer.write_detection_record(_detection_record(received_ns=1_000_000_100))
     writer.write_perf_record(_perf_record())
@@ -179,7 +196,7 @@ class RunReportTests(unittest.TestCase):
     def test_renders_concise_decision_focused_sections(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             run_dir = Path(tmp) / "demo_001"
-            _write_completed_bundle(run_dir)
+            _write_completed_bundle(run_dir, launch_args=AUTONOMY_LAUNCH_ARGS)
             _write_autonomy(run_dir)
             _write_pipeline_telemetry(run_dir)
             _write_evidence(run_dir)
@@ -195,6 +212,18 @@ class RunReportTests(unittest.TestCase):
             self.assertIn("<th>Time to first detection</th><td>0.4s</td>", output)
             self.assertIn("<th>Time to success</th><td>1.6s</td>", output)
             self.assertIn("<th>Source-age p95</th><td>13.00 ms</td>", output)
+            self.assertIn("<th>Mean consumer FPS</th><td>19.00</td>", output)
+            self.assertNotIn("Consumer FPS p95</th>", output)
+            self.assertIn("<td>Consumer FPS</td><td>19.00</td><td>19.00</td><td>19.00</td>", output)
+            self.assertIn("YOLO-World · v2-M · INT8 · RKNN", output)
+            self.assertIn("Autonomy Decision Parameters", output)
+            self.assertIn("Framing area ratio (min / stop / max)", output)
+            self.assertIn("Target Reliability", output)
+            self.assertIn("<th>Observations passing confidence threshold</th><td>2/3 (66.7%)</td>", output)
+            self.assertIn("<th>Missing / invalid target updates</th><td>1</td>", output)
+            self.assertIn("<th>Recovered target-loss episodes</th><td>1</td>", output)
+            self.assertIn("<th>Runtime backend</th><td>robot_runtime_container</td>", output)
+            self.assertIn("<th>Runtime image ID</th><td>sha256:local-image-id</td>", output)
             self.assertIn("State Timeline", output)
             self.assertIn("Target Confidence and Centering Error", output)
             self.assertIn("Target Loss Episodes", output)
@@ -266,17 +295,25 @@ class RunReportTests(unittest.TestCase):
             self.assertIn('class="outcome-banner outcome-failed"', output)
             self.assertIn("Outcome: <strong>failed</strong>", output)
             self.assertIn("<th>Failure reason</th><td>target_timeout</td>", output)
+            self.assertIn("<th>Last valid centering error</th><td>0.02</td>", output)
+            self.assertIn("<th>Last valid target area</th><td>0.12</td>", output)
+            self.assertNotIn("<th>Final centering error</th>", output)
 
-    def test_caps_evidence_gallery_but_links_all_artifacts(self) -> None:
+    def test_collapses_complete_evidence_gallery_while_showing_representative_frames(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             run_dir = Path(tmp) / "demo_001"
             _write_completed_bundle(run_dir)
             _write_evidence(run_dir, count=13)
 
             output = write_run_report(run_dir).output_path.read_text(encoding="utf-8")
-            self.assertIn("Showing 12 of 13 evidence frames.", output)
-            self.assertEqual(output.count('class="evidence-card"'), 12)
-            self.assertIn('href="../evidence/frames/frame_12.jpg"', output)
+            self.assertIn("<summary>All captured frames (13)</summary>", output)
+            self.assertNotIn('<details class="nested-details" open><summary>All captured frames', output)
+            self.assertEqual(output.count('class="evidence-card"'), 17)
+            gallery = output.split("<summary>All captured frames (13)</summary>", maxsplit=1)[1].split(
+                "</details><h3>Provenance</h3>", maxsplit=1
+            )[0]
+            self.assertEqual(gallery.count('href="../evidence/frames/frame_'), 13)
+            self.assertIn('href="../evidence/frames/frame_12.jpg"', gallery)
 
     def test_keeps_overlay_video_behavior(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

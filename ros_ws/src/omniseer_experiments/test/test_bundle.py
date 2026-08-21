@@ -42,8 +42,10 @@ def _config(out_dir: Path, *, overwrite: bool = False) -> RunBundleConfig:
         launch_profile="operator",
         launch_mode="bringup",
         launch_args=("start_gateway:=true", "camera_device:=/dev/video11"),
+        runtime_backend="robot_runtime_container",
         container_image_ref="ghcr.io/acme/omniseer:robot-v2",
         container_image_digest="sha256:0123456789abcdef",
+        container_image_id="sha256:local-image-id",
         experiment_config="experiments/container-smoke.yaml",
         experiment_parameters={"camera": "/dev/video11", "profile": "operator"},
         comparison_id="yolo-world-v2s-baseline",
@@ -138,7 +140,9 @@ class RunBundleWriterTests(unittest.TestCase):
                 self.assertIn('- "start_gateway:=true"', manifest)
                 self.assertIn('- "camera_device:=/dev/video11"', manifest)
                 self.assertIn("container:", manifest)
+                self.assertIn('runtime_backend: "robot_runtime_container"', manifest)
                 self.assertIn('image_ref: "ghcr.io/acme/omniseer:robot-v2"', manifest)
+                self.assertIn('image_id: "sha256:local-image-id"', manifest)
                 self.assertIn("comparison:", manifest)
                 self.assertIn('comparison_id: "yolo-world-v2s-baseline"', manifest)
                 self.assertIn('trial: "03"', manifest)
@@ -221,6 +225,26 @@ class RunBundleWriterTests(unittest.TestCase):
                 )
                 self.assertFalse((run_dir / "provenance" / "detector_model.rknn").exists())
                 self.assertFalse((run_dir / "provenance" / "clip_model.rknn").exists())
+            finally:
+                writer.close()
+
+    def test_preserves_experiment_config_label_without_treating_it_as_a_file(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "runs" / "demo_001"
+            writer = RunBundleWriter(
+                RunBundleConfig(
+                    run_id="demo_001",
+                    out_dir=run_dir,
+                    git_sha="abc123",
+                    experiment_config="Autonomy: frame and capture target",
+                ),
+                started_at=STARTED_AT,
+            )
+            try:
+                manifest = (run_dir / "manifest.yaml").read_text(encoding="utf-8")
+                self.assertIn('value: "Autonomy: frame and capture target"', manifest)
+                self.assertIn('kind: "identifier"', manifest)
+                self.assertNotIn("stat_failed", manifest)
             finally:
                 writer.close()
 

@@ -232,6 +232,7 @@ def _render_report(
         ),
         _video_section(inspection.path, inspection.path / "report"),
         _behavior_section(
+            manifest=manifest,
             autonomy=autonomy,
             detections=detections,
             configured_classes=inspection.configured_classes,
@@ -313,10 +314,16 @@ def _run_overview_section(
             "Time to success",
             _format_duration(_as_float(first_success.get("time_sec")) if first_success else None),
         ),
-        ("Final centering error", _format_optional_float(_last_numeric_field(autonomy, "normalized_error"))),
-        ("Final target area", _format_optional_float(_last_numeric_field(autonomy, "bbox_area_ratio"))),
+        (
+            "Final centering error" if terminal_state != "failed" else "Last valid centering error",
+            _format_optional_float(_last_numeric_field(autonomy, "normalized_error")),
+        ),
+        (
+            "Final target area" if terminal_state != "failed" else "Last valid target area",
+            _format_optional_float(_last_numeric_field(autonomy, "bbox_area_ratio")),
+        ),
         ("Target-loss episodes", str(len(_target_loss_episodes(autonomy)))),
-        ("Consumer FPS p95", _format_optional_float(_p95_field(perf, "consumer_fps"))),
+        ("Mean consumer FPS", _format_optional_float(_mean_field(perf, "consumer_fps"))),
         ("Inference p95", _format_optional_ms(_p95_field(perf, "last_infer_ms"))),
         (
             "Source-age p95",
@@ -331,6 +338,7 @@ def _run_overview_section(
 
 def _behavior_section(
     *,
+    manifest: dict[str, Any],
     autonomy: Sequence[dict[str, Any]],
     detections: Sequence[dict[str, Any]],
     configured_classes: Sequence[str],
@@ -341,6 +349,11 @@ def _behavior_section(
     if autonomy:
         parts.extend(
             [
+                _autonomy_decision_parameters(manifest),
+                _target_reliability_summary(
+                    autonomy,
+                    confidence_threshold=_autonomy_parameter_value(manifest, "min_target_confidence"),
+                ),
                 _autonomy_state_timeline(autonomy),
                 _line_chart(
                     "Target Confidence and Centering Error",
@@ -360,6 +373,65 @@ def _behavior_section(
     if not parts:
         return ""
     return _section("Behavior", "".join(part for part in parts if part), open_by_default=True)
+
+
+def _autonomy_decision_parameters(manifest: dict[str, Any]) -> str:
+    """Show only the recorded settings that materially affect acceptance and success."""
+
+    min_area = _autonomy_parameter_value(manifest, "bbox_area_min_ratio")
+    stop_area = _autonomy_parameter_value(manifest, "approach_stop_area_ratio")
+    max_area = _autonomy_parameter_value(manifest, "bbox_area_max_ratio")
+    center_deadband = _autonomy_parameter_value(manifest, "center_deadband")
+    max_jump = _autonomy_parameter_value(manifest, "max_target_center_jump_ratio")
+    center_jump = _join_parameter_values(
+        (("deadband", center_deadband), ("max jump", max_jump)),
+    )
+    values = (
+        ("Minimum target confidence", _autonomy_parameter_value(manifest, "min_target_confidence")),
+        (
+            "Framing area ratio (min / stop / max)",
+            _join_parameter_values((("min", min_area), ("stop", stop_area), ("max", max_area))),
+        ),
+        ("Required stable frames", _autonomy_parameter_value(manifest, "stable_framed_frames")),
+        (
+            "Success miss tolerance (updates)",
+            _autonomy_parameter_value(manifest, "success_miss_tolerance_updates"),
+        ),
+        ("Center / jump tolerance", center_jump),
+    )
+    rows = [[label, value] for label, value in values if value and value != "-"]
+    if not rows:
+        return ""
+    return "<h3>Autonomy Decision Parameters</h3>" + _table(["Parameter", "Recorded value"], rows)
+
+
+def _target_reliability_summary(records: Sequence[dict[str, Any]], *, confidence_threshold: str) -> str:
+    confidences = [value for value in (_target_confidence(record) for record in records) if value is not None]
+    episodes = _target_loss_episodes(records)
+    missing_updates = sum(episode.missing_target_updates for episode in episodes)
+    durations = [
+        duration
+        for episode in episodes
+        if (duration := _duration_between(episode.start_time_sec, episode.end_time_sec)) is not None
+    ]
+    threshold = _as_float_from_text(confidence_threshold)
+    if threshold is None:
+        accepted = "Unavailable (acceptance threshold not recorded)"
+    elif confidences:
+        accepted_count = sum(value >= threshold for value in confidences)
+        accepted = f"{accepted_count}/{len(confidences)} ({accepted_count / len(confidences) * 100.0:.1f}%)"
+    else:
+        accepted = "-"
+    rows = [
+        ("Target confidence median", _format_optional_float(statistics.median(confidences) if confidences else None)),
+        ("Target confidence mean", _format_optional_float(statistics.fmean(confidences) if confidences else None)),
+        ("Observations passing confidence threshold", accepted),
+        ("Target-loss episodes", str(len(episodes))),
+        ("Missing / invalid target updates", str(missing_updates)),
+        ("Longest target-loss episode", _format_duration(max(durations)) if durations else "-"),
+        ("Recovered target-loss episodes", str(sum(episode.recovered for episode in episodes))),
+    ]
+    return "<h3>Target Reliability</h3>" + _key_value_table(rows)
 
 
 def _class_detection_summary(records: Sequence[dict[str, Any]], *, configured_classes: Sequence[str]) -> str:
@@ -404,8 +476,17 @@ def _performance_section(
 ) -> _ReportSection:
     latency_rows = _latency_summary_rows(perf, pipeline)
     body_parts = []
+    throughput_rows = _throughput_summary_rows(perf)
+    if throughput_rows:
+        body_parts.append(
+            "<h3>Vision Throughput</h3>" + _table(["Metric", "Mean fps", "p50 fps", "p95 fps"], throughput_rows)
+        )
     if latency_rows:
-        body_parts.append("<h3>Latency Summary</h3>" + _table(["Metric", "p50 ms", "p95 ms", "Max ms"], latency_rows))
+        body_parts.append(
+            "<h3>Latency Summary</h3>"
+            + _table(["Metric", "p50 ms", "p95 ms"], [row[:3] for row in latency_rows])
+            + _collapsed_maxima("Latency maxima", latency_rows, unit="ms")
+        )
         body_parts.append(_latency_chart(perf, experiment_start_ns=experiment_start_ns))
     body_parts.append(_supersession_summary(perf))
     system_summary = _compact_system_summary(system)
@@ -443,6 +524,22 @@ def _latency_summary_rows(perf: Sequence[dict[str, Any]], pipeline: Sequence[dic
                     _format_float(_percentile(values, 50)),
                     _format_float(_percentile(values, 95)),
                     _format_float(max(values)),
+                ]
+            )
+    return rows
+
+
+def _throughput_summary_rows(perf: Sequence[dict[str, Any]]) -> list[list[str]]:
+    rows = []
+    for label, field_name in (("Producer FPS", "producer_fps"), ("Consumer FPS", "consumer_fps")):
+        values = [value for value in (_as_float(record.get(field_name)) for record in perf) if value is not None]
+        if values:
+            rows.append(
+                [
+                    label,
+                    _format_float(statistics.fmean(values)),
+                    _format_float(_percentile(values, 50)),
+                    _format_float(_percentile(values, 95)),
                 ]
             )
     return rows
@@ -500,7 +597,24 @@ def _compact_system_summary(records: Sequence[dict[str, Any]]) -> str:
     return (
         "<h3>System Summary</h3>"
         + _key_value_table([("Thermal throttling", throttle_summary)])
-        + (_table(["Metric", "p50", "p95", "Max", "Unit"], rows) if rows else "")
+        + (_table(["Metric", "p50", "p95", "Unit"], [[*row[:3], row[4]] for row in rows]) if rows else "")
+        + _collapsed_maxima("System maxima", rows, unit_column=4)
+    )
+
+
+def _collapsed_maxima(
+    title: str, rows: Sequence[Sequence[str]], *, unit: str = "", unit_column: int | None = None
+) -> str:
+    if not rows:
+        return ""
+    maximum_rows = []
+    for row in rows:
+        maximum_unit = row[unit_column] if unit_column is not None else unit
+        maximum_rows.append([row[0], row[3], maximum_unit])
+    return (
+        f'<details class="nested-details"><summary>{_esc(title)}</summary>'
+        + _table(["Metric", "Maximum", "Unit"], maximum_rows)
+        + "</details>"
     )
 
 
@@ -674,8 +788,6 @@ def _evidence_provenance_section(
     provenance_rows = [
         ("Git SHA", _display(_manifest_string(manifest, "git_sha"))),
         ("SBC", _display(_manifest_string(manifest, "sbc"))),
-        ("Runtime image ref", _provenance_value(_manifest_nested_string(manifest, "container", "image_ref"))),
-        ("Runtime image digest", _provenance_value(_manifest_nested_string(manifest, "container", "image_digest"))),
         ("Experiment config", _display(_manifest_nested_string(manifest, "experiment", "config"))),
         (
             "Experiment overrides",
@@ -685,6 +797,7 @@ def _evidence_provenance_section(
         ("Configured target", _display(target_class)),
         ("Configured classes", _join_or_dash(configured_classes)),
     ]
+    provenance_rows[2:2] = _runtime_provenance_rows(manifest)
     artifact_rows = _all_run_artifact_rows(run_dir, report_dir)
     artifacts = ""
     if artifact_rows:
@@ -695,7 +808,11 @@ def _evidence_provenance_section(
         )
     return _section(
         "Evidence & Provenance",
-        _evidence_gallery(evidence_items) + "<h3>Provenance</h3>" + _key_value_table(provenance_rows) + artifacts,
+        _evidence_gallery(evidence_items)
+        + "<h3>Provenance</h3>"
+        + _key_value_table(provenance_rows)
+        + _model_provenance_details(manifest)
+        + artifacts,
         open_by_default=True,
     )
 
@@ -1429,12 +1546,30 @@ def _errors_section(inspection: RunInspection, *, perf: Sequence[dict[str, Any]]
     return _section("Errors And Drops", body, open_by_default=has_errors_or_drops)
 
 
-def _evidence_gallery(items: Sequence[_EvidenceItem], *, max_items: int = 12) -> str:
+def _evidence_gallery(items: Sequence[_EvidenceItem], *, representative_count: int = 4) -> str:
     if not items:
         return "<p>No evidence images recorded.</p>"
 
+    representative = ""
+    if representative_count > 0:
+        representative = (
+            "<h3>Representative Frames</h3>"
+            f'<div class="evidence-grid">{_evidence_cards(items[:representative_count])}</div>'
+        )
+    full_gallery = (
+        f'<details class="nested-details"><summary>All captured frames ({len(items)})</summary>'
+        f'<div class="evidence-grid">{_evidence_cards(items)}</div>'
+        "</details>"
+    )
+    return (
+        "<p>Annotated images are derived review artifacts. Clean frames are the canonical captured evidence; "
+        "boxes are projected back into source image coordinates.</p>" + representative + full_gallery
+    )
+
+
+def _evidence_cards(items: Sequence[_EvidenceItem]) -> str:
     cards = []
-    for item in items[:max_items]:
+    for item in items:
         label_text = _join_or_dash(item.labels)
         source_note = "annotated" if item.uses_annotation else "clean frame"
         cards.append(
@@ -1451,14 +1586,7 @@ def _evidence_gallery(items: Sequence[_EvidenceItem], *, max_items: int = 12) ->
             "</div>"
             "</article>"
         )
-    intro = (
-        "<p>Annotated images are derived review artifacts. Clean frames are the canonical captured evidence; "
-        "boxes are projected back into source image coordinates.</p>"
-    )
-    cap_note = ""
-    if len(items) > max_items:
-        cap_note = f'<p class="table-note">Showing {max_items} of {len(items)} evidence frames.</p>'
-    return f'{intro}{cap_note}<div class="evidence-grid">{"".join(cards)}</div>'
+    return "".join(cards)
 
 
 def _issues_section(issues: Sequence[str]) -> str:
@@ -1577,6 +1705,35 @@ def _manifest_start_ns(manifest: dict[str, Any]) -> int | None:
     return int(started_at.timestamp() * 1_000_000_000)
 
 
+def _autonomy_parameter_value(manifest: dict[str, Any], name: str) -> str:
+    """Read a recorded autonomy setting from either launch arguments or experiment metadata."""
+
+    names = (name, f"autonomy_{name}", f"autonomy.{name}")
+    for argument in _manifest_nested_list(manifest, "launch", "args"):
+        key, separator, value = argument.partition(":=")
+        if separator and key in names and value:
+            return value
+    parameters = _manifest_nested_dict(manifest, "experiment", "parameters")
+    for key in names:
+        value = parameters.get(key)
+        if isinstance(value, (str, int, float)) and not isinstance(value, bool):
+            return str(value)
+    return ""
+
+
+def _join_parameter_values(values: Sequence[tuple[str, str]]) -> str:
+    present = [f"{label} {value}" for label, value in values if value]
+    return "; ".join(present) if present else "-"
+
+
+def _as_float_from_text(value: str) -> float | None:
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError):
+        return None
+    return parsed if math.isfinite(parsed) else None
+
+
 def _experiment_duration_sec(
     recorded_duration_sec: float,
     *,
@@ -1662,14 +1819,72 @@ def _runtime_image_identity(manifest: dict[str, Any]) -> str:
     return ref if ref else "Unavailable"
 
 
+def _runtime_provenance_rows(manifest: dict[str, Any]) -> list[tuple[str, str]]:
+    values = (
+        ("Runtime backend", _manifest_nested_string(manifest, "container", "runtime_backend")),
+        ("Runtime image ref", _manifest_nested_string(manifest, "container", "image_ref")),
+        ("Runtime image digest", _manifest_nested_string(manifest, "container", "image_digest")),
+        ("Runtime image ID", _manifest_nested_string(manifest, "container", "image_id")),
+    )
+    return [(label, value) for label, value in values if value]
+
+
+def _model_provenance_details(manifest: dict[str, Any]) -> str:
+    """Retain file-level model provenance without crowding the run decision summary."""
+
+    rows = [
+        ("Detector runtime", _manifest_model_value(manifest, "detector")),
+        ("Detector model file", _path_basename(_manifest_model_value(manifest, "detector_model_path"))),
+        ("Detector model SHA256", _model_sha256(manifest, "detector_model")),
+        ("Vision config file", _path_basename(_manifest_model_value(manifest, "vision_params_file"))),
+    ]
+    visible_rows = [(label, value) for label, value in rows if value and value != "Unavailable"]
+    if not visible_rows:
+        return ""
+    return (
+        '<details class="nested-details"><summary>Detailed model provenance</summary>'
+        + _key_value_table(visible_rows)
+        + "</details>"
+    )
+
+
 def _model_identity(manifest: dict[str, Any]) -> str:
-    detector = _manifest_model_value(manifest, "detector")
-    model_path = _manifest_model_value(manifest, "detector_model_path")
-    model_hash = _model_sha256(manifest, "detector_model")
-    parts = [part for part in (detector, _path_basename(model_path)) if part]
-    if model_hash and model_hash != "Unavailable":
-        parts.append(model_hash)
+    family = _manifest_model_value(manifest, "family")
+    variant = _manifest_model_value(manifest, "variant")
+    precision = _manifest_model_value(manifest, "precision")
+    backend = _manifest_model_value(manifest, "backend")
+    parts = [
+        part
+        for part in (
+            _human_model_family(family),
+            _human_model_variant(variant),
+            precision.upper() if precision else "",
+            backend.upper() if backend else "",
+        )
+        if part
+    ]
+    if not parts:
+        detector = _manifest_model_value(manifest, "detector")
+        parts = [_human_detector_identity(detector)] if detector else []
     return " · ".join(parts) if parts else "-"
+
+
+def _human_model_family(value: str) -> str:
+    return {"yolo-world": "YOLO-World", "yolo_world": "YOLO-World"}.get(value.lower(), value)
+
+
+def _human_model_variant(value: str) -> str:
+    normalized = value.lower()
+    if normalized.startswith("v2") and len(normalized) == 3:
+        return f"v2-{normalized[-1].upper()}"
+    return value
+
+
+def _human_detector_identity(value: str) -> str:
+    normalized = value.lower()
+    if normalized == "yolo-world-rknn":
+        return "YOLO-World · RKNN"
+    return value
 
 
 def _model_sha256(manifest: dict[str, Any], name: str) -> str:
@@ -2045,7 +2260,7 @@ def _autonomy_target_loss_table(records: Sequence[dict[str, Any]]) -> str:
     if not loss_rows:
         return ""
     return "<h3>Target Loss Episodes</h3>" + _table(
-        ["Lost At", "Recovered At", "Duration", "State", "Reason", "Missing Updates"],
+        ["Lost At", "Recovered At", "Duration", "State", "Reason", "Missing / invalid updates"],
         loss_rows,
     )
 
@@ -2566,6 +2781,11 @@ def _p95_field(records: Sequence[dict[str, Any]], field_name: str) -> float | No
     if not samples:
         return None
     return _percentile(samples, 95)
+
+
+def _mean_field(records: Sequence[dict[str, Any]], field_name: str) -> float | None:
+    samples = [value for value in (_as_float(record.get(field_name)) for record in records) if value is not None]
+    return statistics.fmean(samples) if samples else None
 
 
 def _numeric_summary(values: Sequence[float]) -> _NumericSummary | None:

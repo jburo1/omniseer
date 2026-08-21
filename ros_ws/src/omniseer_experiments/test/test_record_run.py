@@ -254,6 +254,10 @@ class RecordRunConversionTests(unittest.TestCase):
                 "ghcr.io/acme/omniseer:robot-v2",
                 "--container-image-digest",
                 "sha256:0123456789abcdef",
+                "--container-image-id",
+                "sha256:local-image-id",
+                "--runtime-backend",
+                "robot_runtime_container",
                 "--experiment-config",
                 "experiments/container-smoke.yaml",
                 "--model-family",
@@ -293,6 +297,8 @@ class RecordRunConversionTests(unittest.TestCase):
 
         self.assertEqual(options.container_image_ref, "ghcr.io/acme/omniseer:robot-v2")
         self.assertEqual(options.container_image_digest, "sha256:0123456789abcdef")
+        self.assertEqual(options.container_image_id, "sha256:local-image-id")
+        self.assertEqual(options.runtime_backend, "robot_runtime_container")
         self.assertEqual(options.experiment_config, "experiments/container-smoke.yaml")
         self.assertEqual(options.model_family, "yolo-world")
         self.assertEqual(options.model_variant, "v2s")
