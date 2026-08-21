@@ -69,6 +69,7 @@ gateway does not perform a ROS round trip per status request.
 - `VisionStatus`
 - `RobotHealth`
 - `TeleopStatus`
+- `EffectiveCommand`
 - `PlatformStatus`
 
 `PreviewStatus` contains:
@@ -113,6 +114,16 @@ includes an accepted flag, concise message, and post-request `TeleopStatus`.
 
 The gateway rejects commands when teleop is disabled or when any command value
 is outside configured bounds.
+
+`TeleopStatus.last_command_*` describes the last request accepted through the
+gateway, not the current robot command. It includes availability and freshness;
+requests older than the keyboard mux's 0.5 s timeout are stale.
+
+`EffectiveCommand` describes the latest `TwistStamped` emitted by `twist_mux`
+to the drive-controller reference path. It includes `vx`, `vy`, `wz`, age, and
+freshness. Its source is reported as `keyboard`, `autonomy`, or `navigation`
+only when the gateway can confirm the freshest configured mux input matches the
+emitted command; otherwise it is `unknown`.
 
 `GetOverlaySnapshot` returns:
 

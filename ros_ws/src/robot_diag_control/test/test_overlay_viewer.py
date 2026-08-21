@@ -123,9 +123,18 @@ class OverlayViewerTests(unittest.TestCase):
                     state=robot_gateway_pb2.TELEOP_ENABLED,
                     enabled=True,
                     last_command_age_ms=380,
+                    last_command_available=True,
                     last_command_vx_mps=0.2,
                     last_command_vy_mps=0.0,
                     last_command_wz_rad_s=-0.3,
+                ),
+                effective_command=robot_gateway_pb2.EffectiveCommand(
+                    available=True,
+                    age_ms=42,
+                    vx_mps=0.2,
+                    vy_mps=0.0,
+                    wz_rad_s=-0.3,
+                    active_source="keyboard",
                 ),
                 platform=robot_gateway_pb2.PlatformStatus(
                     compute=robot_gateway_pb2.ComputeStatus(
@@ -175,8 +184,9 @@ class OverlayViewerTests(unittest.TestCase):
         self.assertEqual(lines[0], "FAULT waiting for odometry | ODOM STALE")
         self.assertIn("TELEOP ENABLED | ODOM STALE 740 ms | VISION OK", lines)
         self.assertIn("CAM 30.0 FPS | DET 9.0 FPS | LAT 104 ms | OBJ 3 | AGE 42 ms", lines)
-        self.assertIn("CMD vx +0.20 vy +0.00 wz -0.30", "\n".join(lines))
-        self.assertIn("MEAS vx +0.18 vy +0.01 wz -0.27", "\n".join(lines))
+        self.assertIn("GATEWAY REQUEST vx +0.20 m/s vy +0.00 m/s wz -0.30 rad/s", "\n".join(lines))
+        self.assertIn("EFFECTIVE vx +0.20 m/s vy +0.00 m/s wz -0.30 rad/s | SOURCE keyboard", "\n".join(lines))
+        self.assertIn("ODOM vx +0.18 m/s vy +0.01 m/s wz -0.27 rad/s", "\n".join(lines))
         self.assertIn("PWR LiPo 7.8V | ROCK 91% | Wi-Fi -58 dBm | CPU 43% 62 C | RAM 5.0/16G", lines)
         self.assertIn("EVENT 18 ms odometry recovered", lines)
         self.assertNotIn("READY", "\n".join(lines))
@@ -208,7 +218,7 @@ class OverlayViewerTests(unittest.TestCase):
         self.assertIn("CAM 0.0 FPS", joined)
         self.assertNotIn("layers=", joined)
         self.assertNotIn("PREVIEW", joined)
-        self.assertNotIn("CMD vx", joined)
+        self.assertNotIn("GATEWAY REQUEST", joined)
         self.assertNotIn("PWR", joined)
         self.assertNotIn("EVENT", joined)
 

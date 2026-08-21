@@ -9,6 +9,7 @@
 #include <utility>
 #include <vector>
 
+#include "geometry_msgs/msg/twist_stamped.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 #include "omniseer_msgs/msg/vision_perf_summary.hpp"
 #include "sensor_msgs/msg/battery_state.hpp"
@@ -79,12 +80,33 @@ namespace robot_diag_control_cpp
     TeleopState state{TeleopState::Disabled};
     bool        enabled{false};
     uint64_t    last_command_age_ms{0};
+    bool        last_command_available{false};
+    bool        last_command_stale{false};
     double      max_linear_mps{0.35};
     double      max_angular_rad_s{0.8};
     std::string last_error{};
     double      last_command_vx_mps{0.0};
     double      last_command_vy_mps{0.0};
     double      last_command_wz_rad_s{0.0};
+  };
+
+  enum class CommandSource
+  {
+    Unknown,
+    Keyboard,
+    Autonomy,
+    Navigation,
+  };
+
+  struct EffectiveCommandSnapshot
+  {
+    bool          available{false};
+    bool          stale{false};
+    uint64_t      age_ms{0};
+    double        vx_mps{0.0};
+    double        vy_mps{0.0};
+    double        wz_rad_s{0.0};
+    CommandSource active_source{CommandSource::Unknown};
   };
 
   struct DetectionOverlayItem
@@ -176,13 +198,14 @@ namespace robot_diag_control_cpp
 
   struct SystemStatusSnapshot
   {
-    std::string            gateway_name{};
-    std::string            gateway_version{};
-    PreviewStatusSnapshot  preview{};
-    VisionStatusSnapshot   vision{};
-    RobotHealthSnapshot    health{};
-    TeleopStatusSnapshot   teleop{};
-    PlatformStatusSnapshot platform{};
+    std::string              gateway_name{};
+    std::string              gateway_version{};
+    PreviewStatusSnapshot    preview{};
+    VisionStatusSnapshot     vision{};
+    RobotHealthSnapshot      health{};
+    TeleopStatusSnapshot     teleop{};
+    PlatformStatusSnapshot   platform{};
+    EffectiveCommandSnapshot effective_command{};
   };
 
   class GatewayStateStore
@@ -207,13 +230,15 @@ namespace robot_diag_control_cpp
     PreviewStatusSnapshot set_preview_disabled(PreviewProfile profile, std::string last_error = "");
     TeleopStatusSnapshot  get_teleop_status() const;
     void                  set_teleop_status(const TeleopStatusSnapshot& teleop);
-    void                  update_vision_perf(const omniseer_msgs::msg::VisionPerfSummary& msg);
-    void                  update_odometry(const nav_msgs::msg::Odometry& msg);
-    void                  update_detections(const yolo_msgs::msg::DetectionArray& msg);
-    void                  update_lipo_battery(const sensor_msgs::msg::BatteryState& msg);
-    void                  update_compute_status(const ComputeStatusSnapshot& snapshot);
-    void                  update_network_status(const NetworkStatusSnapshot& snapshot);
-    void                  update_onboard_battery(const BatteryStatusSnapshot& snapshot);
+    void update_mux_input(CommandSource source, const geometry_msgs::msg::TwistStamped& msg);
+    void update_effective_command(const geometry_msgs::msg::TwistStamped& msg);
+    void update_vision_perf(const omniseer_msgs::msg::VisionPerfSummary& msg);
+    void update_odometry(const nav_msgs::msg::Odometry& msg);
+    void update_detections(const yolo_msgs::msg::DetectionArray& msg);
+    void update_lipo_battery(const sensor_msgs::msg::BatteryState& msg);
+    void update_compute_status(const ComputeStatusSnapshot& snapshot);
+    void update_network_status(const NetworkStatusSnapshot& snapshot);
+    void update_onboard_battery(const BatteryStatusSnapshot& snapshot);
 
   private:
     struct StoredVisionPerf
@@ -240,6 +265,14 @@ namespace robot_diag_control_cpp
     {
       std::vector<DetectionOverlayItem> detections{};
       SteadyTimePoint                   updated_at{};
+    };
+
+    struct StoredCommand
+    {
+      double          vx_mps{0.0};
+      double          vy_mps{0.0};
+      double          wz_rad_s{0.0};
+      SteadyTimePoint updated_at{};
     };
 
     struct StoredComputeStatus
@@ -269,6 +302,8 @@ namespace robot_diag_control_cpp
 
     VisionStatusSnapshot     vision_snapshot_locked() const;
     RobotHealthSnapshot      robot_health_snapshot_locked(const VisionStatusSnapshot& vision) const;
+    EffectiveCommandSnapshot effective_command_snapshot_locked() const;
+    CommandSource            attributed_source_locked(const StoredCommand& effective) const;
     DetectionOverlaySnapshot detection_overlay_snapshot_locked() const;
     PlatformStatusSnapshot   platform_snapshot_locked() const;
     ComputeStatusSnapshot    compute_snapshot_locked() const;
@@ -290,11 +325,21 @@ namespace robot_diag_control_cpp
     std::chrono::milliseconds                _odom_stale_after{1000};
     std::chrono::milliseconds                _detections_stale_after{500};
     std::chrono::milliseconds                _platform_stale_after{2000};
+    std::chrono::milliseconds                _command_stale_after{500};
     uint32_t                                 _detection_source_width_px{1280};
     uint32_t                                 _detection_source_height_px{720};
     TimeSource                               _time_source{};
     PreviewStatusSnapshot                    _preview{};
     TeleopStatusSnapshot                     _teleop{};
+    bool                                     _has_effective_command{false};
+    StoredCommand                            _effective_command{};
+    CommandSource                            _effective_command_source{CommandSource::Unknown};
+    bool                                     _has_keyboard_command{false};
+    StoredCommand                            _keyboard_command{};
+    bool                                     _has_autonomy_command{false};
+    StoredCommand                            _autonomy_command{};
+    bool                                     _has_navigation_command{false};
+    StoredCommand                            _navigation_command{};
     bool                                     _has_vision_perf{false};
     StoredVisionPerf                         _vision_perf{};
     bool                                     _has_odometry{false};

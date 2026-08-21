@@ -6,11 +6,12 @@ namespace robot_diag_control_cpp
 {
   namespace
   {
-    constexpr std::size_t kMaxOperatorEvents        = 8;
-    constexpr int32_t     kWeakWifiSignalDbm        = -75;
-    constexpr double      kHighCpuTemperatureC      = 80.0;
-    constexpr double      kLowLipoVoltage           = 7.0;
-    constexpr double      kLowOnboardBatteryPercent = 20.0;
+    constexpr std::size_t kMaxOperatorEvents          = 8;
+    constexpr int32_t     kWeakWifiSignalDbm          = -75;
+    constexpr double      kHighCpuTemperatureC        = 80.0;
+    constexpr double      kLowLipoVoltage             = 7.0;
+    constexpr double      kLowOnboardBatteryPercent   = 20.0;
+    constexpr double      kCommandComparisonTolerance = 1e-6;
   } // namespace
 
   GatewayStateStore::GatewayStateStore(std::string gateway_name, std::string gateway_version,
@@ -32,12 +33,14 @@ namespace robot_diag_control_cpp
   SystemStatusSnapshot GatewayStateStore::get_system_status() const
   {
     std::lock_guard<std::mutex> lock(_mutex);
-    const auto                  vision   = vision_snapshot_locked();
-    const auto                  health   = robot_health_snapshot_locked(vision);
-    const auto                  platform = platform_snapshot_locked();
+    const auto                  vision            = vision_snapshot_locked();
+    const auto                  health            = robot_health_snapshot_locked(vision);
+    const auto                  platform          = platform_snapshot_locked();
+    const auto                  effective_command = effective_command_snapshot_locked();
     update_operator_events_locked(vision, health, _preview, _teleop, platform);
     return SystemStatusSnapshot{
-        _gateway_name, _gateway_version, _preview, vision, health, _teleop, platform,
+        _gateway_name, _gateway_version, _preview, vision,
+        health,        _teleop,          platform, effective_command,
     };
   }
 
@@ -98,6 +101,48 @@ namespace robot_diag_control_cpp
   {
     std::lock_guard<std::mutex> lock(_mutex);
     _teleop = teleop;
+  }
+
+  void GatewayStateStore::update_mux_input(CommandSource                           source,
+                                           const geometry_msgs::msg::TwistStamped& msg)
+  {
+    std::lock_guard<std::mutex> lock(_mutex);
+    const auto                  command = StoredCommand{
+        static_cast<double>(msg.twist.linear.x),
+        static_cast<double>(msg.twist.linear.y),
+        static_cast<double>(msg.twist.angular.z),
+        _time_source(),
+    };
+    switch (source)
+    {
+    case CommandSource::Keyboard:
+      _has_keyboard_command = true;
+      _keyboard_command     = command;
+      return;
+    case CommandSource::Autonomy:
+      _has_autonomy_command = true;
+      _autonomy_command     = command;
+      return;
+    case CommandSource::Navigation:
+      _has_navigation_command = true;
+      _navigation_command     = command;
+      return;
+    case CommandSource::Unknown:
+      return;
+    }
+  }
+
+  void GatewayStateStore::update_effective_command(const geometry_msgs::msg::TwistStamped& msg)
+  {
+    std::lock_guard<std::mutex> lock(_mutex);
+    _has_effective_command = true;
+    _effective_command     = StoredCommand{
+        static_cast<double>(msg.twist.linear.x),
+        static_cast<double>(msg.twist.linear.y),
+        static_cast<double>(msg.twist.angular.z),
+        _time_source(),
+    };
+    _effective_command_source = attributed_source_locked(_effective_command);
   }
 
   void GatewayStateStore::update_vision_perf(const omniseer_msgs::msg::VisionPerfSummary& msg)
@@ -300,6 +345,52 @@ namespace robot_diag_control_cpp
         _odometry.measured_vy_mps,
         _odometry.measured_wz_rad_s,
     };
+  }
+
+  EffectiveCommandSnapshot GatewayStateStore::effective_command_snapshot_locked() const
+  {
+    if (!_has_effective_command)
+    {
+      return EffectiveCommandSnapshot{};
+    }
+
+    const auto age = _time_source() - _effective_command.updated_at;
+    return EffectiveCommandSnapshot{
+        true,
+        age > _command_stale_after,
+        static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(age).count()),
+        _effective_command.vx_mps,
+        _effective_command.vy_mps,
+        _effective_command.wz_rad_s,
+        _effective_command_source,
+    };
+  }
+
+  CommandSource GatewayStateStore::attributed_source_locked(const StoredCommand& effective) const
+  {
+    const auto now      = _time_source();
+    const auto is_fresh = [this, now](bool has_command, const StoredCommand& command)
+    { return has_command && now - command.updated_at <= _command_stale_after; };
+    const auto matches = [&effective](const StoredCommand& candidate)
+    {
+      return std::abs(candidate.vx_mps - effective.vx_mps) <= kCommandComparisonTolerance &&
+             std::abs(candidate.vy_mps - effective.vy_mps) <= kCommandComparisonTolerance &&
+             std::abs(candidate.wz_rad_s - effective.wz_rad_s) <= kCommandComparisonTolerance;
+    };
+
+    if (is_fresh(_has_keyboard_command, _keyboard_command))
+    {
+      return matches(_keyboard_command) ? CommandSource::Keyboard : CommandSource::Unknown;
+    }
+    if (is_fresh(_has_autonomy_command, _autonomy_command))
+    {
+      return matches(_autonomy_command) ? CommandSource::Autonomy : CommandSource::Unknown;
+    }
+    if (is_fresh(_has_navigation_command, _navigation_command))
+    {
+      return matches(_navigation_command) ? CommandSource::Navigation : CommandSource::Unknown;
+    }
+    return CommandSource::Unknown;
   }
 
   DetectionOverlaySnapshot GatewayStateStore::detection_overlay_snapshot_locked() const

@@ -3,6 +3,7 @@
 #include <limits>
 #include <string>
 
+#include "geometry_msgs/msg/twist_stamped.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 #include "omniseer_msgs/msg/vision_perf_summary.hpp"
 #include "robot_diag_control_cpp/gateway_state.hpp"
@@ -155,6 +156,51 @@ namespace robot_diag_control_cpp
       EXPECT_TRUE(stale.available);
       EXPECT_TRUE(stale.stale);
       EXPECT_EQ(stale.age_ms, 450U);
+    }
+
+    TEST(GatewayStateStoreTest, EffectiveCommandTracksMuxOutputAndSourceAttribution)
+    {
+      TimePoint         now{Clock::duration{std::chrono::seconds(100)}};
+      GatewayStateStore store("robot_diag_control_cpp", "0.1.0", std::chrono::milliseconds(1500),
+                              std::chrono::milliseconds(1000), [&now]() { return now; });
+      geometry_msgs::msg::TwistStamped command{};
+      command.twist.linear.x  = 0.12;
+      command.twist.linear.y  = -0.03;
+      command.twist.angular.z = 0.25;
+
+      store.update_mux_input(CommandSource::Keyboard, command);
+      store.update_effective_command(command);
+
+      const auto fresh = store.get_system_status().effective_command;
+      EXPECT_TRUE(fresh.available);
+      EXPECT_FALSE(fresh.stale);
+      EXPECT_EQ(fresh.age_ms, 0U);
+      EXPECT_EQ(fresh.active_source, CommandSource::Keyboard);
+      EXPECT_DOUBLE_EQ(fresh.vx_mps, 0.12);
+      EXPECT_DOUBLE_EQ(fresh.vy_mps, -0.03);
+      EXPECT_DOUBLE_EQ(fresh.wz_rad_s, 0.25);
+
+      now += std::chrono::milliseconds(501);
+      const auto stale = store.get_system_status().effective_command;
+      EXPECT_TRUE(stale.stale);
+      EXPECT_EQ(stale.age_ms, 501U);
+    }
+
+    TEST(GatewayStateStoreTest, EffectiveCommandReportsUnknownWhenMuxPolicyCannotBeConfirmed)
+    {
+      TimePoint         now{Clock::duration{std::chrono::seconds(100)}};
+      GatewayStateStore store("robot_diag_control_cpp", "0.1.0", std::chrono::milliseconds(1500),
+                              std::chrono::milliseconds(1000), [&now]() { return now; });
+      geometry_msgs::msg::TwistStamped keyboard{};
+      keyboard.twist.linear.x = 0.2;
+      geometry_msgs::msg::TwistStamped autonomy{};
+      autonomy.twist.linear.x = 0.1;
+
+      store.update_mux_input(CommandSource::Keyboard, keyboard);
+      store.update_mux_input(CommandSource::Autonomy, autonomy);
+      store.update_effective_command(autonomy);
+
+      EXPECT_EQ(store.get_system_status().effective_command.active_source, CommandSource::Unknown);
     }
 
     TEST(GatewayStateStoreTest, OperatorEventsTrackTransitionsAndRemainCapped)

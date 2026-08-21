@@ -118,7 +118,11 @@ namespace robot_diag_control_cpp
 
   void TeleopManager::publish_stop_locked()
   {
-    _publisher(TeleopCommand{});
+    const TeleopCommand stop{};
+    _publisher(stop);
+    _has_command     = true;
+    _last_command_at = _time_source();
+    _last_command    = stop;
   }
 
   TeleopStatusSnapshot TeleopManager::status_locked(std::string last_error) const
@@ -129,6 +133,8 @@ namespace robot_diag_control_cpp
         _enabled ? TeleopState::Enabled : TeleopState::Disabled,
         _enabled,
         age_ms_or_zero(_has_command, now, _last_command_at),
+        _has_command,
+        _has_command && now - _last_command_at > std::chrono::milliseconds(500),
         _config.max_linear_mps,
         _config.max_angular_rad_s,
         error,

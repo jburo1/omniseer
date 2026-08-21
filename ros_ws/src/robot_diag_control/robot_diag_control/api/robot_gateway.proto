@@ -103,6 +103,7 @@ message SystemStatus {
   RobotHealth health = 5;
   TeleopStatus teleop = 6;
   PlatformStatus platform = 7;
+  EffectiveCommand effective_command = 8;
 }
 
 message SetPreviewModeRequest {
@@ -133,6 +134,20 @@ message TeleopStatus {
   float last_command_vx_mps = 8;
   float last_command_vy_mps = 9;
   float last_command_wz_rad_s = 10;
+  bool last_command_available = 11;
+  bool last_command_stale = 12;
+}
+
+// Latest velocity command observed after twist_mux. The source is reported
+// only when it can be determined from the configured mux inputs.
+message EffectiveCommand {
+  bool available = 1;
+  bool stale = 2;
+  uint64 age_ms = 3;
+  float vx_mps = 4;
+  float vy_mps = 5;
+  float wz_rad_s = 6;
+  string active_source = 7;
 }
 
 message SetTeleopEnabledRequest {

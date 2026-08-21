@@ -62,6 +62,23 @@ namespace robot_diag_control_cpp
       return gateway_proto::TELEOP_STATE_UNSPECIFIED;
     }
 
+    std::string command_source_name(CommandSource source)
+    {
+      switch (source)
+      {
+      case CommandSource::Keyboard:
+        return "keyboard";
+      case CommandSource::Autonomy:
+        return "autonomy";
+      case CommandSource::Navigation:
+        return "navigation";
+      case CommandSource::Unknown:
+        return "unknown";
+      }
+
+      return "unknown";
+    }
+
     std::optional<PreviewProfile> from_proto(gateway_proto::PreviewProfile profile)
     {
       switch (profile)
@@ -124,12 +141,27 @@ namespace robot_diag_control_cpp
       response.set_state(to_proto(snapshot.state));
       response.set_enabled(snapshot.enabled);
       response.set_last_command_age_ms(snapshot.last_command_age_ms);
+      response.set_last_command_available(snapshot.last_command_available);
+      response.set_last_command_stale(snapshot.last_command_stale);
       response.set_max_linear_mps(static_cast<float>(snapshot.max_linear_mps));
       response.set_max_angular_rad_s(static_cast<float>(snapshot.max_angular_rad_s));
       response.set_last_error(snapshot.last_error);
       response.set_last_command_vx_mps(static_cast<float>(snapshot.last_command_vx_mps));
       response.set_last_command_vy_mps(static_cast<float>(snapshot.last_command_vy_mps));
       response.set_last_command_wz_rad_s(static_cast<float>(snapshot.last_command_wz_rad_s));
+      return response;
+    }
+
+    gateway_proto::EffectiveCommand to_proto(const EffectiveCommandSnapshot& snapshot)
+    {
+      gateway_proto::EffectiveCommand response;
+      response.set_available(snapshot.available);
+      response.set_stale(snapshot.stale);
+      response.set_age_ms(snapshot.age_ms);
+      response.set_vx_mps(static_cast<float>(snapshot.vx_mps));
+      response.set_vy_mps(static_cast<float>(snapshot.vy_mps));
+      response.set_wz_rad_s(static_cast<float>(snapshot.wz_rad_s));
+      response.set_active_source(command_source_name(snapshot.active_source));
       return response;
     }
 
@@ -245,11 +277,12 @@ namespace robot_diag_control_cpp
       gateway_proto::SystemStatus response;
       response.set_gateway_name(snapshot.gateway_name);
       response.set_gateway_version(snapshot.gateway_version);
-      *response.mutable_preview()  = to_proto(snapshot.preview);
-      *response.mutable_vision()   = to_proto(snapshot.vision);
-      *response.mutable_health()   = to_proto(snapshot.health);
-      *response.mutable_teleop()   = to_proto(snapshot.teleop);
-      *response.mutable_platform() = to_proto(snapshot.platform);
+      *response.mutable_preview()           = to_proto(snapshot.preview);
+      *response.mutable_vision()            = to_proto(snapshot.vision);
+      *response.mutable_health()            = to_proto(snapshot.health);
+      *response.mutable_teleop()            = to_proto(snapshot.teleop);
+      *response.mutable_platform()          = to_proto(snapshot.platform);
+      *response.mutable_effective_command() = to_proto(snapshot.effective_command);
       return response;
     }
   } // namespace

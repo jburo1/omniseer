@@ -88,6 +88,8 @@ namespace robot_diag_control_cpp
       EXPECT_DOUBLE_EQ(status.last_command_vx_mps, 0.12);
       EXPECT_DOUBLE_EQ(status.last_command_vy_mps, -0.03);
       EXPECT_DOUBLE_EQ(status.last_command_wz_rad_s, 0.25);
+      EXPECT_TRUE(status.last_command_available);
+      EXPECT_FALSE(status.last_command_stale);
     }
 
     TEST(TeleopManagerTest, PollKeepsTeleopEnabledAfterCommandAges)
@@ -110,6 +112,32 @@ namespace robot_diag_control_cpp
       EXPECT_TRUE(status.enabled);
       EXPECT_EQ(published.size(), 1U);
       EXPECT_EQ(status.last_error, "");
+      EXPECT_TRUE(status.last_command_available);
+      EXPECT_TRUE(status.last_command_stale);
+    }
+
+    TEST(TeleopManagerTest, DisableRecordsThePublishedStopAsTheLastGatewayRequest)
+    {
+      TimePoint         now{Clock::duration{std::chrono::seconds(100)}};
+      GatewayStateStore store("robot_diag_control_cpp", "0.1.0", std::chrono::milliseconds(1500),
+                              std::chrono::milliseconds(1000), [&now]() { return now; });
+      std::vector<TeleopCommand> published;
+      TeleopManager              manager(
+          store, [&published](const TeleopCommand& command) { published.push_back(command); },
+          TeleopManagerConfig{0.35, 0.8}, [&now]() { return now; });
+
+      manager.set_enabled(true);
+      ASSERT_TRUE(manager.send_command(TeleopCommand{0.12, -0.03, 0.25}).accepted);
+      now += std::chrono::milliseconds(10);
+      manager.set_enabled(false);
+
+      const auto status = store.get_system_status().teleop;
+      EXPECT_TRUE(status.last_command_available);
+      EXPECT_FALSE(status.last_command_stale);
+      EXPECT_DOUBLE_EQ(status.last_command_vx_mps, 0.0);
+      EXPECT_DOUBLE_EQ(status.last_command_vy_mps, 0.0);
+      EXPECT_DOUBLE_EQ(status.last_command_wz_rad_s, 0.0);
+      EXPECT_EQ(status.last_command_age_ms, 0U);
     }
   } // namespace
 } // namespace robot_diag_control_cpp

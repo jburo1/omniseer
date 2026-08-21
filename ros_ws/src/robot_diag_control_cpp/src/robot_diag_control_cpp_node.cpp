@@ -51,6 +51,13 @@ namespace robot_diag_control_cpp
       const auto preview_encoder = declare_parameter<std::string>("preview_encoder", "software");
       const auto teleop_command_topic =
           declare_parameter<std::string>("teleop_command_topic", "/cmd_vel_keyboard");
+      const auto effective_command_topic =
+          declare_parameter<std::string>("effective_command_topic",
+                                         "/mecanum_drive_controller/reference");
+      const auto autonomy_command_topic =
+          declare_parameter<std::string>("autonomy_command_topic", "/cmd_vel_autonomy");
+      const auto navigation_command_topic =
+          declare_parameter<std::string>("navigation_command_topic", "/cmd_vel_nav");
       const auto teleop_frame_id = declare_parameter<std::string>("teleop_frame_id", "base_link");
       const auto teleop_max_linear_mps = declare_parameter<double>("teleop_max_linear_mps", 0.35);
       const auto teleop_max_angular_rad_s =
@@ -167,6 +174,18 @@ namespace robot_diag_control_cpp
       _battery_subscription = create_subscription<sensor_msgs::msg::BatteryState>(
           battery_topic, 10, [this](const sensor_msgs::msg::BatteryState& msg)
           { _state_store->update_lipo_battery(msg); });
+      _keyboard_command_subscription = create_subscription<geometry_msgs::msg::TwistStamped>(
+          teleop_command_topic, 10, [this](const geometry_msgs::msg::TwistStamped& msg)
+          { _state_store->update_mux_input(CommandSource::Keyboard, msg); });
+      _autonomy_command_subscription = create_subscription<geometry_msgs::msg::TwistStamped>(
+          autonomy_command_topic, 10, [this](const geometry_msgs::msg::TwistStamped& msg)
+          { _state_store->update_mux_input(CommandSource::Autonomy, msg); });
+      _navigation_command_subscription = create_subscription<geometry_msgs::msg::TwistStamped>(
+          navigation_command_topic, 10, [this](const geometry_msgs::msg::TwistStamped& msg)
+          { _state_store->update_mux_input(CommandSource::Navigation, msg); });
+      _effective_command_subscription = create_subscription<geometry_msgs::msg::TwistStamped>(
+          effective_command_topic, 10, [this](const geometry_msgs::msg::TwistStamped& msg)
+          { _state_store->update_effective_command(msg); });
       _preview_poll_timer =
           create_wall_timer(std::chrono::milliseconds(250), [this]() { _preview_manager->poll(); });
       _teleop_poll_timer =
@@ -184,10 +203,11 @@ namespace robot_diag_control_cpp
       RCLCPP_INFO(get_logger(),
                   "C++ gateway node started; gRPC listening on %s, /vision/perf aggregation is "
                   "active, robot health odom topic is %s, preview source is %s, teleop command "
-                  "topic is %s, battery topic is %s",
+                  "topic is %s, effective command topic is %s, battery topic is %s",
                   _grpc_server->listen_address().c_str(), robot_health_odom_topic.c_str(),
                   preview_command.empty() ? preview_source_kind.c_str() : preview_command.c_str(),
-                  teleop_command_topic.c_str(), battery_topic.c_str());
+                  teleop_command_topic.c_str(), effective_command_topic.c_str(),
+                  battery_topic.c_str());
     }
 
     ~RobotDiagControlCppNode() override
@@ -215,9 +235,17 @@ namespace robot_diag_control_cpp
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr        _odometry_subscription{};
     rclcpp::Subscription<yolo_msgs::msg::DetectionArray>::SharedPtr _detections_subscription{};
     rclcpp::Subscription<sensor_msgs::msg::BatteryState>::SharedPtr _battery_subscription{};
-    rclcpp::TimerBase::SharedPtr                                    _preview_poll_timer{};
-    rclcpp::TimerBase::SharedPtr                                    _teleop_poll_timer{};
-    rclcpp::TimerBase::SharedPtr                                    _platform_status_timer{};
+    rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr
+        _keyboard_command_subscription{};
+    rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr
+        _autonomy_command_subscription{};
+    rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr
+        _navigation_command_subscription{};
+    rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr
+                                 _effective_command_subscription{};
+    rclcpp::TimerBase::SharedPtr _preview_poll_timer{};
+    rclcpp::TimerBase::SharedPtr _teleop_poll_timer{};
+    rclcpp::TimerBase::SharedPtr _platform_status_timer{};
   };
 } // namespace robot_diag_control_cpp
 

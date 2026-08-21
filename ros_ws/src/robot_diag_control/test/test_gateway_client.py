@@ -80,11 +80,20 @@ class GatewayClientFormattingTests(unittest.TestCase):
                 state=robot_gateway_pb2.TELEOP_ENABLED,
                 enabled=True,
                 last_command_age_ms=25,
+                last_command_available=True,
                 max_linear_mps=0.35,
                 max_angular_rad_s=0.8,
                 last_command_vx_mps=0.12,
                 last_command_vy_mps=0.0,
                 last_command_wz_rad_s=-0.2,
+            ),
+            effective_command=robot_gateway_pb2.EffectiveCommand(
+                available=True,
+                age_ms=12,
+                vx_mps=0.12,
+                vy_mps=0.0,
+                wz_rad_s=-0.2,
+                active_source="keyboard",
             ),
             platform=_healthy_platform(),
         )
@@ -95,6 +104,7 @@ class GatewayClientFormattingTests(unittest.TestCase):
         self.assertIn("mobility: odom=fresh odom_age_ms=18", formatted)
         self.assertIn("teleop: state=enabled enabled=true", formatted)
         self.assertIn("last_command=(0.12,0.00,-0.20)", formatted)
+        self.assertIn("effective_command: available=true stale=false age_ms=12 source=keyboard", formatted)
         self.assertIn("vision: producer_fps=22.00", formatted)
         self.assertIn("compute: fresh", formatted)
         self.assertIn("network: fresh", formatted)
@@ -128,11 +138,22 @@ class GatewayClientFormattingTests(unittest.TestCase):
                 state=robot_gateway_pb2.TELEOP_ENABLED,
                 enabled=True,
                 last_command_age_ms=740,
+                last_command_available=True,
+                last_command_stale=True,
                 max_linear_mps=0.35,
                 max_angular_rad_s=0.8,
                 last_command_vx_mps=0.2,
                 last_command_vy_mps=0.0,
                 last_command_wz_rad_s=-0.3,
+            ),
+            effective_command=robot_gateway_pb2.EffectiveCommand(
+                available=True,
+                stale=False,
+                age_ms=32,
+                vx_mps=0.2,
+                vy_mps=0.0,
+                wz_rad_s=-0.3,
+                active_source="keyboard",
             ),
             platform=_healthy_platform(),
         )
@@ -141,8 +162,12 @@ class GatewayClientFormattingTests(unittest.TestCase):
 
         self.assertIn("TELEOP ENABLED | NOT READY | ODOM STALE 740 ms | VISION STALE", formatted)
         self.assertIn("CAM 29.8 FPS | DET 8.4 FPS | LAT 116 ms", formatted)
-        self.assertIn("CMD vx +0.20 vy +0.00 wz -0.30", formatted)
-        self.assertIn("MEAS vx +0.18 vy +0.01 wz -0.27", formatted)
+        self.assertIn("GATEWAY REQUEST vx +0.20 m/s vy +0.00 m/s wz -0.30 rad/s | STALE AGE 740 ms", formatted)
+        self.assertIn(
+            "EFFECTIVE vx +0.20 m/s vy +0.00 m/s wz -0.30 rad/s | SOURCE keyboard | FRESH AGE 32 ms",
+            formatted,
+        )
+        self.assertIn("ODOM vx +0.18 m/s vy +0.01 m/s wz -0.27 rad/s | STALE AGE 740 ms", formatted)
         self.assertIn("PWR LiPo 7.8 V | ROCK 91% | Wi-Fi -58 dBm | CPU 43% 62 C", formatted)
         self.assertIn("FAULT waiting for odometry | ODOMETRY STALE | VISION STALE", formatted)
         self.assertNotIn("DEADMAN", formatted)

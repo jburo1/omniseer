@@ -13,6 +13,7 @@ from robot_diag_control.gateway_client import (
     PROFILE_TO_PROTO,
     TELEOP_STATE_NAMES,
     create_stub,
+    format_motion_status,
     format_preview_response,
     get_overlay_snapshot,
     set_preview_mode,
@@ -250,6 +251,7 @@ def _hud_lines(
     health = status.health
     preview = status.preview
     teleop = status.teleop
+    effective = status.effective_command
     platform = status.platform
     compute = platform.compute
     network = platform.network
@@ -321,17 +323,7 @@ def _hud_lines(
             f"OBJ {detections.detection_count} | AGE {detections.age_ms} ms"
         )
     if layers.motion:
-        lines.append(
-            "CMD "
-            f"vx {teleop.last_command_vx_mps:+.2f} "
-            f"vy {teleop.last_command_vy_mps:+.2f} "
-            f"wz {teleop.last_command_wz_rad_s:+.2f} | "
-            "MEAS "
-            f"vx {health.measured_vx_mps:+.2f} "
-            f"vy {health.measured_vy_mps:+.2f} "
-            f"wz {health.measured_wz_rad_s:+.2f} | "
-            f"AGE {teleop.last_command_age_ms} ms"
-        )
+        lines.extend(format_motion_status(teleop, effective, health))
     if layers.system:
         lines.append(_platform_line(platform))
     if fault_parts:

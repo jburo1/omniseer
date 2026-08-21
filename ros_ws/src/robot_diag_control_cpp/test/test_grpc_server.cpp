@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 
+#include "geometry_msgs/msg/twist_stamped.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 #include "omniseer_msgs/msg/vision_perf_summary.hpp"
 #include "robot_diag_control/api/robot_gateway.grpc.pb.h"
@@ -55,6 +56,12 @@ namespace robot_diag_control_cpp
       detection.bbox.size.y            = 200.0;
       detections_msg.detections.push_back(detection);
       store.update_detections(detections_msg);
+      geometry_msgs::msg::TwistStamped command{};
+      command.twist.linear.x  = 0.2;
+      command.twist.linear.y  = -0.1;
+      command.twist.angular.z = 0.3;
+      store.update_mux_input(CommandSource::Keyboard, command);
+      store.update_effective_command(command);
 
       RobotGatewayService service(store, preview_manager, teleop_manager);
       GrpcServer          server(service, "127.0.0.1", 0);
@@ -91,6 +98,12 @@ namespace robot_diag_control_cpp
       EXPECT_EQ(system_status.vision().infer_error_count(), 1U);
       EXPECT_EQ(system_status.teleop().state(), gateway_proto::TELEOP_DISABLED);
       EXPECT_FALSE(system_status.teleop().enabled());
+      EXPECT_TRUE(system_status.effective_command().available());
+      EXPECT_FALSE(system_status.effective_command().stale());
+      EXPECT_EQ(system_status.effective_command().active_source(), "keyboard");
+      EXPECT_FLOAT_EQ(system_status.effective_command().vx_mps(), 0.2F);
+      EXPECT_FLOAT_EQ(system_status.effective_command().vy_mps(), -0.1F);
+      EXPECT_FLOAT_EQ(system_status.effective_command().wz_rad_s(), 0.3F);
 
       gateway_proto::OverlaySnapshot           overlay_snapshot;
       gateway_proto::GetOverlaySnapshotRequest overlay_request;

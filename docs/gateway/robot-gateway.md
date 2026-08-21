@@ -67,6 +67,8 @@ The gateway owns these current responsibilities:
 - normalize cached system status from ROS and platform inputs
 - report gateway name and version
 - report preview, vision, odometry, teleop, and platform status
+- distinguish the last gateway teleop request from the effective post-mux drive
+  command and odometry velocity
 - enable and disable preview through the gateway-owned subprocess lifecycle
 - reject invalid preview profiles
 - enable and disable bounded teleop

@@ -246,6 +246,7 @@ def format_system_status(response: robot_gateway_pb2.SystemStatus) -> str:
     vision = response.vision
     teleop = response.teleop
     platform = response.platform
+    effective = response.effective_command
     lines = [
         f"gateway: {response.gateway_name} ({response.gateway_version})",
         "health:"
@@ -263,11 +264,21 @@ def format_system_status(response: robot_gateway_pb2.SystemStatus) -> str:
         "teleop:"
         f" state={TELEOP_STATE_NAMES.get(teleop.state, 'unknown')}"
         f" enabled={str(teleop.enabled).lower()}"
+        f" last_command_available={str(teleop.last_command_available).lower()}"
+        f" last_command_stale={str(teleop.last_command_stale).lower()}"
         f" last_command_age_ms={teleop.last_command_age_ms}"
         f" last_command=({teleop.last_command_vx_mps:.2f},{teleop.last_command_vy_mps:.2f},"
         f"{teleop.last_command_wz_rad_s:.2f})"
         f" bounds=linear:{teleop.max_linear_mps:.2f}mps angular:{teleop.max_angular_rad_s:.2f}radps",
     ]
+    lines.append(
+        "effective_command:"
+        f" available={str(effective.available).lower()}"
+        f" stale={str(effective.stale).lower()}"
+        f" age_ms={effective.age_ms}"
+        f" source={effective.active_source or 'unknown'}"
+        f" command=({effective.vx_mps:.2f},{effective.vy_mps:.2f},{effective.wz_rad_s:.2f})"
+    )
     if preview.last_error:
         lines.append(f"preview_error: {preview.last_error}")
     if teleop.last_error:
@@ -298,6 +309,7 @@ def format_operator_status(response: robot_gateway_pb2.SystemStatus) -> str:
     vision = response.vision
     teleop = response.teleop
     platform = response.platform
+    effective = response.effective_command
 
     top_strip = (
         f"TELEOP {_teleop_state(teleop)} | "
@@ -315,15 +327,9 @@ def format_operator_status(response: robot_gateway_pb2.SystemStatus) -> str:
         if vision.available
         else "CAM -- FPS | DET -- FPS | LAT -- ms | VISION MISSING"
     )
-    motion_strip = (
-        f"CMD vx {teleop.last_command_vx_mps:+.2f} vy {teleop.last_command_vy_mps:+.2f} "
-        f"wz {teleop.last_command_wz_rad_s:+.2f} | "
-        f"MEAS vx {health.measured_vx_mps:+.2f} vy {health.measured_vy_mps:+.2f} "
-        f"wz {health.measured_wz_rad_s:+.2f} | "
-        f"AGE {teleop.last_command_age_ms} ms"
-    )
+    motion_strips = format_motion_status(teleop, effective, health)
     bounds_strip = (
-        f"BOUNDS vx <= {teleop.max_linear_mps:.2f} m/s | "
+        f"BOUNDS vx/vy <= {teleop.max_linear_mps:.2f} m/s | "
         f"wz <= {teleop.max_angular_rad_s:.2f} rad/s | "
         f"PROFILE {PROFILE_NAMES.get(preview.profile, 'unknown')}"
     )
@@ -331,7 +337,67 @@ def format_operator_status(response: robot_gateway_pb2.SystemStatus) -> str:
 
     faults = _operator_faults(response)
     fault_line = "FAULT none" if not faults else "FAULT " + " | ".join(faults)
-    return "\n".join([top_strip, perception_strip, motion_strip, platform_strip, bounds_strip, fault_line])
+    return "\n".join(
+        [
+            top_strip,
+            perception_strip,
+            *motion_strips,
+            platform_strip,
+            bounds_strip,
+            fault_line,
+        ]
+    )
+
+
+def format_motion_status(
+    teleop: robot_gateway_pb2.TeleopStatus,
+    effective: robot_gateway_pb2.EffectiveCommand,
+    health: robot_gateway_pb2.RobotHealth,
+) -> tuple[str, str, str]:
+    return (
+        _gateway_request_strip(teleop),
+        _effective_command_strip(effective),
+        _odom_velocity_strip(health),
+    )
+
+
+def _gateway_request_strip(teleop: robot_gateway_pb2.TeleopStatus) -> str:
+    if not teleop.last_command_available:
+        return "GATEWAY REQUEST unavailable"
+    freshness = "STALE" if teleop.last_command_stale else "FRESH"
+    return (
+        "GATEWAY REQUEST "
+        f"vx {teleop.last_command_vx_mps:+.2f} m/s "
+        f"vy {teleop.last_command_vy_mps:+.2f} m/s "
+        f"wz {teleop.last_command_wz_rad_s:+.2f} rad/s | "
+        f"{freshness} AGE {teleop.last_command_age_ms} ms"
+    )
+
+
+def _effective_command_strip(effective: robot_gateway_pb2.EffectiveCommand) -> str:
+    if not effective.available:
+        return "EFFECTIVE unavailable | SOURCE unknown"
+    freshness = "STALE" if effective.stale else "FRESH"
+    return (
+        "EFFECTIVE "
+        f"vx {effective.vx_mps:+.2f} m/s "
+        f"vy {effective.vy_mps:+.2f} m/s "
+        f"wz {effective.wz_rad_s:+.2f} rad/s | "
+        f"SOURCE {effective.active_source or 'unknown'} | {freshness} AGE {effective.age_ms} ms"
+    )
+
+
+def _odom_velocity_strip(health: robot_gateway_pb2.RobotHealth) -> str:
+    if not health.odom_available:
+        return "ODOM unavailable"
+    freshness = "STALE" if health.odom_stale else "FRESH"
+    return (
+        "ODOM "
+        f"vx {health.measured_vx_mps:+.2f} m/s "
+        f"vy {health.measured_vy_mps:+.2f} m/s "
+        f"wz {health.measured_wz_rad_s:+.2f} rad/s | "
+        f"{freshness} AGE {health.odom_age_ms} ms"
+    )
 
 
 def _operator_platform_strip(platform: robot_gateway_pb2.PlatformStatus) -> str:
