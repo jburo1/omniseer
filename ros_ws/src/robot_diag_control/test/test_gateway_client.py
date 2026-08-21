@@ -162,7 +162,7 @@ class GatewayClientFormattingTests(unittest.TestCase):
 
         self.assertIn("TELEOP ENABLED | NOT READY | ODOM STALE 740 ms | VISION STALE", formatted)
         self.assertIn("CAM 29.8 FPS | DET 8.4 FPS | LAT 116 ms", formatted)
-        self.assertIn("GATEWAY REQUEST vx +0.20 m/s vy +0.00 m/s wz -0.30 rad/s | STALE AGE 740 ms", formatted)
+        self.assertNotIn("GATEWAY REQUEST", formatted)
         self.assertIn(
             "EFFECTIVE vx +0.20 m/s vy +0.00 m/s wz -0.30 rad/s | SOURCE keyboard | FRESH AGE 32 ms",
             formatted,

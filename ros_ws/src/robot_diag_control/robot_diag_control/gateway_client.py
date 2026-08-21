@@ -327,7 +327,7 @@ def format_operator_status(response: robot_gateway_pb2.SystemStatus) -> str:
         if vision.available
         else "CAM -- FPS | DET -- FPS | LAT -- ms | VISION MISSING"
     )
-    motion_strips = format_motion_status(teleop, effective, health)
+    _, *motion_strips = format_motion_status(teleop, effective, health)
     bounds_strip = (
         f"BOUNDS vx/vy <= {teleop.max_linear_mps:.2f} m/s | "
         f"wz <= {teleop.max_angular_rad_s:.2f} rad/s | "

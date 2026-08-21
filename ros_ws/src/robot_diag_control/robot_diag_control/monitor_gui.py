@@ -19,7 +19,6 @@ from robot_diag_control.gateway_client import (
     create_stub,
     format_operator_status,
     format_preview_response,
-    format_system_status,
     format_teleop_response,
     get_system_status,
     send_teleop_command,
@@ -475,17 +474,6 @@ class RobotMonitorGui:
         self._status_text.pack(fill=tk.BOTH, expand=True)
         status_section.pack(fill=tk.BOTH, expand=True)
 
-        diagnostics_section = CollapsibleSection(review_column, "Diagnostics", padding=8, expanded=False)
-        self._sections["diagnostics"] = diagnostics_section
-        self._diagnostics_text = scrolledtext.ScrolledText(
-            diagnostics_section.body,
-            wrap=tk.WORD,
-            height=8,
-            state=tk.DISABLED,
-        )
-        self._diagnostics_text.pack(fill=tk.BOTH, expand=True)
-        diagnostics_section.pack(fill=tk.BOTH, expand=True, pady=(8, 0))
-
         log_section = CollapsibleSection(review_column, "Activity", padding=8)
         self._sections["log"] = log_section
         self._log_text = scrolledtext.ScrolledText(
@@ -910,12 +898,6 @@ class RobotMonitorGui:
         self._status_text.insert("1.0", text)
         self._status_text.configure(state=tk.DISABLED)
 
-    def _set_diagnostics_text(self, text: str) -> None:
-        self._diagnostics_text.configure(state=tk.NORMAL)
-        self._diagnostics_text.delete("1.0", tk.END)
-        self._diagnostics_text.insert("1.0", text)
-        self._diagnostics_text.configure(state=tk.DISABLED)
-
     def _run_notes(self) -> str:
         if self._run_notes_text is None:
             return ""
@@ -1234,7 +1216,6 @@ class RobotMonitorGui:
         self._update_teleop_enabled(status.teleop.enabled)
         operator_status = format_operator_status(status)
         self._set_status_text(operator_status)
-        self._set_diagnostics_text(format_system_status(status))
         fault_line = operator_status.splitlines()[-1] if operator_status else None
         if fault_line and fault_line != "FAULT none" and fault_line != self._last_fault_line:
             self._append_log(fault_line)

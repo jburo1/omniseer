@@ -428,11 +428,9 @@ class MonitorGuiTests(unittest.TestCase):
                     "teleop",
                     "run",
                     "status",
-                    "diagnostics",
                     "log",
                 },
             )
-            self.assertFalse(gui._sections["diagnostics"].expanded)
 
             for section_name in ("advanced_connection", "advanced_experiment_overrides", "teleop"):
                 section = gui._sections[section_name]
