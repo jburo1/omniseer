@@ -1026,6 +1026,23 @@ class RobotMonitorGui:
         self._status_text.insert("1.0", text)
         self._status_text.configure(state=tk.DISABLED)
 
+    def _startup_health_message(self, status: robot_gateway_pb2.SystemStatus) -> str | None:
+        health = status.health
+        if health.ready:
+            if not self._startup_health_ready:
+                self._startup_health_ready = True
+                return "READY → robot services available"
+            return None
+
+        if (
+            not self._startup_health_ready
+            and health.summary.startswith("waiting for ")
+            and not health.odom_stale
+            and not status.vision.stale
+        ):
+            return f"STARTING → {health.summary}"
+        return None
+
     def _run_notes(self) -> str:
         if self._run_notes_text is None:
             return ""
@@ -1347,8 +1364,16 @@ class RobotMonitorGui:
         operator_status = format_operator_status(status)
         self._set_status_text(operator_status)
         fault_line = operator_status.splitlines()[-1] if operator_status else None
-        if fault_line and fault_line != "FAULT none" and fault_line != self._last_fault_line:
+        startup_message = self._startup_health_message(status)
+        if startup_message is not None:
+            if startup_message != self._last_startup_health_message:
+                tag = "activity_success" if startup_message.startswith("READY →") else "activity_mode"
+                self._append_log(startup_message, tag=tag)
+            if fault_line and fault_line != "FAULT none" and fault_line != self._last_fault_line:
+                self._append_raw_log(fault_line, tag="activity_error")
+        elif fault_line and fault_line != "FAULT none" and fault_line != self._last_fault_line:
             self._append_log(fault_line)
+        self._last_startup_health_message = startup_message
         self._last_fault_line = fault_line
 
     def start_watch(self) -> None:
