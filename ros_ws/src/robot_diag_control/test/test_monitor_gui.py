@@ -634,8 +634,136 @@ class MonitorGuiTests(unittest.TestCase):
                 build_mock.assert_called_once()
                 report_mock.assert_called_once()
                 open_report.assert_called_once()
+                activity = gui._log_text.get("1.0", tk.END)
+                raw = gui._raw_log_text.get("1.0", tk.END)
+                self.assertIn("STAGE → Retrieving run bundle", activity)
+                self.assertIn("STAGE → Run bundle retrieved", activity)
+                self.assertIn("STAGE → Rendering video…", activity)
+                self.assertIn("STAGE → Video ready", activity)
+                self.assertEqual(activity.count("STAGE → Rendering video…"), 1)
+                self.assertNotIn("Rendering video… 0%", activity)
+                self.assertIn("STAGE → Rendering video…", raw)
             finally:
                 root.destroy()
+
+    @unittest.skipIf(tk is None, "tkinter is unavailable")
+    def test_gui_video_render_failure_is_concise_in_activity_and_detailed_in_raw(self):
+        assert tk is not None
+        root = tk.Tk()
+        root.withdraw()
+        try:
+            gui = RobotMonitorGui(root, _build_parser().parse_args([]))
+            result = RunArtifactResult(
+                command=["scripts/omni", "runs", "video", "/runs/operator_001"],
+                success=False,
+                message="video build failed: ffmpeg exited 1: invalid input stream",
+            )
+
+            gui._append_stage("Rendering video…")
+            gui._append_video_render_result(result)
+
+            activity = gui._log_text.get("1.0", tk.END)
+            raw = gui._raw_log_text.get("1.0", tk.END)
+            self.assertIn("STAGE → Rendering video…", activity)
+            self.assertIn("video rendering failed", activity)
+            self.assertNotIn("ffmpeg exited 1: invalid input stream", activity)
+            self.assertIn("video build failed: ffmpeg exited 1: invalid input stream", raw)
+            self.assertTrue(gui._log_text.tag_ranges("activity_error"))
+        finally:
+            root.destroy()
+
+    @unittest.skipIf(tk is None, "tkinter is unavailable")
+    def test_gui_activity_and_raw_tabs_route_and_retain_logs(self):
+        assert tk is not None
+        root = tk.Tk()
+        root.withdraw()
+        try:
+            gui = RobotMonitorGui(root, _build_parser().parse_args([]))
+
+            self.assertEqual(
+                [gui._activity_notebook.tab(tab_id, "text") for tab_id in gui._activity_notebook.tabs()],
+                ["Activity", "Raw"],
+            )
+            self.assertEqual(gui._activity_notebook.select(), str(gui._activity_tab))
+
+            gui._append_log("operator message")
+            self.assertIn("operator message", gui._log_text.get("1.0", tk.END))
+            self.assertIn("operator message", gui._raw_log_text.get("1.0", tk.END))
+
+            remote_run = RemoteRunProcess(_FakeProcess())  # type: ignore[arg-type]
+            gui._run_process = remote_run
+            with patch("robot_diag_control.monitor_gui.start_remote_run_log_reader") as log_reader:
+                gui._start_run_log_reader()
+
+            log_reader.assert_called_once_with(remote_run, gui._append_remote_run_log_threadsafe)
+            on_line = log_reader.call_args.args[1]
+            on_line("[INFO] [rplidar_composition]: scan received")
+            root.update()
+            self.assertNotIn("scan received", gui._log_text.get("1.0", tk.END))
+            self.assertIn("scan received", gui._raw_log_text.get("1.0", tk.END))
+
+            gui._activity_notebook.select(gui._raw_tab)
+            self.assertIn("scan received", gui._raw_log_text.get("1.0", tk.END))
+            gui._activity_notebook.select(gui._activity_tab)
+            self.assertIn("operator message", gui._log_text.get("1.0", tk.END))
+        finally:
+            root.destroy()
+
+    @unittest.skipIf(tk is None, "tkinter is unavailable")
+    def test_gui_remote_autonomy_events_are_concise_and_raw_is_complete(self):
+        assert tk is not None
+        root = tk.Tk()
+        root.withdraw()
+        try:
+            gui = RobotMonitorGui(root, _build_parser().parse_args([]))
+            lines = (
+                "autonomy state reached: scan event=started normalized_error=none",
+                "autonomy state reached: lock event=target_locked target=person confidence=0.82",
+                "autonomy state reached: center event=centering_started target=person confidence=0.82",
+                "autonomy state reached: scan event=reacquire_started reason=no_valid_target_detection",
+                "autonomy state reached: frame event=framing_started target=person confidence=0.82",
+                "autonomy state reached: success event=succeeded reason=framed target=person confidence=0.82",
+                "finalized perception run bundle: out_dir=/runs/operator_001",
+            )
+            for line in lines:
+                gui._append_remote_run_log(line)
+
+            activity = gui._log_text.get("1.0", tk.END)
+            raw = gui._raw_log_text.get("1.0", tk.END)
+            self.assertIn("AUTONOMY → scanning", activity)
+            self.assertIn("AUTONOMY → target acquired | person | conf=0.82", activity)
+            self.assertIn("AUTONOMY → centering", activity)
+            self.assertIn("AUTONOMY → target lost — reacquiring", activity)
+            self.assertIn("AUTONOMY → framing", activity)
+            self.assertIn("SUCCESS → target framed", activity)
+            self.assertIn("RUN → evidence bundle finalized", activity)
+            self.assertTrue(gui._log_text.tag_ranges("activity_success"))
+            for line in lines:
+                self.assertIn(line, raw)
+        finally:
+            root.destroy()
+
+    @unittest.skipIf(tk is None, "tkinter is unavailable")
+    def test_gui_remote_autonomy_failure_and_duplicate_routing(self):
+        assert tk is not None
+        root = tk.Tk()
+        root.withdraw()
+        try:
+            gui = RobotMonitorGui(root, _build_parser().parse_args([]))
+            failure_line = "autonomy state reached: failed event=failed reason=scan_complete_no_target"
+            gui._append_remote_run_log(failure_line)
+            gui._append_remote_run_log(failure_line)
+            gui._append_remote_run_log("autonomy state reached: scan event=reacquire_started reason=target_lost")
+            gui._append_remote_run_log("autonomy state reached: scan event=reacquire_started reason=target_lost")
+
+            activity = gui._log_text.get("1.0", tk.END)
+            raw = gui._raw_log_text.get("1.0", tk.END)
+            self.assertEqual(activity.count("FAULT → autonomy failed | scan_complete_no_target"), 1)
+            self.assertEqual(activity.count("AUTONOMY → target lost — reacquiring"), 2)
+            self.assertEqual(raw.count(failure_line), 2)
+            self.assertTrue(gui._log_text.tag_ranges("activity_error"))
+        finally:
+            root.destroy()
 
     @unittest.skipIf(tk is None, "tkinter is unavailable")
     def test_gui_activity_tags_and_transfer_progress_replace_one_line(self):
@@ -648,18 +776,24 @@ class MonitorGuiTests(unittest.TestCase):
             gui._append_action("Retrieve & Open Report requested")
             gui._set_run_state(RunPhase.PREPARING, run_id="operator_001")
             gui._append_log("artifact warning: incomplete run", tag="activity_warning")
+            gui._append_stage("Retrieving run bundle")
             gui._update_transfer_progress(
                 RsyncProgress(transferred_bytes=851_443_712, total_bytes=1_270_811_510, percent=67)
             )
             gui._update_transfer_progress(
                 RsyncProgress(transferred_bytes=1_270_811_510, total_bytes=1_270_811_510, percent=100)
             )
+            gui._append_stage("Run bundle retrieved")
 
             activity = gui._log_text.get("1.0", tk.END)
+            raw = gui._raw_log_text.get("1.0", tk.END)
             self.assertIn("ACTION → Retrieve & Open Report requested", activity)
             self.assertIn("MODE → preparing operator_001", activity)
+            self.assertIn("STAGE → Retrieving run bundle", activity)
             self.assertIn("TRANSFER → [████████████] 100%", activity)
+            self.assertIn("STAGE → Run bundle retrieved", activity)
             self.assertEqual(activity.count("TRANSFER →"), 1)
+            self.assertEqual(raw, activity)
             self.assertTrue(gui._log_text.tag_ranges("activity_action"))
             self.assertTrue(gui._log_text.tag_ranges("activity_mode"))
             self.assertTrue(gui._log_text.tag_ranges("activity_warning"))

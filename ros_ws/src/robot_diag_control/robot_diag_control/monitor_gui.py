@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import subprocess
 import sys
 import threading
@@ -135,6 +136,53 @@ else:
 DEFAULT_ROBOT_HOST = "192.168.1.178"
 DEFAULT_ROBOT_USER = "radxa"
 RUN_STOP_GRACE_MS = 8000
+
+_AUTONOMY_EVENT_PATTERN = re.compile(r"\bevent=(?P<event>[a-z_]+)")
+_AUTONOMY_REASON_PATTERN = re.compile(r"\breason=(?P<reason>\S+)")
+_AUTONOMY_TARGET_PATTERN = re.compile(r"\btarget=(?P<target>.*?)\s+confidence=(?P<confidence>[0-9]+(?:\.[0-9]+)?)")
+
+
+def _activity_message_for_remote_line(line: str) -> str | None:
+    if "finalized perception run bundle" in line:
+        return "RUN → evidence bundle finalized"
+
+    if "autonomy state reached:" not in line and "autonomy summary:" not in line:
+        return None
+
+    event_match = _AUTONOMY_EVENT_PATTERN.search(line)
+    if event_match is not None:
+        event = event_match.group("event")
+        if event == "started":
+            return "AUTONOMY → scanning"
+        if event == "target_locked":
+            target_match = _AUTONOMY_TARGET_PATTERN.search(line)
+            if target_match is None:
+                return "AUTONOMY → target acquired"
+            return (
+                "AUTONOMY → target acquired"
+                f" | {target_match.group('target')}"
+                f" | conf={float(target_match.group('confidence')):.2f}"
+            )
+        if event in {"centering_started", "centering_resumed"}:
+            return "AUTONOMY → centering"
+        if event == "reacquire_started":
+            return "AUTONOMY → target lost — reacquiring"
+        if event == "framing_started":
+            return "AUTONOMY → framing"
+        if event == "succeeded":
+            return "SUCCESS → target framed"
+        if event == "failed":
+            reason_match = _AUTONOMY_REASON_PATTERN.search(line)
+            if reason_match is None:
+                return "FAULT → autonomy failed"
+            return f"FAULT → autonomy failed | {reason_match.group('reason')}"
+
+    if "autonomy summary: terminal_state=failed" in line:
+        reason_match = _AUTONOMY_REASON_PATTERN.search(line)
+        if reason_match is None:
+            return "FAULT → autonomy failed"
+        return f"FAULT → autonomy failed | {reason_match.group('reason')}"
+    return None
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -335,6 +383,9 @@ class RobotMonitorGui:
         self._teleop_enabled = False
         self._last_status: robot_gateway_pb2.SystemStatus | None = None
         self._last_fault_line: str | None = None
+        self._startup_health_ready = False
+        self._last_startup_health_message: str | None = None
+        self._last_remote_activity_message: str | None = None
 
         self._host_var = tk.StringVar(value=parsed.host)
         self._port_var = tk.StringVar(value=str(parsed.port))
@@ -476,13 +527,27 @@ class RobotMonitorGui:
 
         log_section = CollapsibleSection(review_column, "Activity", padding=8)
         self._sections["log"] = log_section
+        self._activity_notebook = ttk.Notebook(log_section.body)
+        self._activity_tab = ttk.Frame(self._activity_notebook)
+        self._raw_tab = ttk.Frame(self._activity_notebook)
         self._log_text = scrolledtext.ScrolledText(
-            log_section.body,
+            self._activity_tab,
+            wrap=tk.WORD,
+            height=6,
+            state=tk.DISABLED,
+        )
+        self._raw_log_text = scrolledtext.ScrolledText(
+            self._raw_tab,
             wrap=tk.WORD,
             height=6,
             state=tk.DISABLED,
         )
         self._log_text.pack(fill=tk.BOTH, expand=True)
+        self._raw_log_text.pack(fill=tk.BOTH, expand=True)
+        self._activity_notebook.add(self._activity_tab, text="Activity")
+        self._activity_notebook.add(self._raw_tab, text="Raw")
+        self._activity_notebook.select(self._activity_tab)
+        self._activity_notebook.pack(fill=tk.BOTH, expand=True)
         self._configure_activity_tags()
         log_section.pack(fill=tk.BOTH, expand=True, pady=(8, 0))
 
@@ -782,28 +847,54 @@ class RobotMonitorGui:
     def _append_log_threadsafe(self, message: str) -> None:
         self._root.after(0, lambda: self._append_log(message))
 
+    def _append_raw_log_threadsafe(self, message: str) -> None:
+        self._root.after(0, lambda: self._append_raw_log(message))
+
+    def _append_remote_run_log_threadsafe(self, message: str) -> None:
+        self._root.after(0, lambda: self._append_remote_run_log(message))
+
     def _stub(self) -> Any:
         settings = self._connection_settings()
         channel = grpc.insecure_channel(target_for(settings.host, settings.port))
         return channel, create_stub(channel)
 
     def _configure_activity_tags(self) -> None:
-        self._log_text.tag_configure("activity_mode", foreground="#1D4ED8", font=("TkDefaultFont", 10, "bold"))
-        self._log_text.tag_configure("activity_action", font=("TkDefaultFont", 10, "bold"))
-        self._log_text.tag_configure(
-            "activity_success",
-            background="#DCFCE7",
-            foreground="#166534",
-            font=("TkDefaultFont", 10, "bold"),
-        )
-        self._log_text.tag_configure("activity_warning", foreground="#B45309")
-        self._log_text.tag_configure("activity_error", foreground="#B91C1C")
-        self._log_text.tag_configure("activity_transfer", foreground="#047857", font=("TkDefaultFont", 10, "bold"))
+        for log_text in (self._log_text, self._raw_log_text):
+            log_text.tag_configure("activity_mode", foreground="#1D4ED8", font=("TkDefaultFont", 10, "bold"))
+            log_text.tag_configure("activity_action", font=("TkDefaultFont", 10, "bold"))
+            log_text.tag_configure(
+                "activity_success",
+                background="#DCFCE7",
+                foreground="#166534",
+                font=("TkDefaultFont", 10, "bold"),
+            )
+            log_text.tag_configure("activity_warning", foreground="#B45309")
+            log_text.tag_configure("activity_error", foreground="#B91C1C")
+            log_text.tag_configure("activity_transfer", foreground="#047857", font=("TkDefaultFont", 10, "bold"))
 
     def _append_log(self, message: str, *, tag: str | None = None) -> None:
         if tag is None and "autonomy state reached: success event=succeeded" in message:
             message = f"✓ SUCCESS → {message}"
             tag = "activity_success"
+        for log_text in (self._log_text, self._raw_log_text):
+            log_text.configure(state=tk.NORMAL)
+            if tag is None:
+                log_text.insert(tk.END, message + "\n")
+            else:
+                log_text.insert(tk.END, message + "\n", tag)
+            log_text.see(tk.END)
+            log_text.configure(state=tk.DISABLED)
+
+    def _append_raw_log(self, message: str, *, tag: str | None = None) -> None:
+        self._raw_log_text.configure(state=tk.NORMAL)
+        if tag is None:
+            self._raw_log_text.insert(tk.END, message + "\n")
+        else:
+            self._raw_log_text.insert(tk.END, message + "\n", tag)
+        self._raw_log_text.see(tk.END)
+        self._raw_log_text.configure(state=tk.DISABLED)
+
+    def _append_activity_log(self, message: str, *, tag: str | None = None) -> None:
         self._log_text.configure(state=tk.NORMAL)
         if tag is None:
             self._log_text.insert(tk.END, message + "\n")
@@ -811,6 +902,24 @@ class RobotMonitorGui:
             self._log_text.insert(tk.END, message + "\n", tag)
         self._log_text.see(tk.END)
         self._log_text.configure(state=tk.DISABLED)
+
+    def _append_remote_run_log(self, message: str) -> None:
+        self._append_raw_log(message)
+        activity_message = _activity_message_for_remote_line(message)
+        if activity_message is None:
+            return
+        if (
+            activity_message == self._last_remote_activity_message
+            and activity_message != "AUTONOMY → target lost — reacquiring"
+        ):
+            return
+        self._last_remote_activity_message = activity_message
+        tag = None
+        if activity_message.startswith("SUCCESS →"):
+            tag = "activity_success"
+        elif activity_message.startswith("FAULT →"):
+            tag = "activity_error"
+        self._append_activity_log(activity_message, tag=tag)
 
     def _append_action(self, message: str) -> None:
         self._append_log(f"ACTION → {message}", tag="activity_action")
@@ -844,17 +953,18 @@ class RobotMonitorGui:
 
     def _update_transfer_progress(self, progress: RsyncProgress) -> None:
         message = self._format_transfer_progress(progress)
-        self._log_text.configure(state=tk.NORMAL)
-        if not self._transfer_progress_active:
-            self._log_text.mark_set("transfer_progress_start", "end-1c")
-            self._log_text.mark_set("transfer_progress_end", "end-1c")
-            self._log_text.mark_gravity("transfer_progress_start", tk.LEFT)
-            self._log_text.mark_gravity("transfer_progress_end", tk.RIGHT)
-            self._transfer_progress_active = True
-        self._log_text.delete("transfer_progress_start", "transfer_progress_end")
-        self._log_text.insert("transfer_progress_start", message + "\n", "activity_transfer")
-        self._log_text.see(tk.END)
-        self._log_text.configure(state=tk.DISABLED)
+        for log_text in (self._log_text, self._raw_log_text):
+            log_text.configure(state=tk.NORMAL)
+            if not self._transfer_progress_active:
+                log_text.mark_set("transfer_progress_start", "end-1c")
+                log_text.mark_set("transfer_progress_end", "end-1c")
+                log_text.mark_gravity("transfer_progress_start", tk.LEFT)
+                log_text.mark_gravity("transfer_progress_end", tk.RIGHT)
+            log_text.delete("transfer_progress_start", "transfer_progress_end")
+            log_text.insert("transfer_progress_start", message + "\n", "activity_transfer")
+            log_text.see(tk.END)
+            log_text.configure(state=tk.DISABLED)
+        self._transfer_progress_active = True
 
     def _append_artifact_warnings(self, issues: tuple[str, ...]) -> None:
         for issue in issues:
@@ -863,6 +973,15 @@ class RobotMonitorGui:
     def _append_artifact_result(self, result: RunArtifactResult) -> None:
         self._append_log("$ " + shell_join(result.command))
         self._append_log(result.message, tag="activity_error" if not result.success else None)
+        self._append_artifact_warnings(result.issues)
+
+    def _append_video_render_result(self, result: RunArtifactResult) -> None:
+        self._append_log("$ " + shell_join(result.command))
+        if result.success:
+            self._append_log(result.message)
+        else:
+            self._append_error("video rendering failed")
+            self._append_raw_log(result.message, tag="activity_error")
         self._append_artifact_warnings(result.issues)
 
     def _format_run_mode(self, state: RunState) -> str:
@@ -1012,7 +1131,8 @@ class RobotMonitorGui:
         remote_run = self._run_process
         if remote_run is None:
             return
-        start_remote_run_log_reader(remote_run, self._append_log_threadsafe)
+        self._last_remote_activity_message = None
+        start_remote_run_log_reader(remote_run, self._append_remote_run_log_threadsafe)
 
     def stop_run(self) -> None:
         self._append_action("Stop Run requested")
@@ -1173,14 +1293,15 @@ class RobotMonitorGui:
                 self._root.after(0, self._finish_artifact_operation)
                 return
 
-            self._root.after(0, lambda: self._append_stage("Transfer complete"))
+            self._root.after(0, lambda: self._append_stage("Run bundle retrieved"))
             if (context.local_import_root / run_id / "video" / "source.ts").is_file():
-                self._root.after(0, lambda: self._append_stage("Building recorded videos"))
+                self._root.after(0, lambda: self._append_stage("Rendering video…"))
                 result = build_run_videos(context, run_id=run_id)
-                self._root.after(0, lambda result=result: self._append_artifact_result(result))
+                self._root.after(0, lambda result=result: self._append_video_render_result(result))
                 if not result.success:
                     self._root.after(0, self._finish_artifact_operation)
                     return
+                self._root.after(0, lambda: self._append_stage("Video ready"))
 
             self._root.after(0, lambda: self._append_stage("Generating report"))
             result = generate_run_report(context, run_id=run_id, overwrite=True)
