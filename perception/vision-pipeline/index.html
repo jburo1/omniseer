@@ -926,6 +926,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#offline-detector-replay" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Offline Detector Replay
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#primary-implementation-files" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1300,6 +1311,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#offline-detector-replay" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Offline Detector Replay
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#primary-implementation-files" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1561,6 +1583,14 @@ by:</p>
 <p>These checks do not prove live camera, RGA, RKNN, ROCK 5B+, or full runtime
 container behavior unless they are run in an environment with the corresponding
 hardware, SDKs, devices, and ROS graph.</p>
+<h2 id="offline-detector-replay">Offline Detector Replay<a class="headerlink" href="#offline-detector-replay" title="Permanent link">&para;</a></h2>
+<p><code>vision_replay</code> is a target-side, sequential detector replay tool. It decodes one MP4,
+CPU-letterboxes each source frame into the existing 640×640 RGB DMA-backed input pool,
+then uses the normal <code>ConsumerPipeline</code>, <code>RknnRunner</code>, and YOLO-World postprocess path.
+It writes exactly one canonical JSONL record for every decoded frame, including frames
+with no detections. <code>frame_index</code> is the replay identity; the JSONL contains no wall-clock
+or inference-latency fields.</p>
+<p>This is an offline validation tool and is not part of the camera/ROS production runtime.</p>
 <h2 id="primary-implementation-files">Primary Implementation Files<a class="headerlink" href="#primary-implementation-files" title="Permanent link">&para;</a></h2>
 <ul>
 <li><code>vision/include/omniseer/vision/v4l2_capture.hpp</code> and
@@ -1575,6 +1605,9 @@ hardware, SDKs, devices, and ROS graph.</p>
   <code>vision/src/producer_pipeline.cpp</code></li>
 <li><code>vision/include/omniseer/vision/consumer_pipeline.hpp</code> and
   <code>vision/src/consumer_pipeline.cpp</code></li>
+<li><code>vision/apps/vision_replay.cpp</code></li>
+<li><code>vision/include/omniseer/vision/letterbox.hpp</code> and <code>vision/src/letterbox.cpp</code></li>
+<li><code>vision/include/omniseer/vision/replay_jsonl.hpp</code> and <code>vision/src/replay_jsonl.cpp</code></li>
 <li><code>vision/include/omniseer/vision/dma_heap_alloc.hpp</code></li>
 <li><code>vision/include/omniseer/vision/yolo_world_postprocess.hpp</code> and
   <code>vision/src/yolo_world_postprocess.cpp</code></li>
@@ -1608,7 +1641,7 @@ hardware, SDKs, devices, and ROS graph.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 6, 2026 03:29:06 UTC">August 6, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 22, 2026 03:21:24 UTC">August 22, 2026</span>
   </span>
 
     
