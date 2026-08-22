@@ -225,6 +225,17 @@ These checks do not prove live camera, RGA, RKNN, ROCK 5B+, or full runtime
 container behavior unless they are run in an environment with the corresponding
 hardware, SDKs, devices, and ROS graph.
 
+## Offline Detector Replay
+
+`vision_replay` is a target-side, sequential detector replay tool. It decodes one MP4,
+CPU-letterboxes each source frame into the existing 640×640 RGB DMA-backed input pool,
+then uses the normal `ConsumerPipeline`, `RknnRunner`, and YOLO-World postprocess path.
+It writes exactly one canonical JSONL record for every decoded frame, including frames
+with no detections. `frame_index` is the replay identity; the JSONL contains no wall-clock
+or inference-latency fields.
+
+This is an offline validation tool and is not part of the camera/ROS production runtime.
+
 ## Primary Implementation Files
 
 - `vision/include/omniseer/vision/v4l2_capture.hpp` and
@@ -239,6 +250,9 @@ hardware, SDKs, devices, and ROS graph.
   `vision/src/producer_pipeline.cpp`
 - `vision/include/omniseer/vision/consumer_pipeline.hpp` and
   `vision/src/consumer_pipeline.cpp`
+- `vision/apps/vision_replay.cpp`
+- `vision/include/omniseer/vision/letterbox.hpp` and `vision/src/letterbox.cpp`
+- `vision/include/omniseer/vision/replay_jsonl.hpp` and `vision/src/replay_jsonl.cpp`
 - `vision/include/omniseer/vision/dma_heap_alloc.hpp`
 - `vision/include/omniseer/vision/yolo_world_postprocess.hpp` and
   `vision/src/yolo_world_postprocess.cpp`

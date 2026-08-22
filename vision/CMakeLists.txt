@@ -10,12 +10,13 @@ find_path(RKNN_INCLUDE_DIR NAMES rknn_api.h)
 find_library(RKNNRT_LIBRARY NAMES rknnrt)
 
 option(VISION_BUILD_HARNESS "Build vision_harness app (requires librga)" ON)
+option(VISION_BUILD_REPLAY "Build vision_replay app (requires OpenCV and RKNN runtime)" ON)
 option(VISION_BUILD_TESTS "Build vision tests" ON)
 
 if(VISION_BUILD_HARNESS)
   find_package(PkgConfig REQUIRED)
-  pkg_check_modules(RGA librga)
   pkg_check_modules(OPENCV4 opencv4)
+  pkg_check_modules(RGA librga)
 
   if(NOT RGA_FOUND)
     message(WARNING "librga not found; disabling vision_harness (set -DVISION_BUILD_HARNESS=OFF to silence)")
@@ -29,6 +30,25 @@ if(VISION_BUILD_HARNESS)
   endif()
 endif()
 
+if(VISION_BUILD_REPLAY)
+  if(NOT RKNN_INCLUDE_DIR OR NOT RKNNRT_LIBRARY)
+    message(WARNING "RKNN runtime not found; disabling vision_replay (set -DVISION_BUILD_REPLAY=OFF to silence)")
+    set(VISION_BUILD_REPLAY OFF)
+  else()
+    find_package(PkgConfig QUIET)
+    if(NOT PkgConfig_FOUND)
+      message(WARNING "pkg-config not found; disabling vision_replay (set -DVISION_BUILD_REPLAY=OFF to silence)")
+      set(VISION_BUILD_REPLAY OFF)
+    else()
+      pkg_check_modules(OPENCV4 opencv4)
+      if(NOT OPENCV4_FOUND)
+        message(WARNING "OpenCV not found; disabling vision_replay (set -DVISION_BUILD_REPLAY=OFF to silence)")
+        set(VISION_BUILD_REPLAY OFF)
+      endif()
+    endif()
+  endif()
+endif()
+
 set(VISION_HARNESS_SOURCES
   apps/vision_harness.cpp
   src/class_list.cpp
@@ -36,6 +56,7 @@ set(VISION_HARNESS_SOURCES
   src/dma_heap_alloc.cpp
   src/image_buffer_pool.cpp
   src/jsonl_telemetry.cpp
+  src/letterbox.cpp
   src/pipeline.cpp
   src/producer_pipeline.cpp
   src/rga_preprocess.cpp
@@ -55,12 +76,41 @@ if(VISION_BUILD_HARNESS)
   target_compile_definitions(vision_harness PRIVATE VISION_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
 endif()
 
+set(VISION_REPLAY_SOURCES
+  apps/vision_replay.cpp
+  src/class_list.cpp
+  src/consumer_pipeline.cpp
+  src/cpu_letterbox_preprocess.cpp
+  src/dma_heap_alloc.cpp
+  src/image_buffer_pool.cpp
+  src/letterbox.cpp
+  src/replay_jsonl.cpp
+  src/rknn_runner.cpp
+  src/spsc_ring.cpp
+  src/vision_replay_config.cpp
+  src/yolo_world_postprocess.cpp
+  src/yolo_world_text_embeddings.cpp
+)
+
+if(VISION_BUILD_REPLAY)
+  add_executable(vision_replay ${VISION_REPLAY_SOURCES})
+  target_include_directories(vision_replay PRIVATE include ${RKNN_INCLUDE_DIR} ${OPENCV4_INCLUDE_DIRS})
+  target_link_libraries(vision_replay PRIVATE Threads::Threads ${RKNNRT_LIBRARY} ${OPENCV4_LIBRARIES})
+  target_compile_options(vision_replay PRIVATE ${OPENCV4_CFLAGS_OTHER})
+  target_compile_definitions(vision_replay PRIVATE VISION_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+endif()
+
 if(VISION_BUILD_HARNESS)
   set(VISION_LINT_SOURCES ${VISION_HARNESS_SOURCES})
+elseif(VISION_BUILD_REPLAY)
+  set(VISION_LINT_SOURCES ${VISION_REPLAY_SOURCES})
 else()
   set(VISION_LINT_SOURCES
     src/image_buffer_pool.cpp
+    src/letterbox.cpp
+    src/replay_jsonl.cpp
     src/spsc_ring.cpp
+    src/vision_replay_config.cpp
   )
 endif()
 
@@ -132,6 +182,17 @@ if(VISION_BUILD_TESTS)
 
   add_test(NAME rolling_telemetry_test COMMAND rolling_telemetry_test)
 
+  add_executable(vision_replay_utils_test
+    apps/vision_replay_utils_test.cpp
+    src/letterbox.cpp
+    src/replay_jsonl.cpp
+    src/vision_replay_config.cpp
+  )
+  target_include_directories(vision_replay_utils_test PRIVATE include)
+  target_link_libraries(vision_replay_utils_test PRIVATE GTest::gtest_main)
+
+  add_test(NAME vision_replay_utils_test COMMAND vision_replay_utils_test)
+
   if(RKNN_INCLUDE_DIR AND RKNNRT_LIBRARY)
     add_executable(rknn_runner_test
       apps/rknn_runner_test.cpp
@@ -199,6 +260,7 @@ if(VISION_BUILD_TESTS)
     add_executable(rga_preprocess_test
       apps/rga_preprocess_test.cpp
       src/dma_heap_alloc.cpp
+      src/letterbox.cpp
       src/rga_preprocess.cpp
       src/time_utils.cpp
       src/v4l2_capture.cpp
@@ -213,6 +275,7 @@ if(VISION_BUILD_TESTS)
       apps/producer_pipeline_test.cpp
       src/dma_heap_alloc.cpp
       src/image_buffer_pool.cpp
+      src/letterbox.cpp
       src/pipeline.cpp
       src/producer_pipeline.cpp
       src/rga_preprocess.cpp
@@ -233,6 +296,7 @@ if(VISION_BUILD_TESTS)
         src/consumer_pipeline.cpp
         src/dma_heap_alloc.cpp
         src/image_buffer_pool.cpp
+        src/letterbox.cpp
         src/producer_pipeline.cpp
         src/rga_preprocess.cpp
         src/rknn_runner.cpp

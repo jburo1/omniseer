@@ -2,28 +2,12 @@
 
 #include <cstdint>
 
+#include "omniseer/vision/letterbox.hpp"
 #include "omniseer/vision/rga_headers.hpp"
 #include "omniseer/vision/types.hpp"
 
 namespace omniseer::vision
 {
-
-  /**
-   * @brief Runtime letterbox parameters produced by preprocessing.
-   */
-  struct LetterboxMeta
-  {
-    /// @brief Uniform resize scale applied to source dimensions.
-    float scale{1.0f};
-    /// @brief Horizontal padding applied on destination.
-    int pad_x{0};
-    /// @brief Vertical padding applied on destination.
-    int pad_y{0};
-    /// @brief Resized content width before padding.
-    int resized_w{0};
-    /// @brief Resized content height before padding.
-    int resized_h{0};
-  };
 
   /**
    * @brief Configuration for NV12-to-RGB preprocessing with letterboxing.
@@ -92,8 +76,6 @@ namespace omniseer::vision
                          LetterboxMeta* meta = nullptr) const noexcept;
 
   private:
-    /// @brief Compute centered letterbox scale and padding from source/destination geometry.
-    static LetterboxMeta _compute_letterbox(int src_w, int src_h, int dst_w, int dst_h);
     /// @brief Initialize cached RGA rectangles from current configuration.
     bool _init_letterbox();
 

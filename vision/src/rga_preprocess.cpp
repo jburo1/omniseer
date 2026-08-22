@@ -1,9 +1,7 @@
 #include "omniseer/vision/rga_preprocess.hpp"
 
-#include <algorithm>
 #include <cassert>
 #include <cerrno>
-#include <cmath>
 #include <cstring>
 #include <linux/dma-buf.h>
 #include <stdexcept>
@@ -138,30 +136,6 @@ namespace omniseer::vision
     }
   }
 
-  LetterboxMeta RgaPreprocess::_compute_letterbox(int src_w, int src_h, int dst_w, int dst_h)
-  {
-    LetterboxMeta out{};
-    if (src_w <= 0 || src_h <= 0 || dst_w <= 0 || dst_h <= 0)
-      return out;
-
-    const float sx = static_cast<float>(dst_w) / static_cast<float>(src_w);
-    const float sy = static_cast<float>(dst_h) / static_cast<float>(src_h);
-    const float s  = std::min(sx, sy);
-
-    int resized_w = static_cast<int>(std::lround(static_cast<float>(src_w) * s));
-    int resized_h = static_cast<int>(std::lround(static_cast<float>(src_h) * s));
-
-    resized_w = std::clamp(resized_w, 1, dst_w);
-    resized_h = std::clamp(resized_h, 1, dst_h);
-
-    out.scale     = s;
-    out.resized_w = resized_w;
-    out.resized_h = resized_h;
-    out.pad_x     = (dst_w - resized_w) / 2;
-    out.pad_y     = (dst_h - resized_h) / 2;
-    return out;
-  }
-
   bool RgaPreprocess::_init_letterbox()
   {
     if (_cfg.src_w <= 0 || _cfg.src_h <= 0)
@@ -169,7 +143,7 @@ namespace omniseer::vision
     if (_cfg.dst_w <= 0 || _cfg.dst_h <= 0)
       return false;
 
-    _lb    = _compute_letterbox(_cfg.src_w, _cfg.src_h, _cfg.dst_w, _cfg.dst_h);
+    _lb    = compute_letterbox_meta({_cfg.src_w, _cfg.src_h}, {_cfg.dst_w, _cfg.dst_h});
     _srect = im_rect{0, 0, _cfg.src_w, _cfg.src_h};
     _drect = im_rect{_lb.pad_x, _lb.pad_y, _lb.resized_w, _lb.resized_h};
 
