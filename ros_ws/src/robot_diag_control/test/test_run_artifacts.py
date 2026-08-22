@@ -203,6 +203,22 @@ class RunArtifactsTests(unittest.TestCase):
 
         self.assertFalse(result.success)
         self.assertEqual(result.message, "retrieve failed: rsync failed")
+        self.assertEqual(result.output, "rsync failed")
+
+    def test_generate_run_report_preserves_stdout_and_stderr(self):
+        result = generate_run_report(
+            _context(),
+            run_id="operator_001",
+            command_executor=lambda command, _cwd: subprocess.CompletedProcess(
+                command,
+                42,
+                stdout="report stdout\n",
+                stderr="report stderr\n",
+            ),
+        )
+
+        self.assertFalse(result.success)
+        self.assertEqual(result.output, "report stdout\nreport stderr")
 
     def test_retrieve_run_artifacts_reports_launch_failure(self):
         def command_executor(_command: list[str], _cwd: Path) -> subprocess.CompletedProcess[str]:

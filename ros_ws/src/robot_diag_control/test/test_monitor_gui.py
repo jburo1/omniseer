@@ -22,9 +22,9 @@ from robot_diag_control.monitor_gui import (
     _teleop_command_for_action,
 )
 from robot_diag_control.run_artifacts import RunArtifactResult
-from robot_diag_control.run_commands import RUN_BACKEND_LABELS, RobotConnection
+from robot_diag_control.run_commands import RUN_BACKEND_LABELS, RobotConnection, RunConfig
 from robot_diag_control.run_lifecycle import RemoteRunProcess, RunPhase, run_state
-from robot_diag_control.run_manager import RunStopResult
+from robot_diag_control.run_manager import RunStartResult, RunStopResult
 
 try:
     import tkinter as tk
@@ -247,6 +247,7 @@ class MonitorGuiTests(unittest.TestCase):
             remote_runs_root="/robot/repo/runs",
         )
         gui._append_log = lambda message, **_kwargs: logs.append(message)
+        gui._append_raw_log = lambda message, **_kwargs: logs.append(message)
         gui._append_log_threadsafe = logs.append
 
         self.assertTrue(gui._request_run_stop())
@@ -663,7 +664,12 @@ class MonitorGuiTests(unittest.TestCase):
                 def retrieve(*_args, **_kwargs):
                     (run_dir / "video").mkdir(parents=True)
                     (run_dir / "video" / "source.ts").write_bytes(b"recorded")
-                    return RunArtifactResult(command=["pull"], success=True, message="retrieved")
+                    return RunArtifactResult(
+                        command=["/omniseer/scripts/omni", "runs", "pull", "operator_001"],
+                        success=True,
+                        message="retrieved run: /runs/imported/operator_001",
+                        output="pull stdout\npull stderr",
+                    )
 
                 with (
                     patch(
@@ -672,11 +678,21 @@ class MonitorGuiTests(unittest.TestCase):
                     ) as retrieve_mock,
                     patch(
                         "robot_diag_control.monitor_gui.build_run_videos",
-                        return_value=RunArtifactResult(command=["video"], success=True, message="videos built"),
+                        return_value=RunArtifactResult(
+                            command=["/omniseer/scripts/omni", "runs", "video", "/runs/imported/operator_001"],
+                            success=True,
+                            message="videos built: /runs/imported/operator_001/video/overlay.mp4",
+                            output="video stdout\nvideo stderr",
+                        ),
                     ) as build_mock,
                     patch(
                         "robot_diag_control.monitor_gui.generate_run_report",
-                        return_value=RunArtifactResult(command=["report"], success=True, message="report generated"),
+                        return_value=RunArtifactResult(
+                            command=["/omniseer/scripts/omni", "runs", "report", "/runs/imported/operator_001"],
+                            success=True,
+                            message="report generated: /runs/imported/operator_001/report/index.html",
+                            output="report stdout\nreport stderr",
+                        ),
                     ) as report_mock,
                     patch.object(gui, "_open_report") as open_report,
                 ):
@@ -703,9 +719,28 @@ class MonitorGuiTests(unittest.TestCase):
                 self.assertIn("STAGE → Run bundle retrieved", activity)
                 self.assertIn("STAGE → Rendering video…", activity)
                 self.assertIn("STAGE → Video ready", activity)
+                self.assertIn("STAGE → Generating report", activity)
+                self.assertIn("STAGE → Report ready", activity)
+                self.assertIn("STAGE → Opening report", activity)
                 self.assertEqual(activity.count("STAGE → Rendering video…"), 1)
                 self.assertNotIn("Rendering video… 0%", activity)
                 self.assertIn("STAGE → Rendering video…", raw)
+                for raw_only in (
+                    "$ /omniseer/scripts/omni runs pull operator_001",
+                    "$ /omniseer/scripts/omni runs video /runs/imported/operator_001",
+                    "$ /omniseer/scripts/omni runs report /runs/imported/operator_001",
+                    "retrieved run: /runs/imported/operator_001",
+                    "videos built: /runs/imported/operator_001/video/overlay.mp4",
+                    "report generated: /runs/imported/operator_001/report/index.html",
+                    "pull stdout",
+                    "pull stderr",
+                    "video stdout",
+                    "video stderr",
+                    "report stdout",
+                    "report stderr",
+                ):
+                    self.assertIn(raw_only, raw)
+                    self.assertNotIn(raw_only, activity)
             finally:
                 root.destroy()
 
@@ -729,7 +764,9 @@ class MonitorGuiTests(unittest.TestCase):
             raw = gui._raw_log_text.get("1.0", tk.END)
             self.assertIn("STAGE → Rendering video…", activity)
             self.assertIn("video rendering failed", activity)
+            self.assertNotIn("$ scripts/omni runs video /runs/operator_001", activity)
             self.assertNotIn("ffmpeg exited 1: invalid input stream", activity)
+            self.assertIn("$ scripts/omni runs video /runs/operator_001", raw)
             self.assertIn("video build failed: ffmpeg exited 1: invalid input stream", raw)
             self.assertTrue(gui._log_text.tag_ranges("activity_error"))
         finally:
@@ -769,6 +806,28 @@ class MonitorGuiTests(unittest.TestCase):
             self.assertIn("scan received", gui._raw_log_text.get("1.0", tk.END))
             gui._activity_notebook.select(gui._activity_tab)
             self.assertIn("operator message", gui._log_text.get("1.0", tk.END))
+        finally:
+            root.destroy()
+
+    @unittest.skipIf(tk is None, "tkinter is unavailable")
+    def test_gui_run_start_command_is_raw_only(self):
+        assert tk is not None
+        root = tk.Tk()
+        root.withdraw()
+        try:
+            gui = RobotMonitorGui(root, _build_parser().parse_args([]))
+            command = ["ssh", "-tt", "radxa@10.0.0.2", "scripts/omni runtime record --run-id operator_001"]
+
+            gui._complete_start_run(
+                RunStartResult(command=command, remote_run=RemoteRunProcess(_FakeProcess())),  # type: ignore[arg-type]
+                RunConfig(run_id="operator_001", backend=RUN_BACKEND_RUNTIME),
+            )
+
+            activity = gui._log_text.get("1.0", tk.END)
+            raw = gui._raw_log_text.get("1.0", tk.END)
+            self.assertIn("run started remotely: operator_001", activity)
+            self.assertNotIn("$ ssh -tt radxa@10.0.0.2", activity)
+            self.assertIn("$ ssh -tt radxa@10.0.0.2", raw)
         finally:
             root.destroy()
 
@@ -919,8 +978,11 @@ class MonitorGuiTests(unittest.TestCase):
                     gui._open_report(gui._artifact_context(), "operator_001")
 
                 activity = gui._log_text.get("1.0", tk.END)
+                raw = gui._raw_log_text.get("1.0", tk.END)
                 self.assertIn("artifact warning: run_open: manifest ended_at is null; run did not finalize", activity)
                 self.assertIn("artifact warning: missing_summary: summary.json is missing", activity)
+                self.assertNotIn(f"report opened: {report}", activity)
+                self.assertIn(f"report opened: {report}", raw)
                 browser_open.assert_called_once_with(report.as_uri())
             finally:
                 root.destroy()

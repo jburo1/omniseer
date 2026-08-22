@@ -37,6 +37,7 @@ class RunArtifactResult:
     command: list[str]
     success: bool
     message: str
+    output: str = ""
     path: Path | None = None
     issues: tuple[str, ...] = ()
 
@@ -85,8 +86,17 @@ def _default_progress_command_executor(
     return subprocess.CompletedProcess(command, process.wait(), stdout="".join(output), stderr="")
 
 
+def _completed_output(completed: subprocess.CompletedProcess[str]) -> str:
+    output = completed.stdout or ""
+    if completed.stderr:
+        if output and not output.endswith("\n"):
+            output += "\n"
+        output += completed.stderr
+    return output.rstrip()
+
+
 def _completed_detail(completed: subprocess.CompletedProcess[str]) -> str:
-    return (completed.stderr or completed.stdout).strip()
+    return _completed_output(completed)
 
 
 def imported_run_dir(context: RunArtifactContext, run_id: str) -> Path:
@@ -182,19 +192,28 @@ def build_run_videos(
         completed = command_executor(command, context.repo_root)
     except OSError as error:
         return RunArtifactResult(command=command, success=False, message=f"video build failed: {error}")
+    output = _completed_output(completed)
     if completed.returncode != 0:
         return RunArtifactResult(
             command=command,
             success=False,
             message=f"video build failed: {_completed_detail(completed)}",
+            output=output,
         )
     if not source_path.is_file() or not overlay_path.is_file():
         return RunArtifactResult(
             command=command,
             success=False,
             message=f"video build completed but expected outputs are missing: {source_path}, {overlay_path}",
+            output=output,
         )
-    return RunArtifactResult(command=command, success=True, path=overlay_path, message=f"videos built: {overlay_path}")
+    return RunArtifactResult(
+        command=command,
+        success=True,
+        path=overlay_path,
+        message=f"videos built: {overlay_path}",
+        output=output,
+    )
 
 
 def retrieve_run_artifacts(
@@ -222,15 +241,17 @@ def retrieve_run_artifacts(
     except OSError as error:
         return RunArtifactResult(command=command, success=False, message=f"retrieve failed: {error}")
 
+    output = _completed_output(completed)
     if completed.returncode != 0:
         detail = _completed_detail(completed)
-        return RunArtifactResult(command=command, success=False, message=f"retrieve failed: {detail}")
+        return RunArtifactResult(command=command, success=False, message=f"retrieve failed: {detail}", output=output)
     inspection = inspect_run_artifacts(context, run_id)
     if not path.is_dir():
         return RunArtifactResult(
             command=command,
             success=False,
             message=f"retrieve completed but run bundle is missing: {path}",
+            output=output,
             path=path,
             issues=inspection.issues,
         )
@@ -238,6 +259,7 @@ def retrieve_run_artifacts(
         command=command,
         success=True,
         message=f"retrieved run: {path}",
+        output=output,
         path=path,
         issues=inspection.issues,
     )
@@ -257,15 +279,22 @@ def generate_run_report(
     except OSError as error:
         return RunArtifactResult(command=command, success=False, message=f"failed to generate report: {error}")
 
+    output = _completed_output(completed)
     if completed.returncode != 0:
         detail = _completed_detail(completed)
-        return RunArtifactResult(command=command, success=False, message=f"report generation failed: {detail}")
+        return RunArtifactResult(
+            command=command,
+            success=False,
+            message=f"report generation failed: {detail}",
+            output=output,
+        )
     inspection = inspect_run_artifacts(context, run_id, require_report=True)
     if not path.is_file():
         return RunArtifactResult(
             command=command,
             success=False,
             message=f"report generation completed but report is missing: {path}",
+            output=output,
             path=path,
             issues=inspection.issues,
         )
@@ -276,6 +305,7 @@ def generate_run_report(
         command=command,
         success=True,
         message=message,
+        output=output,
         path=path,
         issues=inspection.issues,
     )

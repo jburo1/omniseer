@@ -971,14 +971,20 @@ class RobotMonitorGui:
             self._append_log(f"artifact warning: {issue}", tag="activity_warning")
 
     def _append_artifact_result(self, result: RunArtifactResult) -> None:
-        self._append_log("$ " + shell_join(result.command))
-        self._append_log(result.message, tag="activity_error" if not result.success else None)
+        self._append_raw_log("$ " + shell_join(result.command))
+        if result.output:
+            self._append_raw_log(result.output)
+        self._append_raw_log(result.message, tag="activity_error" if not result.success else None)
+        if not result.success:
+            self._append_error("artifact operation failed")
         self._append_artifact_warnings(result.issues)
 
     def _append_video_render_result(self, result: RunArtifactResult) -> None:
-        self._append_log("$ " + shell_join(result.command))
+        self._append_raw_log("$ " + shell_join(result.command))
+        if result.output:
+            self._append_raw_log(result.output)
         if result.success:
-            self._append_log(result.message)
+            self._append_raw_log(result.message)
         else:
             self._append_error("video rendering failed")
             self._append_raw_log(result.message, tag="activity_error")
@@ -1136,7 +1142,7 @@ class RobotMonitorGui:
             f"nms_iou={run_config.detector_nms_iou_threshold}; "
             f"max_detections={run_config.detector_max_detections}"
         )
-        self._append_log("$ " + shell_join(start_result.command))
+        self._append_raw_log("$ " + shell_join(start_result.command))
         self._start_run_log_reader()
         self._poll_run_process(
             remote_run=start_result.remote_run,
@@ -1207,7 +1213,7 @@ class RobotMonitorGui:
             accepted = self._run_manager.request_runtime_stop(
                 connection=self._robot_connection(),
                 run_id=run_id,
-                on_command=lambda command: self._append_log("$ " + shell_join(command)),
+                on_command=lambda command: self._append_raw_log("$ " + shell_join(command)),
                 on_message=self._append_log_threadsafe,
                 on_completion=_on_completion if finalize_on_success else None,
             )
@@ -1326,6 +1332,7 @@ class RobotMonitorGui:
             if not result.success:
                 self._root.after(0, self._finish_artifact_operation)
                 return
+            self._root.after(0, lambda: self._append_stage("Report ready"))
         except OSError as error:
             self._root.after(0, lambda error=error: self._append_error(f"artifact operation failed: {error}"))
             self._root.after(0, self._finish_artifact_operation)
@@ -1349,7 +1356,7 @@ class RobotMonitorGui:
         if not inspection.report_exists:
             return
         webbrowser.open(path.as_uri())
-        self._append_log(f"report opened: {path}")
+        self._append_raw_log(f"report opened: {path}")
 
     def refresh_status(self) -> None:
         try:
