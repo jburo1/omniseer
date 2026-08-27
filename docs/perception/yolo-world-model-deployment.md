@@ -36,8 +36,23 @@ detected.
 
 ## Local inputs
 
-Do not commit or download weights through these commands. Place the supplied
-detector checkpoint under this checkout. The only variant-specific mapping is:
+Download the pinned, ignored source assets once from a fresh checkout:
+
+```bash
+scripts/omni model assets
+```
+
+This uses `curl` with immutable Hugging Face revisions for
+`wondervictor/YOLO-World` (`4340b03f4f59f46279a6581bbb818e0f77765d4d`) and
+`openai/clip-vit-base-patch32` (`3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268`),
+plus Rockchip Model Zoo commit
+`bad6c7334531becaf90a561988519b7bec34d0ab` for `bus.jpg` and
+`coco_text_outp.npy`. It creates the required one-line local calibration
+dataset. Existing non-empty files are retained, downloads use `.part` files
+until complete, and every required asset is validated before the command
+reports success. `models/` remains ignored.
+
+The only variant-specific mapping is:
 
 | Variant | Checkpoint | Rockchip export config | Artifact stem |
 | --- | --- | --- | --- |
@@ -50,16 +65,19 @@ models/source/yolo_world/v2m/yolo_world_v2_m_obj365v1_goldg_pretrain-c6237d5b.pt
 ```
 
 Rockchip's exporter also instantiates the CLIP text encoder in order to
-reparameterize the supplied COCO text prompts. To keep exports offline and
-reproducible, manually place a complete official
-`openai/clip-vit-base-patch32` Hugging Face snapshot at:
+reparameterize the supplied COCO text prompts. `model assets` places the
+complete official `openai/clip-vit-base-patch32` snapshot at:
 
 ```text
 models/source/clip-vit-base-patch32/
   config.json
   pytorch_model.bin
   tokenizer_config.json
-  tokenizer.json or vocab.json + merges.txt
+  tokenizer.json
+  merges.txt
+  vocab.json
+  special_tokens_map.json
+  preprocessor_config.json
 ```
 
 The wrapper checks the model configuration and weights and forces Hugging Face
@@ -105,14 +123,16 @@ scripts/omni model compile \
   --precision fp
 ```
 
-For INT8, keep the Rockchip YOLO-World v2.1.0 calibration directory and dataset
-format unchanged. The pinned Model Zoo conversion contract is commit
+For INT8, `model assets` creates the Rockchip YOLO-World calibration directory
+and dataset format. The pinned Model Zoo conversion contract is commit
 `c2b7d00714b4e5d21266ab3003f3ca687ba0d57b`; it references
 `coco_text_outp.npy` but does not contain that file. Source only that missing
 calibration embedding from Rockchip Model Zoo commit
 `bad6c7334531becaf90a561988519b7bec34d0ab`
-(`examples/yolo_world/model/coco_text_outp.npy`). Keep it local and ignored,
-alongside the calibration image, preserving the dataset line exactly:
+(`examples/yolo_world/model/coco_text_outp.npy`). The command keeps it local
+and ignored, alongside the calibration image, preserving the dataset line
+exactly and validating that the embedding is a NumPy array of shape
+`[1,80,512]`:
 
 ```text
 models/source/yolo_world/calibration/
@@ -140,8 +160,7 @@ defaults are `artifacts/models/yolo_world_v2_m_fp.rknn` and
 
 ## Full build
 
-After the builder image, detector checkpoint, and local CLIP snapshot are in
-place, run:
+After `model assets` and the builder image are in place, run:
 
 ```bash
 scripts/omni model build \

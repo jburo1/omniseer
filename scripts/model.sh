@@ -10,6 +10,12 @@ source "${script_dir}/lib/common.sh"
 
 readonly model_builder_default_image="omniseer/model-builder:yolo-world-v2s-rknn-toolkit2-2.1.0"
 readonly model_default_variant="v2s"
+readonly model_yolo_world_revision="4340b03f4f59f46279a6581bbb818e0f77765d4d"
+readonly model_clip_revision="3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268"
+readonly model_rockchip_model_zoo_revision="bad6c7334531becaf90a561988519b7bec34d0ab"
+readonly model_yolo_world_assets_url="https://huggingface.co/wondervictor/YOLO-World/resolve/${model_yolo_world_revision}"
+readonly model_clip_assets_url="https://huggingface.co/openai/clip-vit-base-patch32/resolve/${model_clip_revision}"
+readonly model_rockchip_assets_url="https://raw.githubusercontent.com/airockchip/rknn_model_zoo/${model_rockchip_model_zoo_revision}/examples/yolo_world/model"
 
 # Keep this deliberately small: all supported variants use the same exporter,
 # validator, RKNN settings, calibration data, and target. Only these values
@@ -36,6 +42,7 @@ model_select_variant() {
 model_usage() {
   cat <<'EOF'
 Usage:
+  scripts/omni model assets
   scripts/omni model image [--image <name>] [docker build args...]
   scripts/omni model export [--variant v2s|v2m] --weights <checkpoint.pth> [--output <model.onnx>] [--clip-model <dir>] [--image <name>]
   scripts/omni model compile [--variant v2s|v2m] --onnx <model.onnx> --precision fp|int8 [--output <model.rknn>] [--calibration-dir <dir>] [--image <name>]
@@ -147,17 +154,132 @@ model_require_clip_model() {
     || omni_die "local CLIP model must contain config.json and pytorch_model.bin: ${clip_model}"
 }
 
+model_require_calibration_embedding() {
+  local embedding="$1"
+  [[ -s "${embedding}" ]] \
+    || omni_die "Rockchip INT8 text embedding is missing: ${embedding}"
+
+  if ! python3 - "${embedding}" <<'PY'
+import ast
+import struct
+import sys
+
+path = sys.argv[1]
+with open(path, "rb") as asset:
+    if asset.read(6) != b"\x93NUMPY":
+        raise ValueError("missing NumPy magic")
+    version = tuple(asset.read(2))
+    if version == (1, 0):
+        header_length = struct.unpack("<H", asset.read(2))[0]
+    elif version in {(2, 0), (3, 0)}:
+        header_length = struct.unpack("<I", asset.read(4))[0]
+    else:
+        raise ValueError(f"unsupported NumPy version {version}")
+    header = ast.literal_eval(asset.read(header_length).decode("latin1").strip())
+    data_offset = asset.tell()
+
+if header.get("shape") != (1, 80, 512) or header.get("descr") != "<f4":
+    raise ValueError("expected a float32 array with shape (1, 80, 512)")
+with open(path, "rb") as asset:
+    asset.seek(0, 2)
+    if asset.tell() != data_offset + 1 * 80 * 512 * 4:
+        raise ValueError("unexpected array data size")
+PY
+  then
+    omni_die "Rockchip INT8 text embedding must be a valid NumPy file with shape [1,80,512]: ${embedding}"
+  fi
+}
+
 model_require_calibration() {
-  local calibration_dir="$1" npy_magic
+  local calibration_dir="$1"
   [[ -s "${calibration_dir}/dataset.txt" ]] \
     || omni_die "INT8 calibration dataset.txt is missing or empty: ${calibration_dir}/dataset.txt"
+  cmp -s "${calibration_dir}/dataset.txt" <(printf 'bus.jpg coco_text_outp.npy\n') \
+    || omni_die "INT8 calibration dataset.txt must contain exactly: bus.jpg coco_text_outp.npy"
   [[ -s "${calibration_dir}/bus.jpg" ]] \
     || omni_die "Rockchip INT8 calibration image is missing: ${calibration_dir}/bus.jpg"
-  [[ -s "${calibration_dir}/coco_text_outp.npy" ]] \
-    || omni_die "Rockchip INT8 text embedding is missing: ${calibration_dir}/coco_text_outp.npy"
-  npy_magic="$(od -An -tx1 -N6 "${calibration_dir}/coco_text_outp.npy" | tr -d '[:space:]')"
-  [[ "${npy_magic}" == "934e554d5059" ]] \
-    || omni_die "Rockchip INT8 text embedding is not a NumPy .npy file: ${calibration_dir}/coco_text_outp.npy"
+  model_require_calibration_embedding "${calibration_dir}/coco_text_outp.npy"
+}
+
+model_download_missing() {
+  local url="$1" destination="$2" part
+  [[ -s "${destination}" ]] && return 0
+  [[ ! -d "${destination}" ]] || omni_die "asset path is a directory: ${destination}"
+  part="${destination}.part"
+  [[ ! -e "${part}" ]] || omni_die "incomplete asset download already exists: ${part}"
+  mkdir -p "$(dirname "${destination}")"
+  if ! curl -fL --output "${part}" "${url}"; then
+    rm -f "${part}"
+    omni_die "failed to download model asset: ${url}"
+  fi
+  [[ -s "${part}" ]] || {
+    rm -f "${part}"
+    omni_die "downloaded model asset is empty: ${url}"
+  }
+  mv "${part}" "${destination}"
+}
+
+model_write_missing_calibration_dataset() {
+  local dataset="$1" part
+  [[ -s "${dataset}" ]] && return 0
+  [[ ! -d "${dataset}" ]] || omni_die "asset path is a directory: ${dataset}"
+  part="${dataset}.part"
+  [[ ! -e "${part}" ]] || omni_die "incomplete asset download already exists: ${part}"
+  mkdir -p "$(dirname "${dataset}")"
+  printf 'bus.jpg coco_text_outp.npy\n' >"${part}"
+  mv "${part}" "${dataset}"
+}
+
+model_require_assets() {
+  local source_root clip_model calibration_dir checkpoint variant
+  source_root="$(omni_repo_root)/models/source"
+  clip_model="${source_root}/clip-vit-base-patch32"
+  calibration_dir="${source_root}/yolo_world/calibration"
+
+  for variant in v2s v2m; do
+    model_select_variant "${variant}"
+    checkpoint="${source_root}/yolo_world/${model_variant}/${model_checkpoint_name}"
+    model_require_checkpoint "${checkpoint}"
+  done
+  for checkpoint in config.json pytorch_model.bin tokenizer_config.json tokenizer.json merges.txt vocab.json special_tokens_map.json preprocessor_config.json; do
+    [[ -s "${clip_model}/${checkpoint}" ]] \
+      || omni_die "local CLIP model asset is missing or empty: ${clip_model}/${checkpoint}"
+  done
+  model_require_calibration "${calibration_dir}"
+}
+
+model_assets() {
+  local source_root clip_model calibration_dir checkpoint variant asset
+  case "${1:-}" in
+    "") ;;
+    help|-h|--help) model_usage; return 0 ;;
+    *) omni_die "model assets does not accept options" ;;
+  esac
+  omni_require_command curl
+  omni_require_command python3
+
+  source_root="$(omni_repo_root)/models/source"
+  clip_model="${source_root}/clip-vit-base-patch32"
+  calibration_dir="${source_root}/yolo_world/calibration"
+  for variant in v2s v2m; do
+    model_select_variant "${variant}"
+    checkpoint="${source_root}/yolo_world/${model_variant}/${model_checkpoint_name}"
+    model_download_missing "${model_yolo_world_assets_url}/${model_checkpoint_name}" "${checkpoint}"
+  done
+  for asset in config.json pytorch_model.bin tokenizer_config.json tokenizer.json merges.txt vocab.json special_tokens_map.json preprocessor_config.json; do
+    model_download_missing "${model_clip_assets_url}/${asset}" "${clip_model}/${asset}"
+  done
+  model_write_missing_calibration_dataset "${calibration_dir}/dataset.txt"
+  model_download_missing "${model_rockchip_assets_url}/bus.jpg" "${calibration_dir}/bus.jpg"
+  model_download_missing "${model_rockchip_assets_url}/coco_text_outp.npy" "${calibration_dir}/coco_text_outp.npy"
+  model_require_assets
+
+  printf 'Model assets ready:\n'
+  printf '  %s\n' \
+    "${source_root}/yolo_world/v2s/yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth" \
+    "${source_root}/yolo_world/v2m/yolo_world_v2_m_obj365v1_goldg_pretrain-c6237d5b.pth" \
+    "${clip_model}" \
+    "${calibration_dir}"
 }
 
 model_image() {
@@ -341,6 +463,7 @@ model_main() {
   local subcommand="${1:-help}"
   if [[ $# -gt 0 ]]; then shift; fi
   case "${subcommand}" in
+    assets) model_assets "$@" ;;
     image) model_image "$@" ;;
     export) model_export "$@" ;;
     compile) model_compile "$@" ;;
