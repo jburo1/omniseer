@@ -1247,8 +1247,19 @@ wrapper derives the host repository bind path; set
 <code>OMNISEER_MODEL_HOST_REPO_ROOT=/host/path/to/omniseer</code> if that mount cannot be
 detected.</p>
 <h2 id="local-inputs">Local inputs<a class="headerlink" href="#local-inputs" title="Permanent link">&para;</a></h2>
-<p>Do not commit or download weights through these commands. Place the supplied
-detector checkpoint under this checkout. The only variant-specific mapping is:</p>
+<p>Download the pinned, ignored source assets once from a fresh checkout:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>model<span class="w"> </span>assets
+</code></pre></div>
+<p>This uses <code>curl</code> with immutable Hugging Face revisions for
+<code>wondervictor/YOLO-World</code> (<code>4340b03f4f59f46279a6581bbb818e0f77765d4d</code>) and
+<code>openai/clip-vit-base-patch32</code> (<code>3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268</code>),
+plus Rockchip Model Zoo commit
+<code>bad6c7334531becaf90a561988519b7bec34d0ab</code> for <code>bus.jpg</code> and
+<code>coco_text_outp.npy</code>. It creates the required one-line local calibration
+dataset. Existing non-empty files are retained, downloads use <code>.part</code> files
+until complete, and every required asset is validated before the command
+reports success. <code>models/</code> remains ignored.</p>
+<p>The only variant-specific mapping is:</p>
 <table>
 <thead>
 <tr>
@@ -1277,14 +1288,17 @@ detector checkpoint under this checkout. The only variant-specific mapping is:</
 models/source/yolo_world/v2m/yolo_world_v2_m_obj365v1_goldg_pretrain-c6237d5b.pth
 </code></pre></div>
 <p>Rockchip's exporter also instantiates the CLIP text encoder in order to
-reparameterize the supplied COCO text prompts. To keep exports offline and
-reproducible, manually place a complete official
-<code>openai/clip-vit-base-patch32</code> Hugging Face snapshot at:</p>
+reparameterize the supplied COCO text prompts. <code>model assets</code> places the
+complete official <code>openai/clip-vit-base-patch32</code> snapshot at:</p>
 <div class="highlight"><pre><span></span><code>models/source/clip-vit-base-patch32/
   config.json
   pytorch_model.bin
   tokenizer_config.json
-  tokenizer.json or vocab.json + merges.txt
+  tokenizer.json
+  merges.txt
+  vocab.json
+  special_tokens_map.json
+  preprocessor_config.json
 </code></pre></div>
 <p>The wrapper checks the model configuration and weights and forces Hugging Face
 offline mode. Use <code>--clip-model &lt;directory&gt;</code> to choose another local snapshot.</p>
@@ -1317,14 +1331,16 @@ and rejects any model not having exactly the native runtime interface:</p>
 <span class="w">  </span>--onnx<span class="w"> </span>artifacts/models/yolo_world_v2_s.onnx<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--precision<span class="w"> </span>fp
 </code></pre></div>
-<p>For INT8, keep the Rockchip YOLO-World v2.1.0 calibration directory and dataset
-format unchanged. The pinned Model Zoo conversion contract is commit
+<p>For INT8, <code>model assets</code> creates the Rockchip YOLO-World calibration directory
+and dataset format. The pinned Model Zoo conversion contract is commit
 <code>c2b7d00714b4e5d21266ab3003f3ca687ba0d57b</code>; it references
 <code>coco_text_outp.npy</code> but does not contain that file. Source only that missing
 calibration embedding from Rockchip Model Zoo commit
 <code>bad6c7334531becaf90a561988519b7bec34d0ab</code>
-(<code>examples/yolo_world/model/coco_text_outp.npy</code>). Keep it local and ignored,
-alongside the calibration image, preserving the dataset line exactly:</p>
+(<code>examples/yolo_world/model/coco_text_outp.npy</code>). The command keeps it local
+and ignored, alongside the calibration image, preserving the dataset line
+exactly and validating that the embedding is a NumPy array of shape
+<code>[1,80,512]</code>:</p>
 <div class="highlight"><pre><span></span><code>models/source/yolo_world/calibration/
   dataset.txt             # contains: bus.jpg coco_text_outp.npy
   bus.jpg
@@ -1344,8 +1360,7 @@ normalization <code>mean=[0,0,0]</code>, <code>std=[255,255,255]</code>, and fix
 defaults are <code>artifacts/models/yolo_world_v2_m_fp.rknn</code> and
 <code>artifacts/models/yolo_world_v2_m_i8.rknn</code>.</p>
 <h2 id="full-build">Full build<a class="headerlink" href="#full-build" title="Permanent link">&para;</a></h2>
-<p>After the builder image, detector checkpoint, and local CLIP snapshot are in
-place, run:</p>
+<p>After <code>model assets</code> and the builder image are in place, run:</p>
 <div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>model<span class="w"> </span>build<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--variant<span class="w"> </span>v2s<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--weights<span class="w"> </span>models/source/yolo_world/v2s/yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth<span class="w"> </span><span class="se">\</span>
@@ -1382,7 +1397,7 @@ tools run if a generated artifact is missing or empty.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 19, 2026 00:12:51 UTC">August 19, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 27, 2026 00:24:18 UTC">August 27, 2026</span>
   </span>
 
     
