@@ -73,7 +73,7 @@ class RunCommandsTests(unittest.TestCase):
             ],
         )
 
-    def test_runtime_perception_scan_records_video_without_detector_or_autonomy_arguments(self):
+    def test_runtime_perception_scan_records_video_without_vision_or_detector_or_autonomy_arguments(self):
         command = build_remote_start_command(
             connection=_connection(),
             run_config=RunConfig(
@@ -99,6 +99,7 @@ class RunCommandsTests(unittest.TestCase):
         self.assertIn("gateway_preview_encoder:=software", command[3])
         self.assertIn("start_perception_scan:=true", command[3])
         self.assertIn("start_vision:=false", command[3])
+        self.assertIn("gateway_require_vision:=false", command[3])
         self.assertIn("perception_scan_yaw_rate_rad_s:=0.20", command[3])
         self.assertLess(command[3].index("--record-experiment-config"), command[3].index(" -- "))
         self.assertNotIn("--record-classes", command[3])
@@ -237,6 +238,7 @@ class RunCommandsTests(unittest.TestCase):
         self.assertIn("gateway_preview_encoder:=software", command[3])
         self.assertIn("start_perception_scan:=true", command[3])
         self.assertIn("start_vision:=false", command[3])
+        self.assertIn("gateway_require_vision:=false", command[3])
         self.assertNotIn("--record-classes", command[3])
         self.assertNotIn("classes_path:=", command[3])
         self.assertNotIn("postprocess_", command[3])

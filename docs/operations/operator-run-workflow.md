@@ -114,6 +114,10 @@ This capture is intentionally independent of the existing
 `video/source.ts` is consumed unchanged by that offline 2×2 detector
 comparison.
 
+The scan intentionally does not start native vision. Its gateway health check
+therefore requires fresh odometry but does not wait for `/vision/perf`; this
+keeps the video-only capture independent of RKNN inference.
+
 ## Detector Selection and Tuning
 
 Before selecting an external detector model for autonomy, copy its generated

@@ -113,6 +113,24 @@ namespace robot_diag_control_cpp
       EXPECT_EQ(stale_odom.health.odom_age_ms, 1100U);
     }
 
+    TEST(GatewayStateStoreTest, RobotHealthCanRequireOnlyFreshOdometry)
+    {
+      TimePoint         now{Clock::duration{std::chrono::seconds(100)}};
+      GatewayStateStore store(
+          "robot_diag_control_cpp", "0.1.0", std::chrono::milliseconds(1500),
+          std::chrono::milliseconds(1000), [&now]() { return now; }, std::chrono::milliseconds(500),
+          1280, 720, false);
+
+      nav_msgs::msg::Odometry odom{};
+      store.update_odometry(odom);
+
+      const auto healthy_without_vision = store.get_system_status();
+      EXPECT_TRUE(healthy_without_vision.health.ready);
+      EXPECT_EQ(healthy_without_vision.health.state, RobotHealthState::Ok);
+      EXPECT_EQ(healthy_without_vision.health.summary, "robot healthy");
+      EXPECT_FALSE(healthy_without_vision.vision.available);
+    }
+
     TEST(GatewayStateStoreTest, DetectionOverlaySnapshotTracksLatestDetectionsAndFreshness)
     {
       TimePoint         now{Clock::duration{std::chrono::seconds(100)}};

@@ -220,7 +220,8 @@ namespace robot_diag_control_cpp
         std::chrono::milliseconds odom_stale_after       = std::chrono::milliseconds(1000),
         TimeSource                time_source            = std::chrono::steady_clock::now,
         std::chrono::milliseconds detections_stale_after = std::chrono::milliseconds(500),
-        uint32_t detection_source_width_px = 1280, uint32_t detection_source_height_px = 720);
+        uint32_t detection_source_width_px = 1280, uint32_t detection_source_height_px = 720,
+        bool require_vision = true);
 
     SystemStatusSnapshot               get_system_status() const;
     DetectionOverlaySnapshot           get_detection_overlay() const;
@@ -328,6 +329,7 @@ namespace robot_diag_control_cpp
     std::chrono::milliseconds                _command_stale_after{500};
     uint32_t                                 _detection_source_width_px{1280};
     uint32_t                                 _detection_source_height_px{720};
+    bool                                     _require_vision{true};
     TimeSource                               _time_source{};
     PreviewStatusSnapshot                    _preview{};
     TeleopStatusSnapshot                     _teleop{};

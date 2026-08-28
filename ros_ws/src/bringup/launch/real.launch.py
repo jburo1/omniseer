@@ -52,6 +52,7 @@ _REAL_ARGUMENT_DEFAULTS = [
     ("gateway_preview_device", "/dev/video11"),
     ("gateway_preview_record_path", ""),
     ("gateway_preview_encoder", "rockchip"),
+    ("gateway_require_vision", "true"),
     ("start_autonomy", "false"),
     ("start_perception_scan", "false"),
     ("perception_scan_yaw_rate_rad_s", "0.20"),
@@ -185,6 +186,7 @@ _COMMON_FORWARD_ARGS = [
     "gateway_preview_device",
     "gateway_preview_record_path",
     "gateway_preview_encoder",
+    "gateway_require_vision",
 ]
 
 

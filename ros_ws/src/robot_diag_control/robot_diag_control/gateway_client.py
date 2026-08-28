@@ -52,6 +52,10 @@ def _vision_freshness(vision: robot_gateway_pb2.VisionStatus) -> str:
     return "OK"
 
 
+def _vision_is_optional(health: robot_gateway_pb2.RobotHealth, vision: robot_gateway_pb2.VisionStatus) -> bool:
+    return health.ready and not vision.available
+
+
 def _preview_state(preview: robot_gateway_pb2.PreviewStatus) -> str:
     return STATE_NAMES.get(preview.state, "unknown").upper()
 
@@ -78,7 +82,7 @@ def _operator_faults(response: robot_gateway_pb2.SystemStatus) -> list[str]:
         faults.append("ODOMETRY MISSING")
     elif health.odom_stale:
         faults.append("ODOMETRY STALE")
-    if not vision.available:
+    if not vision.available and not health.ready:
         faults.append("VISION MISSING")
     elif vision.stale:
         faults.append("VISION STALE")
@@ -310,12 +314,14 @@ def format_operator_status(response: robot_gateway_pb2.SystemStatus) -> str:
     teleop = response.teleop
     platform = response.platform
     effective = response.effective_command
+    vision_optional = _vision_is_optional(health, vision)
+    vision_state = "OPTIONAL" if vision_optional else _vision_freshness(vision)
 
     top_strip = (
         f"TELEOP {_teleop_state(teleop)} | "
         f"{'READY' if health.ready else 'NOT READY'} | "
         f"ODOM {_odom_freshness(health)} {health.odom_age_ms} ms | "
-        f"VISION {_vision_freshness(vision)} | "
+        f"VISION {vision_state} | "
         f"PREVIEW {_preview_state(preview)}"
     )
     perception_strip = (
@@ -325,6 +331,8 @@ def format_operator_status(response: robot_gateway_pb2.SystemStatus) -> str:
         f"LAT {vision.last_infer_ms:.0f} ms | "
         f"ERR infer={vision.infer_error_count} capture={vision.capture_fatal_error_count}"
         if vision.available
+        else "CAM -- FPS | DET -- FPS | LAT -- ms | VIDEO-ONLY CAPTURE"
+        if vision_optional
         else "CAM -- FPS | DET -- FPS | LAT -- ms | VISION MISSING"
     )
     _, *motion_strips = format_motion_status(teleop, effective, health)

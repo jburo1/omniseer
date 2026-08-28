@@ -337,6 +337,7 @@ def _perception_scan_launch_args(run_config: RunConfig) -> list[str]:
     return [
         "start_perception_scan:=true",
         "start_vision:=false",
+        "gateway_require_vision:=false",
         f"perception_scan_yaw_rate_rad_s:={run_config.perception_scan_yaw_rate_rad_s}",
     ]
 

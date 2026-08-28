@@ -172,6 +172,25 @@ class GatewayClientFormattingTests(unittest.TestCase):
         self.assertIn("FAULT waiting for odometry | ODOMETRY STALE | VISION STALE", formatted)
         self.assertNotIn("DEADMAN", formatted)
 
+    def test_format_operator_status_omits_optional_vision_from_healthy_gateway_faults(self):
+        response = robot_gateway_pb2.SystemStatus(
+            health=robot_gateway_pb2.RobotHealth(
+                state=robot_gateway_pb2.ROBOT_HEALTH_OK,
+                ready=True,
+                summary="robot healthy",
+                odom_available=True,
+            ),
+            vision=robot_gateway_pb2.VisionStatus(available=False),
+            platform=_healthy_platform(),
+        )
+
+        formatted = format_operator_status(response)
+
+        self.assertIn("READY", formatted)
+        self.assertIn("VISION OPTIONAL", formatted)
+        self.assertIn("VIDEO-ONLY CAPTURE", formatted)
+        self.assertNotIn("VISION MISSING", formatted)
+
     def test_format_system_status_summary_includes_health_state(self):
         response = robot_gateway_pb2.SystemStatus(
             health=robot_gateway_pb2.RobotHealth(

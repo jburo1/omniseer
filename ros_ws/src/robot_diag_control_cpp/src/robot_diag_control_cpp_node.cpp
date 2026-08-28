@@ -37,6 +37,7 @@ namespace robot_diag_control_cpp
       const auto grpc_port         = declare_parameter<int64_t>("grpc_port", 50051);
       const auto robot_health_odom_topic =
           declare_parameter<std::string>("robot_health_odom_topic", "/odometry/filtered");
+      const auto require_vision  = declare_parameter<bool>("require_vision", true);
       const auto preview_command = declare_parameter<std::string>("preview_command", "");
       const auto preview_args =
           declare_parameter<std::vector<std::string>>("preview_args", std::vector<std::string>{});
@@ -94,14 +95,12 @@ namespace robot_diag_control_cpp
         throw std::runtime_error("platform_status_poll_ms must be positive");
       }
 
-      _state_store =
-          std::make_unique<GatewayStateStore>(get_name(), "0.1.0",
-                                              std::chrono::milliseconds(vision_stale_after_ms),
-                                              std::chrono::milliseconds(odom_stale_after_ms),
-                                              std::chrono::steady_clock::now,
-                                              std::chrono::milliseconds(detections_stale_after_ms),
-                                              static_cast<uint32_t>(detection_source_width_px),
-                                              static_cast<uint32_t>(detection_source_height_px));
+      _state_store = std::make_unique<GatewayStateStore>(
+          get_name(), "0.1.0", std::chrono::milliseconds(vision_stale_after_ms),
+          std::chrono::milliseconds(odom_stale_after_ms), std::chrono::steady_clock::now,
+          std::chrono::milliseconds(detections_stale_after_ms),
+          static_cast<uint32_t>(detection_source_width_px),
+          static_cast<uint32_t>(detection_source_height_px), require_vision);
       _platform_status_sampler = std::make_unique<PlatformStatusSampler>();
       PreviewCommandFactory preview_command_factory;
       if (!preview_command.empty())
@@ -200,14 +199,16 @@ namespace robot_diag_control_cpp
                 _platform_status_sampler->sample_onboard_battery());
           });
 
-      RCLCPP_INFO(get_logger(),
-                  "C++ gateway node started; gRPC listening on %s, /vision/perf aggregation is "
-                  "active, robot health odom topic is %s, preview source is %s, teleop command "
-                  "topic is %s, effective command topic is %s, battery topic is %s",
-                  _grpc_server->listen_address().c_str(), robot_health_odom_topic.c_str(),
-                  preview_command.empty() ? preview_source_kind.c_str() : preview_command.c_str(),
-                  teleop_command_topic.c_str(), effective_command_topic.c_str(),
-                  battery_topic.c_str());
+      RCLCPP_INFO(
+          get_logger(),
+          "C++ gateway node started; gRPC listening on %s, /vision/perf aggregation is "
+          "active, robot health requires vision=%s, odom topic is %s, preview source is %s, "
+          "teleop command "
+          "topic is %s, effective command topic is %s, battery topic is %s",
+          _grpc_server->listen_address().c_str(), require_vision ? "true" : "false",
+          robot_health_odom_topic.c_str(),
+          preview_command.empty() ? preview_source_kind.c_str() : preview_command.c_str(),
+          teleop_command_topic.c_str(), effective_command_topic.c_str(), battery_topic.c_str());
     }
 
     ~RobotDiagControlCppNode() override

@@ -20,12 +20,12 @@ namespace robot_diag_control_cpp
                                        TimeSource                time_source,
                                        std::chrono::milliseconds detections_stale_after,
                                        uint32_t                  detection_source_width_px,
-                                       uint32_t                  detection_source_height_px)
+                                       uint32_t detection_source_height_px, bool require_vision)
       : _gateway_name(std::move(gateway_name)), _gateway_version(std::move(gateway_version)),
         _vision_stale_after(vision_stale_after), _odom_stale_after(odom_stale_after),
         _detections_stale_after(detections_stale_after),
         _detection_source_width_px(detection_source_width_px),
-        _detection_source_height_px(detection_source_height_px),
+        _detection_source_height_px(detection_source_height_px), _require_vision(require_vision),
         _time_source(std::move(time_source))
   {
   }
@@ -298,7 +298,7 @@ namespace robot_diag_control_cpp
       };
     }
 
-    if (!vision.available)
+    if (_require_vision && !vision.available)
     {
       return RobotHealthSnapshot{
           RobotHealthState::Degraded,
@@ -315,7 +315,7 @@ namespace robot_diag_control_cpp
       };
     }
 
-    if (vision.stale)
+    if (_require_vision && vision.stale)
     {
       return RobotHealthSnapshot{
           RobotHealthState::Degraded,
