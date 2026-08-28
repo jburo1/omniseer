@@ -716,6 +716,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#perception-scan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Perception Scan
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#detector-selection-and-tuning" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1234,6 +1245,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#perception-scan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Perception Scan
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#detector-selection-and-tuning" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1409,16 +1431,30 @@ needs it to write final metadata such as <code>manifest.yaml</code> and <code>su
 <p>Artifact operations are local laptop actions after the robot run has completed.
 They stay separate from robot process lifecycle and do not change robot-side
 behavior.</p>
+<h2 id="perception-scan">Perception Scan<a class="headerlink" href="#perception-scan" title="Permanent link">&para;</a></h2>
+<p><code>Perception: 360° environment scan</code> is a bounded environment capture used to
+generate a controlled reference <code>video/source.ts</code> for offline detector
+comparison. It records video implicitly, starts no live detector inference,
+and rotates in place at the configured positive yaw rate (0.20 rad/s by
+default). The scan completes only after <code>/odometry/filtered</code> reports one full
+wrapped-yaw revolution, commands zero velocity, and exits so the normal
+RunBundle recorder finalizes the bundle. Odometry that never arrives or becomes
+stale ends the scan cleanly without continuing motion.</p>
+<p>This capture is intentionally independent of the existing
+<code>scripts/omni runs compare ...</code> and comparison-report workflow: the resulting
+<code>video/source.ts</code> is consumed unchanged by that offline 2×2 detector
+comparison.</p>
 <h2 id="detector-selection-and-tuning">Detector Selection and Tuning<a class="headerlink" href="#detector-selection-and-tuning" title="Permanent link">&para;</a></h2>
-<p>Before selecting an external detector model, copy its generated RKNN artifact to
-the robot repository's <code>runs/model_artifacts/</code> directory. The normal Experiment
-controls expose <code>Runtime default</code>, YOLO-World v2-S/v2-M, and FP/INT8 choices.
+<p>Before selecting an external detector model for autonomy, copy its generated
+RKNN artifact to the robot repository's <code>runs/model_artifacts/</code> directory. The
+normal Experiment controls expose <code>Runtime default</code>, YOLO-World v2-S/v2-M, and
+FP/INT8 choices.
 An explicit choice uses the staged artifact for that run; <code>Runtime default</code>
 continues to use the detector configured by the runtime image or config. The
 selector does not upload or discover model files.</p>
-<p>The collapsed <strong>Advanced Experiment Overrides</strong> section exposes detector controls
-that operators can adjust between runs without changing hardware or model
-assumptions:</p>
+<p>For autonomy, the collapsed <strong>Advanced Experiment Overrides</strong> section exposes
+detector controls that operators can adjust between runs without changing
+hardware or model assumptions:</p>
 <ul>
 <li><code>Score Threshold</code> -&gt; <code>postprocess.score_threshold</code></li>
 <li><code>NMS IoU</code> -&gt; <code>postprocess.nms_iou_threshold</code></li>
@@ -1426,13 +1462,13 @@ assumptions:</p>
 </ul>
 <p>The command builder passes these as launch arguments and also records them as
 experiment parameters in the run manifest. Operator-started runs also record the
-selected <code>Experiment</code> dropdown label, either <code>Perception recording</code> or
-<code>Autonomy: frame and capture target</code>, so the HTML report has a clear provenance
+selected <code>Experiment</code> dropdown label, either <code>Perception: 360° environment scan</code>
+or <code>Autonomy: frame and capture target</code>, so the HTML report has a clear provenance
 label even when no external experiment config file is used. Model paths, camera
 device, capture size, model input size, class padding, and runner warmup remain
 launch/config-file controls.</p>
-<p>For a recorded camera stream, select <strong>Record video</strong> before starting the run.
-This is off by default. <strong>Retrieve &amp; Open Report</strong> preserves <code>video/source.mp4</code>
+<p>The perception scan always records video. For autonomy, select <strong>Record video</strong>
+before starting the run; it remains off by default. <strong>Retrieve &amp; Open Report</strong> preserves <code>video/source.mp4</code>
 as a stream-copy remux of raw <code>video/source.ts</code>, then creates the repaired
 presentation derivative <code>video/source.corrected.mp4</code> and the approximate
 detection overlay <code>video/overlay.mp4</code> before regenerating the report. Rockchip
@@ -1447,8 +1483,8 @@ RunBundle. This is also off by default and creates the standard ROS 2 bag layout
     ...
 </code></pre></div>
 <h2 id="autonomy-run-type">Autonomy Run Type<a class="headerlink" href="#autonomy-run-type" title="Permanent link">&para;</a></h2>
-<p>The monitor can launch either a perception-only recording or the bounded
-autonomy run type labeled <code>Autonomy: frame and capture target</code> in the
+<p>The monitor can launch the bounded perception scan or the bounded autonomy run
+type labeled <code>Autonomy: frame and capture target</code> in the
 <code>Experiment</code> dropdown. The matching command-line helper is:</p>
 <div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>autonomy<span class="w"> </span>--classes<span class="w"> </span>&lt;class<span class="o">[</span>,class...<span class="o">]</span>&gt;
 scripts/omni<span class="w"> </span>run<span class="w"> </span>autonomy<span class="w"> </span>--target<span class="w"> </span>&lt;class&gt;
@@ -1526,7 +1562,7 @@ hardware run evidence.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 28, 2026 04:56:29 UTC">August 28, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 28, 2026 19:37:49 UTC">August 28, 2026</span>
   </span>
 
     
