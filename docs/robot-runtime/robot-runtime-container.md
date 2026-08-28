@@ -172,6 +172,11 @@ for runtime-backed runs; that command targets the named runtime record container
 for the run id, confirms it is stopped or already absent, and lets the GUI become
 ready for the next run without waiting on a stale SSH session.
 
+After the recording container exits, `runtime record` restores the completed
+RunBundle's ownership to the invoking operator (or the original `sudo` caller).
+This keeps the raw evidence unchanged while allowing non-root `runs inspect`,
+`runs video`, and `runs report` commands to create their derived artifacts.
+
 When launched from a devcontainer, the runtime wrapper resolves the host-side
 workspace bind path before starting Docker so the runtime container writes back
 into this checkout's `runs/` directory instead of a separate `/omniseer/runs`

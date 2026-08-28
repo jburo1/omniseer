@@ -466,6 +466,29 @@ def test_runtime_record_writes_class_file_in_runs_bind_root(tmp_path: Path) -> N
     assert "classes_path:=/runs/operator_debug/classes.txt" in log
 
 
+def test_runtime_record_restores_runbundle_ownership_for_sudo_caller(tmp_path: Path) -> None:
+    env = _runtime_env(tmp_path)
+    runs_root = tmp_path / "runs"
+    (runs_root / "operator_debug").mkdir(parents=True)
+    env["OMNISEER_RUNTIME_RUNS_HOST_ROOT"] = str(runs_root)
+    env["SUDO_UID"] = "1001"
+    env["SUDO_GID"] = "1002"
+
+    result = subprocess.run(
+        ["scripts/omni", "runtime", "record", "--tag", "runtime-test", "--run-id", "operator_debug"],
+        cwd=REPO_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    log = _docker_log(env)
+    assert "--entrypoint /bin/chown" in log
+    assert "-R 1001:1002 /runs/operator_debug" in log
+
+
 def test_runtime_verify_safe_smoke_treats_timeout_as_pass(tmp_path: Path) -> None:
     env = _runtime_env(tmp_path)
     fake_timeout = tmp_path / "timeout"

@@ -91,6 +91,35 @@ runtime_write_record_classes_file() {
   printf '%s\n' "${classes_text}" | tr ',' '\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e '/^$/d' >"${classes_path}"
 }
 
+runtime_restore_record_ownership() {
+  local image_ref="$1"
+  local runs_bind_root="$2"
+  local run_id="$3"
+  local owner_uid owner_gid
+
+  # `runtime record` is commonly invoked via sudo, so preserve ownership for
+  # the operator who must inspect and derive evidence after the container exits.
+  owner_uid="${SUDO_UID:-$(id -u)}"
+  owner_gid="${SUDO_GID:-$(id -g)}"
+  if [[ ! "${owner_uid}" =~ ^[0-9]+$ || ! "${owner_gid}" =~ ^[0-9]+$ ]]; then
+    omni_warn "could not restore RunBundle ownership: invalid caller uid/gid"
+    return 1
+  fi
+  if [[ ! -d "${runs_bind_root}/${run_id}" ]]; then
+    return 0
+  fi
+
+  if ! docker run --rm \
+    -v "${runs_bind_root}:/runs" \
+    --entrypoint /bin/chown \
+    "${image_ref}" \
+    -R "${owner_uid}:${owner_gid}" \
+    "/runs/${run_id}"; then
+    omni_warn "could not restore RunBundle ownership for ${run_id}; video and report derivatives may require write access"
+    return 1
+  fi
+}
+
 runtime_launch_arg_present() {
   local name="$1"
   shift
@@ -514,6 +543,9 @@ runtime_record() {
   status=$?
   runtime_docker_extra_args=()
   set -e
+  if ! runtime_restore_record_ownership "${image_ref}" "${runs_bind_root}" "${run_id}" && [[ "${status}" -eq 0 ]]; then
+    status=1
+  fi
   omni_info "Run bundle path: ${host_run_dir}"
   return "${status}"
 }
