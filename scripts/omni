@@ -120,7 +120,7 @@ Usage:
   scripts/omni runs annotate <run_dir> [--overwrite]
   scripts/omni runs report <run_dir> [--overwrite]   # also annotates evidence
   scripts/omni runs video <run_dir>
-  scripts/omni runs compare <run_dir> [--model-dir <dir>] [--classes <path>] [comparison options]
+  scripts/omni runs compare <run_dir> [--name <comparison-name>] [--model-dir <dir>] [--classes <path>] [comparison options]
   scripts/omni runs local-list [--root <local-runs-root>]
   scripts/omni runs list [retrieval args...]
   scripts/omni runs pull <run_id> [retrieval args...]

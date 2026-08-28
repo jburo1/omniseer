@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <limits>
 #include <memory>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/videoio.hpp>
@@ -16,6 +17,7 @@
 
 #include "omniseer/vision/offline_detector.hpp"
 #include "omniseer/vision/preview_wrap_repair.hpp"
+#include "omniseer/vision/replay_jsonl.hpp"
 #include "omniseer/vision/runbundle_comparison.hpp"
 
 namespace
@@ -29,6 +31,7 @@ namespace
     fs::path    class_list_path{};
     fs::path    clip_model_path{};
     fs::path    clip_vocab_path{};
+    std::string comparison_name{"default"};
     std::string pad_token{"nothing"};
     uint32_t    warmup_runs{0};
     float       score_threshold{0.25F};
@@ -45,14 +48,17 @@ namespace
   std::string usage(const char* argv0)
   {
     return "Usage: " + std::string(argv0) +
-           " <run_dir> [--model-dir <dir>] [--classes <path>] [options]\n"
+           " <run_dir> [--name <comparison-name>] [--model-dir <dir>] [--classes <path>] "
+           "[options]\n"
            "\n"
            "Directly decodes <run_dir>/video/source.ts, reverses the validated 1280x720\n"
            "Rockchip 8-pixel preview wrap in memory, and runs the same corrected BGR\n"
            "frame sequentially through v2-S FP, v2-S INT8, v2-M FP, and v2-M INT8.\n"
-           "It writes video/comparison/comparison.mp4 and provenance.json.\n"
+           "It writes video/comparison/<comparison-name>/comparison.mp4, provenance.json,\n"
+           "and one replay JSONL detection stream for each model.\n"
            "\n"
            "Options:\n"
+           "  --name <comparison-name> Named output directory component (default: default)\n"
            "  --model-dir <dir>        Directory containing the four YOLO-World RKNN artifacts\n"
            "                           (default: <repo>/runs/model_artifacts)\n"
            "  --classes <path>         Class list (default: <run_dir>/classes.txt)\n"
@@ -109,7 +115,9 @@ namespace
         help_requested = true;
         return config;
       }
-      if (arg == "--model-dir")
+      if (arg == "--name")
+        config.comparison_name = require_value("--name");
+      else if (arg == "--model-dir")
         config.model_dir = require_value("--model-dir");
       else if (arg == "--classes")
         config.class_list_path = require_value("--classes");
@@ -159,6 +167,8 @@ namespace
 
     if (config.run_dir.empty())
       throw std::runtime_error("<run_dir> is required");
+    if (!omniseer::vision::comparison_name_is_safe(config.comparison_name))
+      throw std::runtime_error("--name must contain 1-64 ASCII letters, digits, '_' or '-' only");
     if (config.score_threshold < 0.0F || config.score_threshold > 1.0F)
       throw std::runtime_error("--score-threshold must be in [0, 1]");
     if (config.nms_iou_threshold < 0.0F || config.nms_iou_threshold > 1.0F)
@@ -298,7 +308,9 @@ int main(int argc, char** argv)
     require_regular_file(config.clip_vocab_path, "CLIP vocabulary");
     const std::string source_sha256_before = sha256_file(source_ts);
 
-    const fs::path comparison_dir = config.run_dir / "video" / "comparison";
+    const fs::path comparison_relative_dir =
+        fs::path("video") / "comparison" / config.comparison_name;
+    const fs::path comparison_dir = config.run_dir / comparison_relative_dir;
     fs::create_directories(comparison_dir);
     const fs::path output_mp4       = comparison_dir / "comparison.mp4";
     const fs::path intermediate_mp4 = comparison_dir / "comparison.rendering.mp4";
@@ -350,15 +362,29 @@ int main(int argc, char** argv)
           std::to_string(source_width) + "x" + std::to_string(source_height));
     }
     const double output_fps = omniseer::vision::comparison_output_fps(video.get(cv::CAP_PROP_FPS));
+    const double source_fps = video.get(cv::CAP_PROP_FPS);
     cv::VideoWriter writer(intermediate_mp4.string(), cv::VideoWriter::fourcc('m', 'p', '4', 'v'),
                            output_fps, cv::Size(source_width, source_height));
     if (!writer.isOpened())
       throw std::runtime_error("failed to open temporary comparison video for writing");
 
+    std::array<fs::path, 4>                                             detection_jsonl_paths{};
+    std::array<std::unique_ptr<omniseer::vision::ReplayJsonlWriter>, 4> detection_writers{};
+    for (size_t i = 0; i < detection_writers.size(); ++i)
+    {
+      detection_jsonl_paths[i] =
+          comparison_dir / omniseer::vision::kRunbundleComparisonModels[i].detections_filename;
+      detection_writers[i] =
+          std::make_unique<omniseer::vision::ReplayJsonlWriter>(detection_jsonl_paths[i].string(),
+                                                                detectors[i]->class_names());
+    }
+
     uint64_t frame_index = 0;
     cv::Mat  frame{};
     while ((config.max_frames == 0 || frame_index < config.max_frames) && video.read(frame))
     {
+      if (frame_index > std::numeric_limits<uint32_t>::max())
+        throw std::runtime_error("source video has more frames than the replay sequence supports");
       std::string repair_error{};
       if (frame.type() != CV_8UC3 ||
           !omniseer::vision::repair_rockchip_preview_wrap_bgr(frame.data, frame.step, frame.cols,
@@ -373,6 +399,11 @@ int main(int argc, char** argv)
           frame,
           [&](size_t i, const omniseer::vision::ComparisonModelSpec&, const cv::Mat& shared_frame)
           { detections[i] = detectors[i]->infer(shared_frame, frame_index); });
+      const double timestamp_sec =
+          omniseer::vision::comparison_source_timestamp_sec(video.get(cv::CAP_PROP_POS_MSEC),
+                                                            frame_index, source_fps);
+      for (size_t i = 0; i < detection_writers.size(); ++i)
+        detection_writers[i]->write(frame_index, timestamp_sec, detections[i]);
       writer.write(compose_quadrants(frame, detections, detectors[0]->class_names()));
       ++frame_index;
     }
@@ -390,16 +421,20 @@ int main(int argc, char** argv)
       throw std::runtime_error("raw RunBundle source.ts changed while comparison was running");
 
     omniseer::vision::ComparisonProvenance provenance{};
+    provenance.comparison_name        = config.comparison_name;
     provenance.source_path            = "video/source.ts";
     provenance.source_sha256          = source_sha256_before;
     provenance.classes                = detectors[0]->class_names();
     provenance.score_threshold        = config.score_threshold;
     provenance.nms_iou_threshold      = config.nms_iou_threshold;
     provenance.max_detections         = config.max_detections;
-    provenance.output_path            = "video/comparison/comparison.mp4";
+    provenance.output_path            = (comparison_relative_dir / "comparison.mp4").string();
     provenance.output_sha256          = sha256_file(output_mp4);
     provenance.output_fps             = output_fps;
     provenance.source_frames_rendered = frame_index;
+    for (const auto& detection_jsonl_path : detection_jsonl_paths)
+      provenance.detection_jsonl_paths.push_back(
+          (comparison_relative_dir / detection_jsonl_path.filename()).string());
     if (const char* git_sha = std::getenv("OMNISEER_GIT_SHA");
         git_sha != nullptr && *git_sha != '\0')
       provenance.git_sha = git_sha;

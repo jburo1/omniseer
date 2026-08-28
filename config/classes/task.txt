@@ -1,0 +1,19 @@
+# Restrained indoor/object-search vocabulary for the controlled RunBundle replay.
+person
+chair
+book
+bottle
+cup
+backpack
+laptop
+cell phone
+keyboard
+mouse
+remote
+handbag
+suitcase
+desk
+table
+door
+sofa
+potted plant

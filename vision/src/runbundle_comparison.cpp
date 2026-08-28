@@ -49,6 +49,31 @@ namespace omniseer::vision
     return (std::isfinite(input_fps) && input_fps > 0.0) ? input_fps : 30.0;
   }
 
+  bool comparison_name_is_safe(const std::string& name) noexcept
+  {
+    if (name.empty() || name.size() > 64 || name == "." || name == "..")
+      return false;
+    for (const unsigned char ch : name)
+    {
+      const bool ascii_alphanumeric =
+          (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9');
+      if (!(ascii_alphanumeric || ch == '_' || ch == '-'))
+        return false;
+    }
+    return true;
+  }
+
+  double comparison_source_timestamp_sec(double position_msec, uint64_t frame_index,
+                                         double source_fps) noexcept
+  {
+    const double timestamp_sec = position_msec / 1000.0;
+    if (std::isfinite(timestamp_sec) && timestamp_sec >= 0.0)
+      return timestamp_sec;
+    return (std::isfinite(source_fps) && source_fps > 0.0)
+               ? static_cast<double>(frame_index) / source_fps
+               : 0.0;
+  }
+
   ComparisonInputPaths resolve_comparison_input_paths(const std::filesystem::path& run_dir,
                                                       const std::filesystem::path& repo_root,
                                                       const std::filesystem::path& model_dir,
@@ -66,7 +91,9 @@ namespace omniseer::vision
     std::ostringstream out;
     out.imbue(std::locale::classic());
     out << std::fixed << std::setprecision(6);
-    out << "{\n  \"schema_version\": 1,\n  \"source\": {\"path\": ";
+    out << "{\n  \"schema_version\": 2,\n  \"comparison_name\": ";
+    append_json_string(out, provenance.comparison_name);
+    out << ",\n  \"source\": {\"path\": ";
     append_json_string(out, provenance.source_path);
     out << ", \"sha256\": ";
     append_json_string(out, provenance.source_sha256);
@@ -99,7 +126,14 @@ namespace omniseer::vision
       append_json_string(out, model.sha256);
       out << '}';
     }
-    out << "\n  ],\n  \"output\": {\"path\": ";
+    out << "\n  ],\n  \"detection_jsonl\": [";
+    for (size_t i = 0; i < provenance.detection_jsonl_paths.size(); ++i)
+    {
+      if (i != 0)
+        out << ", ";
+      append_json_string(out, provenance.detection_jsonl_paths[i]);
+    }
+    out << "],\n  \"output\": {\"path\": ";
     append_json_string(out, provenance.output_path);
     out << ", \"sha256\": ";
     append_json_string(out, provenance.output_sha256);

@@ -387,7 +387,7 @@ scripts/omni runs inspect <run_dir> [--json] [--require-complete]
 scripts/omni runs annotate <run_dir> [--overwrite]
 scripts/omni runs report <run_dir> [--overwrite]
 scripts/omni runs video <run_dir>
-scripts/omni runs compare <run_dir> [--model-dir <dir>] [--classes <path>] [comparison options]
+scripts/omni runs compare <run_dir> [--name <comparison-name>] [--model-dir <dir>] [--classes <path>] [comparison options]
 scripts/omni runs local-list [--root <local-runs-root>]
 scripts/omni runs list [retrieval args...]
 scripts/omni runs pull <run_id> [retrieval args...]
@@ -422,8 +422,10 @@ serially through the four resident YOLO-World v2 S/M FP/INT8 configurations. It 
 need ROS, a camera, or a live recording pipeline. The command always executes the local
 `vision/build/vision_runbundle_compare` artifact produced by `scripts/omni build vision`
 (or the `OMNISEER_VISION_BUILD_DIR` override). It writes only derived files under
-`video/comparison/` (`comparison.mp4` and `provenance.json`) and never changes raw
-RunBundle evidence or its manifest.
+`video/comparison/<name>/` (`comparison.mp4`, `provenance.json`, and one canonical replay
+JSONL detection stream for each model) and never changes raw RunBundle evidence or its
+manifest. `--name` defaults to `default`; names are deliberately restricted to ASCII letters,
+digits, `_`, and `-` so a comparison cannot select another path.
 
 The GUI and production runtime container run and record robot experiments. The ROCK 5B+
 devcontainer runs this offline comparison. The operator/laptop retrieves RunBundles and
@@ -439,10 +441,17 @@ scripts/omni runs pull demo_001
 scripts/omni runs inspect runs/imported/demo_001
 scripts/omni runs report runs/imported/demo_001
 scripts/omni build vision
-scripts/omni runs compare runs/demo_001
 scripts/omni runs compare runs/demo_001 --max-frames 120
-scripts/omni runs compare runs/demo_001 --model-dir /some/other/model/dir --classes /some/other/classes.txt
+
+# In the ROCK 5B+ devcontainer, retain separate controlled-comparison passes.
+scripts/omni runs compare runs/reference_scene --name task --classes config/classes/task.txt
+scripts/omni runs compare runs/reference_scene --name coco80 --classes config/classes/coco80.txt
 ```
+
+The checked-in `config/classes/task.txt` contains the restrained indoor/object-search vocabulary
+for the final replay. `config/classes/coco80.txt` is the conventional 80-category COCO order.
+The existing compiled-class-capacity validation remains authoritative: a model that cannot accept
+the selected vocabulary fails clearly; the command does not split or batch classes.
 
 ## `check`
 

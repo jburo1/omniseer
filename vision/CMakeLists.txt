@@ -131,6 +131,7 @@ set(VISION_RUNBUNDLE_COMPARISON_SOURCES
   src/letterbox.cpp
   src/offline_detector.cpp
   src/preview_wrap_repair.cpp
+  src/replay_jsonl.cpp
   src/rknn_runner.cpp
   src/runbundle_comparison.cpp
   src/spsc_ring.cpp
