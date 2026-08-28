@@ -24,7 +24,8 @@ class RuntimeScriptRecordingTests(unittest.TestCase):
                         '  printf "%s\\n" "sha256:test"',
                         "  exit 0",
                         "fi",
-                        f'printf "%s\\n" "$@" >"{docker_args_path}"',
+                        f'printf "%s\\n" "---" >>"{docker_args_path}"',
+                        f'printf "%s\\n" "$@" >>"{docker_args_path}"',
                         "exit 0",
                     ]
                 )
@@ -74,7 +75,8 @@ class RuntimeScriptRecordingTests(unittest.TestCase):
                 text=True,
             )
 
-            args = docker_args_path.read_text(encoding="utf-8").splitlines()
+            calls = docker_args_path.read_text(encoding="utf-8").split("---\n")
+            args = next(call.splitlines() for call in calls if "--record-overwrite" in call)
             self.assertIn("run", args)
             self.assertIn("--record-overwrite", args)
             self.assertIn("--record-runtime-backend", args)

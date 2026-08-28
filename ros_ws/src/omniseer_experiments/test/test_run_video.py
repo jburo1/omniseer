@@ -1,7 +1,7 @@
 import tempfile
 import unittest
 from pathlib import Path
-from subprocess import CompletedProcess
+from subprocess import CalledProcessError, CompletedProcess
 from unittest.mock import patch
 
 from omniseer_experiments.run_video import (
@@ -118,6 +118,27 @@ class RunVideoTests(unittest.TestCase):
             self.assertTrue((run_dir / "video" / "source.corrected.mp4").is_file())
             self.assertEqual(render.call_args.args[0], run_dir / "video" / "source.corrected.mp4")
             self.assertEqual(render.call_args.kwargs["timing_anchor"], VideoTimingAnchor(0.125, 1786061000.1234567))
+
+    def test_build_reports_captured_media_stderr(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            run_dir = Path(temp_dir)
+            source_ts = run_dir / "video" / "source.ts"
+            source_ts.parent.mkdir()
+            source_ts.write_bytes(b"immutable raw evidence")
+            (source_ts.parent / "timing.json").write_text(
+                '{"anchor_video_time_ns": 0, "anchor_robot_time_ns": 0}', encoding="utf-8"
+            )
+            (run_dir / "detections.jsonl").write_text("", encoding="utf-8")
+
+            with (
+                patch("omniseer_experiments.run_video.remux_source_video"),
+                patch(
+                    "omniseer_experiments.run_video.repair_preview_wrap_video",
+                    side_effect=CalledProcessError(1, ["ffmpeg"], stderr="Invalid filter graph"),
+                ),
+            ):
+                with self.assertRaisesRegex(RuntimeError, "Invalid filter graph"):
+                    build_run_video(run_dir)
 
     def test_overlay_transcode_uses_browser_compatible_h264(self):
         calls = []

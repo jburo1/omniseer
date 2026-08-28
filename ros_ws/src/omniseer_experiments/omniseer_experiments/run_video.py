@@ -318,21 +318,27 @@ def build_run_video(
             stacklevel=2,
         )
     source_mp4 = video_dir / "source.mp4"
-    remux_source_video(source_ts, source_mp4, runner=runner)
-    corrected_source_mp4 = video_dir / "source.corrected.mp4"
-    repair_preview_wrap_video(source_mp4, corrected_source_mp4, runner=runner)
-    render_overlay(
-        corrected_source_mp4,
-        video_dir / "overlay.mp4",
-        read_timed_detections(
-            detections_path,
-            target_class=_target_class_from_manifest(run_dir / "manifest.yaml"),
-        ),
-        timing_anchor=timing_anchor,
-        video_start_time_sec=video_start_time_sec,
-        runner=runner,
-        cv2_module=cv2_module,
-    )
+    try:
+        remux_source_video(source_ts, source_mp4, runner=runner)
+        corrected_source_mp4 = video_dir / "source.corrected.mp4"
+        repair_preview_wrap_video(source_mp4, corrected_source_mp4, runner=runner)
+        render_overlay(
+            corrected_source_mp4,
+            video_dir / "overlay.mp4",
+            read_timed_detections(
+                detections_path,
+                target_class=_target_class_from_manifest(run_dir / "manifest.yaml"),
+            ),
+            timing_anchor=timing_anchor,
+            video_start_time_sec=video_start_time_sec,
+            runner=runner,
+            cv2_module=cv2_module,
+        )
+    except subprocess.CalledProcessError as exc:
+        stderr = exc.stderr.strip() if isinstance(exc.stderr, str) else ""
+        if stderr:
+            raise RuntimeError(f"video media command failed:\n{stderr}") from exc
+        raise
 
 
 def render_overlay(
