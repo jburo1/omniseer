@@ -22,7 +22,7 @@ DEFAULT_DEVCONTAINER_EXEC_TEMPLATE = (
 RUN_TYPE_PERCEPTION = "perception_recording"
 RUN_TYPE_AUTONOMY_CENTER = "autonomy_center_first_class"
 RUN_TYPE_LABELS = {
-    RUN_TYPE_PERCEPTION: "Perception recording",
+    RUN_TYPE_PERCEPTION: "Perception: 360° environment scan",
     RUN_TYPE_AUTONOMY_CENTER: "Autonomy: frame and capture target",
 }
 PREVIEW_ENCODER_ROCKCHIP = "rockchip"
@@ -83,6 +83,7 @@ class RunConfig:
     autonomy_min_target_confidence: str = "0.50"
     autonomy_max_target_center_jump_ratio: str = "0.20"
     autonomy_evidence_interval_sec: str = "0.25"
+    perception_scan_yaw_rate_rad_s: str = "0.20"
     detector_score_threshold: str = "0.25"
     detector_nms_iou_threshold: str = "0.45"
     detector_max_detections: str = "100"
@@ -197,6 +198,8 @@ def _build_runtime_record_inner_command(
     notes: str,
     run_config: RunConfig,
 ) -> list[str]:
+    if run_config.run_type == RUN_TYPE_PERCEPTION:
+        classes = ()
     command = [
         "scripts/omni",
         "runtime",
@@ -210,7 +213,7 @@ def _build_runtime_record_inner_command(
         command.extend(["--record-classes", ",".join(classes)])
     if notes.strip():
         command.extend(["--record-notes", notes.strip()])
-    if run_config.record_video:
+    if _records_video(run_config):
         command.append("--record-video")
     if run_config.record_rosbag:
         command.append("--record-rosbag")
@@ -221,13 +224,15 @@ def _build_runtime_record_inner_command(
     command.append(f"gateway_preview_encoder:={run_config.preview_encoder}")
     if classes:
         command.append(f"classes_path:={_runtime_container_class_list_path(run_id)}")
-    command.extend(
-        _model_launch_args(
-            run_config,
-            model_path=_runtime_container_model_path(run_config.detector_model_artifact),
+    if run_config.run_type == RUN_TYPE_AUTONOMY_CENTER:
+        command.extend(
+            _model_launch_args(
+                run_config,
+                model_path=_runtime_container_model_path(run_config.detector_model_artifact),
+            )
         )
-    )
     command.extend(_detector_parameter_launch_args(run_config))
+    command.extend(_perception_scan_launch_args(run_config))
     command.extend(
         _autonomy_launch_args(
             classes=classes,
@@ -249,6 +254,8 @@ def _build_devcontainer_record_inner_command(
 ) -> list[str]:
     container_repo_root = devcontainer_workspace_root_for(remote_repo_root)
     container_run_dir = remote_run_dir_for(container_repo_root, run_id)
+    if run_config.run_type == RUN_TYPE_PERCEPTION:
+        classes = ()
     command = [
         "scripts/omni",
         "run",
@@ -265,7 +272,7 @@ def _build_devcontainer_record_inner_command(
         command.extend(["--record-classes", ",".join(classes)])
     if notes.strip():
         command.extend(["--record-notes", notes.strip()])
-    if run_config.record_video:
+    if _records_video(run_config):
         command.append("--record-video")
     if run_config.record_rosbag:
         command.append("--record-rosbag")
@@ -276,19 +283,23 @@ def _build_devcontainer_record_inner_command(
     command.append(f"gateway_preview_encoder:={run_config.preview_encoder}")
     if classes:
         command.append(f"classes_path:={remote_class_list_path_for(container_repo_root, run_id)}")
-    command.extend(
-        _model_launch_args(
-            run_config,
-            model_path=f"{container_repo_root}/runs/model_artifacts/{run_config.detector_model_artifact}",
+    if run_config.run_type == RUN_TYPE_AUTONOMY_CENTER:
+        command.extend(
+            _model_launch_args(
+                run_config,
+                model_path=f"{container_repo_root}/runs/model_artifacts/{run_config.detector_model_artifact}",
+            )
         )
-    )
     command.extend(_detector_parameter_launch_args(run_config))
+    command.extend(_perception_scan_launch_args(run_config))
     command.extend(_autonomy_launch_args(classes=classes, run_type=run_config.run_type, run_dir=container_run_dir))
     command.extend(_autonomy_parameter_launch_args(run_config))
     return command
 
 
 def _detector_parameter_launch_args(run_config: RunConfig) -> list[str]:
+    if run_config.run_type == RUN_TYPE_PERCEPTION:
+        return []
     return [
         f"postprocess_score_threshold:={run_config.detector_score_threshold}",
         f"postprocess_nms_iou_threshold:={run_config.detector_nms_iou_threshold}",
@@ -297,6 +308,8 @@ def _detector_parameter_launch_args(run_config: RunConfig) -> list[str]:
 
 
 def _detector_experiment_parameters(run_config: RunConfig) -> list[str]:
+    if run_config.run_type == RUN_TYPE_PERCEPTION:
+        return ["--record-experiment-parameter", f"preview.encoder={run_config.preview_encoder}"]
     return [
         "--record-experiment-parameter",
         f"preview.encoder={run_config.preview_encoder}",
@@ -312,6 +325,20 @@ def _detector_experiment_parameters(run_config: RunConfig) -> list[str]:
 def _record_experiment_config_args(run_config: RunConfig) -> list[str]:
     config = run_config.experiment_config.strip() or RUN_TYPE_LABELS.get(run_config.run_type, run_config.run_type)
     return ["--record-experiment-config", config]
+
+
+def _records_video(run_config: RunConfig) -> bool:
+    return run_config.record_video or run_config.run_type == RUN_TYPE_PERCEPTION
+
+
+def _perception_scan_launch_args(run_config: RunConfig) -> list[str]:
+    if run_config.run_type != RUN_TYPE_PERCEPTION:
+        return []
+    return [
+        "start_perception_scan:=true",
+        "start_vision:=false",
+        f"perception_scan_yaw_rate_rad_s:={run_config.perception_scan_yaw_rate_rad_s}",
+    ]
 
 
 def _autonomy_launch_args(*, classes: Sequence[str], run_type: str, run_dir: str) -> list[str]:

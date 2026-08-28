@@ -244,6 +244,33 @@ class RealLaunchStructureTests(unittest.TestCase):
             launch_text,
         )
 
+    def test_real_launch_shuts_down_after_successful_perception_scan(self) -> None:
+        module = _load_launch_module("real.launch.py")
+        launch_description = module.generate_launch_description()
+
+        declared_names = {
+            _flatten_launch_value(entity.name)
+            for entity in launch_description.entities
+            if isinstance(entity, DeclareLaunchArgument)
+        }
+        self.assertTrue(
+            {"start_perception_scan", "perception_scan_yaw_rate_rad_s", "perception_scan_revolutions"} <= declared_names
+        )
+
+        scan_nodes = [
+            entity
+            for entity in _walk_entities(launch_description.entities)
+            if isinstance(entity, Node)
+            and "omniseer_autonomy" in _flatten_launch_value(entity.node_package)
+            and "in_place_scan_node" in _flatten_launch_value(entity.node_executable)
+        ]
+        self.assertTrue(scan_nodes, "expected optional omniseer_autonomy in_place_scan_node")
+
+        launch_text = (Path(__file__).resolve().parents[1] / "launch" / "real.launch.py").read_text(encoding="utf-8")
+        self.assertIn("perception_scan_completion_shutdown = RegisterEventHandler", launch_text)
+        self.assertIn("target_action=perception_scan_node", launch_text)
+        self.assertIn('Shutdown(reason="perception scan completed")', launch_text)
+
     def test_twist_mux_includes_autonomy_below_keyboard_above_nav(self) -> None:
         config_path = Path(__file__).resolve().parents[1] / "config" / "twist_mux.yaml"
         text = config_path.read_text(encoding="utf-8")

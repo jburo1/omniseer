@@ -116,7 +116,7 @@ class RunSettingsTests(unittest.TestCase):
 
     def test_resolve_run_form_builds_domain_objects_from_form_values(self):
         selection = resolve_run_form(
-            _values(),
+            _values(run_type_label=RUN_TYPE_LABELS[RUN_TYPE_AUTONOMY_CENTER]),
             repo_root=Path("/repo"),
             default_run_id=lambda: "operator_default",
         )
@@ -131,8 +131,8 @@ class RunSettingsTests(unittest.TestCase):
         self.assertEqual(selection.run_config.classes, ("person", "cup"))
         self.assertEqual(selection.run_config.notes, "trial notes")
         self.assertEqual(selection.run_config.runtime_tag, "candidate-runtime")
-        self.assertEqual(selection.run_config.run_type, RUN_TYPE_PERCEPTION)
-        self.assertEqual(selection.run_config.experiment_config, "Perception recording")
+        self.assertEqual(selection.run_config.run_type, RUN_TYPE_AUTONOMY_CENTER)
+        self.assertEqual(selection.run_config.experiment_config, "Autonomy: frame and capture target")
         self.assertEqual(selection.run_config.devcontainer_exec_template, DEFAULT_DEVCONTAINER_EXEC_TEMPLATE)
         self.assertEqual(selection.run_config.autonomy_bbox_area_min_ratio, "0.10")
         self.assertEqual(selection.run_config.autonomy_approach_stop_area_ratio, "0.18")
@@ -146,12 +146,14 @@ class RunSettingsTests(unittest.TestCase):
         self.assertEqual(selection.run_config.autonomy_min_target_confidence, "0.65")
         self.assertEqual(selection.run_config.autonomy_max_target_center_jump_ratio, "0.15")
         self.assertEqual(selection.run_config.autonomy_evidence_interval_sec, "0.20")
+        self.assertEqual(selection.run_config.perception_scan_yaw_rate_rad_s, "0.20")
         self.assertEqual(selection.run_config.detector_score_threshold, "0.31")
         self.assertEqual(selection.run_config.detector_nms_iou_threshold, "0.52")
         self.assertEqual(selection.run_config.detector_max_detections, "42")
         self.assertEqual(selection.run_config.detector_model_artifact, "")
         self.assertEqual(selection.run_config.experiment_model_family, "")
         self.assertEqual(selection.run_config.preview_encoder, PREVIEW_ENCODER_SOFTWARE)
+        self.assertFalse(selection.run_config.record_video)
         self.assertFalse(selection.run_config.record_rosbag)
         self.assertEqual(selection.artifact_context.repo_root, Path("/repo"))
         self.assertEqual(selection.artifact_context.connection, selection.connection)
@@ -166,7 +168,10 @@ class RunSettingsTests(unittest.TestCase):
         }
         for label, (artifact, variant, precision) in expected.items():
             selection = resolve_run_form(
-                _values(detector_model_label=label),
+                _values(
+                    run_type_label=RUN_TYPE_LABELS[RUN_TYPE_AUTONOMY_CENTER],
+                    detector_model_label=label,
+                ),
                 repo_root=Path("/repo"),
                 default_run_id=lambda: "operator_default",
             )
@@ -199,6 +204,18 @@ class RunSettingsTests(unittest.TestCase):
         self.assertEqual(selection.run_config.run_type, RUN_TYPE_AUTONOMY_CENTER)
         self.assertEqual(selection.run_config.classes, ("chair", "backpack", "bottle"))
 
+    def test_perception_scan_form_forces_video_and_omits_detector_selection(self):
+        selection = resolve_run_form(
+            _values(detector_model_label="YOLO-World v2-S INT8"),
+            repo_root=Path("/repo"),
+            default_run_id=lambda: "operator_default",
+        )
+
+        self.assertEqual(selection.run_config.run_type, RUN_TYPE_PERCEPTION)
+        self.assertEqual(selection.run_config.classes, ())
+        self.assertTrue(selection.run_config.record_video)
+        self.assertEqual(selection.run_config.detector_model_artifact, "")
+
     def test_resolve_run_form_defaults_blank_detector_parameters(self):
         selection = resolve_run_form(
             _values(
@@ -217,14 +234,20 @@ class RunSettingsTests(unittest.TestCase):
     def test_resolve_run_form_rejects_invalid_detector_thresholds(self):
         with self.assertRaisesRegex(ValueError, "score threshold must be a number from 0.0 to 1.0"):
             resolve_run_form(
-                _values(detector_score_threshold="1.5"),
+                _values(
+                    run_type_label=RUN_TYPE_LABELS[RUN_TYPE_AUTONOMY_CENTER],
+                    detector_score_threshold="1.5",
+                ),
                 repo_root=Path("/repo"),
                 default_run_id=lambda: "operator_default",
             )
 
         with self.assertRaisesRegex(ValueError, "NMS IoU must be a number from 0.0 to 1.0"):
             resolve_run_form(
-                _values(detector_nms_iou_threshold="nan"),
+                _values(
+                    run_type_label=RUN_TYPE_LABELS[RUN_TYPE_AUTONOMY_CENTER],
+                    detector_nms_iou_threshold="nan",
+                ),
                 repo_root=Path("/repo"),
                 default_run_id=lambda: "operator_default",
             )
@@ -232,14 +255,20 @@ class RunSettingsTests(unittest.TestCase):
     def test_resolve_run_form_rejects_invalid_approach_stop_percentage(self):
         with self.assertRaisesRegex(ValueError, "approach stop percentage must be a number of at least 100"):
             resolve_run_form(
-                _values(autonomy_approach_stop_area_percent="99"),
+                _values(
+                    run_type_label=RUN_TYPE_LABELS[RUN_TYPE_AUTONOMY_CENTER],
+                    autonomy_approach_stop_area_percent="99",
+                ),
                 repo_root=Path("/repo"),
                 default_run_id=lambda: "operator_default",
             )
 
         with self.assertRaisesRegex(ValueError, "greater than bbox maximum area"):
             resolve_run_form(
-                _values(autonomy_approach_stop_area_percent="300"),
+                _values(
+                    run_type_label=RUN_TYPE_LABELS[RUN_TYPE_AUTONOMY_CENTER],
+                    autonomy_approach_stop_area_percent="300",
+                ),
                 repo_root=Path("/repo"),
                 default_run_id=lambda: "operator_default",
             )
@@ -247,7 +276,10 @@ class RunSettingsTests(unittest.TestCase):
     def test_resolve_run_form_rejects_invalid_max_detections(self):
         with self.assertRaisesRegex(ValueError, "max detections must be a positive integer"):
             resolve_run_form(
-                _values(detector_max_detections="0"),
+                _values(
+                    run_type_label=RUN_TYPE_LABELS[RUN_TYPE_AUTONOMY_CENTER],
+                    detector_max_detections="0",
+                ),
                 repo_root=Path("/repo"),
                 default_run_id=lambda: "operator_default",
             )

@@ -98,18 +98,35 @@ Artifact operations are local laptop actions after the robot run has completed.
 They stay separate from robot process lifecycle and do not change robot-side
 behavior.
 
+## Perception Scan
+
+`Perception: 360° environment scan` is a bounded environment capture used to
+generate a controlled reference `video/source.ts` for offline detector
+comparison. It records video implicitly, starts no live detector inference,
+and rotates in place at the configured positive yaw rate (0.20 rad/s by
+default). The scan completes only after `/odometry/filtered` reports one full
+wrapped-yaw revolution, commands zero velocity, and exits so the normal
+RunBundle recorder finalizes the bundle. Odometry that never arrives or becomes
+stale ends the scan cleanly without continuing motion.
+
+This capture is intentionally independent of the existing
+`scripts/omni runs compare ...` and comparison-report workflow: the resulting
+`video/source.ts` is consumed unchanged by that offline 2×2 detector
+comparison.
+
 ## Detector Selection and Tuning
 
-Before selecting an external detector model, copy its generated RKNN artifact to
-the robot repository's `runs/model_artifacts/` directory. The normal Experiment
-controls expose `Runtime default`, YOLO-World v2-S/v2-M, and FP/INT8 choices.
+Before selecting an external detector model for autonomy, copy its generated
+RKNN artifact to the robot repository's `runs/model_artifacts/` directory. The
+normal Experiment controls expose `Runtime default`, YOLO-World v2-S/v2-M, and
+FP/INT8 choices.
 An explicit choice uses the staged artifact for that run; `Runtime default`
 continues to use the detector configured by the runtime image or config. The
 selector does not upload or discover model files.
 
-The collapsed **Advanced Experiment Overrides** section exposes detector controls
-that operators can adjust between runs without changing hardware or model
-assumptions:
+For autonomy, the collapsed **Advanced Experiment Overrides** section exposes
+detector controls that operators can adjust between runs without changing
+hardware or model assumptions:
 
 - `Score Threshold` -> `postprocess.score_threshold`
 - `NMS IoU` -> `postprocess.nms_iou_threshold`
@@ -117,14 +134,14 @@ assumptions:
 
 The command builder passes these as launch arguments and also records them as
 experiment parameters in the run manifest. Operator-started runs also record the
-selected `Experiment` dropdown label, either `Perception recording` or
-`Autonomy: frame and capture target`, so the HTML report has a clear provenance
+selected `Experiment` dropdown label, either `Perception: 360° environment scan`
+or `Autonomy: frame and capture target`, so the HTML report has a clear provenance
 label even when no external experiment config file is used. Model paths, camera
 device, capture size, model input size, class padding, and runner warmup remain
 launch/config-file controls.
 
-For a recorded camera stream, select **Record video** before starting the run.
-This is off by default. **Retrieve & Open Report** preserves `video/source.mp4`
+The perception scan always records video. For autonomy, select **Record video**
+before starting the run; it remains off by default. **Retrieve & Open Report** preserves `video/source.mp4`
 as a stream-copy remux of raw `video/source.ts`, then creates the repaired
 presentation derivative `video/source.corrected.mp4` and the approximate
 detection overlay `video/overlay.mp4` before regenerating the report. Rockchip
@@ -144,8 +161,8 @@ run_id/
 
 ## Autonomy Run Type
 
-The monitor can launch either a perception-only recording or the bounded
-autonomy run type labeled `Autonomy: frame and capture target` in the
+The monitor can launch the bounded perception scan or the bounded autonomy run
+type labeled `Autonomy: frame and capture target` in the
 `Experiment` dropdown. The matching command-line helper is:
 
 ```bash

@@ -158,7 +158,12 @@ def parse_scene_truth(path: Path) -> SceneTruth:
             if not isinstance(item, list) or len(item) != 2:
                 raise ValueError(f"scene truth present[{class_name!r}] ranges must be [start, end]")
             start, end = item
-            if isinstance(start, bool) or isinstance(end, bool) or not isinstance(start, int) or not isinstance(end, int):
+            if (
+                isinstance(start, bool)
+                or isinstance(end, bool)
+                or not isinstance(start, int)
+                or not isinstance(end, int)
+            ):
                 raise ValueError(f"scene truth present[{class_name!r}] frame ranges must use integers")
             if start < 0 or end < 0:
                 raise ValueError(f"scene truth present[{class_name!r}] frame ranges cannot be negative")
@@ -196,9 +201,7 @@ def load_replay_comparison(reference_run: Path, comparison_name: str) -> ReplayC
         raise ValueError(f"invalid comparison provenance: {provenance_path}: expected object")
     _validate_comparison_artifacts(reference_run, directory, comparison_name, provenance)
 
-    streams = {
-        spec.label: _read_replay_jsonl(directory / spec.detections_filename) for spec in MODEL_SPECS
-    }
+    streams = {spec.label: _read_replay_jsonl(directory / spec.detections_filename) for spec in MODEL_SPECS}
     _validate_replay_alignment(streams)
     return ReplayComparison(
         name=comparison_name,
@@ -235,9 +238,7 @@ def _validate_comparison_artifacts(
         provenance_path=provenance_path,
     )
 
-    expected_streams = [
-        (expected_relative_dir / spec.detections_filename).as_posix() for spec in MODEL_SPECS
-    ]
+    expected_streams = [(expected_relative_dir / spec.detections_filename).as_posix() for spec in MODEL_SPECS]
     if provenance.get("detection_jsonl") != expected_streams:
         raise ValueError(f"comparison provenance lists unexpected replay JSONLs: {provenance_path}")
 
@@ -405,7 +406,12 @@ def write_comparison_report(
 def comparison_report_main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Generate a static detector comparison report.")
     parser.add_argument("reference_run", help="controlled RunBundle containing video/comparison/<name>")
-    parser.add_argument("--trial", action="append", default=[], help="physical trial RunBundle (repeat exactly four times)")
+    parser.add_argument(
+        "--trial",
+        action="append",
+        default=[],
+        help="physical trial RunBundle (repeat exactly four times)",
+    )
     parser.add_argument("--comparison", default="task", help="named controlled comparison (default: task)")
     parser.add_argument("--truth", help="optional scene-truth JSON using inclusive frame ranges")
     parser.add_argument("--overwrite", action="store_true", help="replace an existing report/comparison.html")
@@ -439,8 +445,7 @@ def _validate_truth_vocabulary(truth: SceneTruth, replay: ReplayComparison) -> N
     unknown = sorted((set(truth.present) | set(truth.absent)) - vocabulary)
     if unknown:
         raise ValueError(
-            "scene truth names class(es) absent from the selected comparison vocabulary: "
-            + ", ".join(unknown)
+            "scene truth names class(es) absent from the selected comparison vocabulary: " + ", ".join(unknown)
         )
 
 
@@ -510,7 +515,10 @@ def _validate_replay_alignment(streams: dict[str, tuple[ReplayFrame, ...]]) -> N
     reference = streams[reference_label]
     for label, frames in streams.items():
         if len(frames) != len(reference):
-            raise ValueError(f"replay streams are not aligned: {label} has {len(frames)} frames; {reference_label} has {len(reference)}")
+            raise ValueError(
+                f"replay streams are not aligned: {label} has {len(frames)} frames; "
+                f"{reference_label} has {len(reference)}"
+            )
         for expected, actual in zip(reference, frames, strict=True):
             if actual.frame_index != expected.frame_index:
                 raise ValueError(f"replay streams are not aligned: frame index differs for {label}")
@@ -612,7 +620,11 @@ def _number_or_none(record: dict[str, Any] | None, field: str) -> float | None:
 
 
 def _p50_field(records: Sequence[dict[str, Any]], field: str) -> float | None:
-    values = [float(value) for record in records if isinstance((value := record.get(field)), (int, float)) and not isinstance(value, bool)]
+    values = [
+        float(value)
+        for record in records
+        if isinstance((value := record.get(field)), (int, float)) and not isinstance(value, bool)
+    ]
     return _percentile(values, 50) if values else None
 
 
@@ -642,9 +654,9 @@ def _render_comparison_report(
     sections.append(_provenance_section(replay, trials))
     body = "\n".join(section.html_text for section in sections)
     return (
-        "<!doctype html>\n<html lang=\"en\">\n<head>\n"
-        "  <meta charset=\"utf-8\">\n"
-        "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n"
+        '<!doctype html>\n<html lang="en">\n<head>\n'
+        '  <meta charset="utf-8">\n'
+        '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
         "  <title>Omniseer Detector Configuration Comparison</title>\n"
         f"  <style>{_css()}</style>\n"
         "</head>\n<body>\n  <main>\n"
@@ -658,17 +670,14 @@ def _overview_section(reference_run: Path, replay: ReplayComparison, truth: Scen
     classes = replay.provenance.get("classes")
     vocabulary_size = len(classes) if isinstance(classes, list) else 0
     frames = len(replay.streams[MODEL_SPECS[0].label])
-    body = (
-        "<p>Four closed-loop robot trials + controlled same-video replay.</p>"
-        + _key_value_table(
-            [
-                ("Reference RunBundle", reference_run.name),
-                ("Selected comparison", replay.name),
-                ("Replay frames", str(frames)),
-                ("Class vocabulary size", str(vocabulary_size)),
-                ("Manual scene truth", "supplied" if truth is not None else "not supplied"),
-            ]
-        )
+    body = "<p>Four closed-loop robot trials + controlled same-video replay.</p>" + _key_value_table(
+        [
+            ("Reference RunBundle", reference_run.name),
+            ("Selected comparison", replay.name),
+            ("Replay frames", str(frames)),
+            ("Class vocabulary size", str(vocabulary_size)),
+            ("Manual scene truth", "supplied" if truth is not None else "not supplied"),
+        ]
     )
     return _section("Overview", body, open_by_default=True)
 
@@ -676,9 +685,10 @@ def _overview_section(reference_run: Path, replay: ReplayComparison, truth: Scen
 def _methodology_section():
     body = (
         "<h3>Physical trials</h3><p>Measure end-to-end behavior with each detector in the autonomy loop.</p>"
-        "<h3>Controlled replay</h3><p>Holds source video, classes, preprocessing, postprocessing, and thresholds fixed; "
+        "<h3>Controlled replay</h3><p>Holds source video, classes, preprocessing, "
+        "postprocessing, and thresholds fixed; "
         "only detector configuration changes.</p>"
-        "<p class=\"table-note\">The replay uses immutable source.ts, deterministic 8px repair in memory, "
+        '<p class="table-note">The replay uses immutable source.ts, deterministic 8px repair in memory, '
         "the same corrected frame, and four resident RKNN detectors sequentially. Offline replay timing is not "
         "production runtime performance.</p>"
     )
@@ -719,7 +729,9 @@ def _controlled_replay_section(
     body = video_html + "<h3>Per-model replay summary</h3>" + _replay_summary_table(metrics)
     body += _per_class_tables(metrics)
     if truth is None:
-        body += "<p class=\"table-note\">No manual scene truth was supplied; controlled replay metrics are descriptive.</p>"
+        body += (
+            '<p class="table-note">No manual scene truth was supplied; controlled replay metrics are descriptive.</p>'
+        )
     else:
         body += _truth_tables(replay, truth)
     return _section("Controlled Perception Replay", body, open_by_default=True)
@@ -742,8 +754,8 @@ def _comparison_video(video_path: Path, report_dir: Path, title: str) -> str:
         return f"<p>{title} is unavailable.</p>"
     href = _relative_href(report_dir, video_path)
     return (
-        f"<h3>{title}</h3><video controls preload=\"metadata\" src=\"{_attr(href)}\"></video>"
-        f"<p><a href=\"{_attr(href)}\">Open comparison video</a></p>"
+        f'<h3>{title}</h3><video controls preload="metadata" src="{_attr(href)}"></video>'
+        f'<p><a href="{_attr(href)}">Open comparison video</a></p>'
     )
 
 
@@ -758,7 +770,10 @@ def _replay_summary_table(metrics: dict[str, ReplayMetrics]) -> str:
         ]
         for spec in MODEL_SPECS
     ]
-    return _table(["Configuration", "Frames evaluated", "Total detections", "Unique classes", "Median confidence"], rows)
+    return _table(
+        ["Configuration", "Frames evaluated", "Total detections", "Unique classes", "Median confidence"],
+        rows,
+    )
 
 
 def _per_class_tables(metrics: dict[str, ReplayMetrics]) -> str:
@@ -779,7 +794,14 @@ def _per_class_tables(metrics: dict[str, ReplayMetrics]) -> str:
         parts.append(f"<h3>{spec.label}</h3>")
         parts.append(
             _table(
-                ["Class", "Frames with >=1", "Frame fraction", "Total detections", "Median confidence", "Max confidence"],
+                [
+                    "Class",
+                    "Frames with >=1",
+                    "Frame fraction",
+                    "Total detections",
+                    "Median confidence",
+                    "Max confidence",
+                ],
                 rows,
             )
             if rows
@@ -805,7 +827,19 @@ def _truth_tables(replay: ReplayComparison, truth: SceneTruth) -> str:
             for class_name, value in present_by_model[spec.label].items()
         ]
         parts.append(f"<h3>{spec.label} present classes</h3>")
-        parts.append(_table(["Class", "Visible frames", "Visible detected", "Coverage", "First delay (frames)", "Detection gaps"], rows))
+        parts.append(
+            _table(
+                [
+                    "Class",
+                    "Visible frames",
+                    "Visible detected",
+                    "Coverage",
+                    "First delay (frames)",
+                    "Detection gaps",
+                ],
+                rows,
+            )
+        )
         absent_rows = [
             [
                 class_name,
@@ -817,7 +851,17 @@ def _truth_tables(replay: ReplayComparison, truth: SceneTruth) -> str:
         ]
         if absent_rows:
             parts.append(f"<h3>{spec.label} known-absent classes</h3>")
-            parts.append(_table(["Class", "Frames falsely containing", "Total false detections", "Max false confidence"], absent_rows))
+            parts.append(
+                _table(
+                    [
+                        "Class",
+                        "Frames falsely containing",
+                        "Total false detections",
+                        "Max false confidence",
+                    ],
+                    absent_rows,
+                )
+            )
     return "".join(parts)
 
 
@@ -844,7 +888,13 @@ def _provenance_section(replay: ReplayComparison, trials: dict[str, TrialMetrics
     if isinstance(models, list):
         for model in models:
             if isinstance(model, dict):
-                model_rows.append([str(model.get("label", "-")), str(model.get("artifact_name", "-")), str(model.get("sha256", "-"))])
+                model_rows.append(
+                    [
+                        str(model.get("label", "-")),
+                        str(model.get("artifact_name", "-")),
+                        str(model.get("sha256", "-")),
+                    ]
+                )
     trial_rows = []
     for spec in MODEL_SPECS:
         trial = trials[spec.label]
@@ -853,8 +903,12 @@ def _provenance_section(replay: ReplayComparison, trials: dict[str, TrialMetrics
         trial_rows.append([spec.label, trial.run_id, str(trial.manifest.get("git_sha", "-")), str(image or "-")])
     body = _key_value_table(rows)
     if model_rows:
-        body += "<h3>Controlled replay model artifacts</h3>" + _table(["Configuration", "Artifact", "SHA-256"], model_rows)
-    body += "<h3>Physical trial identities</h3>" + _table(["Configuration", "RunBundle ID", "Git SHA", "Container identity"], trial_rows)
+        body += "<h3>Controlled replay model artifacts</h3>" + _table(
+            ["Configuration", "Artifact", "SHA-256"], model_rows
+        )
+    body += "<h3>Physical trial identities</h3>" + _table(
+        ["Configuration", "RunBundle ID", "Git SHA", "Container identity"], trial_rows
+    )
     return _section("Provenance", body)
 
 

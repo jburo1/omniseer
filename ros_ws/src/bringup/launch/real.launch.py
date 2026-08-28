@@ -53,6 +53,9 @@ _REAL_ARGUMENT_DEFAULTS = [
     ("gateway_preview_record_path", ""),
     ("gateway_preview_encoder", "rockchip"),
     ("start_autonomy", "false"),
+    ("start_perception_scan", "false"),
+    ("perception_scan_yaw_rate_rad_s", "0.20"),
+    ("perception_scan_revolutions", "1.0"),
     ("autonomy_target_class", ""),
     ("autonomy_run_dir", ""),
     ("autonomy_bbox_area_min_ratio", "0.08"),
@@ -371,6 +374,37 @@ def _build_real_bringup_actions(*, pkg_bringup, config):
         condition=IfCondition(config["start_autonomy"]),
     )
 
+    perception_scan_node = Node(
+        package="omniseer_autonomy",
+        executable="in_place_scan_node",
+        name="in_place_scan_node",
+        output="screen",
+        arguments=["--ros-args", "--log-level", config["log_level"]],
+        parameters=[
+            {
+                "use_sim_time": config["use_sim_time"],
+                "yaw_rate_rad_s": config["perception_scan_yaw_rate_rad_s"],
+                "revolutions": config["perception_scan_revolutions"],
+            }
+        ],
+        condition=IfCondition(config["start_perception_scan"]),
+    )
+
+    perception_scan_completion_shutdown = RegisterEventHandler(
+        OnProcessExit(
+            target_action=perception_scan_node,
+            on_exit=_handle_required_process_exit(
+                "perception scan",
+                [
+                    LogInfo(msg="perception scan completed; shutting down real launch"),
+                    EmitEvent(event=Shutdown(reason="perception scan completed")),
+                ],
+                "perception scan failed",
+            ),
+        ),
+        condition=IfCondition(config["start_perception_scan"]),
+    )
+
     # Keep the teleop command path available even if lidar/nav boundary topics
     # are still missing.
     baseline_twist_mux_node = Node(
@@ -457,6 +491,8 @@ def _build_real_bringup_actions(*, pkg_bringup, config):
         rosbag_recorder,
         autonomy_node,
         autonomy_completion_shutdown,
+        perception_scan_node,
+        perception_scan_completion_shutdown,
         baseline_twist_mux_node,
         wait_boundary_topics,
         launch_common_after_wait,

@@ -6,6 +6,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 from robot_diag_control.run_commands import (
+    RUN_TYPE_AUTONOMY_CENTER,
     RobotConnection,
     RunConfig,
     build_remote_run_mkdir_command,
@@ -65,7 +66,7 @@ def prepare_remote_run(
         run_config=run_config,
     )
     runner(mkdir_command, "create remote run directory")
-    if run_config.classes:
+    if run_config.run_type == RUN_TYPE_AUTONOMY_CENTER and run_config.classes:
         upload_classes_file(
             connection=connection,
             run_config=run_config,

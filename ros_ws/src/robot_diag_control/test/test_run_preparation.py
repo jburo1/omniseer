@@ -2,7 +2,12 @@ import sys
 import unittest
 from pathlib import Path
 
-from robot_diag_control.run_commands import RUN_BACKEND_RUNTIME, RobotConnection, RunConfig
+from robot_diag_control.run_commands import (
+    RUN_BACKEND_RUNTIME,
+    RUN_TYPE_AUTONOMY_CENTER,
+    RobotConnection,
+    RunConfig,
+)
 from robot_diag_control.run_preparation import prepare_remote_run, run_command_checked
 
 
@@ -53,6 +58,7 @@ class RunPreparationTests(unittest.TestCase):
                 run_id="operator_001",
                 backend=RUN_BACKEND_RUNTIME,
                 classes=("person", "fire extinguisher"),
+                run_type=RUN_TYPE_AUTONOMY_CENTER,
             ),
             cwd=Path("/repo"),
             command_runner=runner,

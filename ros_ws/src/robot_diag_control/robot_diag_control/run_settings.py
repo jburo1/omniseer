@@ -12,7 +12,9 @@ from robot_diag_control.run_commands import (
     DETECTOR_MODEL_CHOICES,
     PREVIEW_ENCODER_LABELS,
     RUN_BACKEND_LABELS,
+    RUN_TYPE_AUTONOMY_CENTER,
     RUN_TYPE_LABELS,
+    RUN_TYPE_PERCEPTION,
     RUNTIME_DEFAULT_MODEL_LABEL,
     DetectorModelChoice,
     RobotConnection,
@@ -51,6 +53,7 @@ class RunFormValues:
     autonomy_min_target_confidence: str = "0.50"
     autonomy_max_target_center_jump_ratio: str = "0.20"
     autonomy_evidence_interval_sec: str = "0.25"
+    perception_scan_yaw_rate_rad_s: str = "0.20"
     detector_score_threshold: str = "0.25"
     detector_nms_iou_threshold: str = "0.45"
     detector_max_detections: str = "100"
@@ -142,6 +145,17 @@ def validated_positive_int(value: str, *, name: str, default: str) -> str:
     return normalized
 
 
+def validated_positive_float(value: str, *, name: str, default: str) -> str:
+    normalized = value.strip() or default
+    try:
+        parsed = float(normalized)
+    except ValueError as exc:
+        raise ValueError(f"{name} must be a positive number") from exc
+    if not math.isfinite(parsed) or parsed <= 0.0:
+        raise ValueError(f"{name} must be a positive number")
+    return normalized
+
+
 def validated_nonnegative_int(value: str, *, name: str, default: str) -> str:
     normalized = value.strip() or default
     try:
@@ -208,60 +222,94 @@ def resolve_run_form(
         remote_repo_root=remote_repo_root,
         remote_runs_root=remote_runs_root,
     )
+    is_autonomy_run = run_type == RUN_TYPE_AUTONOMY_CENTER
     autonomy_bbox_area_min_ratio = values.autonomy_bbox_area_min_ratio.strip() or "0.08"
     autonomy_bbox_area_max_ratio = values.autonomy_bbox_area_max_ratio.strip() or "0.35"
-    detector_model = selected_detector_model(values.detector_model_label)
+    detector_model = selected_detector_model(values.detector_model_label) if is_autonomy_run else None
     run_config = RunConfig(
         run_id=run_id,
         backend=selected_run_backend(values.backend_label),
-        classes=tuple(parse_run_classes(values.classes_text)),
+        classes=tuple(parse_run_classes(values.classes_text)) if is_autonomy_run else (),
         notes=values.notes.strip(),
         runtime_tag=values.runtime_tag.strip() or DEFAULT_RUNTIME_TAG,
         devcontainer_exec_template=values.devcontainer_exec_template.strip() or DEFAULT_DEVCONTAINER_EXEC_TEMPLATE,
         run_type=run_type,
         experiment_config=RUN_TYPE_LABELS[run_type],
         autonomy_bbox_area_min_ratio=autonomy_bbox_area_min_ratio,
-        autonomy_approach_stop_area_ratio=approach_stop_area_ratio(
-            bbox_area_min_ratio=autonomy_bbox_area_min_ratio,
-            bbox_area_max_ratio=autonomy_bbox_area_max_ratio,
-            percent=values.autonomy_approach_stop_area_percent,
+        autonomy_approach_stop_area_ratio=(
+            approach_stop_area_ratio(
+                bbox_area_min_ratio=autonomy_bbox_area_min_ratio,
+                bbox_area_max_ratio=autonomy_bbox_area_max_ratio,
+                percent=values.autonomy_approach_stop_area_percent,
+            )
+            if is_autonomy_run
+            else "0.10"
         ),
         autonomy_bbox_area_max_ratio=autonomy_bbox_area_max_ratio,
         autonomy_forward_speed_m_s=values.autonomy_forward_speed_m_s.strip() or "0.05",
         autonomy_reverse_speed_m_s=values.autonomy_reverse_speed_m_s.strip() or "0.04",
         autonomy_stable_framed_frames=values.autonomy_stable_framed_frames.strip() or "10",
-        autonomy_success_miss_tolerance_updates=validated_nonnegative_int(
-            values.autonomy_success_miss_tolerance_updates,
-            name="success miss tolerance updates",
-            default="2",
+        autonomy_success_miss_tolerance_updates=(
+            validated_nonnegative_int(
+                values.autonomy_success_miss_tolerance_updates,
+                name="success miss tolerance updates",
+                default="2",
+            )
+            if is_autonomy_run
+            else "2"
         ),
         autonomy_proximity_stop_m=values.autonomy_proximity_stop_m.strip() or "0.30",
         autonomy_capture_timeout_sec=values.autonomy_capture_timeout_sec.strip() or "2.0",
-        autonomy_min_target_confidence=validated_unit_interval(
-            values.autonomy_min_target_confidence,
-            name="minimum target confidence",
-            default="0.50",
+        autonomy_min_target_confidence=(
+            validated_unit_interval(
+                values.autonomy_min_target_confidence,
+                name="minimum target confidence",
+                default="0.50",
+            )
+            if is_autonomy_run
+            else "0.50"
         ),
-        autonomy_max_target_center_jump_ratio=validated_positive_unit_interval(
-            values.autonomy_max_target_center_jump_ratio,
-            name="maximum target center jump ratio",
-            default="0.20",
+        autonomy_max_target_center_jump_ratio=(
+            validated_positive_unit_interval(
+                values.autonomy_max_target_center_jump_ratio,
+                name="maximum target center jump ratio",
+                default="0.20",
+            )
+            if is_autonomy_run
+            else "0.20"
         ),
         autonomy_evidence_interval_sec=values.autonomy_evidence_interval_sec.strip() or "0.25",
-        detector_score_threshold=validated_unit_interval(
-            values.detector_score_threshold,
-            name="score threshold",
-            default="0.25",
+        perception_scan_yaw_rate_rad_s=validated_positive_float(
+            values.perception_scan_yaw_rate_rad_s,
+            name="perception scan yaw rate",
+            default="0.20",
         ),
-        detector_nms_iou_threshold=validated_unit_interval(
-            values.detector_nms_iou_threshold,
-            name="NMS IoU",
-            default="0.45",
+        detector_score_threshold=(
+            validated_unit_interval(
+                values.detector_score_threshold,
+                name="score threshold",
+                default="0.25",
+            )
+            if is_autonomy_run
+            else "0.25"
         ),
-        detector_max_detections=validated_positive_int(
-            values.detector_max_detections,
-            name="max detections",
-            default="100",
+        detector_nms_iou_threshold=(
+            validated_unit_interval(
+                values.detector_nms_iou_threshold,
+                name="NMS IoU",
+                default="0.45",
+            )
+            if is_autonomy_run
+            else "0.45"
+        ),
+        detector_max_detections=(
+            validated_positive_int(
+                values.detector_max_detections,
+                name="max detections",
+                default="100",
+            )
+            if is_autonomy_run
+            else "100"
         ),
         detector_model_artifact=detector_model.artifact_filename if detector_model else "",
         experiment_model_family=detector_model.family if detector_model else "",
@@ -269,7 +317,7 @@ def resolve_run_form(
         experiment_model_precision=detector_model.precision if detector_model else "",
         experiment_model_backend=detector_model.backend if detector_model else "",
         preview_encoder=selected_preview_encoder(values.preview_encoder_label),
-        record_video=values.record_video,
+        record_video=values.record_video or run_type == RUN_TYPE_PERCEPTION,
         record_rosbag=values.record_rosbag,
     )
     artifact_context = RunArtifactContext(

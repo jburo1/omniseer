@@ -13,6 +13,7 @@ from robot_diag_control.monitor_gui import (
     RUN_BACKEND_RUNTIME,
     RUN_TYPE_AUTONOMY_CENTER,
     RUN_TYPE_LABELS,
+    RUN_TYPE_PERCEPTION,
     RobotMonitorGui,
     _build_overlay_viewer_command,
     _build_parser,
@@ -353,21 +354,27 @@ class MonitorGuiTests(unittest.TestCase):
             root.destroy()
 
     @unittest.skipIf(tk is None, "tkinter is unavailable")
-    def test_gui_run_form_exposes_class_list_input(self):
+    def test_gui_switches_between_perception_scan_and_autonomy_fields(self):
         assert tk is not None
         root = tk.Tk()
         root.withdraw()
         try:
-            RobotMonitorGui(root, _build_parser().parse_args([]))
+            gui = RobotMonitorGui(root, _build_parser().parse_args([]))
 
-            texts = _widget_texts(root)
+            self.assertEqual(gui._run_experiment_frames[RUN_TYPE_PERCEPTION].winfo_manager(), "pack")
+            self.assertEqual(gui._run_experiment_frames[RUN_TYPE_AUTONOMY_CENTER].winfo_manager(), "")
+            self.assertIn("Scan yaw rate rad/s", _widget_texts(gui._run_experiment_frames[RUN_TYPE_PERCEPTION]))
 
-            self.assertIn("Class List", texts)
-            self.assertIn("Record video", texts)
-            self.assertIn("Record rosbag", texts)
-            self.assertIn("Preview encoder", texts)
-            self.assertNotIn("Object to Search For", texts)
-            self.assertNotIn("Target Class", texts)
+            gui._run_type_var.set(RUN_TYPE_LABELS[RUN_TYPE_AUTONOMY_CENTER])
+            gui._sync_run_experiment_fields()
+
+            self.assertEqual(gui._run_experiment_frames[RUN_TYPE_PERCEPTION].winfo_manager(), "")
+            self.assertEqual(gui._run_experiment_frames[RUN_TYPE_AUTONOMY_CENTER].winfo_manager(), "pack")
+            autonomy_texts = _widget_texts(gui._run_experiment_frames[RUN_TYPE_AUTONOMY_CENTER])
+            self.assertIn("Class List", autonomy_texts)
+            self.assertIn("Detector model", autonomy_texts)
+            self.assertIn("Record video", autonomy_texts)
+            self.assertIn("Record rosbag", autonomy_texts)
         finally:
             root.destroy()
 

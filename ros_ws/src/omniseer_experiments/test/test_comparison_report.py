@@ -3,13 +3,12 @@ import json
 from pathlib import Path
 
 import pytest
-
 from omniseer_experiments.comparison_report import (
     MODEL_SPECS,
     ReplayDetection,
     ReplayFrame,
-    aggregate_replay,
     absent_truth_metrics,
+    aggregate_replay,
     load_replay_comparison,
     parse_scene_truth,
     present_truth_metrics,
@@ -220,7 +219,12 @@ def test_truth_metrics_count_coverage_gaps_known_absent_only(tmp_path: Path) -> 
     truth = parse_scene_truth(truth_path)
     present = present_truth_metrics(frames, truth)["chair"]
     absent = absent_truth_metrics(frames, truth)["dog"]
-    assert (present.visible_frames, present.visible_frames_detected, present.first_detection_delay, present.detection_gaps) == (5, 2, 0, 2)
+    assert (
+        present.visible_frames,
+        present.visible_frames_detected,
+        present.first_detection_delay,
+        present.detection_gaps,
+    ) == (5, 2, 0, 2)
     assert (absent.frames_falsely_containing, absent.total_false_detections, absent.max_false_confidence) == (1, 2, 0.8)
     assert "cat" not in absent_truth_metrics(frames, truth)
 
@@ -265,8 +269,16 @@ def test_html_uses_existing_report_style_and_conditional_sections(tmp_path: Path
 
     _write_comparison(reference, "coco80")
     truth_path = reference / "scene_truth.json"
-    truth_path.write_text(json.dumps({"schema_version": 1, "present": {"chair": [[0, 2]]}, "absent": ["dog"]}), encoding="utf-8")
-    output = write_comparison_report(reference, trial_dirs=trials, truth_path=truth_path, overwrite=True).output_path.read_text(encoding="utf-8")
+    truth_path.write_text(
+        json.dumps({"schema_version": 1, "present": {"chair": [[0, 2]]}, "absent": ["dog"]}),
+        encoding="utf-8",
+    )
+    output = write_comparison_report(
+        reference,
+        trial_dirs=trials,
+        truth_path=truth_path,
+        overwrite=True,
+    ).output_path.read_text(encoding="utf-8")
     assert "Manual scene-truth visibility" in output
     assert "Exploratory COCO-80" in output
 

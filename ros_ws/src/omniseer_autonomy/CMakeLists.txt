@@ -14,6 +14,7 @@ find_package(sensor_msgs REQUIRED)
 find_package(yolo_msgs REQUIRED)
 
 add_library(omniseer_autonomy_core STATIC
+  src/in_place_scan_controller.cpp
   src/target_centering_controller.cpp
 )
 target_compile_features(omniseer_autonomy_core PUBLIC cxx_std_17)
@@ -36,9 +37,21 @@ target_link_libraries(target_centering_node PRIVATE
   omniseer_autonomy_core
 )
 
+add_executable(in_place_scan_node
+  src/in_place_scan_node.cpp
+)
+target_compile_features(in_place_scan_node PUBLIC cxx_std_17)
+target_link_libraries(in_place_scan_node PRIVATE
+  ${geometry_msgs_TARGETS}
+  ${nav_msgs_TARGETS}
+  rclcpp::rclcpp
+  omniseer_autonomy_core
+)
+
 install(TARGETS
   omniseer_autonomy_core
   target_centering_node
+  in_place_scan_node
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}
@@ -85,6 +98,17 @@ if(BUILD_TESTING)
     omniseer_autonomy_core
   )
   target_include_directories(test_target_centering_node PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+  )
+
+  ament_add_gtest(test_in_place_scan_controller
+    test/test_in_place_scan_controller.cpp
+  )
+  target_compile_features(test_in_place_scan_controller PUBLIC cxx_std_17)
+  target_link_libraries(test_in_place_scan_controller
+    omniseer_autonomy_core
+  )
+  target_include_directories(test_in_place_scan_controller PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
   )
 endif()
