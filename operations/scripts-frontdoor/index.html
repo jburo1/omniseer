@@ -1922,7 +1922,7 @@ generates local reports. See <a href="../operator-run-workflow/">Operator Run Wo
 scripts/omni<span class="w"> </span>runs<span class="w"> </span>annotate<span class="w"> </span>&lt;run_dir&gt;<span class="w"> </span><span class="o">[</span>--overwrite<span class="o">]</span>
 scripts/omni<span class="w"> </span>runs<span class="w"> </span>report<span class="w"> </span>&lt;run_dir&gt;<span class="w"> </span><span class="o">[</span>--overwrite<span class="o">]</span>
 scripts/omni<span class="w"> </span>runs<span class="w"> </span>video<span class="w"> </span>&lt;run_dir&gt;
-scripts/omni<span class="w"> </span>runs<span class="w"> </span>compare<span class="w"> </span>&lt;run_dir&gt;<span class="w"> </span><span class="o">[</span>--model-dir<span class="w"> </span>&lt;dir&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>--classes<span class="w"> </span>&lt;path&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>comparison<span class="w"> </span>options<span class="o">]</span>
+scripts/omni<span class="w"> </span>runs<span class="w"> </span>compare<span class="w"> </span>&lt;run_dir&gt;<span class="w"> </span><span class="o">[</span>--name<span class="w"> </span>&lt;comparison-name&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>--model-dir<span class="w"> </span>&lt;dir&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>--classes<span class="w"> </span>&lt;path&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>comparison<span class="w"> </span>options<span class="o">]</span>
 scripts/omni<span class="w"> </span>runs<span class="w"> </span>local-list<span class="w"> </span><span class="o">[</span>--root<span class="w"> </span>&lt;local-runs-root&gt;<span class="o">]</span>
 scripts/omni<span class="w"> </span>runs<span class="w"> </span>list<span class="w"> </span><span class="o">[</span>retrieval<span class="w"> </span>args...<span class="o">]</span>
 scripts/omni<span class="w"> </span>runs<span class="w"> </span>pull<span class="w"> </span>&lt;run_id&gt;<span class="w"> </span><span class="o">[</span>retrieval<span class="w"> </span>args...<span class="o">]</span>
@@ -1951,8 +1951,10 @@ serially through the four resident YOLO-World v2 S/M FP/INT8 configurations. It 
 need ROS, a camera, or a live recording pipeline. The command always executes the local
 <code>vision/build/vision_runbundle_compare</code> artifact produced by <code>scripts/omni build vision</code>
 (or the <code>OMNISEER_VISION_BUILD_DIR</code> override). It writes only derived files under
-<code>video/comparison/</code> (<code>comparison.mp4</code> and <code>provenance.json</code>) and never changes raw
-RunBundle evidence or its manifest.</p>
+<code>video/comparison/&lt;name&gt;/</code> (<code>comparison.mp4</code>, <code>provenance.json</code>, and one canonical replay
+JSONL detection stream for each model) and never changes raw RunBundle evidence or its
+manifest. <code>--name</code> defaults to <code>default</code>; names are deliberately restricted to ASCII letters,
+digits, <code>_</code>, and <code>-</code> so a comparison cannot select another path.</p>
 <p>The GUI and production runtime container run and record robot experiments. The ROCK 5B+
 devcontainer runs this offline comparison. The operator/laptop retrieves RunBundles and
 generates presentation videos and reports. Do not enter the production runtime container
@@ -1964,10 +1966,16 @@ scripts/omni<span class="w"> </span>runs<span class="w"> </span>pull<span class=
 scripts/omni<span class="w"> </span>runs<span class="w"> </span>inspect<span class="w"> </span>runs/imported/demo_001
 scripts/omni<span class="w"> </span>runs<span class="w"> </span>report<span class="w"> </span>runs/imported/demo_001
 scripts/omni<span class="w"> </span>build<span class="w"> </span>vision
-scripts/omni<span class="w"> </span>runs<span class="w"> </span>compare<span class="w"> </span>runs/demo_001
 scripts/omni<span class="w"> </span>runs<span class="w"> </span>compare<span class="w"> </span>runs/demo_001<span class="w"> </span>--max-frames<span class="w"> </span><span class="m">120</span>
-scripts/omni<span class="w"> </span>runs<span class="w"> </span>compare<span class="w"> </span>runs/demo_001<span class="w"> </span>--model-dir<span class="w"> </span>/some/other/model/dir<span class="w"> </span>--classes<span class="w"> </span>/some/other/classes.txt
+
+<span class="c1"># In the ROCK 5B+ devcontainer, retain separate controlled-comparison passes.</span>
+scripts/omni<span class="w"> </span>runs<span class="w"> </span>compare<span class="w"> </span>runs/reference_scene<span class="w"> </span>--name<span class="w"> </span>task<span class="w"> </span>--classes<span class="w"> </span>config/classes/task.txt
+scripts/omni<span class="w"> </span>runs<span class="w"> </span>compare<span class="w"> </span>runs/reference_scene<span class="w"> </span>--name<span class="w"> </span>coco80<span class="w"> </span>--classes<span class="w"> </span>config/classes/coco80.txt
 </code></pre></div>
+<p>The checked-in <code>config/classes/task.txt</code> contains the restrained indoor/object-search vocabulary
+for the final replay. <code>config/classes/coco80.txt</code> is the conventional 80-category COCO order.
+The existing compiled-class-capacity validation remains authoritative: a model that cannot accept
+the selected vocabulary fails clearly; the command does not split or batch classes.</p>
 <h2 id="check"><code>check</code><a class="headerlink" href="#check" title="Permanent link">&para;</a></h2>
 <p>Passively validates an already running graph.</p>
 <div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>check
@@ -2105,7 +2113,7 @@ runbooks. New operator commands should use
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 28, 2026 05:20:43 UTC">August 28, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 28, 2026 17:55:32 UTC">August 28, 2026</span>
   </span>
 
     
