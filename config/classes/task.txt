@@ -3,17 +3,29 @@ person
 chair
 book
 bottle
+shoe
+hammer
+glass
 cup
-backpack
-laptop
+mug
+subwoofer
+speaker
+jar
+plant
 cell phone
-keyboard
-mouse
-remote
+beer mug
+stein
+scissors
+bag
+toothbrush
 handbag
-suitcase
+garbage can
+window
 desk
 table
 door
-sofa
 potted plant
+tripod
+dog
+cat
+giraffe
