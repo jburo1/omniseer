@@ -4,7 +4,7 @@ This host-only workflow produces the detector model consumed by Omniseer's
 native RKNN vision path:
 
 ```text
-YOLO-World v2-S or v2-M `.pth` -> ONNX (images + texts) -> RK3588 `.rknn`
+YOLO-World v2-S, v2-M, or v2-L `.pth` -> ONNX (images + texts) -> RK3588 `.rknn`
 ```
 
 It does not add training, export, ONNX, or RKNN Toolkit dependencies to
@@ -58,10 +58,12 @@ The only variant-specific mapping is:
 | --- | --- | --- | --- |
 | `v2s` | `yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth` | `configs/pretrain/yolo_world_v2_s_vlpan_bn_2e-3_100e_4x8gpus_obj365v1_goldg_train_lvis_minival.py` | `yolo_world_v2_s` |
 | `v2m` | `yolo_world_v2_m_obj365v1_goldg_pretrain-c6237d5b.pth` | `configs/pretrain/yolo_world_v2_m_vlpan_bn_2e-3_100e_4x8gpus_obj365v1_goldg_train_lvis_minival.py` | `yolo_world_v2_m` |
+| `v2l` | `yolo_world_v2_l_obj365v1_goldg_pretrain-a82b1fe3.pth` | `configs/pretrain/yolo_world_v2_l_vlpan_bn_2e-3_100e_4x8gpus_obj365v1_goldg_train_lvis_minival.py` | `yolo_world_v2_l` |
 
 ```text
 models/source/yolo_world/v2s/yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth
 models/source/yolo_world/v2m/yolo_world_v2_m_obj365v1_goldg_pretrain-c6237d5b.pth
+models/source/yolo_world/v2l/yolo_world_v2_l_obj365v1_goldg_pretrain-a82b1fe3.pth
 ```
 
 Rockchip's exporter also instantiates the CLIP text encoder in order to
@@ -91,12 +93,18 @@ scripts/omni model export \
   --weights models/source/yolo_world/v2s/yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth
 ```
 
-For v2-M, use its matching pinned Rockchip config through the same command:
+For v2-M or v2-L, use its matching pinned Rockchip config through the same command:
 
 ```bash
 scripts/omni model export \
   --variant v2m \
   --weights models/source/yolo_world/v2m/yolo_world_v2_m_obj365v1_goldg_pretrain-c6237d5b.pth
+```
+
+```bash
+scripts/omni model export \
+  --variant v2l \
+  --weights models/source/yolo_world/v2l/yolo_world_v2_l_obj365v1_goldg_pretrain-a82b1fe3.pth
 ```
 
 This invokes Rockchip's `deploy/export_onnx.py`, the matching 640 config, ONNX
@@ -108,8 +116,9 @@ and rejects any model not having exactly the native runtime interface:
 - `texts`: `[1,80,512]`;
 - six NCHW outputs: 80-class and 4-box tensors at 80x80, 40x40, and 20x20.
 
-The default results are `artifacts/models/yolo_world_v2_s.onnx` and
-`artifacts/models/yolo_world_v2_m.onnx`, respectively. `--variant` defaults to
+The default results are `artifacts/models/yolo_world_v2_s.onnx`,
+`artifacts/models/yolo_world_v2_m.onnx`, and
+`artifacts/models/yolo_world_v2_l.onnx`, respectively. `--variant` defaults to
 `v2s` for backward compatibility.
 
 ## Compile RKNN
@@ -156,7 +165,9 @@ normalization `mean=[0,0,0]`, `std=[255,255,255]`, and fixed named inputs
 `artifacts/models/yolo_world_v2_s_fp.rknn`; the INT8 output is
 `artifacts/models/yolo_world_v2_s_i8.rknn`. With `--variant v2m`, the same
 defaults are `artifacts/models/yolo_world_v2_m_fp.rknn` and
-`artifacts/models/yolo_world_v2_m_i8.rknn`.
+`artifacts/models/yolo_world_v2_m_i8.rknn`; with `--variant v2l`, they are
+`artifacts/models/yolo_world_v2_l_fp.rknn` and
+`artifacts/models/yolo_world_v2_l_i8.rknn`.
 
 ## Full build
 
@@ -173,6 +184,13 @@ scripts/omni model build \
 scripts/omni model build \
   --variant v2m \
   --weights models/source/yolo_world/v2m/yolo_world_v2_m_obj365v1_goldg_pretrain-c6237d5b.pth \
+  --precision int8
+```
+
+```bash
+scripts/omni model build \
+  --variant v2l \
+  --weights models/source/yolo_world/v2l/yolo_world_v2_l_obj365v1_goldg_pretrain-a82b1fe3.pth \
   --precision int8
 ```
 

@@ -19,7 +19,7 @@ Command groups:
 | `setup` | Install local development dependencies. |
 | `build` | Build ROS, native vision, firmware, and runtime-container artifacts. |
 | `runtime` | Build, run, record, verify, push, and pull robot runtime container checkpoints. |
-| `model` | Export and compile host-side YOLO-World v2-S RKNN artifacts. |
+| `model` | Export and compile host-side YOLO-World v2-S/v2-M/v2-L RKNN artifacts. |
 | `test` | Run targeted local verification checks. |
 | `run` | Launch sim, real robot profiles, autonomy, monitor, and teleop surfaces. |
 | `runs` | Inspect, annotate, report, build videos, list, and retrieve RunBundles. |
@@ -100,7 +100,7 @@ See [Robot Runtime Container](../robot-runtime/robot-runtime-container.md).
 
 ## `model`
 
-Builds host-side YOLO-World v2-S or v2-M deployment artifacts without adding any model
+Builds host-side YOLO-World v2-S, v2-M, or v2-L deployment artifacts without adding any model
 building dependency to the robot runtime image.
 
 ```bash
@@ -108,6 +108,7 @@ scripts/omni model image
 scripts/omni model export --variant v2s --weights <v2-s.pth>
 scripts/omni model compile --variant v2s --onnx artifacts/models/yolo_world_v2_s.onnx --precision fp
 scripts/omni model build --variant v2m --weights <v2-m.pth> --precision int8
+scripts/omni model build --variant v2l --weights <v2-l.pth> --precision int8
 ```
 
 See [YOLO-World v2 Model Deployment](../perception/yolo-world-model-deployment.md)
@@ -416,8 +417,8 @@ canonical evidence frames. `report` annotates missing evidence first, then
 writes `report/index.html`. `list` and `pull` use SSH and validate pulled
 bundles locally.
 
-`comparison-report` combines exactly four physical RunBundles (one for each canonical
-v2-S/v2-M FP/INT8 configuration) with one named controlled replay from the reference
+`comparison-report` combines exactly six physical RunBundles (one for each canonical
+v2-S/v2-M/v2-L FP/INT8 configuration) with one named controlled replay from the reference
 RunBundle. It writes `<reference_run>/report/comparison.html` without replacing the
 single-run report. Trial order does not matter; model identity is resolved from each
 manifest. The optional `--truth` JSON uses inclusive source-frame ranges for known-present
@@ -427,7 +428,7 @@ as a descriptive-only exploratory section.
 `compare` is a ROCK 5B+ devcontainer offline RKNN workflow. Build native vision in the
 devcontainer, then it directly decodes immutable `video/source.ts`, reverses the
 validated Rockchip 8-pixel preview wrap in memory, and executes the same corrected frame
-serially through the four resident YOLO-World v2 S/M FP/INT8 configurations. It does not
+serially through the six resident YOLO-World v2 S/M/L FP/INT8 configurations. It does not
 need ROS, a camera, or a live recording pipeline. The command always executes the local
 `vision/build/vision_runbundle_compare` artifact produced by `scripts/omni build vision`
 (or the `OMNISEER_VISION_BUILD_DIR` override). It writes only derived files under
@@ -454,6 +455,8 @@ scripts/omni runs comparison-report runs/reference_scene \
   --trial runs/v2s_int8_scene \
   --trial runs/v2m_fp_scene \
   --trial runs/v2m_int8_scene \
+  --trial runs/v2l_fp_scene \
+  --trial runs/v2l_int8_scene \
   --comparison task \
   --truth runs/reference_scene/scene_truth.json
 scripts/omni build vision

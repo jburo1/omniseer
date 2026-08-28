@@ -9,27 +9,20 @@
 
 namespace omniseer::vision
 {
-  enum class ComparisonQuadrant
-  {
-    TopLeft,
-    TopRight,
-    BottomLeft,
-    BottomRight,
-  };
-
   struct ComparisonModelSpec
   {
-    const char*        label;
-    const char*        artifact_name;
-    const char*        detections_filename;
-    ComparisonQuadrant quadrant;
+    const char* label;
+    const char* artifact_name;
+    const char* detections_filename;
   };
 
-  constexpr std::array<ComparisonModelSpec, 4> kRunbundleComparisonModels{{
-      {"v2-S FP", "yolo_world_v2_s_fp.rknn", "v2s_fp.jsonl", ComparisonQuadrant::TopLeft},
-      {"v2-S INT8", "yolo_world_v2_s_i8.rknn", "v2s_int8.jsonl", ComparisonQuadrant::TopRight},
-      {"v2-M FP", "yolo_world_v2_m_fp.rknn", "v2m_fp.jsonl", ComparisonQuadrant::BottomLeft},
-      {"v2-M INT8", "yolo_world_v2_m_i8.rknn", "v2m_int8.jsonl", ComparisonQuadrant::BottomRight},
+  constexpr std::array<ComparisonModelSpec, 6> kRunbundleComparisonModels{{
+      {"v2-S FP", "yolo_world_v2_s_fp.rknn", "v2s_fp.jsonl"},
+      {"v2-S INT8", "yolo_world_v2_s_i8.rknn", "v2s_int8.jsonl"},
+      {"v2-M FP", "yolo_world_v2_m_fp.rknn", "v2m_fp.jsonl"},
+      {"v2-M INT8", "yolo_world_v2_m_i8.rknn", "v2m_int8.jsonl"},
+      {"v2-L FP", "yolo_world_v2_l_fp.rknn", "v2l_fp.jsonl"},
+      {"v2-L INT8", "yolo_world_v2_l_i8.rknn", "v2l_int8.jsonl"},
   }};
 
   struct ComparisonInputPaths
@@ -50,7 +43,8 @@ namespace omniseer::vision
                                                       const std::filesystem::path& class_list_path);
 
   /**
-   * @brief Visit the four configurations in presentation order with one shared frame.
+   * @brief Visit the six configurations in S/M/L by FP/INT8 presentation order with one shared
+   * frame.
    *
    * This intentionally has no parallelism or ownership transfer: every visitor call
    * observes the exact same immutable corrected source-frame object.

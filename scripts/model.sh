@@ -35,7 +35,13 @@ model_select_variant() {
       model_config_path="configs/pretrain/yolo_world_v2_m_vlpan_bn_2e-3_100e_4x8gpus_obj365v1_goldg_train_lvis_minival.py"
       model_artifact_stem="yolo_world_v2_m"
       ;;
-    *) omni_die "unsupported YOLO-World model variant: ${variant}; expected v2s or v2m" ;;
+    v2l)
+      model_variant="v2l"
+      model_checkpoint_name="yolo_world_v2_l_obj365v1_goldg_pretrain-a82b1fe3.pth"
+      model_config_path="configs/pretrain/yolo_world_v2_l_vlpan_bn_2e-3_100e_4x8gpus_obj365v1_goldg_train_lvis_minival.py"
+      model_artifact_stem="yolo_world_v2_l"
+      ;;
+    *) omni_die "unsupported YOLO-World model variant: ${variant}; expected v2s, v2m, or v2l" ;;
   esac
 }
 
@@ -44,17 +50,17 @@ model_usage() {
 Usage:
   scripts/omni model assets
   scripts/omni model image [--image <name>] [docker build args...]
-  scripts/omni model export [--variant v2s|v2m] --weights <checkpoint.pth> [--output <model.onnx>] [--clip-model <dir>] [--image <name>]
-  scripts/omni model compile [--variant v2s|v2m] --onnx <model.onnx> --precision fp|int8 [--output <model.rknn>] [--calibration-dir <dir>] [--image <name>]
-  scripts/omni model build [--variant v2s|v2m] --weights <checkpoint.pth> --precision fp|int8 [--onnx-output <model.onnx>] [--output <model.rknn>] [--clip-model <dir>] [--calibration-dir <dir>] [--image <name>]
+  scripts/omni model export [--variant v2s|v2m|v2l] --weights <checkpoint.pth> [--output <model.onnx>] [--clip-model <dir>] [--image <name>]
+  scripts/omni model compile [--variant v2s|v2m|v2l] --onnx <model.onnx> --precision fp|int8 [--output <model.rknn>] [--calibration-dir <dir>] [--image <name>]
+  scripts/omni model build [--variant v2s|v2m|v2l] --weights <checkpoint.pth> --precision fp|int8 [--onnx-output <model.onnx>] [--output <model.rknn>] [--clip-model <dir>] [--calibration-dir <dir>] [--image <name>]
 
 Defaults:
   image             omniseer/model-builder:yolo-world-v2s-rknn-toolkit2-2.1.0
-  variant           v2s (default); supported: v2s, v2m
+  variant           v2s (default); supported: v2s, v2m, v2l
   clip model        models/source/clip-vit-base-patch32
-  ONNX output       artifacts/models/yolo_world_v2_<s|m>.onnx
-  FP RKNN output    artifacts/models/yolo_world_v2_<s|m>_fp.rknn
-  INT8 RKNN output  artifacts/models/yolo_world_v2_<s|m>_i8.rknn
+  ONNX output       artifacts/models/yolo_world_v2_<s|m|l>.onnx
+  FP RKNN output    artifacts/models/yolo_world_v2_<s|m|l>_fp.rknn
+  INT8 RKNN output  artifacts/models/yolo_world_v2_<s|m|l>_i8.rknn
   calibration dir   models/source/yolo_world/calibration
 EOF
 }
@@ -236,7 +242,7 @@ model_require_assets() {
   clip_model="${source_root}/clip-vit-base-patch32"
   calibration_dir="${source_root}/yolo_world/calibration"
 
-  for variant in v2s v2m; do
+  for variant in v2s v2m v2l; do
     model_select_variant "${variant}"
     checkpoint="${source_root}/yolo_world/${model_variant}/${model_checkpoint_name}"
     model_require_checkpoint "${checkpoint}"
@@ -261,7 +267,7 @@ model_assets() {
   source_root="$(omni_repo_root)/models/source"
   clip_model="${source_root}/clip-vit-base-patch32"
   calibration_dir="${source_root}/yolo_world/calibration"
-  for variant in v2s v2m; do
+  for variant in v2s v2m v2l; do
     model_select_variant "${variant}"
     checkpoint="${source_root}/yolo_world/${model_variant}/${model_checkpoint_name}"
     model_download_missing "${model_yolo_world_assets_url}/${model_checkpoint_name}" "${checkpoint}"
@@ -278,6 +284,7 @@ model_assets() {
   printf '  %s\n' \
     "${source_root}/yolo_world/v2s/yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth" \
     "${source_root}/yolo_world/v2m/yolo_world_v2_m_obj365v1_goldg_pretrain-c6237d5b.pth" \
+    "${source_root}/yolo_world/v2l/yolo_world_v2_l_obj365v1_goldg_pretrain-a82b1fe3.pth" \
     "${clip_model}" \
     "${calibration_dir}"
 }
@@ -309,7 +316,7 @@ model_export() {
   clip_model="$(omni_repo_root)/models/source/clip-vit-base-patch32"
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      --variant) [[ $# -ge 2 ]] || omni_die "--variant requires v2s or v2m"; variant="$2"; shift 2 ;;
+      --variant) [[ $# -ge 2 ]] || omni_die "--variant requires v2s, v2m, or v2l"; variant="$2"; shift 2 ;;
       --variant=*) variant="${1#--variant=}"; shift ;;
       --weights) [[ $# -ge 2 ]] || omni_die "--weights requires a path"; weights="$2"; shift 2 ;;
       --weights=*) weights="${1#--weights=}"; shift ;;
@@ -375,7 +382,7 @@ model_compile() {
   calibration_dir="$(omni_repo_root)/models/source/yolo_world/calibration"
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      --variant) [[ $# -ge 2 ]] || omni_die "--variant requires v2s or v2m"; variant="$2"; shift 2 ;;
+      --variant) [[ $# -ge 2 ]] || omni_die "--variant requires v2s, v2m, or v2l"; variant="$2"; shift 2 ;;
       --variant=*) variant="${1#--variant=}"; shift ;;
       --onnx) [[ $# -ge 2 ]] || omni_die "--onnx requires a path"; onnx="$2"; shift 2 ;;
       --onnx=*) onnx="${1#--onnx=}"; shift ;;
@@ -426,7 +433,7 @@ model_build() {
   variant="${model_default_variant}"
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      --variant) [[ $# -ge 2 ]] || omni_die "--variant requires v2s or v2m"; variant="$2"; shift 2 ;;
+      --variant) [[ $# -ge 2 ]] || omni_die "--variant requires v2s, v2m, or v2l"; variant="$2"; shift 2 ;;
       --variant=*) variant="${1#--variant=}"; shift ;;
       --weights) [[ $# -ge 2 ]] || omni_die "--weights requires a path"; weights="$2"; shift 2 ;;
       --weights=*) weights="${1#--weights=}"; shift ;;

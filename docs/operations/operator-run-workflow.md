@@ -111,7 +111,7 @@ stale ends the scan cleanly without continuing motion.
 
 This capture is intentionally independent of the existing
 `scripts/omni runs compare ...` and comparison-report workflow: the resulting
-`video/source.ts` is consumed unchanged by that offline 2×2 detector
+`video/source.ts` is consumed unchanged by that offline 3×2 detector
 comparison.
 
 The scan intentionally does not start native vision. Its gateway health check

@@ -53,13 +53,13 @@ namespace
            "\n"
            "Directly decodes <run_dir>/video/source.ts, reverses the validated 1280x720\n"
            "Rockchip 8-pixel preview wrap in memory, and runs the same corrected BGR\n"
-           "frame sequentially through v2-S FP, v2-S INT8, v2-M FP, and v2-M INT8.\n"
+           "frame sequentially through v2-S, v2-M, and v2-L FP and INT8 configurations.\n"
            "It writes video/comparison/<comparison-name>/comparison.mp4, provenance.json,\n"
            "and one replay JSONL detection stream for each model.\n"
            "\n"
            "Options:\n"
            "  --name <comparison-name> Named output directory component (default: default)\n"
-           "  --model-dir <dir>        Directory containing the four YOLO-World RKNN artifacts\n"
+           "  --model-dir <dir>        Directory containing the six YOLO-World RKNN artifacts\n"
            "                           (default: <repo>/runs/model_artifacts)\n"
            "  --classes <path>         Class list (default: <run_dir>/classes.txt)\n"
            "  --clip-model <path>      CLIP text encoder RKNN path\n"
@@ -251,24 +251,27 @@ namespace
     }
   }
 
-  cv::Mat compose_quadrants(const cv::Mat&                                          corrected_bgr,
-                            const std::array<omniseer::vision::DetectionsFrame, 4>& detections,
-                            const std::vector<std::string>&                         class_names)
+  cv::Mat compose_grid(const cv::Mat&                                          corrected_bgr,
+                       const std::array<omniseer::vision::DetectionsFrame, 6>& detections,
+                       const std::vector<std::string>&                         class_names)
   {
-    std::array<cv::Mat, 4> quadrants{};
-    for (size_t i = 0; i < quadrants.size(); ++i)
+    std::array<cv::Mat, 6> panels{};
+    for (size_t i = 0; i < panels.size(); ++i)
     {
       cv::Mat annotated = corrected_bgr.clone();
       draw_detections(annotated, detections[i], class_names,
                       omniseer::vision::kRunbundleComparisonModels[i].label);
-      cv::resize(annotated, quadrants[i], cv::Size(640, 360), 0.0, 0.0, cv::INTER_AREA);
+      cv::resize(annotated, panels[i], cv::Size(corrected_bgr.cols / 2, corrected_bgr.rows / 2),
+                 0.0, 0.0, cv::INTER_AREA);
     }
-    cv::Mat top{};
-    cv::Mat bottom{};
+    cv::Mat s_row{};
+    cv::Mat m_row{};
+    cv::Mat l_row{};
     cv::Mat output{};
-    cv::hconcat(quadrants[0], quadrants[1], top);
-    cv::hconcat(quadrants[2], quadrants[3], bottom);
-    cv::vconcat(top, bottom, output);
+    cv::hconcat(panels[0], panels[1], s_row);
+    cv::hconcat(panels[2], panels[3], m_row);
+    cv::hconcat(panels[4], panels[5], l_row);
+    cv::vconcat(std::vector<cv::Mat>{s_row, m_row, l_row}, output);
     return output;
   }
 
@@ -316,8 +319,8 @@ int main(int argc, char** argv)
     const fs::path intermediate_mp4 = comparison_dir / "comparison.rendering.mp4";
     const fs::path provenance_path  = comparison_dir / "provenance.json";
 
-    std::array<fs::path, 4>                                           model_paths{};
-    std::array<std::unique_ptr<omniseer::vision::OfflineDetector>, 4> detectors{};
+    std::array<fs::path, 6>                                           model_paths{};
+    std::array<std::unique_ptr<omniseer::vision::OfflineDetector>, 6> detectors{};
     for (size_t i = 0; i < detectors.size(); ++i)
     {
       const auto& model = omniseer::vision::kRunbundleComparisonModels[i];
@@ -364,12 +367,12 @@ int main(int argc, char** argv)
     const double output_fps = omniseer::vision::comparison_output_fps(video.get(cv::CAP_PROP_FPS));
     const double source_fps = video.get(cv::CAP_PROP_FPS);
     cv::VideoWriter writer(intermediate_mp4.string(), cv::VideoWriter::fourcc('m', 'p', '4', 'v'),
-                           output_fps, cv::Size(source_width, source_height));
+                           output_fps, cv::Size(source_width, source_height * 3 / 2));
     if (!writer.isOpened())
       throw std::runtime_error("failed to open temporary comparison video for writing");
 
-    std::array<fs::path, 4>                                             detection_jsonl_paths{};
-    std::array<std::unique_ptr<omniseer::vision::ReplayJsonlWriter>, 4> detection_writers{};
+    std::array<fs::path, 6>                                             detection_jsonl_paths{};
+    std::array<std::unique_ptr<omniseer::vision::ReplayJsonlWriter>, 6> detection_writers{};
     for (size_t i = 0; i < detection_writers.size(); ++i)
     {
       detection_jsonl_paths[i] =
@@ -393,7 +396,7 @@ int main(int argc, char** argv)
         throw std::runtime_error("failed to repair decoded raw frame: " + repair_error);
       }
 
-      std::array<omniseer::vision::DetectionsFrame, 4> detections{};
+      std::array<omniseer::vision::DetectionsFrame, 6> detections{};
       // Calls are deliberately serial and all receive this exact corrected cv::Mat.
       omniseer::vision::visit_comparison_models(
           frame,
@@ -404,7 +407,7 @@ int main(int argc, char** argv)
                                                             frame_index, source_fps);
       for (size_t i = 0; i < detection_writers.size(); ++i)
         detection_writers[i]->write(frame_index, timestamp_sec, detections[i]);
-      writer.write(compose_quadrants(frame, detections, detectors[0]->class_names()));
+      writer.write(compose_grid(frame, detections, detectors[0]->class_names()));
       ++frame_index;
     }
     writer.release();

@@ -47,6 +47,8 @@ MODEL_SPECS = (
     _ModelSpec("v2-S INT8", "v2s_int8.jsonl", "s", "int8"),
     _ModelSpec("v2-M FP", "v2m_fp.jsonl", "m", "fp"),
     _ModelSpec("v2-M INT8", "v2m_int8.jsonl", "m", "int8"),
+    _ModelSpec("v2-L FP", "v2l_fp.jsonl", "l", "fp"),
+    _ModelSpec("v2-L INT8", "v2l_int8.jsonl", "l", "int8"),
 )
 
 
@@ -185,7 +187,7 @@ def parse_scene_truth(path: Path) -> SceneTruth:
 
 
 def load_replay_comparison(reference_run: Path, comparison_name: str) -> ReplayComparison:
-    """Load one required named comparison and verify its four frame-aligned streams."""
+    """Load one required named comparison and verify its six frame-aligned streams."""
 
     if not _safe_comparison_name(comparison_name):
         raise ValueError("comparison name must contain 1-64 ASCII letters, digits, '_' or '-' only")
@@ -345,7 +347,7 @@ def absent_truth_metrics(frames: Sequence[ReplayFrame], truth: SceneTruth) -> di
 
 def resolve_trial_metrics(trial_dirs: Sequence[Path]) -> dict[str, TrialMetrics]:
     if len(trial_dirs) != len(MODEL_SPECS):
-        raise ValueError("exactly four physical --trial RunBundles are required")
+        raise ValueError("exactly six physical --trial RunBundles are required")
     resolved: dict[str, TrialMetrics] = {}
     for run_dir in trial_dirs:
         manifest = _read_manifest(run_dir / "manifest.yaml")
@@ -410,7 +412,7 @@ def comparison_report_main(argv: list[str] | None = None) -> None:
         "--trial",
         action="append",
         default=[],
-        help="physical trial RunBundle (repeat exactly four times)",
+        help="physical trial RunBundle (repeat exactly six times)",
     )
     parser.add_argument("--comparison", default="task", help="named controlled comparison (default: task)")
     parser.add_argument("--truth", help="optional scene-truth JSON using inclusive frame ranges")
@@ -564,13 +566,15 @@ def _resolve_trial_spec(manifest: dict[str, Any]) -> _ModelSpec | None:
         return None
     variant = str(model.get("variant") or "").lower().replace("-", "").replace("_", "")
     precision = str(model.get("precision") or "").lower().replace("-", "").replace("_", "")
-    if variant not in {"v2s", "v2m"} or precision not in {"fp", "fp16", "float", "float16", "int8", "i8"}:
+    if variant not in {"v2s", "v2m", "v2l"} or precision not in {"fp", "fp16", "float", "float16", "int8", "i8"}:
         identity = " ".join(str(model.get(key) or "") for key in ("detector_model_path", "detector"))
         normalized = identity.lower().replace("-", "_")
         if "v2_s" in normalized or "v2s" in normalized:
             variant = "v2s"
         elif "v2_m" in normalized or "v2m" in normalized:
             variant = "v2m"
+        elif "v2_l" in normalized or "v2l" in normalized:
+            variant = "v2l"
         if "int8" in normalized or "_i8" in normalized:
             precision = "int8"
         elif "fp16" in normalized or "_fp" in normalized:
@@ -670,7 +674,7 @@ def _overview_section(reference_run: Path, replay: ReplayComparison, truth: Scen
     classes = replay.provenance.get("classes")
     vocabulary_size = len(classes) if isinstance(classes, list) else 0
     frames = len(replay.streams[MODEL_SPECS[0].label])
-    body = "<p>Four closed-loop robot trials + controlled same-video replay.</p>" + _key_value_table(
+    body = "<p>Six closed-loop robot trials + controlled same-video replay.</p>" + _key_value_table(
         [
             ("Reference RunBundle", reference_run.name),
             ("Selected comparison", replay.name),
@@ -689,7 +693,7 @@ def _methodology_section():
         "postprocessing, and thresholds fixed; "
         "only detector configuration changes.</p>"
         '<p class="table-note">The replay uses immutable source.ts, deterministic 8px repair in memory, '
-        "the same corrected frame, and four resident RKNN detectors sequentially. Offline replay timing is not "
+        "the same corrected frame, and six resident RKNN detectors sequentially. Offline replay timing is not "
         "production runtime performance.</p>"
     )
     return _section("Methodology", body, open_by_default=True)

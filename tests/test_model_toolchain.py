@@ -38,9 +38,9 @@ def test_model_help_is_available_from_omni_front_door() -> None:
 
     assert result.returncode == 0, result.stderr
     assert "model assets" in result.stdout
-    assert "model export [--variant v2s|v2m] --weights" in result.stdout
-    assert "model compile [--variant v2s|v2m] --onnx" in result.stdout
-    assert "model build [--variant v2s|v2m] --weights" in result.stdout
+    assert "model export [--variant v2s|v2m|v2l] --weights" in result.stdout
+    assert "model compile [--variant v2s|v2m|v2l] --onnx" in result.stdout
+    assert "model build [--variant v2s|v2m|v2l] --weights" in result.stdout
 
 
 def test_model_variant_v2s_resolves_expected_checkpoint_config_and_artifacts() -> None:
@@ -65,6 +65,17 @@ def test_model_variant_v2m_resolves_expected_checkpoint_config_and_artifacts() -
     )
 
 
+def test_model_variant_v2l_resolves_expected_checkpoint_config_and_artifacts() -> None:
+    result = resolve_variant("v2l")
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout == (
+        "v2l|yolo_world_v2_l_obj365v1_goldg_pretrain-a82b1fe3.pth|"
+        "configs/pretrain/yolo_world_v2_l_vlpan_bn_2e-3_100e_4x8gpus_obj365v1_goldg_train_lvis_minival.py|"
+        "yolo_world_v2_l.onnx|yolo_world_v2_l_fp.rknn|yolo_world_v2_l_i8.rknn\n"
+    )
+
+
 def test_model_variant_rejects_unsupported_value() -> None:
     result = subprocess.run(
         ["scripts/omni", "model", "export", "--variant", "v2x"],
@@ -75,7 +86,7 @@ def test_model_variant_rejects_unsupported_value() -> None:
     )
 
     assert result.returncode != 0
-    assert "unsupported YOLO-World model variant: v2x; expected v2s or v2m" in result.stderr
+    assert "unsupported YOLO-World model variant: v2x; expected v2s, v2m, or v2l" in result.stderr
 
 
 def test_model_export_defaults_to_v2s() -> None:

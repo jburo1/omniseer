@@ -92,6 +92,8 @@ class RunSettingsTests(unittest.TestCase):
             "YOLO-World v2-S FP": "yolo_world_v2_s_fp.rknn",
             "YOLO-World v2-M INT8": "yolo_world_v2_m_i8.rknn",
             "YOLO-World v2-M FP": "yolo_world_v2_m_fp.rknn",
+            "YOLO-World v2-L FP": "yolo_world_v2_l_fp.rknn",
+            "YOLO-World v2-L INT8": "yolo_world_v2_l_i8.rknn",
         }
         self.assertIsNone(selected_detector_model("Runtime default"))
         for label, artifact in expected.items():
@@ -165,6 +167,8 @@ class RunSettingsTests(unittest.TestCase):
             "YOLO-World v2-S FP": ("yolo_world_v2_s_fp.rknn", "v2s", "fp"),
             "YOLO-World v2-M INT8": ("yolo_world_v2_m_i8.rknn", "v2m", "int8"),
             "YOLO-World v2-M FP": ("yolo_world_v2_m_fp.rknn", "v2m", "fp"),
+            "YOLO-World v2-L FP": ("yolo_world_v2_l_fp.rknn", "v2l", "fp"),
+            "YOLO-World v2-L INT8": ("yolo_world_v2_l_i8.rknn", "v2l", "int8"),
         }
         for label, (artifact, variant, precision) in expected.items():
             selection = resolve_run_form(

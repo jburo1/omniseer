@@ -137,6 +137,17 @@ def _write_all_trials(root: Path) -> list[Path]:
     return trials
 
 
+def test_canonical_model_specs_cover_six_s_m_l_fp_int8_configurations() -> None:
+    assert [(spec.label, spec.detections_filename) for spec in MODEL_SPECS] == [
+        ("v2-S FP", "v2s_fp.jsonl"),
+        ("v2-S INT8", "v2s_int8.jsonl"),
+        ("v2-M FP", "v2m_fp.jsonl"),
+        ("v2-M INT8", "v2m_int8.jsonl"),
+        ("v2-L FP", "v2l_fp.jsonl"),
+        ("v2-L INT8", "v2l_int8.jsonl"),
+    ]
+
+
 def test_scene_truth_accepts_multiple_ranges_and_rejects_invalid_values(tmp_path: Path) -> None:
     truth_path = tmp_path / "truth.json"
     truth_path.write_text(
@@ -235,12 +246,12 @@ def test_trial_resolution_is_order_independent_and_requires_canonical_set(tmp_pa
     assert set(resolved) == {spec.label for spec in MODEL_SPECS}
     assert resolved["v2-S FP"].values["Inference p50"] == "8.00 ms"
 
-    with pytest.raises(ValueError, match="exactly four"):
+    with pytest.raises(ValueError, match="exactly six"):
         resolve_trial_metrics(trials[:3])
     duplicate = tmp_path / "duplicate"
     _write_trial(duplicate, "v2s", "fp")
     with pytest.raises(ValueError, match="duplicate"):
-        resolve_trial_metrics([*trials[:3], duplicate])
+        resolve_trial_metrics([*trials[:-1], duplicate])
 
     sparse = tmp_path / "sparse"
     _write_trial(sparse, "v2s", "fp", telemetry=False)

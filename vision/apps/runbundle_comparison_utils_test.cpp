@@ -5,22 +5,27 @@
 
 namespace omniseer::vision
 {
-  TEST(RunbundleComparison, UsesTheRequiredModelArtifactAndQuadrantMapping)
+  TEST(RunbundleComparison, UsesTheRequiredModelArtifactAndGridMapping)
   {
-    ASSERT_EQ(kRunbundleComparisonModels.size(), 4U);
+    ASSERT_EQ(kRunbundleComparisonModels.size(), 6U);
     EXPECT_STREQ(kRunbundleComparisonModels[0].label, "v2-S FP");
     EXPECT_STREQ(kRunbundleComparisonModels[0].artifact_name, "yolo_world_v2_s_fp.rknn");
     EXPECT_STREQ(kRunbundleComparisonModels[0].detections_filename, "v2s_fp.jsonl");
-    EXPECT_EQ(kRunbundleComparisonModels[0].quadrant, ComparisonQuadrant::TopLeft);
     EXPECT_STREQ(kRunbundleComparisonModels[1].label, "v2-S INT8");
+    EXPECT_STREQ(kRunbundleComparisonModels[1].artifact_name, "yolo_world_v2_s_i8.rknn");
     EXPECT_STREQ(kRunbundleComparisonModels[1].detections_filename, "v2s_int8.jsonl");
-    EXPECT_EQ(kRunbundleComparisonModels[1].quadrant, ComparisonQuadrant::TopRight);
     EXPECT_STREQ(kRunbundleComparisonModels[2].label, "v2-M FP");
+    EXPECT_STREQ(kRunbundleComparisonModels[2].artifact_name, "yolo_world_v2_m_fp.rknn");
     EXPECT_STREQ(kRunbundleComparisonModels[2].detections_filename, "v2m_fp.jsonl");
-    EXPECT_EQ(kRunbundleComparisonModels[2].quadrant, ComparisonQuadrant::BottomLeft);
     EXPECT_STREQ(kRunbundleComparisonModels[3].label, "v2-M INT8");
+    EXPECT_STREQ(kRunbundleComparisonModels[3].artifact_name, "yolo_world_v2_m_i8.rknn");
     EXPECT_STREQ(kRunbundleComparisonModels[3].detections_filename, "v2m_int8.jsonl");
-    EXPECT_EQ(kRunbundleComparisonModels[3].quadrant, ComparisonQuadrant::BottomRight);
+    EXPECT_STREQ(kRunbundleComparisonModels[4].label, "v2-L FP");
+    EXPECT_STREQ(kRunbundleComparisonModels[4].artifact_name, "yolo_world_v2_l_fp.rknn");
+    EXPECT_STREQ(kRunbundleComparisonModels[4].detections_filename, "v2l_fp.jsonl");
+    EXPECT_STREQ(kRunbundleComparisonModels[5].label, "v2-L INT8");
+    EXPECT_STREQ(kRunbundleComparisonModels[5].artifact_name, "yolo_world_v2_l_i8.rknn");
+    EXPECT_STREQ(kRunbundleComparisonModels[5].detections_filename, "v2l_int8.jsonl");
   }
 
   TEST(RunbundleComparison, ResolvesDocumentedRunbundleInputDefaults)
@@ -68,8 +73,8 @@ namespace omniseer::vision
   TEST(RunbundleComparison, EveryModelVisitReceivesTheSameCorrectedSourceObject)
   {
     const int                 corrected_frame = 42;
-    std::array<const int*, 4> received{};
-    std::array<size_t, 4>     order{};
+    std::array<const int*, 6> received{};
+    std::array<size_t, 6>     order{};
     visit_comparison_models(corrected_frame,
                             [&](size_t index, const ComparisonModelSpec&, const int& frame)
                             {
