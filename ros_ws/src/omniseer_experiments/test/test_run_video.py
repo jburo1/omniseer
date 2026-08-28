@@ -1,6 +1,8 @@
 import tempfile
 import unittest
 from pathlib import Path
+from subprocess import CompletedProcess
+from unittest.mock import patch
 
 from omniseer_experiments.run_video import (
     NON_TARGET_COLOR,
@@ -9,11 +11,13 @@ from omniseer_experiments.run_video import (
     VideoTimingAnchor,
     _draw_detections,
     _target_class_from_manifest,
+    build_run_video,
     frame_robot_time,
     load_video_start_time,
     load_video_timing_anchor,
     nearest_detections,
     remux_source_video,
+    repair_preview_wrap_video,
     transcode_overlay_video,
     video_relative_to_robot_time,
 )
@@ -30,6 +34,90 @@ class RunVideoTests(unittest.TestCase):
 
         self.assertEqual(calls[0][0][0], ["ffmpeg", "-y", "-i", "video/source.ts", "-c", "copy", "video/source.mp4"])
         self.assertTrue(calls[0][1]["check"])
+
+    def test_preview_wrap_repair_uses_explicit_circular_filter_and_h264(self):
+        calls = []
+
+        def runner(*args, **kwargs):
+            calls.append((args, kwargs))
+            if args[0][0] == "ffprobe":
+                return CompletedProcess(args[0], 0, stdout='{"streams":[{"width":1280,"height":720}]}')
+            return CompletedProcess(args[0], 0, stdout="")
+
+        repair_preview_wrap_video(Path("video/source.mp4"), Path("video/source.corrected.mp4"), runner=runner)
+
+        self.assertEqual(calls[0][0][0][0], "ffprobe")
+        self.assertEqual(
+            calls[1][0][0],
+            [
+                "ffmpeg",
+                "-y",
+                "-i",
+                "video/source.mp4",
+                "-filter_complex",
+                "[0:v]split=2[main_input][wrapped_input];"
+                "[main_input]crop=1272:720:8:0[main];"
+                "[wrapped_input]crop=8:720:0:0[wrapped];"
+                "[main][wrapped]hstack=inputs=2[corrected]",
+                "-map",
+                "[corrected]",
+                "-an",
+                "-c:v",
+                "libx264",
+                "-preset",
+                "ultrafast",
+                "-crf",
+                "18",
+                "-pix_fmt",
+                "yuv420p",
+                "-movflags",
+                "+faststart",
+                "-fps_mode",
+                "passthrough",
+                "video/source.corrected.mp4",
+            ],
+        )
+
+    def test_preview_wrap_repair_rejects_unsupported_geometry(self):
+        def runner(*args, **_kwargs):
+            return CompletedProcess(args[0], 0, stdout='{"streams":[{"width":640,"height":480}]}')
+
+        with self.assertRaisesRegex(ValueError, "supports only 1280x720"):
+            repair_preview_wrap_video(Path("video/source.mp4"), Path("video/source.corrected.mp4"), runner=runner)
+
+    def test_build_preserves_raw_remux_and_uses_corrected_source_for_overlay(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            run_dir = Path(temp_dir)
+            source_ts = run_dir / "video" / "source.ts"
+            source_ts.parent.mkdir()
+            source_ts.write_bytes(b"immutable raw evidence")
+            (source_ts.parent / "timing.json").write_text(
+                '{"anchor_video_time_ns": 125000000, "anchor_robot_time_ns": 1786061000123456789}',
+                encoding="utf-8",
+            )
+            (run_dir / "detections.jsonl").write_text("", encoding="utf-8")
+            raw_before = source_ts.read_bytes()
+
+            with (
+                patch("omniseer_experiments.run_video.remux_source_video") as remux,
+                patch("omniseer_experiments.run_video.repair_preview_wrap_video") as repair,
+                patch("omniseer_experiments.run_video.render_overlay") as render,
+            ):
+                remux.side_effect = lambda _source, output, **_kwargs: output.write_bytes(b"raw remux")
+                repair.side_effect = lambda _source, output, **_kwargs: output.write_bytes(b"corrected derivative")
+                build_run_video(run_dir)
+
+            self.assertEqual(source_ts.read_bytes(), raw_before)
+            remux.assert_called_once_with(source_ts, run_dir / "video" / "source.mp4", runner=unittest.mock.ANY)
+            repair.assert_called_once_with(
+                run_dir / "video" / "source.mp4",
+                run_dir / "video" / "source.corrected.mp4",
+                runner=unittest.mock.ANY,
+            )
+            self.assertTrue((run_dir / "video" / "source.mp4").is_file())
+            self.assertTrue((run_dir / "video" / "source.corrected.mp4").is_file())
+            self.assertEqual(render.call_args.args[0], run_dir / "video" / "source.corrected.mp4")
+            self.assertEqual(render.call_args.kwargs["timing_anchor"], VideoTimingAnchor(0.125, 1786061000.1234567))
 
     def test_overlay_transcode_uses_browser_compatible_h264(self):
         calls = []

@@ -8,6 +8,7 @@ from robot_diag_control.run_artifacts import (
     RunArtifactContext,
     build_pull_command,
     build_report_command,
+    build_run_videos,
     generate_run_report,
     imported_run_dir,
     inspect_run_artifacts,
@@ -131,6 +132,23 @@ class RunArtifactsTests(unittest.TestCase):
             command,
             ["/repo/scripts/omni", "runs", "report", "/repo/runs/imported/operator_001", "--overwrite"],
         )
+
+    def test_build_run_videos_requires_corrected_source_derivative(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            context = _context_for_repo(Path(tmp))
+            video_dir = imported_run_dir(context, "operator_001") / "video"
+            video_dir.mkdir(parents=True)
+
+            def command_executor(command: list[str], _cwd: Path) -> subprocess.CompletedProcess[str]:
+                (video_dir / "source.mp4").write_bytes(b"raw remux")
+                (video_dir / "source.corrected.mp4").write_bytes(b"corrected derivative")
+                (video_dir / "overlay.mp4").write_bytes(b"overlay")
+                return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+
+            result = build_run_videos(context, run_id="operator_001", command_executor=command_executor)
+
+            self.assertTrue(result.success)
+            self.assertEqual(result.path, video_dir / "overlay.mp4")
 
     def test_retrieve_run_artifacts_executes_pull_command_and_reports_success(self):
         commands: list[list[str]] = []

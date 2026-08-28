@@ -354,19 +354,22 @@ class RunReportTests(unittest.TestCase):
             self.assertNotIn("Frame 2", representative)
             self.assertNotIn("Frame 4", representative)
 
-    def test_keeps_overlay_video_behavior(self) -> None:
+    def test_uses_corrected_source_video_presentation_derivative(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             run_dir = Path(tmp) / "demo_001"
             _write_completed_bundle(run_dir)
             video_dir = run_dir / "video"
             video_dir.mkdir()
             (video_dir / "source.mp4").write_bytes(b"mp4")
+            (video_dir / "source.corrected.mp4").write_bytes(b"mp4")
             (video_dir / "overlay.mp4").write_bytes(b"mp4")
 
             output = write_run_report(run_dir).output_path.read_text(encoding="utf-8")
             self.assertIn('<details id="video" open>', output)
             self.assertIn("video/overlay.mp4", output)
-            self.assertNotIn("Source video", output)
+            self.assertIn("video/source.corrected.mp4", output)
+            self.assertIn("Corrected source video", output)
+            self.assertNotIn("<h3>Source video</h3>", output)
 
     def test_collapses_top_five_cpu_consumers(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -187,6 +187,7 @@ def build_run_videos(
     command = build_video_command(context, run_id=run_id)
     video_dir = imported_run_dir(context, run_id) / "video"
     source_path = video_dir / "source.mp4"
+    corrected_source_path = video_dir / "source.corrected.mp4"
     overlay_path = video_dir / "overlay.mp4"
     try:
         completed = command_executor(command, context.repo_root)
@@ -200,11 +201,14 @@ def build_run_videos(
             message=f"video build failed: {_completed_detail(completed)}",
             output=output,
         )
-    if not source_path.is_file() or not overlay_path.is_file():
+    if not source_path.is_file() or not corrected_source_path.is_file() or not overlay_path.is_file():
         return RunArtifactResult(
             command=command,
             success=False,
-            message=f"video build completed but expected outputs are missing: {source_path}, {overlay_path}",
+            message=(
+                "video build completed but expected outputs are missing: "
+                f"{source_path}, {corrected_source_path}, {overlay_path}"
+            ),
             output=output,
         )
     return RunArtifactResult(

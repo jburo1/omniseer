@@ -124,9 +124,12 @@ device, capture size, model input size, class padding, and runner warmup remain
 launch/config-file controls.
 
 For a recorded camera stream, select **Record video** before starting the run.
-This is off by default. **Retrieve & Open Report** creates `video/source.mp4`
-and the approximate detection overlay `video/overlay.mp4` before regenerating
-the report; source preview and inference use separate camera paths, so the
+This is off by default. **Retrieve & Open Report** preserves `video/source.mp4`
+as a stream-copy remux of raw `video/source.ts`, then creates the repaired
+presentation derivative `video/source.corrected.mp4` and the approximate
+detection overlay `video/overlay.mp4` before regenerating the report. Rockchip
+preview recordings have a known deterministic 8px horizontal wrap; raw evidence
+is not modified. Source preview and inference use separate camera paths, so the
 overlay is not pixel-perfect synchronized.
 
 Select **Record rosbag** to add the configured ROS topic allowlist to the same

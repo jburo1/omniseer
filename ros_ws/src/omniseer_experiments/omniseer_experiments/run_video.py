@@ -18,6 +18,13 @@ MAX_DETECTION_TIME_DELTA_SEC = 0.10
 TARGET_COLOR = (0, 255, 0)
 NON_TARGET_COLOR = (0, 0, 255)
 
+# Rockchip preview recordings have a known, deterministic horizontal circular wrap:
+# [original x=1272..1279][original x=0..1271].  Raw source.ts and its stream-copy
+# source.mp4 derivative remain evidence; this repair is only for presentation derivatives.
+PREVIEW_WRAP_REPAIR_PIXELS = 8
+PREVIEW_WRAP_REPAIR_WIDTH = 1280
+PREVIEW_WRAP_REPAIR_HEIGHT = 720
+
 
 @dataclass(frozen=True)
 class TimedDetections:
@@ -171,6 +178,87 @@ def remux_source_video(source_ts: Path, source_mp4: Path, *, runner: Callable[..
     )
 
 
+def probe_video_geometry(source_mp4: Path, *, runner: Callable[..., Any] = subprocess.run) -> tuple[int, int]:
+    """Return the first video stream geometry, or fail before applying a fixed repair."""
+    result = runner(
+        [
+            "ffprobe",
+            "-v",
+            "error",
+            "-select_streams",
+            "v:0",
+            "-show_entries",
+            "stream=width,height",
+            "-of",
+            "json",
+            str(source_mp4),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    try:
+        payload = json.loads(result.stdout)
+        streams = payload["streams"]
+        stream = streams[0]
+        width, height = stream["width"], stream["height"]
+    except (KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
+        raise RuntimeError(f"failed to read video geometry from {source_mp4}") from exc
+    if isinstance(width, bool) or isinstance(height, bool) or not isinstance(width, int) or not isinstance(height, int):
+        raise RuntimeError(f"video geometry is invalid for {source_mp4}")
+    return width, height
+
+
+def repair_preview_wrap_video(
+    source_mp4: Path, corrected_mp4: Path, *, runner: Callable[..., Any] = subprocess.run
+) -> None:
+    """Encode the known 1280x720 preview-wrap correction as a presentation derivative."""
+    width, height = probe_video_geometry(source_mp4, runner=runner)
+    if (width, height) != (PREVIEW_WRAP_REPAIR_WIDTH, PREVIEW_WRAP_REPAIR_HEIGHT):
+        raise ValueError(
+            "preview-wrap repair supports only "
+            f"{PREVIEW_WRAP_REPAIR_WIDTH}x{PREVIEW_WRAP_REPAIR_HEIGHT} video, got {width}x{height}: {source_mp4}"
+        )
+
+    main_width = PREVIEW_WRAP_REPAIR_WIDTH - PREVIEW_WRAP_REPAIR_PIXELS
+    filter_graph = (
+        f"[0:v]split=2[main_input][wrapped_input];"
+        f"[main_input]crop={main_width}:{PREVIEW_WRAP_REPAIR_HEIGHT}:"
+        f"{PREVIEW_WRAP_REPAIR_PIXELS}:0[main];"
+        f"[wrapped_input]crop={PREVIEW_WRAP_REPAIR_PIXELS}:{PREVIEW_WRAP_REPAIR_HEIGHT}:0:0[wrapped];"
+        f"[main][wrapped]hstack=inputs=2[corrected]"
+    )
+    runner(
+        [
+            "ffmpeg",
+            "-y",
+            "-i",
+            str(source_mp4),
+            "-filter_complex",
+            filter_graph,
+            "-map",
+            "[corrected]",
+            "-an",
+            "-c:v",
+            "libx264",
+            "-preset",
+            "ultrafast",
+            "-crf",
+            "18",
+            "-pix_fmt",
+            "yuv420p",
+            "-movflags",
+            "+faststart",
+            "-fps_mode",
+            "passthrough",
+            str(corrected_mp4),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+
 def transcode_overlay_video(
     rendered_overlay_mp4: Path, overlay_mp4: Path, *, runner: Callable[..., Any] = subprocess.run
 ) -> None:
@@ -231,8 +319,10 @@ def build_run_video(
         )
     source_mp4 = video_dir / "source.mp4"
     remux_source_video(source_ts, source_mp4, runner=runner)
+    corrected_source_mp4 = video_dir / "source.corrected.mp4"
+    repair_preview_wrap_video(source_mp4, corrected_source_mp4, runner=runner)
     render_overlay(
-        source_mp4,
+        corrected_source_mp4,
         video_dir / "overlay.mp4",
         read_timed_detections(
             detections_path,

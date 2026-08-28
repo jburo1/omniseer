@@ -850,7 +850,18 @@ def _video_section(run_dir: Path, report_dir: Path) -> str:
     overlay_mp4 = run_dir / "video" / "overlay.mp4"
     if not overlay_mp4.is_file():
         return ""
-    parts = ["<p>Detection overlays map video time to recorded robot time before matching detections.</p>"]
+    parts = [
+        "<p>Detection overlays map video time to recorded robot time before matching detections. "
+        "The corrected source and overlay are presentation derivatives; the raw recorded source.ts is preserved.</p>"
+    ]
+    corrected_source_mp4 = run_dir / "video" / "source.corrected.mp4"
+    if corrected_source_mp4.is_file():
+        corrected_href = _relative_href(report_dir, corrected_source_mp4)
+        parts.append(
+            f'<h3>Corrected source video</h3><video controls preload="metadata" '
+            f'src="{_attr(corrected_href)}"></video><p><a href="{_attr(corrected_href)}">'
+            "Open corrected source video</a></p>"
+        )
     href = _relative_href(report_dir, overlay_mp4)
     parts.append(
         f'<h3>Detection overlay</h3><video controls preload="metadata" '
