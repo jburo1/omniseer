@@ -1223,7 +1223,7 @@
 <h1 id="yolo-world-v2-model-deployment">YOLO-World v2 Model Deployment<a class="headerlink" href="#yolo-world-v2-model-deployment" title="Permanent link">&para;</a></h1>
 <p>This host-only workflow produces the detector model consumed by Omniseer's
 native RKNN vision path:</p>
-<div class="highlight"><pre><span></span><code>YOLO-World v2-S or v2-M `.pth` -&gt; ONNX (images + texts) -&gt; RK3588 `.rknn`
+<div class="highlight"><pre><span></span><code>YOLO-World v2-S, v2-M, or v2-L `.pth` -&gt; ONNX (images + texts) -&gt; RK3588 `.rknn`
 </code></pre></div>
 <p>It does not add training, export, ONNX, or RKNN Toolkit dependencies to
 <code>docker/runtime/Dockerfile</code>. The checked-in runtime model remains unchanged.</p>
@@ -1282,10 +1282,17 @@ reports success. <code>models/</code> remains ignored.</p>
 <td><code>configs/pretrain/yolo_world_v2_m_vlpan_bn_2e-3_100e_4x8gpus_obj365v1_goldg_train_lvis_minival.py</code></td>
 <td><code>yolo_world_v2_m</code></td>
 </tr>
+<tr>
+<td><code>v2l</code></td>
+<td><code>yolo_world_v2_l_obj365v1_goldg_pretrain-a82b1fe3.pth</code></td>
+<td><code>configs/pretrain/yolo_world_v2_l_vlpan_bn_2e-3_100e_4x8gpus_obj365v1_goldg_train_lvis_minival.py</code></td>
+<td><code>yolo_world_v2_l</code></td>
+</tr>
 </tbody>
 </table>
 <div class="highlight"><pre><span></span><code>models/source/yolo_world/v2s/yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth
 models/source/yolo_world/v2m/yolo_world_v2_m_obj365v1_goldg_pretrain-c6237d5b.pth
+models/source/yolo_world/v2l/yolo_world_v2_l_obj365v1_goldg_pretrain-a82b1fe3.pth
 </code></pre></div>
 <p>Rockchip's exporter also instantiates the CLIP text encoder in order to
 reparameterize the supplied COCO text prompts. <code>model assets</code> places the
@@ -1307,10 +1314,14 @@ offline mode. Use <code>--clip-model &lt;directory&gt;</code> to choose another 
 <span class="w">  </span>--variant<span class="w"> </span>v2s<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--weights<span class="w"> </span>models/source/yolo_world/v2s/yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth
 </code></pre></div>
-<p>For v2-M, use its matching pinned Rockchip config through the same command:</p>
+<p>For v2-M or v2-L, use its matching pinned Rockchip config through the same command:</p>
 <div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>model<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--variant<span class="w"> </span>v2m<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--weights<span class="w"> </span>models/source/yolo_world/v2m/yolo_world_v2_m_obj365v1_goldg_pretrain-c6237d5b.pth
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>model<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--variant<span class="w"> </span>v2l<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--weights<span class="w"> </span>models/source/yolo_world/v2l/yolo_world_v2_l_obj365v1_goldg_pretrain-a82b1fe3.pth
 </code></pre></div>
 <p>This invokes Rockchip's <code>deploy/export_onnx.py</code>, the matching 640 config, ONNX
 opset 12 (required for this graph's <code>einsum</code> operator), and the checked-in
@@ -1321,8 +1332,9 @@ and rejects any model not having exactly the native runtime interface:</p>
 <li><code>texts</code>: <code>[1,80,512]</code>;</li>
 <li>six NCHW outputs: 80-class and 4-box tensors at 80x80, 40x40, and 20x20.</li>
 </ul>
-<p>The default results are <code>artifacts/models/yolo_world_v2_s.onnx</code> and
-<code>artifacts/models/yolo_world_v2_m.onnx</code>, respectively. <code>--variant</code> defaults to
+<p>The default results are <code>artifacts/models/yolo_world_v2_s.onnx</code>,
+<code>artifacts/models/yolo_world_v2_m.onnx</code>, and
+<code>artifacts/models/yolo_world_v2_l.onnx</code>, respectively. <code>--variant</code> defaults to
 <code>v2s</code> for backward compatibility.</p>
 <h2 id="compile-rknn">Compile RKNN<a class="headerlink" href="#compile-rknn" title="Permanent link">&para;</a></h2>
 <p>FP/non-quantized RKNN needs only the validated ONNX:</p>
@@ -1358,7 +1370,9 @@ normalization <code>mean=[0,0,0]</code>, <code>std=[255,255,255]</code>, and fix
 <code>artifacts/models/yolo_world_v2_s_fp.rknn</code>; the INT8 output is
 <code>artifacts/models/yolo_world_v2_s_i8.rknn</code>. With <code>--variant v2m</code>, the same
 defaults are <code>artifacts/models/yolo_world_v2_m_fp.rknn</code> and
-<code>artifacts/models/yolo_world_v2_m_i8.rknn</code>.</p>
+<code>artifacts/models/yolo_world_v2_m_i8.rknn</code>; with <code>--variant v2l</code>, they are
+<code>artifacts/models/yolo_world_v2_l_fp.rknn</code> and
+<code>artifacts/models/yolo_world_v2_l_i8.rknn</code>.</p>
 <h2 id="full-build">Full build<a class="headerlink" href="#full-build" title="Permanent link">&para;</a></h2>
 <p>After <code>model assets</code> and the builder image are in place, run:</p>
 <div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>model<span class="w"> </span>build<span class="w"> </span><span class="se">\</span>
@@ -1369,6 +1383,11 @@ defaults are <code>artifacts/models/yolo_world_v2_m_fp.rknn</code> and
 <div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>model<span class="w"> </span>build<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--variant<span class="w"> </span>v2m<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--weights<span class="w"> </span>models/source/yolo_world/v2m/yolo_world_v2_m_obj365v1_goldg_pretrain-c6237d5b.pth<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--precision<span class="w"> </span>int8
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>model<span class="w"> </span>build<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--variant<span class="w"> </span>v2l<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--weights<span class="w"> </span>models/source/yolo_world/v2l/yolo_world_v2_l_obj365v1_goldg_pretrain-a82b1fe3.pth<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--precision<span class="w"> </span>int8
 </code></pre></div>
 <p>Use <code>--precision fp</code> for a non-quantized model. Existing generated artifacts
@@ -1397,7 +1416,7 @@ tools run if a generated artifact is missing or empty.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 27, 2026 00:24:18 UTC">August 27, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 28, 2026 21:37:26 UTC">August 28, 2026</span>
   </span>
 
     

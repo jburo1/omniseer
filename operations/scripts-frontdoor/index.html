@@ -1573,7 +1573,7 @@ scripts/omni<span class="w"> </span>doctor
 </tr>
 <tr>
 <td><code>model</code></td>
-<td>Export and compile host-side YOLO-World v2-S RKNN artifacts.</td>
+<td>Export and compile host-side YOLO-World v2-S/v2-M/v2-L RKNN artifacts.</td>
 </tr>
 <tr>
 <td><code>test</code></td>
@@ -1660,12 +1660,13 @@ scripts/omni<span class="w"> </span>build<span class="w"> </span>runtime-contain
 </code></pre></div>
 <p>See <a href="../../robot-runtime/robot-runtime-container/">Robot Runtime Container</a>.</p>
 <h2 id="model"><code>model</code><a class="headerlink" href="#model" title="Permanent link">&para;</a></h2>
-<p>Builds host-side YOLO-World v2-S or v2-M deployment artifacts without adding any model
+<p>Builds host-side YOLO-World v2-S, v2-M, or v2-L deployment artifacts without adding any model
 building dependency to the robot runtime image.</p>
 <div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>model<span class="w"> </span>image
 scripts/omni<span class="w"> </span>model<span class="w"> </span><span class="nb">export</span><span class="w"> </span>--variant<span class="w"> </span>v2s<span class="w"> </span>--weights<span class="w"> </span>&lt;v2-s.pth&gt;
 scripts/omni<span class="w"> </span>model<span class="w"> </span>compile<span class="w"> </span>--variant<span class="w"> </span>v2s<span class="w"> </span>--onnx<span class="w"> </span>artifacts/models/yolo_world_v2_s.onnx<span class="w"> </span>--precision<span class="w"> </span>fp
 scripts/omni<span class="w"> </span>model<span class="w"> </span>build<span class="w"> </span>--variant<span class="w"> </span>v2m<span class="w"> </span>--weights<span class="w"> </span>&lt;v2-m.pth&gt;<span class="w"> </span>--precision<span class="w"> </span>int8
+scripts/omni<span class="w"> </span>model<span class="w"> </span>build<span class="w"> </span>--variant<span class="w"> </span>v2l<span class="w"> </span>--weights<span class="w"> </span>&lt;v2-l.pth&gt;<span class="w"> </span>--precision<span class="w"> </span>int8
 </code></pre></div>
 <p>See <a href="../../perception/yolo-world-model-deployment/">YOLO-World v2 Model Deployment</a>
 for the pinned builder, local inputs, artifacts, and calibration assets.</p>
@@ -1945,8 +1946,8 @@ directories. <code>annotate</code> creates derived annotated evidence without mo
 canonical evidence frames. <code>report</code> annotates missing evidence first, then
 writes <code>report/index.html</code>. <code>list</code> and <code>pull</code> use SSH and validate pulled
 bundles locally.</p>
-<p><code>comparison-report</code> combines exactly four physical RunBundles (one for each canonical
-v2-S/v2-M FP/INT8 configuration) with one named controlled replay from the reference
+<p><code>comparison-report</code> combines exactly six physical RunBundles (one for each canonical
+v2-S/v2-M/v2-L FP/INT8 configuration) with one named controlled replay from the reference
 RunBundle. It writes <code>&lt;reference_run&gt;/report/comparison.html</code> without replacing the
 single-run report. Trial order does not matter; model identity is resolved from each
 manifest. The optional <code>--truth</code> JSON uses inclusive source-frame ranges for known-present
@@ -1955,7 +1956,7 @@ as a descriptive-only exploratory section.</p>
 <p><code>compare</code> is a ROCK 5B+ devcontainer offline RKNN workflow. Build native vision in the
 devcontainer, then it directly decodes immutable <code>video/source.ts</code>, reverses the
 validated Rockchip 8-pixel preview wrap in memory, and executes the same corrected frame
-serially through the four resident YOLO-World v2 S/M FP/INT8 configurations. It does not
+serially through the six resident YOLO-World v2 S/M/L FP/INT8 configurations. It does not
 need ROS, a camera, or a live recording pipeline. The command always executes the local
 <code>vision/build/vision_runbundle_compare</code> artifact produced by <code>scripts/omni build vision</code>
 (or the <code>OMNISEER_VISION_BUILD_DIR</code> override). It writes only derived files under
@@ -1978,6 +1979,8 @@ scripts/omni<span class="w"> </span>runs<span class="w"> </span>comparison-repor
 <span class="w">  </span>--trial<span class="w"> </span>runs/v2s_int8_scene<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--trial<span class="w"> </span>runs/v2m_fp_scene<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--trial<span class="w"> </span>runs/v2m_int8_scene<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--trial<span class="w"> </span>runs/v2l_fp_scene<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--trial<span class="w"> </span>runs/v2l_int8_scene<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--comparison<span class="w"> </span>task<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--truth<span class="w"> </span>runs/reference_scene/scene_truth.json
 scripts/omni<span class="w"> </span>build<span class="w"> </span>vision
@@ -2128,7 +2131,7 @@ runbooks. New operator commands should use
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 28, 2026 18:39:23 UTC">August 28, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 28, 2026 21:37:26 UTC">August 28, 2026</span>
   </span>
 
     
