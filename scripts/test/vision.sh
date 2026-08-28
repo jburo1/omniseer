@@ -33,9 +33,10 @@ cmake -S "${repo_root}/vision" -B "${build_dir}" -DVISION_BUILD_HARNESS=OFF
 
 omni_info "Building portable vision verification targets"
 cmake --build "${build_dir}" \
-  --target image_buffer_pool_test jsonl_telemetry_test rolling_telemetry_test vision_replay_utils_test
+  --target image_buffer_pool_test jsonl_telemetry_test rolling_telemetry_test vision_replay_utils_test \
+    preview_wrap_repair_test runbundle_comparison_utils_test
 
 omni_info "Running portable vision verification tests"
 exec ctest --test-dir "${build_dir}" \
-  -R 'image_buffer_pool_test|jsonl_telemetry_test|rolling_telemetry_test|vision_replay_utils_test' \
+  -R 'image_buffer_pool_test|jsonl_telemetry_test|rolling_telemetry_test|vision_replay_utils_test|preview_wrap_repair_test|runbundle_comparison_utils_test' \
   --output-on-failure

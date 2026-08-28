@@ -27,6 +27,19 @@ def _write_fake_ros2(path: Path) -> None:
     path.chmod(0o755)
 
 
+def _write_fake_compare(path: Path) -> None:
+    path.write_text(
+        "#!/usr/bin/env bash\n"
+        "printf 'local compare'\n"
+        'for arg in "$@"; do\n'
+        "  printf ' %s' \"$arg\"\n"
+        "done\n"
+        "printf '\\n'\n",
+        encoding="utf-8",
+    )
+    path.chmod(0o755)
+
+
 def test_omni_runs_list_dispatches_to_retrieve_runs(tmp_path: Path) -> None:
     setup_file = tmp_path / "setup.bash"
     ros2 = tmp_path / "ros2"
@@ -212,6 +225,26 @@ def test_omni_runs_report_dispatches_to_report_run(tmp_path: Path) -> None:
 
     assert result.returncode == 0, result.stderr
     assert result.stdout == "ros2 run omniseer_experiments report_run runs/imported/demo_001 --overwrite\n"
+
+
+def test_omni_runs_compare_uses_local_vision_build_when_runtime_binary_is_unavailable(tmp_path: Path) -> None:
+    build_dir = tmp_path / "vision-build"
+    build_dir.mkdir()
+    _write_fake_compare(build_dir / "vision_runbundle_compare")
+    env = os.environ.copy()
+    env["OMNISEER_VISION_BUILD_DIR"] = str(build_dir)
+
+    result = subprocess.run(
+        ["scripts/omni", "runs", "compare", "--help"],
+        cwd=REPO_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout == "local compare --help\n"
 
 
 def test_omni_runs_local_list_dispatches_to_list_runs(tmp_path: Path) -> None:

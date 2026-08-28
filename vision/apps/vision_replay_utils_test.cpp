@@ -72,9 +72,10 @@ TEST(VisionReplayJsonlTest, WritesOneRecordPerFrameIncludingEmptyDetections)
   ASSERT_TRUE(input.good());
   std::string first{};
   std::string second{};
+  std::string third{};
   EXPECT_TRUE(std::getline(input, first));
   EXPECT_TRUE(std::getline(input, second));
-  EXPECT_FALSE(std::getline(input, first));
+  EXPECT_FALSE(std::getline(input, third));
   EXPECT_EQ(first, "{\"frame_index\":0,\"timestamp_sec\":0.000000000,\"detections\":[]}");
   EXPECT_EQ(second,
             "{\"frame_index\":1,\"timestamp_sec\":0.033333333,\"detections\":[{\"class_id\":1,"

@@ -56,6 +56,7 @@ Examples:
   scripts/omni runs annotate runs/imported/demo_001
   scripts/omni runs report runs/imported/demo_001
   scripts/omni runs video runs/imported/demo_001
+  scripts/omni runs compare /runs/demo_001 --model-dir /models --classes /runs/demo_001/classes.txt
   scripts/omni runs local-list --root runs
   scripts/omni test smoke-sim
   scripts/omni build ros
@@ -119,6 +120,7 @@ Usage:
   scripts/omni runs annotate <run_dir> [--overwrite]
   scripts/omni runs report <run_dir> [--overwrite]   # also annotates evidence
   scripts/omni runs video <run_dir>
+  scripts/omni runs compare <run_dir> --model-dir <dir> --classes <path> [comparison options]
   scripts/omni runs local-list [--root <local-runs-root>]
   scripts/omni runs list [retrieval args...]
   scripts/omni runs pull <run_id> [retrieval args...]
@@ -330,6 +332,18 @@ EOF
       video)
         omni_source_ros_workspace
         exec ros2 run omniseer_experiments build_run_video "$@"
+        ;;
+      compare)
+        if omni_command_available omniseer_runbundle_compare; then
+          exec omniseer_runbundle_compare "$@"
+        fi
+
+        local_compare_binary="${OMNISEER_VISION_BUILD_DIR:-${OMNI_REPO_ROOT}/vision/build}/vision_runbundle_compare"
+        if [[ -x "${local_compare_binary}" ]]; then
+          exec "${local_compare_binary}" "$@"
+        fi
+
+        omni_die "omniseer_runbundle_compare not found in PATH and local comparison binary is missing at ${local_compare_binary}; run 'scripts/omni build vision' on the target or use the robot runtime container"
         ;;
       local-list)
         omni_source_ros_workspace

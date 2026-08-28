@@ -236,6 +236,22 @@ or inference-latency fields.
 
 This is an offline validation tool and is not part of the camera/ROS production runtime.
 
+## RunBundle Four-Model Comparison
+
+`scripts/omni runs compare <run_dir> --model-dir <dir> --classes <path>` is the
+ROCK 5B+ target-runtime comparison workflow. It decodes the immutable raw
+`video/source.ts` once, reverses the known 1280x720 Rockchip preview circular wrap
+in memory (recorded `[x=1272..1279][x=0..1271]` becomes normal pixel order), and
+passes that same corrected BGR frame serially to resident v2-S FP, v2-S INT8, v2-M
+FP, and v2-M INT8 `OfflineDetector` instances. Each instance uses the existing CPU
+letterbox, `RknnRunner`, `ConsumerPipeline`, embeddings, and YOLO postprocess path.
+
+The renderer draws each production source-pixel detection result before producing a
+labeled 2x2 H.264/yuv420p MP4 at the source FPS. Offline inference duration does not
+control output elapsed time. It writes only `video/comparison/comparison.mp4` and a
+provenance sidecar; the raw source, original detections, and RunBundle manifest remain
+unchanged.
+
 ## Primary Implementation Files
 
 - `vision/include/omniseer/vision/v4l2_capture.hpp` and
@@ -251,6 +267,11 @@ This is an offline validation tool and is not part of the camera/ROS production 
 - `vision/include/omniseer/vision/consumer_pipeline.hpp` and
   `vision/src/consumer_pipeline.cpp`
 - `vision/apps/vision_replay.cpp`
+- `vision/apps/runbundle_compare.cpp`
+- `vision/include/omniseer/vision/offline_detector.hpp` and
+  `vision/src/offline_detector.cpp`
+- `vision/include/omniseer/vision/preview_wrap_repair.hpp` and
+  `vision/src/preview_wrap_repair.cpp`
 - `vision/include/omniseer/vision/letterbox.hpp` and `vision/src/letterbox.cpp`
 - `vision/include/omniseer/vision/replay_jsonl.hpp` and `vision/src/replay_jsonl.cpp`
 - `vision/include/omniseer/vision/dma_heap_alloc.hpp`

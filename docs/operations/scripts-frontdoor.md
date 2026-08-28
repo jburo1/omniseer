@@ -386,6 +386,8 @@ Inspects local RunBundles and retrieves robot-side RunBundles.
 scripts/omni runs inspect <run_dir> [--json] [--require-complete]
 scripts/omni runs annotate <run_dir> [--overwrite]
 scripts/omni runs report <run_dir> [--overwrite]
+scripts/omni runs video <run_dir>
+scripts/omni runs compare <run_dir> --model-dir <dir> --classes <path> [comparison options]
 scripts/omni runs local-list [--root <local-runs-root>]
 scripts/omni runs list [retrieval args...]
 scripts/omni runs pull <run_id> [retrieval args...]
@@ -413,6 +415,16 @@ canonical evidence frames. `report` annotates missing evidence first, then
 writes `report/index.html`. `list` and `pull` use SSH and validate pulled
 bundles locally.
 
+`compare` is a target-runtime-only offline RKNN workflow. It directly decodes the
+immutable `video/source.ts`, reverses the validated Rockchip 8-pixel preview wrap in
+memory, and executes the same corrected frame serially through the four resident
+YOLO-World v2 S/M FP/INT8 configurations. It does not need ROS, a camera, or a live
+recording pipeline. The command writes only derived files under
+`video/comparison/` (`comparison.mp4` and `provenance.json`) and never changes raw
+RunBundle evidence or its manifest. It uses the installed
+`omniseer_runbundle_compare` runtime command when available; otherwise it uses the
+local `vision_runbundle_compare` artifact from `scripts/omni build vision`.
+
 Examples:
 
 ```bash
@@ -420,6 +432,8 @@ scripts/omni runs list
 scripts/omni runs pull demo_001
 scripts/omni runs inspect runs/imported/demo_001
 scripts/omni runs report runs/imported/demo_001
+scripts/omni runs compare /runs/demo_001 --model-dir /models --classes /runs/demo_001/classes.txt
+scripts/omni runs compare /runs/demo_001 --model-dir /models --classes /runs/demo_001/classes.txt --max-frames 120
 ```
 
 ## `check`

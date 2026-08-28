@@ -11,6 +11,7 @@ find_library(RKNNRT_LIBRARY NAMES rknnrt)
 
 option(VISION_BUILD_HARNESS "Build vision_harness app (requires librga)" ON)
 option(VISION_BUILD_REPLAY "Build vision_replay app (requires OpenCV and RKNN runtime)" ON)
+option(VISION_BUILD_RUNBUNDLE_COMPARISON "Build the target-side RunBundle comparison tool" ON)
 option(VISION_BUILD_TESTS "Build vision tests" ON)
 
 if(VISION_BUILD_HARNESS)
@@ -27,6 +28,25 @@ if(VISION_BUILD_HARNESS)
   elseif(NOT OPENCV4_FOUND)
     message(WARNING "OpenCV not found; disabling vision_harness (set -DVISION_BUILD_HARNESS=OFF to silence)")
     set(VISION_BUILD_HARNESS OFF)
+  endif()
+endif()
+
+if(VISION_BUILD_RUNBUNDLE_COMPARISON)
+  if(NOT RKNN_INCLUDE_DIR OR NOT RKNNRT_LIBRARY)
+    message(WARNING "RKNN runtime not found; disabling vision_runbundle_compare (set -DVISION_BUILD_RUNBUNDLE_COMPARISON=OFF to silence)")
+    set(VISION_BUILD_RUNBUNDLE_COMPARISON OFF)
+  else()
+    find_package(PkgConfig QUIET)
+    if(NOT PkgConfig_FOUND)
+      message(WARNING "pkg-config not found; disabling vision_runbundle_compare (set -DVISION_BUILD_RUNBUNDLE_COMPARISON=OFF to silence)")
+      set(VISION_BUILD_RUNBUNDLE_COMPARISON OFF)
+    else()
+      pkg_check_modules(OPENCV4 opencv4)
+      if(NOT OPENCV4_FOUND)
+        message(WARNING "OpenCV not found; disabling vision_runbundle_compare (set -DVISION_BUILD_RUNBUNDLE_COMPARISON=OFF to silence)")
+        set(VISION_BUILD_RUNBUNDLE_COMPARISON OFF)
+      endif()
+    endif()
   endif()
 endif()
 
@@ -84,6 +104,7 @@ set(VISION_REPLAY_SOURCES
   src/dma_heap_alloc.cpp
   src/image_buffer_pool.cpp
   src/letterbox.cpp
+  src/offline_detector.cpp
   src/replay_jsonl.cpp
   src/rknn_runner.cpp
   src/spsc_ring.cpp
@@ -100,10 +121,37 @@ if(VISION_BUILD_REPLAY)
   target_compile_definitions(vision_replay PRIVATE VISION_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
 endif()
 
-if(VISION_BUILD_HARNESS)
-  set(VISION_LINT_SOURCES ${VISION_HARNESS_SOURCES})
+set(VISION_RUNBUNDLE_COMPARISON_SOURCES
+  apps/runbundle_compare.cpp
+  src/class_list.cpp
+  src/consumer_pipeline.cpp
+  src/cpu_letterbox_preprocess.cpp
+  src/dma_heap_alloc.cpp
+  src/image_buffer_pool.cpp
+  src/letterbox.cpp
+  src/offline_detector.cpp
+  src/preview_wrap_repair.cpp
+  src/rknn_runner.cpp
+  src/runbundle_comparison.cpp
+  src/spsc_ring.cpp
+  src/yolo_world_postprocess.cpp
+  src/yolo_world_text_embeddings.cpp
+)
+
+if(VISION_BUILD_RUNBUNDLE_COMPARISON)
+  add_executable(vision_runbundle_compare ${VISION_RUNBUNDLE_COMPARISON_SOURCES})
+  target_include_directories(vision_runbundle_compare PRIVATE include ${RKNN_INCLUDE_DIR} ${OPENCV4_INCLUDE_DIRS})
+  target_link_libraries(vision_runbundle_compare PRIVATE Threads::Threads ${RKNNRT_LIBRARY} ${OPENCV4_LIBRARIES})
+  target_compile_options(vision_runbundle_compare PRIVATE ${OPENCV4_CFLAGS_OTHER})
+  target_compile_definitions(vision_runbundle_compare PRIVATE VISION_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+endif()
+
+if(VISION_BUILD_RUNBUNDLE_COMPARISON)
+  set(VISION_LINT_SOURCES ${VISION_RUNBUNDLE_COMPARISON_SOURCES})
 elseif(VISION_BUILD_REPLAY)
   set(VISION_LINT_SOURCES ${VISION_REPLAY_SOURCES})
+elseif(VISION_BUILD_HARNESS)
+  set(VISION_LINT_SOURCES ${VISION_HARNESS_SOURCES})
 else()
   set(VISION_LINT_SOURCES
     src/image_buffer_pool.cpp
@@ -192,6 +240,25 @@ if(VISION_BUILD_TESTS)
   target_link_libraries(vision_replay_utils_test PRIVATE GTest::gtest_main)
 
   add_test(NAME vision_replay_utils_test COMMAND vision_replay_utils_test)
+
+  add_executable(preview_wrap_repair_test
+    apps/preview_wrap_repair_test.cpp
+    src/preview_wrap_repair.cpp
+  )
+  target_include_directories(preview_wrap_repair_test PRIVATE include)
+  target_link_libraries(preview_wrap_repair_test PRIVATE GTest::gtest_main)
+
+  add_test(NAME preview_wrap_repair_test COMMAND preview_wrap_repair_test)
+
+  add_executable(runbundle_comparison_utils_test
+    apps/runbundle_comparison_utils_test.cpp
+    src/preview_wrap_repair.cpp
+    src/runbundle_comparison.cpp
+  )
+  target_include_directories(runbundle_comparison_utils_test PRIVATE include)
+  target_link_libraries(runbundle_comparison_utils_test PRIVATE GTest::gtest_main)
+
+  add_test(NAME runbundle_comparison_utils_test COMMAND runbundle_comparison_utils_test)
 
   if(RKNN_INCLUDE_DIR AND RKNNRT_LIBRARY)
     add_executable(rknn_runner_test

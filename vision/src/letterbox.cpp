@@ -32,14 +32,14 @@ namespace omniseer::vision
   PipelineRemapConfig make_letterbox_remap(Size source_size, Size model_input_size)
   {
     const LetterboxMeta meta = compute_letterbox_meta(source_size, model_input_size);
-    return {
-        .source_size      = source_size,
-        .model_input_size = model_input_size,
-        .scale            = meta.scale,
-        .pad_x            = meta.pad_x,
-        .pad_y            = meta.pad_y,
-        .resized_w        = meta.resized_w,
-        .resized_h        = meta.resized_h,
-    };
+    PipelineRemapConfig out{};
+    out.source_size      = source_size;
+    out.model_input_size = model_input_size;
+    out.scale            = meta.scale;
+    out.pad_x            = meta.pad_x;
+    out.pad_y            = meta.pad_y;
+    out.resized_w        = meta.resized_w;
+    out.resized_h        = meta.resized_h;
+    return out;
   }
 } // namespace omniseer::vision
