@@ -18,6 +18,24 @@ namespace omniseer::vision
     EXPECT_EQ(kRunbundleComparisonModels[3].quadrant, ComparisonQuadrant::BottomRight);
   }
 
+  TEST(RunbundleComparison, ResolvesDocumentedRunbundleInputDefaults)
+  {
+    const auto paths = resolve_comparison_input_paths("runs/demo_001", "/omniseer", {}, {});
+
+    EXPECT_EQ(paths.source_path, "runs/demo_001/video/source.ts");
+    EXPECT_EQ(paths.class_list_path, "runs/demo_001/classes.txt");
+    EXPECT_EQ(paths.model_dir, "/omniseer/runs/model_artifacts");
+  }
+
+  TEST(RunbundleComparison, PreservesExplicitInputOverrides)
+  {
+    const auto paths = resolve_comparison_input_paths("runs/demo_001", "/omniseer", "/models",
+                                                      "custom/classes.txt");
+
+    EXPECT_EQ(paths.model_dir, "/models");
+    EXPECT_EQ(paths.class_list_path, "custom/classes.txt");
+  }
+
   TEST(RunbundleComparison, OutputFpsDoesNotDependOnOfflineProcessingDuration)
   {
     EXPECT_DOUBLE_EQ(comparison_output_fps(29.97), 29.97);
@@ -27,7 +45,7 @@ namespace omniseer::vision
 
   TEST(RunbundleComparison, EveryModelVisitReceivesTheSameCorrectedSourceObject)
   {
-    const int                  corrected_frame = 42;
+    const int                 corrected_frame = 42;
     std::array<const int*, 4> received{};
     std::array<size_t, 4>     order{};
     visit_comparison_models(corrected_frame,
@@ -49,10 +67,11 @@ namespace omniseer::vision
     provenance.source_path   = "video/source.ts";
     provenance.source_sha256 = "source-hash";
     provenance.classes       = {"chair"};
-    provenance.models.push_back({"v2-S FP", "yolo_world_v2_s_fp.rknn", "/models/s.rknn", "model-hash"});
+    provenance.models.push_back(
+        {"v2-S FP", "yolo_world_v2_s_fp.rknn", "/models/s.rknn", "model-hash"});
     provenance.output_path   = "video/comparison/comparison.mp4";
     provenance.output_sha256 = "output-hash";
-    const std::string json = comparison_provenance_json(provenance);
+    const std::string json   = comparison_provenance_json(provenance);
     EXPECT_NE(json.find("video/source.ts"), std::string::npos);
     EXPECT_NE(json.find("rockchip_preview_circular_wrap_v1"), std::string::npos);
     EXPECT_NE(json.find("rotate_left_px"), std::string::npos);

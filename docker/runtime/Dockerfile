@@ -216,13 +216,6 @@ RUN set -eux; \
       omniseer_vision_bridge \
     --cmake-args -DBUILD_TESTING=OFF
 
-RUN set -eux; \
-  cmake -S /opt/omniseer-src/vision -B /opt/omniseer-src/vision/build-runtime \
-    -DVISION_BUILD_HARNESS=OFF \
-    -DVISION_BUILD_REPLAY=OFF \
-    -DVISION_BUILD_TESTS=OFF; \
-  cmake --build /opt/omniseer-src/vision/build-runtime --target vision_runbundle_compare
-
 FROM runtime-base AS portable-runtime
 
 WORKDIR /opt/omniseer
@@ -262,12 +255,11 @@ WORKDIR /opt/omniseer
 COPY --from=robot-builder /usr/lib/librknnrt.so /usr/lib/librknnrt.so
 COPY --from=robot-builder /opt/omniseer-src/ros_ws/install /ros_ws/install
 COPY --from=robot-builder /opt/omniseer-src/vision/testdata /omniseer/vision/testdata
-COPY --from=robot-builder /opt/omniseer-src/vision/build-runtime/vision_runbundle_compare /usr/local/bin/omniseer_runbundle_compare
 COPY scripts ./scripts
 COPY docker/runtime/entrypoint.sh /usr/local/bin/omniseer-runtime-entrypoint
 
 RUN set -eux; \
-  chmod 0755 /usr/local/bin/omniseer-runtime-entrypoint /usr/local/bin/omniseer_runbundle_compare; \
+  chmod 0755 /usr/local/bin/omniseer-runtime-entrypoint; \
   mkdir -p /runs; \
   ldconfig
 

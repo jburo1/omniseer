@@ -1,10 +1,9 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <gtest/gtest.h>
 #include <string>
 #include <vector>
-
-#include <gtest/gtest.h>
 
 #include "omniseer/vision/preview_wrap_repair.hpp"
 
@@ -12,7 +11,8 @@ namespace omniseer::vision
 {
   TEST(PreviewWrapRepair, RestoresEverySyntheticBgrPixelWithoutChangingGeometry)
   {
-    constexpr size_t row_bytes = kRockchipPreviewWrapRepairWidth * kRockchipPreviewWrapRepairChannels;
+    constexpr size_t row_bytes =
+        kRockchipPreviewWrapRepairWidth * kRockchipPreviewWrapRepairChannels;
     std::vector<uint8_t> original(row_bytes * kRockchipPreviewWrapRepairHeight);
     for (int y = 0; y < kRockchipPreviewWrapRepairHeight; ++y)
     {
@@ -30,24 +30,24 @@ namespace omniseer::vision
     for (int y = 0; y < kRockchipPreviewWrapRepairHeight; ++y)
     {
       const size_t offset = static_cast<size_t>(y) * row_bytes;
-      std::copy_n(original.begin() + static_cast<std::ptrdiff_t>(offset +
-                                                                  (kRockchipPreviewWrapRepairWidth -
-                                                                   kRockchipPreviewWrapRepairPixels) *
-                                                                      kRockchipPreviewWrapRepairChannels),
+      std::copy_n(original.begin() +
+                      static_cast<std::ptrdiff_t>(offset + (kRockchipPreviewWrapRepairWidth -
+                                                            kRockchipPreviewWrapRepairPixels) *
+                                                               kRockchipPreviewWrapRepairChannels),
                   kRockchipPreviewWrapRepairPixels * kRockchipPreviewWrapRepairChannels,
                   recorded.begin() + static_cast<std::ptrdiff_t>(offset));
       std::copy_n(original.begin() + static_cast<std::ptrdiff_t>(offset),
                   (kRockchipPreviewWrapRepairWidth - kRockchipPreviewWrapRepairPixels) *
                       kRockchipPreviewWrapRepairChannels,
-                  recorded.begin() + static_cast<std::ptrdiff_t>(offset +
-                                                                  kRockchipPreviewWrapRepairPixels *
-                                                                      kRockchipPreviewWrapRepairChannels));
+                  recorded.begin() +
+                      static_cast<std::ptrdiff_t>(offset + kRockchipPreviewWrapRepairPixels *
+                                                               kRockchipPreviewWrapRepairChannels));
     }
 
     std::string error{};
     ASSERT_TRUE(repair_rockchip_preview_wrap_bgr(recorded.data(), row_bytes,
-                                                  kRockchipPreviewWrapRepairWidth,
-                                                  kRockchipPreviewWrapRepairHeight, error))
+                                                 kRockchipPreviewWrapRepairWidth,
+                                                 kRockchipPreviewWrapRepairHeight, error))
         << error;
     EXPECT_EQ(recorded, original);
   }

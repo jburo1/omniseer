@@ -387,7 +387,7 @@ scripts/omni runs inspect <run_dir> [--json] [--require-complete]
 scripts/omni runs annotate <run_dir> [--overwrite]
 scripts/omni runs report <run_dir> [--overwrite]
 scripts/omni runs video <run_dir>
-scripts/omni runs compare <run_dir> --model-dir <dir> --classes <path> [comparison options]
+scripts/omni runs compare <run_dir> [--model-dir <dir>] [--classes <path>] [comparison options]
 scripts/omni runs local-list [--root <local-runs-root>]
 scripts/omni runs list [retrieval args...]
 scripts/omni runs pull <run_id> [retrieval args...]
@@ -415,15 +415,21 @@ canonical evidence frames. `report` annotates missing evidence first, then
 writes `report/index.html`. `list` and `pull` use SSH and validate pulled
 bundles locally.
 
-`compare` is a target-runtime-only offline RKNN workflow. It directly decodes the
-immutable `video/source.ts`, reverses the validated Rockchip 8-pixel preview wrap in
-memory, and executes the same corrected frame serially through the four resident
-YOLO-World v2 S/M FP/INT8 configurations. It does not need ROS, a camera, or a live
-recording pipeline. The command writes only derived files under
+`compare` is a ROCK 5B+ devcontainer offline RKNN workflow. Build native vision in the
+devcontainer, then it directly decodes immutable `video/source.ts`, reverses the
+validated Rockchip 8-pixel preview wrap in memory, and executes the same corrected frame
+serially through the four resident YOLO-World v2 S/M FP/INT8 configurations. It does not
+need ROS, a camera, or a live recording pipeline. The command always executes the local
+`vision/build/vision_runbundle_compare` artifact produced by `scripts/omni build vision`
+(or the `OMNISEER_VISION_BUILD_DIR` override). It writes only derived files under
 `video/comparison/` (`comparison.mp4` and `provenance.json`) and never changes raw
-RunBundle evidence or its manifest. It uses the installed
-`omniseer_runbundle_compare` runtime command when available; otherwise it uses the
-local `vision_runbundle_compare` artifact from `scripts/omni build vision`.
+RunBundle evidence or its manifest.
+
+The GUI and production runtime container run and record robot experiments. The ROCK 5B+
+devcontainer runs this offline comparison. The operator/laptop retrieves RunBundles and
+generates presentation videos and reports. Do not enter the production runtime container
+for the normal comparison workflow. Paths are interpreted exactly in the filesystem
+namespace of the shell running the command.
 
 Examples:
 
@@ -432,8 +438,10 @@ scripts/omni runs list
 scripts/omni runs pull demo_001
 scripts/omni runs inspect runs/imported/demo_001
 scripts/omni runs report runs/imported/demo_001
-scripts/omni runs compare /runs/demo_001 --model-dir /models --classes /runs/demo_001/classes.txt
-scripts/omni runs compare /runs/demo_001 --model-dir /models --classes /runs/demo_001/classes.txt --max-frames 120
+scripts/omni build vision
+scripts/omni runs compare runs/demo_001
+scripts/omni runs compare runs/demo_001 --max-frames 120
+scripts/omni runs compare runs/demo_001 --model-dir /some/other/model/dir --classes /some/other/classes.txt
 ```
 
 ## `check`

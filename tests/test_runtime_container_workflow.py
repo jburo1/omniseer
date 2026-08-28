@@ -188,6 +188,13 @@ def test_robot_runtime_packages_vision_testdata_at_configured_path() -> None:
     assert "classes.path: /omniseer/vision/testdata/text_embeddings/classes_person_bus.txt" in config
 
 
+def test_robot_runtime_does_not_package_runbundle_comparison_tool() -> None:
+    dockerfile = (REPO_ROOT / "docker/runtime/Dockerfile").read_text(encoding="utf-8")
+
+    assert "vision_runbundle_compare" not in dockerfile
+    assert "omniseer_runbundle_compare" not in dockerfile
+
+
 def test_runtime_image_carries_source_git_sha() -> None:
     dockerfile = (REPO_ROOT / "docker/runtime/Dockerfile").read_text(encoding="utf-8")
     build_script = (REPO_ROOT / "scripts/build/runtime_container.sh").read_text(encoding="utf-8")

@@ -1,5 +1,5 @@
-#include <array>
 #include <algorithm>
+#include <array>
 #include <cerrno>
 #include <cmath>
 #include <cstdio>
@@ -7,13 +7,12 @@
 #include <filesystem>
 #include <fstream>
 #include <memory>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/videoio.hpp>
 #include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
-
-#include <opencv2/imgproc.hpp>
-#include <opencv2/videoio.hpp>
 
 #include "omniseer/vision/offline_detector.hpp"
 #include "omniseer/vision/preview_wrap_repair.hpp"
@@ -46,7 +45,7 @@ namespace
   std::string usage(const char* argv0)
   {
     return "Usage: " + std::string(argv0) +
-           " <run_dir> --model-dir <dir> --classes <path> [options]\n"
+           " <run_dir> [--model-dir <dir>] [--classes <path>] [options]\n"
            "\n"
            "Directly decodes <run_dir>/video/source.ts, reverses the validated 1280x720\n"
            "Rockchip 8-pixel preview wrap in memory, and runs the same corrected BGR\n"
@@ -55,7 +54,8 @@ namespace
            "\n"
            "Options:\n"
            "  --model-dir <dir>        Directory containing the four YOLO-World RKNN artifacts\n"
-           "  --classes <path>         Class list, using the normal vision_replay convention\n"
+           "                           (default: <repo>/runs/model_artifacts)\n"
+           "  --classes <path>         Class list (default: <run_dir>/classes.txt)\n"
            "  --clip-model <path>      CLIP text encoder RKNN path\n"
            "  --clip-vocab <path>      CLIP BPE merges/vocab path\n"
            "  --pad-token <text>       Internal pad phrase for unused class slots\n"
@@ -71,7 +71,7 @@ namespace
   {
     if (text == nullptr || *text == '\0')
       return false;
-    char*              end   = nullptr;
+    char*               end   = nullptr;
     const unsigned long value = std::strtoul(text, &end, 10);
     if (end == nullptr || *end != '\0' || value > UINT32_MAX)
       return false;
@@ -97,8 +97,8 @@ namespace
     Config config{};
     for (int i = 1; i < argc; ++i)
     {
-      const std::string arg = argv[i];
-      const auto require_value = [&](const char* option) -> const char*
+      const std::string arg           = argv[i];
+      const auto        require_value = [&](const char* option) -> const char*
       {
         if (i + 1 >= argc)
           throw std::runtime_error(std::string("missing value for ") + option);
@@ -159,10 +159,6 @@ namespace
 
     if (config.run_dir.empty())
       throw std::runtime_error("<run_dir> is required");
-    if (config.model_dir.empty())
-      throw std::runtime_error("--model-dir is required");
-    if (config.class_list_path.empty())
-      throw std::runtime_error("--classes is required");
     if (config.score_threshold < 0.0F || config.score_threshold > 1.0F)
       throw std::runtime_error("--score-threshold must be in [0, 1]");
     if (config.nms_iou_threshold < 0.0F || config.nms_iou_threshold > 1.0F)
@@ -179,7 +175,14 @@ namespace
   void require_regular_file(const fs::path& path, const char* description)
   {
     if (!fs::is_regular_file(path))
-      throw std::runtime_error(std::string(description) + " is not a regular file: " + path.string());
+      throw std::runtime_error(std::string(description) +
+                               " is not a regular file: " + path.string());
+  }
+
+  void require_directory(const fs::path& path, const char* description)
+  {
+    if (!fs::is_directory(path))
+      throw std::runtime_error(std::string(description) + " is not a directory: " + path.string());
   }
 
   std::string shell_quote(const std::string& value)
@@ -203,7 +206,7 @@ namespace
     if (pipe == nullptr)
       throw std::runtime_error("failed to start sha256sum for: " + path.string());
     std::array<char, 256> output{};
-    const char*           line = std::fgets(output.data(), static_cast<int>(output.size()), pipe);
+    const char*           line   = std::fgets(output.data(), static_cast<int>(output.size()), pipe);
     const int             status = ::pclose(pipe);
     if (line == nullptr || status != 0)
       throw std::runtime_error("sha256sum failed for: " + path.string());
@@ -231,16 +234,16 @@ namespace
       const std::string class_name = (detection.class_id < class_names.size())
                                          ? class_names[detection.class_id]
                                          : "<out-of-range>";
-      const std::string text = class_name + " " + cv::format("%.2f", detection.score);
-      const int text_y = std::max(48, y1 - 5);
+      const std::string text       = class_name + " " + cv::format("%.2f", detection.score);
+      const int         text_y     = std::max(48, y1 - 5);
       cv::putText(image, text, cv::Point(x1, text_y), cv::FONT_HERSHEY_SIMPLEX, 0.5,
                   cv::Scalar(0, 255, 0), 1, cv::LINE_AA);
     }
   }
 
-  cv::Mat compose_quadrants(const cv::Mat& corrected_bgr,
+  cv::Mat compose_quadrants(const cv::Mat&                                          corrected_bgr,
                             const std::array<omniseer::vision::DetectionsFrame, 4>& detections,
-                            const std::vector<std::string>& class_names)
+                            const std::vector<std::string>&                         class_names)
   {
     std::array<cv::Mat, 4> quadrants{};
     for (size_t i = 0; i < quadrants.size(); ++i)
@@ -264,7 +267,8 @@ namespace
     const std::string command =
         "ffmpeg -y -loglevel error -i " + shell_quote(intermediate.string()) +
         " -map 0:v:0 -an -c:v libx264 -preset ultrafast -crf 18 -pix_fmt yuv420p "
-        "-movflags +faststart " + shell_quote(output.string());
+        "-movflags +faststart " +
+        shell_quote(output.string());
     if (std::system(command.c_str()) != 0)
       throw std::runtime_error("ffmpeg failed to encode browser-compatible comparison MP4");
   }
@@ -275,39 +279,44 @@ int main(int argc, char** argv)
   try
   {
     bool         help_requested = false;
-    const Config config = parse_args(argc, argv, help_requested);
+    const Config config         = parse_args(argc, argv, help_requested);
     if (help_requested)
     {
       std::fputs(usage(argv[0]).c_str(), stdout);
       return 0;
     }
 
-    const fs::path source_ts = config.run_dir / "video" / "source.ts";
+    const auto input_paths =
+        omniseer::vision::resolve_comparison_input_paths(config.run_dir,
+                                                         fs::path(VISION_SOURCE_DIR).parent_path(),
+                                                         config.model_dir, config.class_list_path);
+    const fs::path source_ts = input_paths.source_path;
     require_regular_file(source_ts, "raw RunBundle source.ts");
-    require_regular_file(config.class_list_path, "class list");
+    require_regular_file(input_paths.class_list_path, "class list");
+    require_directory(input_paths.model_dir, "model directory");
     require_regular_file(config.clip_model_path, "CLIP model");
     require_regular_file(config.clip_vocab_path, "CLIP vocabulary");
     const std::string source_sha256_before = sha256_file(source_ts);
 
     const fs::path comparison_dir = config.run_dir / "video" / "comparison";
     fs::create_directories(comparison_dir);
-    const fs::path output_mp4 = comparison_dir / "comparison.mp4";
+    const fs::path output_mp4       = comparison_dir / "comparison.mp4";
     const fs::path intermediate_mp4 = comparison_dir / "comparison.rendering.mp4";
-    const fs::path provenance_path = comparison_dir / "provenance.json";
+    const fs::path provenance_path  = comparison_dir / "provenance.json";
 
-    std::array<fs::path, 4> model_paths{};
+    std::array<fs::path, 4>                                           model_paths{};
     std::array<std::unique_ptr<omniseer::vision::OfflineDetector>, 4> detectors{};
     for (size_t i = 0; i < detectors.size(); ++i)
     {
       const auto& model = omniseer::vision::kRunbundleComparisonModels[i];
-      model_paths[i] = config.model_dir / model.artifact_name;
+      model_paths[i]    = input_paths.model_dir / model.artifact_name;
       require_regular_file(model_paths[i], (std::string(model.label) + " model artifact").c_str());
       try
       {
         detectors[i] = std::make_unique<omniseer::vision::OfflineDetector>(
             omniseer::vision::OfflineDetectorConfig{
                 .detector_model_path = model_paths[i].string(),
-                .class_list_path     = config.class_list_path.string(),
+                .class_list_path     = input_paths.class_list_path.string(),
                 .clip_model_path     = config.clip_model_path.string(),
                 .clip_vocab_path     = config.clip_vocab_path.string(),
                 .pad_token           = config.pad_token,
@@ -331,13 +340,14 @@ int main(int argc, char** argv)
     cv::VideoCapture video(source_ts.string());
     if (!video.isOpened())
       throw std::runtime_error("failed to decode raw RunBundle source.ts: " + source_ts.string());
-    const int source_width = static_cast<int>(video.get(cv::CAP_PROP_FRAME_WIDTH));
+    const int source_width  = static_cast<int>(video.get(cv::CAP_PROP_FRAME_WIDTH));
     const int source_height = static_cast<int>(video.get(cv::CAP_PROP_FRAME_HEIGHT));
     if (source_width != omniseer::vision::kRockchipPreviewWrapRepairWidth ||
         source_height != omniseer::vision::kRockchipPreviewWrapRepairHeight)
     {
-      throw std::runtime_error("comparison accepts only validated 1280x720 raw preview recordings; got " +
-                               std::to_string(source_width) + "x" + std::to_string(source_height));
+      throw std::runtime_error(
+          "comparison accepts only validated 1280x720 raw preview recordings; got " +
+          std::to_string(source_width) + "x" + std::to_string(source_height));
     }
     const double output_fps = omniseer::vision::comparison_output_fps(video.get(cv::CAP_PROP_FPS));
     cv::VideoWriter writer(intermediate_mp4.string(), cv::VideoWriter::fourcc('m', 'p', '4', 'v'),
@@ -350,8 +360,9 @@ int main(int argc, char** argv)
     while ((config.max_frames == 0 || frame_index < config.max_frames) && video.read(frame))
     {
       std::string repair_error{};
-      if (frame.type() != CV_8UC3 || !omniseer::vision::repair_rockchip_preview_wrap_bgr(
-                                      frame.data, frame.step, frame.cols, frame.rows, repair_error))
+      if (frame.type() != CV_8UC3 ||
+          !omniseer::vision::repair_rockchip_preview_wrap_bgr(frame.data, frame.step, frame.cols,
+                                                              frame.rows, repair_error))
       {
         throw std::runtime_error("failed to repair decoded raw frame: " + repair_error);
       }
@@ -359,7 +370,8 @@ int main(int argc, char** argv)
       std::array<omniseer::vision::DetectionsFrame, 4> detections{};
       // Calls are deliberately serial and all receive this exact corrected cv::Mat.
       omniseer::vision::visit_comparison_models(
-          frame, [&](size_t i, const omniseer::vision::ComparisonModelSpec&, const cv::Mat& shared_frame)
+          frame,
+          [&](size_t i, const omniseer::vision::ComparisonModelSpec&, const cv::Mat& shared_frame)
           { detections[i] = detectors[i]->infer(shared_frame, frame_index); });
       writer.write(compose_quadrants(frame, detections, detectors[0]->class_names()));
       ++frame_index;
@@ -372,22 +384,24 @@ int main(int argc, char** argv)
     std::error_code remove_error{};
     fs::remove(intermediate_mp4, remove_error);
     if (remove_error)
-      throw std::runtime_error("failed to remove temporary comparison rendering: " + remove_error.message());
+      throw std::runtime_error("failed to remove temporary comparison rendering: " +
+                               remove_error.message());
     if (sha256_file(source_ts) != source_sha256_before)
       throw std::runtime_error("raw RunBundle source.ts changed while comparison was running");
 
     omniseer::vision::ComparisonProvenance provenance{};
-    provenance.source_path      = "video/source.ts";
-    provenance.source_sha256    = source_sha256_before;
-    provenance.classes          = detectors[0]->class_names();
-    provenance.score_threshold  = config.score_threshold;
-    provenance.nms_iou_threshold = config.nms_iou_threshold;
-    provenance.max_detections    = config.max_detections;
-    provenance.output_path      = "video/comparison/comparison.mp4";
-    provenance.output_sha256    = sha256_file(output_mp4);
-    provenance.output_fps       = output_fps;
+    provenance.source_path            = "video/source.ts";
+    provenance.source_sha256          = source_sha256_before;
+    provenance.classes                = detectors[0]->class_names();
+    provenance.score_threshold        = config.score_threshold;
+    provenance.nms_iou_threshold      = config.nms_iou_threshold;
+    provenance.max_detections         = config.max_detections;
+    provenance.output_path            = "video/comparison/comparison.mp4";
+    provenance.output_sha256          = sha256_file(output_mp4);
+    provenance.output_fps             = output_fps;
     provenance.source_frames_rendered = frame_index;
-    if (const char* git_sha = std::getenv("OMNISEER_GIT_SHA"); git_sha != nullptr && *git_sha != '\0')
+    if (const char* git_sha = std::getenv("OMNISEER_GIT_SHA");
+        git_sha != nullptr && *git_sha != '\0')
       provenance.git_sha = git_sha;
     for (size_t i = 0; i < model_paths.size(); ++i)
     {

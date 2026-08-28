@@ -238,8 +238,11 @@ This is an offline validation tool and is not part of the camera/ROS production 
 
 ## RunBundle Four-Model Comparison
 
-`scripts/omni runs compare <run_dir> --model-dir <dir> --classes <path>` is the
-ROCK 5B+ target-runtime comparison workflow. It decodes the immutable raw
+`scripts/omni runs compare <run_dir>` is the ROCK 5B+ devcontainer offline comparison
+workflow. It uses `<repo>/runs/model_artifacts` for model artifacts and
+`<run_dir>/classes.txt` by default; `--model-dir` and `--classes` remain available for
+nonstandard debugging cases. Paths are interpreted exactly in the filesystem namespace
+of the shell running the command. It decodes the immutable raw
 `video/source.ts` once, reverses the known 1280x720 Rockchip preview circular wrap
 in memory (recorded `[x=1272..1279][x=0..1271]` becomes normal pixel order), and
 passes that same corrected BGR frame serially to resident v2-S FP, v2-S INT8, v2-M

@@ -2,10 +2,9 @@
 
 #include <cstdint>
 #include <memory>
+#include <opencv2/core.hpp>
 #include <string>
 #include <vector>
-
-#include <opencv2/core.hpp>
 
 #include "omniseer/vision/detections.hpp"
 
@@ -45,7 +44,7 @@ namespace omniseer::vision
     OfflineDetector& operator=(OfflineDetector&&)      = delete;
 
     const std::vector<std::string>& class_names() const noexcept;
-    DetectionsFrame infer(const cv::Mat& corrected_bgr_frame, uint64_t frame_index);
+    DetectionsFrame                 infer(const cv::Mat& corrected_bgr_frame, uint64_t frame_index);
 
   private:
     struct Impl;

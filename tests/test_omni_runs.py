@@ -227,7 +227,7 @@ def test_omni_runs_report_dispatches_to_report_run(tmp_path: Path) -> None:
     assert result.stdout == "ros2 run omniseer_experiments report_run runs/imported/demo_001 --overwrite\n"
 
 
-def test_omni_runs_compare_uses_local_vision_build_when_runtime_binary_is_unavailable(tmp_path: Path) -> None:
+def test_omni_runs_compare_dispatches_to_local_vision_build(tmp_path: Path) -> None:
     build_dir = tmp_path / "vision-build"
     build_dir.mkdir()
     _write_fake_compare(build_dir / "vision_runbundle_compare")
@@ -245,6 +245,57 @@ def test_omni_runs_compare_uses_local_vision_build_when_runtime_binary_is_unavai
 
     assert result.returncode == 0, result.stderr
     assert result.stdout == "local compare --help\n"
+
+
+def test_omni_runs_compare_ignores_runtime_style_path_binary(tmp_path: Path) -> None:
+    build_dir = tmp_path / "vision-build"
+    build_dir.mkdir()
+    _write_fake_compare(build_dir / "vision_runbundle_compare")
+    runtime_binary = tmp_path / "omniseer_runbundle_compare"
+    runtime_binary.write_text("#!/usr/bin/env bash\nprintf 'runtime compare\\n'\n", encoding="utf-8")
+    runtime_binary.chmod(0o755)
+    env = os.environ.copy()
+    env["OMNISEER_VISION_BUILD_DIR"] = str(build_dir)
+    env["PATH"] = f"{tmp_path}:{env['PATH']}"
+
+    result = subprocess.run(
+        ["scripts/omni", "runs", "compare", "--help"],
+        cwd=REPO_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout == "local compare --help\n"
+
+
+def test_omni_runs_compare_requires_local_vision_build(tmp_path: Path) -> None:
+    env = os.environ.copy()
+    env["OMNISEER_VISION_BUILD_DIR"] = str(tmp_path / "missing-vision-build")
+
+    result = subprocess.run(
+        ["scripts/omni", "runs", "compare", "--help"],
+        cwd=REPO_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode != 0
+    assert "local comparison binary is missing" in result.stderr
+    assert "scripts/omni build vision" in result.stderr
+
+
+def test_comparison_docs_use_devcontainer_defaults_without_runtime_paths() -> None:
+    docs = (REPO_ROOT / "docs/operations/scripts-frontdoor.md").read_text(encoding="utf-8")
+
+    assert "ROCK 5B+ devcontainer offline RKNN workflow" in docs
+    assert "scripts/omni runs compare runs/demo_001" in docs
+    assert "scripts/omni runs compare /runs/demo_001 --model-dir /models" not in docs
+    assert "target-runtime-only offline RKNN workflow" not in docs
 
 
 def test_omni_runs_local_list_dispatches_to_list_runs(tmp_path: Path) -> None:

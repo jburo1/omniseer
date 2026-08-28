@@ -21,8 +21,8 @@ namespace omniseer::vision
     }
 
     constexpr size_t pixel_bytes = kRockchipPreviewWrapRepairChannels;
-    constexpr size_t wrap_bytes = kRockchipPreviewWrapRepairPixels * pixel_bytes;
-    constexpr size_t row_bytes = kRockchipPreviewWrapRepairWidth * pixel_bytes;
+    constexpr size_t wrap_bytes  = kRockchipPreviewWrapRepairPixels * pixel_bytes;
+    constexpr size_t row_bytes   = kRockchipPreviewWrapRepairWidth * pixel_bytes;
     if (row_stride < row_bytes)
     {
       error = "Rockchip preview-wrap repair frame stride is smaller than one BGR row";
@@ -31,7 +31,7 @@ namespace omniseer::vision
 
     for (int y = 0; y < height; ++y)
     {
-      uint8_t* row = data + static_cast<size_t>(y) * row_stride;
+      uint8_t*                        row = data + static_cast<size_t>(y) * row_stride;
       std::array<uint8_t, wrap_bytes> wrapped_right{};
       std::memcpy(wrapped_right.data(), row, wrap_bytes);
       std::memmove(row, row + wrap_bytes, row_bytes - wrap_bytes);

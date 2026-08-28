@@ -50,15 +50,17 @@ namespace omniseer::vision
   {
     explicit Impl(OfflineDetectorConfig config)
         : _config(std::move(config)),
-          _remap(make_letterbox_remap({_config.source_width, _config.source_height},
-                                      kModelInputSize)),
+          _remap(
+              make_letterbox_remap({_config.source_width, _config.source_height}, kModelInputSize)),
           _class_names(load_class_list_file(_config.class_list_path)),
-          _embeddings(YoloWorldTextEmbeddingsBuilder({
-              .text_encoder_model_path = _config.clip_model_path,
-              .detector_model_path     = _config.detector_model_path,
-              .clip_vocab_path         = _config.clip_vocab_path,
-              .pad_token               = _config.pad_token,
-          }).build(_class_names)),
+          _embeddings(
+              YoloWorldTextEmbeddingsBuilder({
+                                                 .text_encoder_model_path = _config.clip_model_path,
+                                                 .detector_model_path = _config.detector_model_path,
+                                                 .clip_vocab_path     = _config.clip_vocab_path,
+                                                 .pad_token           = _config.pad_token,
+                                             })
+                  .build(_class_names)),
           _runner({.model_path = _config.detector_model_path, .warmup_runs = _config.warmup_runs}),
           _consumer(_pool, _runner, nullptr, &_sink,
                     {
@@ -77,7 +79,8 @@ namespace omniseer::vision
           corrected_bgr_frame.cols != _config.source_width ||
           corrected_bgr_frame.rows != _config.source_height)
       {
-        throw std::invalid_argument("offline detector source frame does not match configured BGR geometry");
+        throw std::invalid_argument(
+            "offline detector source frame does not match configured BGR geometry");
       }
       if (frame_index > UINT32_MAX)
         throw std::runtime_error("offline detector frame sequence exceeds uint32_t");
@@ -103,15 +106,15 @@ namespace omniseer::vision
       return _sink.take();
     }
 
-    OfflineDetectorConfig       _config{};
-    PipelineRemapConfig         _remap{};
-    std::vector<std::string>    _class_names{};
-    PreparedTextEmbeddings      _embeddings{};
-    ImageBufferPool             _pool{};
-    DmaHeapAllocator            _allocator{};
-    RknnRunner                  _runner;
-    CapturingDetectionsSink     _sink{};
-    ConsumerPipeline            _consumer;
+    OfflineDetectorConfig    _config{};
+    PipelineRemapConfig      _remap{};
+    std::vector<std::string> _class_names{};
+    PreparedTextEmbeddings   _embeddings{};
+    ImageBufferPool          _pool{};
+    DmaHeapAllocator         _allocator{};
+    RknnRunner               _runner;
+    CapturingDetectionsSink  _sink{};
+    ConsumerPipeline         _consumer;
   };
 
   OfflineDetector::OfflineDetector(OfflineDetectorConfig config)
