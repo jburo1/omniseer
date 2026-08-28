@@ -386,6 +386,7 @@ Inspects local RunBundles and retrieves robot-side RunBundles.
 scripts/omni runs inspect <run_dir> [--json] [--require-complete]
 scripts/omni runs annotate <run_dir> [--overwrite]
 scripts/omni runs report <run_dir> [--overwrite]
+scripts/omni runs comparison-report <reference_run> --trial <run_dir> --trial <run_dir> --trial <run_dir> --trial <run_dir> [--comparison <name>] [--truth <path>] [--overwrite]
 scripts/omni runs video <run_dir>
 scripts/omni runs compare <run_dir> [--name <comparison-name>] [--model-dir <dir>] [--classes <path>] [comparison options]
 scripts/omni runs local-list [--root <local-runs-root>]
@@ -415,6 +416,14 @@ canonical evidence frames. `report` annotates missing evidence first, then
 writes `report/index.html`. `list` and `pull` use SSH and validate pulled
 bundles locally.
 
+`comparison-report` combines exactly four physical RunBundles (one for each canonical
+v2-S/v2-M FP/INT8 configuration) with one named controlled replay from the reference
+RunBundle. It writes `<reference_run>/report/comparison.html` without replacing the
+single-run report. Trial order does not matter; model identity is resolved from each
+manifest. The optional `--truth` JSON uses inclusive source-frame ranges for known-present
+classes and a list of known-absent classes. A valid `coco80` comparison is added automatically
+as a descriptive-only exploratory section.
+
 `compare` is a ROCK 5B+ devcontainer offline RKNN workflow. Build native vision in the
 devcontainer, then it directly decodes immutable `video/source.ts`, reverses the
 validated Rockchip 8-pixel preview wrap in memory, and executes the same corrected frame
@@ -440,6 +449,13 @@ scripts/omni runs list
 scripts/omni runs pull demo_001
 scripts/omni runs inspect runs/imported/demo_001
 scripts/omni runs report runs/imported/demo_001
+scripts/omni runs comparison-report runs/reference_scene \
+  --trial runs/v2s_fp_scene \
+  --trial runs/v2s_int8_scene \
+  --trial runs/v2m_fp_scene \
+  --trial runs/v2m_int8_scene \
+  --comparison task \
+  --truth runs/reference_scene/scene_truth.json
 scripts/omni build vision
 scripts/omni runs compare runs/demo_001 --max-frames 120
 

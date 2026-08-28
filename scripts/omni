@@ -119,6 +119,7 @@ Usage:
   scripts/omni runs inspect <run_dir> [--json] [--require-complete]
   scripts/omni runs annotate <run_dir> [--overwrite]
   scripts/omni runs report <run_dir> [--overwrite]   # also annotates evidence
+  scripts/omni runs comparison-report <reference_run> --trial <run_dir> --trial <run_dir> --trial <run_dir> --trial <run_dir> [--comparison <name>] [--truth <path>] [--overwrite]
   scripts/omni runs video <run_dir>
   scripts/omni runs compare <run_dir> [--name <comparison-name>] [--model-dir <dir>] [--classes <path>] [comparison options]
   scripts/omni runs local-list [--root <local-runs-root>]
@@ -328,6 +329,10 @@ EOF
       report)
         omni_source_ros_workspace
         exec ros2 run omniseer_experiments report_run "$@"
+        ;;
+      comparison-report)
+        omni_source_ros_workspace
+        exec ros2 run omniseer_experiments comparison_report "$@"
         ;;
       video)
         omni_source_ros_workspace
