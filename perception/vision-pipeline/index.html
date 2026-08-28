@@ -937,6 +937,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#runbundle-four-model-comparison" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RunBundle Four-Model Comparison
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#primary-implementation-files" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1322,6 +1333,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#runbundle-four-model-comparison" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RunBundle Four-Model Comparison
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#primary-implementation-files" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1591,6 +1613,19 @@ It writes exactly one canonical JSONL record for every decoded frame, including 
 with no detections. <code>frame_index</code> is the replay identity; the JSONL contains no wall-clock
 or inference-latency fields.</p>
 <p>This is an offline validation tool and is not part of the camera/ROS production runtime.</p>
+<h2 id="runbundle-four-model-comparison">RunBundle Four-Model Comparison<a class="headerlink" href="#runbundle-four-model-comparison" title="Permanent link">&para;</a></h2>
+<p><code>scripts/omni runs compare &lt;run_dir&gt; --model-dir &lt;dir&gt; --classes &lt;path&gt;</code> is the
+ROCK 5B+ target-runtime comparison workflow. It decodes the immutable raw
+<code>video/source.ts</code> once, reverses the known 1280x720 Rockchip preview circular wrap
+in memory (recorded <code>[x=1272..1279][x=0..1271]</code> becomes normal pixel order), and
+passes that same corrected BGR frame serially to resident v2-S FP, v2-S INT8, v2-M
+FP, and v2-M INT8 <code>OfflineDetector</code> instances. Each instance uses the existing CPU
+letterbox, <code>RknnRunner</code>, <code>ConsumerPipeline</code>, embeddings, and YOLO postprocess path.</p>
+<p>The renderer draws each production source-pixel detection result before producing a
+labeled 2x2 H.264/yuv420p MP4 at the source FPS. Offline inference duration does not
+control output elapsed time. It writes only <code>video/comparison/comparison.mp4</code> and a
+provenance sidecar; the raw source, original detections, and RunBundle manifest remain
+unchanged.</p>
 <h2 id="primary-implementation-files">Primary Implementation Files<a class="headerlink" href="#primary-implementation-files" title="Permanent link">&para;</a></h2>
 <ul>
 <li><code>vision/include/omniseer/vision/v4l2_capture.hpp</code> and
@@ -1606,6 +1641,11 @@ or inference-latency fields.</p>
 <li><code>vision/include/omniseer/vision/consumer_pipeline.hpp</code> and
   <code>vision/src/consumer_pipeline.cpp</code></li>
 <li><code>vision/apps/vision_replay.cpp</code></li>
+<li><code>vision/apps/runbundle_compare.cpp</code></li>
+<li><code>vision/include/omniseer/vision/offline_detector.hpp</code> and
+  <code>vision/src/offline_detector.cpp</code></li>
+<li><code>vision/include/omniseer/vision/preview_wrap_repair.hpp</code> and
+  <code>vision/src/preview_wrap_repair.cpp</code></li>
 <li><code>vision/include/omniseer/vision/letterbox.hpp</code> and <code>vision/src/letterbox.cpp</code></li>
 <li><code>vision/include/omniseer/vision/replay_jsonl.hpp</code> and <code>vision/src/replay_jsonl.cpp</code></li>
 <li><code>vision/include/omniseer/vision/dma_heap_alloc.hpp</code></li>
@@ -1641,7 +1681,7 @@ or inference-latency fields.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 22, 2026 03:21:24 UTC">August 22, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 28, 2026 04:56:42 UTC">August 28, 2026</span>
   </span>
 
     
