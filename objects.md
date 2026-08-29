@@ -1,0 +1,53 @@
+plant start 0
+book start 0
+jar start 0
+water bottle start 0
+jar end 101
+water bottle end 125
+cellphone start 140
+plant end 179
+beer mug start 179
+scissors start 209
+book start 273
+chair end 284
+bag start 311
+handbag start 311
+cellphone end 359
+chair start 387
+beer mug end 394
+scissors end 436
+mug start 535
+bag end 550
+handbag end 311
+glass start 585
+toothbrush start 603
+subwoofer start 615
+chair end 650
+book end 701
+chair start 712
+mug end 745
+tripod start 804
+glass end 807
+toothbrush end 839
+hammer start 844
+subwoofer end 846
+person start 874
+shoe start 879
+garbage can start 969
+chair end 994
+plant start 1005
+tripod end 1049
+jar start 1075
+book start 1084
+hammer end 1086
+water bottle start 1112
+shoe end 1163
+person end 1166
+garbage can end 1199
+chair begin 1203
+
+dog absent
+cat absent
+laptop absent
+computer monitor absent
+sofa absent
