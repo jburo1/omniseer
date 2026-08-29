@@ -12,9 +12,8 @@ subwoofer
 speaker
 jar
 plant
-cell phone
+cellphone
 beer mug
-stein
 scissors
 bag
 toothbrush
