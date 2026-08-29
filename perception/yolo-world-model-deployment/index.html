@@ -896,6 +896,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Compile RKNN">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#add-robot-calibration-images" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Add robot calibration images
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1187,6 +1204,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Compile RKNN">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#add-robot-calibration-images" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Add robot calibration images
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1252,13 +1286,10 @@ detected.</p>
 </code></pre></div>
 <p>This uses <code>curl</code> with immutable Hugging Face revisions for
 <code>wondervictor/YOLO-World</code> (<code>4340b03f4f59f46279a6581bbb818e0f77765d4d</code>) and
-<code>openai/clip-vit-base-patch32</code> (<code>3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268</code>),
-plus Rockchip Model Zoo commit
-<code>bad6c7334531becaf90a561988519b7bec34d0ab</code> for <code>bus.jpg</code> and
-<code>coco_text_outp.npy</code>. It creates the required one-line local calibration
-dataset. Existing non-empty files are retained, downloads use <code>.part</code> files
-until complete, and every required asset is validated before the command
-reports success. <code>models/</code> remains ignored.</p>
+<code>openai/clip-vit-base-patch32</code> (<code>3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268</code>).
+Existing non-empty files are retained, downloads use <code>.part</code> files until
+complete, and every required asset is validated before the command reports
+success. <code>models/</code> remains ignored.</p>
 <p>The only variant-specific mapping is:</p>
 <table>
 <thead>
@@ -1343,21 +1374,30 @@ and rejects any model not having exactly the native runtime interface:</p>
 <span class="w">  </span>--onnx<span class="w"> </span>artifacts/models/yolo_world_v2_s.onnx<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--precision<span class="w"> </span>fp
 </code></pre></div>
-<p>For INT8, <code>model assets</code> creates the Rockchip YOLO-World calibration directory
-and dataset format. The pinned Model Zoo conversion contract is commit
-<code>c2b7d00714b4e5d21266ab3003f3ca687ba0d57b</code>; it references
-<code>coco_text_outp.npy</code> but does not contain that file. Source only that missing
-calibration embedding from Rockchip Model Zoo commit
-<code>bad6c7334531becaf90a561988519b7bec34d0ab</code>
-(<code>examples/yolo_world/model/coco_text_outp.npy</code>). The command keeps it local
-and ignored, alongside the calibration image, preserving the dataset line
-exactly and validating that the embedding is a NumPy array of shape
-<code>[1,80,512]</code>:</p>
-<div class="highlight"><pre><span></span><code>models/source/yolo_world/calibration/
-  dataset.txt             # contains: bus.jpg coco_text_outp.npy
-  bus.jpg
-  coco_text_outp.npy      # Rockchip commit bad6c733...; [1,80,512] CLIP output
+<h3 id="add-robot-calibration-images">Add robot calibration images<a class="headerlink" href="#add-robot-calibration-images" title="Permanent link">&para;</a></h3>
+<p>Place representative <code>.jpg</code>, <code>.jpeg</code>, or <code>.png</code> frames beneath
+<code>models/source/calibration_images/</code>. The checked-in
+<code>config/classes/calibration.txt</code> supplies the text input: it contains all 29
+labels from <code>task.txt</code>, followed by 51 labels selected with fixed seed <code>0</code> from
+COCO-80 labels not already in <code>task.txt</code>. This preserves the detector's fixed
+80-class text-input shape without making COCO-80 the calibration vocabulary.</p>
+<p>Generate the matching CLIP embedding and the INT8 dataset:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>model<span class="w"> </span>calibration
 </code></pre></div>
+<p>This generates the ignored <code>calibration_text_outp.npy</code> from the local pinned
+CLIP snapshot, then atomically creates or replaces <code>dataset.txt</code>. Every image
+entry is paired with that embedding, the second input to this two-input model:</p>
+<div class="highlight"><pre><span></span><code>config/classes/calibration.txt                 # 80 calibration labels
+models/source/yolo_world/calibration/
+  calibration_text_outp.npy                    # [1,80,512] float32 CLIP output
+  dataset.txt                                  # &lt;image&gt; calibration_text_outp.npy
+</code></pre></div>
+<p>To use a different in-repository image directory, class list, CLIP snapshot, or
+calibration directory, pass <code>--images-dir &lt;dir&gt;</code>, <code>--classes &lt;file&gt;</code>,
+<code>--clip-model &lt;dir&gt;</code>, and/or <code>--calibration-dir &lt;dir&gt;</code>.</p>
+<p>For the images currently at <code>models/source/calibration_images/</code>, the generated
+dataset therefore has 100 entries: one for each robot frame. Rerun this
+command whenever the image set changes, before rebuilding an INT8 model.</p>
 <p>Then compile:</p>
 <div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>model<span class="w"> </span>compile<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--variant<span class="w"> </span>v2s<span class="w"> </span><span class="se">\</span>
@@ -1416,7 +1456,7 @@ tools run if a generated artifact is missing or empty.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 28, 2026 21:37:26 UTC">August 28, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 29, 2026 19:07:25 UTC">August 29, 2026</span>
   </span>
 
     
