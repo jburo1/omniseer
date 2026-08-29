@@ -1,0 +1,84 @@
+# INT8 calibration vocabulary for YOLO-World's fixed 80-row text input.
+#
+# The first 29 labels are config/classes/task.txt. The remaining 51 labels were selected
+# with Python's random.Random(0) from COCO-80 labels not already in task.txt.
+person
+chair
+book
+bottle
+shoe
+hammer
+glass
+cup
+mug
+subwoofer
+speaker
+jar
+plant
+cellphone
+beer mug
+scissors
+bag
+toothbrush
+handbag
+garbage can
+window
+desk
+table
+door
+potted plant
+tripod
+dog
+cat
+giraffe
+couch
+tv
+train
+tennis racket
+sink
+skis
+cell phone
+bed
+teddy bear
+zebra
+baseball glove
+tie
+spoon
+bird
+surfboard
+traffic light
+bear
+toilet
+cake
+truck
+banana
+cow
+wine glass
+bowl
+fire hydrant
+toaster
+hair drier
+bus
+umbrella
+keyboard
+fork
+sandwich
+remote
+sports ball
+backpack
+laptop
+carrot
+horse
+hot dog
+pizza
+oven
+car
+refrigerator
+elephant
+bicycle
+motorcycle
+bench
+clock
+suitcase
+sheep
+stop sign

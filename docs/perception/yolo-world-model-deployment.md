@@ -44,13 +44,10 @@ scripts/omni model assets
 
 This uses `curl` with immutable Hugging Face revisions for
 `wondervictor/YOLO-World` (`4340b03f4f59f46279a6581bbb818e0f77765d4d`) and
-`openai/clip-vit-base-patch32` (`3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268`),
-plus Rockchip Model Zoo commit
-`bad6c7334531becaf90a561988519b7bec34d0ab` for `bus.jpg` and
-`coco_text_outp.npy`. It creates the required one-line local calibration
-dataset. Existing non-empty files are retained, downloads use `.part` files
-until complete, and every required asset is validated before the command
-reports success. `models/` remains ignored.
+`openai/clip-vit-base-patch32` (`3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268`).
+Existing non-empty files are retained, downloads use `.part` files until
+complete, and every required asset is validated before the command reports
+success. `models/` remains ignored.
 
 The only variant-specific mapping is:
 
@@ -132,23 +129,39 @@ scripts/omni model compile \
   --precision fp
 ```
 
-For INT8, `model assets` creates the Rockchip YOLO-World calibration directory
-and dataset format. The pinned Model Zoo conversion contract is commit
-`c2b7d00714b4e5d21266ab3003f3ca687ba0d57b`; it references
-`coco_text_outp.npy` but does not contain that file. Source only that missing
-calibration embedding from Rockchip Model Zoo commit
-`bad6c7334531becaf90a561988519b7bec34d0ab`
-(`examples/yolo_world/model/coco_text_outp.npy`). The command keeps it local
-and ignored, alongside the calibration image, preserving the dataset line
-exactly and validating that the embedding is a NumPy array of shape
-`[1,80,512]`:
+### Add robot calibration images
+
+Place representative `.jpg`, `.jpeg`, or `.png` frames beneath
+`models/source/calibration_images/`. The checked-in
+`config/classes/calibration.txt` supplies the text input: it contains all 29
+labels from `task.txt`, followed by 51 labels selected with fixed seed `0` from
+COCO-80 labels not already in `task.txt`. This preserves the detector's fixed
+80-class text-input shape without making COCO-80 the calibration vocabulary.
+
+Generate the matching CLIP embedding and the INT8 dataset:
+
+```bash
+scripts/omni model calibration
+```
+
+This generates the ignored `calibration_text_outp.npy` from the local pinned
+CLIP snapshot, then atomically creates or replaces `dataset.txt`. Every image
+entry is paired with that embedding, the second input to this two-input model:
 
 ```text
+config/classes/calibration.txt                 # 80 calibration labels
 models/source/yolo_world/calibration/
-  dataset.txt             # contains: bus.jpg coco_text_outp.npy
-  bus.jpg
-  coco_text_outp.npy      # Rockchip commit bad6c733...; [1,80,512] CLIP output
+  calibration_text_outp.npy                    # [1,80,512] float32 CLIP output
+  dataset.txt                                  # <image> calibration_text_outp.npy
 ```
+
+To use a different in-repository image directory, class list, CLIP snapshot, or
+calibration directory, pass `--images-dir <dir>`, `--classes <file>`,
+`--clip-model <dir>`, and/or `--calibration-dir <dir>`.
+
+For the images currently at `models/source/calibration_images/`, the generated
+dataset therefore has 100 entries: one for each robot frame. Rerun this
+command whenever the image set changes, before rebuilding an INT8 model.
 
 Then compile:
 

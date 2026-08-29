@@ -10,6 +10,7 @@ from rknn.api import RKNN
 
 IMAGE_INPUT_SHAPE = [1, 3, 640, 640]
 TEXT_INPUT_SHAPE = [1, 80, 512]
+CALIBRATION_TEXT_EMBEDDING = "calibration_text_outp.npy"
 
 
 def parse_args() -> argparse.Namespace:
@@ -31,8 +32,8 @@ def require_nonempty(path: Path, description: str) -> None:
 
 
 def require_text_embedding(dataset: Path) -> None:
-    """Validate the fixed Rockchip calibration input before RKNN consumes it."""
-    embedding = dataset.parent / "coco_text_outp.npy"
+    """Validate the fixed calibration text input before RKNN consumes it."""
+    embedding = dataset.parent / CALIBRATION_TEXT_EMBEDDING
     require_nonempty(embedding, "INT8 text embedding")
     try:
         values = np.load(embedding, allow_pickle=False)

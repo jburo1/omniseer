@@ -1,3 +1,4 @@
+import random
 import struct
 import subprocess
 import tempfile
@@ -38,6 +39,7 @@ def test_model_help_is_available_from_omni_front_door() -> None:
 
     assert result.returncode == 0, result.stderr
     assert "model assets" in result.stdout
+    assert "model calibration [--images-dir <dir>] [--classes <file>] [--clip-model <dir>]" in result.stdout
     assert "model export [--variant v2s|v2m|v2l] --weights" in result.stdout
     assert "model compile [--variant v2s|v2m|v2l] --onnx" in result.stdout
     assert "model build [--variant v2s|v2m|v2l] --weights" in result.stdout
@@ -128,11 +130,10 @@ def test_model_assets_pin_expected_sources_and_revisions() -> None:
 
     assert "4340b03f4f59f46279a6581bbb818e0f77765d4d" in model_script
     assert "3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268" in model_script
-    assert "bad6c7334531becaf90a561988519b7bec34d0ab" in model_script
     assert "huggingface.co/wondervictor/YOLO-World/resolve/${model_yolo_world_revision}" in model_script
     assert "huggingface.co/openai/clip-vit-base-patch32/resolve/${model_clip_revision}" in model_script
-    assert "examples/yolo_world/model" in model_script
-    assert "bus.jpg coco_text_outp.npy\\n" in model_script
+    assert "calibration_text_outp.npy" in model_script
+    assert "coco_text_outp.npy" not in model_script
 
 
 def test_model_assets_does_not_overwrite_non_empty_file() -> None:
@@ -184,30 +185,103 @@ def run_calibration_check(calibration_dir: Path) -> subprocess.CompletedProcess[
 def test_model_calibration_rejects_missing_or_invalid_embedding() -> None:
     with tempfile.TemporaryDirectory() as temporary_directory:
         calibration_dir = Path(temporary_directory)
-        (calibration_dir / "dataset.txt").write_text("bus.jpg coco_text_outp.npy\n", encoding="utf-8")
-        (calibration_dir / "bus.jpg").write_bytes(b"image")
+        (calibration_dir / "dataset.txt").write_text("frame_001.jpg calibration_text_outp.npy\n", encoding="utf-8")
+        (calibration_dir / "frame_001.jpg").write_bytes(b"image")
 
         missing = run_calibration_check(calibration_dir)
         assert missing.returncode != 0
         assert "text embedding is missing" in missing.stderr
 
-        write_float32_npy(calibration_dir / "coco_text_outp.npy", (1, 79, 512))
+        write_float32_npy(calibration_dir / "calibration_text_outp.npy", (1, 79, 512))
         invalid = run_calibration_check(calibration_dir)
         assert invalid.returncode != 0
         assert "valid NumPy file with shape [1,80,512]" in invalid.stderr
 
 
-def test_model_calibration_dataset_contract_is_exact() -> None:
+def test_model_calibration_accepts_multiple_images_paired_with_the_calibration_embedding() -> None:
+    with tempfile.TemporaryDirectory() as temporary_directory:
+        temporary_path = Path(temporary_directory)
+        calibration_dir = temporary_path / "calibration"
+        calibration_dir.mkdir()
+        (calibration_dir / "dataset.txt").write_text(
+            "../robot/frame_001.jpg calibration_text_outp.npy\n", encoding="utf-8"
+        )
+        robot_images = temporary_path / "robot"
+        robot_images.mkdir()
+        (robot_images / "frame_001.jpg").write_bytes(b"image")
+        write_float32_npy(calibration_dir / "calibration_text_outp.npy", (1, 80, 512))
+
+        result = run_calibration_check(calibration_dir)
+
+        assert result.returncode == 0, result.stderr
+
+
+def test_model_calibration_rejects_an_entry_with_a_different_text_embedding() -> None:
     with tempfile.TemporaryDirectory() as temporary_directory:
         calibration_dir = Path(temporary_directory)
-        (calibration_dir / "dataset.txt").write_text("bus.jpg coco_text_outp.npy\nextra\n", encoding="utf-8")
-        (calibration_dir / "bus.jpg").write_bytes(b"image")
-        write_float32_npy(calibration_dir / "coco_text_outp.npy", (1, 80, 512))
+        (calibration_dir / "dataset.txt").write_text("frame_001.jpg another_text_embedding.npy\n", encoding="utf-8")
+        (calibration_dir / "frame_001.jpg").write_bytes(b"image")
+        write_float32_npy(calibration_dir / "calibration_text_outp.npy", (1, 80, 512))
 
         result = run_calibration_check(calibration_dir)
 
         assert result.returncode != 0
-        assert "dataset.txt must contain exactly: bus.jpg coco_text_outp.npy" in result.stderr
+        assert "must pair every image with calibration_text_outp.npy" in result.stderr
+
+
+def test_model_calibration_generates_a_dataset_from_images_dir() -> None:
+    with tempfile.TemporaryDirectory(dir=REPO_ROOT) as temporary_directory:
+        temporary_path = Path(temporary_directory)
+        calibration_dir = temporary_path / "calibration"
+        images_dir = temporary_path / "images"
+        calibration_dir.mkdir()
+        images_dir.mkdir()
+        write_float32_npy(calibration_dir / "calibration_text_outp.npy", (1, 80, 512))
+        (images_dir / "frame_010.jpg").write_bytes(b"image")
+        (images_dir / "frame_002.png").write_bytes(b"image")
+        (images_dir / "ignore.txt").write_text("not an image", encoding="utf-8")
+
+        result = subprocess.run(
+            [
+                "bash",
+                "-c",
+                'source scripts/model.sh; model_write_calibration_dataset "$1" "$2"',
+                "model-calibration-dataset-test",
+                str(images_dir),
+                str(calibration_dir),
+            ],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        assert result.returncode == 0, result.stderr
+        assert (calibration_dir / "dataset.txt").read_text(encoding="utf-8") == (
+            "../images/frame_002.png calibration_text_outp.npy\n../images/frame_010.jpg calibration_text_outp.npy\n"
+        )
+
+
+def read_class_list(path: Path) -> list[str]:
+    return [
+        line.strip()
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if line.strip() and not line.startswith("#")
+    ]
+
+
+def test_calibration_class_list_contains_task_classes_and_reproducible_coco_fillers() -> None:
+    task_classes = read_class_list(REPO_ROOT / "config" / "classes" / "task.txt")
+    coco_classes = read_class_list(REPO_ROOT / "config" / "classes" / "coco80.txt")
+    calibration_classes = read_class_list(REPO_ROOT / "config" / "classes" / "calibration.txt")
+    task_keys = {label.casefold() for label in task_classes}
+    candidates = [label for label in coco_classes if label.casefold() not in task_keys]
+    expected_fillers = random.Random(0).sample(candidates, 80 - len(task_classes))
+
+    assert len(calibration_classes) == 80
+    assert len({label.casefold() for label in calibration_classes}) == 80
+    assert calibration_classes[: len(task_classes)] == task_classes
+    assert calibration_classes[len(task_classes) :] == expected_fillers
 
 
 def test_model_builder_pins_rockchip_revisions_and_keeps_runtime_separate() -> None:
@@ -223,6 +297,5 @@ def test_model_builder_pins_rockchip_revisions_and_keeps_runtime_separate() -> N
 def test_model_deployment_documents_calibration_embedding_provenance() -> None:
     deployment_doc = (REPO_ROOT / "docs" / "perception" / "yolo-world-model-deployment.md").read_text(encoding="utf-8")
 
-    assert "c2b7d00714b4e5d21266ab3003f3ca687ba0d57b" in deployment_doc
-    assert "bad6c7334531becaf90a561988519b7bec34d0ab" in deployment_doc
-    assert "examples/yolo_world/model/coco_text_outp.npy" in deployment_doc
+    assert "config/classes/calibration.txt" in deployment_doc
+    assert "calibration_text_outp.npy" in deployment_doc

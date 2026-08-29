@@ -105,6 +105,7 @@ building dependency to the robot runtime image.
 
 ```bash
 scripts/omni model image
+scripts/omni model calibration --images-dir models/source/calibration_images
 scripts/omni model export --variant v2s --weights <v2-s.pth>
 scripts/omni model compile --variant v2s --onnx artifacts/models/yolo_world_v2_s.onnx --precision fp
 scripts/omni model build --variant v2m --weights <v2-m.pth> --precision int8

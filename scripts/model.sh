@@ -12,10 +12,9 @@ readonly model_builder_default_image="omniseer/model-builder:yolo-world-v2s-rknn
 readonly model_default_variant="v2s"
 readonly model_yolo_world_revision="4340b03f4f59f46279a6581bbb818e0f77765d4d"
 readonly model_clip_revision="3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268"
-readonly model_rockchip_model_zoo_revision="bad6c7334531becaf90a561988519b7bec34d0ab"
 readonly model_yolo_world_assets_url="https://huggingface.co/wondervictor/YOLO-World/resolve/${model_yolo_world_revision}"
 readonly model_clip_assets_url="https://huggingface.co/openai/clip-vit-base-patch32/resolve/${model_clip_revision}"
-readonly model_rockchip_assets_url="https://raw.githubusercontent.com/airockchip/rknn_model_zoo/${model_rockchip_model_zoo_revision}/examples/yolo_world/model"
+readonly model_calibration_embedding_name="calibration_text_outp.npy"
 
 # Keep this deliberately small: all supported variants use the same exporter,
 # validator, RKNN settings, calibration data, and target. Only these values
@@ -49,6 +48,7 @@ model_usage() {
   cat <<'EOF'
 Usage:
   scripts/omni model assets
+  scripts/omni model calibration [--images-dir <dir>] [--classes <file>] [--clip-model <dir>] [--calibration-dir <dir>] [--image <name>]
   scripts/omni model image [--image <name>] [docker build args...]
   scripts/omni model export [--variant v2s|v2m|v2l] --weights <checkpoint.pth> [--output <model.onnx>] [--clip-model <dir>] [--image <name>]
   scripts/omni model compile [--variant v2s|v2m|v2l] --onnx <model.onnx> --precision fp|int8 [--output <model.rknn>] [--calibration-dir <dir>] [--image <name>]
@@ -62,6 +62,8 @@ Defaults:
   FP RKNN output    artifacts/models/yolo_world_v2_<s|m|l>_fp.rknn
   INT8 RKNN output  artifacts/models/yolo_world_v2_<s|m|l>_i8.rknn
   calibration dir   models/source/yolo_world/calibration
+  calibration images models/source/calibration_images (when generated with `model calibration`)
+  calibration classes config/classes/calibration.txt (80 labels)
 EOF
 }
 
@@ -163,7 +165,7 @@ model_require_clip_model() {
 model_require_calibration_embedding() {
   local embedding="$1"
   [[ -s "${embedding}" ]] \
-    || omni_die "Rockchip INT8 text embedding is missing: ${embedding}"
+    || omni_die "INT8 calibration text embedding is missing: ${embedding}"
 
   if ! python3 - "${embedding}" <<'PY'
 import ast
@@ -192,19 +194,32 @@ with open(path, "rb") as asset:
         raise ValueError("unexpected array data size")
 PY
   then
-    omni_die "Rockchip INT8 text embedding must be a valid NumPy file with shape [1,80,512]: ${embedding}"
+    omni_die "INT8 calibration text embedding must be a valid NumPy file with shape [1,80,512]: ${embedding}"
   fi
 }
 
 model_require_calibration() {
-  local calibration_dir="$1"
+  local calibration_dir="$1" dataset_line image_path embedding_path extra_field
+  local entry_count=0
   [[ -s "${calibration_dir}/dataset.txt" ]] \
     || omni_die "INT8 calibration dataset.txt is missing or empty: ${calibration_dir}/dataset.txt"
-  cmp -s "${calibration_dir}/dataset.txt" <(printf 'bus.jpg coco_text_outp.npy\n') \
-    || omni_die "INT8 calibration dataset.txt must contain exactly: bus.jpg coco_text_outp.npy"
-  [[ -s "${calibration_dir}/bus.jpg" ]] \
-    || omni_die "Rockchip INT8 calibration image is missing: ${calibration_dir}/bus.jpg"
-  model_require_calibration_embedding "${calibration_dir}/coco_text_outp.npy"
+  model_require_calibration_embedding "${calibration_dir}/${model_calibration_embedding_name}"
+
+  while IFS= read -r dataset_line || [[ -n "${dataset_line}" ]]; do
+    [[ -n "${dataset_line}" ]] || continue
+    read -r image_path embedding_path extra_field <<<"${dataset_line}"
+    [[ -n "${image_path}" && -n "${embedding_path}" && -z "${extra_field}" ]] \
+      || omni_die "INT8 calibration dataset entry must contain an image and ${model_calibration_embedding_name}: ${dataset_line}"
+    [[ "${embedding_path}" == "${model_calibration_embedding_name}" ]] \
+      || omni_die "INT8 calibration dataset must pair every image with ${model_calibration_embedding_name}: ${dataset_line}"
+    [[ "${image_path}" != /* && "${image_path}" != *$'\t'* && "${image_path}" != *' '* ]] \
+      || omni_die "INT8 calibration image path must be a whitespace-free path relative to ${calibration_dir}: ${image_path}"
+    [[ -s "${calibration_dir}/${image_path}" ]] \
+      || omni_die "INT8 calibration image is missing or empty: ${calibration_dir}/${image_path}"
+    ((entry_count += 1))
+  done <"${calibration_dir}/dataset.txt"
+  ((entry_count > 0)) \
+    || omni_die "INT8 calibration dataset.txt must contain at least one image entry: ${calibration_dir}/dataset.txt"
 }
 
 model_download_missing() {
@@ -225,22 +240,83 @@ model_download_missing() {
   mv "${part}" "${destination}"
 }
 
-model_write_missing_calibration_dataset() {
-  local dataset="$1" part
-  [[ -s "${dataset}" ]] && return 0
-  [[ ! -d "${dataset}" ]] || omni_die "asset path is a directory: ${dataset}"
+model_write_calibration_dataset() {
+  local images_dir="$1" calibration_dir="$2" dataset part image image_relative
+  local -a images=()
+  dataset="${calibration_dir}/dataset.txt"
+  [[ -d "${images_dir}" ]] || omni_die "calibration images directory is missing: ${images_dir}"
+  model_require_calibration_embedding "${calibration_dir}/${model_calibration_embedding_name}"
+
+  while IFS= read -r -d '' image; do
+    [[ "${image}" != *$'\t'* && "${image}" != *' '* ]] \
+      || omni_die "calibration image paths cannot contain whitespace: ${image}"
+    images+=("${image}")
+  done < <(find "${images_dir}" -type f \
+    \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' \) -print0 | LC_ALL=C sort -z)
+  ((${#images[@]} > 0)) || omni_die "no .jpg, .jpeg, or .png calibration images found under: ${images_dir}"
+
   part="${dataset}.part"
-  [[ ! -e "${part}" ]] || omni_die "incomplete asset download already exists: ${part}"
-  mkdir -p "$(dirname "${dataset}")"
-  printf 'bus.jpg coco_text_outp.npy\n' >"${part}"
+  [[ ! -e "${part}" ]] || omni_die "incomplete calibration dataset already exists: ${part}"
+  mkdir -p "${calibration_dir}"
+  {
+    for image in "${images[@]}"; do
+      image_relative="$(realpath --relative-to="${calibration_dir}" "${image}")"
+      [[ "${image_relative}" != /* ]] \
+        || omni_die "calibration image must be reachable relative to ${calibration_dir}: ${image}"
+      printf '%s %s\n' "${image_relative}" "${model_calibration_embedding_name}"
+    done
+  } >"${part}"
   mv "${part}" "${dataset}"
+  printf 'INT8 calibration dataset: %s (%d robot images)\n' \
+    "${dataset}" "${#images[@]}"
+}
+
+model_calibration() {
+  local image images_dir calibration_dir classes clip_model
+  image="$(model_image_name)"
+  images_dir="$(omni_repo_root)/models/source/calibration_images"
+  calibration_dir="$(omni_repo_root)/models/source/yolo_world/calibration"
+  classes="$(omni_repo_root)/config/classes/calibration.txt"
+  clip_model="$(omni_repo_root)/models/source/clip-vit-base-patch32"
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --images-dir) [[ $# -ge 2 ]] || omni_die "--images-dir requires a path"; images_dir="$2"; shift 2 ;;
+      --images-dir=*) images_dir="${1#--images-dir=}"; shift ;;
+      --classes) [[ $# -ge 2 ]] || omni_die "--classes requires a path"; classes="$2"; shift 2 ;;
+      --classes=*) classes="${1#--classes=}"; shift ;;
+      --clip-model) [[ $# -ge 2 ]] || omni_die "--clip-model requires a path"; clip_model="$2"; shift 2 ;;
+      --clip-model=*) clip_model="${1#--clip-model=}"; shift ;;
+      --calibration-dir) [[ $# -ge 2 ]] || omni_die "--calibration-dir requires a path"; calibration_dir="$2"; shift 2 ;;
+      --calibration-dir=*) calibration_dir="${1#--calibration-dir=}"; shift ;;
+      --image) [[ $# -ge 2 ]] || omni_die "--image requires a value"; image="$2"; shift 2 ;;
+      --image=*) image="${1#--image=}"; shift ;;
+      -h|--help|help) model_usage; return 0 ;;
+      *) omni_die "unknown model calibration option: $1" ;;
+    esac
+  done
+  images_dir="$(model_existing_path "${images_dir}")"
+  classes="$(model_existing_path "${classes}")"
+  clip_model="$(model_existing_path "${clip_model}")"
+  calibration_dir="$(model_output_path "${calibration_dir}")"
+  model_require_in_repo "${images_dir}"
+  model_require_in_repo "${classes}"
+  model_require_in_repo "${clip_model}"
+  model_require_in_repo "${calibration_dir}"
+  model_require_clip_model "${clip_model}"
+  model_require_docker
+  model_docker_run "${image}" env HF_HOME=/tmp/huggingface \
+    python /workspace/tools/model/generate_yolo_world_calibration_embedding.py \
+    --classes "$(model_container_path "${classes}")" \
+    --clip-model "$(model_container_path "${clip_model}")" \
+    --output "$(model_container_path "${calibration_dir}/${model_calibration_embedding_name}")"
+  model_write_calibration_dataset "${images_dir}" "${calibration_dir}"
+  model_require_calibration "${calibration_dir}"
 }
 
 model_require_assets() {
-  local source_root clip_model calibration_dir checkpoint variant
+  local source_root clip_model checkpoint variant
   source_root="$(omni_repo_root)/models/source"
   clip_model="${source_root}/clip-vit-base-patch32"
-  calibration_dir="${source_root}/yolo_world/calibration"
 
   for variant in v2s v2m v2l; do
     model_select_variant "${variant}"
@@ -251,11 +327,10 @@ model_require_assets() {
     [[ -s "${clip_model}/${checkpoint}" ]] \
       || omni_die "local CLIP model asset is missing or empty: ${clip_model}/${checkpoint}"
   done
-  model_require_calibration "${calibration_dir}"
 }
 
 model_assets() {
-  local source_root clip_model calibration_dir checkpoint variant asset
+  local source_root clip_model checkpoint variant asset
   case "${1:-}" in
     "") ;;
     help|-h|--help) model_usage; return 0 ;;
@@ -266,7 +341,6 @@ model_assets() {
 
   source_root="$(omni_repo_root)/models/source"
   clip_model="${source_root}/clip-vit-base-patch32"
-  calibration_dir="${source_root}/yolo_world/calibration"
   for variant in v2s v2m v2l; do
     model_select_variant "${variant}"
     checkpoint="${source_root}/yolo_world/${model_variant}/${model_checkpoint_name}"
@@ -275,9 +349,6 @@ model_assets() {
   for asset in config.json pytorch_model.bin tokenizer_config.json tokenizer.json merges.txt vocab.json special_tokens_map.json preprocessor_config.json; do
     model_download_missing "${model_clip_assets_url}/${asset}" "${clip_model}/${asset}"
   done
-  model_write_missing_calibration_dataset "${calibration_dir}/dataset.txt"
-  model_download_missing "${model_rockchip_assets_url}/bus.jpg" "${calibration_dir}/bus.jpg"
-  model_download_missing "${model_rockchip_assets_url}/coco_text_outp.npy" "${calibration_dir}/coco_text_outp.npy"
   model_require_assets
 
   printf 'Model assets ready:\n'
@@ -285,8 +356,7 @@ model_assets() {
     "${source_root}/yolo_world/v2s/yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth" \
     "${source_root}/yolo_world/v2m/yolo_world_v2_m_obj365v1_goldg_pretrain-c6237d5b.pth" \
     "${source_root}/yolo_world/v2l/yolo_world_v2_l_obj365v1_goldg_pretrain-a82b1fe3.pth" \
-    "${clip_model}" \
-    "${calibration_dir}"
+    "${clip_model}"
 }
 
 model_image() {
@@ -471,6 +541,7 @@ model_main() {
   if [[ $# -gt 0 ]]; then shift; fi
   case "${subcommand}" in
     assets) model_assets "$@" ;;
+    calibration) model_calibration "$@" ;;
     image) model_image "$@" ;;
     export) model_export "$@" ;;
     compile) model_compile "$@" ;;
