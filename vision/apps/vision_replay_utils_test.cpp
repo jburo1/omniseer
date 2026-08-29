@@ -107,7 +107,7 @@ TEST(VisionReplayConfigTest, ParsesSupportedDetectorOptions)
       "detector.rknn", "--classes",         "classes.txt", "--output",
       "output.jsonl",  "--clip-model",      "clip.rknn",   "--clip-vocab",
       "vocab.bpe",     "--score-threshold", "0.3",         "--nms-iou-threshold",
-      "0.4",           "--max-detections",  "8",
+      "0.4",           "--max-detections",  "8",           "--rknn-debug",
   };
   std::vector<char*> argv = argv_from(args);
   std::string        error{};
@@ -120,4 +120,5 @@ TEST(VisionReplayConfigTest, ParsesSupportedDetectorOptions)
   EXPECT_FLOAT_EQ(config.score_threshold, 0.3F);
   EXPECT_FLOAT_EQ(config.nms_iou_threshold, 0.4F);
   EXPECT_EQ(config.max_detections, 8U);
+  EXPECT_TRUE(config.debug_rknn);
 }

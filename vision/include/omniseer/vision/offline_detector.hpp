@@ -24,6 +24,7 @@ namespace omniseer::vision
     uint32_t    max_detections{100};
     int         source_width{1280};
     int         source_height{720};
+    bool        debug_rknn{false};
   };
 
   /**

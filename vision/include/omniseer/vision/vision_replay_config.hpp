@@ -19,6 +19,7 @@ namespace omniseer::vision
     float       score_threshold{0.25F};
     float       nms_iou_threshold{0.45F};
     uint32_t    max_detections{100};
+    bool        debug_rknn{false};
   };
 
   /**

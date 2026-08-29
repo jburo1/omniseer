@@ -61,7 +61,12 @@ namespace omniseer::vision
                                                  .pad_token           = _config.pad_token,
                                              })
                   .build(_class_names)),
-          _runner({.model_path = _config.detector_model_path, .warmup_runs = _config.warmup_runs}),
+          _runner({
+              .model_path            = _config.detector_model_path,
+              .warmup_runs           = _config.warmup_runs,
+              .debug_tensor_metadata = _config.debug_rknn,
+              .debug_first_inference = _config.debug_rknn,
+          }),
           _consumer(_pool, _runner, nullptr, &_sink,
                     {
                         .score_threshold   = _config.score_threshold,

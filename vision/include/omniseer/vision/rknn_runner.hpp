@@ -23,6 +23,10 @@ namespace omniseer::vision
     std::string model_path{};
     /// @brief Number of warmup inferences to run during preflight.
     uint32_t warmup_runs{2};
+    /// @brief Print RKNN input/output tensor metadata at preflight.
+    bool debug_tensor_metadata{false};
+    /// @brief Print raw and dequantized output statistics for the first inference only.
+    bool debug_first_inference{false};
   };
 
   /**
@@ -56,6 +60,14 @@ namespace omniseer::vision
     size_t bytes{0};
   };
 
+  /** @brief The RKNN descriptor used for the RGB888 image DMA binding. */
+  struct RknnImageBindingDesc
+  {
+    rknn_tensor_type   type{RKNN_TENSOR_FLOAT32};
+    rknn_tensor_format format{RKNN_TENSOR_UNDEFINED};
+    uint8_t            pass_through{1};
+  };
+
   /**
    * @brief Immutable metadata for one RKNN output tensor captured during preflight.
    */
@@ -75,6 +87,10 @@ namespace omniseer::vision
     int32_t zero_point{0};
     /// @brief Quantization scale for asymmetric int tensors.
     float scale{1.0F};
+    /// @brief RKNN tensor memory layout.
+    rknn_tensor_format format{RKNN_TENSOR_UNDEFINED};
+    /// @brief RKNN tensor quantization scheme.
+    rknn_tensor_qnt_type quantization{RKNN_TENSOR_QNT_NONE};
   };
 
   /**
@@ -159,6 +175,8 @@ namespace omniseer::vision
     const std::vector<RknnOutputView>& outputs() const noexcept;
     /// @brief Immutable output metadata captured during preflight.
     const std::vector<RknnOutputDesc>& output_descs() const noexcept;
+    /// @brief Actual RGB888 image binding contract after successful preflight.
+    RknnImageBindingDesc image_binding_desc() const noexcept;
 
   private:
     struct ImageInputBinding
@@ -192,6 +210,12 @@ namespace omniseer::vision
     void _prepare_outputs();
     /// @brief Run startup warmup passes on one pre-bound image slot.
     void _run_warmup();
+    /// @brief Derive the tensor descriptor used to bind an RGB image DMA buffer.
+    rknn_tensor_attr _image_bind_attr() const noexcept;
+    /// @brief Print one queried input/output tensor descriptor when diagnostics are enabled.
+    void _debug_log_tensor_metadata(const char* direction, const rknn_tensor_attr& attr) const;
+    /// @brief Print one inference's raw and dequantized output statistics.
+    void _debug_log_output_statistics() const noexcept;
 
     /// @brief Validate one image descriptor against preflight constraints.
     bool _validate_image_descriptor(const ImageBuffer& input) const noexcept;
@@ -223,5 +247,6 @@ namespace omniseer::vision
     std::vector<rknn_output>       _output_io{};
     std::vector<RknnOutputDesc>    _output_descs{};
     std::vector<RknnOutputView>    _output_views{};
+    bool                           _debug_first_inference_pending{false};
   };
 } // namespace omniseer::vision

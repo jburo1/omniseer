@@ -73,6 +73,7 @@ int main(int argc, char** argv)
           .max_detections      = config.max_detections,
           .source_width        = source_w,
           .source_height       = source_h,
+          .debug_rknn          = config.debug_rknn,
     });
     omniseer::vision::ReplayJsonlWriter jsonl(config.output_path, detector.class_names());
 

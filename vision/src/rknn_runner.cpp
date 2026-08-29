@@ -1,7 +1,11 @@
 #include "omniseer/vision/rknn_runner.hpp"
 
+#include <algorithm>
+#include <array>
 #include <cassert>
 #include <cerrno>
+#include <cmath>
+#include <cstdio>
 #include <cstring>
 #include <fstream>
 #include <limits>
@@ -61,6 +65,83 @@ namespace omniseer::vision
         return 0;
       return offset + plane_size;
     }
+
+    size_t tensor_element_size(rknn_tensor_type type) noexcept
+    {
+      switch (type)
+      {
+      case RKNN_TENSOR_FLOAT32:
+      case RKNN_TENSOR_INT32:
+      case RKNN_TENSOR_UINT32:
+        return 4;
+      case RKNN_TENSOR_FLOAT16:
+      case RKNN_TENSOR_INT16:
+      case RKNN_TENSOR_UINT16:
+        return 2;
+      case RKNN_TENSOR_INT8:
+      case RKNN_TENSOR_UINT8:
+      case RKNN_TENSOR_BOOL:
+        return 1;
+      default:
+        return 0;
+      }
+    }
+
+    float float16_to_float32(uint16_t value) noexcept
+    {
+      const uint32_t sign     = static_cast<uint32_t>(value & 0x8000U) << 16;
+      const uint32_t exponent = (value >> 10) & 0x1fU;
+      uint32_t       mantissa = value & 0x03ffU;
+      uint32_t       bits     = 0;
+      if (exponent == 0)
+      {
+        if (mantissa != 0)
+        {
+          uint32_t shift = 0;
+          while ((mantissa & 0x0400U) == 0)
+          {
+            mantissa <<= 1;
+            ++shift;
+          }
+          bits = sign | ((127U - 14U - shift) << 23) | ((mantissa & 0x03ffU) << 13);
+        }
+        else
+          bits = sign;
+      }
+      else if (exponent == 0x1fU)
+        bits = sign | 0x7f800000U | (mantissa << 13);
+      else
+        bits = sign | ((exponent + 112U) << 23) | (mantissa << 13);
+
+      float result = 0.0F;
+      std::memcpy(&result, &bits, sizeof(result));
+      return result;
+    }
+
+    float raw_value_as_float(const void* data, rknn_tensor_type type, size_t index) noexcept
+    {
+      switch (type)
+      {
+      case RKNN_TENSOR_FLOAT32:
+        return static_cast<const float*>(data)[index];
+      case RKNN_TENSOR_FLOAT16:
+        return float16_to_float32(static_cast<const uint16_t*>(data)[index]);
+      case RKNN_TENSOR_INT8:
+        return static_cast<const int8_t*>(data)[index];
+      case RKNN_TENSOR_UINT8:
+        return static_cast<const uint8_t*>(data)[index];
+      case RKNN_TENSOR_INT16:
+        return static_cast<const int16_t*>(data)[index];
+      case RKNN_TENSOR_UINT16:
+        return static_cast<const uint16_t*>(data)[index];
+      case RKNN_TENSOR_INT32:
+        return static_cast<const int32_t*>(data)[index];
+      case RKNN_TENSOR_UINT32:
+        return static_cast<const uint32_t*>(data)[index];
+      default:
+        return 0.0F;
+      }
+    }
   } // namespace
 
   RknnRunner::RknnRunner(RknnRunnerConfig cfg) : _cfg(std::move(cfg)) {}
@@ -85,6 +166,19 @@ namespace omniseer::vision
     return _output_descs;
   }
 
+  RknnImageBindingDesc RknnRunner::image_binding_desc() const noexcept
+  {
+    if (_image_input_index < 0 || static_cast<size_t>(_image_input_index) >= _input_attrs.size())
+      return {};
+
+    const rknn_tensor_attr attr = _image_bind_attr();
+    return {
+        .type         = attr.type,
+        .format       = attr.fmt,
+        .pass_through = attr.pass_through,
+    };
+  }
+
   void RknnRunner::preflight(const ImageBufferPool& pool, const void* text_data, size_t text_bytes)
   {
     _shutdown();
@@ -95,12 +189,14 @@ namespace omniseer::vision
       _init_context_from_model();
       _query_model_io();
       _resolve_input_roles();
+      _debug_log_tensor_metadata("image_bind", _image_bind_attr());
       _prebind_all_image_slots(pool);
       _bind_static_text_input(text_data, text_bytes);
       _prepare_outputs();
       _run_warmup();
 
-      _armed = true;
+      _debug_first_inference_pending = _cfg.debug_first_inference;
+      _armed                         = true;
     }
     catch (...)
     {
@@ -140,18 +236,8 @@ namespace omniseer::vision
       assert(static_cast<size_t>(_image_input_index) < _input_attrs.size());
 
       errno                       = 0;
-      rknn_tensor_attr image_attr = _input_attrs[static_cast<size_t>(_image_input_index)];
-      if (image_attr.type == RKNN_TENSOR_FLOAT16 || image_attr.type == RKNN_TENSOR_FLOAT32)
-      {
-        image_attr.type         = RKNN_TENSOR_UINT8;
-        image_attr.fmt          = RKNN_TENSOR_NHWC;
-        image_attr.pass_through = 0;
-      }
-      else
-      {
-        image_attr.pass_through = 1;
-      }
-      const int rc_set = rknn_set_io_mem(_ctx, binding.mem, &image_attr);
+      rknn_tensor_attr image_attr = _image_bind_attr();
+      const int        rc_set     = rknn_set_io_mem(_ctx, binding.mem, &image_attr);
       if (rc_set != RKNN_SUCC)
         return fail(InferStatus::RknnError, rc_set, (errno != 0) ? errno : EIO);
       _active_image_slot = pool_index;
@@ -168,6 +254,12 @@ namespace omniseer::vision
     const int rc_get = rknn_outputs_get(_ctx, _io_num.n_output, _output_io.data(), nullptr);
     if (rc_get != RKNN_SUCC)
       return fail(InferStatus::RknnError, rc_get, (errno != 0) ? errno : EIO);
+
+    if (_debug_first_inference_pending)
+    {
+      _debug_log_output_statistics();
+      _debug_first_inference_pending = false;
+    }
 
     errno                = 0;
     const int rc_release = rknn_outputs_release(_ctx, _io_num.n_output, _output_io.data());
@@ -206,6 +298,7 @@ namespace omniseer::vision
       if (rc != RKNN_SUCC)
         throw make_rknn_error("rknn_query(RKNN_QUERY_INPUT_ATTR)", rc);
       _input_attrs[static_cast<size_t>(i)] = attr;
+      _debug_log_tensor_metadata("input", attr);
     }
   }
 
@@ -263,7 +356,8 @@ namespace omniseer::vision
 
     rknn_tensor_attr bind_attr = text_attr;
     bind_attr.pass_through     = 1;
-    const int rc_set           = rknn_set_io_mem(_ctx, _text_mem, &bind_attr);
+    _debug_log_tensor_metadata("text_bind", bind_attr);
+    const int rc_set = rknn_set_io_mem(_ctx, _text_mem, &bind_attr);
     if (rc_set != RKNN_SUCC)
       throw make_rknn_error("rknn_set_io_mem(text preflight)", rc_set);
   }
@@ -301,9 +395,13 @@ namespace omniseer::vision
       {
         desc.dims[static_cast<size_t>(dim)] = out.attr.dims[dim];
       }
-      desc.type       = out.attr.type;
-      desc.zero_point = out.attr.zp;
-      desc.scale      = out.attr.scale;
+      desc.type         = out.attr.type;
+      desc.zero_point   = out.attr.zp;
+      desc.scale        = out.attr.scale;
+      desc.format       = out.attr.fmt;
+      desc.quantization = out.attr.qnt_type;
+
+      _debug_log_tensor_metadata("output", out.attr);
 
       out.storage.assign(static_cast<size_t>(out_bytes), 0u);
 
@@ -333,18 +431,8 @@ namespace omniseer::vision
 
     ImageInputBinding& warm_binding = _image_bindings[0];
 
-    rknn_tensor_attr image_attr = _input_attrs[static_cast<size_t>(_image_input_index)];
-    if (image_attr.type == RKNN_TENSOR_FLOAT16 || image_attr.type == RKNN_TENSOR_FLOAT32)
-    {
-      image_attr.type         = RKNN_TENSOR_UINT8;
-      image_attr.fmt          = RKNN_TENSOR_NHWC;
-      image_attr.pass_through = 0;
-    }
-    else
-    {
-      image_attr.pass_through = 1;
-    }
-    int rc = rknn_set_io_mem(_ctx, warm_binding.mem, &image_attr);
+    rknn_tensor_attr image_attr = _image_bind_attr();
+    int              rc         = rknn_set_io_mem(_ctx, warm_binding.mem, &image_attr);
     if (rc != RKNN_SUCC)
       throw make_rknn_error("rknn_set_io_mem(image warmup)", rc);
     _active_image_slot = warm_binding.pool_index;
@@ -365,6 +453,122 @@ namespace omniseer::vision
     }
   }
 
+  rknn_tensor_attr RknnRunner::_image_bind_attr() const noexcept
+  {
+    rknn_tensor_attr image_attr = _input_attrs[static_cast<size_t>(_image_input_index)];
+    image_attr.type             = RKNN_TENSOR_UINT8;
+    image_attr.fmt              = RKNN_TENSOR_NHWC;
+    image_attr.pass_through     = 0;
+    return image_attr;
+  }
+
+  void RknnRunner::_debug_log_tensor_metadata(const char*             direction,
+                                              const rknn_tensor_attr& attr) const
+  {
+    if (!_cfg.debug_tensor_metadata)
+      return;
+
+    std::fprintf(stderr, "RKNN_DIAG tensor direction=%s index=%u name=%s dtype=%s format=%s dims=",
+                 direction, attr.index, attr.name, get_type_string(attr.type),
+                 get_format_string(attr.fmt));
+    for (uint32_t dim = 0; dim < attr.n_dims; ++dim)
+      std::fprintf(stderr, "%s%u", (dim == 0) ? "[" : ",", attr.dims[dim]);
+    std::fprintf(stderr,
+                 "] quantization=%s zero_point=%d scale=%.9g bytes=%u bytes_with_stride=%u "
+                 "pass_through=%u\n",
+                 get_qnt_type_string(attr.qnt_type), attr.zp, static_cast<double>(attr.scale),
+                 attr.size, attr.size_with_stride, attr.pass_through);
+  }
+
+  void RknnRunner::_debug_log_output_statistics() const noexcept
+  {
+    for (const OutputBinding& out : _output_bindings)
+    {
+      const size_t element_size = tensor_element_size(out.attr.type);
+      if (element_size == 0 || out.storage.size() < element_size)
+      {
+        std::fprintf(stderr,
+                     "RKNN_DIAG output_stats index=%u name=%s unsupported_dtype=%s bytes=%zu\n",
+                     out.attr.index, out.attr.name, get_type_string(out.attr.type),
+                     out.storage.size());
+        continue;
+      }
+
+      const size_t elements =
+          std::min(static_cast<size_t>(out.attr.n_elems), out.storage.size() / element_size);
+      if (elements == 0)
+      {
+        std::fprintf(stderr, "RKNN_DIAG output_stats index=%u name=%s elements=0\n", out.attr.index,
+                     out.attr.name);
+        continue;
+      }
+
+      float       raw_min = raw_value_as_float(out.storage.data(), out.attr.type, 0);
+      float       raw_max = raw_min;
+      const float first_dequantized =
+          (out.attr.qnt_type == RKNN_TENSOR_QNT_AFFINE_ASYMMETRIC)
+              ? (raw_min - static_cast<float>(out.attr.zp)) * out.attr.scale
+              : raw_min;
+      float                 deq_min   = first_dequantized;
+      float                 deq_max   = first_dequantized;
+      float                 score_max = -std::numeric_limits<float>::infinity();
+      size_t                above_001 = 0;
+      size_t                above_010 = 0;
+      size_t                above_025 = 0;
+      std::array<bool, 256> seen_i8{};
+      size_t                unique_i8         = 0;
+      const bool            is_classification = out.attr.n_dims == 4 && out.attr.dims[1] != 4;
+
+      for (size_t i = 0; i < elements; ++i)
+      {
+        const float raw         = raw_value_as_float(out.storage.data(), out.attr.type, i);
+        raw_min                 = std::min(raw_min, raw);
+        raw_max                 = std::max(raw_max, raw);
+        const float dequantized = (out.attr.qnt_type == RKNN_TENSOR_QNT_AFFINE_ASYMMETRIC)
+                                      ? (raw - static_cast<float>(out.attr.zp)) * out.attr.scale
+                                      : raw;
+        deq_min                 = std::min(deq_min, dequantized);
+        deq_max                 = std::max(deq_max, dequantized);
+
+        if (out.attr.type == RKNN_TENSOR_INT8)
+        {
+          const uint8_t key =
+              static_cast<uint8_t>(reinterpret_cast<const int8_t*>(out.storage.data())[i]) + 128U;
+          if (!seen_i8[key])
+          {
+            seen_i8[key] = true;
+            ++unique_i8;
+          }
+        }
+
+        if (is_classification)
+        {
+          score_max = std::max(score_max, dequantized);
+          above_001 += (dequantized > 0.01F) ? 1u : 0u;
+          above_010 += (dequantized > 0.10F) ? 1u : 0u;
+          above_025 += (dequantized > 0.25F) ? 1u : 0u;
+        }
+      }
+
+      std::fprintf(stderr,
+                   "RKNN_DIAG output_stats index=%u name=%s raw_min=%.9g raw_max=%.9g "
+                   "dequantized_min=%.9g dequantized_max=%.9g",
+                   out.attr.index, out.attr.name, static_cast<double>(raw_min),
+                   static_cast<double>(raw_max), static_cast<double>(deq_min),
+                   static_cast<double>(deq_max));
+      if (out.attr.type == RKNN_TENSOR_INT8)
+        std::fprintf(stderr, " unique_int8_values=%zu", unique_i8);
+      if (is_classification)
+      {
+        std::fprintf(stderr,
+                     " classification_max_dequantized_score=%.9g count_gt_0.01=%zu "
+                     "count_gt_0.10=%zu count_gt_0.25=%zu",
+                     static_cast<double>(score_max), above_001, above_010, above_025);
+      }
+      std::fprintf(stderr, "\n");
+    }
+  }
+
   bool RknnRunner::_validate_image_descriptor(const ImageBuffer& input) const noexcept
   {
     if (_image_input_index < 0 || static_cast<size_t>(_image_input_index) >= _input_attrs.size())
@@ -380,11 +584,7 @@ namespace omniseer::vision
     if (p.stride == 0)
       return false;
 
-    const rknn_tensor_attr& image_attr = _input_attrs[static_cast<size_t>(_image_input_index)];
-    const bool              fp_image =
-        image_attr.type == RKNN_TENSOR_FLOAT16 || image_attr.type == RKNN_TENSOR_FLOAT32;
-    const uint32_t required_bytes = fp_image ? p.stride * static_cast<uint32_t>(input.size.h)
-                                             : tensor_bytes_for_attr(image_attr);
+    const uint32_t required_bytes = p.stride * static_cast<uint32_t>(input.size.h);
     if (required_bytes == 0)
       return false;
 
@@ -417,13 +617,9 @@ namespace omniseer::vision
     if (p.offset > static_cast<uint32_t>(std::numeric_limits<int32_t>::max()))
       throw std::runtime_error("RknnRunner::preflight: input offset exceeds int32 range");
 
-    const rknn_tensor_attr& image_attr = _input_attrs[static_cast<size_t>(_image_input_index)];
-    const uint32_t          input_bytes =
-        (image_attr.type == RKNN_TENSOR_FLOAT16 || image_attr.type == RKNN_TENSOR_FLOAT32)
-                     ? p.stride * static_cast<uint32_t>(input.size.h)
-                     : tensor_bytes_for_attr(image_attr);
-    const size_t map_size = map_size_for_input(input);
-    void*        mapped   = ::mmap(nullptr, map_size, PROT_READ | PROT_WRITE, MAP_SHARED, p.fd, 0);
+    const uint32_t input_bytes = p.stride * static_cast<uint32_t>(input.size.h);
+    const size_t   map_size    = map_size_for_input(input);
+    void*          mapped = ::mmap(nullptr, map_size, PROT_READ | PROT_WRITE, MAP_SHARED, p.fd, 0);
     if (mapped == MAP_FAILED)
     {
       throw std::runtime_error("RknnRunner::preflight: mmap input failed: " +
@@ -504,7 +700,8 @@ namespace omniseer::vision
     _active_image_slot = -1;
     _io_num            = rknn_input_output_num{};
     _input_attrs.clear();
-    _image_input_index = -1;
-    _text_input_index  = -1;
+    _image_input_index             = -1;
+    _text_input_index              = -1;
+    _debug_first_inference_pending = false;
   }
 } // namespace omniseer::vision

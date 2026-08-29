@@ -277,6 +277,20 @@ TEST_F(RknnRunnerSmokeTest, PreflightArmsRunner)
   }
 }
 
+TEST_F(RknnRunnerSmokeTest, Int8ModelBindsRgb888ForRuntimeQuantization)
+{
+  omniseer::vision::RknnRunnerConfig cfg{};
+  cfg.model_path  = model_path_;
+  cfg.warmup_runs = 0;
+  omniseer::vision::RknnRunner runner(cfg);
+
+  ASSERT_NO_THROW(runner.preflight(pool_, text_i8_.data(), text_i8_.size()));
+  const auto binding = runner.image_binding_desc();
+  EXPECT_EQ(binding.type, RKNN_TENSOR_UINT8);
+  EXPECT_EQ(binding.format, RKNN_TENSOR_NHWC);
+  EXPECT_EQ(binding.pass_through, 0u);
+}
+
 TEST(RknnRunnerFpSmokeTest, PreflightAcceptsRgb8DmaBuffer)
 {
   const std::string model = fp_model_path();

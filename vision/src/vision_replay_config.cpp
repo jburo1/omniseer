@@ -48,6 +48,8 @@ namespace omniseer::vision
            "  --score-threshold <f>    Minimum detection confidence (default: 0.25)\n"
            "  --nms-iou-threshold <f>  Per-class NMS IoU threshold (default: 0.45)\n"
            "  --max-detections <u32>   Maximum detections per frame (default: 100)\n"
+           "  --rknn-debug            Print tensor metadata and first-inference raw output "
+           "statistics\n"
            "  --help                   Show this help\n";
   }
 
@@ -115,6 +117,8 @@ namespace omniseer::vision
                                      std::string(value));
           }
         }
+        else if (arg == "--rknn-debug")
+          config.debug_rknn = true;
         else
         {
           throw std::runtime_error("unknown argument: " + arg);
