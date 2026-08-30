@@ -937,6 +937,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#raw-rknn-output-probe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Raw RKNN Output Probe
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#runbundle-six-model-comparison" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1361,6 +1372,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#raw-rknn-output-probe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Raw RKNN Output Probe
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#runbundle-six-model-comparison" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1641,6 +1663,24 @@ It writes exactly one canonical JSONL record for every decoded frame, including 
 with no detections. <code>frame_index</code> is the replay identity; the JSONL contains no wall-clock
 or inference-latency fields.</p>
 <p>This is an offline validation tool and is not part of the camera/ROS production runtime.</p>
+<h2 id="raw-rknn-output-probe">Raw RKNN Output Probe<a class="headerlink" href="#raw-rknn-output-probe" title="Permanent link">&para;</a></h2>
+<p>The robot runtime image also contains <code>/usr/local/bin/vision_rknn_probe</code> for controlled
+host-versus-RK3588 output parity checks. It runs one still image through the production
+CPU letterbox, YOLO-World text-embedding preparation, and <code>RknnRunner</code>, then stops before
+YOLO decoding and NMS. It writes portable raw <code>output_&lt;index&gt;.bin</code> files plus
+<code>metadata.json</code> (RKNN shape/type/quantization and dequantized statistics) to the selected
+directory.</p>
+<div class="highlight"><pre><span></span><code>vision_rknn_probe<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--detector-model<span class="w"> </span>/models/yolo_world.rknn<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--image<span class="w"> </span>/data/frame.png<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--classes<span class="w"> </span>/data/classes.txt<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--clip-model<span class="w"> </span>/models/clip_text.rknn<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--clip-vocab<span class="w"> </span>/models/clip_vocab.bpe<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--output-dir<span class="w"> </span>/data/rknn-probe
+</code></pre></div>
+<p>Use repeated <code>--class &lt;name&gt;</code> instead of <code>--classes</code> when a temporary class list is more
+convenient. This diagnostic tool is separate from <code>vision_replay</code> and is not a production
+inference path.</p>
 <h2 id="runbundle-six-model-comparison">RunBundle Six-Model Comparison<a class="headerlink" href="#runbundle-six-model-comparison" title="Permanent link">&para;</a></h2>
 <p><code>scripts/omni runs compare &lt;run_dir&gt;</code> is the ROCK 5B+ devcontainer offline comparison
 workflow. It uses <code>&lt;repo&gt;/runs/model_artifacts</code> for model artifacts and
@@ -1731,7 +1771,7 @@ the comparison before rendering.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 28, 2026 21:37:26 UTC">August 28, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 30, 2026 19:09:49 UTC">August 30, 2026</span>
   </span>
 
     
