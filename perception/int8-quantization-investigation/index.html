@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://jburo1.github.io/omniseer/robot-runtime/ros-packages/">
+        <link rel="canonical" href="https://jburo1.github.io/omniseer/perception/int8-quantization-investigation/">
       
       
-        <link rel="prev" href="../robot-runtime-container/">
+        <link rel="prev" href="../yolo-world-model-deployment/">
       
       
-        <link rel="next" href="../../firmware/overview/">
+        <link rel="next" href="../vision-telemetry/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>ROS Packages and Sim/Real Boundary - Omniseer</title>
+        <title>INT8 Quantization Investigation - Omniseer</title>
       
     
     
@@ -67,13 +67,13 @@
   
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Omniseer">
-  <meta property="og:title" content="ROS Packages and Sim/Real Boundary - Omniseer">
+  <meta property="og:title" content="INT8 Quantization Investigation - Omniseer">
   <meta property="og:description" content="Edge-to-cloud ROS 2 robot for open-vocabulary perception and reproducible edge-AI experiments">
-  <meta property="og:url" content="https://jburo1.github.io/omniseer/robot-runtime/ros-packages/">
+  <meta property="og:url" content="https://jburo1.github.io/omniseer/perception/int8-quantization-investigation/">
   <meta property="og:image" content="https://jburo1.github.io/omniseer/assets/brand/social-preview.png">
   <meta property="og:image:type" content="image/png">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="ROS Packages and Sim/Real Boundary - Omniseer">
+  <meta name="twitter:title" content="INT8 Quantization Investigation - Omniseer">
   <meta name="twitter:description" content="Edge-to-cloud ROS 2 robot for open-vocabulary perception and reproducible edge-AI experiments">
   <meta name="twitter:image" content="https://jburo1.github.io/omniseer/assets/brand/social-preview.png">
 
@@ -94,7 +94,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#ros-packages-and-simreal-boundary" class="md-skip">
+        <a href="#yolo-world-v2-int8-quantization-investigation" class="md-skip">
           Skip to content
         </a>
       
@@ -129,7 +129,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              ROS Packages and Sim/Real Boundary
+              INT8 Quantization Investigation
             
           </span>
         </div>
@@ -350,7 +350,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../perception/edge-to-cloud/" class="md-nav__link">
+      <a href="../edge-to-cloud/" class="md-nav__link">
         
   
   
@@ -627,7 +627,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../robot-runtime-container/" class="md-nav__link">
+      <a href="../../robot-runtime/robot-runtime-container/" class="md-nav__link">
         
   
   
@@ -708,37 +708,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    ROS Packages and Sim/Real Boundary
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../robot-runtime/ros-packages/" class="md-nav__link">
         
   
   
@@ -754,125 +727,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#purpose" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Purpose
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#current-boundary-contract" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Current Boundary Contract
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#simulation-producers" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Simulation Producers
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#real-hardware-producers" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Real-Hardware Producers
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#shared-launch-composition" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Shared Launch Composition
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#adapter-responsibilities" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Adapter Responsibilities
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#remaining-parity-gaps" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Remaining Parity Gaps
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#verification-boundary" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Verification Boundary
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#primary-implementation-files" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Primary Implementation Files
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -913,7 +767,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../perception/vision-pipeline/" class="md-nav__link">
+      <a href="../vision-pipeline/" class="md-nav__link">
         
   
   
@@ -941,7 +795,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../perception/yolo-world-model-deployment/" class="md-nav__link">
+      <a href="../yolo-world-model-deployment/" class="md-nav__link">
         
   
   
@@ -966,10 +820,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../perception/int8-quantization-investigation/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    INT8 Quantization Investigation
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -985,6 +866,70 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#conclusions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conclusions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reproducible-host-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reproducible host analysis
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fixed-inputs-and-conversion-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed inputs and conversion contract
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#discarded-raw-traces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Discarded raw traces
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -997,7 +942,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../perception/vision-telemetry/" class="md-nav__link">
+      <a href="../vision-telemetry/" class="md-nav__link">
         
   
   
@@ -1218,10 +1163,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#purpose" class="md-nav__link">
+  <a href="#conclusions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Purpose
+        Conclusions
       
     </span>
   </a>
@@ -1229,10 +1174,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#current-boundary-contract" class="md-nav__link">
+  <a href="#reproducible-host-analysis" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current Boundary Contract
+        Reproducible host analysis
       
     </span>
   </a>
@@ -1240,10 +1185,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#simulation-producers" class="md-nav__link">
+  <a href="#fixed-inputs-and-conversion-contract" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Simulation Producers
+        Fixed inputs and conversion contract
       
     </span>
   </a>
@@ -1251,65 +1196,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#real-hardware-producers" class="md-nav__link">
+  <a href="#discarded-raw-traces" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Real-Hardware Producers
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#shared-launch-composition" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Shared Launch Composition
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#adapter-responsibilities" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Adapter Responsibilities
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#remaining-parity-gaps" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Remaining Parity Gaps
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#verification-boundary" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Verification Boundary
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#primary-implementation-files" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Primary Implementation Files
+        Discarded raw traces
       
     </span>
   </a>
@@ -1336,253 +1226,115 @@
   
 
 
-<h1 id="ros-packages-and-simreal-boundary">ROS Packages and Sim/Real Boundary<a class="headerlink" href="#ros-packages-and-simreal-boundary" title="Permanent link">&para;</a></h1>
-<h2 id="purpose">Purpose<a class="headerlink" href="#purpose" title="Permanent link">&para;</a></h2>
-<p>This page is the current reference for the ROS boundary between Gazebo
-simulation and the physical robot. The boundary is the set of normalized ROS
-contracts consumed by localization, mapping, navigation, autonomy, and
-operator tooling. Provider-specific transport, sensor, and compute details
-remain below it.</p>
-<p>Simulation validates launch composition and the ROS contracts it exercises. It
-does not validate physical sensor behavior, firmware timing, micro-ROS
-transport, camera acceleration, calibration, or robot motion.</p>
-<h2 id="current-boundary-contract">Current Boundary Contract<a class="headerlink" href="#current-boundary-contract" title="Permanent link">&para;</a></h2>
-<p><code>twist_mux</code> publishes the stamped command contract used by both providers. The
-simulated <code>mecanum_drive_controller</code> and the Teensy firmware both consume
-<code>/mecanum_drive_controller/reference</code>; the controller-shaped topic name is
-therefore part of the current public boundary.</p>
-<p>The common graph consumes wheel odometry, IMU, and scan data through the same
-topic names. <code>robot_io_adapters</code> derives real wheel odometry from the raw
-encoder-count topic so that both paths expose
-<code>/mecanum_drive_controller/odometry</code>.</p>
-<table>
-<thead>
-<tr>
-<th>Topic or service</th>
-<th>Type</th>
-<th>Simulation producer</th>
-<th>Real-hardware producer</th>
-<th>Current consumers / status</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>/mecanum_drive_controller/reference</code></td>
-<td><code>geometry_msgs/msg/TwistStamped</code></td>
-<td><code>twist_mux</code> feeds the Gazebo <code>mecanum_drive_controller</code></td>
-<td><code>twist_mux</code> feeds the Teensy through the micro-ROS agent</td>
-<td>Command input for both motion providers. Firmware retains motor control, kinematics, and timeout handling.</td>
-</tr>
-<tr>
-<td><code>/mecanum_drive_controller/odometry</code></td>
-<td><code>nav_msgs/msg/Odometry</code></td>
-<td>Gazebo <code>mecanum_drive_controller</code></td>
-<td><code>encoder_counts_to_odometry</code> derives it from Teensy <code>/encoder_counts</code></td>
-<td>EKF. Frame IDs are configured as <code>odom</code> and <code>base_link</code>.</td>
-</tr>
-<tr>
-<td><code>/imu</code></td>
-<td><code>sensor_msgs/msg/Imu</code></td>
-<td>Gazebo sensor through <code>ros_gz_bridge</code></td>
-<td>Teensy micro-ROS publisher</td>
-<td>EKF.</td>
-</tr>
-<tr>
-<td><code>/scan</code></td>
-<td><code>sensor_msgs/msg/LaserScan</code></td>
-<td>Gazebo LiDAR through <code>ros_gz_bridge</code></td>
-<td><code>rplidar_ros</code></td>
-<td>RF2O, SLAM, and Nav2.</td>
-</tr>
-<tr>
-<td><code>/range</code></td>
-<td><code>sensor_msgs/msg/Range</code></td>
-<td><code>scan_to_range</code> converts the Gazebo <code>/sonar</code> <code>LaserScan</code></td>
-<td>Teensy HC-SR04 publisher</td>
-<td>Optional target-centering autonomy input. The simulated conversion is a contract adapter, not a physical-sonar equivalence claim.</td>
-</tr>
-<tr>
-<td><code>/yolo/detections</code></td>
-<td><code>yolo_msgs/msg/DetectionArray</code></td>
-<td>Optional <code>yolo_bringup</code> YOLO-World provider using <code>/front_camera/image</code></td>
-<td><code>omniseer_vision_bridge</code> native runtime</td>
-<td>Optional gateway, target-centering autonomy, and run recording.</td>
-</tr>
-<tr>
-<td><code>/vision/perf</code></td>
-<td><code>omniseer_msgs/msg/VisionPerfSummary</code></td>
-<td>No producer</td>
-<td><code>omniseer_vision_bridge</code> native runtime</td>
-<td>Optional gateway and run recording; absent in normal simulation.</td>
-</tr>
-<tr>
-<td><code>/battery</code></td>
-<td><code>sensor_msgs/msg/BatteryState</code></td>
-<td>No producer</td>
-<td>Teensy micro-ROS publisher</td>
-<td>Optional gateway and run recording; absent in simulation.</td>
-</tr>
-<tr>
-<td><code>/vision/capture_frame</code></td>
-<td><code>omniseer_msgs/srv/CaptureFrame</code></td>
-<td>No provider</td>
-<td><code>omniseer_vision_bridge</code></td>
-<td>Optional target-centering evidence capture. This is a real-vision capability, not a sim/real-parity contract.</td>
-</tr>
-</tbody>
-</table>
-<p><code>/encoder_counts</code> (<code>omniseer_msgs/msg/WheelEncoderCounts</code>) is intentionally
-below the common boundary. It is a real-only firmware output consumed by the
-odometry adapter, not a topic required by simulation consumers. The message
-contains a timestamp and front-left, front-right, rear-left, and rear-right
-counts.</p>
-<p>Raw camera input is also provider-local: Gazebo publishes
-<code>/front_camera/image</code> through <code>ros_gz_image</code>, while the native vision runtime
-captures from its configured V4L2 device. The shared perception output is
-<code>/yolo/detections</code>.</p>
-<h2 id="simulation-producers">Simulation Producers<a class="headerlink" href="#simulation-producers" title="Permanent link">&para;</a></h2>
-<p><code>sim_io.launch.py</code> owns Gazebo, the Gazebo bridges, robot spawning, the
-Gazebo-backed controller path, and the scan-to-range adapter. The Gazebo model
-in <code>omniseer.urdf.xacro</code> defines the camera, sonar, LiDAR, IMU,
-<code>gz_ros2_control</code>, and the odometry publisher. <code>bridge_config.yaml</code> bridges
-<code>/clock</code>, <code>/imu</code>, <code>/scan</code>, <code>/sonar</code>, and <code>/front_camera/camera_info</code>; the
-separate image bridge exposes <code>/front_camera/image</code>.</p>
-<p>The optional simulation detection provider is launched by
-<code>perception.launch.py</code> when <code>start_yolo:=true</code>. It uses the simulation image
-topic and publishes under the <code>yolo</code> namespace, including
-<code>/yolo/detections</code>.</p>
-<h2 id="real-hardware-producers">Real-Hardware Producers<a class="headerlink" href="#real-hardware-producers" title="Permanent link">&para;</a></h2>
-<p><code>real_io.launch.py</code> starts the real I/O side:</p>
+<h1 id="yolo-world-v2-int8-quantization-investigation">YOLO-World v2 INT8 Quantization Investigation<a class="headerlink" href="#yolo-world-v2-int8-quantization-investigation" title="Permanent link">&para;</a></h1>
+<p>This record preserves the conclusions of the 2026-08-29 RKNN quantization
+investigation. Raw Toolkit simulator snapshots are intentionally ignored under
+<code>artifacts/quant_analysis/</code>; they are reproducible diagnostic output, not
+source evidence.</p>
+<h2 id="conclusions">Conclusions<a class="headerlink" href="#conclusions" title="Permanent link">&para;</a></h2>
 <ul>
-<li>a Teensy device preflight followed by <code>micro_ros_agent</code> when enabled;</li>
-<li>the RPLidar driver publishing <code>/scan</code> when enabled; and</li>
-<li><code>encoder_counts_to_odometry</code>, configured by <code>encoder_odometry.yaml</code>.</li>
+<li>The original controlled S/M/L FP-versus-INT8 comparison found viable INT8
+  behavior for v2-S and v2-M, while v2-L INT8 diverged materially from its FP
+  result.</li>
+<li>Recalibration with 100 representative robot frames preserved the viable S/M
+  result but did not make v2-L INT8 deployment-ready.</li>
+<li>The native image input binding was corrected to bind RGB888 as <code>UINT8</code>,
+  <code>NHWC</code>, and <code>pass_through=0</code>, allowing RKNN runtime quantization instead of
+  passing RGB pixels through as the model's declared floating input type.</li>
+<li>On the controlled <code>bus.jpg</code> input, v2-M is a healthy layer-wise control.
+  It is evidence for this investigation, not a declaration of a final
+  supported model baseline.</li>
+<li>The v2-L INT8 simulator error becomes material around
+  <code>neck/top_down_layers.0</code> and compounds through later top-down, bottom-up,
+  and detection-head layers. v2-L INT8 is therefore not deployment-ready;
+  v2-S and v2-M remain viable pending hardware validation.</li>
+<li>An initial v2-L hybrid experiment kept the two
+  <code>neck/top_down_layers.0/final_conv</code> outputs in FP16. Its current status is
+  diagnostic-only: it has not completed a controlled comparison or hardware
+  validation and is not a deployment candidate.</li>
+<li>All conclusions above remain host-simulator results. Real RK3588 hardware
+  inference, latency, thermal behavior, and end-to-end detection validation
+  are still pending.</li>
 </ul>
-<p>The firmware publishes <code>/encoder_counts</code>, <code>/imu</code>, <code>/range</code>, and <code>/battery</code>,
-and subscribes to <code>/mecanum_drive_controller/reference</code> as a
-<code>TwistStamped</code> message. The firmware continues to own command handling,
-mecanum kinematics, motor output, encoder acquisition, IMU acquisition, and
-sonar acquisition.</p>
-<p><code>real.launch.py</code> separately includes <code>real_vision.launch.py</code> by default.
-That launch starts <code>omniseer_vision_bridge</code>, which publishes
-<code>/yolo/detections</code> and <code>/vision/perf</code> and serves <code>/vision/capture_frame</code>.
-It is a real-only dependency on the configured camera, native vision runtime,
-and its model assets.</p>
-<h2 id="shared-launch-composition">Shared Launch Composition<a class="headerlink" href="#shared-launch-composition" title="Permanent link">&para;</a></h2>
-<p>The launch composition in the repository is:</p>
-<div class="highlight"><pre><span></span><code>sim.launch.py   = pre-launch cleanup + sim_io.launch.py  + common.launch.py + optional RViz
-real.launch.py  = pre-launch cleanup + real_io.launch.py + real_vision.launch.py
-                  + common.launch.py + optional autonomy, recording, and gateway
+<h2 id="reproducible-host-analysis">Reproducible host analysis<a class="headerlink" href="#reproducible-host-analysis" title="Permanent link">&para;</a></h2>
+<p>Build the pinned host model-builder image and run any variant:</p>
+<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>model<span class="w"> </span>image
+scripts/omni<span class="w"> </span>model<span class="w"> </span>analyze<span class="w"> </span>--variant<span class="w"> </span>v2s
+scripts/omni<span class="w"> </span>model<span class="w"> </span>analyze<span class="w"> </span>--variant<span class="w"> </span>v2m
+scripts/omni<span class="w"> </span>model<span class="w"> </span>analyze<span class="w"> </span>--variant<span class="w"> </span>v2l
 </code></pre></div>
-<p><code>common.launch.py</code> starts the layers shared by the two top-level paths:</p>
-<ul>
-<li><code>description.launch.py</code> and <code>robot_state_publisher</code>;</li>
-<li>EKF using either <code>ekf_fusion.yaml</code> or <code>ekf_fusion_real.yaml</code>;</li>
-<li><code>perception.launch.py</code>, which hosts SLAM, RF2O, and the optional YOLO
-  provider;</li>
-<li><code>twist_mux</code>; and</li>
-<li>Nav2 after <code>/odometry/filtered</code> and <code>/map</code> are available.</li>
-</ul>
-<p>The gateway is optional in the shared launch. In the real top-level launch,
-optional target-centering autonomy and RunBundle recording are added outside
-the common layer.</p>
-<p><code>real.launch.py</code> defaults to waiting for first messages on <code>/imu</code>,
-<code>/encoder_counts</code>, <code>/scan</code>, and <code>/mecanum_drive_controller/odometry</code> before it
-starts the common graph. It starts a baseline <code>twist_mux</code> while that wait runs,
-so teleoperation remains available. The check is a launch precondition, not
-hardware acceptance evidence.</p>
-<p>The currently shared description launch uses
-<code>omniseer_description/urdf/xacro/omniseer.urdf.xacro</code>. That xacro still embeds
-Gazebo sensors, Gazebo friction, and <code>gz_ros2_control</code>; it is shared as a
-launch file, not yet a simulation-free robot-description artifact.</p>
-<h2 id="adapter-responsibilities">Adapter Responsibilities<a class="headerlink" href="#adapter-responsibilities" title="Permanent link">&para;</a></h2>
-<p><code>robot_io_adapters</code> contains compute-bearing conversions only:</p>
-<ul>
-<li><code>encoder_counts_to_odometry</code> integrates the real
-  <code>WheelEncoderCounts</code> stream with configured mecanum geometry and publishes
-  <code>nav_msgs/msg/Odometry</code>. It uses explicit wheel ordering, timestamps, and
-  <code>odom</code>/<code>base_link</code> frame parameters.</li>
-<li><code>scan_to_range</code> converts a <code>sensor_msgs/msg/LaserScan</code> source to
-  <code>sensor_msgs/msg/Range</code>. Simulation uses it to expose <code>/range</code> from the
-  Gazebo sonar scan.</li>
-</ul>
-<p>The package does not provide name-only relays. Simulation and firmware publish
-the aligned command, IMU, and range names directly.</p>
-<h2 id="remaining-parity-gaps">Remaining Parity Gaps<a class="headerlink" href="#remaining-parity-gaps" title="Permanent link">&para;</a></h2>
-<ul>
-<li>The shared xacro contains Gazebo-only sensors, plugins, and control blocks.</li>
-<li>The optional simulation YOLO provider remains in <code>perception.launch.py</code>,
-  which is included by <code>common.launch.py</code>, rather than in <code>sim_io.launch.py</code>.</li>
-<li>Simulation has no <code>/vision/perf</code>, <code>/battery</code>, or <code>/vision/capture_frame</code>
-  provider. Those are optional real-side capabilities.</li>
-<li>The simulation EKF configuration fuses wheel odometry, RF2O odometry, and
-  IMU; the real default configuration fuses wheel odometry and IMU only.
-  Real RF2O may still be launched, but it is not an input to the real-default
-  EKF configuration.</li>
-<li>The smoke test checks topic existence and type only. It does not assert the
-  command topic, <code>/range</code>, perception topics, frame IDs, timestamps, rates,
-  stale-data behavior, control timeouts, or simulated/real sensor fidelity.</li>
-<li>There is no mocked real-I/O launch smoke path. The real launch requires its
-  configured Teensy and LiDAR inputs when their enabled defaults are used.</li>
-</ul>
-<h2 id="verification-boundary">Verification Boundary<a class="headerlink" href="#verification-boundary" title="Permanent link">&para;</a></h2>
-<p>The ROS CI job builds and tests the portable ROS package set and runs the
-headless Gazebo smoke test. The smoke test launches <code>bringup sim.launch.py</code>
-with navigation, SLAM, RF2O, RViz, and gateway disabled, then verifies that
-the running launch reports these topic types:</p>
+<p><code>model analyze</code> runs only the RKNN Toolkit2 host simulator. It neither opens
+ADB nor contacts a board. It rebuilds the selected ONNX as INT8 and writes a
+throwaway report and snapshots to <code>artifacts/quant_analysis/&lt;variant&gt;/</code>; that
+directory must otherwise be empty so a report cannot be mistaken for a new
+run. Delete it before rerunning the same variant.</p>
+<p>The controlled input is
+<code>models/source/yolo_world/calibration/bus.jpg</code>. Analysis uses the runtime text
+input <code>[1,80,512]</code> <code>float32</code>: <code>person</code>, <code>bus</code>, then 78 <code>nothing</code> rows. This is
+deliberately distinct from the 80-label calibration vocabulary used to build
+the representative dataset.</p>
+<h2 id="fixed-inputs-and-conversion-contract">Fixed inputs and conversion contract<a class="headerlink" href="#fixed-inputs-and-conversion-contract" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Topic</th>
-<th>Required type in smoke test</th>
+<th>Item</th>
+<th>Value</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>/clock</code></td>
-<td><code>rosgraph_msgs/msg/Clock</code></td>
+<td>Builder</td>
+<td>RKNN Toolkit2 <code>2.1.0+708089d1</code>, source <code>deaba85fc437a28db0b0c29f27d8929f4c5816a1</code></td>
 </tr>
 <tr>
-<td><code>/imu</code></td>
-<td><code>sensor_msgs/msg/Imu</code></td>
+<td>YOLO-World exporter</td>
+<td>Rockchip fork <code>b8b0fe9beffa9564306a798f6e443c9fe88057af</code></td>
 </tr>
 <tr>
-<td><code>/scan</code></td>
-<td><code>sensor_msgs/msg/LaserScan</code></td>
+<td>Target conversion contract</td>
+<td>RK3588; <code>images=[1,3,640,640]</code>, <code>texts=[1,80,512]</code></td>
 </tr>
 <tr>
-<td><code>/mecanum_drive_controller/odometry</code></td>
-<td><code>nav_msgs/msg/Odometry</code></td>
+<td>Image conversion</td>
+<td><code>mean=[0,0,0]</code>, <code>std=[255,255,255]</code>; named <code>images</code>, <code>texts</code> inputs</td>
+</tr>
+<tr>
+<td>Quantization</td>
+<td>Toolkit <code>build(do_quantization=True)</code> using <code>models/source/yolo_world/calibration/dataset.txt</code></td>
+</tr>
+<tr>
+<td>Calibration set</td>
+<td>100 robot frames plus one generated fixed-shape CLIP text input per dataset entry</td>
+</tr>
+<tr>
+<td>Postprocess thresholds for controlled runtime comparisons</td>
+<td>score <code>0.25</code>; NMS IoU <code>0.45</code></td>
 </tr>
 </tbody>
 </table>
-<p>This CI coverage verifies the tested simulation launch and four interfaces. It
-does not verify the physical robot. Hardware acceptance requires the target
-SBC, Teensy, LiDAR, camera, micro-ROS transport, native vision dependencies,
-and an observed run with the applicable sensors and safety controls.</p>
-<h2 id="primary-implementation-files">Primary Implementation Files<a class="headerlink" href="#primary-implementation-files" title="Permanent link">&para;</a></h2>
-<ul>
-<li><code>ros_ws/src/bringup/launch/common.launch.py</code></li>
-<li><code>ros_ws/src/bringup/launch/description.launch.py</code></li>
-<li><code>ros_ws/src/bringup/launch/sim.launch.py</code></li>
-<li><code>ros_ws/src/bringup/launch/sim_io.launch.py</code></li>
-<li><code>ros_ws/src/bringup/launch/real.launch.py</code></li>
-<li><code>ros_ws/src/bringup/launch/real_io.launch.py</code></li>
-<li><code>ros_ws/src/bringup/launch/real_vision.launch.py</code></li>
-<li><code>ros_ws/src/bringup/launch/perception.launch.py</code></li>
-<li><code>ros_ws/src/bringup/config/bridge_config.yaml</code></li>
-<li><code>ros_ws/src/bringup/config/encoder_odometry.yaml</code></li>
-<li><code>ros_ws/src/bringup/config/ekf_fusion.yaml</code></li>
-<li><code>ros_ws/src/bringup/config/ekf_fusion_real.yaml</code></li>
-<li><code>ros_ws/src/bringup/config/twist_mux.yaml</code></li>
-<li><code>ros_ws/src/robot_io_adapters/src/encoder_counts_to_odometry_node.cpp</code></li>
-<li><code>ros_ws/src/robot_io_adapters/src/scan_to_range_node.cpp</code></li>
-<li><code>ros_ws/src/omniseer_description/urdf/xacro/omniseer.urdf.xacro</code></li>
-<li><code>firmware/include/micro_ros_config.hpp</code></li>
-<li><code>firmware/src/micro_ros_node.cpp</code></li>
-<li><code>ros_ws/src/bringup/test/test_sim_launch_smoke.py</code></li>
-<li><code>.github/workflows/ci.yml</code></li>
-</ul>
+<p>The exact local input hashes recorded during the investigation were:</p>
+<div class="highlight"><pre><span></span><code>yolo_world_v2_s.onnx  0b5f46756f56fbaba1178413fb5bc0db2660353adc821dd0744161c9cba2bf41
+yolo_world_v2_m.onnx  f3aeb4c93001d9faef04de68f573693238322030b0a2c1b0e0228bb460f31326
+yolo_world_v2_l.onnx  b7d5cd79a887ff6d78d711a3676acba427545e28383de363913b5ecd63e6649a
+dataset.txt           4d55fef03384759c8753f83bbaed24714687c13b6a17f43a62db3ec0c1a0120d
+calibration_text_outp.npy
+                      9cfb78cef21252785897d52519c91af583a7a7117e4fd541716563b360698d8e
+bus.jpg               33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c
+</code></pre></div>
+<p>The v2-S, v2-M, and v2-L ONNX artifacts above had sizes 51,067,624,
+113,524,529, and 187,339,766 bytes, respectively. Regenerate and record new
+hashes whenever the exporter, source checkpoint, calibration dataset, CLIP
+snapshot, or controlled input changes.</p>
+<h2 id="discarded-raw-traces">Discarded raw traces<a class="headerlink" href="#discarded-raw-traces" title="Permanent link">&para;</a></h2>
+<p>The investigation's raw Toolkit output is intentionally excluded from version
+control. After this document and its hashes have been reviewed, these local
+generated directories are safe to delete:</p>
+<div class="highlight"><pre><span></span><code>artifacts/quant_analysis/v2m/
+artifacts/quant_analysis/v2l/
+</code></pre></div>
+<p>They contain host-generated snapshots and reports only; the model artifacts,
+calibration inputs, source changes, and findings required to recreate the
+investigation are retained elsewhere.</p>
 
 
 
@@ -1603,7 +1355,7 @@ and an observed run with the applicable sensors and safety controls.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 6, 2026 04:17:00 UTC">August 6, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 30, 2026 05:08:46 UTC">August 30, 2026</span>
   </span>
 
     

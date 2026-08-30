@@ -1085,6 +1085,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../perception/int8-quantization-investigation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    INT8 Quantization Investigation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../perception/vision-telemetry/" class="md-nav__link">
         
   
@@ -1663,12 +1691,17 @@ scripts/omni<span class="w"> </span>build<span class="w"> </span>runtime-contain
 <p>Builds host-side YOLO-World v2-S, v2-M, or v2-L deployment artifacts without adding any model
 building dependency to the robot runtime image.</p>
 <div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>model<span class="w"> </span>image
+scripts/omni<span class="w"> </span>model<span class="w"> </span>analyze<span class="w"> </span>--variant<span class="w"> </span>v2m<span class="w">  </span><span class="c1"># INT8 layer-wise accuracy analysis in the host simulator</span>
 scripts/omni<span class="w"> </span>model<span class="w"> </span>calibration<span class="w"> </span>--images-dir<span class="w"> </span>models/source/calibration_images
 scripts/omni<span class="w"> </span>model<span class="w"> </span><span class="nb">export</span><span class="w"> </span>--variant<span class="w"> </span>v2s<span class="w"> </span>--weights<span class="w"> </span>&lt;v2-s.pth&gt;
 scripts/omni<span class="w"> </span>model<span class="w"> </span>compile<span class="w"> </span>--variant<span class="w"> </span>v2s<span class="w"> </span>--onnx<span class="w"> </span>artifacts/models/yolo_world_v2_s.onnx<span class="w"> </span>--precision<span class="w"> </span>fp
 scripts/omni<span class="w"> </span>model<span class="w"> </span>build<span class="w"> </span>--variant<span class="w"> </span>v2m<span class="w"> </span>--weights<span class="w"> </span>&lt;v2-m.pth&gt;<span class="w"> </span>--precision<span class="w"> </span>int8
 scripts/omni<span class="w"> </span>model<span class="w"> </span>build<span class="w"> </span>--variant<span class="w"> </span>v2l<span class="w"> </span>--weights<span class="w"> </span>&lt;v2-l.pth&gt;<span class="w"> </span>--precision<span class="w"> </span>int8
 </code></pre></div>
+<p><code>model analyze</code> is a host-simulator accuracy-analysis path for v2-S, v2-M, or
+v2-L. It writes raw Toolkit snapshots and its report to the ignored
+<code>artifacts/quant_analysis/v2&lt;s|m|l&gt;/</code> directory. It has no board, ADB, or
+special Docker-network dependency.</p>
 <p>See <a href="../../perception/yolo-world-model-deployment/">YOLO-World v2 Model Deployment</a>
 for the pinned builder, local inputs, artifacts, and calibration assets.</p>
 <h2 id="runtime"><code>runtime</code><a class="headerlink" href="#runtime" title="Permanent link">&para;</a></h2>
@@ -2132,7 +2165,7 @@ runbooks. New operator commands should use
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 29, 2026 19:07:25 UTC">August 29, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 30, 2026 05:08:46 UTC">August 30, 2026</span>
   </span>
 
     
