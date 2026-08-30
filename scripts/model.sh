@@ -50,6 +50,7 @@ Usage:
   scripts/omni model assets
   scripts/omni model calibration [--images-dir <dir>] [--classes <file>] [--clip-model <dir>] [--calibration-dir <dir>] [--image <name>]
   scripts/omni model image [--image <name>] [docker build args...]
+  scripts/omni model analyze [--variant v2s|v2m|v2l] [--onnx <model.onnx>] [--calibration-dir <dir>] [--clip-model <dir>] [--output-dir <dir>] [--image <name>]
   scripts/omni model export [--variant v2s|v2m|v2l] --weights <checkpoint.pth> [--output <model.onnx>] [--clip-model <dir>] [--image <name>]
   scripts/omni model compile [--variant v2s|v2m|v2l] --onnx <model.onnx> --precision fp|int8 [--output <model.rknn>] [--calibration-dir <dir>] [--image <name>]
   scripts/omni model build [--variant v2s|v2m|v2l] --weights <checkpoint.pth> --precision fp|int8 [--onnx-output <model.onnx>] [--output <model.rknn>] [--clip-model <dir>] [--calibration-dir <dir>] [--image <name>]
@@ -63,6 +64,9 @@ Defaults:
   INT8 RKNN output  artifacts/models/yolo_world_v2_<s|m|l>_i8.rknn
   calibration dir   models/source/yolo_world/calibration
   calibration images models/source/calibration_images (when generated with `model calibration`)
+  analysis variant  v2m (default); supported: v2s, v2m, v2l
+  analysis ONNX     artifacts/models/yolo_world_v2_<s|m|l>.onnx
+  analysis output   artifacts/quant_analysis/v2<s|m|l>
   calibration classes config/classes/calibration.txt (80 labels)
 EOF
 }
@@ -378,6 +382,62 @@ model_image() {
   exec docker build --file "$(omni_repo_root)/docker/model-builder/Dockerfile" --tag "${image}" "$@" "$(omni_repo_root)/docker/model-builder"
 }
 
+model_analyze() {
+  local image variant onnx calibration_dir clip_model output_dir analysis_image
+  image="$(model_image_name)"
+  variant="v2m"
+  onnx=""
+  calibration_dir="$(omni_repo_root)/models/source/yolo_world/calibration"
+  clip_model="$(omni_repo_root)/models/source/clip-vit-base-patch32"
+  analysis_image="${calibration_dir}/bus.jpg"
+  output_dir=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --variant) [[ $# -ge 2 ]] || omni_die "--variant requires a value"; variant="$2"; shift 2 ;;
+      --variant=*) variant="${1#--variant=}"; shift ;;
+      --onnx) [[ $# -ge 2 ]] || omni_die "--onnx requires a path"; onnx="$2"; shift 2 ;;
+      --onnx=*) onnx="${1#--onnx=}"; shift ;;
+      --calibration-dir) [[ $# -ge 2 ]] || omni_die "--calibration-dir requires a path"; calibration_dir="$2"; shift 2 ;;
+      --calibration-dir=*) calibration_dir="${1#--calibration-dir=}"; shift ;;
+      --clip-model) [[ $# -ge 2 ]] || omni_die "--clip-model requires a path"; clip_model="$2"; shift 2 ;;
+      --clip-model=*) clip_model="${1#--clip-model=}"; shift ;;
+      --output-dir) [[ $# -ge 2 ]] || omni_die "--output-dir requires a path"; output_dir="$2"; shift 2 ;;
+      --output-dir=*) output_dir="${1#--output-dir=}"; shift ;;
+      --image) [[ $# -ge 2 ]] || omni_die "--image requires a value"; image="$2"; shift 2 ;;
+      --image=*) image="${1#--image=}"; shift ;;
+      -h|--help|help) model_usage; return 0 ;;
+      *) omni_die "unknown model analyze option: $1" ;;
+    esac
+  done
+  model_select_variant "${variant}"
+  onnx="${onnx:-$(omni_repo_root)/artifacts/models/${model_artifact_stem}.onnx}"
+  output_dir="${output_dir:-$(omni_repo_root)/artifacts/quant_analysis/${model_variant}}"
+  onnx="$(model_existing_path "${onnx}")"
+  calibration_dir="$(model_existing_path "${calibration_dir}")"
+  clip_model="$(model_existing_path "${clip_model}")"
+  analysis_image="$(model_existing_path "${analysis_image}")"
+  output_dir="$(model_output_path "${output_dir}")"
+  model_require_in_repo "${onnx}"
+  model_require_in_repo "${calibration_dir}"
+  model_require_in_repo "${clip_model}"
+  model_require_in_repo "${analysis_image}"
+  model_require_in_repo "${output_dir}"
+  model_require_calibration "${calibration_dir}"
+  model_require_clip_model "${clip_model}"
+  [[ ! -e "${output_dir}" || ! -n "$(find "${output_dir}" -mindepth 1 -not -name texts_person_bus_padded.npy -print -quit 2>/dev/null)" ]] \
+    || omni_die "analysis output directory must be empty to preserve raw Toolkit output: ${output_dir}"
+  model_require_docker
+  mkdir -p "${output_dir}"
+  model_docker_run "${image}" env HF_HOME=/tmp/huggingface TOKENIZERS_PARALLELISM=false \
+    python /workspace/tools/model/analyze_yolo_world_rknn.py \
+    --variant "${model_variant}" \
+    --onnx "$(model_container_path "${onnx}")" \
+    --calibration-dir "$(model_container_path "${calibration_dir}")" \
+    --clip-model "$(model_container_path "${clip_model}")" \
+    --analysis-image "$(model_container_path "${analysis_image}")" \
+    --output-dir "$(model_container_path "${output_dir}")"
+}
+
 model_export() {
   local image output clip_model variant
   image="$(model_image_name)"
@@ -543,6 +603,7 @@ model_main() {
     assets) model_assets "$@" ;;
     calibration) model_calibration "$@" ;;
     image) model_image "$@" ;;
+    analyze) model_analyze "$@" ;;
     export) model_export "$@" ;;
     compile) model_compile "$@" ;;
     build) model_build "$@" ;;

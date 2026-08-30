@@ -40,6 +40,8 @@ def test_model_help_is_available_from_omni_front_door() -> None:
     assert result.returncode == 0, result.stderr
     assert "model assets" in result.stdout
     assert "model calibration [--images-dir <dir>] [--classes <file>] [--clip-model <dir>]" in result.stdout
+    assert "model rknn-debug" not in result.stdout
+    assert "model analyze [--variant v2s|v2m|v2l] [--onnx <model.onnx>]" in result.stdout
     assert "model export [--variant v2s|v2m|v2l] --weights" in result.stdout
     assert "model compile [--variant v2s|v2m|v2l] --onnx" in result.stdout
     assert "model build [--variant v2s|v2m|v2l] --weights" in result.stdout
@@ -292,6 +294,31 @@ def test_model_builder_pins_rockchip_revisions_and_keeps_runtime_separate() -> N
     assert "deaba85fc437a28db0b0c29f27d8929f4c5816a1" in dockerfile
     assert "rknn_toolkit2-2.1.0+708089d1" in dockerfile
     assert "deploy/export_onnx.py" not in runtime_dockerfile
+
+
+def test_model_analysis_supports_all_variants_without_board_dependencies() -> None:
+    model_script = (REPO_ROOT / "scripts" / "model.sh").read_text(encoding="utf-8")
+    dockerfile = (REPO_ROOT / "docker" / "model-builder" / "Dockerfile").read_text(encoding="utf-8")
+    analysis_script = (REPO_ROOT / "tools" / "model" / "analyze_yolo_world_rknn.py").read_text(encoding="utf-8")
+
+    assert "apt-get install --no-install-recommends -y adb" not in dockerfile
+    assert "rknn-debug" not in model_script
+    assert "--network host" not in model_script
+    assert "analyze_yolo_world_rknn.py" in model_script
+    assert "--variant v2s|v2m|v2l" in model_script
+    assert "artifacts/models/${model_artifact_stem}.onnx" in model_script
+    assert "artifacts/quant_analysis/${model_variant}" in model_script
+    assert 'choices=("v2s", "v2m", "v2l")' in analysis_script
+    assert 'target_platform="rk3588"' in analysis_script
+    assert "mean_values=[[0, 0, 0]]" in analysis_script
+    assert "std_values=[[255, 255, 255]]" in analysis_script
+    assert 'inputs=["images", "texts"]' in analysis_script
+    assert "input_size_list=[IMAGE_INPUT_SHAPE, TEXT_INPUT_SHAPE]" in analysis_script
+    assert "do_quantization=True" in analysis_script
+    assert 'target="rk3588"' not in analysis_script
+    assert 'RUNTIME_CLASSES = ["person", "bus"]' in analysis_script
+    assert 'RUNTIME_PAD_TOKEN = "nothing"' in analysis_script
+    assert "generate_padded_embedding" in analysis_script
 
 
 def test_model_deployment_documents_calibration_embedding_provenance() -> None:

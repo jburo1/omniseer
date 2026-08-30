@@ -37,7 +37,10 @@ def read_classes(path: Path) -> list[str]:
     return classes
 
 
-def generate_embedding(classes: list[str], clip_model: Path) -> np.ndarray:
+def generate_embedding_rows(classes: list[str], clip_model: Path) -> np.ndarray:
+    """Generate one normalized FP32 CLIP embedding row for every supplied class."""
+    if not classes:
+        raise ValueError("at least one class is required to generate a text embedding")
     if not clip_model.is_dir():
         raise ValueError(f"local CLIP model directory is missing: {clip_model}")
     tokenizer = AutoTokenizer.from_pretrained(clip_model, local_files_only=True)
@@ -47,11 +50,33 @@ def generate_embedding(classes: list[str], clip_model: Path) -> np.ndarray:
         values = model(**inputs).text_embeds
         values = values / values.norm(p=2, dim=-1, keepdim=True)
     embedding = values.cpu().numpy().astype(np.float32, copy=False)
-    if embedding.shape != (CLASS_CAPACITY, EMBEDDING_WIDTH):
+    if embedding.shape != (len(classes), EMBEDDING_WIDTH):
         raise ValueError(
-            f"CLIP text embedding has shape {list(embedding.shape)}, expected [{CLASS_CAPACITY}, {EMBEDDING_WIDTH}]"
+            f"CLIP text embedding has shape {list(embedding.shape)}, expected [{len(classes)}, {EMBEDDING_WIDTH}]"
         )
-    return np.expand_dims(embedding, axis=0)
+    return embedding
+
+
+def generate_embedding(classes: list[str], clip_model: Path) -> np.ndarray:
+    """Generate the fixed 80-row YOLO-World calibration text input."""
+    if len(classes) != CLASS_CAPACITY:
+        raise ValueError(f"calibration class count has {len(classes)} labels, expected {CLASS_CAPACITY}")
+    return np.expand_dims(generate_embedding_rows(classes, clip_model), axis=0)
+
+
+def generate_padded_embedding(classes: list[str], clip_model: Path, pad_token: str = "nothing") -> np.ndarray:
+    """Generate the runtime's fixed-capacity detector text input.
+
+    The native runtime appends its ``pad_token`` to fill every unused YOLO-World
+    class slot. Keep host-side calibration and analysis inputs on that same
+    convention.
+    """
+    if len(classes) > CLASS_CAPACITY:
+        raise ValueError(f"class count exceeds the {CLASS_CAPACITY}-slot detector capacity")
+    if not pad_token:
+        raise ValueError("pad token is empty")
+    rows = [*classes, *([pad_token] * (CLASS_CAPACITY - len(classes)))]
+    return np.expand_dims(generate_embedding_rows(rows, clip_model), axis=0)
 
 
 def main() -> int:
