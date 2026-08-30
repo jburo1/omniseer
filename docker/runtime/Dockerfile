@@ -195,6 +195,13 @@ COPY --from=rknn_lib /librknnrt.so /usr/lib/librknnrt.so
 
 RUN set -eux; \
   ldconfig; \
+  cmake -S /opt/omniseer-src/vision -B /opt/omniseer-build/vision \
+    -DVISION_BUILD_HARNESS=OFF \
+    -DVISION_BUILD_REPLAY=ON \
+    -DVISION_BUILD_RKNN_PROBE=ON \
+    -DVISION_BUILD_RUNBUNDLE_COMPARISON=OFF \
+    -DVISION_BUILD_TESTS=OFF; \
+  cmake --build /opt/omniseer-build/vision --target vision_replay vision_rknn_probe --parallel; \
   set +u; \
   source "/opt/ros/${ROS_DISTRO}/setup.bash"; \
   set -u; \
@@ -255,6 +262,8 @@ WORKDIR /opt/omniseer
 COPY --from=robot-builder /usr/lib/librknnrt.so /usr/lib/librknnrt.so
 COPY --from=robot-builder /opt/omniseer-src/ros_ws/install /ros_ws/install
 COPY --from=robot-builder /opt/omniseer-src/vision/testdata /omniseer/vision/testdata
+COPY --from=robot-builder /opt/omniseer-build/vision/vision_replay /usr/local/bin/vision_replay
+COPY --from=robot-builder /opt/omniseer-build/vision/vision_rknn_probe /usr/local/bin/vision_rknn_probe
 COPY scripts ./scripts
 COPY docker/runtime/entrypoint.sh /usr/local/bin/omniseer-runtime-entrypoint
 

@@ -608,6 +608,12 @@ runtime_verify_smoke() {
   return "${status}"
 }
 
+runtime_verify_vision_tools() {
+  local image_ref="$1"
+  OMNISEER_RUNTIME_DOCKER_TTY=never runtime_docker_run "${image_ref}" \
+    /bin/bash -lc 'test -x /usr/local/bin/vision_replay && test -x /usr/local/bin/vision_rknn_probe && vision_rknn_probe --help >/dev/null'
+}
+
 runtime_verify_full() {
   local image_ref="$1"
   local verify_id="$2"
@@ -723,6 +729,8 @@ runtime_verify() {
   tag="$(runtime_resolve_existing_tag "${tag}")"
   image_ref="$(runtime_image_ref "${image_base}" "${tag}")"
   run_id="runtime_${stage}_$(runtime_timestamp)"
+
+  runtime_verify_vision_tools "${image_ref}"
 
   if [[ "${stage}" == "smoke" ]]; then
     runtime_verify_smoke "${image_base}" "${tag}"

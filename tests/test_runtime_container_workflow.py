@@ -513,6 +513,10 @@ def test_runtime_verify_safe_smoke_treats_timeout_as_pass(tmp_path: Path) -> Non
 
     assert result.returncode == 0, result.stderr
     assert (Path(env["OMNISEER_RUNTIME_METADATA_DIR"]) / "verify-smoke-runtime-test.env").is_file()
+    log = _docker_log(env)
+    assert "/usr/local/bin/vision_replay" in log
+    assert "/usr/local/bin/vision_rknn_probe" in log
+    assert "vision_rknn_probe --help" in log
 
 
 def test_runtime_verify_full_records_rockchip_preview_artifact(tmp_path: Path) -> None:

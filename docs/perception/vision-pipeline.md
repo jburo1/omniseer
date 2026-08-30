@@ -236,6 +236,29 @@ or inference-latency fields.
 
 This is an offline validation tool and is not part of the camera/ROS production runtime.
 
+## Raw RKNN Output Probe
+
+The robot runtime image also contains `/usr/local/bin/vision_rknn_probe` for controlled
+host-versus-RK3588 output parity checks. It runs one still image through the production
+CPU letterbox, YOLO-World text-embedding preparation, and `RknnRunner`, then stops before
+YOLO decoding and NMS. It writes portable raw `output_<index>.bin` files plus
+`metadata.json` (RKNN shape/type/quantization and dequantized statistics) to the selected
+directory.
+
+```bash
+vision_rknn_probe \
+  --detector-model /models/yolo_world.rknn \
+  --image /data/frame.png \
+  --classes /data/classes.txt \
+  --clip-model /models/clip_text.rknn \
+  --clip-vocab /models/clip_vocab.bpe \
+  --output-dir /data/rknn-probe
+```
+
+Use repeated `--class <name>` instead of `--classes` when a temporary class list is more
+convenient. This diagnostic tool is separate from `vision_replay` and is not a production
+inference path.
+
 ## RunBundle Six-Model Comparison
 
 `scripts/omni runs compare <run_dir>` is the ROCK 5B+ devcontainer offline comparison

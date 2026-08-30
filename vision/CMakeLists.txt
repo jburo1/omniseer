@@ -11,6 +11,7 @@ find_library(RKNNRT_LIBRARY NAMES rknnrt)
 
 option(VISION_BUILD_HARNESS "Build vision_harness app (requires librga)" ON)
 option(VISION_BUILD_REPLAY "Build vision_replay app (requires OpenCV and RKNN runtime)" ON)
+option(VISION_BUILD_RKNN_PROBE "Build raw RKNN output diagnostic probe" ON)
 option(VISION_BUILD_RUNBUNDLE_COMPARISON "Build the target-side RunBundle comparison tool" ON)
 option(VISION_BUILD_TESTS "Build vision tests" ON)
 
@@ -69,6 +70,25 @@ if(VISION_BUILD_REPLAY)
   endif()
 endif()
 
+if(VISION_BUILD_RKNN_PROBE)
+  if(NOT RKNN_INCLUDE_DIR OR NOT RKNNRT_LIBRARY)
+    message(WARNING "RKNN runtime not found; disabling vision_rknn_probe (set -DVISION_BUILD_RKNN_PROBE=OFF to silence)")
+    set(VISION_BUILD_RKNN_PROBE OFF)
+  else()
+    find_package(PkgConfig QUIET)
+    if(NOT PkgConfig_FOUND)
+      message(WARNING "pkg-config not found; disabling vision_rknn_probe (set -DVISION_BUILD_RKNN_PROBE=OFF to silence)")
+      set(VISION_BUILD_RKNN_PROBE OFF)
+    else()
+      pkg_check_modules(OPENCV4 opencv4)
+      if(NOT OPENCV4_FOUND)
+        message(WARNING "OpenCV not found; disabling vision_rknn_probe (set -DVISION_BUILD_RKNN_PROBE=OFF to silence)")
+        set(VISION_BUILD_RKNN_PROBE OFF)
+      endif()
+    endif()
+  endif()
+endif()
+
 set(VISION_HARNESS_SOURCES
   apps/vision_harness.cpp
   src/class_list.cpp
@@ -119,6 +139,25 @@ if(VISION_BUILD_REPLAY)
   target_link_libraries(vision_replay PRIVATE Threads::Threads ${RKNNRT_LIBRARY} ${OPENCV4_LIBRARIES})
   target_compile_options(vision_replay PRIVATE ${OPENCV4_CFLAGS_OTHER})
   target_compile_definitions(vision_replay PRIVATE VISION_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+endif()
+
+set(VISION_RKNN_PROBE_SOURCES
+  apps/vision_rknn_probe.cpp
+  src/class_list.cpp
+  src/cpu_letterbox_preprocess.cpp
+  src/dma_heap_alloc.cpp
+  src/image_buffer_pool.cpp
+  src/letterbox.cpp
+  src/rknn_runner.cpp
+  src/spsc_ring.cpp
+  src/yolo_world_text_embeddings.cpp
+)
+
+if(VISION_BUILD_RKNN_PROBE)
+  add_executable(vision_rknn_probe ${VISION_RKNN_PROBE_SOURCES})
+  target_include_directories(vision_rknn_probe PRIVATE include ${RKNN_INCLUDE_DIR} ${OPENCV4_INCLUDE_DIRS})
+  target_link_libraries(vision_rknn_probe PRIVATE Threads::Threads ${RKNNRT_LIBRARY} ${OPENCV4_LIBRARIES})
+  target_compile_options(vision_rknn_probe PRIVATE ${OPENCV4_CFLAGS_OTHER})
 endif()
 
 set(VISION_RUNBUNDLE_COMPARISON_SOURCES
