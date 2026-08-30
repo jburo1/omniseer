@@ -105,12 +105,18 @@ building dependency to the robot runtime image.
 
 ```bash
 scripts/omni model image
+scripts/omni model analyze --variant v2m  # INT8 layer-wise accuracy analysis in the host simulator
 scripts/omni model calibration --images-dir models/source/calibration_images
 scripts/omni model export --variant v2s --weights <v2-s.pth>
 scripts/omni model compile --variant v2s --onnx artifacts/models/yolo_world_v2_s.onnx --precision fp
 scripts/omni model build --variant v2m --weights <v2-m.pth> --precision int8
 scripts/omni model build --variant v2l --weights <v2-l.pth> --precision int8
 ```
+
+`model analyze` is a host-simulator accuracy-analysis path for v2-S, v2-M, or
+v2-L. It writes raw Toolkit snapshots and its report to the ignored
+`artifacts/quant_analysis/v2<s|m|l>/` directory. It has no board, ADB, or
+special Docker-network dependency.
 
 See [YOLO-World v2 Model Deployment](../perception/yolo-world-model-deployment.md)
 for the pinned builder, local inputs, artifacts, and calibration assets.

@@ -48,6 +48,7 @@ nav:
     - Firmware & Robot I/O: firmware/overview.md
     - Vision Pipeline: perception/vision-pipeline.md
     - YOLO-World v2 Model Deployment: perception/yolo-world-model-deployment.md
+    - INT8 Quantization Investigation: perception/int8-quantization-investigation.md
     - Vision Telemetry: perception/vision-telemetry.md
     - Robot Gateway: gateway/robot-gateway.md
     - Gateway API: gateway/gateway-api.md

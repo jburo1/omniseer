@@ -34,6 +34,24 @@ wrapper derives the host repository bind path; set
 `OMNISEER_MODEL_HOST_REPO_ROOT=/host/path/to/omniseer` if that mount cannot be
 detected.
 
+## Layer-wise accuracy analysis
+
+The opt-in analysis entrypoint runs the Toolkit2 host simulator. It does not
+use ADB, a connected RK3588, or a `target` argument. Select the model variant
+explicitly (v2-M remains the historical default):
+
+```bash
+scripts/omni model analyze --variant v2m
+```
+
+The analysis rebuilds the selected ONNX model as INT8 with the existing
+representative calibration data, using the runtime vocabulary `person`, `bus`,
+and 78 `nothing` padding rows. The raw Toolkit report and snapshots (including
+the generated `[1,80,512]` float32 text input) are kept only in the ignored
+`artifacts/quant_analysis/v2<s|m|l>/` directory. See the
+[INT8 quantization investigation](int8-quantization-investigation.md) for the
+recorded findings and reproducibility details.
+
 ## Local inputs
 
 Download the pinned, ignored source assets once from a fresh checkout:
