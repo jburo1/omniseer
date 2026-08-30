@@ -181,6 +181,34 @@ When a change plausibly affects latency, throughput, frame rate, CPU, memory, st
 * measure it when practical;
 * do not use unsupported language such as “should be fine.”
 
+## Experiment Artifacts
+
+Treat large ML, inference, profiling, and quantization outputs as temporary unless they are explicitly designated as durable results.
+
+Prefer retaining:
+
+* experiment configuration and manifests;
+* model, compiler, dataset, and version metadata;
+* aggregate metrics and error summaries;
+* plots and reports;
+* only the minimal representative samples needed to support conclusions.
+
+Do not retain or commit large regenerable outputs such as:
+
+* per-frame or per-layer tensor dumps;
+* duplicated activations or reference tensors;
+* temporary simulator/compiler intermediates;
+* bulk debug outputs produced only during investigation.
+
+For experiments expected to generate substantial data:
+
+* prefer an ignored scratch/artifact location rather than tracked repository paths;
+* avoid duplicating shared reference data between experiment runs;
+* summarize results before deleting temporary evidence;
+* remove large temporary artifacts when the investigation is complete.
+
+Do not delete ambiguous experiment data, source datasets, canonical models, or RunBundles without explicit user instruction.
+
 ## Generated and Derived Files
 
 Do not commit arbitrary build outputs, cache directories, generated binaries, secrets, machine-specific files, or host-only paths.

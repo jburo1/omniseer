@@ -124,4 +124,7 @@ models/
 
 # --- Generated model build artifacts ---
 artifacts/models/
+
+# --- Generated quantization-analysis output ---
+# Retain conclusions in documentation; Toolkit artifacts are reproducible.
 artifacts/quant_analysis/
