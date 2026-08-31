@@ -122,10 +122,12 @@ keeps the video-only capture independent of RKNN inference.
 
 Before selecting an external detector model for autonomy, copy its generated
 RKNN artifact to the robot repository's `runs/model_artifacts/` directory. The
-normal Experiment controls expose `Runtime default`, YOLO-World v2-S/v2-M, and
-FP/INT8 choices, plus YOLO-World v2-L Hybrid. For the final six-model matrix,
-stage `yolo_world_v2_l_hybrid_td01_clspreds0_mm_inputs_fp16.rknn` and verify
-that `sha256sum` reports
+normal Experiment controls expose `Runtime default`, YOLO-World v2-S/v2-M/v2-L,
+FP choices, the recalibrated INT8 choices, and YOLO-World v2-L Hybrid. The
+recalibrated choices use the canonical `yolo_world_v2_{s,m,l}_i8.rknn` artifact
+names. For the final six-model matrix, stage
+`yolo_world_v2_l_hybrid_td01_clspreds0_mm_inputs_fp16.rknn` and verify that
+`sha256sum` reports
 `df72d337ad03a7b90c5a96f2b44495fd25f5747094019b038b2823d5133d398e` before
 selecting it.
 An explicit choice uses the staged artifact for that run; `Runtime default`

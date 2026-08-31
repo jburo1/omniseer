@@ -88,12 +88,12 @@ class RunSettingsTests(unittest.TestCase):
 
     def test_selected_detector_models_resolve_to_expected_artifacts(self):
         expected = {
-            "YOLO-World v2-S INT8": "yolo_world_v2_s_i8.rknn",
+            "YOLO-World v2-S INT8 (recalibrated)": "yolo_world_v2_s_i8.rknn",
             "YOLO-World v2-S FP": "yolo_world_v2_s_fp.rknn",
-            "YOLO-World v2-M INT8": "yolo_world_v2_m_i8.rknn",
+            "YOLO-World v2-M INT8 (recalibrated)": "yolo_world_v2_m_i8.rknn",
             "YOLO-World v2-M FP": "yolo_world_v2_m_fp.rknn",
             "YOLO-World v2-L FP": "yolo_world_v2_l_fp.rknn",
-            "YOLO-World v2-L INT8": "yolo_world_v2_l_i8.rknn",
+            "YOLO-World v2-L INT8 (recalibrated)": "yolo_world_v2_l_i8.rknn",
             "YOLO-World v2-L Hybrid": "yolo_world_v2_l_hybrid_td01_clspreds0_mm_inputs_fp16.rknn",
         }
         self.assertIsNone(selected_detector_model("Runtime default"))
@@ -164,12 +164,12 @@ class RunSettingsTests(unittest.TestCase):
 
     def test_resolve_run_form_maps_detector_choice_to_provenance(self):
         expected = {
-            "YOLO-World v2-S INT8": ("yolo_world_v2_s_i8.rknn", "v2s", "int8"),
+            "YOLO-World v2-S INT8 (recalibrated)": ("yolo_world_v2_s_i8.rknn", "v2s", "int8"),
             "YOLO-World v2-S FP": ("yolo_world_v2_s_fp.rknn", "v2s", "fp"),
-            "YOLO-World v2-M INT8": ("yolo_world_v2_m_i8.rknn", "v2m", "int8"),
+            "YOLO-World v2-M INT8 (recalibrated)": ("yolo_world_v2_m_i8.rknn", "v2m", "int8"),
             "YOLO-World v2-M FP": ("yolo_world_v2_m_fp.rknn", "v2m", "fp"),
             "YOLO-World v2-L FP": ("yolo_world_v2_l_fp.rknn", "v2l", "fp"),
-            "YOLO-World v2-L INT8": ("yolo_world_v2_l_i8.rknn", "v2l", "int8"),
+            "YOLO-World v2-L INT8 (recalibrated)": ("yolo_world_v2_l_i8.rknn", "v2l", "int8"),
             "YOLO-World v2-L Hybrid": (
                 "yolo_world_v2_l_hybrid_td01_clspreds0_mm_inputs_fp16.rknn",
                 "v2l",
@@ -216,7 +216,7 @@ class RunSettingsTests(unittest.TestCase):
 
     def test_perception_scan_form_forces_video_and_omits_detector_selection(self):
         selection = resolve_run_form(
-            _values(detector_model_label="YOLO-World v2-S INT8"),
+            _values(detector_model_label="YOLO-World v2-S INT8 (recalibrated)"),
             repo_root=Path("/repo"),
             default_run_id=lambda: "operator_default",
         )
