@@ -38,20 +38,16 @@ HYBRID_LAYERS = [
 # these entries FP16 asks Toolkit2 to insert output conversion without
 # promoting the cls_preds or cls_contrasts computations which feed them.
 CLASSIFICATION_OUTPUTS = ("1577_int8", "1579_int8", "1581_int8")
-CLASSIFICATION_PREDICTION_TENSORS = tuple(
-    f"/bbox_head/head_module/cls_preds.{level}/cls_preds.{level}.{stage}/{suffix}"
-    for level in range(1)
-    for stage, suffix in (
-        (0, "conv/Conv_output_0"),
-        (0, "activate/Mul_output_0"),
-        (1, "conv/Conv_output_0"),
-        (1, "activate/Mul_output_0"),
-        (2, "Conv_output_0"),
-        (2, "Conv_output_0_rs"),
-        (2, "Conv_output_0_rs_mm"),
-        (2, "Conv_output_0_rs_mm_rs"),
-    )
+CLASSIFICATION_PROJECTION_TENSORS = (
+    "/bbox_head/head_module/cls_preds.0/cls_preds.0.2/Conv_output_0",
+    "/bbox_head/head_module/cls_preds.0/cls_preds.0.2/Conv_output_0_rs",
+    "/bbox_head/head_module/cls_preds.0/cls_preds.0.2/Conv_output_0_rs_mm",
+    "/bbox_head/head_module/cls_preds.0/cls_preds.0.2/Conv_output_0_rs_mm_rs",
 )
+# Toolkit2 lowers the shared text embedding to this reshape/transpose result
+# before it feeds the classification exMatMul operators.  This is the narrowest
+# generated-config name available at that operand boundary.
+CLASSIFICATION_TEXT_MATMUL_TENSOR = "texts_tp-rs"
 
 
 def parse_args() -> argparse.Namespace:
@@ -112,12 +108,15 @@ def require_empty_hybrid_workdir(path: Path) -> None:
     path.mkdir(parents=True, exist_ok=True)
 
 
-def augment_td01_classification_predictions(config: Path) -> None:
-    """Add only the cls_preds FP16 path to the validated TD01 output control."""
+def augment_td01_classification_projection(config: Path) -> None:
+    """Add the 80x80 projection and its text operand at the MatMul boundary."""
     contents = config.read_text(encoding="utf-8")
     custom, parameters = contents.split("quantize_parameters:\n", 1)
     existing = set(re.findall(r"^    (\S+): float16$", custom, flags=re.MULTILINE))
-    unexpected_head_entries = [entry for entry in existing if "/bbox_head/head_module/" in entry]
+    expected_head_entries = set(CLASSIFICATION_PROJECTION_TENSORS)
+    unexpected_head_entries = [
+        entry for entry in existing if "/bbox_head/head_module/" in entry and entry not in expected_head_entries
+    ]
     if unexpected_head_entries:
         raise ValueError(
             "hybrid template must be the output-FP16 control with no head FP16 entries: "
@@ -128,7 +127,10 @@ def augment_td01_classification_predictions(config: Path) -> None:
         raise ValueError(
             "hybrid template is missing validated FP16 classification outputs: " + ", ".join(missing_outputs)
         )
-    custom += "".join(f"    {entry}: float16\n" for entry in CLASSIFICATION_PREDICTION_TENSORS)
+    missing_projection_entries = [entry for entry in CLASSIFICATION_PROJECTION_TENSORS if entry not in existing]
+    custom += "".join(f"    {entry}: float16\n" for entry in missing_projection_entries)
+    if CLASSIFICATION_TEXT_MATMUL_TENSOR not in existing:
+        custom += f"    {CLASSIFICATION_TEXT_MATMUL_TENSOR}: float16\n"
     config.write_text(custom + "quantize_parameters:\n" + parameters, encoding="utf-8")
 
 
@@ -151,7 +153,7 @@ def build_hybrid(rknn: RKNN, onnx: Path, dataset: Path, workdir: Path, template_
                 shutil.copy2(template_workdir / filename, workdir / filename)
         for filename in (model_input, data_input, model_quantization_cfg):
             require_nonempty(workdir / filename, f"RKNN hybrid configuration {filename}")
-        augment_td01_classification_predictions(workdir / model_quantization_cfg)
+        augment_td01_classification_projection(workdir / model_quantization_cfg)
         print("--> Building hybrid model")
         ret = rknn.hybrid_quantization_step2(model_input, data_input, model_quantization_cfg)
         if ret != 0:

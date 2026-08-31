@@ -1,0 +1,24 @@
+Capture source: read-only SSH inspection of radxa@192.168.1.178 on 2026-08-31.
+This file records the board state associated with the one-frame outputs in
+this directory; no model or inference operation was performed for this capture.
+
+uname:
+Linux rock-5b-plus 6.1.84-8-rk2410 #8 SMP Thu Oct 16 07:07:35 UTC 2025 aarch64 GNU/Linux
+
+operating system:
+Debian GNU/Linux 12 (bookworm), VERSION_ID=12
+
+RKNN runtime:
+/usr/lib/librknnrt.so -> aarch64-linux-gnu/librknnrt.so.2.3.0
+librknnrt version: 2.3.0 (c949ad889d@2024-11-07T11:35:33)
+
+NPU driver:
+/proc/driver/rknpu/version was absent on this board; the driver version was
+therefore not recovered by this capture.
+
+board checkout:
+240472a1ce06e4326979372c8e7b827e64e371f2
+
+board worktree note:
+vision/src/rknn_runner.cpp was modified at capture time.  Its content was not
+copied or changed by this evidence-freeze task.
