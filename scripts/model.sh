@@ -52,8 +52,8 @@ Usage:
   scripts/omni model image [--image <name>] [docker build args...]
   scripts/omni model analyze [--variant v2s|v2m|v2l] [--onnx <model.onnx>] [--calibration-dir <dir>] [--clip-model <dir>] [--output-dir <dir>] [--image <name>]
   scripts/omni model export [--variant v2s|v2m|v2l] --weights <checkpoint.pth> [--output <model.onnx>] [--clip-model <dir>] [--image <name>]
-  scripts/omni model compile [--variant v2s|v2m|v2l] --onnx <model.onnx> --precision fp|int8 [--output <model.rknn>] [--calibration-dir <dir>] [--image <name>]
-  scripts/omni model build [--variant v2s|v2m|v2l] --weights <checkpoint.pth> --precision fp|int8 [--onnx-output <model.onnx>] [--output <model.rknn>] [--clip-model <dir>] [--calibration-dir <dir>] [--image <name>]
+  scripts/omni model compile [--variant v2s|v2m|v2l] --onnx <model.onnx> --precision fp|int8|hybrid [--output <model.rknn>] [--calibration-dir <dir>] [--image <name>]
+  scripts/omni model build [--variant v2s|v2m|v2l] --weights <checkpoint.pth> --precision fp|int8|hybrid [--onnx-output <model.onnx>] [--output <model.rknn>] [--clip-model <dir>] [--calibration-dir <dir>] [--image <name>]
 
 Defaults:
   image             omniseer/model-builder:yolo-world-v2s-rknn-toolkit2-2.1.0
@@ -62,6 +62,7 @@ Defaults:
   ONNX output       artifacts/models/yolo_world_v2_<s|m|l>.onnx
   FP RKNN output    artifacts/models/yolo_world_v2_<s|m|l>_fp.rknn
   INT8 RKNN output  artifacts/models/yolo_world_v2_<s|m|l>_i8.rknn
+  hybrid RKNN output artifacts/models/yolo_world_v2_l_hybrid.rknn (v2l only)
   calibration dir   models/source/yolo_world/calibration
   calibration images models/source/calibration_images (when generated with `model calibration`)
   analysis variant  v2m (default); supported: v2s, v2m, v2l
@@ -516,7 +517,7 @@ model_compile() {
       --variant=*) variant="${1#--variant=}"; shift ;;
       --onnx) [[ $# -ge 2 ]] || omni_die "--onnx requires a path"; onnx="$2"; shift 2 ;;
       --onnx=*) onnx="${1#--onnx=}"; shift ;;
-      --precision) [[ $# -ge 2 ]] || omni_die "--precision requires fp or int8"; precision="$2"; shift 2 ;;
+      --precision) [[ $# -ge 2 ]] || omni_die "--precision requires fp, int8, or hybrid"; precision="$2"; shift 2 ;;
       --precision=*) precision="${1#--precision=}"; shift ;;
       --output) [[ $# -ge 2 ]] || omni_die "--output requires a path"; output="$2"; shift 2 ;;
       --output=*) output="${1#--output=}"; shift ;;
@@ -530,16 +531,22 @@ model_compile() {
   done
   model_select_variant "${variant}"
   [[ -n "${onnx}" ]] || omni_die "model compile requires --onnx"
-  case "${precision}" in fp|int8) ;; *) omni_die "--precision must be fp or int8" ;; esac
+  case "${precision}" in fp|int8|hybrid) ;; *) omni_die "--precision must be fp, int8, or hybrid" ;; esac
+  [[ "${precision}" != hybrid || "${model_variant}" == v2l ]] \
+    || omni_die "--precision hybrid is currently defined only for v2l"
   onnx="$(model_existing_path "${onnx}")"
   model_require_in_repo "${onnx}"
   if [[ -z "${output}" ]]; then
-    if [[ "${precision}" == int8 ]]; then output="$(omni_repo_root)/artifacts/models/${model_artifact_stem}_i8.rknn"; else output="$(omni_repo_root)/artifacts/models/${model_artifact_stem}_fp.rknn"; fi
+    case "${precision}" in
+      fp) output="$(omni_repo_root)/artifacts/models/${model_artifact_stem}_fp.rknn" ;;
+      int8) output="$(omni_repo_root)/artifacts/models/${model_artifact_stem}_i8.rknn" ;;
+      hybrid) output="$(omni_repo_root)/artifacts/models/${model_artifact_stem}_hybrid.rknn" ;;
+    esac
   fi
   output="$(model_output_path "${output}")"
   model_require_in_repo "${output}"
   [[ ! -e "${output}" ]] || omni_die "refusing to replace existing RKNN artifact: ${output}"
-  if [[ "${precision}" == int8 ]]; then
+  if [[ "${precision}" == int8 || "${precision}" == hybrid ]]; then
     calibration_dir="$(model_existing_path "${calibration_dir}")"
     model_require_in_repo "${calibration_dir}"
     model_require_calibration "${calibration_dir}"
@@ -549,8 +556,13 @@ model_compile() {
   local onnx_in_container output_in_container args=(python /workspace/tools/model/compile_yolo_world_rknn.py)
   onnx_in_container="$(model_container_path "${onnx}")"
   output_in_container="$(model_container_path "${output}")"
-  args+=("${onnx_in_container}" "${output_in_container}" --precision)
-  [[ "${precision}" == int8 ]] && args+=(i8 --dataset "$(model_container_path "${calibration_dir}")/dataset.txt") || args+=(fp)
+  args+=("${onnx_in_container}" "${output_in_container}" --precision "${precision}")
+  if [[ "${precision}" == int8 || "${precision}" == hybrid ]]; then
+    args+=(--dataset "$(model_container_path "${calibration_dir}")/dataset.txt")
+  fi
+  if [[ "${precision}" == hybrid ]]; then
+    args+=(--hybrid-workdir "$(model_container_path "$(dirname "${output}")")/$(basename "${output%.rknn}")_config")
+  fi
   model_docker_run "${image}" python /workspace/tools/model/validate_yolo_world_onnx.py "${onnx_in_container}"
   model_docker_run "${image}" "${args[@]}"
   [[ -s "${output}" ]] || omni_die "RKNN compilation did not produce a non-empty artifact: ${output}"
@@ -567,7 +579,7 @@ model_build() {
       --variant=*) variant="${1#--variant=}"; shift ;;
       --weights) [[ $# -ge 2 ]] || omni_die "--weights requires a path"; weights="$2"; shift 2 ;;
       --weights=*) weights="${1#--weights=}"; shift ;;
-      --precision) [[ $# -ge 2 ]] || omni_die "--precision requires fp or int8"; precision="$2"; shift 2 ;;
+      --precision) [[ $# -ge 2 ]] || omni_die "--precision requires fp, int8, or hybrid"; precision="$2"; shift 2 ;;
       --precision=*) precision="${1#--precision=}"; shift ;;
       --onnx-output) [[ $# -ge 2 ]] || omni_die "--onnx-output requires a path"; onnx_output="$2"; shift 2 ;;
       --onnx-output=*) onnx_output="${1#--onnx-output=}"; shift ;;
