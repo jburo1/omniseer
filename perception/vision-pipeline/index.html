@@ -1691,15 +1691,15 @@ command. It decodes the immutable raw
 <code>video/source.ts</code> once, reverses the known 1280x720 Rockchip preview circular wrap
 in memory (recorded <code>[x=1272..1279][x=0..1271]</code> becomes normal pixel order), and
 passes that same corrected BGR frame serially to resident v2-S FP, v2-S INT8, v2-M
-FP, v2-M INT8, v2-L FP, and v2-L INT8 <code>OfflineDetector</code> instances. Each instance uses the existing CPU
+FP, v2-M INT8, v2-L FP, and v2-L Hybrid <code>OfflineDetector</code> instances. Each instance uses the existing CPU
 letterbox, <code>RknnRunner</code>, <code>ConsumerPipeline</code>, embeddings, and YOLO postprocess path.</p>
 <p>For every decoded source frame, the comparator persists each model result with the existing replay
 JSONL schema (<code>frame_index</code>, source presentation <code>timestamp_sec</code>, and detections), then draws those
 same production source-pixel results before producing a
-labeled 3x2 H.264/yuv420p MP4 at the source FPS, with S/M/L rows and FP/INT8 columns. Offline inference duration does not
+labeled 3x2 H.264/yuv420p MP4 at the source FPS, with v2-S and v2-M FP/INT8 rows and a v2-L FP/Hybrid row. Offline inference duration does not
 control output elapsed time. It writes only under <code>video/comparison/&lt;name&gt;/</code>:
 <code>comparison.mp4</code>, <code>provenance.json</code>, <code>v2s_fp.jsonl</code>, <code>v2s_int8.jsonl</code>, <code>v2m_fp.jsonl</code>,
-<code>v2m_int8.jsonl</code>, <code>v2l_fp.jsonl</code>, and <code>v2l_int8.jsonl</code>. The raw source, original detections, and
+<code>v2m_int8.jsonl</code>, <code>v2l_fp.jsonl</code>, and <code>v2l_hybrid.jsonl</code>. The raw source, original detections, and
 RunBundle manifest remain unchanged.</p>
 <p>From the ROCK 5B+ devcontainer:</p>
 <div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>/omniseer
@@ -1771,7 +1771,7 @@ the comparison before rendering.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 30, 2026 19:09:49 UTC">August 30, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 31, 2026 23:07:59 UTC">August 31, 2026</span>
   </span>
 
     
