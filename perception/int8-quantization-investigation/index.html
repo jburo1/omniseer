@@ -894,6 +894,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#final-representative-rk3588-evaluation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Final representative RK3588 evaluation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#final-engineering-decision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Final engineering decision
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#reproducible-host-analysis" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -916,10 +938,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#discarded-raw-traces" class="md-nav__link">
+  <a href="#raw-traces-and-retained-final-evidence" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Discarded raw traces
+        Raw traces and retained final evidence
       
     </span>
   </a>
@@ -1174,6 +1196,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#final-representative-rk3588-evaluation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Final representative RK3588 evaluation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#final-engineering-decision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Final engineering decision
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#reproducible-host-analysis" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1196,10 +1240,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#discarded-raw-traces" class="md-nav__link">
+  <a href="#raw-traces-and-retained-final-evidence" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Discarded raw traces
+        Raw traces and retained final evidence
       
     </span>
   </a>
@@ -1227,34 +1271,101 @@
 
 
 <h1 id="yolo-world-v2-int8-quantization-investigation">YOLO-World v2 INT8 Quantization Investigation<a class="headerlink" href="#yolo-world-v2-int8-quantization-investigation" title="Permanent link">&para;</a></h1>
-<p>This record preserves the conclusions of the 2026-08-29 RKNN quantization
-investigation. Raw Toolkit simulator snapshots are intentionally ignored under
-<code>artifacts/quant_analysis/</code>; they are reproducible diagnostic output, not
-source evidence.</p>
+<p>This record preserves the conclusions of the 2026-08-29--31 RKNN
+quantization investigation. Raw Toolkit simulator snapshots are intentionally
+ignored under <code>artifacts/quant_analysis/</code>; the compact final RK3588 evaluation
+evidence is retained and indexed in
+<code>artifacts/quant_analysis/v2l/EVIDENCE_INDEX.md</code>.</p>
 <h2 id="conclusions">Conclusions<a class="headerlink" href="#conclusions" title="Permanent link">&para;</a></h2>
 <ul>
-<li>The original controlled S/M/L FP-versus-INT8 comparison found viable INT8
-  behavior for v2-S and v2-M, while v2-L INT8 diverged materially from its FP
-  result.</li>
-<li>Recalibration with 100 representative robot frames preserved the viable S/M
-  result but did not make v2-L INT8 deployment-ready.</li>
-<li>The native image input binding was corrected to bind RGB888 as <code>UINT8</code>,
-  <code>NHWC</code>, and <code>pass_through=0</code>, allowing RKNN runtime quantization instead of
-  passing RGB pixels through as the model's declared floating input type.</li>
-<li>On the controlled <code>bus.jpg</code> input, v2-M is a healthy layer-wise control.
-  It is evidence for this investigation, not a declaration of a final
-  supported model baseline.</li>
-<li>The v2-L INT8 simulator error becomes material around
-  <code>neck/top_down_layers.0</code> and compounds through later top-down, bottom-up,
-  and detection-head layers. v2-L INT8 is therefore not deployment-ready;
-  v2-S and v2-M remain viable pending hardware validation.</li>
-<li>An initial v2-L hybrid experiment kept the two
-  <code>neck/top_down_layers.0/final_conv</code> outputs in FP16. Its current status is
-  diagnostic-only: it has not completed a controlled comparison or hardware
-  validation and is not a deployment candidate.</li>
-<li>All conclusions above remain host-simulator results. Real RK3588 hardware
-  inference, latency, thermal behavior, and end-to-end detection validation
-  are still pending.</li>
+<li>v2-L recalibrated INT8 has a classification collapse before YOLO
+  postprocessing. The final RK3588 replay produced zero detections on all 300
+  representative frames.</li>
+<li>TD0 did not recover the failure. TD01 substantially recovered the 80x80 and
+  40x40 classification heads; expanding FP16 across the whole neck did not
+  materially improve further.</li>
+<li>The remaining failure localizes around the lowered projection / exMatMul
+  path under particular hybrid-precision arrangements. The exact proprietary
+  Toolkit2/backend mechanism remains unresolved.</li>
+<li>The isolated exMatMul micrograph remained healthy. The expanded
+  projection-context reproducer instead collapsed exactly on RK3588 for the
+  failed hybrid layout, while its FP16 and healthy-hybrid controls remained
+  non-constant. This distinguishes the required projection context from an
+  isolated matrix multiply alone.</li>
+<li>The final TD01 result is a useful experimental/diagnostic mixed-precision
+  mitigation, but is not FP-equivalent or a validated production replacement:
+  it retained 789 of 1,301 FP detections (60.6%) and had severe
+  class-specific degradation.</li>
+</ul>
+<h2 id="final-representative-rk3588-evaluation">Final representative RK3588 evaluation<a class="headerlink" href="#final-representative-rk3588-evaluation" title="Permanent link">&para;</a></h2>
+<p>The canonical final evidence is
+<code>artifacts/quant_analysis/v2l/final_multiframe_eval/results/</code>, indexed with
+hashes and file-retention guidance in
+<code>artifacts/quant_analysis/v2l/EVIDENCE_INDEX.md</code>. It replays 300 frozen
+representative frames using the existing <code>vision_replay</code> detector path, no
+warmup, score threshold 0.25, and NMS IoU threshold 0.45.</p>
+<p>FP is a behavioral reference, not ground truth. FP-relative agreement uses
+the same class, IoU &gt;= 0.50, and deterministic one-to-one matching: eligible
+pairs are ordered by descending IoU, then FP index, then candidate index and
+accepted greedily.</p>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th style="text-align: right;">Active frames</th>
+<th style="text-align: right;">Detections</th>
+<th style="text-align: right;">Matched FP detections</th>
+<th style="text-align: right;">FP detection retention</th>
+<th style="text-align: right;">Whole-process replay</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>v2-L FP</td>
+<td style="text-align: right;">300</td>
+<td style="text-align: right;">1,301</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;">118.751 s / 2.526 fps</td>
+</tr>
+<tr>
+<td>v2-L recalibrated INT8</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0 / 1,301</td>
+<td style="text-align: right;">0.0%</td>
+<td style="text-align: right;">58.653 s / 5.115 fps</td>
+</tr>
+<tr>
+<td>v2-L TD01 base hybrid</td>
+<td style="text-align: right;">295</td>
+<td style="text-align: right;">1,030</td>
+<td style="text-align: right;">789 / 1,301</td>
+<td style="text-align: right;">60.6%</td>
+<td style="text-align: right;">75.084 s / 3.996 fps</td>
+</tr>
+</tbody>
+</table>
+<p>The timing column is whole-process replay time: model/text initialization,
+PNG decode, CPU letterbox preprocessing, RKNN inference, postprocessing, and
+JSONL serialization. It is <strong>not</strong> isolated RKNN inference latency.</p>
+<p>For TD01, the strong FP detection-retention classes were person (81/86,
+94.2%), potted plant (119/127, 93.7%), tripod (58/63, 92.1%), cup (47/52,
+90.4%), garbage can (120/137, 87.6%), and bottle (66/79, 83.5%). Severe
+FP-relative degradation remained for handbag (2/48, 4.2%), bag (4/59, 6.8%),
+cellphone (0/5), book (18/73, 24.7%), subwoofer (7/27, 25.9%), and desk
+(37/124, 29.8%). These values are neither ground-truth precision nor recall.</p>
+<h2 id="final-engineering-decision">Final engineering decision<a class="headerlink" href="#final-engineering-decision" title="Permanent link">&para;</a></h2>
+<ul>
+<li>v2-L FP remains the quality reference.</li>
+<li>Recalibrated v2-L INT8 is unsuitable.</li>
+<li>TD01 is an experimental/diagnostic mixed-precision mitigation, not a
+  validated production replacement.</li>
+<li>The proprietary Toolkit2/backend root cause remains unresolved.</li>
+<li>The root-cause investigation is closed. Future work should reopen it only
+  when a vendor bug report or a production-quality v2-L mixed-precision
+  deployment is specifically required; TD01's 60.6% retention alone is not a
+  reason to reopen it.</li>
 </ul>
 <h2 id="reproducible-host-analysis">Reproducible host analysis<a class="headerlink" href="#reproducible-host-analysis" title="Permanent link">&para;</a></h2>
 <p>Build the pinned host model-builder image and run any variant:</p>
@@ -1325,14 +1436,16 @@ bus.jpg               33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f60
 113,524,529, and 187,339,766 bytes, respectively. Regenerate and record new
 hashes whenever the exporter, source checkpoint, calibration dataset, CLIP
 snapshot, or controlled input changes.</p>
-<h2 id="discarded-raw-traces">Discarded raw traces<a class="headerlink" href="#discarded-raw-traces" title="Permanent link">&para;</a></h2>
-<p>The investigation's raw Toolkit output is intentionally excluded from version
-control. After this document and its hashes have been reviewed, these local
-generated directories are safe to delete:</p>
-<div class="highlight"><pre><span></span><code>artifacts/quant_analysis/v2m/
-artifacts/quant_analysis/v2l/
-</code></pre></div>
-<p>They contain host-generated snapshots and reports only; the model artifacts,
+<h2 id="raw-traces-and-retained-final-evidence">Raw traces and retained final evidence<a class="headerlink" href="#raw-traces-and-retained-final-evidence" title="Permanent link">&para;</a></h2>
+<p>The investigation's raw Toolkit output remains intentionally excluded from
+version control. Do not delete experimental artifacts as part of this
+investigation closeout. The final 300-frame result bundle is distinct compact
+evidence and is retained as described in the evidence index; the frozen source
+and PNG frames remain reproducible local inputs rather than Git content.</p>
+<p>Earlier host-generated snapshot directories are candidates for later cleanup
+only after the evidence review. Do not treat the broad
+<code>artifacts/quant_analysis/v2l/</code> directory as removable: it now contains the
+Git-retained evidence index and final result bundle. Model artifacts,
 calibration inputs, source changes, and findings required to recreate the
 investigation are retained elsewhere.</p>
 
@@ -1355,7 +1468,7 @@ investigation are retained elsewhere.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 30, 2026 05:08:46 UTC">August 30, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 31, 2026 23:27:54 UTC">August 31, 2026</span>
   </span>
 
     
