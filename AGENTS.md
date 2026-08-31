@@ -144,6 +144,8 @@ python3 -m pre_commit run --all-files
 
 Review hook modifications intentionally and rerun affected tests when needed.
 
+Use conventional commits style messages for commits, if confused, look at git log.
+
 ## Experimental Discipline
 
 For model, quantization, performance, or perception comparisons:

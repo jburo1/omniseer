@@ -509,12 +509,20 @@ namespace omniseer::vision
           (out.attr.qnt_type == RKNN_TENSOR_QNT_AFFINE_ASYMMETRIC)
               ? (raw_min - static_cast<float>(out.attr.zp)) * out.attr.scale
               : raw_min;
-      float                 deq_min   = first_dequantized;
-      float                 deq_max   = first_dequantized;
-      float                 score_max = -std::numeric_limits<float>::infinity();
-      size_t                above_001 = 0;
-      size_t                above_010 = 0;
-      size_t                above_025 = 0;
+      float                 deq_min         = first_dequantized;
+      float                 deq_max         = first_dequantized;
+      double                raw_sum         = 0.0;
+      double                raw_sum_squares = 0.0;
+      double                deq_sum         = 0.0;
+      double                deq_sum_squares = 0.0;
+      size_t                raw_zero_count  = 0;
+      size_t                deq_zero_count  = 0;
+      size_t                int8_min_count  = 0;
+      size_t                int8_max_count  = 0;
+      float                 score_max       = -std::numeric_limits<float>::infinity();
+      size_t                above_001       = 0;
+      size_t                above_010       = 0;
+      size_t                above_025       = 0;
       std::array<bool, 256> seen_i8{};
       size_t                unique_i8         = 0;
       const bool            is_classification = out.attr.n_dims == 4 && out.attr.dims[1] != 4;
@@ -529,16 +537,24 @@ namespace omniseer::vision
                                       : raw;
         deq_min                 = std::min(deq_min, dequantized);
         deq_max                 = std::max(deq_max, dequantized);
+        raw_sum += raw;
+        raw_sum_squares += static_cast<double>(raw) * raw;
+        deq_sum += dequantized;
+        deq_sum_squares += static_cast<double>(dequantized) * dequantized;
+        raw_zero_count += (raw == 0.0F) ? 1u : 0u;
+        deq_zero_count += (dequantized == 0.0F) ? 1u : 0u;
 
         if (out.attr.type == RKNN_TENSOR_INT8)
         {
-          const uint8_t key =
-              static_cast<uint8_t>(reinterpret_cast<const int8_t*>(out.storage.data())[i]) + 128U;
+          const int8_t  value = reinterpret_cast<const int8_t*>(out.storage.data())[i];
+          const uint8_t key   = static_cast<uint8_t>(value) + 128U;
           if (!seen_i8[key])
           {
             seen_i8[key] = true;
             ++unique_i8;
           }
+          int8_min_count += (value == std::numeric_limits<int8_t>::min()) ? 1u : 0u;
+          int8_max_count += (value == std::numeric_limits<int8_t>::max()) ? 1u : 0u;
         }
 
         if (is_classification)
@@ -550,14 +566,29 @@ namespace omniseer::vision
         }
       }
 
+      const double element_count = static_cast<double>(elements);
+      const double raw_mean      = raw_sum / element_count;
+      const double deq_mean      = deq_sum / element_count;
+      const double raw_std =
+          std::sqrt(std::max(0.0, raw_sum_squares / element_count - raw_mean * raw_mean));
+      const double deq_std =
+          std::sqrt(std::max(0.0, deq_sum_squares / element_count - deq_mean * deq_mean));
+
       std::fprintf(stderr,
                    "RKNN_DIAG output_stats index=%u name=%s raw_min=%.9g raw_max=%.9g "
-                   "dequantized_min=%.9g dequantized_max=%.9g",
+                   "raw_mean=%.9g raw_std=%.9g raw_zero_fraction=%.9g "
+                   "dequantized_min=%.9g dequantized_max=%.9g dequantized_mean=%.9g "
+                   "dequantized_std=%.9g dequantized_zero_fraction=%.9g",
                    out.attr.index, out.attr.name, static_cast<double>(raw_min),
-                   static_cast<double>(raw_max), static_cast<double>(deq_min),
-                   static_cast<double>(deq_max));
+                   static_cast<double>(raw_max), raw_mean, raw_std,
+                   static_cast<double>(raw_zero_count) / element_count,
+                   static_cast<double>(deq_min), static_cast<double>(deq_max), deq_mean, deq_std,
+                   static_cast<double>(deq_zero_count) / element_count);
       if (out.attr.type == RKNN_TENSOR_INT8)
-        std::fprintf(stderr, " unique_int8_values=%zu", unique_i8);
+        std::fprintf(stderr,
+                     " unique_int8_values=%zu int8_min_fraction=%.9g int8_max_fraction=%.9g",
+                     unique_i8, static_cast<double>(int8_min_count) / element_count,
+                     static_cast<double>(int8_max_count) / element_count);
       if (is_classification)
       {
         std::fprintf(stderr,
