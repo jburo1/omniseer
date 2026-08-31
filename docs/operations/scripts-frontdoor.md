@@ -463,7 +463,7 @@ scripts/omni runs comparison-report runs/reference_scene \
   --trial runs/v2m_fp_scene \
   --trial runs/v2m_int8_scene \
   --trial runs/v2l_fp_scene \
-  --trial runs/v2l_int8_scene \
+  --trial runs/v2l_hybrid_scene \
   --comparison task \
   --truth runs/reference_scene/scene_truth.json
 scripts/omni build vision

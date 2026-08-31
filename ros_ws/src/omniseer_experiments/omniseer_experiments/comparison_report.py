@@ -48,7 +48,7 @@ MODEL_SPECS = (
     _ModelSpec("v2-M FP", "v2m_fp.jsonl", "m", "fp"),
     _ModelSpec("v2-M INT8", "v2m_int8.jsonl", "m", "int8"),
     _ModelSpec("v2-L FP", "v2l_fp.jsonl", "l", "fp"),
-    _ModelSpec("v2-L INT8", "v2l_int8.jsonl", "l", "int8"),
+    _ModelSpec("v2-L Hybrid", "v2l_hybrid.jsonl", "l", "hybrid"),
 )
 
 
@@ -566,16 +566,19 @@ def _resolve_trial_spec(manifest: dict[str, Any]) -> _ModelSpec | None:
         return None
     variant = str(model.get("variant") or "").lower().replace("-", "").replace("_", "")
     precision = str(model.get("precision") or "").lower().replace("-", "").replace("_", "")
-    if variant not in {"v2s", "v2m", "v2l"} or precision not in {"fp", "fp16", "float", "float16", "int8", "i8"}:
-        identity = " ".join(str(model.get(key) or "") for key in ("detector_model_path", "detector"))
-        normalized = identity.lower().replace("-", "_")
+    identity = " ".join(str(model.get(key) or "") for key in ("detector_model_path", "detector"))
+    normalized = identity.lower().replace("-", "_")
+    if not variant:
         if "v2_s" in normalized or "v2s" in normalized:
             variant = "v2s"
         elif "v2_m" in normalized or "v2m" in normalized:
             variant = "v2m"
         elif "v2_l" in normalized or "v2l" in normalized:
             variant = "v2l"
-        if "int8" in normalized or "_i8" in normalized:
+    if not precision:
+        if "hybrid" in normalized:
+            precision = "hybrid"
+        elif "int8" in normalized or "_i8" in normalized:
             precision = "int8"
         elif "fp16" in normalized or "_fp" in normalized:
             precision = "fp"

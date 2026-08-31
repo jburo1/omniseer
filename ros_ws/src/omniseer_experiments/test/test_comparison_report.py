@@ -7,6 +7,7 @@ from omniseer_experiments.comparison_report import (
     MODEL_SPECS,
     ReplayDetection,
     ReplayFrame,
+    _resolve_trial_spec,
     absent_truth_metrics,
     aggregate_replay,
     load_replay_comparison,
@@ -137,15 +138,28 @@ def _write_all_trials(root: Path) -> list[Path]:
     return trials
 
 
-def test_canonical_model_specs_cover_six_s_m_l_fp_int8_configurations() -> None:
+def test_canonical_model_specs_cover_six_s_m_l_final_configurations() -> None:
     assert [(spec.label, spec.detections_filename) for spec in MODEL_SPECS] == [
         ("v2-S FP", "v2s_fp.jsonl"),
         ("v2-S INT8", "v2s_int8.jsonl"),
         ("v2-M FP", "v2m_fp.jsonl"),
         ("v2-M INT8", "v2m_int8.jsonl"),
         ("v2-L FP", "v2l_fp.jsonl"),
-        ("v2-L INT8", "v2l_int8.jsonl"),
+        ("v2-L Hybrid", "v2l_hybrid.jsonl"),
     ]
+
+
+def test_trial_spec_prefers_explicit_hybrid_precision_over_fp16_filename() -> None:
+    hybrid_path = "models/yolo_world_v2_l_hybrid_td01_clspreds0_mm_inputs_fp16.rknn"
+    assert (
+        _resolve_trial_spec({"model": {"variant": "v2l", "precision": "hybrid", "detector_model_path": hybrid_path}})
+        == MODEL_SPECS[5]
+    )
+    assert _resolve_trial_spec({"model": {"detector_model_path": hybrid_path}}) == MODEL_SPECS[5]
+    assert (
+        _resolve_trial_spec({"model": {"variant": "v2l", "precision": "fp", "detector_model_path": hybrid_path}})
+        == MODEL_SPECS[4]
+    )
 
 
 def test_scene_truth_accepts_multiple_ranges_and_rejects_invalid_values(tmp_path: Path) -> None:

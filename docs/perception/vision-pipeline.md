@@ -270,16 +270,16 @@ command. It decodes the immutable raw
 `video/source.ts` once, reverses the known 1280x720 Rockchip preview circular wrap
 in memory (recorded `[x=1272..1279][x=0..1271]` becomes normal pixel order), and
 passes that same corrected BGR frame serially to resident v2-S FP, v2-S INT8, v2-M
-FP, v2-M INT8, v2-L FP, and v2-L INT8 `OfflineDetector` instances. Each instance uses the existing CPU
+FP, v2-M INT8, v2-L FP, and v2-L Hybrid `OfflineDetector` instances. Each instance uses the existing CPU
 letterbox, `RknnRunner`, `ConsumerPipeline`, embeddings, and YOLO postprocess path.
 
 For every decoded source frame, the comparator persists each model result with the existing replay
 JSONL schema (`frame_index`, source presentation `timestamp_sec`, and detections), then draws those
 same production source-pixel results before producing a
-labeled 3x2 H.264/yuv420p MP4 at the source FPS, with S/M/L rows and FP/INT8 columns. Offline inference duration does not
+labeled 3x2 H.264/yuv420p MP4 at the source FPS, with v2-S and v2-M FP/INT8 rows and a v2-L FP/Hybrid row. Offline inference duration does not
 control output elapsed time. It writes only under `video/comparison/<name>/`:
 `comparison.mp4`, `provenance.json`, `v2s_fp.jsonl`, `v2s_int8.jsonl`, `v2m_fp.jsonl`,
-`v2m_int8.jsonl`, `v2l_fp.jsonl`, and `v2l_int8.jsonl`. The raw source, original detections, and
+`v2m_int8.jsonl`, `v2l_fp.jsonl`, and `v2l_hybrid.jsonl`. The raw source, original detections, and
 RunBundle manifest remain unchanged.
 
 From the ROCK 5B+ devcontainer:

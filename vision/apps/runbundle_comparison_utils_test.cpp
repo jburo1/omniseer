@@ -23,9 +23,10 @@ namespace omniseer::vision
     EXPECT_STREQ(kRunbundleComparisonModels[4].label, "v2-L FP");
     EXPECT_STREQ(kRunbundleComparisonModels[4].artifact_name, "yolo_world_v2_l_fp.rknn");
     EXPECT_STREQ(kRunbundleComparisonModels[4].detections_filename, "v2l_fp.jsonl");
-    EXPECT_STREQ(kRunbundleComparisonModels[5].label, "v2-L INT8");
-    EXPECT_STREQ(kRunbundleComparisonModels[5].artifact_name, "yolo_world_v2_l_i8.rknn");
-    EXPECT_STREQ(kRunbundleComparisonModels[5].detections_filename, "v2l_int8.jsonl");
+    EXPECT_STREQ(kRunbundleComparisonModels[5].label, "v2-L Hybrid");
+    EXPECT_STREQ(kRunbundleComparisonModels[5].artifact_name,
+                 "yolo_world_v2_l_hybrid_td01_clspreds0_mm_inputs_fp16.rknn");
+    EXPECT_STREQ(kRunbundleComparisonModels[5].detections_filename, "v2l_hybrid.jsonl");
   }
 
   TEST(RunbundleComparison, ResolvesDocumentedRunbundleInputDefaults)
