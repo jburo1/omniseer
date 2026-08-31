@@ -3,9 +3,12 @@
 
 import argparse
 import os
+import re
+import shutil
 import sys
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Optional
 
 import numpy as np
 from rknn.api import RKNN
@@ -15,6 +18,10 @@ TEXT_INPUT_SHAPE = [1, 80, 512]
 CALIBRATION_TEXT_EMBEDDING = "calibration_text_outp.npy"
 HYBRID_LAYERS = [
     [
+        "/neck/upsample_layers.0/Resize_output_0",
+        "/neck/Concat_output_0",
+    ],
+    [
         "/neck/top_down_layers.0/Concat_output_0",
         "/neck/top_down_layers.0/final_conv/conv/Conv_output_0",
     ],
@@ -22,7 +29,29 @@ HYBRID_LAYERS = [
         "/neck/top_down_layers.0/final_conv/conv/Conv_output_0",
         "/neck/top_down_layers.0/final_conv/activate/Mul_output_0",
     ],
+    [
+        "/neck/top_down_layers.0/final_conv/activate/Mul_output_0",
+        "/neck/top_down_layers.1/final_conv/activate/Mul_output_0",
+    ],
 ]
+# These are the generated terminal classification output names.  Keeping only
+# these entries FP16 asks Toolkit2 to insert output conversion without
+# promoting the cls_preds or cls_contrasts computations which feed them.
+CLASSIFICATION_OUTPUTS = ("1577_int8", "1579_int8", "1581_int8")
+CLASSIFICATION_PREDICTION_TENSORS = tuple(
+    f"/bbox_head/head_module/cls_preds.{level}/cls_preds.{level}.{stage}/{suffix}"
+    for level in range(1)
+    for stage, suffix in (
+        (0, "conv/Conv_output_0"),
+        (0, "activate/Mul_output_0"),
+        (1, "conv/Conv_output_0"),
+        (1, "activate/Mul_output_0"),
+        (2, "Conv_output_0"),
+        (2, "Conv_output_0_rs"),
+        (2, "Conv_output_0_rs_mm"),
+        (2, "Conv_output_0_rs_mm_rs"),
+    )
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -39,6 +68,11 @@ def parse_args() -> argparse.Namespace:
         "--hybrid-workdir",
         type=Path,
         help="Empty directory in which Toolkit2 writes the reproducible hybrid configuration.",
+    )
+    parser.add_argument(
+        "--hybrid-template-workdir",
+        type=Path,
+        help="Existing Toolkit2 step-1 work directory to use as the exact hybrid baseline.",
     )
     return parser.parse_args()
 
@@ -78,19 +112,46 @@ def require_empty_hybrid_workdir(path: Path) -> None:
     path.mkdir(parents=True, exist_ok=True)
 
 
-def build_hybrid(rknn: RKNN, onnx: Path, dataset: Path, workdir: Path) -> None:
+def augment_td01_classification_predictions(config: Path) -> None:
+    """Add only the cls_preds FP16 path to the validated TD01 output control."""
+    contents = config.read_text(encoding="utf-8")
+    custom, parameters = contents.split("quantize_parameters:\n", 1)
+    existing = set(re.findall(r"^    (\S+): float16$", custom, flags=re.MULTILINE))
+    unexpected_head_entries = [entry for entry in existing if "/bbox_head/head_module/" in entry]
+    if unexpected_head_entries:
+        raise ValueError(
+            "hybrid template must be the output-FP16 control with no head FP16 entries: "
+            + ", ".join(sorted(unexpected_head_entries))
+        )
+    missing_outputs = [entry for entry in CLASSIFICATION_OUTPUTS if entry not in existing]
+    if missing_outputs:
+        raise ValueError(
+            "hybrid template is missing validated FP16 classification outputs: " + ", ".join(missing_outputs)
+        )
+    custom += "".join(f"    {entry}: float16\n" for entry in CLASSIFICATION_PREDICTION_TENSORS)
+    config.write_text(custom + "quantize_parameters:\n" + parameters, encoding="utf-8")
+
+
+def build_hybrid(rknn: RKNN, onnx: Path, dataset: Path, workdir: Path, template_workdir: Optional[Path] = None) -> None:
     """Use Toolkit2's supported two-step hybrid quantization workflow."""
     require_empty_hybrid_workdir(workdir)
     model_input = f"{onnx.stem}.model"
     data_input = f"{onnx.stem}.data"
     model_quantization_cfg = f"{onnx.stem}.quantization.cfg"
-    print(f"--> Generating hybrid configuration in {workdir}")
     with working_directory(workdir):
-        ret = rknn.hybrid_quantization_step1(dataset=str(dataset), custom_hybrid=HYBRID_LAYERS)
-        if ret != 0:
-            raise RuntimeError(f"RKNN hybrid_quantization_step1 failed with code {ret}")
+        if template_workdir is None:
+            print(f"--> Generating hybrid configuration in {workdir}")
+            ret = rknn.hybrid_quantization_step1(dataset=str(dataset), custom_hybrid=HYBRID_LAYERS)
+            if ret != 0:
+                raise RuntimeError(f"RKNN hybrid_quantization_step1 failed with code {ret}")
+        else:
+            print(f"--> Copying exact hybrid baseline from {template_workdir}")
+            for filename in (model_input, data_input, model_quantization_cfg):
+                require_nonempty(template_workdir / filename, f"RKNN hybrid baseline {filename}")
+                shutil.copy2(template_workdir / filename, workdir / filename)
         for filename in (model_input, data_input, model_quantization_cfg):
             require_nonempty(workdir / filename, f"RKNN hybrid configuration {filename}")
+        augment_td01_classification_predictions(workdir / model_quantization_cfg)
         print("--> Building hybrid model")
         ret = rknn.hybrid_quantization_step2(model_input, data_input, model_quantization_cfg)
         if ret != 0:
@@ -134,7 +195,13 @@ def main() -> int:
                 raise RuntimeError(f"RKNN load_onnx failed with code {ret}")
 
             if args.precision == "hybrid":
-                build_hybrid(rknn, args.onnx, args.dataset, args.hybrid_workdir)
+                build_hybrid(
+                    rknn,
+                    args.onnx,
+                    args.dataset,
+                    args.hybrid_workdir,
+                    args.hybrid_template_workdir,
+                )
             else:
                 print("--> Building model")
                 ret = rknn.build(

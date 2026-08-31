@@ -516,7 +516,7 @@ def test_runtime_verify_safe_smoke_treats_timeout_as_pass(tmp_path: Path) -> Non
     log = _docker_log(env)
     assert "/usr/local/bin/vision_replay" in log
     assert "/usr/local/bin/vision_rknn_probe" in log
-    assert "vision_rknn_probe --help" in log
+    assert "vision_rknn_probe\\ --help" in log
 
 
 def test_runtime_verify_full_records_rockchip_preview_artifact(tmp_path: Path) -> None:

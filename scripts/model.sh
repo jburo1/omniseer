@@ -52,7 +52,7 @@ Usage:
   scripts/omni model image [--image <name>] [docker build args...]
   scripts/omni model analyze [--variant v2s|v2m|v2l] [--onnx <model.onnx>] [--calibration-dir <dir>] [--clip-model <dir>] [--output-dir <dir>] [--image <name>]
   scripts/omni model export [--variant v2s|v2m|v2l] --weights <checkpoint.pth> [--output <model.onnx>] [--clip-model <dir>] [--image <name>]
-  scripts/omni model compile [--variant v2s|v2m|v2l] --onnx <model.onnx> --precision fp|int8|hybrid [--output <model.rknn>] [--calibration-dir <dir>] [--image <name>]
+  scripts/omni model compile [--variant v2s|v2m|v2l] --onnx <model.onnx> --precision fp|int8|hybrid [--output <model.rknn>] [--calibration-dir <dir>] [--hybrid-template-workdir <dir>] [--image <name>]
   scripts/omni model build [--variant v2s|v2m|v2l] --weights <checkpoint.pth> --precision fp|int8|hybrid [--onnx-output <model.onnx>] [--output <model.rknn>] [--clip-model <dir>] [--calibration-dir <dir>] [--image <name>]
 
 Defaults:
@@ -504,12 +504,13 @@ model_export() {
 }
 
 model_compile() {
-  local image calibration_dir variant
+  local image calibration_dir hybrid_template_workdir variant
   image="$(model_image_name)"
   variant="${model_default_variant}"
   local onnx=""
   local precision=""
   local output=""
+  hybrid_template_workdir=""
   calibration_dir="$(omni_repo_root)/models/source/yolo_world/calibration"
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -523,6 +524,8 @@ model_compile() {
       --output=*) output="${1#--output=}"; shift ;;
       --calibration-dir) [[ $# -ge 2 ]] || omni_die "--calibration-dir requires a path"; calibration_dir="$2"; shift 2 ;;
       --calibration-dir=*) calibration_dir="${1#--calibration-dir=}"; shift ;;
+      --hybrid-template-workdir) [[ $# -ge 2 ]] || omni_die "--hybrid-template-workdir requires a path"; hybrid_template_workdir="$2"; shift 2 ;;
+      --hybrid-template-workdir=*) hybrid_template_workdir="${1#--hybrid-template-workdir=}"; shift ;;
       --image) [[ $# -ge 2 ]] || omni_die "--image requires a value"; image="$2"; shift 2 ;;
       --image=*) image="${1#--image=}"; shift ;;
       -h|--help|help) model_usage; return 0 ;;
@@ -534,6 +537,8 @@ model_compile() {
   case "${precision}" in fp|int8|hybrid) ;; *) omni_die "--precision must be fp, int8, or hybrid" ;; esac
   [[ "${precision}" != hybrid || "${model_variant}" == v2l ]] \
     || omni_die "--precision hybrid is currently defined only for v2l"
+  [[ -z "${hybrid_template_workdir}" || "${precision}" == hybrid ]] \
+    || omni_die "--hybrid-template-workdir requires --precision hybrid"
   onnx="$(model_existing_path "${onnx}")"
   model_require_in_repo "${onnx}"
   if [[ -z "${output}" ]]; then
@@ -562,6 +567,11 @@ model_compile() {
   fi
   if [[ "${precision}" == hybrid ]]; then
     args+=(--hybrid-workdir "$(model_container_path "$(dirname "${output}")")/$(basename "${output%.rknn}")_config")
+    if [[ -n "${hybrid_template_workdir}" ]]; then
+      hybrid_template_workdir="$(model_existing_path "${hybrid_template_workdir}")"
+      model_require_in_repo "${hybrid_template_workdir}"
+      args+=(--hybrid-template-workdir "$(model_container_path "${hybrid_template_workdir}")")
+    fi
   fi
   model_docker_run "${image}" python /workspace/tools/model/validate_yolo_world_onnx.py "${onnx_in_container}"
   model_docker_run "${image}" "${args[@]}"
