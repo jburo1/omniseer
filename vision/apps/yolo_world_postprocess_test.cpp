@@ -225,3 +225,62 @@ TEST(YoloWorldPostprocessTest, DecodesOneFloat16DetectionIntoSourceSpace)
   EXPECT_NEAR(det.x2, 736.0F, 1e-4F);
   EXPECT_NEAR(det.y2, 520.0F, 1e-4F);
 }
+
+TEST(YoloWorldPostprocessTest, DecodesFloat16ClassesAndInt8BoxesIntoSourceSpace)
+{
+  std::vector<FakeFloat16Tensor> class_tensors{};
+  class_tensors.reserve(3);
+  class_tensors.push_back(make_fp16_tensor(0, 80, 80));
+  class_tensors.push_back(make_fp16_tensor(2, 80, 40));
+  class_tensors.push_back(make_fp16_tensor(4, 80, 20));
+
+  std::vector<FakeTensor> box_tensors{};
+  box_tensors.reserve(3);
+  box_tensors.push_back(make_i8_tensor(1, 4, 80, -128, 0.50F));
+  box_tensors.push_back(make_i8_tensor(3, 4, 40, -128, 0.50F));
+  box_tensors.push_back(make_i8_tensor(5, 4, 20, -128, 0.50F));
+
+  set_class_score(class_tensors[2], 2, 8, 8, 0.80F);
+  set_box(box_tensors[2], 8, 8, -124, -126, -122, -120);
+
+  std::vector<RknnOutputDesc> descs(6);
+  std::vector<RknnOutputView> views(6);
+  for (size_t scale = 0; scale < class_tensors.size(); ++scale)
+  {
+    const uint32_t class_index = static_cast<uint32_t>(scale * 2u);
+    const uint32_t box_index   = class_index + 1u;
+    descs[class_index]         = class_tensors[scale].desc;
+    views[class_index]         = class_tensors[scale].view;
+    descs[box_index]           = box_tensors[scale].desc;
+    views[box_index]           = box_tensors[scale].view;
+  }
+
+  const YoloWorldOutputLayout layout = omniseer::vision::resolve_yolo_world_output_layout(descs);
+
+  ConsumerPipelineConfig cfg{};
+  cfg.score_threshold   = 0.25F;
+  cfg.nms_iou_threshold = 0.45F;
+  cfg.max_detections    = 100;
+
+  PipelineRemapConfig remap{};
+  remap.source_size      = {.w = 1280, .h = 720};
+  remap.model_input_size = {.w = 640, .h = 640};
+  remap.scale            = 0.5F;
+  remap.pad_x            = 0;
+  remap.pad_y            = 140;
+
+  DetectionsFrame frame{};
+  frame.source_size        = remap.source_size;
+  frame.active_class_count = 3;
+
+  omniseer::vision::decode_yolo_world_detections(views, descs, layout, cfg, remap, 3, frame);
+
+  ASSERT_EQ(frame.count, 1u);
+  const Detection& det = frame.detections[0];
+  EXPECT_EQ(det.class_id, 2u);
+  EXPECT_NEAR(det.score, 0.80F, 3e-4F);
+  EXPECT_NEAR(det.x1, 416.0F, 1e-4F);
+  EXPECT_NEAR(det.y1, 200.0F, 1e-4F);
+  EXPECT_NEAR(det.x2, 736.0F, 1e-4F);
+  EXPECT_NEAR(det.y2, 520.0F, 1e-4F);
+}

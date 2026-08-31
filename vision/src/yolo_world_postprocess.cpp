@@ -278,6 +278,71 @@ namespace omniseer::vision
       }
     }
 
+    void collect_fp16_int8_candidates(const int8_t* box_tensor, const RknnOutputDesc& box_desc,
+                                      const uint16_t*       class_tensor,
+                                      const RknnOutputDesc& class_desc, uint32_t model_input_size,
+                                      uint32_t active_class_count, float score_threshold,
+                                      std::vector<Candidate>& candidates) noexcept
+    {
+      (void) class_desc;
+      if (box_tensor == nullptr || class_tensor == nullptr || box_desc.scale <= 0.0F)
+        return;
+
+      const uint32_t grid_h   = box_desc.dims[2];
+      const uint32_t grid_w   = box_desc.dims[3];
+      const size_t   grid_len = static_cast<size_t>(grid_h) * static_cast<size_t>(grid_w);
+      const float    stride =
+          (grid_h == 0) ? 0.0F : static_cast<float>(model_input_size) / static_cast<float>(grid_h);
+      if (grid_len == 0 || stride <= 0.0F)
+        return;
+
+      for (uint32_t y = 0; y < grid_h; ++y)
+      {
+        for (uint32_t x = 0; x < grid_w; ++x)
+        {
+          const size_t cell_offset = static_cast<size_t>(y) * grid_w + x;
+
+          float    max_score  = score_threshold;
+          uint32_t best_class = 0;
+          bool     found      = false;
+          for (uint32_t class_id = 0; class_id < active_class_count; ++class_id)
+          {
+            const float score = float16_to_float32(
+                class_tensor[cell_offset + static_cast<size_t>(class_id) * grid_len]);
+            if (score > score_threshold && (!found || score > max_score))
+            {
+              max_score  = score;
+              best_class = class_id;
+              found      = true;
+            }
+          }
+          if (!found)
+            continue;
+
+          const float left   = dequantize_i8(box_tensor[cell_offset + 0u * grid_len],
+                                             box_desc.zero_point, box_desc.scale);
+          const float top    = dequantize_i8(box_tensor[cell_offset + 1u * grid_len],
+                                             box_desc.zero_point, box_desc.scale);
+          const float right  = dequantize_i8(box_tensor[cell_offset + 2u * grid_len],
+                                             box_desc.zero_point, box_desc.scale);
+          const float bottom = dequantize_i8(box_tensor[cell_offset + 3u * grid_len],
+                                             box_desc.zero_point, box_desc.scale);
+
+          const float center_x = (static_cast<float>(x) + 0.5F) * stride;
+          const float center_y = (static_cast<float>(y) + 0.5F) * stride;
+
+          Candidate candidate{};
+          candidate.class_id = static_cast<uint16_t>(best_class);
+          candidate.score    = max_score;
+          candidate.x1       = center_x - left * stride;
+          candidate.y1       = center_y - top * stride;
+          candidate.x2       = center_x + right * stride;
+          candidate.y2       = center_y + bottom * stride;
+          candidates.push_back(candidate);
+        }
+      }
+    }
+
     float compute_iou(const Candidate& a, const Candidate& b) noexcept
     {
       const float inter_x1 = std::max(a.x1, b.x1);
@@ -424,6 +489,15 @@ namespace omniseer::vision
                                 static_cast<const uint16_t*>(outputs[class_index].data), class_desc,
                                 remap.model_input_size.h, active_class_count, cfg.score_threshold,
                                 candidates);
+        continue;
+      }
+
+      if (class_desc.type == RKNN_TENSOR_FLOAT16 && box_desc.type == RKNN_TENSOR_INT8)
+      {
+        collect_fp16_int8_candidates(static_cast<const int8_t*>(outputs[box_index].data), box_desc,
+                                     static_cast<const uint16_t*>(outputs[class_index].data),
+                                     class_desc, remap.model_input_size.h, active_class_count,
+                                     cfg.score_threshold, candidates);
         continue;
       }
 
