@@ -16,13 +16,17 @@ collection are deliberately force-added to Git.
 | Recalibrated v2-L INT8 failure | `artifacts/models/yolo_world_v2_l_i8_recal.rknn` | `337012ef7690c39dbbbb0fc73ce4396a5c9ff2411032cca47fb012b66045faef` |
 | Original TD0 hybrid | `runs/model_artifacts/yolo_world_v2_l_hybrid.rknn` plus `_config/` | `6a590575f5de60ecdca4a5b01346932eab05aa6b3479f876b53b3c4bf51fd2f5` |
 | TD01 base hybrid | `runs/model_artifacts/yolo_world_v2_l_hybrid_td01.rknn` plus `_config/` | `20e43523ab4221fd755553030dbc58943f457839d5583b1f2f29954489c2ef92` |
-| Current practical TD01 mitigation | `runs/model_artifacts/yolo_world_v2_l_hybrid_td01_clspreds0_mm_inputs_fp16.rknn` plus `_config/` | model `df72d337ad03a7b90c5a96f2b44495fd25f5747094019b038b2823d5133d398e`; config `d9f93c95d849307c86bf5f48705ff31002b81ff779aa2693d8b8e5badcbdc365` |
+| TD01 base hybrid (diagnostic mitigation) | `runs/model_artifacts/yolo_world_v2_l_hybrid_td01.rknn` plus `_config/` | `20e43523ab4221fd755553030dbc58943f457839d5583b1f2f29954489c2ef92` |
 | Full-neck hybrid | `runs/model_artifacts/yolo_world_v2_l_hybrid_neck.rknn` plus `_config/` | `fa197bed3d9e0a70bf0803b0139bf3350c4efbef895f03d44b2000a618905439` |
 
-The TD01 mitigation config is derived from the stored TD01 output-FP16 control
-and retains the `cls_preds.0.2` projection/reshape/exMatMul boundary plus
-`texts_tp-rs` in FP16.  Keep the `.rknn` and all three generated step-1 files
-(`.model`, `.data`, `.quantization.cfg`) together.
+TD01 is a diagnostic mixed-precision mitigation, not an FP-equivalent or
+production-validated replacement. Keep its `.rknn` and all three generated
+step-1 files (`.model`, `.data`, `.quantization.cfg`) together. The
+`yolo_world_v2_l_hybrid_td01_clspreds0_mm_inputs_fp16.rknn` artifact (model
+`df72d337ad03a7b90c5a96f2b44495fd25f5747094019b038b2823d5133d398e`; config
+`d9f93c95d849307c86bf5f48705ff31002b81ff779aa2693d8b8e5badcbdc365`) is a
+failed classifier-path localization probe, not a mitigation or deployment
+candidate.
 
 ## Classification-path localization evidence
 
@@ -41,6 +45,28 @@ projection-context reproducer supplies the real v2-L classifier context.
 and text-input hash
 `f1eb7a48d7cb69fbc5aec5f943b2f3b752ebbe5f6d85ed8a3e4ed7c271bf3311`.
 It also records the exact RKNN artifact hashes and comparison metrics.
+
+### Final RK3588 reproduction
+
+The final hardware reproduction is
+`artifacts/quant_analysis/v2l/cls80_projection_context_toolkit210_run2/rk3588_execution_20260831/`.
+Its canonical, Git-retained machine-readable comparison is `metrics.json`
+(SHA-256 `77f8634499127aa1bd02a1228489b8dbd756d632df78d73b59ad7f7c82d688fb`).
+It identifies RK3588 as the platform, the three exact model hashes, output
+shapes/statistics, host/reference comparison metrics, and raw-output hashes.
+
+On RK3588, only the failed-layout hybrid (`failed_fp16_island`) collapsed to
+an exactly constant output (value `-11.993370056152344`, stddev `0.0`).  The
+FP16 control and healthy-hybrid control remained non-constant (stddev
+`5.930371901237637` and `5.876957691347017`, respectively).  The raw output
+arrays remain in that directory as recoverable local evidence; their hashes,
+recorded in `metrics.json`, are:
+
+| Variant | Raw output file | SHA-256 |
+| --- | --- | --- |
+| Failed-layout hybrid | `failed_fp16_island_hardware_output.npy` | `42f4f41a873f54315a82837519d86d3f607550ec03f2dbe41a93f8175eb49ac4` |
+| FP16 control | `full_fp16_hardware_output.npy` | `675fe8131019bf2402b0c7f7712b57539856c056075d495f0f261d0c0c1404bc` |
+| Healthy-hybrid control | `healthy_int8_matmul_hardware_output.npy` | `b5a0092a00b6641cdf8710999d59ea189bea24d71e6682f276f1281c36296206` |
 
 ## Inputs, host diagnostics, and version contract
 
@@ -64,9 +90,10 @@ It also records the exact RKNN artifact hashes and comparison metrics.
 Radxa directory of that name.  It contains the corrected single-frame AVI and
 frame hashes, plus paired `.log` and `.jsonl` output for FP, recalibrated INT8,
 TD0, TD01, full-neck, the TD01 output control, and each classifier-path bisect.
-The current mitigation is represented by
-`v2l_hybrid_td01_clspreds0_mm_inputs_fp16.{log,jsonl}`.  The local copy was
-byte-compared with the board after transfer.
+The TD01 base hybrid is the mitigation in this one-frame collection.  The
+`v2l_hybrid_td01_clspreds0_mm_inputs_fp16.{log,jsonl}` pair is a
+classifier-path localization probe, not mitigation evidence.  The local copy
+was byte-compared with the board after transfer.
 
 The RK3588 logs capture actual tensor metadata and output statistics.
 `rk3588_environment.txt` records the board kernel, runtime `2.3.0`
@@ -74,6 +101,53 @@ The RK3588 logs capture actual tensor metadata and output statistics.
 `/proc/driver/rknpu/version` path was absent, so the NPU driver version remains
 unknown and must be captured before a hardware-version-sensitive conclusion.
 No further board copy is required for the evidence currently present there.
+
+## Canonical final 300-frame RK3588 evaluation
+
+`artifacts/quant_analysis/v2l/final_multiframe_eval/results/` is the
+canonical final representative evaluation. The retained compact evidence is
+`summary.json`, `summary.md`, the three normalized `v2l_*.jsonl` files, and
+the corresponding `raw/*_replay.jsonl`, `*.wall_time.txt`, `*.stdout.log`,
+and `*.stderr.log` process records. `summary.json` binds every retained JSONL
+file to its SHA-256, exact model hash, replay command, runtime setting, and
+whole-process timing method.
+
+The 300-frame JSONL results independently confirm the following FP-relative
+comparison. FP is a behavioral reference, not ground truth. Matching requires
+the same class and IoU >= 0.50, enumerates all eligible pairs, sorts by
+descending IoU then FP index then candidate index, and greedily accepts
+deterministic one-to-one pairs.
+
+| Model | Active frames | Detections | Matched FP detections | FP detection retention | Whole-process replay |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| v2-L FP | 300 | 1,301 | — | — | 118.751 s / 2.526 fps |
+| v2-L recalibrated INT8 | 0 | 0 | 0 / 1,301 | 0.0% | 58.653 s / 5.115 fps |
+| v2-L TD01 base hybrid | 295 | 1,030 | 789 / 1,301 | 60.6% | 75.084 s / 3.996 fps |
+
+These are whole-process replay measurements, including initialization, PNG
+decode, CPU letterbox preprocessing, RKNN inference, postprocessing, and
+JSONL serialization. They are explicitly **not** isolated RKNN inference
+latency.
+
+TD01's notable FP detection retention was person 81/86 (94.2%), potted plant
+119/127 (93.7%), tripod 58/63 (92.1%), cup 47/52 (90.4%), garbage can 120/137
+(87.6%), and bottle 66/79 (83.5%). Its notable degradation was handbag 2/48
+(4.2%), bag 4/59 (6.8%), cellphone 0/5, book 18/73 (24.7%), subwoofer 7/27
+(25.9%), and desk 37/124 (29.8%). These are FP-relative agreement measures,
+not ground-truth precision or recall.
+
+The frozen dataset manifest is retained in Git at
+`artifacts/quant_analysis/v2l/final_multiframe_eval/manifest.json` (SHA-256
+`3a33a81643c31e4fb72b8a8406c825858baef2abef10b112e136cc6ca3a4c055`).
+`summary.json` records that same manifest SHA-256,
+`3a33a81643c31e4fb72b8a8406c825858baef2abef10b112e136cc6ca3a4c055`, source
+SHA-256 `9cede604070b3bbdbcb31f6040a84c9637f4894522b480a46b6faf7fdca40058`,
+and the task-class SHA-256 `86034945de1c68662432a8677b5c08fb1c965cb2069d5e5b1f634571f5b91e3b`.
+The source transport stream (`runs/scan_final/video/source.ts`) and its 300
+lossless PNG frames are intentionally not retained in Git: they are external,
+reproducible artifacts identified by their recorded hashes and the manifest's
+deterministic extraction recipe. Do not force-add either the source stream or
+the PNG sequence. No experimental artifacts are deleted by this index.
 
 ## Non-canonical duplicates / failed probes
 

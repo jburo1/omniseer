@@ -1,0 +1,619 @@
+{
+  "schema_version": 1,
+  "created_at_utc": "2026-08-31T22:59:07.970072Z",
+  "dataset": {
+    "path": "artifacts/quant_analysis/v2l/final_multiframe_eval",
+    "manifest_path": "artifacts/quant_analysis/v2l/final_multiframe_eval/manifest.json",
+    "manifest_sha256": "3a33a81643c31e4fb72b8a8406c825858baef2abef10b112e136cc6ca3a4c055",
+    "source": {
+      "path": "runs/scan_final/video/source.ts",
+      "sha256": "9cede604070b3bbdbcb31f6040a84c9637f4894522b480a46b6faf7fdca40058",
+      "decoded_frame_count": 1222,
+      "duration_sec": 30.534022,
+      "width": 1280,
+      "height": 720,
+      "avg_frame_rate": "30/1"
+    },
+    "frame_count": 300
+  },
+  "task_classes": {
+    "path": "config/classes/task.txt",
+    "sha256": "86034945de1c68662432a8677b5c08fb1c965cb2069d5e5b1f634571f5b91e3b"
+  },
+  "settings": {
+    "warmup": 0,
+    "score_threshold": 0.25,
+    "nms_iou_threshold": 0.45,
+    "max_detections": 100,
+    "input": "Frozen lossless 1280x720 PNG image sequence in manifest source-frame order.",
+    "runtime_path": "vision/build/vision_replay -> OfflineDetector -> existing CPU letterbox/RKNN/YOLO-World postprocess.",
+    "shared_text_embedding_inputs": {
+      "clip_model": "vision/testdata/text_embeddings/clip_text_fp16.rknn",
+      "clip_model_sha256": "af2336695d3c32df9d022b453b6e05fb72e80b3ec529903d214b9c78879da484",
+      "clip_vocab": "vision/testdata/text_embeddings/clip_vocab.bpe",
+      "clip_vocab_sha256": "9fd691f7c8039210e0fced15865466c65820d09b63988b0174bfe25de299051a"
+    },
+    "sequential_execution_order": [
+      "v2l_fp",
+      "v2l_int8_recal",
+      "v2l_td01"
+    ]
+  },
+  "models": {
+    "v2l_fp": {
+      "display_name": "v2-L FP",
+      "model_path": "runs/model_artifacts/yolo_world_v2_l_fp.rknn",
+      "raw_path": "raw/v2l_fp_replay.jsonl",
+      "wall_time_path": "raw/v2l_fp.wall_time.txt",
+      "model_sha256": "b6112550be6a4b2a019619053a3015914f99a5ba7216c078115a6dfbdef75df3",
+      "output_path": "results/v2l_fp.jsonl",
+      "output_sha256": "3819758787cddb187c8f01457a9c16ff17df1b3617e49356eb4d02ded037fde1",
+      "raw_replay_sha256": "bd30899daf4a9fa5cb02fe365580d6461b9cc99016a7e3b1d9ca179211c935c2",
+      "quality_metrics": {
+        "frames_evaluated": 300,
+        "active_frames_with_detection": 300,
+        "total_detections": 1301,
+        "detections_per_active_frame": 4.336666666666667,
+        "detection_count_by_class": {
+          "bag": 59,
+          "beer mug": 1,
+          "book": 73,
+          "bottle": 79,
+          "cellphone": 5,
+          "chair": 117,
+          "cup": 52,
+          "desk": 124,
+          "dog": 10,
+          "garbage can": 137,
+          "handbag": 48,
+          "jar": 11,
+          "mug": 104,
+          "person": 86,
+          "potted plant": 127,
+          "scissors": 52,
+          "shoe": 2,
+          "speaker": 124,
+          "subwoofer": 27,
+          "tripod": 63
+        },
+        "score_distribution": {
+          "count": 1301,
+          "mean": 0.6263453067924674,
+          "median": 0.613769531,
+          "p10": 0.306640625,
+          "p90": 0.920898438,
+          "max": 0.970214844
+        }
+      },
+      "performance_metrics": {
+        "per_inference_latency_available": false,
+        "reason": "vision_replay JSONL does not expose inference timing; no production diagnostic changes were made.",
+        "whole_process_wall_time_sec": 118.751,
+        "whole_process_wall_time_per_frame_ms": 395.83666666666664,
+        "whole_process_effective_fps": 2.526294515414607,
+        "scope": "Includes model/text-embedding initialization, PNG sequence decode, CPU letterbox preprocessing, RKNN inference, postprocessing, and JSONL serialization; do not interpret as model inference latency."
+      }
+    },
+    "v2l_int8_recal": {
+      "display_name": "v2-L recalibrated INT8",
+      "model_path": "runs/model_artifacts/yolo_world_v2_l_i8_recal.rknn",
+      "raw_path": "raw/v2l_int8_recal_replay.jsonl",
+      "wall_time_path": "raw/v2l_int8_recal.wall_time.txt",
+      "model_sha256": "337012ef7690c39dbbbb0fc73ce4396a5c9ff2411032cca47fb012b66045faef",
+      "output_path": "results/v2l_int8_recal.jsonl",
+      "output_sha256": "99772b8107a0a2d5675ebaf27777cc302f12895441ed693da8e1cb82324d2909",
+      "raw_replay_sha256": "f3d262360a80ddf8d43e80dc1376c6bdab9286cb5b816ccc6bdeb22f3e442854",
+      "quality_metrics": {
+        "frames_evaluated": 300,
+        "active_frames_with_detection": 0,
+        "total_detections": 0,
+        "detections_per_active_frame": 0.0,
+        "detection_count_by_class": {},
+        "score_distribution": {
+          "count": 0,
+          "mean": null,
+          "median": null,
+          "p10": null,
+          "p90": null,
+          "max": null
+        }
+      },
+      "performance_metrics": {
+        "per_inference_latency_available": false,
+        "reason": "vision_replay JSONL does not expose inference timing; no production diagnostic changes were made.",
+        "whole_process_wall_time_sec": 58.6534,
+        "whole_process_wall_time_per_frame_ms": 195.5113333333333,
+        "whole_process_effective_fps": 5.114793004327115,
+        "scope": "Includes model/text-embedding initialization, PNG sequence decode, CPU letterbox preprocessing, RKNN inference, postprocessing, and JSONL serialization; do not interpret as model inference latency."
+      }
+    },
+    "v2l_td01": {
+      "display_name": "v2-L TD01 base hybrid",
+      "model_path": "runs/model_artifacts/yolo_world_v2_l_hybrid_td01.rknn",
+      "raw_path": "raw/v2l_td01_replay.jsonl",
+      "wall_time_path": "raw/v2l_td01.wall_time.txt",
+      "model_sha256": "20e43523ab4221fd755553030dbc58943f457839d5583b1f2f29954489c2ef92",
+      "output_path": "results/v2l_td01.jsonl",
+      "output_sha256": "a8688a4d35f183f2d0e6dd1969b86899ae5cc5c18eb72c1fd11cdc0b8c2bce8c",
+      "raw_replay_sha256": "9a711eb83c7b01cc76b41c983ccc6833a91a5403d0266f31cd8fc609b4a2111e",
+      "quality_metrics": {
+        "frames_evaluated": 300,
+        "active_frames_with_detection": 295,
+        "total_detections": 1030,
+        "detections_per_active_frame": 3.4915254237288136,
+        "detection_count_by_class": {
+          "bag": 4,
+          "beer mug": 5,
+          "book": 18,
+          "bottle": 79,
+          "chair": 106,
+          "cup": 154,
+          "desk": 37,
+          "dog": 4,
+          "garbage can": 123,
+          "handbag": 2,
+          "jar": 7,
+          "mug": 49,
+          "person": 84,
+          "potted plant": 119,
+          "scissors": 27,
+          "shoe": 69,
+          "speaker": 73,
+          "subwoofer": 12,
+          "tripod": 58
+        },
+        "score_distribution": {
+          "count": 1030,
+          "mean": 0.542216377338835,
+          "median": 0.507954955,
+          "p10": 0.295952141,
+          "p90": 0.861464143,
+          "max": 0.934577227
+        }
+      },
+      "performance_metrics": {
+        "per_inference_latency_available": false,
+        "reason": "vision_replay JSONL does not expose inference timing; no production diagnostic changes were made.",
+        "whole_process_wall_time_sec": 75.0837,
+        "whole_process_wall_time_per_frame_ms": 250.279,
+        "whole_process_effective_fps": 3.9955409762704823,
+        "scope": "Includes model/text-embedding initialization, PNG sequence decode, CPU letterbox preprocessing, RKNN inference, postprocessing, and JSONL serialization; do not interpret as model inference latency."
+      }
+    }
+  },
+  "fp_relative_comparisons": {
+    "v2l_int8_recal": {
+      "reference": "v2l_fp",
+      "matching_rule": "Class-aware IoU >= 0.50; enumerate all eligible pairs, sort by descending IoU then FP index then candidate index, and greedily accept one-to-one pairs.",
+      "fp_detection_count": 1301,
+      "matched_detection_count": 0,
+      "fp_detection_retention": 0.0,
+      "unmatched_fp_detections": 1301,
+      "extra_candidate_detections_relative_to_fp": 0,
+      "matched_iou": {
+        "count": 0,
+        "mean": null,
+        "median": null,
+        "p10": null,
+        "p90": null,
+        "max": null
+      },
+      "matched_score_delta_candidate_minus_fp": {
+        "count": 0,
+        "mean": null,
+        "median": null,
+        "p10": null,
+        "p90": null,
+        "max": null
+      },
+      "per_class": {
+        "bag": {
+          "fp_detections": 59,
+          "matched": 0,
+          "unmatched_fp": 59,
+          "extra_candidate": 0,
+          "fp_detection_retention": 0.0
+        },
+        "beer mug": {
+          "fp_detections": 1,
+          "matched": 0,
+          "unmatched_fp": 1,
+          "extra_candidate": 0,
+          "fp_detection_retention": 0.0
+        },
+        "book": {
+          "fp_detections": 73,
+          "matched": 0,
+          "unmatched_fp": 73,
+          "extra_candidate": 0,
+          "fp_detection_retention": 0.0
+        },
+        "bottle": {
+          "fp_detections": 79,
+          "matched": 0,
+          "unmatched_fp": 79,
+          "extra_candidate": 0,
+          "fp_detection_retention": 0.0
+        },
+        "cellphone": {
+          "fp_detections": 5,
+          "matched": 0,
+          "unmatched_fp": 5,
+          "extra_candidate": 0,
+          "fp_detection_retention": 0.0
+        },
+        "chair": {
+          "fp_detections": 117,
+          "matched": 0,
+          "unmatched_fp": 117,
+          "extra_candidate": 0,
+          "fp_detection_retention": 0.0
+        },
+        "cup": {
+          "fp_detections": 52,
+          "matched": 0,
+          "unmatched_fp": 52,
+          "extra_candidate": 0,
+          "fp_detection_retention": 0.0
+        },
+        "desk": {
+          "fp_detections": 124,
+          "matched": 0,
+          "unmatched_fp": 124,
+          "extra_candidate": 0,
+          "fp_detection_retention": 0.0
+        },
+        "dog": {
+          "fp_detections": 10,
+          "matched": 0,
+          "unmatched_fp": 10,
+          "extra_candidate": 0,
+          "fp_detection_retention": 0.0
+        },
+        "garbage can": {
+          "fp_detections": 137,
+          "matched": 0,
+          "unmatched_fp": 137,
+          "extra_candidate": 0,
+          "fp_detection_retention": 0.0
+        },
+        "handbag": {
+          "fp_detections": 48,
+          "matched": 0,
+          "unmatched_fp": 48,
+          "extra_candidate": 0,
+          "fp_detection_retention": 0.0
+        },
+        "jar": {
+          "fp_detections": 11,
+          "matched": 0,
+          "unmatched_fp": 11,
+          "extra_candidate": 0,
+          "fp_detection_retention": 0.0
+        },
+        "mug": {
+          "fp_detections": 104,
+          "matched": 0,
+          "unmatched_fp": 104,
+          "extra_candidate": 0,
+          "fp_detection_retention": 0.0
+        },
+        "person": {
+          "fp_detections": 86,
+          "matched": 0,
+          "unmatched_fp": 86,
+          "extra_candidate": 0,
+          "fp_detection_retention": 0.0
+        },
+        "potted plant": {
+          "fp_detections": 127,
+          "matched": 0,
+          "unmatched_fp": 127,
+          "extra_candidate": 0,
+          "fp_detection_retention": 0.0
+        },
+        "scissors": {
+          "fp_detections": 52,
+          "matched": 0,
+          "unmatched_fp": 52,
+          "extra_candidate": 0,
+          "fp_detection_retention": 0.0
+        },
+        "shoe": {
+          "fp_detections": 2,
+          "matched": 0,
+          "unmatched_fp": 2,
+          "extra_candidate": 0,
+          "fp_detection_retention": 0.0
+        },
+        "speaker": {
+          "fp_detections": 124,
+          "matched": 0,
+          "unmatched_fp": 124,
+          "extra_candidate": 0,
+          "fp_detection_retention": 0.0
+        },
+        "subwoofer": {
+          "fp_detections": 27,
+          "matched": 0,
+          "unmatched_fp": 27,
+          "extra_candidate": 0,
+          "fp_detection_retention": 0.0
+        },
+        "tripod": {
+          "fp_detections": 63,
+          "matched": 0,
+          "unmatched_fp": 63,
+          "extra_candidate": 0,
+          "fp_detection_retention": 0.0
+        }
+      }
+    },
+    "v2l_td01": {
+      "reference": "v2l_fp",
+      "matching_rule": "Class-aware IoU >= 0.50; enumerate all eligible pairs, sort by descending IoU then FP index then candidate index, and greedily accept one-to-one pairs.",
+      "fp_detection_count": 1301,
+      "matched_detection_count": 789,
+      "fp_detection_retention": 0.606456571867794,
+      "unmatched_fp_detections": 512,
+      "extra_candidate_detections_relative_to_fp": 241,
+      "matched_iou": {
+        "count": 789,
+        "mean": 0.9759748968687048,
+        "median": 0.9805711463139415,
+        "p10": 0.9619464284637473,
+        "p90": 0.9896815552773097,
+        "max": 0.9961053977701559
+      },
+      "matched_score_delta_candidate_minus_fp": {
+        "count": 789,
+        "mean": -0.16032931017363752,
+        "median": -0.143667102,
+        "p10": -0.3989775902,
+        "p90": 0.05353012000000017,
+        "max": 0.28431022100000003
+      },
+      "per_class": {
+        "bag": {
+          "fp_detections": 59,
+          "matched": 4,
+          "unmatched_fp": 55,
+          "extra_candidate": 0,
+          "fp_detection_retention": 0.06779661016949153
+        },
+        "beer mug": {
+          "fp_detections": 1,
+          "matched": 0,
+          "unmatched_fp": 1,
+          "extra_candidate": 5,
+          "fp_detection_retention": 0.0
+        },
+        "book": {
+          "fp_detections": 73,
+          "matched": 18,
+          "unmatched_fp": 55,
+          "extra_candidate": 0,
+          "fp_detection_retention": 0.2465753424657534
+        },
+        "bottle": {
+          "fp_detections": 79,
+          "matched": 66,
+          "unmatched_fp": 13,
+          "extra_candidate": 13,
+          "fp_detection_retention": 0.8354430379746836
+        },
+        "cellphone": {
+          "fp_detections": 5,
+          "matched": 0,
+          "unmatched_fp": 5,
+          "extra_candidate": 0,
+          "fp_detection_retention": 0.0
+        },
+        "chair": {
+          "fp_detections": 117,
+          "matched": 71,
+          "unmatched_fp": 46,
+          "extra_candidate": 35,
+          "fp_detection_retention": 0.6068376068376068
+        },
+        "cup": {
+          "fp_detections": 52,
+          "matched": 47,
+          "unmatched_fp": 5,
+          "extra_candidate": 107,
+          "fp_detection_retention": 0.9038461538461539
+        },
+        "desk": {
+          "fp_detections": 124,
+          "matched": 37,
+          "unmatched_fp": 87,
+          "extra_candidate": 0,
+          "fp_detection_retention": 0.29838709677419356
+        },
+        "dog": {
+          "fp_detections": 10,
+          "matched": 4,
+          "unmatched_fp": 6,
+          "extra_candidate": 0,
+          "fp_detection_retention": 0.4
+        },
+        "garbage can": {
+          "fp_detections": 137,
+          "matched": 120,
+          "unmatched_fp": 17,
+          "extra_candidate": 3,
+          "fp_detection_retention": 0.8759124087591241
+        },
+        "handbag": {
+          "fp_detections": 48,
+          "matched": 2,
+          "unmatched_fp": 46,
+          "extra_candidate": 0,
+          "fp_detection_retention": 0.041666666666666664
+        },
+        "jar": {
+          "fp_detections": 11,
+          "matched": 7,
+          "unmatched_fp": 4,
+          "extra_candidate": 0,
+          "fp_detection_retention": 0.6363636363636364
+        },
+        "mug": {
+          "fp_detections": 104,
+          "matched": 47,
+          "unmatched_fp": 57,
+          "extra_candidate": 2,
+          "fp_detection_retention": 0.4519230769230769
+        },
+        "person": {
+          "fp_detections": 86,
+          "matched": 81,
+          "unmatched_fp": 5,
+          "extra_candidate": 3,
+          "fp_detection_retention": 0.9418604651162791
+        },
+        "potted plant": {
+          "fp_detections": 127,
+          "matched": 119,
+          "unmatched_fp": 8,
+          "extra_candidate": 0,
+          "fp_detection_retention": 0.937007874015748
+        },
+        "scissors": {
+          "fp_detections": 52,
+          "matched": 26,
+          "unmatched_fp": 26,
+          "extra_candidate": 1,
+          "fp_detection_retention": 0.5
+        },
+        "shoe": {
+          "fp_detections": 2,
+          "matched": 2,
+          "unmatched_fp": 0,
+          "extra_candidate": 67,
+          "fp_detection_retention": 1.0
+        },
+        "speaker": {
+          "fp_detections": 124,
+          "matched": 73,
+          "unmatched_fp": 51,
+          "extra_candidate": 0,
+          "fp_detection_retention": 0.5887096774193549
+        },
+        "subwoofer": {
+          "fp_detections": 27,
+          "matched": 7,
+          "unmatched_fp": 20,
+          "extra_candidate": 5,
+          "fp_detection_retention": 0.25925925925925924
+        },
+        "tripod": {
+          "fp_detections": 63,
+          "matched": 58,
+          "unmatched_fp": 5,
+          "extra_candidate": 0,
+          "fp_detection_retention": 0.9206349206349206
+        }
+      }
+    }
+  },
+  "environment": {
+    "kernel": "Linux-6.1.84-8-rk2410-aarch64-with-glibc2.39",
+    "npu_governor": "rknpu_ondemand",
+    "npu_current_freq_hz_pre_run": "1000000000",
+    "cpu_governor_cpu0": "ondemand",
+    "replay_binary": {
+      "path": "vision/build/vision_replay",
+      "sha256": "d752d6a783f776f3323f21fa1d0427b519aadc368214b1bf5612c2e94af0e76c"
+    },
+    "rknn_server_version": "not available as a command; /usr/bin/rknn_server is running on this board"
+  },
+  "limitations": [
+    "FP is a behavioral reference, not ground truth; comparisons are FP-relative matching, not precision/recall.",
+    "The existing replay surface does not emit inference latency, so only explicitly scoped whole-process wall time is recorded."
+  ],
+  "execution": {
+    "sequential": true,
+    "commands": [
+      {
+        "model_key": "v2l_fp",
+        "argv": [
+          "vision/build/vision_replay",
+          "--video",
+          "artifacts/quant_analysis/v2l/final_multiframe_eval/frames/frame_%03d.png",
+          "--classes",
+          "config/classes/task.txt",
+          "--detector-model",
+          "runs/model_artifacts/yolo_world_v2_l_fp.rknn",
+          "--output",
+          "artifacts/quant_analysis/v2l/final_multiframe_eval/results/raw/v2l_fp_replay.jsonl",
+          "--clip-model",
+          "vision/testdata/text_embeddings/clip_text_fp16.rknn",
+          "--clip-vocab",
+          "vision/testdata/text_embeddings/clip_vocab.bpe",
+          "--warmup",
+          "0",
+          "--score-threshold",
+          "0.25",
+          "--nms-iou-threshold",
+          "0.45",
+          "--max-detections",
+          "100"
+        ]
+      },
+      {
+        "model_key": "v2l_int8_recal",
+        "argv": [
+          "vision/build/vision_replay",
+          "--video",
+          "artifacts/quant_analysis/v2l/final_multiframe_eval/frames/frame_%03d.png",
+          "--classes",
+          "config/classes/task.txt",
+          "--detector-model",
+          "runs/model_artifacts/yolo_world_v2_l_i8_recal.rknn",
+          "--output",
+          "artifacts/quant_analysis/v2l/final_multiframe_eval/results/raw/v2l_int8_recal_replay.jsonl",
+          "--clip-model",
+          "vision/testdata/text_embeddings/clip_text_fp16.rknn",
+          "--clip-vocab",
+          "vision/testdata/text_embeddings/clip_vocab.bpe",
+          "--warmup",
+          "0",
+          "--score-threshold",
+          "0.25",
+          "--nms-iou-threshold",
+          "0.45",
+          "--max-detections",
+          "100"
+        ]
+      },
+      {
+        "model_key": "v2l_td01",
+        "argv": [
+          "vision/build/vision_replay",
+          "--video",
+          "artifacts/quant_analysis/v2l/final_multiframe_eval/frames/frame_%03d.png",
+          "--classes",
+          "config/classes/task.txt",
+          "--detector-model",
+          "runs/model_artifacts/yolo_world_v2_l_hybrid_td01.rknn",
+          "--output",
+          "artifacts/quant_analysis/v2l/final_multiframe_eval/results/raw/v2l_td01_replay.jsonl",
+          "--clip-model",
+          "vision/testdata/text_embeddings/clip_text_fp16.rknn",
+          "--clip-vocab",
+          "vision/testdata/text_embeddings/clip_vocab.bpe",
+          "--warmup",
+          "0",
+          "--score-threshold",
+          "0.25",
+          "--nms-iou-threshold",
+          "0.45",
+          "--max-detections",
+          "100"
+        ]
+      }
+    ],
+    "whole_process_timing_method": "date +%s%N immediately before and after each vision_replay process; stored in results/raw/*.wall_time.txt"
+  }
+}

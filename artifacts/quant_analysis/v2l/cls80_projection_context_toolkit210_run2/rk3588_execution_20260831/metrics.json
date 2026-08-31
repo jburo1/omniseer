@@ -1,0 +1,128 @@
+{
+  "inputs": [
+    {
+      "constant_exact": false,
+      "dtype": "float32",
+      "max": 21.977100372314453,
+      "mean": 0.4611719703962223,
+      "min": -0.27846458554267883,
+      "near_constant": false,
+      "path": "projection_input.npy",
+      "shape": [
+        1,
+        256,
+        80,
+        80
+      ],
+      "stddev": 0.8749429932030416
+    },
+    {
+      "constant_exact": false,
+      "dtype": "float32",
+      "max": 0.6170805096626282,
+      "mean": 0.0021934309216996573,
+      "min": -0.2170926183462143,
+      "near_constant": false,
+      "path": "texts.npy",
+      "shape": [
+        1,
+        80,
+        512
+      ],
+      "stddev": 0.0441397058344982
+    }
+  ],
+  "platform": "RK3588",
+  "variants": {
+    "failed_fp16_island": {
+      "hardware": {
+        "constant_exact": true,
+        "dtype": "float32",
+        "max": -11.993370056152344,
+        "mean": -11.993370056152344,
+        "min": -11.993370056152344,
+        "near_constant": true,
+        "shape": [
+          1,
+          80,
+          80,
+          80
+        ],
+        "stddev": 0.0
+      },
+      "hardware_output": "failed_fp16_island_hardware_output.npy",
+      "hardware_output_sha256": "42f4f41a873f54315a82837519d86d3f607550ec03f2dbe41a93f8175eb49ac4",
+      "host_output": "failed_fp16_island_output.npy",
+      "model": "cls80_projection_context_failed_fp16_island.rknn",
+      "model_sha256": "d18ae60bd87ed7f3459eb3b0d212bd50f12edf1e7ed9e4cd0b87de8f4600b3d9",
+      "vs_host": {
+        "max_absolute_error": 24.709232330322266,
+        "mean_absolute_error": 3.8357053227229043
+      },
+      "vs_reference": {
+        "max_absolute_error": 24.85372543334961,
+        "mean_absolute_error": 3.8683172597289084
+      }
+    },
+    "full_fp16": {
+      "hardware": {
+        "constant_exact": false,
+        "dtype": "float32",
+        "max": -2.388671875,
+        "mean": -10.674383388519287,
+        "min": -79.375,
+        "near_constant": false,
+        "shape": [
+          1,
+          80,
+          80,
+          80
+        ],
+        "stddev": 5.930371901237637
+      },
+      "hardware_output": "full_fp16_hardware_output.npy",
+      "hardware_output_sha256": "675fe8131019bf2402b0c7f7712b57539856c056075d495f0f261d0c0c1404bc",
+      "host_output": "full_fp16_output.npy",
+      "model": "cls80_projection_context_full_fp16.rknn",
+      "model_sha256": "93824f5e40bf38b5c3ee45ef964945a54f1f33e31612ad6c48884dd69b09c615",
+      "vs_host": {
+        "max_absolute_error": 61.8515625,
+        "mean_absolute_error": 7.00786841583252
+      },
+      "vs_reference": {
+        "max_absolute_error": 61.85516357421875,
+        "mean_absolute_error": 7.008037526698783
+      }
+    },
+    "healthy_int8_matmul": {
+      "hardware": {
+        "constant_exact": false,
+        "dtype": "float32",
+        "max": -3.0344667434692383,
+        "mean": -10.681884626038839,
+        "min": -36.84709930419922,
+        "near_constant": false,
+        "shape": [
+          1,
+          80,
+          80,
+          80
+        ],
+        "stddev": 5.876957691347017
+      },
+      "hardware_output": "healthy_int8_matmul_hardware_output.npy",
+      "hardware_output_sha256": "b5a0092a00b6641cdf8710999d59ea189bea24d71e6682f276f1281c36296206",
+      "host_output": "healthy_int8_matmul_output.npy",
+      "model": "cls80_projection_context_healthy_int8_matmul.rknn",
+      "model_sha256": "d976099125003f95ef8bdbf3aba0c8e13f2baa4c424b693f2736686c8183dd24",
+      "vs_host": {
+        "max_absolute_error": 31.78965663909912,
+        "mean_absolute_error": 6.980088096709922
+      },
+      "vs_reference": {
+        "max_absolute_error": 32.178404808044434,
+        "mean_absolute_error": 6.997668606476393
+      }
+    }
+  }
+}
