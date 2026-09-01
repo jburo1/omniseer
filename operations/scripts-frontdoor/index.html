@@ -2003,6 +2003,11 @@ need ROS, a camera, or a live recording pipeline. The command always executes th
 JSONL detection stream for each model) and never changes raw RunBundle evidence or its
 manifest. <code>--name</code> defaults to <code>default</code>; names are deliberately restricted to ASCII letters,
 digits, <code>_</code>, and <code>-</code> so a comparison cannot select another path.</p>
+<p>After a comparison has produced its replay JSONLs, <code>compare --render-replay</code> redraws the
+same source video from those streams without initializing RKNN or changing replay JSONLs,
+provenance, thresholds, or study results. It replaces only the selected derived MP4. The
+portable <code>vision_runbundle_replay_render</code> executable is built on laptops with OpenCV even
+when RKNN support is unavailable; <code>scripts/omni runs compare --render-replay</code> selects it.</p>
 <p>The GUI and production runtime container run and record robot experiments. The ROCK 5B+
 devcontainer runs this offline comparison. The operator/laptop retrieves RunBundles and
 generates presentation videos and reports. Do not enter the production runtime container
@@ -2024,6 +2029,7 @@ scripts/omni<span class="w"> </span>runs<span class="w"> </span>comparison-repor
 <span class="w">  </span>--objects<span class="w"> </span>studies/detector_comparison/scan_recal/visibility.txt
 scripts/omni<span class="w"> </span>build<span class="w"> </span>vision
 scripts/omni<span class="w"> </span>runs<span class="w"> </span>compare<span class="w"> </span>runs/demo_001<span class="w"> </span>--max-frames<span class="w"> </span><span class="m">120</span>
+scripts/omni<span class="w"> </span>runs<span class="w"> </span>compare<span class="w"> </span>runs/demo_001<span class="w"> </span>--render-replay<span class="w"> </span>--name<span class="w"> </span>default<span class="w"> </span>--max-frames<span class="w"> </span><span class="m">120</span>
 
 <span class="c1"># In the ROCK 5B+ devcontainer, retain separate controlled-comparison passes.</span>
 scripts/omni<span class="w"> </span>runs<span class="w"> </span>compare<span class="w"> </span>runs/reference_scene<span class="w"> </span>--name<span class="w"> </span>task<span class="w"> </span>--classes<span class="w"> </span>config/classes/task.txt
@@ -2170,7 +2176,7 @@ runbooks. New operator commands should use
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 1, 2026 04:10:10 UTC">September 1, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 1, 2026 20:06:33 UTC">September 1, 2026</span>
   </span>
 
     
