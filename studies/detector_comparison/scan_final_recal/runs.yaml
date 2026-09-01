@@ -1,0 +1,12 @@
+# Immutable RunBundle identities for the completed scan_final_recal study.
+# These values are read from each bundle's manifest.yaml; bundle directory
+# names are not the source of truth.
+schema_version: 1
+reference_run_id: "scan_final"
+trial_run_ids:
+  v2_s_fp: "v2s_fp_scene_1"
+  v2_s_int8: "v2s_int8_scene_1"
+  v2_m_fp: "v2m_fp_scene_1"
+  v2_m_int8: "v2m_int8_scene_1"
+  v2_l_fp: "v2l_fp_scene_1"
+  v2_l_hybrid: "v2l_hybrid_scene_1"

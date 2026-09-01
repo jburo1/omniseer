@@ -45,11 +45,11 @@ shoe end 1163
 person end 1166
 garbage can end 1199
 chair start 1203
-plant end 1222
-jar end 1222
-book end 1222
-bottle end 1222
-chair end 1222
+plant end 1221
+jar end 1221
+book end 1221
+bottle end 1221
+chair end 1221
 
 dog absent
 cat absent
