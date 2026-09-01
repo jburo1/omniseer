@@ -94,6 +94,7 @@ class ReplayMetrics:
 class SceneTruth:
     present: dict[str, tuple[tuple[int, int], ...]]
     absent: tuple[str, ...]
+    issues: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -184,6 +185,91 @@ def parse_scene_truth(path: Path) -> SceneTruth:
     if overlap:
         raise ValueError(f"scene truth classes cannot be both present and absent: {sorted(overlap)!r}")
     return SceneTruth(present=present, absent=tuple(absent))
+
+
+def parse_objects_annotations(path: Path) -> SceneTruth:
+    """Read manual ``objects.md`` visibility annotations without guessing bad ranges.
+
+    Each non-comment line is ``<class> start <frame>``, ``<class> end <frame>``,
+    or ``<class> absent``.  Frames are inclusive.  Well-formed ranges remain
+    usable when other lines have issues; every ignored line is retained in
+    ``issues`` for the generated report.
+    """
+
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except FileNotFoundError as exc:
+        raise ValueError(f"objects annotations file is missing: {path}") from exc
+    except OSError as exc:
+        raise ValueError(f"objects annotations file is unreadable: {path}: {exc}") from exc
+
+    present: dict[str, list[tuple[int, int]]] = defaultdict(list)
+    active_starts: dict[str, tuple[int, int]] = {}
+    absent: list[str] = []
+    issues: list[str] = []
+    for line_number, raw_line in enumerate(lines, start=1):
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        tokens = line.split()
+        if tokens[-1] == "absent":
+            class_name = " ".join(tokens[:-1])
+            if not class_name:
+                issues.append(f"line {line_number}: absent requires a class name")
+            elif class_name in absent:
+                issues.append(f"line {line_number}: duplicate absent class {class_name!r}")
+            else:
+                absent.append(class_name)
+            continue
+        if len(tokens) < 3:
+            issues.append(f"line {line_number}: expected '<class> start|end <frame>' or '<class> absent'")
+            continue
+        class_name = " ".join(tokens[:-2])
+        action, frame_text = tokens[-2:]
+        if not class_name:
+            issues.append(f"line {line_number}: visibility annotation requires a class name")
+            continue
+        if action not in {"start", "end"}:
+            issues.append(f"line {line_number}: unsupported visibility action {action!r}")
+            continue
+        try:
+            frame = int(frame_text)
+        except ValueError:
+            issues.append(f"line {line_number}: frame index must be a non-negative integer")
+            continue
+        if frame < 0:
+            issues.append(f"line {line_number}: frame index must be a non-negative integer")
+            continue
+        if action == "start":
+            if class_name in active_starts:
+                start, start_line = active_starts[class_name]
+                issues.append(
+                    f"line {line_number}: duplicate start for {class_name!r}; "
+                    f"line {start_line} start at frame {start} remains active"
+                )
+            else:
+                active_starts[class_name] = (frame, line_number)
+        elif class_name not in active_starts:
+            issues.append(f"line {line_number}: end for {class_name!r} has no matching start")
+        else:
+            start, _ = active_starts.pop(class_name)
+            if frame < start:
+                issues.append(f"line {line_number}: end frame {frame} precedes start frame {start} for {class_name!r}")
+            else:
+                present[class_name].append((start, frame))
+
+    for class_name, (start, line_number) in active_starts.items():
+        issues.append(
+            f"line {line_number}: start for {class_name!r} at frame {start} has no matching end; interval excluded"
+        )
+    overlap = set(present).intersection(absent)
+    if overlap:
+        raise ValueError(f"objects annotations classes cannot be both present and absent: {sorted(overlap)!r}")
+    return SceneTruth(
+        present={class_name: tuple(ranges) for class_name, ranges in present.items()},
+        absent=tuple(absent),
+        issues=tuple(issues),
+    )
 
 
 def load_replay_comparison(reference_run: Path, comparison_name: str) -> ReplayComparison:
@@ -369,12 +455,17 @@ def write_comparison_report(
     trial_dirs: Sequence[Path],
     comparison_name: str = "task",
     truth_path: Path | None = None,
+    objects_path: Path | None = None,
     overwrite: bool = False,
 ) -> ComparisonReportSummary:
     replay = load_replay_comparison(reference_run, comparison_name)
+    if truth_path is not None and objects_path is not None:
+        raise ValueError("use only one of --truth or --objects")
     truth = parse_scene_truth(truth_path) if truth_path is not None else None
     if truth is not None:
         _validate_truth_vocabulary(truth, replay)
+    if objects_path is not None:
+        truth = _filter_objects_vocabulary(parse_objects_annotations(objects_path), replay)
     trials = resolve_trial_metrics(trial_dirs)
     output_path = reference_run / "report" / "comparison.html"
     if output_path.exists() and not overwrite:
@@ -416,6 +507,10 @@ def comparison_report_main(argv: list[str] | None = None) -> None:
     )
     parser.add_argument("--comparison", default="task", help="named controlled comparison (default: task)")
     parser.add_argument("--truth", help="optional scene-truth JSON using inclusive frame ranges")
+    parser.add_argument(
+        "--objects",
+        help="optional objects.md manual visibility annotations; malformed lines are reported, not inferred",
+    )
     parser.add_argument("--overwrite", action="store_true", help="replace an existing report/comparison.html")
     args = parser.parse_args(argv)
     try:
@@ -424,6 +519,7 @@ def comparison_report_main(argv: list[str] | None = None) -> None:
             trial_dirs=tuple(Path(path) for path in args.trial),
             comparison_name=args.comparison,
             truth_path=Path(args.truth) if args.truth else None,
+            objects_path=Path(args.objects) if args.objects else None,
             overwrite=args.overwrite,
         )
     except (FileExistsError, ValueError) as exc:
@@ -449,6 +545,24 @@ def _validate_truth_vocabulary(truth: SceneTruth, replay: ReplayComparison) -> N
         raise ValueError(
             "scene truth names class(es) absent from the selected comparison vocabulary: " + ", ".join(unknown)
         )
+
+
+def _filter_objects_vocabulary(truth: SceneTruth, replay: ReplayComparison) -> SceneTruth:
+    """Keep only manual labels that can be evaluated by this replay's vocabulary."""
+
+    classes = replay.provenance.get("classes")
+    if not isinstance(classes, list) or any(not isinstance(item, str) or not item for item in classes):
+        raise ValueError("comparison provenance classes must be a non-empty list of strings")
+    vocabulary = set(classes)
+    unknown = sorted((set(truth.present) | set(truth.absent)) - vocabulary)
+    issues = list(truth.issues)
+    for class_name in unknown:
+        issues.append(f"class {class_name!r} is not in the selected comparison vocabulary and was not evaluated")
+    return SceneTruth(
+        present={class_name: ranges for class_name, ranges in truth.present.items() if class_name in vocabulary},
+        absent=tuple(class_name for class_name in truth.absent if class_name in vocabulary),
+        issues=tuple(issues),
+    )
 
 
 def _safe_comparison_name(name: str) -> bool:
@@ -820,55 +934,82 @@ def _per_class_tables(metrics: dict[str, ReplayMetrics]) -> str:
 def _truth_tables(replay: ReplayComparison, truth: SceneTruth) -> str:
     present_by_model = {label: present_truth_metrics(frames, truth) for label, frames in replay.streams.items()}
     absent_by_model = {label: absent_truth_metrics(frames, truth) for label, frames in replay.streams.items()}
-    parts = ["<h3>Manual scene-truth visibility</h3>"]
+    parts = [
+        "<h3>Manual scene-presence / visibility metrics</h3>",
+        '<p class="table-note">These frame-level metrics use manual class visibility intervals, not boxes. '
+        "They are not mAP, bounding-box recall, or full detection accuracy.</p>",
+    ]
+    aggregate_rows = []
     for spec in MODEL_SPECS:
-        rows = [
-            [
-                class_name,
-                str(value.visible_frames),
-                str(value.visible_frames_detected),
-                _fraction(value.visible_frames_detected, value.visible_frames),
-                str(value.first_detection_delay) if value.first_detection_delay is not None else "-",
-                str(value.detection_gaps),
-            ]
-            for class_name, value in present_by_model[spec.label].items()
-        ]
-        parts.append(f"<h3>{spec.label} present classes</h3>")
-        parts.append(
+        values = present_by_model[spec.label].values()
+        visible = sum(value.visible_frames for value in values)
+        detected = sum(value.visible_frames_detected for value in values)
+        aggregate_rows.append([spec.label, str(visible), str(detected), _fraction(detected, visible)])
+    parts.extend(
+        [
+            "<h3>Aggregate visible-frame detection rate</h3>",
             _table(
-                [
-                    "Class",
-                    "Visible frames",
-                    "Visible detected",
-                    "Coverage",
-                    "First delay (frames)",
-                    "Detection gaps",
-                ],
-                rows,
-            )
-        )
-        absent_rows = [
-            [
-                class_name,
-                str(value.frames_falsely_containing),
-                str(value.total_false_detections),
-                _format_optional_float(value.max_false_confidence),
-            ]
-            for class_name, value in absent_by_model[spec.label].items()
+                ["Configuration", "Annotated visible frames", "Visible frames detected", "Detection rate"],
+                aggregate_rows,
+            ),
         ]
-        if absent_rows:
-            parts.append(f"<h3>{spec.label} known-absent classes</h3>")
-            parts.append(
+    )
+    if truth.present:
+        present_rows = []
+        for class_name, ranges in truth.present.items():
+            visible = next(iter(present_by_model.values()))[class_name].visible_frames
+            present_rows.append(
+                [
+                    class_name,
+                    ", ".join(f"{start}\u2013{end}" for start, end in ranges),
+                    str(visible),
+                    *(
+                        f"{present_by_model[spec.label][class_name].visible_frames_detected} / "
+                        f"{_fraction(present_by_model[spec.label][class_name].visible_frames_detected, visible)}"
+                        for spec in MODEL_SPECS
+                    ),
+                ]
+            )
+        parts.extend(
+            [
+                "<h3>Per-class visible-frame comparison</h3>",
                 _table(
                     [
                         "Class",
-                        "Frames falsely containing",
-                        "Total false detections",
-                        "Max false confidence",
+                        "Inclusive visible frame intervals",
+                        "Visible frames",
+                        *(spec.label for spec in MODEL_SPECS),
                     ],
-                    absent_rows,
-                )
+                    present_rows,
+                ),
+            ]
+        )
+    if truth.absent:
+        absent_rows = []
+        for class_name in truth.absent:
+            absent_rows.append(
+                [
+                    class_name,
+                    *(
+                        f"{absent_by_model[spec.label][class_name].total_false_detections} detections / "
+                        f"{absent_by_model[spec.label][class_name].frames_falsely_containing} frames"
+                        for spec in MODEL_SPECS
+                    ),
+                ]
             )
+        parts.extend(
+            [
+                "<h3>Explicitly absent classes: false detections</h3>",
+                _table(["Class", *(spec.label for spec in MODEL_SPECS)], absent_rows),
+            ]
+        )
+    if truth.issues:
+        parts.extend(
+            [
+                "<h3>Annotation issues / excluded labels</h3>",
+                "<ul>" + "".join(f"<li>{_attr(issue)}</li>" for issue in truth.issues) + "</ul>",
+            ]
+        )
     return "".join(parts)
 
 

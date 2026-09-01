@@ -11,6 +11,7 @@ from omniseer_experiments.comparison_report import (
     absent_truth_metrics,
     aggregate_replay,
     load_replay_comparison,
+    parse_objects_annotations,
     parse_scene_truth,
     present_truth_metrics,
     resolve_trial_metrics,
@@ -183,6 +184,33 @@ def test_scene_truth_accepts_multiple_ranges_and_rejects_invalid_values(tmp_path
             parse_scene_truth(truth_path)
 
 
+def test_objects_annotations_support_multiple_intervals_and_report_ambiguous_lines(tmp_path: Path) -> None:
+    objects_path = tmp_path / "objects.md"
+    objects_path.write_text(
+        "\n".join(
+            [
+                "person start 874",
+                "person end 1166",
+                "chair start 0",
+                "chair end 3",
+                "chair start 8",
+                "chair end 9",
+                "dog absent",
+                "chair begin 12",
+                "book start 13",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    truth = parse_objects_annotations(objects_path)
+    assert truth.present["person"] == ((874, 1166),)
+    assert truth.present["chair"] == ((0, 3), (8, 9))
+    assert truth.absent == ("dog",)
+    assert any("unsupported visibility action 'begin'" in issue for issue in truth.issues)
+    assert any("book" in issue and "no matching end" in issue for issue in truth.issues)
+
+
 def test_replay_alignment_and_aggregation_metrics(tmp_path: Path) -> None:
     reference = tmp_path / "reference"
     _write_comparison(reference)
@@ -285,7 +313,7 @@ def test_html_uses_existing_report_style_and_conditional_sections(tmp_path: Path
     assert "Controlled Perception Replay" in output
     assert "../video/comparison/task/comparison.mp4" in output
     assert str(reference) not in output
-    assert "Manual scene-truth visibility" not in output
+    assert "Manual scene-presence / visibility metrics" not in output
     assert "Exploratory COCO-80" not in output
     assert _sha256(reference / "video" / "source.ts") in output
     assert "hash-0" in output
@@ -304,8 +332,31 @@ def test_html_uses_existing_report_style_and_conditional_sections(tmp_path: Path
         truth_path=truth_path,
         overwrite=True,
     ).output_path.read_text(encoding="utf-8")
-    assert "Manual scene-truth visibility" in output
+    assert "Manual scene-presence / visibility metrics" in output
     assert "Exploratory COCO-80" in output
+
+
+def test_objects_annotations_render_six_model_visibility_and_absent_metrics(tmp_path: Path) -> None:
+    reference = tmp_path / "reference"
+    _write_comparison(reference)
+    trials = _write_all_trials(tmp_path / "trials")
+    objects_path = reference / "objects.md"
+    objects_path.write_text(
+        "chair start 0\nchair end 2\ndog absent\nperson start 874\nperson end 1166\n",
+        encoding="utf-8",
+    )
+    output = write_comparison_report(
+        reference,
+        trial_dirs=trials,
+        objects_path=objects_path,
+    ).output_path.read_text(encoding="utf-8")
+    assert "Manual scene-presence / visibility metrics" in output
+    assert "Aggregate visible-frame detection rate" in output
+    assert "Per-class visible-frame comparison" in output
+    assert "Explicitly absent classes: false detections" in output
+    assert "person&#x27; is not in the selected comparison vocabulary" in output
+    for spec in MODEL_SPECS:
+        assert spec.label in output
 
 
 def test_scene_truth_rejects_classes_outside_selected_vocabulary(tmp_path: Path) -> None:
