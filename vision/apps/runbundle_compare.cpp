@@ -32,6 +32,8 @@ namespace
     fs::path    clip_model_path{};
     fs::path    clip_vocab_path{};
     std::string comparison_name{"default"};
+    fs::path    output_path{};
+    bool        v2l_int8_vs_hybrid{false};
     std::string pad_token{"nothing"};
     uint32_t    warmup_runs{0};
     float       score_threshold{0.25F};
@@ -62,6 +64,8 @@ namespace
            "  --model-dir <dir>        Directory containing the six YOLO-World RKNN artifacts\n"
            "                           (default: <repo>/runs/model_artifacts)\n"
            "  --classes <path>         Class list (default: <run_dir>/classes.txt)\n"
+           "  --v2l-int8-vs-hybrid     Render only v2-L recalibrated INT8 and TD01 hybrid\n"
+           "  --output <path>          MP4 output path for --v2l-int8-vs-hybrid\n"
            "  --clip-model <path>      CLIP text encoder RKNN path\n"
            "  --clip-vocab <path>      CLIP BPE merges/vocab path\n"
            "  --pad-token <text>       Internal pad phrase for unused class slots\n"
@@ -121,6 +125,10 @@ namespace
         config.model_dir = require_value("--model-dir");
       else if (arg == "--classes")
         config.class_list_path = require_value("--classes");
+      else if (arg == "--v2l-int8-vs-hybrid")
+        config.v2l_int8_vs_hybrid = true;
+      else if (arg == "--output")
+        config.output_path = require_value("--output");
       else if (arg == "--clip-model")
         config.clip_model_path = require_value("--clip-model");
       else if (arg == "--clip-vocab")
@@ -175,6 +183,8 @@ namespace
       throw std::runtime_error("--nms-iou-threshold must be in [0, 1]");
     if (config.max_detections == 0)
       throw std::runtime_error("--max-detections must be > 0");
+    if (!config.output_path.empty() && !config.v2l_int8_vs_hybrid)
+      throw std::runtime_error("--output is only supported with --v2l-int8-vs-hybrid");
     if (config.clip_model_path.empty())
       config.clip_model_path = source_path("/testdata/text_embeddings/clip_text_fp16.rknn");
     if (config.clip_vocab_path.empty())
@@ -251,18 +261,33 @@ namespace
     }
   }
 
-  cv::Mat compose_grid(const cv::Mat&                                          corrected_bgr,
-                       const std::array<omniseer::vision::DetectionsFrame, 6>& detections,
-                       const std::vector<std::string>&                         class_names)
+  cv::Mat compose_grid(const cv::Mat&                                            corrected_bgr,
+                       const std::vector<omniseer::vision::DetectionsFrame>&     detections,
+                       const std::vector<omniseer::vision::ComparisonModelSpec>& models,
+                       const std::vector<std::string>&                           class_names)
   {
-    std::array<cv::Mat, 6> panels{};
-    for (size_t i = 0; i < panels.size(); ++i)
+    std::vector<cv::Mat> panels{};
+    panels.reserve(models.size());
+    const bool two_panel_comparison = models.size() == 2;
+    for (size_t i = 0; i < models.size(); ++i)
     {
       cv::Mat annotated = corrected_bgr.clone();
-      draw_detections(annotated, detections[i], class_names,
-                      omniseer::vision::kRunbundleComparisonModels[i].label);
-      cv::resize(annotated, panels[i], cv::Size(corrected_bgr.cols / 2, corrected_bgr.rows / 2),
-                 0.0, 0.0, cv::INTER_AREA);
+      draw_detections(annotated, detections[i], class_names, models[i].label);
+      if (two_panel_comparison)
+        panels.push_back(std::move(annotated));
+      else
+      {
+        cv::Mat reduced{};
+        cv::resize(annotated, reduced, cv::Size(corrected_bgr.cols / 2, corrected_bgr.rows / 2),
+                   0.0, 0.0, cv::INTER_AREA);
+        panels.push_back(std::move(reduced));
+      }
+    }
+    if (two_panel_comparison)
+    {
+      cv::Mat output{};
+      cv::hconcat(panels, output);
+      return output;
     }
     cv::Mat s_row{};
     cv::Mat m_row{};
@@ -311,19 +336,38 @@ int main(int argc, char** argv)
     require_regular_file(config.clip_vocab_path, "CLIP vocabulary");
     const std::string source_sha256_before = sha256_file(source_ts);
 
+    const std::vector<omniseer::vision::ComparisonModelSpec> models =
+        config.v2l_int8_vs_hybrid
+            ? std::vector<
+                  omniseer::vision::ComparisonModelSpec>{{"v2-L INT8",
+                                                          "yolo_world_v2_l_i8_recal.rknn",
+                                                          "v2l_int8_recal.jsonl"},
+                                                         {"v2-L Hybrid",
+                                                          "yolo_world_v2_l_hybrid_td01.rknn",
+                                                          "v2l_hybrid_td01.jsonl"}}
+            : std::vector<omniseer::vision::ComparisonModelSpec>(
+                  omniseer::vision::kRunbundleComparisonModels.begin(),
+                  omniseer::vision::kRunbundleComparisonModels.end());
     const fs::path comparison_relative_dir =
         fs::path("video") / "comparison" / config.comparison_name;
-    const fs::path comparison_dir = config.run_dir / comparison_relative_dir;
+    const fs::path comparison_dir = config.output_path.empty()
+                                        ? config.run_dir / comparison_relative_dir
+                                        : config.output_path.parent_path();
     fs::create_directories(comparison_dir);
-    const fs::path output_mp4       = comparison_dir / "comparison.mp4";
-    const fs::path intermediate_mp4 = comparison_dir / "comparison.rendering.mp4";
-    const fs::path provenance_path  = comparison_dir / "provenance.json";
+    const fs::path output_mp4 =
+        config.output_path.empty() ? comparison_dir / "comparison.mp4" : config.output_path;
+    const fs::path intermediate_mp4 =
+        comparison_dir / (output_mp4.stem().string() + ".rendering.mp4");
+    const fs::path provenance_path =
+        comparison_dir / (config.output_path.empty()
+                              ? "provenance.json"
+                              : output_mp4.stem().string() + ".provenance.json");
 
-    std::array<fs::path, 6>                                           model_paths{};
-    std::array<std::unique_ptr<omniseer::vision::OfflineDetector>, 6> detectors{};
+    std::vector<fs::path>                                           model_paths(models.size());
+    std::vector<std::unique_ptr<omniseer::vision::OfflineDetector>> detectors(models.size());
     for (size_t i = 0; i < detectors.size(); ++i)
     {
-      const auto& model = omniseer::vision::kRunbundleComparisonModels[i];
+      const auto& model = models[i];
       model_paths[i]    = input_paths.model_dir / model.artifact_name;
       require_regular_file(model_paths[i], (std::string(model.label) + " model artifact").c_str());
       try
@@ -366,17 +410,23 @@ int main(int argc, char** argv)
     }
     const double output_fps = omniseer::vision::comparison_output_fps(video.get(cv::CAP_PROP_FPS));
     const double source_fps = video.get(cv::CAP_PROP_FPS);
+    const cv::Size  output_size = config.v2l_int8_vs_hybrid
+                                      ? cv::Size(source_width * 2, source_height)
+                                      : cv::Size(source_width, source_height * 3 / 2);
     cv::VideoWriter writer(intermediate_mp4.string(), cv::VideoWriter::fourcc('m', 'p', '4', 'v'),
-                           output_fps, cv::Size(source_width, source_height * 3 / 2));
+                           output_fps, output_size);
     if (!writer.isOpened())
       throw std::runtime_error("failed to open temporary comparison video for writing");
 
-    std::array<fs::path, 6>                                             detection_jsonl_paths{};
-    std::array<std::unique_ptr<omniseer::vision::ReplayJsonlWriter>, 6> detection_writers{};
+    std::vector<fs::path> detection_jsonl_paths(models.size());
+    std::vector<std::unique_ptr<omniseer::vision::ReplayJsonlWriter>> detection_writers(
+        models.size());
     for (size_t i = 0; i < detection_writers.size(); ++i)
     {
       detection_jsonl_paths[i] =
-          comparison_dir / omniseer::vision::kRunbundleComparisonModels[i].detections_filename;
+          comparison_dir / (config.v2l_int8_vs_hybrid
+                                ? output_mp4.stem().string() + "." + models[i].detections_filename
+                                : models[i].detections_filename);
       detection_writers[i] =
           std::make_unique<omniseer::vision::ReplayJsonlWriter>(detection_jsonl_paths[i].string(),
                                                                 detectors[i]->class_names());
@@ -396,18 +446,16 @@ int main(int argc, char** argv)
         throw std::runtime_error("failed to repair decoded raw frame: " + repair_error);
       }
 
-      std::array<omniseer::vision::DetectionsFrame, 6> detections{};
+      std::vector<omniseer::vision::DetectionsFrame> detections(models.size());
       // Calls are deliberately serial and all receive this exact corrected cv::Mat.
-      omniseer::vision::visit_comparison_models(
-          frame,
-          [&](size_t i, const omniseer::vision::ComparisonModelSpec&, const cv::Mat& shared_frame)
-          { detections[i] = detectors[i]->infer(shared_frame, frame_index); });
+      for (size_t i = 0; i < models.size(); ++i)
+        detections[i] = detectors[i]->infer(frame, frame_index);
       const double timestamp_sec =
           omniseer::vision::comparison_source_timestamp_sec(video.get(cv::CAP_PROP_POS_MSEC),
                                                             frame_index, source_fps);
       for (size_t i = 0; i < detection_writers.size(); ++i)
         detection_writers[i]->write(frame_index, timestamp_sec, detections[i]);
-      writer.write(compose_grid(frame, detections, detectors[0]->class_names()));
+      writer.write(compose_grid(frame, detections, models, detectors[0]->class_names()));
       ++frame_index;
     }
     writer.release();
@@ -424,28 +472,33 @@ int main(int argc, char** argv)
       throw std::runtime_error("raw RunBundle source.ts changed while comparison was running");
 
     omniseer::vision::ComparisonProvenance provenance{};
-    provenance.comparison_name        = config.comparison_name;
-    provenance.source_path            = "video/source.ts";
-    provenance.source_sha256          = source_sha256_before;
-    provenance.classes                = detectors[0]->class_names();
-    provenance.score_threshold        = config.score_threshold;
+    provenance.comparison_name =
+        config.v2l_int8_vs_hybrid ? "v2l-int8-vs-hybrid" : config.comparison_name;
+    provenance.source_path     = config.v2l_int8_vs_hybrid ? source_ts.string() : "video/source.ts";
+    provenance.source_sha256   = source_sha256_before;
+    provenance.classes         = detectors[0]->class_names();
+    provenance.score_threshold = config.score_threshold;
     provenance.nms_iou_threshold      = config.nms_iou_threshold;
     provenance.max_detections         = config.max_detections;
-    provenance.output_path            = (comparison_relative_dir / "comparison.mp4").string();
+    provenance.output_path            = config.v2l_int8_vs_hybrid
+                                            ? output_mp4.string()
+                                            : (comparison_relative_dir / "comparison.mp4").string();
     provenance.output_sha256          = sha256_file(output_mp4);
     provenance.output_fps             = output_fps;
     provenance.source_frames_rendered = frame_index;
     for (const auto& detection_jsonl_path : detection_jsonl_paths)
       provenance.detection_jsonl_paths.push_back(
-          (comparison_relative_dir / detection_jsonl_path.filename()).string());
+          config.v2l_int8_vs_hybrid
+              ? detection_jsonl_path.string()
+              : (comparison_relative_dir / detection_jsonl_path.filename()).string());
     if (const char* git_sha = std::getenv("OMNISEER_GIT_SHA");
         git_sha != nullptr && *git_sha != '\0')
       provenance.git_sha = git_sha;
     for (size_t i = 0; i < model_paths.size(); ++i)
     {
       provenance.models.push_back({
-          .label         = omniseer::vision::kRunbundleComparisonModels[i].label,
-          .artifact_name = omniseer::vision::kRunbundleComparisonModels[i].artifact_name,
+          .label         = models[i].label,
+          .artifact_name = models[i].artifact_name,
           .path          = model_paths[i].string(),
           .sha256        = sha256_file(model_paths[i]),
       });

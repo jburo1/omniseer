@@ -1,0 +1,15 @@
+{
+  "schema_version": 2,
+  "comparison_name": "v2l-int8-vs-hybrid",
+  "source": {"path": "runs/scan_final/video/source.ts", "sha256": "9cede604070b3bbdbcb31f6040a84c9637f4894522b480a46b6faf7fdca40058"},
+  "repair": {"id": "rockchip_preview_circular_wrap_v1", "recorded_order": "[original x=1272..1279][original x=0..1271]", "width": 1280, "height": 720, "rotate_left_px": 8},
+  "classes": ["person", "chair", "book", "bottle", "shoe", "hammer", "glass", "cup", "mug", "subwoofer", "speaker", "jar", "plant", "cellphone", "beer mug", "scissors", "bag", "toothbrush", "handbag", "garbage can", "window", "desk", "table", "door", "potted plant", "tripod", "dog", "cat", "giraffe"],
+  "postprocess": {"score_threshold": 0.250000, "nms_iou_threshold": 0.450000, "max_detections": 100},
+  "models": [
+    {"label": "v2-L INT8", "artifact_name": "yolo_world_v2_l_i8_recal.rknn", "path": "/omniseer/runs/model_artifacts/yolo_world_v2_l_i8_recal.rknn", "sha256": "337012ef7690c39dbbbb0fc73ce4396a5c9ff2411032cca47fb012b66045faef"},
+    {"label": "v2-L Hybrid", "artifact_name": "yolo_world_v2_l_hybrid_td01.rknn", "path": "/omniseer/runs/model_artifacts/yolo_world_v2_l_hybrid_td01.rknn", "sha256": "20e43523ab4221fd755553030dbc58943f457839d5583b1f2f29954489c2ef92"}
+  ],
+  "detection_jsonl": ["studies/quantization/yolo_world_v2l_int8/evidence/scan_final_v2l_int8_vs_hybrid.v2l_int8_recal.jsonl", "studies/quantization/yolo_world_v2l_int8/evidence/scan_final_v2l_int8_vs_hybrid.v2l_hybrid_td01.jsonl"],
+  "output": {"path": "studies/quantization/yolo_world_v2l_int8/evidence/scan_final_v2l_int8_vs_hybrid.mp4", "sha256": "0f15bd410ba7521178e4b6aed3679b25df0419165c57e19fa7a23877a8760325", "fps": 30.000000, "source_frames_rendered": 1222, "timing_policy": "one output frame per decoded source frame at source FPS; offline processing duration does not change presentation elapsed time"},
+  "git_sha": "unknown"
+}
