@@ -1,14 +1,14 @@
+chair start 0
 plant start 0
 book start 0
 jar start 0
-water bottle start 0
+bottle start 0
 jar end 101
-water bottle end 125
+bottle end 125
 cellphone start 140
 plant end 179
 beer mug start 179
 scissors start 209
-book start 273
 chair end 284
 bag start 311
 handbag start 311
@@ -40,11 +40,16 @@ tripod end 1049
 jar start 1075
 book start 1084
 hammer end 1086
-water bottle start 1112
+bottle start 1112
 shoe end 1163
 person end 1166
 garbage can end 1199
-chair begin 1203
+chair start 1203
+plant end 1222
+jar end 1222
+book end 1222
+bottle end 1222
+chair end 1222
 
 dog absent
 cat absent
