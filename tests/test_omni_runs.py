@@ -283,6 +283,26 @@ def test_omni_runs_compare_dispatches_to_local_vision_build(tmp_path: Path) -> N
     assert result.stdout == "local compare --help\n"
 
 
+def test_omni_runs_compare_render_replay_dispatches_to_portable_renderer(tmp_path: Path) -> None:
+    build_dir = tmp_path / "vision-build"
+    build_dir.mkdir()
+    _write_fake_compare(build_dir / "vision_runbundle_replay_render")
+    env = os.environ.copy()
+    env["OMNISEER_VISION_BUILD_DIR"] = str(build_dir)
+
+    result = subprocess.run(
+        ["scripts/omni", "runs", "compare", "runs/demo_001", "--render-replay", "--max-frames", "1"],
+        cwd=REPO_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout == "local compare runs/demo_001 --render-replay --max-frames 1\n"
+
+
 def test_omni_runs_compare_ignores_runtime_style_path_binary(tmp_path: Path) -> None:
     build_dir = tmp_path / "vision-build"
     build_dir.mkdir()

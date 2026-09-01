@@ -28,6 +28,14 @@ namespace omniseer::vision
     EXPECT_STREQ(kRunbundleComparisonModels[5].detections_filename, "v2l_hybrid.jsonl");
   }
 
+  TEST(RunbundleComparison, UsesReadableDetectionLabels)
+  {
+    EXPECT_DOUBLE_EQ(kComparisonReducedDetectionLabelFontScale, 0.9);
+    EXPECT_EQ(kComparisonReducedDetectionLabelThickness, 2);
+    EXPECT_DOUBLE_EQ(kComparisonFullDetectionLabelFontScale, 0.5);
+    EXPECT_EQ(kComparisonFullDetectionLabelThickness, 1);
+  }
+
   TEST(RunbundleComparison, ResolvesDocumentedRunbundleInputDefaults)
   {
     const auto paths = resolve_comparison_input_paths("runs/demo_001", "/omniseer", {}, {});

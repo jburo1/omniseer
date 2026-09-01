@@ -25,6 +25,11 @@ namespace omniseer::vision
       {"v2-L Hybrid", "yolo_world_v2_l_hybrid_td01.rknn", "v2l_hybrid.jsonl"},
   }};
 
+  constexpr double kComparisonReducedDetectionLabelFontScale = 0.9;
+  constexpr int    kComparisonReducedDetectionLabelThickness = 2;
+  constexpr double kComparisonFullDetectionLabelFontScale    = 0.5;
+  constexpr int    kComparisonFullDetectionLabelThickness    = 1;
+
   struct ComparisonInputPaths
   {
     std::filesystem::path source_path{};

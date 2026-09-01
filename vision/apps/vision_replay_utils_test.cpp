@@ -81,6 +81,16 @@ TEST(VisionReplayJsonlTest, WritesOneRecordPerFrameIncludingEmptyDetections)
             "{\"frame_index\":1,\"timestamp_sec\":0.033333333,\"detections\":[{\"class_id\":1,"
             "\"class_name\":\"bus\",\"score\":0.750000000,\"bbox\":[10.000000000,20.000000000,"
             "30.000000000,40.000000000]}]}");
+
+  omniseer::vision::ReplayJsonlReader reader(output_path);
+  const auto                          empty    = reader.read(0);
+  const auto                          detected = reader.read(1);
+  EXPECT_EQ(empty.count, 0U);
+  ASSERT_EQ(detected.count, 1U);
+  EXPECT_EQ(detected.detections[0].class_id, 1U);
+  EXPECT_FLOAT_EQ(detected.detections[0].score, 0.75F);
+  EXPECT_FLOAT_EQ(detected.detections[0].x1, 10.0F);
+  EXPECT_FLOAT_EQ(detected.detections[0].y2, 40.0F);
   EXPECT_EQ(std::remove(output_path.c_str()), 0);
 }
 

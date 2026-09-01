@@ -15,7 +15,10 @@
 #include <utility>
 #include <vector>
 
+#include "omniseer/vision/class_list.hpp"
+#ifndef OMNISEER_REPLAY_RENDER_ONLY
 #include "omniseer/vision/offline_detector.hpp"
+#endif
 #include "omniseer/vision/preview_wrap_repair.hpp"
 #include "omniseer/vision/replay_jsonl.hpp"
 #include "omniseer/vision/runbundle_comparison.hpp"
@@ -33,7 +36,9 @@ namespace
     fs::path    clip_vocab_path{};
     std::string comparison_name{"default"};
     fs::path    output_path{};
+    fs::path    replay_dir{};
     bool        v2l_int8_vs_hybrid{false};
+    bool        render_replay{false};
     std::string pad_token{"nothing"};
     uint32_t    warmup_runs{0};
     float       score_threshold{0.25F};
@@ -49,6 +54,25 @@ namespace
 
   std::string usage(const char* argv0)
   {
+#ifdef OMNISEER_REPLAY_RENDER_ONLY
+    return "Usage: " + std::string(argv0) +
+           " <run_dir> --render-replay [--name <comparison-name>] [options]\n"
+           "\n"
+           "Directly decodes <run_dir>/video/source.ts, reverses the validated 1280x720\n"
+           "Rockchip 8-pixel preview wrap in memory, and redraws the saved comparison\n"
+           "replay JSONLs without initializing or invoking RKNN inference.\n"
+           "\n"
+           "Options:\n"
+           "  --name <comparison-name> Named output directory component (default: default)\n"
+           "  --classes <path>         Class list (default: <run_dir>/classes.txt)\n"
+           "  --v2l-int8-vs-hybrid     Render only v2-L recalibrated INT8 and TD01 hybrid\n"
+           "  --output <path>          MP4 output path for --v2l-int8-vs-hybrid\n"
+           "  --render-replay          Required; render saved replay JSONLs\n"
+           "  --replay-dir <dir>       Saved replay JSONL directory (default: comparison output "
+           "directory)\n"
+           "  --max-frames <u32>       Stop after this many source frames (default: all)\n"
+           "  --help                   Show this help\n";
+#else
     return "Usage: " + std::string(argv0) +
            " <run_dir> [--name <comparison-name>] [--model-dir <dir>] [--classes <path>] "
            "[options]\n"
@@ -58,6 +82,8 @@ namespace
            "frame sequentially through v2-S, v2-M, and v2-L FP and INT8 configurations.\n"
            "It writes video/comparison/<comparison-name>/comparison.mp4, provenance.json,\n"
            "and one replay JSONL detection stream for each model.\n"
+           "Use --render-replay to redraw an existing comparison from those saved JSONLs\n"
+           "without initializing or invoking RKNN inference.\n"
            "\n"
            "Options:\n"
            "  --name <comparison-name> Named output directory component (default: default)\n"
@@ -66,6 +92,9 @@ namespace
            "  --classes <path>         Class list (default: <run_dir>/classes.txt)\n"
            "  --v2l-int8-vs-hybrid     Render only v2-L recalibrated INT8 and TD01 hybrid\n"
            "  --output <path>          MP4 output path for --v2l-int8-vs-hybrid\n"
+           "  --render-replay          Render saved replay JSONLs instead of running inference\n"
+           "  --replay-dir <dir>       Saved replay JSONL directory (default: comparison output "
+           "directory)\n"
            "  --clip-model <path>      CLIP text encoder RKNN path\n"
            "  --clip-vocab <path>      CLIP BPE merges/vocab path\n"
            "  --pad-token <text>       Internal pad phrase for unused class slots\n"
@@ -75,6 +104,7 @@ namespace
            "  --max-detections <u32>   Maximum detections per model/frame (default: 100)\n"
            "  --max-frames <u32>       Stop after this many source frames (default: all)\n"
            "  --help                   Show this help\n";
+#endif
   }
 
   bool parse_u32(const char* text, uint32_t& out)
@@ -129,6 +159,10 @@ namespace
         config.v2l_int8_vs_hybrid = true;
       else if (arg == "--output")
         config.output_path = require_value("--output");
+      else if (arg == "--render-replay")
+        config.render_replay = true;
+      else if (arg == "--replay-dir")
+        config.replay_dir = require_value("--replay-dir");
       else if (arg == "--clip-model")
         config.clip_model_path = require_value("--clip-model");
       else if (arg == "--clip-vocab")
@@ -185,6 +219,10 @@ namespace
       throw std::runtime_error("--max-detections must be > 0");
     if (!config.output_path.empty() && !config.v2l_int8_vs_hybrid)
       throw std::runtime_error("--output is only supported with --v2l-int8-vs-hybrid");
+#ifdef OMNISEER_REPLAY_RENDER_ONLY
+    if (!config.render_replay)
+      throw std::runtime_error("this executable supports only --render-replay");
+#endif
     if (config.clip_model_path.empty())
       config.clip_model_path = source_path("/testdata/text_embeddings/clip_text_fp16.rknn");
     if (config.clip_vocab_path.empty())
@@ -236,19 +274,32 @@ namespace
     return result.substr(0, 64);
   }
 
-  void draw_detections(cv::Mat& image, const omniseer::vision::DetectionsFrame& detections,
-                       const std::vector<std::string>& class_names, const std::string& label)
+  void draw_panel_label(cv::Mat& image, const std::string& label, const int header_height,
+                        const cv::Point text_origin, const double font_scale, const int thickness)
   {
-    cv::rectangle(image, cv::Rect(0, 0, image.cols, 34), cv::Scalar(0, 0, 0), cv::FILLED);
-    cv::putText(image, label, cv::Point(12, 24), cv::FONT_HERSHEY_SIMPLEX, 0.7,
-                cv::Scalar(255, 255, 255), 2, cv::LINE_AA);
+    cv::rectangle(image, cv::Rect(0, 0, image.cols, header_height), cv::Scalar(0, 0, 0),
+                  cv::FILLED);
+    cv::putText(image, label, text_origin, cv::FONT_HERSHEY_SIMPLEX, font_scale,
+                cv::Scalar(255, 255, 255), thickness, cv::LINE_AA);
+  }
+
+  void draw_detections(cv::Mat& image, const omniseer::vision::DetectionsFrame& detections,
+                       const std::vector<std::string>& class_names, const cv::Size source_size,
+                       const double detection_label_font_scale, const int detection_label_thickness)
+  {
     for (uint32_t i = 0; i < detections.count; ++i)
     {
-      const auto& detection = detections.detections[i];
-      const int   x1 = std::clamp(static_cast<int>(std::lround(detection.x1)), 0, image.cols - 1);
-      const int   y1 = std::clamp(static_cast<int>(std::lround(detection.y1)), 0, image.rows - 1);
-      const int   x2 = std::clamp(static_cast<int>(std::lround(detection.x2)), 0, image.cols - 1);
-      const int   y2 = std::clamp(static_cast<int>(std::lround(detection.y2)), 0, image.rows - 1);
+      const auto&  detection = detections.detections[i];
+      const double scale_x   = static_cast<double>(image.cols) / source_size.width;
+      const double scale_y   = static_cast<double>(image.rows) / source_size.height;
+      const int    x1 =
+          std::clamp(static_cast<int>(std::lround(detection.x1 * scale_x)), 0, image.cols - 1);
+      const int y1 =
+          std::clamp(static_cast<int>(std::lround(detection.y1 * scale_y)), 0, image.rows - 1);
+      const int x2 =
+          std::clamp(static_cast<int>(std::lround(detection.x2 * scale_x)), 0, image.cols - 1);
+      const int y2 =
+          std::clamp(static_cast<int>(std::lround(detection.y2 * scale_y)), 0, image.rows - 1);
       cv::rectangle(image, cv::Point(x1, y1), cv::Point(x2, y2), cv::Scalar(0, 255, 0), 2,
                     cv::LINE_AA);
       const std::string class_name = (detection.class_id < class_names.size())
@@ -256,8 +307,9 @@ namespace
                                          : "<out-of-range>";
       const std::string text       = class_name + " " + cv::format("%.2f", detection.score);
       const int         text_y     = std::max(48, y1 - 5);
-      cv::putText(image, text, cv::Point(x1, text_y), cv::FONT_HERSHEY_SIMPLEX, 0.5,
-                  cv::Scalar(0, 255, 0), 1, cv::LINE_AA);
+      cv::putText(image, text, cv::Point(x1, text_y), cv::FONT_HERSHEY_SIMPLEX,
+                  detection_label_font_scale, cv::Scalar(0, 255, 0), detection_label_thickness,
+                  cv::LINE_AA);
     }
   }
 
@@ -271,15 +323,24 @@ namespace
     const bool two_panel_comparison = models.size() == 2;
     for (size_t i = 0; i < models.size(); ++i)
     {
-      cv::Mat annotated = corrected_bgr.clone();
-      draw_detections(annotated, detections[i], class_names, models[i].label);
       if (two_panel_comparison)
+      {
+        cv::Mat annotated = corrected_bgr.clone();
+        draw_panel_label(annotated, models[i].label, 34, cv::Point(12, 24), 0.7, 2);
+        draw_detections(annotated, detections[i], class_names, corrected_bgr.size(),
+                        omniseer::vision::kComparisonFullDetectionLabelFontScale,
+                        omniseer::vision::kComparisonFullDetectionLabelThickness);
         panels.push_back(std::move(annotated));
+      }
       else
       {
         cv::Mat reduced{};
-        cv::resize(annotated, reduced, cv::Size(corrected_bgr.cols / 2, corrected_bgr.rows / 2),
+        cv::resize(corrected_bgr, reduced, cv::Size(corrected_bgr.cols / 2, corrected_bgr.rows / 2),
                    0.0, 0.0, cv::INTER_AREA);
+        draw_panel_label(reduced, models[i].label, 17, cv::Point(6, 12), 0.35, 1);
+        draw_detections(reduced, detections[i], class_names, corrected_bgr.size(),
+                        omniseer::vision::kComparisonReducedDetectionLabelFontScale,
+                        omniseer::vision::kComparisonReducedDetectionLabelThickness);
         panels.push_back(std::move(reduced));
       }
     }
@@ -331,9 +392,14 @@ int main(int argc, char** argv)
     const fs::path source_ts = input_paths.source_path;
     require_regular_file(source_ts, "raw RunBundle source.ts");
     require_regular_file(input_paths.class_list_path, "class list");
-    require_directory(input_paths.model_dir, "model directory");
-    require_regular_file(config.clip_model_path, "CLIP model");
-    require_regular_file(config.clip_vocab_path, "CLIP vocabulary");
+#ifndef OMNISEER_REPLAY_RENDER_ONLY
+    if (!config.render_replay)
+    {
+      require_directory(input_paths.model_dir, "model directory");
+      require_regular_file(config.clip_model_path, "CLIP model");
+      require_regular_file(config.clip_vocab_path, "CLIP vocabulary");
+    }
+#endif
     const std::string source_sha256_before = sha256_file(source_ts);
 
     const std::vector<omniseer::vision::ComparisonModelSpec> models =
@@ -363,9 +429,15 @@ int main(int argc, char** argv)
                               ? "provenance.json"
                               : output_mp4.stem().string() + ".provenance.json");
 
+    std::vector<std::string> class_names{};
+#ifndef OMNISEER_REPLAY_RENDER_ONLY
     std::vector<fs::path>                                           model_paths(models.size());
     std::vector<std::unique_ptr<omniseer::vision::OfflineDetector>> detectors(models.size());
-    for (size_t i = 0; i < detectors.size(); ++i)
+#endif
+    if (config.render_replay)
+      class_names = omniseer::vision::load_class_list_file(input_paths.class_list_path.string());
+#ifndef OMNISEER_REPLAY_RENDER_ONLY
+    for (size_t i = 0; !config.render_replay && i < detectors.size(); ++i)
     {
       const auto& model = models[i];
       model_paths[i]    = input_paths.model_dir / model.artifact_name;
@@ -395,6 +467,9 @@ int main(int argc, char** argv)
       if (i != 0 && detectors[i]->class_names() != detectors[0]->class_names())
         throw std::runtime_error("model contexts prepared different class lists");
     }
+    if (!config.render_replay)
+      class_names = detectors[0]->class_names();
+#endif
 
     cv::VideoCapture video(source_ts.string());
     if (!video.isOpened())
@@ -418,18 +493,33 @@ int main(int argc, char** argv)
     if (!writer.isOpened())
       throw std::runtime_error("failed to open temporary comparison video for writing");
 
+    const fs::path replay_dir = config.replay_dir.empty() ? comparison_dir : config.replay_dir;
     std::vector<fs::path> detection_jsonl_paths(models.size());
+#ifndef OMNISEER_REPLAY_RENDER_ONLY
     std::vector<std::unique_ptr<omniseer::vision::ReplayJsonlWriter>> detection_writers(
         models.size());
-    for (size_t i = 0; i < detection_writers.size(); ++i)
+#endif
+    std::vector<std::unique_ptr<omniseer::vision::ReplayJsonlReader>> detection_readers(
+        models.size());
+    for (size_t i = 0; i < models.size(); ++i)
     {
       detection_jsonl_paths[i] =
           comparison_dir / (config.v2l_int8_vs_hybrid
                                 ? output_mp4.stem().string() + "." + models[i].detections_filename
                                 : models[i].detections_filename);
-      detection_writers[i] =
-          std::make_unique<omniseer::vision::ReplayJsonlWriter>(detection_jsonl_paths[i].string(),
-                                                                detectors[i]->class_names());
+      if (config.render_replay)
+      {
+        const fs::path replay_path = replay_dir / detection_jsonl_paths[i].filename();
+        require_regular_file(replay_path, "saved replay JSONL");
+        detection_readers[i] =
+            std::make_unique<omniseer::vision::ReplayJsonlReader>(replay_path.string());
+      }
+#ifndef OMNISEER_REPLAY_RENDER_ONLY
+      else
+        detection_writers[i] =
+            std::make_unique<omniseer::vision::ReplayJsonlWriter>(detection_jsonl_paths[i].string(),
+                                                                  class_names);
+#endif
     }
 
     uint64_t frame_index = 0;
@@ -447,15 +537,25 @@ int main(int argc, char** argv)
       }
 
       std::vector<omniseer::vision::DetectionsFrame> detections(models.size());
-      // Calls are deliberately serial and all receive this exact corrected cv::Mat.
-      for (size_t i = 0; i < models.size(); ++i)
-        detections[i] = detectors[i]->infer(frame, frame_index);
-      const double timestamp_sec =
-          omniseer::vision::comparison_source_timestamp_sec(video.get(cv::CAP_PROP_POS_MSEC),
-                                                            frame_index, source_fps);
-      for (size_t i = 0; i < detection_writers.size(); ++i)
-        detection_writers[i]->write(frame_index, timestamp_sec, detections[i]);
-      writer.write(compose_grid(frame, detections, models, detectors[0]->class_names()));
+      if (config.render_replay)
+      {
+        for (size_t i = 0; i < detection_readers.size(); ++i)
+          detections[i] = detection_readers[i]->read(frame_index);
+      }
+#ifndef OMNISEER_REPLAY_RENDER_ONLY
+      else
+      {
+        // Calls are deliberately serial and all receive this exact corrected cv::Mat.
+        for (size_t i = 0; i < models.size(); ++i)
+          detections[i] = detectors[i]->infer(frame, frame_index);
+        const double timestamp_sec =
+            omniseer::vision::comparison_source_timestamp_sec(video.get(cv::CAP_PROP_POS_MSEC),
+                                                              frame_index, source_fps);
+        for (size_t i = 0; i < detection_writers.size(); ++i)
+          detection_writers[i]->write(frame_index, timestamp_sec, detections[i]);
+      }
+#endif
+      writer.write(compose_grid(frame, detections, models, class_names));
       ++frame_index;
     }
     writer.release();
@@ -470,6 +570,18 @@ int main(int argc, char** argv)
                                remove_error.message());
     if (sha256_file(source_ts) != source_sha256_before)
       throw std::runtime_error("raw RunBundle source.ts changed while comparison was running");
+
+#ifdef OMNISEER_REPLAY_RENDER_ONLY
+    std::fprintf(stdout, "vision_runbundle_compare: rendered %llu saved replay frames to %s\n",
+                 static_cast<unsigned long long>(frame_index), output_mp4.c_str());
+    return 0;
+#else
+    if (config.render_replay)
+    {
+      std::fprintf(stdout, "vision_runbundle_compare: rendered %llu saved replay frames to %s\n",
+                   static_cast<unsigned long long>(frame_index), output_mp4.c_str());
+      return 0;
+    }
 
     omniseer::vision::ComparisonProvenance provenance{};
     provenance.comparison_name =
@@ -513,6 +625,7 @@ int main(int argc, char** argv)
     std::fprintf(stdout, "vision_runbundle_compare: wrote %llu corrected source frames to %s\n",
                  static_cast<unsigned long long>(frame_index), output_mp4.c_str());
     return 0;
+#endif
   }
   catch (const std::exception& e)
   {

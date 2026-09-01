@@ -449,6 +449,12 @@ JSONL detection stream for each model) and never changes raw RunBundle evidence 
 manifest. `--name` defaults to `default`; names are deliberately restricted to ASCII letters,
 digits, `_`, and `-` so a comparison cannot select another path.
 
+After a comparison has produced its replay JSONLs, `compare --render-replay` redraws the
+same source video from those streams without initializing RKNN or changing replay JSONLs,
+provenance, thresholds, or study results. It replaces only the selected derived MP4. The
+portable `vision_runbundle_replay_render` executable is built on laptops with OpenCV even
+when RKNN support is unavailable; `scripts/omni runs compare --render-replay` selects it.
+
 The GUI and production runtime container run and record robot experiments. The ROCK 5B+
 devcontainer runs this offline comparison. The operator/laptop retrieves RunBundles and
 generates presentation videos and reports. Do not enter the production runtime container
@@ -473,6 +479,7 @@ scripts/omni runs comparison-report runs/reference_scene \
   --objects studies/detector_comparison/scan_recal/visibility.txt
 scripts/omni build vision
 scripts/omni runs compare runs/demo_001 --max-frames 120
+scripts/omni runs compare runs/demo_001 --render-replay --name default --max-frames 120
 
 # In the ROCK 5B+ devcontainer, retain separate controlled-comparison passes.
 scripts/omni runs compare runs/reference_scene --name task --classes config/classes/task.txt

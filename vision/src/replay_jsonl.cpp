@@ -3,6 +3,7 @@
 #include <cmath>
 #include <iomanip>
 #include <locale>
+#include <regex>
 #include <stdexcept>
 #include <utility>
 
@@ -113,5 +114,77 @@ namespace omniseer::vision
     _output.flush();
     if (!_output)
       throw std::runtime_error("failed to write replay JSONL output");
+  }
+
+  ReplayJsonlReader::ReplayJsonlReader(std::string input_path)
+      : _input(input_path), _input_path(std::move(input_path))
+  {
+    if (!_input)
+      throw std::runtime_error("failed to open replay JSONL input: " + _input_path);
+    _input.imbue(std::locale::classic());
+  }
+
+  DetectionsFrame ReplayJsonlReader::read(uint64_t expected_frame_index)
+  {
+    std::string line{};
+    if (!std::getline(_input, line))
+      throw std::runtime_error("replay JSONL ended before source frame " +
+                               std::to_string(expected_frame_index) + ": " + _input_path);
+
+    static const std::regex frame_index_pattern(R"("frame_index":([0-9]+))");
+    std::smatch             frame_index_match{};
+    if (!std::regex_search(line, frame_index_match, frame_index_pattern))
+      throw std::runtime_error("replay JSONL record has no frame_index: " + _input_path);
+    const uint64_t frame_index = std::stoull(frame_index_match[1].str());
+    if (frame_index != expected_frame_index)
+      throw std::runtime_error("replay JSONL frame_index does not match source frame in " +
+                               _input_path);
+
+    static const std::regex detection_pattern(
+        R"(\{"class_id":([0-9]+),"class_name":"(?:\\.|[^"])*","score":([-+0-9.eE]+),"bbox":\[([-+0-9.eE]+),([-+0-9.eE]+),([-+0-9.eE]+),([-+0-9.eE]+)\]\})");
+    const size_t detections_start = line.find("\"detections\":[");
+    const size_t detections_end   = line.rfind("]}");
+    if (detections_start == std::string::npos || detections_end == std::string::npos ||
+        detections_end < detections_start)
+      throw std::runtime_error("replay JSONL record has no detections array: " + _input_path);
+
+    DetectionsFrame frame{};
+    size_t          unparsed_start = detections_start + std::string("\"detections\":[").size();
+    for (std::sregex_iterator it(line.begin(), line.end(), detection_pattern), end; it != end; ++it)
+    {
+      if (frame.count == DetectionsFrame::capacity)
+        throw std::runtime_error("replay JSONL detection count exceeds frame capacity: " +
+                                 _input_path);
+      const std::smatch& match       = *it;
+      const size_t       match_start = static_cast<size_t>(match.position());
+      if (match_start < unparsed_start || match_start > detections_end)
+        throw std::runtime_error("replay JSONL contains an invalid detection: " + _input_path);
+      for (size_t i = unparsed_start; i < match_start; ++i)
+      {
+        if (line[i] != ',')
+          throw std::runtime_error("replay JSONL contains an invalid detection: " + _input_path);
+      }
+      Detection&          detection = frame.detections[frame.count++];
+      const unsigned long class_id  = std::stoul(match[1].str());
+      if (class_id > UINT32_MAX)
+        throw std::runtime_error("replay JSONL class_id is out of range: " + _input_path);
+      detection.class_id = static_cast<uint32_t>(class_id);
+      detection.score    = std::stof(match[2].str());
+      detection.x1       = std::stof(match[3].str());
+      detection.y1       = std::stof(match[4].str());
+      detection.x2       = std::stof(match[5].str());
+      detection.y2       = std::stof(match[6].str());
+      if (!std::isfinite(detection.score) || !std::isfinite(detection.x1) ||
+          !std::isfinite(detection.y1) || !std::isfinite(detection.x2) ||
+          !std::isfinite(detection.y2))
+        throw std::runtime_error("replay JSONL contains a non-finite detection: " + _input_path);
+      unparsed_start = match_start + static_cast<size_t>(match.length());
+    }
+    for (size_t i = unparsed_start; i < detections_end; ++i)
+    {
+      if (line[i] != ',')
+        throw std::runtime_error("replay JSONL contains an invalid detection: " + _input_path);
+    }
+    return frame;
   }
 } // namespace omniseer::vision

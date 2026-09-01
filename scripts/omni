@@ -123,6 +123,7 @@ Usage:
   scripts/omni runs comparison-report <reference_run> --trial <run_dir> --trial <run_dir> --trial <run_dir> --trial <run_dir> [--comparison <name>] [--truth <path>|--objects <path>] [--overwrite]
   scripts/omni runs video <run_dir>
   scripts/omni runs compare <run_dir> [--name <comparison-name>] [--model-dir <dir>] [--classes <path>] [comparison options]
+  scripts/omni runs compare <run_dir> --render-replay [--name <comparison-name>] [--max-frames <u32>]
   scripts/omni runs local-list [--root <local-runs-root>]
   scripts/omni runs list [retrieval args...]
   scripts/omni runs pull <run_id> [retrieval args...]
@@ -341,6 +342,9 @@ EOF
         ;;
       compare)
         local_compare_binary="${OMNISEER_VISION_BUILD_DIR:-${OMNI_REPO_ROOT}/vision/build}/vision_runbundle_compare"
+        if omni_arg_present "--render-replay" "$@"; then
+          local_compare_binary="${OMNISEER_VISION_BUILD_DIR:-${OMNI_REPO_ROOT}/vision/build}/vision_runbundle_replay_render"
+        fi
         if [[ -x "${local_compare_binary}" ]]; then
           exec "${local_compare_binary}" "$@"
         fi

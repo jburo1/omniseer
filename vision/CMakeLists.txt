@@ -13,7 +13,22 @@ option(VISION_BUILD_HARNESS "Build vision_harness app (requires librga)" ON)
 option(VISION_BUILD_REPLAY "Build vision_replay app (requires OpenCV and RKNN runtime)" ON)
 option(VISION_BUILD_RKNN_PROBE "Build raw RKNN output diagnostic probe" ON)
 option(VISION_BUILD_RUNBUNDLE_COMPARISON "Build the target-side RunBundle comparison tool" ON)
+option(VISION_BUILD_RUNBUNDLE_REPLAY_RENDER "Build the portable RunBundle replay comparison renderer" ON)
 option(VISION_BUILD_TESTS "Build vision tests" ON)
+
+if(VISION_BUILD_RUNBUNDLE_REPLAY_RENDER)
+  find_package(PkgConfig QUIET)
+  if(NOT PkgConfig_FOUND)
+    message(WARNING "pkg-config not found; disabling vision_runbundle_replay_render")
+    set(VISION_BUILD_RUNBUNDLE_REPLAY_RENDER OFF)
+  else()
+    pkg_check_modules(OPENCV4 opencv4)
+    if(NOT OPENCV4_FOUND)
+      message(WARNING "OpenCV not found; disabling vision_runbundle_replay_render")
+      set(VISION_BUILD_RUNBUNDLE_REPLAY_RENDER OFF)
+    endif()
+  endif()
+endif()
 
 if(VISION_BUILD_HARNESS)
   find_package(PkgConfig REQUIRED)
@@ -49,6 +64,25 @@ if(VISION_BUILD_RUNBUNDLE_COMPARISON)
       endif()
     endif()
   endif()
+endif()
+
+set(VISION_RUNBUNDLE_REPLAY_RENDER_SOURCES
+  apps/runbundle_compare.cpp
+  src/class_list.cpp
+  src/preview_wrap_repair.cpp
+  src/replay_jsonl.cpp
+  src/runbundle_comparison.cpp
+)
+
+if(VISION_BUILD_RUNBUNDLE_REPLAY_RENDER)
+  add_executable(vision_runbundle_replay_render ${VISION_RUNBUNDLE_REPLAY_RENDER_SOURCES})
+  target_include_directories(vision_runbundle_replay_render PRIVATE include ${OPENCV4_INCLUDE_DIRS})
+  target_link_libraries(vision_runbundle_replay_render PRIVATE Threads::Threads ${OPENCV4_LIBRARIES})
+  target_compile_options(vision_runbundle_replay_render PRIVATE ${OPENCV4_CFLAGS_OTHER})
+  target_compile_definitions(vision_runbundle_replay_render PRIVATE
+    OMNISEER_REPLAY_RENDER_ONLY
+    VISION_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+  )
 endif()
 
 if(VISION_BUILD_REPLAY)
@@ -299,6 +333,11 @@ if(VISION_BUILD_TESTS)
   target_link_libraries(runbundle_comparison_utils_test PRIVATE GTest::gtest_main)
 
   add_test(NAME runbundle_comparison_utils_test COMMAND runbundle_comparison_utils_test)
+
+  if(VISION_BUILD_RUNBUNDLE_REPLAY_RENDER)
+    add_test(NAME runbundle_replay_render_help
+      COMMAND vision_runbundle_replay_render --render-replay --help)
+  endif()
 
   if(RKNN_INCLUDE_DIR AND RKNNRT_LIBRARY)
     add_executable(rknn_runner_test

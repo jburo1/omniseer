@@ -31,4 +31,21 @@ namespace omniseer::vision
     std::ofstream            _output{};
     std::vector<std::string> _class_names{};
   };
+
+  /** @brief Sequential reader for ReplayJsonlWriter's canonical source-frame records. */
+  class ReplayJsonlReader
+  {
+  public:
+    explicit ReplayJsonlReader(std::string input_path);
+
+    ReplayJsonlReader(const ReplayJsonlReader&)            = delete;
+    ReplayJsonlReader& operator=(const ReplayJsonlReader&) = delete;
+
+    /** @brief Return detections for exactly the requested source frame. */
+    DetectionsFrame read(uint64_t expected_frame_index);
+
+  private:
+    std::ifstream _input{};
+    std::string   _input_path{};
+  };
 } // namespace omniseer::vision
