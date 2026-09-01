@@ -93,15 +93,13 @@ class RunSettingsTests(unittest.TestCase):
             "YOLO-World v2-M INT8 (recalibrated)": "yolo_world_v2_m_i8.rknn",
             "YOLO-World v2-M FP": "yolo_world_v2_m_fp.rknn",
             "YOLO-World v2-L FP": "yolo_world_v2_l_fp.rknn",
+            "YOLO-World v2-L Hybrid": "yolo_world_v2_l_hybrid_td01.rknn",
             "YOLO-World v2-L INT8 (recalibrated)": "yolo_world_v2_l_i8.rknn",
         }
         self.assertIsNone(selected_detector_model("Runtime default"))
         for label, artifact in expected.items():
             self.assertEqual(DETECTOR_MODEL_CHOICES[label].artifact_filename, artifact)
             self.assertEqual(selected_detector_model(label).artifact_filename, artifact)
-        self.assertNotIn("YOLO-World v2-L Hybrid", DETECTOR_MODEL_CHOICES)
-        with self.assertRaisesRegex(ValueError, "unsupported detector model"):
-            selected_detector_model("YOLO-World v2-L Hybrid")
 
     def test_normalized_remote_paths_use_defaults_and_strip_trailing_slashes(self):
         self.assertEqual(normalized_remote_repo_root(""), DEFAULT_REMOTE_REPO_ROOT)
@@ -171,6 +169,7 @@ class RunSettingsTests(unittest.TestCase):
             "YOLO-World v2-M INT8 (recalibrated)": ("yolo_world_v2_m_i8.rknn", "v2m", "int8"),
             "YOLO-World v2-M FP": ("yolo_world_v2_m_fp.rknn", "v2m", "fp"),
             "YOLO-World v2-L FP": ("yolo_world_v2_l_fp.rknn", "v2l", "fp"),
+            "YOLO-World v2-L Hybrid": ("yolo_world_v2_l_hybrid_td01.rknn", "v2l", "hybrid"),
             "YOLO-World v2-L INT8 (recalibrated)": ("yolo_world_v2_l_i8.rknn", "v2l", "int8"),
         }
         for label, (artifact, variant, precision) in expected.items():

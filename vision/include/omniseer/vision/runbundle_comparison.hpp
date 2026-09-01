@@ -22,8 +22,7 @@ namespace omniseer::vision
       {"v2-M FP", "yolo_world_v2_m_fp.rknn", "v2m_fp.jsonl"},
       {"v2-M INT8", "yolo_world_v2_m_i8.rknn", "v2m_int8.jsonl"},
       {"v2-L FP", "yolo_world_v2_l_fp.rknn", "v2l_fp.jsonl"},
-      {"v2-L Hybrid", "yolo_world_v2_l_hybrid_td01_clspreds0_mm_inputs_fp16.rknn",
-       "v2l_hybrid.jsonl"},
+      {"v2-L Hybrid", "yolo_world_v2_l_hybrid_td01.rknn", "v2l_hybrid.jsonl"},
   }};
 
   struct ComparisonInputPaths

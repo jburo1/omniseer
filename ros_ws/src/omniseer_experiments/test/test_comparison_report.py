@@ -150,8 +150,8 @@ def test_canonical_model_specs_cover_six_s_m_l_final_configurations() -> None:
     ]
 
 
-def test_trial_spec_prefers_explicit_hybrid_precision_over_fp16_filename() -> None:
-    hybrid_path = "models/yolo_world_v2_l_hybrid_td01_clspreds0_mm_inputs_fp16.rknn"
+def test_trial_spec_resolves_canonical_td01_base_hybrid() -> None:
+    hybrid_path = "models/yolo_world_v2_l_hybrid_td01.rknn"
     assert (
         _resolve_trial_spec({"model": {"variant": "v2l", "precision": "hybrid", "detector_model_path": hybrid_path}})
         == MODEL_SPECS[5]

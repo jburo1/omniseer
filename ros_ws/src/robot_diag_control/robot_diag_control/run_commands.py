@@ -51,6 +51,7 @@ DETECTOR_MODEL_CHOICES: dict[str, DetectorModelChoice | None] = {
     "YOLO-World v2-M INT8 (recalibrated)": DetectorModelChoice("v2m", "int8", "yolo_world_v2_m_i8.rknn"),
     "YOLO-World v2-M FP": DetectorModelChoice("v2m", "fp", "yolo_world_v2_m_fp.rknn"),
     "YOLO-World v2-L FP": DetectorModelChoice("v2l", "fp", "yolo_world_v2_l_fp.rknn"),
+    "YOLO-World v2-L Hybrid": DetectorModelChoice("v2l", "hybrid", "yolo_world_v2_l_hybrid_td01.rknn"),
     "YOLO-World v2-L INT8 (recalibrated)": DetectorModelChoice("v2l", "int8", "yolo_world_v2_l_i8.rknn"),
 }
 

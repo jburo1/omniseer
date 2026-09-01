@@ -270,7 +270,10 @@ command. It decodes the immutable raw
 `video/source.ts` once, reverses the known 1280x720 Rockchip preview circular wrap
 in memory (recorded `[x=1272..1279][x=0..1271]` becomes normal pixel order), and
 passes that same corrected BGR frame serially to resident v2-S FP, v2-S INT8, v2-M
-FP, v2-M INT8, v2-L FP, and v2-L Hybrid `OfflineDetector` instances. Each instance uses the existing CPU
+FP, v2-M INT8, v2-L FP, and v2-L Hybrid `OfflineDetector` instances. The
+`v2-L Hybrid` entry uses the canonical TD01 base hybrid artifact
+`yolo_world_v2_l_hybrid_td01.rknn`; this is the hybrid model in the six-model
+experiment matrix. Each instance uses the existing CPU
 letterbox, `RknnRunner`, `ConsumerPipeline`, embeddings, and YOLO postprocess path.
 
 For every decoded source frame, the comparator persists each model result with the existing replay
