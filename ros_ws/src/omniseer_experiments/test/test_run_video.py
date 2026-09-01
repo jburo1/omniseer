@@ -5,6 +5,8 @@ from subprocess import CalledProcessError, CompletedProcess
 from unittest.mock import patch
 
 from omniseer_experiments.run_video import (
+    DETECTION_LABEL_FONT_SCALE,
+    DETECTION_LABEL_THICKNESS,
     NON_TARGET_COLOR,
     TARGET_COLOR,
     TimedDetections,
@@ -185,10 +187,10 @@ class RunVideoTests(unittest.TestCase):
                 self.rectangles.append((top_left, bottom_right, color))
 
             def putText(self, *_args):
-                pass
+                self.text = _args
 
         class Frame:
-            shape = (720, 1280, 3)
+            shape = (360, 640, 3)
 
         cv2 = FakeCv2()
         _draw_detections(
@@ -205,12 +207,16 @@ class RunVideoTests(unittest.TestCase):
                 },
             ],
             target_class="person",
+            source_width=1280,
+            source_height=720,
         )
 
         self.assertEqual(
             cv2.rectangles,
-            [((540, 310), (740, 410), TARGET_COLOR), ((80, 80), (120, 120), NON_TARGET_COLOR)],
+            [((270, 155), (370, 205), TARGET_COLOR), ((40, 40), (60, 60), NON_TARGET_COLOR)],
         )
+        self.assertEqual(cv2.text[4], DETECTION_LABEL_FONT_SCALE)
+        self.assertEqual(cv2.text[6], DETECTION_LABEL_THICKNESS)
 
     def test_target_class_is_read_from_manifest(self):
         with tempfile.TemporaryDirectory() as temp_dir:

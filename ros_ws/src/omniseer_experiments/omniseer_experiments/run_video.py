@@ -17,6 +17,8 @@ from omniseer_experiments.run_inspection import _parse_generated_manifest
 MAX_DETECTION_TIME_DELTA_SEC = 0.10
 TARGET_COLOR = (0, 255, 0)
 NON_TARGET_COLOR = (0, 0, 255)
+DETECTION_LABEL_FONT_SCALE = 0.9
+DETECTION_LABEL_THICKNESS = 2
 
 # Rockchip preview recordings have a known, deterministic horizontal circular wrap:
 # [original x=1272..1279][original x=0..1271].  Raw source.ts and its stream-copy
@@ -413,11 +415,18 @@ def render_overlay_frames(
                 timing_anchor=timing_anchor,
                 video_start_time_sec=video_start_time_sec,
             )
-            match = nearest_detections(records, frame_robot_time_sec=frame_robot_time_sec)
-            if match is not None:
-                _draw_detections(cv2, frame, match.detections, target_class=match.target_class)
             if (output_width, output_height) != (width, height):
                 frame = cv2.resize(frame, (output_width, output_height), interpolation=cv2.INTER_AREA)
+            match = nearest_detections(records, frame_robot_time_sec=frame_robot_time_sec)
+            if match is not None:
+                _draw_detections(
+                    cv2,
+                    frame,
+                    match.detections,
+                    target_class=match.target_class,
+                    source_width=width,
+                    source_height=height,
+                )
             writer.write(frame)
             frame_index += 1
     finally:
@@ -425,8 +434,20 @@ def render_overlay_frames(
         writer.release()
 
 
-def _draw_detections(cv2: Any, frame: Any, detections: Sequence[dict[str, Any]], *, target_class: str = "") -> None:
+def _draw_detections(
+    cv2: Any,
+    frame: Any,
+    detections: Sequence[dict[str, Any]],
+    *,
+    target_class: str = "",
+    source_width: int | None = None,
+    source_height: int | None = None,
+) -> None:
     frame_height, frame_width = frame.shape[:2]
+    source_width = source_width or frame_width
+    source_height = source_height or frame_height
+    scale_x = frame_width / source_width
+    scale_y = frame_height / source_height
     for detection in detections:
         bbox = detection.get("bbox")
         if not isinstance(bbox, dict):
@@ -436,10 +457,10 @@ def _draw_detections(cv2: Any, frame: Any, detections: Sequence[dict[str, Any]],
         if None in {center_x, center_y, size_x, size_y}:
             continue
         # DetectionArray coordinates are remapped by vision into source-camera pixels.
-        x1 = max(0, min(frame_width - 1, round(center_x - size_x / 2)))
-        y1 = max(0, min(frame_height - 1, round(center_y - size_y / 2)))
-        x2 = max(0, min(frame_width - 1, round(center_x + size_x / 2)))
-        y2 = max(0, min(frame_height - 1, round(center_y + size_y / 2)))
+        x1 = max(0, min(frame_width - 1, round((center_x - size_x / 2) * scale_x)))
+        y1 = max(0, min(frame_height - 1, round((center_y - size_y / 2) * scale_y)))
+        x2 = max(0, min(frame_width - 1, round((center_x + size_x / 2) * scale_x)))
+        y2 = max(0, min(frame_height - 1, round((center_y + size_y / 2) * scale_y)))
         if x2 <= x1 or y2 <= y1:
             continue
         class_id = detection.get("class_id", 0)
@@ -452,9 +473,9 @@ def _draw_detections(cv2: Any, frame: Any, detections: Sequence[dict[str, Any]],
             f"{class_name} {score:.2f}",
             (x1, max(16, y1)),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.5,
+            DETECTION_LABEL_FONT_SCALE,
             color,
-            1,
+            DETECTION_LABEL_THICKNESS,
             cv2.LINE_AA,
         )
 
