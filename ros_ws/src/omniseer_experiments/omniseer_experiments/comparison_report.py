@@ -188,7 +188,7 @@ def parse_scene_truth(path: Path) -> SceneTruth:
 
 
 def parse_objects_annotations(path: Path) -> SceneTruth:
-    """Read manual ``objects.md`` visibility annotations without guessing bad ranges.
+    """Read manual visibility annotations without guessing bad ranges.
 
     Each non-comment line is ``<class> start <frame>``, ``<class> end <frame>``,
     or ``<class> absent``.  Frames are inclusive.  Well-formed ranges remain
@@ -509,7 +509,7 @@ def comparison_report_main(argv: list[str] | None = None) -> None:
     parser.add_argument("--truth", help="optional scene-truth JSON using inclusive frame ranges")
     parser.add_argument(
         "--objects",
-        help="optional objects.md manual visibility annotations; malformed lines are reported, not inferred",
+        help="optional manual visibility annotations; malformed lines are reported, not inferred",
     )
     parser.add_argument("--overwrite", action="store_true", help="replace an existing report/comparison.html")
     args = parser.parse_args(argv)

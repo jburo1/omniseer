@@ -2,9 +2,9 @@
 
 Frozen inventory for the investigation wrap-up.  This index names existing
 artifacts only; it does not make a deployment-readiness claim and it is not an
-experiment record.  Paths are repository-relative.  Generated model and host
-artifact directories remain ignored; this index and the small RK3588 output
-collection are deliberately force-added to Git.
+experiment record. Paths are repository-relative. Generated model and host
+artifact directories remain ignored; the compact Git-retained evidence is in
+this study's `evidence/` directory.
 
 ## Canonical detector artifacts
 
@@ -33,10 +33,11 @@ candidate.
 Retain both rows: the exMatMul micrograph is the narrow control, and the
 projection-context reproducer supplies the real v2-L classifier context.
 
-| Evidence | Canonical path | Required contents |
+| Evidence | Location | Required contents |
 | --- | --- | --- |
-| exMatMul control | `artifacts/quant_analysis/v2l/cls80_exmatmul_toolkit210_final/` | `report.json`, run log, ONNX, three RKNN variants, step-1 configs, input/reference/output arrays |
-| final minimal hardware reproducer | `artifacts/quant_analysis/v2l/cls80_projection_context_toolkit210_run2/` | `report.json`, `cls80_projection_context_*.rknn`, ONNX, step-1 configs, projection/image/text/reference/output arrays |
+| exMatMul control (generated local reproducer) | `artifacts/quant_analysis/v2l/cls80_exmatmul_toolkit210_final/` | `report.json`, run log, ONNX, three RKNN variants, step-1 configs, input/reference/output arrays |
+| final minimal hardware reproducer (generated local) | `artifacts/quant_analysis/v2l/cls80_projection_context_toolkit210_run2/` | `report.json`, `cls80_projection_context_*.rknn`, ONNX, step-1 configs, projection/image/text/reference/output arrays |
+| retained RK3588 metrics | `studies/quantization/yolo_world_v2l_int8/evidence/projection_context_rk3588/metrics.json` | machine-readable hardware comparison metrics and raw-output hashes |
 | reproducer source | `tools/model/reproduce_cls80_exmatmul.py`; `tools/model/reproduce_cls80_projection_context.py` | source must remain with the artifacts |
 
 `cls80_projection_context_toolkit210_run2/report.json` records Toolkit2
@@ -48,8 +49,8 @@ It also records the exact RKNN artifact hashes and comparison metrics.
 
 ### Final RK3588 reproduction
 
-The final hardware reproduction is
-`artifacts/quant_analysis/v2l/cls80_projection_context_toolkit210_run2/rk3588_execution_20260831/`.
+The final hardware reproduction's compact retained metrics are in
+`studies/quantization/yolo_world_v2l_int8/evidence/projection_context_rk3588/`.
 Its canonical, Git-retained machine-readable comparison is `metrics.json`
 (SHA-256 `77f8634499127aa1bd02a1228489b8dbd756d632df78d73b59ad7f7c82d688fb`).
 It identifies RK3588 as the platform, the three exact model hashes, output
@@ -58,9 +59,9 @@ shapes/statistics, host/reference comparison metrics, and raw-output hashes.
 On RK3588, only the failed-layout hybrid (`failed_fp16_island`) collapsed to
 an exactly constant output (value `-11.993370056152344`, stddev `0.0`).  The
 FP16 control and healthy-hybrid control remained non-constant (stddev
-`5.930371901237637` and `5.876957691347017`, respectively).  The raw output
-arrays remain in that directory as recoverable local evidence; their hashes,
-recorded in `metrics.json`, are:
+`5.930371901237637` and `5.876957691347017`, respectively). The raw output
+arrays remain in the generated local reproducer directory as recoverable local
+evidence; their hashes, recorded in `metrics.json`, are:
 
 | Variant | Raw output file | SHA-256 |
 | --- | --- | --- |
@@ -86,8 +87,8 @@ recorded in `metrics.json`, are:
 
 ## RK3588 one-frame evidence
 
-`artifacts/quant_analysis/rk3588_v2l_20260831/` is an intact copy of the
-Radxa directory of that name.  It contains the corrected single-frame AVI and
+`studies/quantization/yolo_world_v2l_int8/evidence/one_frame_rk3588/` is an
+intact copy of the Radxa one-frame evidence directory. It contains the corrected single-frame AVI and
 frame hashes, plus paired `.log` and `.jsonl` output for FP, recalibrated INT8,
 TD0, TD01, full-neck, the TD01 output control, and each classifier-path bisect.
 The TD01 base hybrid is the mitigation in this one-frame collection.  The
@@ -104,7 +105,7 @@ No further board copy is required for the evidence currently present there.
 
 ## Canonical final 300-frame RK3588 evaluation
 
-`artifacts/quant_analysis/v2l/final_multiframe_eval/results/` is the
+`studies/quantization/yolo_world_v2l_int8/evidence/final_multiframe_rk3588/results/` is the
 canonical final representative evaluation. The retained compact evidence is
 `summary.json`, `summary.md`, the three normalized `v2l_*.jsonl` files, and
 the corresponding `raw/*_replay.jsonl`, `*.wall_time.txt`, `*.stdout.log`,
@@ -137,7 +138,7 @@ TD01's notable FP detection retention was person 81/86 (94.2%), potted plant
 not ground-truth precision or recall.
 
 The frozen dataset manifest is retained in Git at
-`artifacts/quant_analysis/v2l/final_multiframe_eval/manifest.json` (SHA-256
+`studies/quantization/yolo_world_v2l_int8/evidence/final_multiframe_rk3588/manifest.json` (SHA-256
 `3a33a81643c31e4fb72b8a8406c825858baef2abef10b112e136cc6ca3a4c055`).
 `summary.json` records that same manifest SHA-256,
 `3a33a81643c31e4fb72b8a8406c825858baef2abef10b112e136cc6ca3a4c055`, source

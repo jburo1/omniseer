@@ -3,8 +3,8 @@
 This record preserves the conclusions of the 2026-08-29--31 RKNN
 quantization investigation. Raw Toolkit simulator snapshots are intentionally
 ignored under `artifacts/quant_analysis/`; the compact final RK3588 evaluation
-evidence is retained and indexed in
-`artifacts/quant_analysis/v2l/EVIDENCE_INDEX.md`.
+evidence is retained in the v2-L INT8 study and indexed in
+`studies/quantization/yolo_world_v2l_int8/evidence/EVIDENCE_INDEX.md`.
 
 ## Conclusions
 
@@ -30,9 +30,9 @@ evidence is retained and indexed in
 ## Final representative RK3588 evaluation
 
 The canonical final evidence is
-`artifacts/quant_analysis/v2l/final_multiframe_eval/results/`, indexed with
+`studies/quantization/yolo_world_v2l_int8/evidence/final_multiframe_rk3588/results/`, indexed with
 hashes and file-retention guidance in
-`artifacts/quant_analysis/v2l/EVIDENCE_INDEX.md`. It replays 300 frozen
+`studies/quantization/yolo_world_v2l_int8/evidence/EVIDENCE_INDEX.md`. It replays 300 frozen
 representative frames using the existing `vision_replay` detector path, no
 warmup, score threshold 0.25, and NMS IoU threshold 0.45.
 
@@ -131,8 +131,8 @@ evidence and is retained as described in the evidence index; the frozen source
 and PNG frames remain reproducible local inputs rather than Git content.
 
 Earlier host-generated snapshot directories are candidates for later cleanup
-only after the evidence review. Do not treat the broad
-`artifacts/quant_analysis/v2l/` directory as removable: it now contains the
-Git-retained evidence index and final result bundle. Model artifacts,
-calibration inputs, source changes, and findings required to recreate the
-investigation are retained elsewhere.
+only after the evidence review. The broad
+`artifacts/quant_analysis/v2l/` directory remains generated local output;
+the Git-retained evidence index and final result bundle are under `studies/`.
+Model artifacts, calibration inputs, source changes, and findings required to
+recreate the investigation are retained elsewhere.

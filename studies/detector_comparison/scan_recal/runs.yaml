@@ -1,0 +1,6 @@
+# Tracked documentation names the six required model configurations but does
+# not record immutable source or trial RunBundle identifiers. Do not infer IDs
+# from illustrative `runs/...` command paths.
+schema_version: 1
+reference_run_id: null
+trial_run_ids: {}

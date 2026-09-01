@@ -429,8 +429,8 @@ v2-S/v2-M/v2-L FP/INT8 configuration) with one named controlled replay from the 
 RunBundle. It writes `<reference_run>/report/comparison.html` without replacing the
 single-run report. Trial order does not matter; model identity is resolved from each
 manifest. The optional `--truth` JSON uses inclusive source-frame ranges for known-present
-classes and a list of known-absent classes. Alternatively, `--objects` reads the repository's
-manual `objects.md` syntax: `<class> start <inclusive-frame>`, `<class> end <inclusive-frame>`,
+classes and a list of known-absent classes. Alternatively, `--objects` reads the study's
+manual visibility-annotation syntax: `<class> start <inclusive-frame>`, `<class> end <inclusive-frame>`,
 and `<class> absent`. It reports malformed or vocabulary-mismatched annotations in the report
 without inventing intervals; only labels in the comparison vocabulary are evaluated. These are
 manual scene-presence / visibility metrics, not mAP, bounding-box recall, or full detection
@@ -470,7 +470,7 @@ scripts/omni runs comparison-report runs/reference_scene \
   --trial runs/v2l_fp_scene \
   --trial runs/v2l_hybrid_scene \
   --comparison task \
-  --objects objects.md
+  --objects studies/detector_comparison/scan_recal/visibility.txt
 scripts/omni build vision
 scripts/omni runs compare runs/demo_001 --max-frames 120
 
