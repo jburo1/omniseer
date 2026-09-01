@@ -73,12 +73,12 @@ TEST(JsonlTelemetry, WritesProducerAndConsumerJsonl)
     consumer.publish_ns                = 23;
     consumer.release_ns                = 24;
     consumer.total_ns                  = 110;
-    consumer.stage_mask = static_cast<uint32_t>(omniseer::vision::ConsumerStageMask::AcquireRead) |
-                          static_cast<uint32_t>(omniseer::vision::ConsumerStageMask::Infer) |
-                          static_cast<uint32_t>(omniseer::vision::ConsumerStageMask::Postprocess) |
-                          static_cast<uint32_t>(omniseer::vision::ConsumerStageMask::Publish) |
-                          static_cast<uint32_t>(omniseer::vision::ConsumerStageMask::Release);
-    consumer.infer_errno     = 0;
+    consumer.stage_mask  = static_cast<uint32_t>(omniseer::vision::ConsumerStageMask::AcquireRead) |
+                           static_cast<uint32_t>(omniseer::vision::ConsumerStageMask::Infer) |
+                           static_cast<uint32_t>(omniseer::vision::ConsumerStageMask::Postprocess) |
+                           static_cast<uint32_t>(omniseer::vision::ConsumerStageMask::Publish) |
+                           static_cast<uint32_t>(omniseer::vision::ConsumerStageMask::Release);
+    consumer.infer_errno = 0;
     consumer.consumer_status = static_cast<uint8_t>(omniseer::vision::ConsumerTickStatus::Consumed);
     consumer.infer_status    = static_cast<uint8_t>(omniseer::vision::InferStatus::Ok);
     consumer.postprocess_status = static_cast<uint8_t>(omniseer::vision::PostprocessStatus::Ok);
