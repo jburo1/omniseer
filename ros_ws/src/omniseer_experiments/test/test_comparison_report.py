@@ -184,9 +184,9 @@ def test_scene_truth_accepts_multiple_ranges_and_rejects_invalid_values(tmp_path
             parse_scene_truth(truth_path)
 
 
-def test_objects_annotations_support_multiple_intervals_and_report_ambiguous_lines(tmp_path: Path) -> None:
-    objects_path = tmp_path / "objects.md"
-    objects_path.write_text(
+def test_visibility_annotations_support_multiple_intervals_and_report_ambiguous_lines(tmp_path: Path) -> None:
+    visibility_path = tmp_path / "visibility.txt"
+    visibility_path.write_text(
         "\n".join(
             [
                 "person start 874",
@@ -203,7 +203,7 @@ def test_objects_annotations_support_multiple_intervals_and_report_ambiguous_lin
         + "\n",
         encoding="utf-8",
     )
-    truth = parse_objects_annotations(objects_path)
+    truth = parse_objects_annotations(visibility_path)
     assert truth.present["person"] == ((874, 1166),)
     assert truth.present["chair"] == ((0, 3), (8, 9))
     assert truth.absent == ("dog",)
@@ -336,19 +336,19 @@ def test_html_uses_existing_report_style_and_conditional_sections(tmp_path: Path
     assert "Exploratory COCO-80" in output
 
 
-def test_objects_annotations_render_six_model_visibility_and_absent_metrics(tmp_path: Path) -> None:
+def test_visibility_annotations_render_six_model_visibility_and_absent_metrics(tmp_path: Path) -> None:
     reference = tmp_path / "reference"
     _write_comparison(reference)
     trials = _write_all_trials(tmp_path / "trials")
-    objects_path = reference / "objects.md"
-    objects_path.write_text(
+    visibility_path = reference / "visibility.txt"
+    visibility_path.write_text(
         "chair start 0\nchair end 2\ndog absent\nperson start 874\nperson end 1166\n",
         encoding="utf-8",
     )
     output = write_comparison_report(
         reference,
         trial_dirs=trials,
-        objects_path=objects_path,
+        objects_path=visibility_path,
     ).output_path.read_text(encoding="utf-8")
     assert "Manual scene-presence / visibility metrics" in output
     assert "Aggregate visible-frame detection rate" in output
