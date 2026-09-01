@@ -42,3 +42,8 @@ Panel order is `v2-S FP | v2-M FP | v2-L FP` on the top row and `v2-S INT8 |
 v2-M INT8 | v2-L Hybrid` on the bottom row. The corresponding manifest-verified
 RunBundle IDs are `v2s_fp_scene_1`, `v2m_fp_scene_1`, `v2l_fp_scene_1`,
 `v2s_int8_scene_1`, `v2m_int8_scene_1`, and `v2l_hybrid_scene_1`.
+
+`evidence/scene_1_v2l_int8_vs_hybrid_1x2.mp4` is the corresponding two-panel
+derivative for the v2-L INT8 (collapsed) RunBundle `v2l_int8_scene_1` and the
+v2-L Hybrid RunBundle `v2l_hybrid_scene_1`. The panels start together and the
+video ends at the 32.5-second INT8 input, the shorter of the two overlays.
