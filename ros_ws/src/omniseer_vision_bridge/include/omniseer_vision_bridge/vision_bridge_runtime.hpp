@@ -68,9 +68,9 @@ namespace omniseer_vision_bridge
     bool                                       has_fatal_error() const noexcept;
     std::string                                fatal_error_message() const;
     omniseer::vision::RollingTelemetrySnapshot telemetry_snapshot() const noexcept;
-    TargetCaptureResult                        capture_source_frame(TargetCaptureMetadata     metadata,
-                                                                    uint64_t                  source_capture_ts_real_ns,
-                                                                    std::chrono::milliseconds timeout);
+    TargetCaptureResult capture_source_frame(TargetCaptureMetadata     metadata,
+                                             uint64_t                  source_capture_ts_real_ns,
+                                             std::chrono::milliseconds timeout);
 
   private:
     struct Impl;

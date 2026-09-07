@@ -121,9 +121,7 @@ TEST(V4l2Capture, NegotiatesAndStreamsDmabufNv12_1280x720)
     {
       slot_fd.emplace(f.v4l2_index, f.planes[0].fd);
 
-      struct stat st
-      {
-      };
+      struct stat st{};
       ASSERT_EQ(::fstat(f.planes[0].fd, &st), 0) << std::strerror(errno);
 
       const std::string link = readlink_fd(f.planes[0].fd);
