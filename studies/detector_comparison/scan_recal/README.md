@@ -32,6 +32,10 @@ the raw source or trial evidence.
 
 ## Scene 1 presentation grid
 
+`evidence/controlled_replay_2x3.mp4` is the six-model controlled replay: all
+six panels are rendered from the same fixed source video and saved replay
+detections. It is distinct from the independent physical-run grid below.
+
 `evidence/scene_1_overlay_grid_2x3.mp4` is a presentation derivative assembled
 from the already-rendered corrected overlay videos in six independently
 recorded `scene_1` RunBundles. It is distinct from the fixed-source replay

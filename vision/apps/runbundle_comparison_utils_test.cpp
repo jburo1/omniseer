@@ -32,7 +32,7 @@ namespace omniseer::vision
   {
     EXPECT_DOUBLE_EQ(kComparisonReducedDetectionLabelFontScale, 0.9);
     EXPECT_EQ(kComparisonReducedDetectionLabelThickness, 2);
-    EXPECT_DOUBLE_EQ(kComparisonFullDetectionLabelFontScale, 0.5);
+    EXPECT_DOUBLE_EQ(kComparisonFullDetectionLabelFontScale, 0.9);
     EXPECT_EQ(kComparisonFullDetectionLabelThickness, 1);
   }
 

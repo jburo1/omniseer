@@ -27,7 +27,7 @@ namespace omniseer::vision
 
   constexpr double kComparisonReducedDetectionLabelFontScale = 0.9;
   constexpr int    kComparisonReducedDetectionLabelThickness = 2;
-  constexpr double kComparisonFullDetectionLabelFontScale    = 0.5;
+  constexpr double kComparisonFullDetectionLabelFontScale    = 0.9;
   constexpr int    kComparisonFullDetectionLabelThickness    = 1;
 
   struct ComparisonInputPaths
