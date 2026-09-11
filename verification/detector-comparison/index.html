@@ -1015,6 +1015,34 @@
   
   
     <li class="md-nav__item">
+      <a href="https://github.com/jburo1/omniseer/tree/master/studies/autonomy/v2m_int8_target_acquisition" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Target Acquisition RunBundle
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../ci-cd/" class="md-nav__link">
         
   
@@ -1117,6 +1145,34 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://github.com/jburo1/omniseer/tree/master/studies/quantization/yolo_world_v2l_int8" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    INT8 Quantization Study
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1269,11 +1325,15 @@ runs; its panels do not start together and it is not a controlled replay.</p>
 </tr>
 </tbody>
 </table>
-<p>v2-S INT8 has the highest observed throughput. Against their FP counterparts,
-v2-S INT8 improves inference p50/p95 by 1.98×/2.53× and throughput by 2.09×;
-v2-M INT8 by 2.34×/2.36× and 2.30×; and v2-L Hybrid by 1.85×/1.74× and
-1.76×. v2-M INT8 is therefore the most plausible coverage/throughput
-compromise for this scene. v2-L Hybrid is faster than v2-L FP, but has lower
+<p>v2-S INT8 has the highest author-reported throughput among the six physical
+case-study summaries. The v2-M INT8 RunBundle is publicly inspectable; the
+other five physical RunBundles remain local, so their timing values and derived
+ratios cannot be independently recomputed from the public repository. Against
+their FP counterparts, v2-S INT8 improves inference p50/p95 by 1.98×/2.53× and
+throughput by 2.09×; v2-M INT8 by 2.34×/2.36× and 2.30×; and v2-L Hybrid by
+1.85×/1.74× and 1.76×. v2-M INT8 is therefore the most plausible
+author-reported coverage/throughput compromise for this scene. v2-L Hybrid is
+faster than v2-L FP, but has lower
 controlled coverage and higher observed memory use. All six trials succeeded
 without target loss; their 50.5–57.8 s success times vary far less than their
 59.19–380.25 ms inference p50 values, suggesting scan/control timing is also
@@ -1308,7 +1368,7 @@ source stream.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 11, 2026 20:15:54 UTC">September 11, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 11, 2026 21:33:47 UTC">September 11, 2026</span>
   </span>
 
     
