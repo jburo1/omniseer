@@ -20,9 +20,9 @@ The implemented behavior is intentionally narrow: scan for a configured class, a
 
     ---
 
-    ![Terminal person detection from the reviewed v2-M INT8 RunBundle](assets/evidence/target-acquisition-terminal.webp)
+    ![Terminal person detection from the reviewed v2-L FP RunBundle](assets/evidence/target-acquisition-v2l-fp-terminal.webp)
 
-    A public v2-M INT8 RunBundle records first detection at **24.5 s**, terminal `framed` success at **51.1 s**, **10.04 FPS** mean consumer throughput, **96.22 ms** RKNN inference p50, and **zero target-loss episodes**.
+    A public v2-L FP RunBundle records first detection at **25.4 s**, terminal `framed` success at **56.1 s**, **2.64 FPS** mean consumer throughput, **380.25 ms** RKNN inference p50, and **zero target-loss episodes**.
 
     [:octicons-arrow-right-24: Review the run](verification/target-acquisition.md)
 

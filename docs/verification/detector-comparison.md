@@ -42,8 +42,8 @@ runs; its panels do not start together and it is not a controlled replay.
 | v2-L Hybrid | success | 24.9 s | 57.8 s | 4.65 | 205.55 ms | 229.90 ms |
 
 v2-S INT8 has the highest author-reported throughput among the six physical
-case-study summaries. The v2-M INT8 RunBundle is publicly inspectable; the
-other five physical RunBundles remain local, so their timing values and derived
+case-study summaries. The v2-L FP RunBundle is publicly inspectable; the
+other four physical RunBundles remain local, so their timing values and derived
 ratios cannot be independently recomputed from the public repository. Against
 their FP counterparts, v2-S INT8 improves inference p50/p95 by 1.98×/2.53× and
 throughput by 2.09×; v2-M INT8 by 2.34×/2.36× and 2.30×; and v2-L Hybrid by

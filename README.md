@@ -14,7 +14,7 @@ and framing, and records reproducible evidence from real robot runs.
 [Documentation](https://jburo1.github.io/omniseer/) |
 [Architecture](docs/architecture/overview.md) |
 [Verification Evidence](docs/verification/evidence.md) |
-[Target Acquisition RunBundle](studies/autonomy/v2m_int8_target_acquisition/README.md) |
+[Target Acquisition RunBundle](studies/autonomy/v2l_fp_target_acquisition/README.md) |
 [Detector Comparison](studies/detector_comparison/scan_final_recal/README.md) |
 [INT8 Quantization Study](studies/quantization/yolo_world_v2l_int8/README.md) |
 [Operator Workflow](docs/operations/operator-run-workflow.md)
@@ -80,9 +80,9 @@ claims can be reviewed against recorded artifacts.
   <tr>
     <td width="50%" align="center">
       <a href="docs/verification/target-acquisition.md">
-        <img src="docs/assets/evidence/target-acquisition-terminal.webp" alt="Terminal person detection from the v2-M INT8 target-acquisition RunBundle" width="360" />
+        <img src="docs/assets/evidence/target-acquisition-v2l-fp-terminal.webp" alt="Terminal person detection from the v2-L FP target-acquisition RunBundle" width="360" />
       </a><br />
-      <a href="docs/verification/target-acquisition.md">v2-M INT8 target acquisition</a><br />
+      <a href="docs/verification/target-acquisition.md">v2-L FP target acquisition</a><br />
       One reviewed physical RunBundle with terminal <code>target_framed</code> evidence.
     </td>
     <td width="50%" align="center">
@@ -100,7 +100,7 @@ claims can be reviewed against recorded artifacts.
 | Evidence | What it supports | Public boundary |
 | --- | --- | --- |
 | GitHub Actions CI | Portable ROS package checks, Gazebo smoke boundary topics, portable vision tests, firmware compile, docs build, and hardware-independent runtime packaging | CI does not prove camera, RKNN/RGA, LiDAR, Teensy, or physical robot execution |
-| [v2-M INT8 target-acquisition RunBundle](studies/autonomy/v2m_int8_target_acquisition/README.md) | One successful real-robot bounded perception-to-control target acquisition and framing execution | One representative run; not a benchmark, replicated result, navigation-based search, or general detector-accuracy claim |
+| [v2-L FP target-acquisition RunBundle](studies/autonomy/v2l_fp_target_acquisition/README.md) | One successful real-robot bounded perception-to-control target acquisition and framing execution | One representative run; not a benchmark, replicated result, navigation-based search, or general detector-accuracy claim |
 | [Six-model detector comparison](studies/detector_comparison/scan_final_recal/README.md) | Controlled deployment trade-offs: v2-M FP led fixed-source coverage; v2-S INT8 led author-reported physical-run throughput | One-scene presence/visibility study plus six independent end-to-end case studies; controlled replay metrics are recomputable, while five physical-run timing summaries remain local; not mAP, a replicated benchmark, or general detector accuracy |
 | [v2-L INT8 quantization study](studies/quantization/yolo_world_v2l_int8/README.md) | Target-hardware INT8 failure investigation and TD01 mixed-precision diagnostic mitigation | TD01 is not a validated production replacement |
 | RunBundle format and tooling | Reproducible run manifests, detections, performance telemetry, system telemetry, evidence frames, annotations, and static report generation | Tooling alone does not establish a particular run; the target-acquisition study above is the named public autonomy RunBundle |

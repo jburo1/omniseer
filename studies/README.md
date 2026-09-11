@@ -13,7 +13,7 @@ material belong in `docs/`. Experiment and reproducer programs belong in
 
 ## Canonical studies
 
-- [v2m_int8_target_acquisition](autonomy/v2m_int8_target_acquisition/README.md):
+- [v2l_fp_target_acquisition](autonomy/v2l_fp_target_acquisition/README.md):
   one complete, publicly inspectable ROCK 5B+ bounded target-acquisition
   RunBundle.
 

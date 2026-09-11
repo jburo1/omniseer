@@ -40,21 +40,21 @@ The [physical-run presentation grid](evidence/physical_trials_grid_2x3.mp4) is a
 | v2-L FP | success | 25.4 s | 56.1 s | 2.64 | 380.25 ms | 400.98 ms |
 | v2-L Hybrid | success | 24.9 s | 57.8 s | 4.65 | 205.55 ms | 229.90 ms |
 
-The public-safe [physical-run summary](physical_runs.yaml) binds each row to its local manifest hash and records the shared hardware, Git revision, container digest, and completion status. The throughput and latency values for the five non-public trials are author-reported summaries derived from their retained local RunBundles; they cannot be independently recomputed from the public repository.
+The public-safe [physical-run summary](physical_runs.yaml) binds each row to its local manifest hash and records the shared hardware, Git revision, container digest, and completion status. The throughput and latency values for the four non-public trials are author-reported summaries derived from their retained local RunBundles; they cannot be independently recomputed from the public repository.
 
-The v2-M INT8 physical trial, [`v2m_int8_scene_1`](../../autonomy/v2m_int8_target_acquisition/README.md), is also retained as the publicly inspectable full RunBundle; the other five physical bundles remain local evidence.
+The v2-L FP physical trial, [`v2l_fp_scene_1`](../../autonomy/v2l_fp_target_acquisition/README.md), is also retained as the publicly inspectable full RunBundle; the other four physical bundles remain local evidence.
 
 ## Joint engineering evaluation
 
-FP-to-accelerated inference ratios were calculated from the independent-run measurements: v2-S INT8 reduces p50/p95 latency by 1.98×/2.53× and raises throughput 2.09× over v2-S FP; v2-M INT8 does so by 2.34×/2.36× and 2.30×; v2-L Hybrid does so by 1.85×/1.74× and 1.76×. Except for the public v2-M INT8 RunBundle, these timing inputs remain local and the ratios are author-reported rather than independently recomputable from this repository.
+FP-to-accelerated inference ratios were calculated from the independent-run measurements: v2-S INT8 reduces p50/p95 latency by 1.98×/2.53× and raises throughput 2.09× over v2-S FP; v2-M INT8 does so by 2.34×/2.36× and 2.30×; v2-L Hybrid does so by 1.85×/1.74× and 1.76×. Except for the public v2-L FP RunBundle, these timing inputs remain local and the ratios are author-reported rather than independently recomputable from this repository.
 
 v2-M FP is the highest-coverage configuration in the controlled replay, while v2-S INT8 has the highest author-reported throughput among the six physical case-study summaries. v2-M INT8 is the most plausible author-reported coverage/throughput compromise for this scene. v2-L FP provides high controlled coverage with the largest observed latency. v2-L Hybrid is faster than v2-L FP, but substantially weaker in controlled coverage and has the highest observed memory use. All six trials completed successfully with no target-loss episodes. Time to success varied much less than inference latency, which suggests that this bounded trial was also dominated by scan/control timing.
 
-These are one independent physical run per configuration: end-to-end case-study measurements, not replicated benchmark estimates or proof of causal model differences. The v2-M INT8 RunBundle is publicly inspectable; the other five physical RunBundles remain local, so their reported runtime summaries are not independently recomputable from the public repository. Do not use physical-run detections for controlled accuracy comparisons. Detection coverage comes from the fixed-source replay; runtime behavior comes from the independent trials.
+These are one independent physical run per configuration: end-to-end case-study measurements, not replicated benchmark estimates or proof of causal model differences. The v2-L FP RunBundle is publicly inspectable; the other four physical RunBundles remain local, so their reported runtime summaries are not independently recomputable from the public repository. Do not use physical-run detections for controlled accuracy comparisons. Detection coverage comes from the fixed-source replay; runtime behavior comes from the independent trials.
 
 ## Evidence and reproducibility
 
-The original replay provenance is unchanged. [checksums.sha256](checksums.sha256) contains only tracked paths that a public clone can verify; the withheld local source-stream hash is recorded separately in [withheld_source_hashes.sha256](withheld_source_hashes.sha256). The complete RunBundles and raw physical manifests remain ignored local evidence. No inference, report generation, or video rendering was rerun for this study consolidation.
+The original replay provenance is unchanged. [checksums.sha256](checksums.sha256) contains only tracked paths that a public clone can verify; the withheld local source-stream hash is recorded separately in [withheld_source_hashes.sha256](withheld_source_hashes.sha256). Apart from the public v2-L FP RunBundle, the complete RunBundles and raw physical manifests remain ignored local evidence. No inference, report generation, or video rendering was rerun for this study consolidation.
 
 ## Limitations
 
