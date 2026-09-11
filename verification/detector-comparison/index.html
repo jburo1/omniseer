@@ -6,15 +6,17 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Edge-to-cloud ROS 2 robot for open-vocabulary perception and reproducible edge-AI experiments">
+        <meta name="description" content="Six YOLO-World configurations on a repaired 360° scene: controlled presence/visibility coverage plus independent ROCK 5B+ physical-run summaries.">
       
       
       
         <link rel="canonical" href="https://jburo1.github.io/omniseer/verification/detector-comparison/">
       
       
-        <link rel="prev" href="../ci-cd/">
+        <link rel="prev" href="../target-acquisition/">
       
+      
+        <link rel="next" href="../int8-quantization-failure/">
       
       
         
@@ -66,13 +68,13 @@
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Omniseer">
   <meta property="og:title" content="Detector Comparison - Omniseer">
-  <meta property="og:description" content="Edge-to-cloud ROS 2 robot for open-vocabulary perception and reproducible edge-AI experiments">
+  <meta property="og:description" content="Six YOLO-World configurations on a repaired 360° scene: controlled presence/visibility coverage plus independent ROCK 5B+ physical-run summaries.">
   <meta property="og:url" content="https://jburo1.github.io/omniseer/verification/detector-comparison/">
   <meta property="og:image" content="https://jburo1.github.io/omniseer/assets/brand/social-preview.png">
   <meta property="og:image:type" content="image/png">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Detector Comparison - Omniseer">
-  <meta name="twitter:description" content="Edge-to-cloud ROS 2 robot for open-vocabulary perception and reproducible edge-AI experiments">
+  <meta name="twitter:description" content="Six YOLO-World configurations on a repaired 360° scene: controlled presence/visibility coverage plus independent ROCK 5B+ physical-run summaries.">
   <meta name="twitter:image" content="https://jburo1.github.io/omniseer/assets/brand/social-preview.png">
 
   </head>
@@ -92,7 +94,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#detector-comparison-recalibrated-360-scene" class="md-skip">
+        <a href="#detector-comparison" class="md-skip">
           Skip to content
         </a>
       
@@ -270,6 +272,215 @@
       
   
   
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Results
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Results
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../target-acquisition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Target Acquisition
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Detector Comparison
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Detector Comparison
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#engineering-question" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Engineering question
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#independent-physical-runs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Independent physical runs
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../int8-quantization-failure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    INT8 Quantization Failure Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
   
   
     
@@ -281,17 +492,17 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
         
           
-          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
             
   
   
   <span class="md-ellipsis">
     
   
-    Project
+    System
   
 
     
@@ -302,12 +513,12 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
   
-    Project
+    System
   
 
           </label>
@@ -375,6 +586,34 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../../perception/vision-pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vision Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
     
     
     
@@ -384,10 +623,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
         
           
-          <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
             
   
   
@@ -405,8 +644,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_3">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -480,34 +719,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../evidence/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Verification Evidence
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -530,17 +741,17 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
             
   
   
   <span class="md-ellipsis">
     
   
-    Operate
+    Engineering Docs
   
 
     
@@ -551,12 +762,12 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
   
-    Operate
+    Engineering Docs
   
 
           </label>
@@ -646,60 +857,6 @@
 
               
             
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
-        
-          
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Subsystems
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Subsystems
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
               
                 
   
@@ -743,34 +900,6 @@
     
   
     Firmware & Robot I/O
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../perception/vision-pipeline/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Vision Pipeline
   
 
     
@@ -963,20 +1092,18 @@
       
   
   
-    
   
   
-  
     
     
     
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
           
           <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
@@ -986,7 +1113,7 @@
   <span class="md-ellipsis">
     
   
-    Verification
+    Evidence & Reproducibility
   
 
     
@@ -997,12 +1124,12 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
   
-    Verification
+    Evidence & Reproducibility
   
 
           </label>
@@ -1015,14 +1142,14 @@
   
   
     <li class="md-nav__item">
-      <a href="https://github.com/jburo1/omniseer/tree/master/studies/autonomy/v2m_int8_target_acquisition" class="md-nav__link">
+      <a href="../evidence/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Target Acquisition RunBundle
+    Verification Evidence
   
 
     
@@ -1051,120 +1178,6 @@
     
   
     CI/CD Overview
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-    
-  
-  
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Detector Comparison
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Detector Comparison
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#independent-physical-runs" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Independent physical runs
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="https://github.com/jburo1/omniseer/tree/master/studies/quantization/yolo_world_v2l_int8" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    INT8 Quantization Study
   
 
     
@@ -1212,6 +1225,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#engineering-question" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Engineering question
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#independent-physical-runs" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1242,11 +1266,16 @@
   
 
 
-<h1 id="detector-comparison-recalibrated-360-scene">Detector comparison: recalibrated 360° scene<a class="headerlink" href="#detector-comparison-recalibrated-360-scene" title="Permanent link">&para;</a></h1>
-<p>The canonical <a href="https://github.com/jburo1/omniseer/blob/master/studies/detector_comparison/scan_final_recal/README.md">six-model YOLO-World comparison</a>
-publishes a controlled replay, six replay JSONLs, visibility annotations,
-repaired provenance, a comparison report, and a summary of six independent
-physical ROCK 5B+ runs.</p>
+<h1 id="detector-comparison">Detector Comparison<a class="headerlink" href="#detector-comparison" title="Permanent link">&para;</a></h1>
+<h2 id="engineering-question">Engineering question<a class="headerlink" href="#engineering-question" title="Permanent link">&para;</a></h2>
+<p>With one repaired, frame-aligned 360° source scene, how do the six final
+YOLO-World RKNN detector configurations differ when vocabulary and
+post-processing are held fixed—and how do their independent physical
+case-study summaries inform deployment trade-offs?</p>
+<p><a href="https://github.com/jburo1/omniseer/blob/master/studies/detector_comparison/scan_final_recal/evidence/controlled_replay_2x3.mp4"><img alt="Six-panel controlled replay poster" src="https://github.com/jburo1/omniseer/raw/master/studies/detector_comparison/scan_final_recal/evidence/controlled_replay_poster.jpg" /></a></p>
+<p><em>Controlled replay of the same repaired source frames through all six detector
+configurations. The full study publishes provenance, JSONLs, visibility
+annotations, a comparison report, and independent physical-run summaries.</em></p>
 <p>The controlled replay is a 3-row × 2-column layout, pairing FP with INT8 or
 Hybrid by model size. It holds the repaired source frames, vocabulary, and
 post-processing fixed while changing only the detector configuration. Its leading
@@ -1331,8 +1360,8 @@ other five physical RunBundles remain local, so their timing values and derived
 ratios cannot be independently recomputed from the public repository. Against
 their FP counterparts, v2-S INT8 improves inference p50/p95 by 1.98×/2.53× and
 throughput by 2.09×; v2-M INT8 by 2.34×/2.36× and 2.30×; and v2-L Hybrid by
-1.85×/1.74× and 1.76×. v2-M INT8 is therefore the most plausible
-author-reported coverage/throughput compromise for this scene. v2-L Hybrid is
+1.85×/1.74× and 1.76×. v2-M INT8 is therefore the strongest observed
+coverage/throughput compromise for this scene. v2-L Hybrid is
 faster than v2-L FP, but has lower
 controlled coverage and higher observed memory use. All six trials succeeded
 without target loss; their 50.5–57.8 s success times vary far less than their
@@ -1348,6 +1377,7 @@ complete RunBundles, source transport stream, and raw physical manifests remain
 ignored local evidence. JSONLs plus visibility annotations are sufficient to
 recompute controlled metrics; rerendering the video also requires the retained
 source stream.</p>
+<p><a class="md-button md-button--primary" href="https://github.com/jburo1/omniseer/tree/master/studies/detector_comparison/scan_final_recal">Open the full detector-comparison study and reproducibility artifacts on GitHub</a></p>
 
 
 
@@ -1368,7 +1398,7 @@ source stream.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 11, 2026 21:33:47 UTC">September 11, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 11, 2026 21:50:43 UTC">September 11, 2026</span>
   </span>
 
     

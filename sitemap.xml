@@ -80,4 +80,12 @@
          <loc>https://jburo1.github.io/omniseer/verification/evidence/</loc>
          <lastmod>2026-09-11</lastmod>
     </url>
+    <url>
+         <loc>https://jburo1.github.io/omniseer/verification/int8-quantization-failure/</loc>
+         <lastmod>2026-09-11</lastmod>
+    </url>
+    <url>
+         <loc>https://jburo1.github.io/omniseer/verification/target-acquisition/</loc>
+         <lastmod>2026-09-11</lastmod>
+    </url>
 </urlset>

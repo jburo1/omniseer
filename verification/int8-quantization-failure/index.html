@@ -6,17 +6,17 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Physical edge-AI robotics for open-vocabulary perception, bounded behavior, and reproducible evidence">
+        <meta name="description" content="RK3588 investigation: recalibrated YOLO-World v2-L INT8 retained no detections; a mixed-precision probe recovered partial behavior and localized the failure.">
       
       
       
-        <link rel="canonical" href="https://jburo1.github.io/omniseer/perception/yolo-world-model-deployment/">
+        <link rel="canonical" href="https://jburo1.github.io/omniseer/verification/int8-quantization-failure/">
       
       
-        <link rel="prev" href="../../firmware/overview/">
+        <link rel="prev" href="../detector-comparison/">
       
       
-        <link rel="next" href="../int8-quantization-investigation/">
+        <link rel="next" href="../../architecture/overview/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>YOLO-World v2 Model Deployment - Omniseer</title>
+        <title>INT8 Quantization Failure Analysis - Omniseer</title>
       
     
     
@@ -67,14 +67,14 @@
   
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Omniseer">
-  <meta property="og:title" content="YOLO-World v2 Model Deployment - Omniseer">
-  <meta property="og:description" content="Physical edge-AI robotics for open-vocabulary perception, bounded behavior, and reproducible evidence">
-  <meta property="og:url" content="https://jburo1.github.io/omniseer/perception/yolo-world-model-deployment/">
+  <meta property="og:title" content="INT8 Quantization Failure Analysis - Omniseer">
+  <meta property="og:description" content="RK3588 investigation: recalibrated YOLO-World v2-L INT8 retained no detections; a mixed-precision probe recovered partial behavior and localized the failure.">
+  <meta property="og:url" content="https://jburo1.github.io/omniseer/verification/int8-quantization-failure/">
   <meta property="og:image" content="https://jburo1.github.io/omniseer/assets/brand/social-preview.png">
   <meta property="og:image:type" content="image/png">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="YOLO-World v2 Model Deployment - Omniseer">
-  <meta name="twitter:description" content="Physical edge-AI robotics for open-vocabulary perception, bounded behavior, and reproducible evidence">
+  <meta name="twitter:title" content="INT8 Quantization Failure Analysis - Omniseer">
+  <meta name="twitter:description" content="RK3588 investigation: recalibrated YOLO-World v2-L INT8 retained no detections; a mixed-precision probe recovered partial behavior and localized the failure.">
   <meta name="twitter:image" content="https://jburo1.github.io/omniseer/assets/brand/social-preview.png">
 
   </head>
@@ -94,7 +94,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#yolo-world-v2-model-deployment" class="md-skip">
+        <a href="#int8-quantization-failure-analysis" class="md-skip">
           Skip to content
         </a>
       
@@ -129,7 +129,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              YOLO-World v2 Model Deployment
+              INT8 Quantization Failure Analysis
             
           </span>
         </div>
@@ -272,18 +272,20 @@
       
   
   
+    
   
   
+  
     
     
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
         
           
           <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
@@ -304,7 +306,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_2">
             <span class="md-nav__icon md-icon"></span>
             
@@ -322,7 +324,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../verification/target-acquisition/" class="md-nav__link">
+      <a href="../target-acquisition/" class="md-nav__link">
         
   
   
@@ -350,7 +352,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../verification/detector-comparison/" class="md-nav__link">
+      <a href="../detector-comparison/" class="md-nav__link">
         
   
   
@@ -375,10 +377,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../verification/int8-quantization-failure/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    INT8 Quantization Failure Analysis
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -394,6 +423,70 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#engineering-question" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Engineering question
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#final-rk3588-evaluation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Final RK3588 evaluation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#engineering-conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Engineering conclusion
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Limitations
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -488,7 +581,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../edge-to-cloud/" class="md-nav__link">
+      <a href="../../perception/edge-to-cloud/" class="md-nav__link">
         
   
   
@@ -516,7 +609,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../vision-pipeline/" class="md-nav__link">
+      <a href="../../perception/vision-pipeline/" class="md-nav__link">
         
   
   
@@ -659,20 +752,18 @@
       
   
   
-    
   
   
-  
     
     
     
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
         
           
           <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
@@ -693,7 +784,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
@@ -848,37 +939,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    YOLO-World v2 Model Deployment
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../perception/yolo-world-model-deployment/" class="md-nav__link">
         
   
   
@@ -894,109 +958,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#pinned-builder" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Pinned builder
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#layer-wise-accuracy-analysis" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Layer-wise accuracy analysis
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#local-inputs" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Local inputs
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#export-onnx" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Export ONNX
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#compile-rknn" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Compile RKNN
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Compile RKNN">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#add-robot-calibration-images" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Add robot calibration images
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#full-build" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Full build
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1009,7 +970,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../int8-quantization-investigation/" class="md-nav__link">
+      <a href="../../perception/int8-quantization-investigation/" class="md-nav__link">
         
   
   
@@ -1037,7 +998,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../vision-telemetry/" class="md-nav__link">
+      <a href="../../perception/vision-telemetry/" class="md-nav__link">
         
   
   
@@ -1203,7 +1164,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../verification/evidence/" class="md-nav__link">
+      <a href="../evidence/" class="md-nav__link">
         
   
   
@@ -1231,7 +1192,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../verification/ci-cd/" class="md-nav__link">
+      <a href="../ci-cd/" class="md-nav__link">
         
   
   
@@ -1286,10 +1247,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#pinned-builder" class="md-nav__link">
+  <a href="#engineering-question" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Pinned builder
+        Engineering question
       
     </span>
   </a>
@@ -1297,10 +1258,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#layer-wise-accuracy-analysis" class="md-nav__link">
+  <a href="#final-rk3588-evaluation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Layer-wise accuracy analysis
+        Final RK3588 evaluation
       
     </span>
   </a>
@@ -1308,10 +1269,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#local-inputs" class="md-nav__link">
+  <a href="#engineering-conclusion" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Local inputs
+        Engineering conclusion
       
     </span>
   </a>
@@ -1319,49 +1280,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#export-onnx" class="md-nav__link">
+  <a href="#limitations" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Export ONNX
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#compile-rknn" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Compile RKNN
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Compile RKNN">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#add-robot-calibration-images" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Add robot calibration images
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#full-build" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Full build
+        Limitations
       
     </span>
   </a>
@@ -1388,201 +1310,47 @@
   
 
 
-<h1 id="yolo-world-v2-model-deployment">YOLO-World v2 Model Deployment<a class="headerlink" href="#yolo-world-v2-model-deployment" title="Permanent link">&para;</a></h1>
-<p>This host-only workflow produces the detector model consumed by Omniseer's
-native RKNN vision path:</p>
-<div class="highlight"><pre><span></span><code>YOLO-World v2-S, v2-M, or v2-L `.pth` -&gt; ONNX (images + texts) -&gt; RK3588 `.rknn`
-</code></pre></div>
-<p>It does not add training, export, ONNX, or RKNN Toolkit dependencies to
-<code>docker/runtime/Dockerfile</code>. The checked-in runtime model remains unchanged.</p>
-<h2 id="pinned-builder">Pinned builder<a class="headerlink" href="#pinned-builder" title="Permanent link">&para;</a></h2>
-<p>Build the dedicated host-side image once from the checkout:</p>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>model<span class="w"> </span>image
-</code></pre></div>
-<p>The image pins:</p>
-<ul>
-<li><code>airockchip/YOLO-World</code> commit
-  <code>b8b0fe9beffa9564306a798f6e443c9fe88057af</code> (the Rockchip RKNN exporter);</li>
-<li><code>airockchip/rknn-toolkit2</code> v2.1.0 commit
-  <code>deaba85fc437a28db0b0c29f27d8929f4c5816a1</code>, including
-  <code>rknn_toolkit2-2.1.0+708089d1</code> for CPython 3.8;</li>
-<li>the Rockchip model-zoo v2.1.0 commit
-  <code>c2b7d00714b4e5d21266ab3003f3ca687ba0d57b</code> conversion contract:
-  <code>images=[1,3,640,640]</code> and <code>texts=[1,80,512]</code> for <code>rk3588</code>.</li>
-</ul>
-<p>Docker is run against the host daemon. When invoked in a devcontainer the
-wrapper derives the host repository bind path; set
-<code>OMNISEER_MODEL_HOST_REPO_ROOT=/host/path/to/omniseer</code> if that mount cannot be
-detected.</p>
-<h2 id="layer-wise-accuracy-analysis">Layer-wise accuracy analysis<a class="headerlink" href="#layer-wise-accuracy-analysis" title="Permanent link">&para;</a></h2>
-<p>The opt-in analysis entrypoint runs the Toolkit2 host simulator. It does not
-use ADB, a connected RK3588, or a <code>target</code> argument. Select the model variant
-explicitly (v2-M remains the historical default):</p>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>model<span class="w"> </span>analyze<span class="w"> </span>--variant<span class="w"> </span>v2m
-</code></pre></div>
-<p>The analysis rebuilds the selected ONNX model as INT8 with the existing
-representative calibration data, using the runtime vocabulary <code>person</code>, <code>bus</code>,
-and 78 <code>nothing</code> padding rows. The raw Toolkit report and snapshots (including
-the generated <code>[1,80,512]</code> float32 text input) are kept only in the ignored
-<code>artifacts/quant_analysis/v2&lt;s|m|l&gt;/</code> directory. See the
-<a href="../int8-quantization-investigation/">INT8 quantization investigation</a> for the
-recorded findings and reproducibility details.</p>
-<h2 id="local-inputs">Local inputs<a class="headerlink" href="#local-inputs" title="Permanent link">&para;</a></h2>
-<p>Download the pinned, ignored source assets once from a fresh checkout:</p>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>model<span class="w"> </span>assets
-</code></pre></div>
-<p>This uses <code>curl</code> with immutable Hugging Face revisions for
-<code>wondervictor/YOLO-World</code> (<code>4340b03f4f59f46279a6581bbb818e0f77765d4d</code>) and
-<code>openai/clip-vit-base-patch32</code> (<code>3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268</code>).
-Existing non-empty files are retained, downloads use <code>.part</code> files until
-complete, and every required asset is validated before the command reports
-success. <code>models/</code> remains ignored.</p>
-<p>The only variant-specific mapping is:</p>
+<h1 id="int8-quantization-failure-analysis">INT8 Quantization Failure Analysis<a class="headerlink" href="#int8-quantization-failure-analysis" title="Permanent link">&para;</a></h1>
+<h2 id="engineering-question">Engineering question<a class="headerlink" href="#engineering-question" title="Permanent link">&para;</a></h2>
+<p>Could recalibrated YOLO-World v2-L INT8 preserve useful open-vocabulary behavior on RK3588, and could a targeted mixed-precision layout identify a practical recovery path?</p>
+<h2 id="final-rk3588-evaluation">Final RK3588 evaluation<a class="headerlink" href="#final-rk3588-evaluation" title="Permanent link">&para;</a></h2>
+<p>The canonical evaluation replays 300 frozen representative frames through the existing detector path on RK3588. FP is the behavioral reference rather than ground truth; retention means same-class, one-to-one matches at IoU &gt;= 0.50.</p>
 <table>
 <thead>
 <tr>
-<th>Variant</th>
-<th>Checkpoint</th>
-<th>Rockchip export config</th>
-<th>Artifact stem</th>
+<th>Model</th>
+<th style="text-align: right;">Active frames</th>
+<th style="text-align: right;">Detections</th>
+<th style="text-align: right;">FP detections retained</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>v2s</code></td>
-<td><code>yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth</code></td>
-<td><code>configs/pretrain/yolo_world_v2_s_vlpan_bn_2e-3_100e_4x8gpus_obj365v1_goldg_train_lvis_minival.py</code></td>
-<td><code>yolo_world_v2_s</code></td>
+<td>v2-L FP</td>
+<td style="text-align: right;">300</td>
+<td style="text-align: right;">1,301</td>
+<td style="text-align: right;">—</td>
 </tr>
 <tr>
-<td><code>v2m</code></td>
-<td><code>yolo_world_v2_m_obj365v1_goldg_pretrain-c6237d5b.pth</code></td>
-<td><code>configs/pretrain/yolo_world_v2_m_vlpan_bn_2e-3_100e_4x8gpus_obj365v1_goldg_train_lvis_minival.py</code></td>
-<td><code>yolo_world_v2_m</code></td>
+<td>v2-L recalibrated INT8</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;"><strong>0 / 1,301 (0.0%)</strong></td>
 </tr>
 <tr>
-<td><code>v2l</code></td>
-<td><code>yolo_world_v2_l_obj365v1_goldg_pretrain-a82b1fe3.pth</code></td>
-<td><code>configs/pretrain/yolo_world_v2_l_vlpan_bn_2e-3_100e_4x8gpus_obj365v1_goldg_train_lvis_minival.py</code></td>
-<td><code>yolo_world_v2_l</code></td>
+<td>v2-L TD01 mixed precision</td>
+<td style="text-align: right;">295</td>
+<td style="text-align: right;">1,030</td>
+<td style="text-align: right;"><strong>789 / 1,301 (60.6%)</strong></td>
 </tr>
 </tbody>
 </table>
-<div class="highlight"><pre><span></span><code>models/source/yolo_world/v2s/yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth
-models/source/yolo_world/v2m/yolo_world_v2_m_obj365v1_goldg_pretrain-c6237d5b.pth
-models/source/yolo_world/v2l/yolo_world_v2_l_obj365v1_goldg_pretrain-a82b1fe3.pth
-</code></pre></div>
-<p>Rockchip's exporter also instantiates the CLIP text encoder in order to
-reparameterize the supplied COCO text prompts. <code>model assets</code> places the
-complete official <code>openai/clip-vit-base-patch32</code> snapshot at:</p>
-<div class="highlight"><pre><span></span><code>models/source/clip-vit-base-patch32/
-  config.json
-  pytorch_model.bin
-  tokenizer_config.json
-  tokenizer.json
-  merges.txt
-  vocab.json
-  special_tokens_map.json
-  preprocessor_config.json
-</code></pre></div>
-<p>The wrapper checks the model configuration and weights and forces Hugging Face
-offline mode. Use <code>--clip-model &lt;directory&gt;</code> to choose another local snapshot.</p>
-<h2 id="export-onnx">Export ONNX<a class="headerlink" href="#export-onnx" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>model<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--variant<span class="w"> </span>v2s<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--weights<span class="w"> </span>models/source/yolo_world/v2s/yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth
-</code></pre></div>
-<p>For v2-M or v2-L, use its matching pinned Rockchip config through the same command:</p>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>model<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--variant<span class="w"> </span>v2m<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--weights<span class="w"> </span>models/source/yolo_world/v2m/yolo_world_v2_m_obj365v1_goldg_pretrain-c6237d5b.pth
-</code></pre></div>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>model<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--variant<span class="w"> </span>v2l<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--weights<span class="w"> </span>models/source/yolo_world/v2l/yolo_world_v2_l_obj365v1_goldg_pretrain-a82b1fe3.pth
-</code></pre></div>
-<p>This invokes Rockchip's <code>deploy/export_onnx.py</code>, the matching 640 config, ONNX
-opset 12 (required for this graph's <code>einsum</code> operator), and the checked-in
-80 COCO prompt list. It validates ONNX with <code>onnx.checker</code>
-and rejects any model not having exactly the native runtime interface:</p>
-<ul>
-<li><code>images</code>: <code>[1,3,640,640]</code>;</li>
-<li><code>texts</code>: <code>[1,80,512]</code>;</li>
-<li>six NCHW outputs: 80-class and 4-box tensors at 80x80, 40x40, and 20x20.</li>
-</ul>
-<p>The default results are <code>artifacts/models/yolo_world_v2_s.onnx</code>,
-<code>artifacts/models/yolo_world_v2_m.onnx</code>, and
-<code>artifacts/models/yolo_world_v2_l.onnx</code>, respectively. <code>--variant</code> defaults to
-<code>v2s</code> for backward compatibility.</p>
-<h2 id="compile-rknn">Compile RKNN<a class="headerlink" href="#compile-rknn" title="Permanent link">&para;</a></h2>
-<p>FP/non-quantized RKNN needs only the validated ONNX:</p>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>model<span class="w"> </span>compile<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--variant<span class="w"> </span>v2s<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--onnx<span class="w"> </span>artifacts/models/yolo_world_v2_s.onnx<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--precision<span class="w"> </span>fp
-</code></pre></div>
-<h3 id="add-robot-calibration-images">Add robot calibration images<a class="headerlink" href="#add-robot-calibration-images" title="Permanent link">&para;</a></h3>
-<p>Place representative <code>.jpg</code>, <code>.jpeg</code>, or <code>.png</code> frames beneath
-<code>models/source/calibration_images/</code>. The checked-in
-<code>config/classes/calibration.txt</code> supplies the text input: it contains all 29
-labels from <code>task.txt</code>, followed by 51 labels selected with fixed seed <code>0</code> from
-COCO-80 labels not already in <code>task.txt</code>. This preserves the detector's fixed
-80-class text-input shape without making COCO-80 the calibration vocabulary.</p>
-<p>Generate the matching CLIP embedding and the INT8 dataset:</p>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>model<span class="w"> </span>calibration
-</code></pre></div>
-<p>This generates the ignored <code>calibration_text_outp.npy</code> from the local pinned
-CLIP snapshot, then atomically creates or replaces <code>dataset.txt</code>. Every image
-entry is paired with that embedding, the second input to this two-input model:</p>
-<div class="highlight"><pre><span></span><code>config/classes/calibration.txt                 # 80 calibration labels
-models/source/yolo_world/calibration/
-  calibration_text_outp.npy                    # [1,80,512] float32 CLIP output
-  dataset.txt                                  # &lt;image&gt; calibration_text_outp.npy
-</code></pre></div>
-<p>To use a different in-repository image directory, class list, CLIP snapshot, or
-calibration directory, pass <code>--images-dir &lt;dir&gt;</code>, <code>--classes &lt;file&gt;</code>,
-<code>--clip-model &lt;dir&gt;</code>, and/or <code>--calibration-dir &lt;dir&gt;</code>.</p>
-<p>For the images currently at <code>models/source/calibration_images/</code>, the generated
-dataset therefore has 100 entries: one for each robot frame. Rerun this
-command whenever the image set changes, before rebuilding an INT8 model.</p>
-<p>Then compile:</p>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>model<span class="w"> </span>compile<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--variant<span class="w"> </span>v2s<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--onnx<span class="w"> </span>artifacts/models/yolo_world_v2_s.onnx<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--precision<span class="w"> </span>int8
-</code></pre></div>
-<p>This is the Rockchip converter configuration: <code>target_platform=rk3588</code>, RGB
-normalization <code>mean=[0,0,0]</code>, <code>std=[255,255,255]</code>, and fixed named inputs
-<code>images</code> and <code>texts</code>. The FP output is
-<code>artifacts/models/yolo_world_v2_s_fp.rknn</code>; the INT8 output is
-<code>artifacts/models/yolo_world_v2_s_i8.rknn</code>. With <code>--variant v2m</code>, the same
-defaults are <code>artifacts/models/yolo_world_v2_m_fp.rknn</code> and
-<code>artifacts/models/yolo_world_v2_m_i8.rknn</code>; with <code>--variant v2l</code>, they are
-<code>artifacts/models/yolo_world_v2_l_fp.rknn</code> and
-<code>artifacts/models/yolo_world_v2_l_i8.rknn</code>.</p>
-<h2 id="full-build">Full build<a class="headerlink" href="#full-build" title="Permanent link">&para;</a></h2>
-<p>After <code>model assets</code> and the builder image are in place, run:</p>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>model<span class="w"> </span>build<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--variant<span class="w"> </span>v2s<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--weights<span class="w"> </span>models/source/yolo_world/v2s/yolo_world_v2_s_obj365v1_goldg_pretrain-55b943ea.pth<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--precision<span class="w"> </span>int8
-</code></pre></div>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>model<span class="w"> </span>build<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--variant<span class="w"> </span>v2m<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--weights<span class="w"> </span>models/source/yolo_world/v2m/yolo_world_v2_m_obj365v1_goldg_pretrain-c6237d5b.pth<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--precision<span class="w"> </span>int8
-</code></pre></div>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>model<span class="w"> </span>build<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--variant<span class="w"> </span>v2l<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--weights<span class="w"> </span>models/source/yolo_world/v2l/yolo_world_v2_l_obj365v1_goldg_pretrain-a82b1fe3.pth<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--precision<span class="w"> </span>int8
-</code></pre></div>
-<p>Use <code>--precision fp</code> for a non-quantized model. Existing generated artifacts
-are deliberately not overwritten; choose a new <code>--output</code> / <code>--onnx-output</code> or
-remove the exact generated artifact intentionally before rebuilding.</p>
-<p>The commands fail before compilation for a missing checkpoint, local CLIP
-snapshot, calibration asset, or incompatible ONNX contract, and fail after the
-tools run if a generated artifact is missing or empty.</p>
+<p><a class="md-button md-button--primary" href="https://github.com/jburo1/omniseer/blob/master/studies/quantization/yolo_world_v2l_int8/evidence/scan_final_v2l_int8_vs_hybrid.mp4">Watch the retained INT8-versus-TD01 RK3588 replay</a></p>
+<h2 id="engineering-conclusion">Engineering conclusion<a class="headerlink" href="#engineering-conclusion" title="Permanent link">&para;</a></h2>
+<p>Recalibrated v2-L INT8 is unsuitable for this model and conversion contract: it collapsed before post-processing in the final replay. TD01 is diagnostic evidence of partial recovery, not an FP-equivalent or validated production replacement. The healthy narrow exMatMul micrograph and failed expanded projection context locate the issue in the classification/projection path and its precision arrangement; the exact Toolkit2/backend mechanism remains unresolved.</p>
+<p><a class="md-button" href="https://github.com/jburo1/omniseer/tree/master/studies/quantization/yolo_world_v2l_int8">Open the complete study, results, and provenance on GitHub</a></p>
+<h2 id="limitations">Limitations<a class="headerlink" href="#limitations" title="Permanent link">&para;</a></h2>
+<p>This is a fixed 300-frame RK3588 comparison with recorded models, thresholds, and replay path. It is not ground-truth precision or recall, broad deployment validation, isolated latency measurement, or proof of a proprietary Toolkit2/backend root cause. The frozen source stream and extracted frames are identified by hashes but are non-retained external inputs, so independently rerunning the evaluation requires access to those source artifacts.</p>
 
 
 
@@ -1603,7 +1371,7 @@ tools run if a generated artifact is missing or empty.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 30, 2026 05:08:46 UTC">August 30, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 11, 2026 21:50:43 UTC">September 11, 2026</span>
   </span>
 
     
