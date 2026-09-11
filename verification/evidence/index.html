@@ -1162,6 +1162,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../detector-comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Detector Comparison
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1399,6 +1427,14 @@ named run, report, video, annotated frame, or measurement.</p>
 <td>Compile-only; no board flash or physical IO validation</td>
 </tr>
 <tr>
+<td><a href="../detector-comparison/">Six-model detector comparison</a></td>
+<td>A repaired, controlled 360° replay exposes detector presence/visibility differences, with supporting context from six independently recorded physical ROCK 5B+ runs</td>
+<td>Tracked 2×3 replay, provenance, six JSONLs, visibility annotations, report, and physical-run summary</td>
+<td>Target-hardware-derived source and a developer checkout</td>
+<td>Yes</td>
+<td>One scene and vocabulary only; not mAP, bounding-box recall, timing, or autonomy evidence. Complete RunBundles and source stream remain local-only</td>
+</tr>
+<tr>
 <td>RunBundle tooling</td>
 <td>The implemented recorder, inspection, retrieval, annotation, and report code can create and review structured run evidence</td>
 <td><code>omniseer_experiments</code> tests in <code>scripts/omni test ros</code>; <code>scripts/omni runs inspect</code>, <code>annotate</code>, and <code>report</code></td>
@@ -1489,12 +1525,14 @@ micro-ROS transport, robot actuation, or public RunBundle recording.</p>
 are not public evidence unless the run output is published as an artifact and linked
 from this page.</p>
 <h2 id="target-hardware-evidence">Target-Hardware Evidence<a class="headerlink" href="#target-hardware-evidence" title="Permanent link">&para;</a></h2>
-<p>No public target-hardware RunBundle, static report, annotated frame, video, or
-measurement is linked from this repository state. Target-hardware claims in this
-catalog are therefore limited to implementation-backed capability unless a named
-public artifact is listed in the inventory.</p>
-<p>Non-public local target-hardware artifacts can still be operationally useful, but
-they are not presented here as public review evidence.</p>
+<p>The <a href="../detector-comparison/">scan_final_recal detector comparison</a> is public,
+target-hardware-derived evidence: it includes a controlled replay video,
+recomputable JSONL/visibility metrics, and a summary bound to six inspected
+physical-run manifests. It supports only the bounded detector-comparison claims
+made there. It does not publish a complete RunBundle, raw source stream,
+target-hardware timing measurement, or autonomy-execution record.</p>
+<p>The complete ignored local bundle remains operationally useful, but is not public
+review evidence beyond the explicitly tracked derivatives and hashes.</p>
 <h2 id="runbundle-evidence-format">RunBundle Evidence Format<a class="headerlink" href="#runbundle-evidence-format" title="Permanent link">&para;</a></h2>
 <p>RunBundles are the implemented evidence format for robot runs. A bundle is a
 directory, normally under <code>runs/&lt;run_id&gt;</code> on the robot or under an imported runs
@@ -1629,7 +1667,7 @@ observed results, inspection status, and limitations.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 11, 2026 19:37:11 UTC">August 11, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 11, 2026 19:36:25 UTC">September 11, 2026</span>
   </span>
 
     

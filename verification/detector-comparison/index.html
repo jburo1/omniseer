@@ -10,13 +10,11 @@
       
       
       
-        <link rel="canonical" href="https://jburo1.github.io/omniseer/operations/operator-run-workflow/">
+        <link rel="canonical" href="https://jburo1.github.io/omniseer/verification/detector-comparison/">
       
       
-        <link rel="prev" href="../scripts-frontdoor/">
+        <link rel="prev" href="../ci-cd/">
       
-      
-        <link rel="next" href="../../robot-runtime/robot-runtime-container/">
       
       
         
@@ -27,7 +25,7 @@
     
     
       
-        <title>Operator Run Workflow - Omniseer</title>
+        <title>Detector Comparison - Omniseer</title>
       
     
     
@@ -67,13 +65,13 @@
   
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Omniseer">
-  <meta property="og:title" content="Operator Run Workflow - Omniseer">
+  <meta property="og:title" content="Detector Comparison - Omniseer">
   <meta property="og:description" content="Edge-to-cloud ROS 2 robot for open-vocabulary perception and reproducible edge-AI experiments">
-  <meta property="og:url" content="https://jburo1.github.io/omniseer/operations/operator-run-workflow/">
+  <meta property="og:url" content="https://jburo1.github.io/omniseer/verification/detector-comparison/">
   <meta property="og:image" content="https://jburo1.github.io/omniseer/assets/brand/social-preview.png">
   <meta property="og:image:type" content="image/png">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Operator Run Workflow - Omniseer">
+  <meta name="twitter:title" content="Detector Comparison - Omniseer">
   <meta name="twitter:description" content="Edge-to-cloud ROS 2 robot for open-vocabulary perception and reproducible edge-AI experiments">
   <meta name="twitter:image" content="https://jburo1.github.io/omniseer/assets/brand/social-preview.png">
 
@@ -94,7 +92,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#operator-run-workflow" class="md-skip">
+        <a href="#detector-comparison-recalibrated-360-scene" class="md-skip">
           Skip to content
         </a>
       
@@ -129,7 +127,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Operator Run Workflow
+              Detector Comparison
             
           </span>
         </div>
@@ -489,7 +487,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../verification/evidence/" class="md-nav__link">
+      <a href="../evidence/" class="md-nav__link">
         
   
   
@@ -521,20 +519,18 @@
       
   
   
-    
   
   
-  
     
     
     
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
         
           
           <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
@@ -555,7 +551,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -573,7 +569,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../scripts-frontdoor/" class="md-nav__link">
+      <a href="../../operations/scripts-frontdoor/" class="md-nav__link">
         
   
   
@@ -598,37 +594,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Operator Run Workflow
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../operations/operator-run-workflow/" class="md-nav__link">
         
   
   
@@ -644,125 +613,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#purpose" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Purpose
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#operator-modules" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Operator Modules
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#start-sequence" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Start Sequence
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#stop-sequence" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Stop Sequence
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#artifact-sequence" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Artifact Sequence
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#perception-scan" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Perception Scan
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#detector-selection-and-tuning" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Detector Selection and Tuning
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#autonomy-run-type" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Autonomy Run Type
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#verification" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Verification
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1113,18 +963,20 @@
       
   
   
+    
   
   
+  
     
     
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
         
           
           <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
@@ -1145,7 +997,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1163,7 +1015,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../verification/ci-cd/" class="md-nav__link">
+      <a href="../ci-cd/" class="md-nav__link">
         
   
   
@@ -1188,10 +1040,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../verification/detector-comparison/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Detector Comparison
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1207,6 +1086,37 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#independent-physical-runs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Independent physical runs
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1246,98 +1156,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#purpose" class="md-nav__link">
+  <a href="#independent-physical-runs" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Purpose
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#operator-modules" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Operator Modules
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#start-sequence" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Start Sequence
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#stop-sequence" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Stop Sequence
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#artifact-sequence" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Artifact Sequence
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#perception-scan" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Perception Scan
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#detector-selection-and-tuning" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Detector Selection and Tuning
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#autonomy-run-type" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Autonomy Run Type
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#verification" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Verification
+        Independent physical runs
       
     </span>
   </a>
@@ -1364,247 +1186,108 @@
   
 
 
-<h1 id="operator-run-workflow">Operator Run Workflow<a class="headerlink" href="#operator-run-workflow" title="Permanent link">&para;</a></h1>
-<p>This document explains the implemented operator monitor run workflow. The GUI
-collects operator input and displays state; small run modules own command
-building, process control, artifact handling, and validation.</p>
-<h2 id="purpose">Purpose<a class="headerlink" href="#purpose" title="Permanent link">&para;</a></h2>
-<p>The operator monitor is the laptop-side interface for remote perception runs. It:</p>
-<ul>
-<li>reads operator run settings from the Tk form</li>
-<li>starts a robot-side run over SSH</li>
-<li>streams the remote run log back into the GUI</li>
-<li>requests graceful stop, then falls back to runtime-container stop when needed</li>
-<li>retrieves the completed run bundle</li>
-<li>builds recorded videos when the retrieved bundle contains <code>video/source.ts</code></li>
-<li>generates and opens the local HTML report</li>
-</ul>
-<p>The monitor remains laptop-side tooling. Robot behavior belongs to <code>robot-core</code>
-and the robot-side <code>scripts/omni runtime record</code> / <code>scripts/omni run real</code>
-surfaces.</p>
-<h2 id="operator-modules">Operator Modules<a class="headerlink" href="#operator-modules" title="Permanent link">&para;</a></h2>
-<p>Python modules under <code>ros_ws/src/robot_diag_control/robot_diag_control</code>:</p>
+<h1 id="detector-comparison-recalibrated-360-scene">Detector comparison: recalibrated 360° scene<a class="headerlink" href="#detector-comparison-recalibrated-360-scene" title="Permanent link">&para;</a></h1>
+<p>The canonical <a href="https://github.com/jburo1/omniseer/blob/master/studies/detector_comparison/scan_final_recal/README.md">six-model YOLO-World comparison</a>
+publishes a controlled replay, six replay JSONLs, visibility annotations,
+repaired provenance, a comparison report, and a summary of six independent
+physical ROCK 5B+ runs.</p>
+<p>The controlled replay is a 3-row × 2-column layout, pairing FP with INT8 or
+Hybrid by model size. It holds the repaired source frames, vocabulary, and
+post-processing fixed while changing only the detector configuration. Its leading
+visible-frame result is v2-M FP at 2,367 / 5,679 (41.7%), narrowly ahead of v2-L
+FP at 41.6%. This is one-scene presence/visibility evidence, not mAP,
+bounding-box recall, latency evidence, or general detector accuracy.</p>
+<h2 id="independent-physical-runs">Independent physical runs<a class="headerlink" href="#independent-physical-runs" title="Permanent link">&para;</a></h2>
+<p>The physical presentation grid is a 2-row × 3-column display of independent
+runs; its panels do not start together and it is not a controlled replay.</p>
 <table>
 <thead>
 <tr>
-<th>Module</th>
-<th>Owns</th>
-<th>Should not own</th>
+<th>Configuration</th>
+<th>Outcome</th>
+<th style="text-align: right;">First detection</th>
+<th style="text-align: right;">Success</th>
+<th style="text-align: right;">Mean consumer FPS</th>
+<th style="text-align: right;">Inference p50</th>
+<th style="text-align: right;">Inference p95</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>monitor_gui.py</code></td>
-<td>Tk widgets, callbacks, timers, log display, button state application</td>
-<td>SSH command construction, subprocess result interpretation, run artifact parsing</td>
+<td>v2-S FP</td>
+<td>success</td>
+<td style="text-align: right;">24.6 s</td>
+<td style="text-align: right;">53.4 s</td>
+<td style="text-align: right;">7.90</td>
+<td style="text-align: right;">117.28 ms</td>
+<td style="text-align: right;">153.95 ms</td>
 </tr>
 <tr>
-<td><code>run_settings.py</code></td>
-<td>Converting GUI form values into <code>RobotConnection</code>, <code>RunConfig</code>, and artifact context</td>
-<td>Tk widgets or side effects beyond value normalization</td>
+<td>v2-S INT8</td>
+<td>success</td>
+<td style="text-align: right;">24.6 s</td>
+<td style="text-align: right;">50.5 s</td>
+<td style="text-align: right;">16.54</td>
+<td style="text-align: right;">59.19 ms</td>
+<td style="text-align: right;">60.76 ms</td>
 </tr>
 <tr>
-<td><code>run_commands.py</code></td>
-<td>Stable command/path builders for remote start, stop, pull, and report</td>
-<td>Subprocess execution or GUI state</td>
+<td>v2-M FP</td>
+<td>success</td>
+<td style="text-align: right;">25.2 s</td>
+<td style="text-align: right;">53.9 s</td>
+<td style="text-align: right;">4.37</td>
+<td style="text-align: right;">225.12 ms</td>
+<td style="text-align: right;">251.43 ms</td>
 </tr>
 <tr>
-<td><code>run_preparation.py</code></td>
-<td>Remote run directory creation and class-file upload before launch</td>
-<td>Long-lived run process lifecycle</td>
+<td>v2-M INT8</td>
+<td>success</td>
+<td style="text-align: right;">24.5 s</td>
+<td style="text-align: right;">51.1 s</td>
+<td style="text-align: right;">10.04</td>
+<td style="text-align: right;">96.22 ms</td>
+<td style="text-align: right;">106.47 ms</td>
 </tr>
 <tr>
-<td><code>run_lifecycle.py</code></td>
-<td>Process wrappers, process state checks, stop signal mechanics, run-control availability</td>
-<td>Robot-specific SSH command construction</td>
+<td>v2-L FP</td>
+<td>success</td>
+<td style="text-align: right;">25.4 s</td>
+<td style="text-align: right;">56.1 s</td>
+<td style="text-align: right;">2.64</td>
+<td style="text-align: right;">380.25 ms</td>
+<td style="text-align: right;">400.98 ms</td>
 </tr>
 <tr>
-<td><code>run_manager.py</code></td>
-<td>Start/stop orchestration, runtime-stop fallback, completion interpretation</td>
-<td>Tk widgets or artifact report generation</td>
-</tr>
-<tr>
-<td><code>run_artifacts.py</code></td>
-<td>Pulling run bundles, generating reports, artifact paths, artifact result messages</td>
-<td>Tk widgets or robot process lifecycle</td>
+<td>v2-L Hybrid</td>
+<td>success</td>
+<td style="text-align: right;">24.9 s</td>
+<td style="text-align: right;">57.8 s</td>
+<td style="text-align: right;">4.65</td>
+<td style="text-align: right;">205.55 ms</td>
+<td style="text-align: right;">229.90 ms</td>
 </tr>
 </tbody>
 </table>
-<p>This split keeps command construction, process lifecycle, and artifact handling
-separate from Tk widgets.</p>
-<h2 id="start-sequence">Start Sequence<a class="headerlink" href="#start-sequence" title="Permanent link">&para;</a></h2>
-<ol>
-<li><code>monitor_gui.py</code> collects current form values.</li>
-<li><code>run_settings.resolve_run_form(...)</code> returns:</li>
-<li><code>RobotConnection</code></li>
-<li><code>RunConfig</code></li>
-<li><code>RunArtifactContext</code></li>
-<li><code>RunManager.start(...)</code> calls <code>prepare_remote_run(...)</code>.</li>
-<li><code>run_preparation.py</code> creates the remote run directory and uploads
-   <code>classes.txt</code> when operator classes are provided.</li>
-<li><code>run_commands.build_remote_start_command(...)</code> builds the SSH command for the
-   selected backend:</li>
-<li>runtime container: <code>scripts/omni runtime record</code></li>
-<li>devcontainer: <code>docker exec</code> into the running robot devcontainer, then
-     <code>scripts/omni run real --profile operator ...</code> from the container-visible
-     workspace path</li>
-<li><code>run_lifecycle.start_remote_run_process(...)</code> starts the local SSH process.</li>
-<li>The GUI starts the remote log reader and polls for completion.</li>
-</ol>
-<h2 id="stop-sequence">Stop Sequence<a class="headerlink" href="#stop-sequence" title="Permanent link">&para;</a></h2>
-<ol>
-<li>The GUI calls <code>RunManager.request_stop(...)</code>.</li>
-<li><code>run_lifecycle.request_remote_run_stop(...)</code> writes Ctrl-C to the SSH process
-   stdin so the robot-side recorder can finalize the run bundle.</li>
-<li>For the runtime-container backend, the GUI also calls
-   <code>RunManager.request_runtime_stop(...)</code> immediately, which runs:</li>
-</ol>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>runtime<span class="w"> </span>stop<span class="w"> </span>--run-id<span class="w"> </span>&lt;run_id&gt;
-</code></pre></div>
-<p>A successful container stop, including the already-stopped case, moves the GUI
-   to <code>STOPPED</code> and clears the stale SSH handle so the operator can start the
-   next run without waiting on that old session.
-4. For non-runtime backends, or if the runtime stop path is unavailable, the GUI
-   starts a grace timer and then calls <code>RunManager.force_stop(...)</code> if the process
-   does not exit.
-5. <code>RunManager.completion(...)</code> converts the final exit state into a typed
-   result:
-   - operator-requested stop -&gt; <code>STOPPED</code>
-   - zero exit -&gt; <code>STOPPED</code>
-   - nonzero exit -&gt; <code>FAILED</code></p>
-<p>The important invariant is that a graceful stop is preferred because the recorder
-needs it to write final metadata such as <code>manifest.yaml</code> and <code>summary.json</code>.</p>
-<h2 id="artifact-sequence">Artifact Sequence<a class="headerlink" href="#artifact-sequence" title="Permanent link">&para;</a></h2>
-<p>The GUI's <strong>Retrieve &amp; Open Report</strong> action:</p>
-<ol>
-<li>calls <code>retrieve_run_artifacts(...)</code>.</li>
-<li>executes <code>scripts/omni runs pull &lt;run_id&gt;</code>.</li>
-<li>builds videos with <code>build_run_videos(...)</code> when the retrieved bundle contains
-   <code>video/source.ts</code>.</li>
-<li>regenerates the report with <code>generate_run_report(...)</code>.</li>
-<li>opens <code>runs/imported/&lt;run_id&gt;/report/index.html</code> when present.</li>
-</ol>
-<p>Artifact operations are local laptop actions after the robot run has completed.
-They stay separate from robot process lifecycle and do not change robot-side
-behavior.</p>
-<h2 id="perception-scan">Perception Scan<a class="headerlink" href="#perception-scan" title="Permanent link">&para;</a></h2>
-<p><code>Perception: 360° environment scan</code> is a bounded environment capture used to
-generate a controlled reference <code>video/source.ts</code> for offline detector
-comparison. It records video implicitly, starts no live detector inference,
-and rotates in place at the configured positive yaw rate (0.20 rad/s by
-default). The scan completes only after <code>/odometry/filtered</code> reports one full
-wrapped-yaw revolution, commands zero velocity, and exits so the normal
-RunBundle recorder finalizes the bundle. Odometry that never arrives or becomes
-stale ends the scan cleanly without continuing motion.</p>
-<p>This capture is intentionally independent of the existing
-<code>scripts/omni runs compare ...</code> and comparison-report workflow: the resulting
-<code>video/source.ts</code> is consumed unchanged by that offline 3×2 detector
-comparison.</p>
-<p>The scan intentionally does not start native vision. Its gateway health check
-therefore requires fresh odometry but does not wait for <code>/vision/perf</code>; this
-keeps the video-only capture independent of RKNN inference.</p>
-<h2 id="detector-selection-and-tuning">Detector Selection and Tuning<a class="headerlink" href="#detector-selection-and-tuning" title="Permanent link">&para;</a></h2>
-<p>Before selecting an external detector model for autonomy, copy its generated
-RKNN artifact to the robot repository's <code>runs/model_artifacts/</code> directory. The
-normal Experiment controls expose <code>Runtime default</code>, YOLO-World v2-S/v2-M/v2-L
-FP choices, the recalibrated INT8 choices, and <code>YOLO-World v2-L Hybrid</code>. The
-recalibrated choices use the canonical <code>yolo_world_v2_{s,m,l}_i8.rknn</code> artifact
-names. <code>YOLO-World v2-L Hybrid</code> uses the canonical TD01 base hybrid artifact,
-<code>yolo_world_v2_l_hybrid_td01.rknn</code>; classifier-path diagnostic hybrid artifacts
-are not runtime model choices in the operator controls.
-An explicit choice uses the staged artifact for that run; <code>Runtime default</code>
-continues to use the detector configured by the runtime image or config. The
-selector does not upload or discover model files.</p>
-<p>For autonomy, the collapsed <strong>Advanced Experiment Overrides</strong> section exposes
-detector controls that operators can adjust between runs without changing
-hardware or model assumptions:</p>
-<ul>
-<li><code>Score Threshold</code> -&gt; <code>postprocess.score_threshold</code></li>
-<li><code>NMS IoU</code> -&gt; <code>postprocess.nms_iou_threshold</code></li>
-<li><code>Max Detections</code> -&gt; <code>postprocess.max_detections</code></li>
-</ul>
-<p>The command builder passes these as launch arguments and also records them as
-experiment parameters in the run manifest. Operator-started runs also record the
-selected <code>Experiment</code> dropdown label, either <code>Perception: 360° environment scan</code>
-or <code>Autonomy: frame and capture target</code>, so the HTML report has a clear provenance
-label even when no external experiment config file is used. Model paths, camera
-device, capture size, model input size, class padding, and runner warmup remain
-launch/config-file controls.</p>
-<p>The perception scan always records video. For autonomy, select <strong>Record video</strong>
-before starting the run; it remains off by default. <strong>Retrieve &amp; Open Report</strong> preserves <code>video/source.mp4</code>
-as a stream-copy remux of raw <code>video/source.ts</code>, then creates the repaired
-presentation derivative <code>video/source.corrected.mp4</code> and the approximate
-detection overlay <code>video/overlay.mp4</code> before regenerating the report. Rockchip
-preview recordings have a known deterministic 8px horizontal wrap; raw evidence
-is not modified. Source preview and inference use separate camera paths, so the
-overlay is not pixel-perfect synchronized.</p>
-<p>Select <strong>Record rosbag</strong> to add the configured ROS topic allowlist to the same
-RunBundle. This is also off by default and creates the standard ROS 2 bag layout:</p>
-<div class="highlight"><pre><span></span><code>run_id/
-  rosbag/
-    metadata.yaml
-    ...
-</code></pre></div>
-<h2 id="autonomy-run-type">Autonomy Run Type<a class="headerlink" href="#autonomy-run-type" title="Permanent link">&para;</a></h2>
-<p>The monitor can launch the bounded perception scan or the bounded autonomy run
-type labeled <code>Autonomy: frame and capture target</code> in the
-<code>Experiment</code> dropdown. The matching command-line helper is:</p>
-<div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>run<span class="w"> </span>autonomy<span class="w"> </span>--classes<span class="w"> </span>&lt;class<span class="o">[</span>,class...<span class="o">]</span>&gt;
-scripts/omni<span class="w"> </span>run<span class="w"> </span>autonomy<span class="w"> </span>--target<span class="w"> </span>&lt;class&gt;
-</code></pre></div>
-<p>The monitor uses the runtime-container recording path for this run type and
-appends launch arguments that start <code>omniseer_autonomy/target_centering_node</code>,
-set the target to the first configured class in the operator <code>Class List</code>, pass
-the full class list to native vision and run metadata, and write
-<code>autonomy.jsonl</code> into the run bundle. When target centering reaches success or
-failure, the autonomy node stops commanding motion, completes terminal logging
-and capture handling, and exits cleanly; real launch then shuts down so the
-recorder can finalize the run bundle without an operator Stop Run.</p>
-<p>The bounded autonomy run type is summarized in <a href="../../architecture/overview/">System Architecture</a>. It performs an in-place visual target-acquisition and framing loop for a configured class, records <code>autonomy.jsonl</code>, and stops once it reaches a terminal success or failure state.</p>
-<p>The node publishes <code>TwistStamped</code> commands to <code>/cmd_vel_autonomy</code>, relies on
-<code>twist_mux</code> arbitration, and records terminal state into the bundle for the HTML
-report. During scan, the target-centering node subscribes to <code>/odometry/filtered</code>
-and stops with <code>scan_complete_no_target</code> after one observed revolution by default.
-Navigation, SLAM, tracking packages, and camera servo control remain out of scope
-for this run type.</p>
-<p>The robot-side console log, retained in recorded bundles as <code>logs/bringup.log</code>,
-includes each newly reached autonomy state and a terminal summary with the final
-state, reason, states reached, target-loss count, timing milestones, final
-centering error, and final confidence. The structured <code>autonomy.jsonl</code> stream
-remains the canonical machine-readable event record.</p>
-<h2 id="verification">Verification<a class="headerlink" href="#verification" title="Permanent link">&para;</a></h2>
-<p>Local documentation and unit-test coverage can verify behavior that does not
-require robot hardware:</p>
-<ul>
-<li>command construction</li>
-<li>form normalization</li>
-<li>pre-launch preparation ordering</li>
-<li>start/stop manager decisions</li>
-<li>runtime-stop fallback message formatting</li>
-<li>completion interpretation</li>
-<li>artifact pull/report result handling</li>
-<li>compact GUI-facing gRPC error messages</li>
-</ul>
-<p>Full hardware acceptance requires a real operator run:</p>
-<ol>
-<li>launch the monitor from the laptop</li>
-<li>start a runtime-container run on the robot</li>
-<li>stop it from the GUI</li>
-<li>verify the run bundle finalizes</li>
-<li>retrieve it</li>
-<li>generate and open the report</li>
-</ol>
-<p>For the operator profile, a robot-side acceptance check can be run against an
-existing graph:</p>
-<div class="highlight"><pre><span></span><code><span class="nv">OMNISEER_REQUIRE_DETECTIONS</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>scripts/omni<span class="w"> </span>run<span class="w"> </span>real<span class="w"> </span>verify
-</code></pre></div>
-<p>This check requires live encoder, wheel-odometry, LiDAR, vision, and detection
-messages; healthy gateway status; and zero vision errors. It also starts and
-stops preview, runs a short headless overlay viewer smoke when laptop-side
-dependencies are available, enables teleop, sends only a zero command, verifies
-that the stamped controller reference receives it, and disables teleop. This is
-an acceptance check for the operator profile, not a substitute for recorded
-hardware run evidence.</p>
+<p>v2-S INT8 has the highest observed throughput. Against their FP counterparts,
+v2-S INT8 improves inference p50/p95 by 1.98×/2.53× and throughput by 2.09×;
+v2-M INT8 by 2.34×/2.36× and 2.30×; and v2-L Hybrid by 1.85×/1.74× and
+1.76×. v2-M INT8 is therefore the most plausible coverage/throughput
+compromise for this scene. v2-L Hybrid is faster than v2-L FP, but has lower
+controlled coverage and higher observed memory use. All six trials succeeded
+without target loss; their 50.5–57.8 s success times vary far less than their
+59.19–380.25 ms inference p50 values, suggesting scan/control timing is also
+material in this bounded trial.</p>
+<p>These are one independent physical run per configuration, not replicated
+benchmark estimates or proof of causal model differences. Detection coverage
+comes from fixed-source replay; runtime behavior comes from the independent
+trials. The retained thermal throttle field is unavailable, so no-throttling is
+not established by this evidence.</p>
+<p>The tracked comparison video is target-hardware-derived public evidence. The
+complete RunBundles, source transport stream, and raw physical manifests remain
+ignored local evidence. JSONLs plus visibility annotations are sufficient to
+recompute controlled metrics; rerendering the video also requires the retained
+source stream.</p>
 
 
 
@@ -1625,7 +1308,7 @@ hardware run evidence.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 1, 2026 04:56:27 UTC">September 1, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 11, 2026 20:15:54 UTC">September 11, 2026</span>
   </span>
 
     
