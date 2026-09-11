@@ -54,5 +54,7 @@ nav:
     - Gateway API: gateway/gateway-api.md
     - Preview Streaming: gateway/preview-streaming.md
   - Verification:
+    - Target Acquisition RunBundle: https://github.com/jburo1/omniseer/tree/master/studies/autonomy/v2m_int8_target_acquisition
     - CI/CD Overview: verification/ci-cd.md
     - Detector Comparison: verification/detector-comparison.md
+    - INT8 Quantization Study: https://github.com/jburo1/omniseer/tree/master/studies/quantization/yolo_world_v2l_int8

@@ -26,11 +26,15 @@ runs; its panels do not start together and it is not a controlled replay.
 | v2-L FP | success | 25.4 s | 56.1 s | 2.64 | 380.25 ms | 400.98 ms |
 | v2-L Hybrid | success | 24.9 s | 57.8 s | 4.65 | 205.55 ms | 229.90 ms |
 
-v2-S INT8 has the highest observed throughput. Against their FP counterparts,
-v2-S INT8 improves inference p50/p95 by 1.98×/2.53× and throughput by 2.09×;
-v2-M INT8 by 2.34×/2.36× and 2.30×; and v2-L Hybrid by 1.85×/1.74× and
-1.76×. v2-M INT8 is therefore the most plausible coverage/throughput
-compromise for this scene. v2-L Hybrid is faster than v2-L FP, but has lower
+v2-S INT8 has the highest author-reported throughput among the six physical
+case-study summaries. The v2-M INT8 RunBundle is publicly inspectable; the
+other five physical RunBundles remain local, so their timing values and derived
+ratios cannot be independently recomputed from the public repository. Against
+their FP counterparts, v2-S INT8 improves inference p50/p95 by 1.98×/2.53× and
+throughput by 2.09×; v2-M INT8 by 2.34×/2.36× and 2.30×; and v2-L Hybrid by
+1.85×/1.74× and 1.76×. v2-M INT8 is therefore the most plausible
+author-reported coverage/throughput compromise for this scene. v2-L Hybrid is
+faster than v2-L FP, but has lower
 controlled coverage and higher observed memory use. All six trials succeeded
 without target loss; their 50.5–57.8 s success times vary far less than their
 59.19–380.25 ms inference p50 values, suggesting scan/control timing is also

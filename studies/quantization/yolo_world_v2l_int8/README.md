@@ -65,5 +65,6 @@ precision or recall, broad deployment validation, isolated inference-latency
 measurements, or proof of a proprietary Toolkit2/backend root cause. Reported
 replay times include initialization, decode, CPU preprocessing, inference,
 postprocessing, and serialization. The frozen source stream and extracted
-PNG frames are reproducible external inputs identified by hashes and the
-manifest; they are intentionally not retained in Git.
+PNG frames are identified, non-retained external inputs recorded by hashes and
+the manifest; an independent rerun requires access to the original source
+artifacts.

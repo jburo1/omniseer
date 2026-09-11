@@ -15,7 +15,6 @@ this study's `evidence/` directory.
 | Original v2-L INT8 | `artifacts/models/yolo_world_v2_l_i8.rknn` | `3b8dbbbf02952cc9c83b9287c54fdde7a7f5d923d22605594ddbac27284b87a8` |
 | Recalibrated v2-L INT8 failure | `artifacts/models/yolo_world_v2_l_i8_recal.rknn` | `337012ef7690c39dbbbb0fc73ce4396a5c9ff2411032cca47fb012b66045faef` |
 | Original TD0 hybrid | `runs/model_artifacts/yolo_world_v2_l_hybrid.rknn` plus `_config/` | `6a590575f5de60ecdca4a5b01346932eab05aa6b3479f876b53b3c4bf51fd2f5` |
-| TD01 base hybrid | `runs/model_artifacts/yolo_world_v2_l_hybrid_td01.rknn` plus `_config/` | `20e43523ab4221fd755553030dbc58943f457839d5583b1f2f29954489c2ef92` |
 | TD01 base hybrid (diagnostic mitigation) | `runs/model_artifacts/yolo_world_v2_l_hybrid_td01.rknn` plus `_config/` | `20e43523ab4221fd755553030dbc58943f457839d5583b1f2f29954489c2ef92` |
 | Full-neck hybrid | `runs/model_artifacts/yolo_world_v2_l_hybrid_neck.rknn` plus `_config/` | `fa197bed3d9e0a70bf0803b0139bf3350c4efbef895f03d44b2000a618905439` |
 
