@@ -8,11 +8,19 @@ description: "Physical edge-AI robotics on RK3588: open-vocabulary neural percep
 
 The implemented behavior is intentionally narrow: scan for a configured class, acquire a stable detection, center it, make bounded framing adjustments, and stop at a configured proximity limit. It is not navigation-based object search, room-scale exploration, or a claim of general autonomy.
 
+<p align="center">
+  <img src="assets/evidence/robot-hero.webp" alt="Omniseer physical mobile robot with LiDAR and mecanum drive" width="960" />
+</p>
+
+## Evidence-backed studies
+
 <div class="grid cards" markdown>
 
 -   :material-robot-industrial-outline: **Target acquisition on the physical robot**
 
     ---
+
+    ![Terminal person detection from the reviewed v2-M INT8 RunBundle](assets/evidence/target-acquisition-terminal.webp)
 
     A public v2-M INT8 RunBundle records first detection at **24.5 s**, terminal `framed` success at **51.1 s**, **10.04 FPS** mean consumer throughput, **96.22 ms** RKNN inference p50, and **zero target-loss episodes**.
 
@@ -21,6 +29,8 @@ The implemented behavior is intentionally narrow: scan for a configured class, a
 -   :material-chart-timeline-variant-shimmer: **Six-detector deployment trade-off**
 
     ---
+
+    ![Six-panel controlled replay poster](assets/evidence/detector-comparison-poster.webp)
 
     In one controlled scene, v2-M FP led coverage at **41.7%**. Across six independent physical case studies, v2-S INT8 reached the highest observed throughput at **16.54 FPS**; v2-M INT8 was the strongest observed coverage/throughput compromise for this scene.
 

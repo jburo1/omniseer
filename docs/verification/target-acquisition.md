@@ -12,9 +12,12 @@ Can open-vocabulary YOLO-World v2-M INT8 running through RKNN on a ROCK 5B+ supp
 
 The public `v2m_int8_scene_1` RunBundle records one successful physical-robot execution for the configured `person` target. The controller scanned, acquired a stable detection, centered and framed it, then stopped with terminal reason `framed`.
 
-[![Terminal person detection and framing capture](https://github.com/jburo1/omniseer/raw/master/studies/autonomy/v2m_int8_target_acquisition/run/evidence/annotated/capture_frame_2924.jpg)](https://github.com/jburo1/omniseer/blob/master/studies/autonomy/v2m_int8_target_acquisition/run/evidence/annotated/capture_frame_2924.jpg)
+<video controls preload="metadata" poster="../assets/evidence/target-acquisition-terminal.webp" width="100%">
+  <source src="https://media.githubusercontent.com/media/jburo1/omniseer/master/studies/autonomy/v2m_int8_target_acquisition/run/video/overlay.mp4" type="video/mp4" />
+  Your browser cannot play this video. <a href="https://github.com/jburo1/omniseer/blob/master/studies/autonomy/v2m_int8_target_acquisition/run/video/overlay.mp4">Open the target-acquisition overlay video on GitHub</a>.
+</video>
 
-*Terminal capture from frame 2924. The matching `target_framed` event is retained in the public autonomy trace.*
+*The RunBundle's overlay video records the reviewed execution. Its poster is the terminal capture from frame 2924; the matching `target_framed` event is retained in the public autonomy trace.*
 
 | Measurement | Observed value |
 | --- | ---: |

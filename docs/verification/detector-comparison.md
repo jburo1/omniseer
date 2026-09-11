@@ -11,7 +11,10 @@ YOLO-World RKNN detector configurations differ when vocabulary and
 post-processing are held fixed—and how do their independent physical
 case-study summaries inform deployment trade-offs?
 
-[![Six-panel controlled replay poster](https://github.com/jburo1/omniseer/raw/master/studies/detector_comparison/scan_final_recal/evidence/controlled_replay_poster.jpg)](https://github.com/jburo1/omniseer/blob/master/studies/detector_comparison/scan_final_recal/evidence/controlled_replay_2x3.mp4)
+<video controls preload="metadata" poster="../assets/evidence/detector-comparison-poster.webp" width="100%">
+  <source src="https://media.githubusercontent.com/media/jburo1/omniseer/master/studies/detector_comparison/scan_final_recal/evidence/controlled_replay_2x3.mp4" type="video/mp4" />
+  Your browser cannot play this video. <a href="https://github.com/jburo1/omniseer/blob/master/studies/detector_comparison/scan_final_recal/evidence/controlled_replay_2x3.mp4">Open the controlled replay video on GitHub</a>.
+</video>
 
 *Controlled replay of the same repaired source frames through all six detector
 configurations. The full study publishes provenance, JSONLs, visibility

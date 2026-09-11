@@ -7,6 +7,10 @@ Omniseer is an edge-to-cloud ROS 2 robotics platform that runs open-vocabulary
 perception on a ROCK 5B+ mobile robot, performs bounded visual target acquisition
 and framing, and records reproducible evidence from real robot runs.
 
+<p align="center">
+  <img src="docs/assets/evidence/robot-hero.webp" width="800" alt="Omniseer physical mobile robot with LiDAR and mecanum drive" />
+</p>
+
 [Documentation](https://jburo1.github.io/omniseer/) |
 [Architecture](docs/architecture/overview.md) |
 [Verification Evidence](docs/verification/evidence.md) |
@@ -69,6 +73,27 @@ Important boundaries are explicit:
 The technically distinctive work is making that path fast enough for edge
 execution, bounded enough for physical robot behavior, and measurable enough that
 claims can be reviewed against recorded artifacts.
+
+## Evidence at a Glance
+
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <a href="docs/verification/target-acquisition.md">
+        <img src="docs/assets/evidence/target-acquisition-terminal.webp" alt="Terminal person detection from the v2-M INT8 target-acquisition RunBundle" width="360" />
+      </a><br />
+      <a href="docs/verification/target-acquisition.md">v2-M INT8 target acquisition</a><br />
+      One reviewed physical RunBundle with terminal <code>target_framed</code> evidence.
+    </td>
+    <td width="50%" align="center">
+      <a href="docs/verification/detector-comparison.md">
+        <img src="docs/assets/evidence/detector-comparison-poster.webp" alt="Six-panel controlled replay of YOLO-World detector configurations" width="360" />
+      </a><br />
+      <a href="docs/verification/detector-comparison.md">Six-model detector comparison</a><br />
+      One repaired source scene replayed under six held-constant configurations.
+    </td>
+  </tr>
+</table>
 
 ## Representative Engineering Evidence
 

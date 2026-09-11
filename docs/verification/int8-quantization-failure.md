@@ -18,7 +18,12 @@ The canonical evaluation replays 300 frozen representative frames through the ex
 | v2-L recalibrated INT8 | 0 | 0 | **0 / 1,301 (0.0%)** |
 | v2-L TD01 mixed precision | 295 | 1,030 | **789 / 1,301 (60.6%)** |
 
-[Watch the retained INT8-versus-TD01 RK3588 replay](https://github.com/jburo1/omniseer/blob/master/studies/quantization/yolo_world_v2l_int8/evidence/scan_final_v2l_int8_vs_hybrid.mp4){ .md-button .md-button--primary }
+<video controls preload="metadata" width="100%">
+  <source src="https://media.githubusercontent.com/media/jburo1/omniseer/master/studies/quantization/yolo_world_v2l_int8/evidence/scan_final_v2l_int8_vs_hybrid.mp4" type="video/mp4" />
+  Your browser cannot play this video. <a href="https://github.com/jburo1/omniseer/blob/master/studies/quantization/yolo_world_v2l_int8/evidence/scan_final_v2l_int8_vs_hybrid.mp4">Open the INT8-versus-TD01 replay on GitHub</a>.
+</video>
+
+*Canonical RK3588 replay of recalibrated INT8 versus the TD01 mixed-precision diagnostic. No separate representative still was retained for this study.*
 
 ## Engineering conclusion
 
