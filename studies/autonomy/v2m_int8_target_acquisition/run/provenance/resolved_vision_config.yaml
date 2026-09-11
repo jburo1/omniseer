@@ -1,0 +1,23 @@
+camera:
+  device: "/dev/video12"
+  width: 1280
+  height: 720
+  buffer_count: 4
+pipeline:
+  dst_width: 640
+  dst_height: 640
+models:
+  detector_model_path: "/runs/model_artifacts/yolo_world_v2_m_i8.rknn"
+  clip_model_path: "/omniseer/vision/testdata/text_embeddings/clip_text_fp16.rknn"
+  clip_vocab_path: "/omniseer/vision/testdata/text_embeddings/clip_vocab.bpe"
+classes:
+  path: "/runs/v2m_int8_scene_1/classes.txt"
+  pad_token: "nothing"
+runner:
+  warmup_runs: 0
+postprocess:
+  score_threshold: 0.25
+  nms_iou_threshold: 0.45
+  max_detections: 100
+frames:
+  camera_frame_id: "camera_optical_frame"

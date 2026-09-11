@@ -36,10 +36,11 @@ named run, report, video, annotated frame, or measurement.
 | Local simulation smoke check | The shared simulation bringup exposes asserted boundary topics | `scripts/omni test smoke-sim` | Developer checkout with ROS/Gazebo dependencies | No | Simulation-only; does not prove real sensor, actuator, or target-hardware timing behavior |
 | Local portable vision check | Hardware-independent native vision components preserve their contracts | `scripts/omni test vision` | Developer checkout with portable native build dependencies | No | Does not exercise V4L2 camera capture, RGA preprocessing, RKNN inference, or NPU latency |
 | Local firmware compile | Firmware sources compile outside CI | `scripts/omni build firmware` | Developer checkout with PlatformIO | No | Compile-only; no board flash or physical IO validation |
-| [Six-model detector comparison](detector-comparison.md) | A repaired, controlled 360° replay exposes detector presence/visibility differences, with supporting context from six independently recorded physical ROCK 5B+ runs | Tracked 2×3 replay, provenance, six JSONLs, visibility annotations, report, and physical-run summary | Target-hardware-derived source and a developer checkout | Yes | One scene and vocabulary only; not mAP, bounding-box recall, timing, or autonomy evidence. Complete RunBundles and source stream remain local-only |
+| [Six-model detector comparison](detector-comparison.md) | A repaired, controlled 360° replay exposes detector presence/visibility differences, with supporting context from six independently recorded physical ROCK 5B+ runs | Tracked 2×3 replay, provenance, six JSONLs, visibility annotations, report, and physical-run summary | Target-hardware-derived source and a developer checkout | Yes | One scene and vocabulary only; not mAP, bounding-box recall, timing, or autonomy evidence |
+| [v2-M INT8 target acquisition RunBundle](https://github.com/jburo1/omniseer/tree/master/studies/autonomy/v2m_int8_target_acquisition) | One ROCK 5B+ execution completed bounded visual target acquisition and framing | Complete `v2m_int8_scene_1` RunBundle: manifest, autonomy trace, detections, telemetry, evidence frames, video, rosbag, provenance, and static report | ROCK 5B+ physical robot | Yes | One successful representative run; not a benchmark, statistical result, navigation-based search, global exploration, learned control, or general detector-accuracy claim |
 | RunBundle tooling | The implemented recorder, inspection, retrieval, annotation, and report code can create and review structured run evidence | `omniseer_experiments` tests in `scripts/omni test ros`; `scripts/omni runs inspect`, `annotate`, and `report` | Source tree and local runs | Partly: source and tests are public; individual local runs are not public unless linked | Tool support does not imply that autonomy, perception accuracy, or target hardware has been executed in a public run |
 | Native target runtime implementation | The codebase contains the V4L2/RGA/RKNN perception path and ROS bridge integration | `vision/`, `ros_ws/src/omniseer_vision_bridge/`, launch/config files, and portable tests for hardware-independent pieces | Source tree and target runtime code | Yes for source; no linked execution artifact here | Implementation-backed capability only unless tied to a target-hardware run or measurement |
-| Bounded autonomy implementation | The codebase contains bounded visual target acquisition and framing behavior | `ros_ws/src/omniseer_autonomy/`, `scripts/omni run autonomy`, controller/node tests, and RunBundle `autonomy.jsonl` support | Source tree and local/target runtime when launched | Yes for source; no linked execution artifact here | `autonomy.jsonl` support does not itself prove an autonomy run occurred |
+| Bounded autonomy implementation | The codebase contains bounded visual target acquisition and framing behavior | `ros_ws/src/omniseer_autonomy/`, `scripts/omni run autonomy`, controller/node tests, and RunBundle `autonomy.jsonl` support | Source tree and local/target runtime when launched | Yes for source; the named RunBundle above is target-hardware execution evidence | Source support and one bounded execution do not establish broader autonomy behavior |
 
 ## Public CI Evidence
 
@@ -87,8 +88,12 @@ physical-run manifests. It supports only the bounded detector-comparison claims
 made there. It does not publish a complete RunBundle, raw source stream,
 target-hardware timing measurement, or autonomy-execution record.
 
-The complete ignored local bundle remains operationally useful, but is not public
-review evidence beyond the explicitly tracked derivatives and hashes.
+The [v2-M INT8 target-acquisition RunBundle](https://github.com/jburo1/omniseer/tree/master/studies/autonomy/v2m_int8_target_acquisition)
+is public target-hardware evidence for one bounded autonomy execution. It retains
+the original manifest, autonomy trace, detections, performance/system/pipeline
+telemetry, evidence frames, media, rosbag, provenance, and static report. It does
+not turn the detector comparison into autonomy evidence, or establish claims beyond
+that single run.
 
 ## RunBundle Evidence Format
 

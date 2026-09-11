@@ -1,0 +1,135 @@
+[INFO] [launch]: All log files can be found below /root/.ros/log/2026-09-01-00-32-18-544934-rock-5b-plus-12411
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [pre_launch_cleanup-1]: process started with pid [12415]
+[pre_launch_cleanup-1] === Lingering bringup-owned processes before cleanup (real) ===
+[pre_launch_cleanup-1] (none)
+[pre_launch_cleanup-1] [cleanup] stopping ROS 2 daemon
+[pre_launch_cleanup-1] === Remaining bringup-owned processes after cleanup (real) ===
+[pre_launch_cleanup-1] (none)
+[pre_launch_cleanup-1] [cleanup] restarting ROS 2 daemon
+[INFO] [pre_launch_cleanup-1]: process has finished cleanly [pid 12415]
+[INFO] [wait_for_teensy-2]: process started with pid [12474]
+[INFO] [rplidar_composition-3]: process started with pid [12475]
+[INFO] [encoder_counts_to_odometry-4]: process started with pid [12476]
+[INFO] [vision_bridge_node-5]: process started with pid [12477]
+[INFO] [record_run-6]: process started with pid [12478]
+[INFO] [record_rosbag-7]: process started with pid [12479]
+[INFO] [target_centering_node-8]: process started with pid [12480]
+[INFO] [robot_state_publisher-9]: process started with pid [12481]
+[INFO] [twist_mux-10]: process started with pid [12482]
+[INFO] [ekf_node-11]: process started with pid [12487]
+[INFO] [robot_diag_control_cpp_node-12]: process started with pid [12488]
+[INFO] [wait_for_teensy-2]: process has finished cleanly [pid 12474]
+[INFO] [micro_ros_agent-13]: process started with pid [12566]
+[robot_state_publisher-9] [INFO] [1788222741.652610079] [robot_state_publisher]: Robot initialized
+[rplidar_composition-3] [INFO] [1788222741.652972919] [rplidar_composition]: RPLIDAR running on ROS 2 package rplidar_ros. SDK Version: '1.12.0'
+[encoder_counts_to_odometry-4] [INFO] [1788222741.678348630] [encoder_counts_to_odometry]: EncoderCountsToOdometry: /encoder_counts -> /mecanum_drive_controller/odometry
+[target_centering_node-8] [INFO] [1788222741.691076882] [target_centering_node]: target centering autonomy started; target_class=person command_topic=/cmd_vel_autonomy detections_topic=/yolo/detections odometry_topic=/odometry/filtered range_topic=/range capture_service=/vision/capture_frame
+[vision_bridge_node-5] [INFO] [1788222741.692414196] [vision_bridge]: configured bridge: camera.device=/dev/video12 camera.width=1280 camera.height=720 camera.buffer_count=4 pipeline.dst_width=640 pipeline.dst_height=640 models.detector_model_path="/runs/model_artifacts/yolo_world_v2_m_i8.rknn" models.clip_model_path="/omniseer/vision/testdata/text_embeddings/clip_text_fp16.rknn" models.clip_vocab_path="/omniseer/vision/testdata/text_embeddings/clip_vocab.bpe" classes.path="/runs/v2m_int8_scene_1/classes.txt" classes.pad_token="nothing" producer.preflight_capture_wait_ms=200 runner.warmup_runs=0 postprocess.score_threshold=0.25 postprocess.nms_iou_threshold=0.45 postprocess.max_detections=100 frames.camera_frame_id="camera_optical_frame" provenance.resolved_config_path="/runs/v2m_int8_scene_1/provenance/resolved_vision_config.yaml" telemetry.pipeline_jsonl_path="/runs/v2m_int8_scene_1/pipeline_telemetry.jsonl" evidence.dir="/runs/v2m_int8_scene_1/evidence" evidence.interval_sec=0.25 evidence.jpeg_quality=85 evidence.storage_budget_mb=1024 evidence.min_free_mb=256
+[twist_mux-10] [INFO] [1788222741.704274434] [twist_mux]: Topic handler 'topics.autonomy' subscribed to topic '/cmd_vel_autonomy': timeout = 0.500000s , priority = 2.
+[twist_mux-10] [INFO] [1788222741.709515479] [twist_mux]: Topic handler 'topics.keyboard' subscribed to topic '/cmd_vel_keyboard': timeout = 0.500000s , priority = 3.
+[micro_ros_agent-13] [35m[1788222741.711970][m info     | [34mTermiosAgentLinux.cpp[m | [37minit                    [m | [32mrunning...[m             | fd: 3
+[micro_ros_agent-13] [35m[1788222741.712310][m info     | [34mRoot.cpp          [m | [37mset_verbose_level       [m | [32mlogger setup[m           | verbose_level: 4
+[twist_mux-10] [INFO] [1788222741.712043687] [twist_mux]: Topic handler 'topics.navigation' subscribed to topic '/cmd_vel_nav': timeout = 0.500000s , priority = 1.
+[twist_mux-10] [INFO] [1788222741.713495628] [twist_mux]: Topic handler 'locks.e_stop' subscribed to topic '/cmd_vel_emergency_stop': timeout = None , priority = 255.
+[target_centering_node-8] [INFO] [1788222741.741466340] [target_centering_node]: autonomy state reached: scan event=started normalized_error=- bbox_area_ratio=- stable_framed_frames=0 confirmation_miss_count=0 target_loss_count=0
+[micro_ros_agent-13] [35m[1788222741.777865][m info     | [34mRoot.cpp          [m | [37mcreate_client           [m | [32mcreate[m                 | client_key: 0x61787C13, session_id: 0x81
+[micro_ros_agent-13] [35m[1788222741.777983][m info     | [34mSessionManager.hpp[m | [37mestablish_session       [m | [32msession established[m    | client_key: 0x61787C13, address: 0
+[record_rosbag-7] [WARN] [ros2bag]: Positional "topics" argument deprecated. Please use optional "--topics" argument instead.
+[micro_ros_agent-13] [35m[1788222742.175047][m info     | [34mProxyClient.cpp   [m | [37mcreate_participant      [m | [32mparticipant created[m    | client_key: 0x61787C13, participant_id: 0x000(1)
+[micro_ros_agent-13] [35m[1788222742.176723][m info     | [34mProxyClient.cpp   [m | [37mcreate_topic            [m | [32mtopic created[m          | client_key: 0x61787C13, topic_id: 0x000(2), participant_id: 0x000(1)
+[micro_ros_agent-13] [35m[1788222742.177023][m info     | [34mProxyClient.cpp   [m | [37mcreate_publisher        [m | [32mpublisher created[m      | client_key: 0x61787C13, publisher_id: 0x000(3), participant_id: 0x000(1)
+[micro_ros_agent-13] [35m[1788222742.177836][m info     | [34mProxyClient.cpp   [m | [37mcreate_datawriter       [m | [32mdatawriter created[m     | client_key: 0x61787C13, datawriter_id: 0x000(5), publisher_id: 0x000(3)
+[micro_ros_agent-13] [35m[1788222742.179759][m info     | [34mProxyClient.cpp   [m | [37mcreate_topic            [m | [32mtopic created[m          | client_key: 0x61787C13, topic_id: 0x001(2), participant_id: 0x000(1)
+[micro_ros_agent-13] [35m[1788222742.180149][m info     | [34mProxyClient.cpp   [m | [37mcreate_publisher        [m | [32mpublisher created[m      | client_key: 0x61787C13, publisher_id: 0x001(3), participant_id: 0x000(1)
+[micro_ros_agent-13] [35m[1788222742.180909][m info     | [34mProxyClient.cpp   [m | [37mcreate_datawriter       [m | [32mdatawriter created[m     | client_key: 0x61787C13, datawriter_id: 0x001(5), publisher_id: 0x001(3)
+[micro_ros_agent-13] [35m[1788222742.181243][m info     | [34mProxyClient.cpp   [m | [37mcreate_topic            [m | [32mtopic created[m          | client_key: 0x61787C13, topic_id: 0x002(2), participant_id: 0x000(1)
+[micro_ros_agent-13] [35m[1788222742.181601][m info     | [34mProxyClient.cpp   [m | [37mcreate_publisher        [m | [32mpublisher created[m      | client_key: 0x61787C13, publisher_id: 0x002(3), participant_id: 0x000(1)
+[micro_ros_agent-13] [35m[1788222742.183952][m info     | [34mProxyClient.cpp   [m | [37mcreate_datawriter       [m | [32mdatawriter created[m     | client_key: 0x61787C13, datawriter_id: 0x002(5), publisher_id: 0x002(3)
+[micro_ros_agent-13] [35m[1788222742.186645][m info     | [34mProxyClient.cpp   [m | [37mcreate_topic            [m | [32mtopic created[m          | client_key: 0x61787C13, topic_id: 0x003(2), participant_id: 0x000(1)
+[micro_ros_agent-13] [35m[1788222742.188089][m info     | [34mProxyClient.cpp   [m | [37mcreate_publisher        [m | [32mpublisher created[m      | client_key: 0x61787C13, publisher_id: 0x003(3), participant_id: 0x000(1)
+[micro_ros_agent-13] [35m[1788222742.188832][m info     | [34mProxyClient.cpp   [m | [37mcreate_datawriter       [m | [32mdatawriter created[m     | client_key: 0x61787C13, datawriter_id: 0x003(5), publisher_id: 0x003(3)
+[micro_ros_agent-13] [35m[1788222742.189304][m info     | [34mProxyClient.cpp   [m | [37mcreate_topic            [m | [32mtopic created[m          | client_key: 0x61787C13, topic_id: 0x004(2), participant_id: 0x000(1)
+[micro_ros_agent-13] [35m[1788222742.190001][m info     | [34mProxyClient.cpp   [m | [37mcreate_publisher        [m | [32mpublisher created[m      | client_key: 0x61787C13, publisher_id: 0x004(3), participant_id: 0x000(1)
+[micro_ros_agent-13] [35m[1788222742.194174][m info     | [34mProxyClient.cpp   [m | [37mcreate_datawriter       [m | [32mdatawriter created[m     | client_key: 0x61787C13, datawriter_id: 0x004(5), publisher_id: 0x004(3)
+[micro_ros_agent-13] [35m[1788222742.195152][m info     | [34mProxyClient.cpp   [m | [37mcreate_topic            [m | [32mtopic created[m          | client_key: 0x61787C13, topic_id: 0x005(2), participant_id: 0x000(1)
+[micro_ros_agent-13] [35m[1788222742.196092][m info     | [34mProxyClient.cpp   [m | [37mcreate_subscriber       [m | [32msubscriber created[m     | client_key: 0x61787C13, subscriber_id: 0x000(4), participant_id: 0x000(1)
+[micro_ros_agent-13] [35m[1788222742.198561][m info     | [34mProxyClient.cpp   [m | [37mcreate_datareader       [m | [32mdatareader created[m     | client_key: 0x61787C13, datareader_id: 0x000(6), subscriber_id: 0x000(4)
+[record_rosbag-7] stdin is not a terminal device. Keyboard handling disabled.[INFO] [1788222742.210201375] [rosbag2_recorder]: Press SPACE for pausing/resuming
+[record_rosbag-7] [INFO] [1788222742.249263770] [rosbag2_recorder]: Listening for topics...
+[robot_diag_control_cpp_node-12] [INFO] [1788222742.253216794] [robot_diag_control_cpp]: C++ gateway node started; gRPC listening on 0.0.0.0:50051, /vision/perf aggregation is active, robot health requires vision=true, odom topic is /odometry/filtered, preview source is camera, teleop command topic is /cmd_vel_keyboard, effective command topic is /mecanum_drive_controller/reference, battery topic is /battery
+[record_rosbag-7] [INFO] [1788222742.266510305] [rosbag2_recorder]: Event publisher thread: Starting
+[record_rosbag-7] [INFO] [1788222742.275419410] [rosbag2_recorder]: Subscribed to topic '/imu'
+[record_rosbag-7] [INFO] [1788222742.282974285] [rosbag2_recorder]: Subscribed to topic '/encoder_counts'
+[record_rosbag-7] [INFO] [1788222742.283443584] [rosbag2_recorder]: Recording...
+[ekf_node-11] [INFO] [1788222742.352938981] [ekf_filter]: Detected a initial_estimate_covariance parameter with length 15. Assuming diagonal values specified.
+[record_rosbag-7] [INFO] [1788222742.569776018] [rosbag2_recorder]: Subscribed to topic '/mecanum_drive_controller/odometry'
+[record_rosbag-7] [INFO] [1788222742.902540217] [rosbag2_recorder]: Subscribed to topic '/vision/perf'
+[record_rosbag-7] [INFO] [1788222742.912452089] [rosbag2_recorder]: Subscribed to topic '/yolo/detections'
+[record_run-6] [INFO] [1788222742.930759725] [perception_run_recorder]: recording perception run bundle: run_id=v2m_int8_scene_1 out_dir=/runs/v2m_int8_scene_1
+[record_rosbag-7] [INFO] [1788222743.016719976] [rosbag2_recorder]: Subscribed to topic '/cmd_vel_keyboard'
+[record_rosbag-7] [INFO] [1788222743.020026947] [rosbag2_recorder]: Subscribed to topic '/mecanum_drive_controller/reference'
+[record_rosbag-7] [INFO] [1788222743.122258381] [rosbag2_recorder]: Subscribed to topic '/cmd_vel_autonomy'
+[record_rosbag-7] [INFO] [1788222743.128012767] [rosbag2_recorder]: Subscribed to topic '/tf_static'
+[record_rosbag-7] [INFO] [1788222743.131674119] [rosbag2_recorder]: Subscribed to topic '/tf'
+[vision_bridge_node-5] [INFO] [1788222744.016305814] [vision_bridge]: vision runtime started in headless bridge mode and publishing /yolo/detections, /vision/perf, and /vision/capture_frame
+[rplidar_composition-3] [INFO] [1788222744.179364162] [rplidar_composition]: RPLIDAR S/N: 518AFA86C2E392D1A5E59FF5C65E5C63
+[rplidar_composition-3] [INFO] [1788222744.179439413] [rplidar_composition]: Firmware Ver: 1.29
+[rplidar_composition-3] [INFO] [1788222744.179451080] [rplidar_composition]: Hardware Rev: 7
+[rplidar_composition-3] [INFO] [1788222744.181332944] [rplidar_composition]: RPLidar health status : '0'
+[rplidar_composition-3] [INFO] [1788222744.181390695] [rplidar_composition]: Start
+[rplidar_composition-3] [INFO] [1788222744.732573631] [rplidar_composition]: current scan mode: Sensitivity, max_distance: 12.0 m, Point number: 7.9K , angle_compensate: 2, flip_x_axis 0
+[record_rosbag-7] [INFO] [1788222744.852475685] [rosbag2_recorder]: Subscribed to topic '/scan'
+[record_rosbag-7] [INFO] [1788222744.952684083] [rosbag2_recorder]: All requested topics are subscribed. Stopping discovery...
+[vision_bridge_node-5] rga_api version 1.10.0_[8]
+[target_centering_node-8] [INFO] [1788222766.333816868] [target_centering_node]: autonomy state reached: lock event=target_locked previous_state=scan target=person confidence=0.905655 normalized_error=- bbox_area_ratio=- stable_framed_frames=0 confirmation_miss_count=0 target_loss_count=0
+[target_centering_node-8] [INFO] [1788222766.333913411] [target_centering_node]: autonomy state reached: center event=centering_started previous_state=lock target=person confidence=0.905655 normalized_error=- bbox_area_ratio=- stable_framed_frames=0 confirmation_miss_count=0 target_loss_count=0
+[target_centering_node-8] [INFO] [1788222770.912581707] [target_centering_node]: autonomy state reached: frame event=framing_started previous_state=center target=person confidence=0.946484 normalized_error=- bbox_area_ratio=- stable_framed_frames=0 confirmation_miss_count=0 target_loss_count=0
+[target_centering_node-8] [INFO] [1788222785.624194566] [target_centering_node]: autonomy state reached: center event=centering_resumed previous_state=frame target=person confidence=0.946484 normalized_error=- bbox_area_ratio=- stable_framed_frames=0 confirmation_miss_count=0 target_loss_count=0
+[target_centering_node-8] [INFO] [1788222785.917561484] [target_centering_node]: autonomy state reached: frame event=framing_started previous_state=center target=person confidence=0.946484 normalized_error=- bbox_area_ratio=- stable_framed_frames=0 confirmation_miss_count=0 target_loss_count=0
+[target_centering_node-8] [INFO] [1788222791.415710872] [target_centering_node]: autonomy state reached: center event=centering_resumed previous_state=frame target=person confidence=0.946484 normalized_error=- bbox_area_ratio=- stable_framed_frames=0 confirmation_miss_count=0 target_loss_count=0
+[target_centering_node-8] [INFO] [1788222791.522369453] [target_centering_node]: autonomy state reached: frame event=framing_started previous_state=center target=person confidence=0.946484 normalized_error=- bbox_area_ratio=- stable_framed_frames=0 confirmation_miss_count=0 target_loss_count=0
+[target_centering_node-8] [INFO] [1788222791.627342175] [target_centering_node]: autonomy state reached: center event=centering_resumed previous_state=frame target=person confidence=0.946484 normalized_error=- bbox_area_ratio=- stable_framed_frames=0 confirmation_miss_count=0 target_loss_count=0
+[target_centering_node-8] [INFO] [1788222791.735851117] [target_centering_node]: autonomy state reached: frame event=framing_started previous_state=center target=person confidence=0.946484 normalized_error=- bbox_area_ratio=- stable_framed_frames=0 confirmation_miss_count=0 target_loss_count=0
+[target_centering_node-8] [INFO] [1788222792.807435858] [target_centering_node]: autonomy state reached: success event=succeeded previous_state=frame reason=framed target=person confidence=0.946484 normalized_error=- bbox_area_ratio=- stable_framed_frames=10 confirmation_miss_count=0 target_loss_count=0
+[target_centering_node-8] [INFO] [1788222792.807674445] [target_centering_node]: target centering succeeded
+[target_centering_node-8] [INFO] [1788222792.807713529] [target_centering_node]: autonomy summary: terminal_state=success reason=framed states_reached=scan,lock,center,frame,success target_loss_count=0 time_to_first_detection_sec=24.4012 time_to_centered_sec=29.1713 final_error=-0.0202152 final_confidence=0.946484
+[target_centering_node-8] [INFO] [1788222792.812296848] [target_centering_node]: target capture saved: evidence/frames/capture_frame_2924.jpg
+[target_centering_node-8] [INFO] [1788222792.812358391] [target_centering_node]: terminal autonomy handling complete; shutting down: target capture completed
+[INFO] [target_centering_node-8]: process has finished cleanly [pid 12480]
+[INFO] [launch.user]: target centering autonomy completed; shutting down real launch
+[INFO] [micro_ros_agent-13]: sending signal 'SIGINT' to process[micro_ros_agent-13]
+[INFO] [robot_diag_control_cpp_node-12]: sending signal 'SIGINT' to process[robot_diag_control_cpp_node-12]
+[INFO] [ekf_node-11]: sending signal 'SIGINT' to process[ekf_node-11]
+[ERROR] [micro_ros_agent-13]: process has died [pid 12566, exit code -2, cmd '/ros_ws/install/lib/micro_ros_agent/micro_ros_agent serial --dev /dev/serial/by-id/usb-Teensyduino_USB_Serial_16634450-if00 -b 115200 --ros-args --log-level info --ros-args'].
+[INFO] [twist_mux-10]: sending signal 'SIGINT' to process[twist_mux-10]
+[INFO] [robot_state_publisher-9]: sending signal 'SIGINT' to process[robot_state_publisher-9]
+[INFO] [record_rosbag-7]: sending signal 'SIGINT' to process[record_rosbag-7]
+[INFO] [record_run-6]: sending signal 'SIGINT' to process[record_run-6]
+[INFO] [vision_bridge_node-5]: sending signal 'SIGINT' to process[vision_bridge_node-5]
+[INFO] [encoder_counts_to_odometry-4]: sending signal 'SIGINT' to process[encoder_counts_to_odometry-4]
+[INFO] [rplidar_composition-3]: sending signal 'SIGINT' to process[rplidar_composition-3]
+[robot_diag_control_cpp_node-12] [INFO] [1788222792.993106095] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[ekf_node-11] [INFO] [1788222793.000525916] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[twist_mux-10] [INFO] [1788222793.009044170] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[robot_state_publisher-9] [INFO] [1788222793.015280389] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[record_rosbag-7] [INFO] [1788222793.018891278] [rosbag2_recorder]: Pausing recording.
+[record_rosbag-7] [INFO] [1788222793.019048488] [rosbag2_cpp]: Writing remaining messages from cache to the bag. It may take a while
+[vision_bridge_node-5] [INFO] [1788222793.034313095] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[encoder_counts_to_odometry-4] [INFO] [1788222793.039930097] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[record_rosbag-7] [INFO] [1788222793.040215351] [rosbag2_recorder]: Event publisher thread: Exiting
+[rplidar_composition-3] [INFO] [1788222793.044714378] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[record_rosbag-7] [INFO] [1788222793.046389736] [rosbag2_recorder]: Recording stopped
+[record_rosbag-7] [INFO] [1788222793.082779497] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[INFO] [ekf_node-11]: process has finished cleanly [pid 12487]
+[INFO] [robot_state_publisher-9]: process has finished cleanly [pid 12481]
+[INFO] [encoder_counts_to_odometry-4]: process has finished cleanly [pid 12476]
+[INFO] [twist_mux-10]: process has finished cleanly [pid 12482]
+[record_run-6] [INFO] [1788222793.211904039] [perception_run_recorder]: finalized perception run bundle: out_dir=/runs/v2m_int8_scene_1
+[record_run-6] Failed to publish log message to rosout: publisher's context is invalid, at ./src/rcl/publisher.c:427
+[INFO] [robot_diag_control_cpp_node-12]: process has finished cleanly [pid 12488]
+[INFO] [record_rosbag-7]: process has finished cleanly [pid 12479]
+[INFO] [vision_bridge_node-5]: process has finished cleanly [pid 12477]
+[INFO] [launch.user]: vision_bridge exited with code 0
+[INFO] [record_run-6]: process has finished cleanly [pid 12478]
+[INFO] [rplidar_composition-3]: process has finished cleanly [pid 12475]

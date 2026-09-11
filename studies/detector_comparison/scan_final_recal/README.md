@@ -42,6 +42,8 @@ The [physical-run presentation grid](evidence/physical_trials_grid_2x3.mp4) is a
 
 The public-safe [physical-run summary](physical_runs.yaml) binds each row to its local manifest hash and records the shared hardware, Git revision, container digest, and completion status.
 
+The v2-M INT8 physical trial, [`v2m_int8_scene_1`](../../autonomy/v2m_int8_target_acquisition/README.md), is also retained as the publicly inspectable full RunBundle; the other five physical bundles remain local evidence.
+
 ## Joint engineering evaluation
 
 FP-to-accelerated inference ratios were calculated from the independent-run measurements: v2-S INT8 reduces p50/p95 latency by 1.98×/2.53× and raises throughput 2.09× over v2-S FP; v2-M INT8 does so by 2.34×/2.36× and 2.30×; v2-L Hybrid does so by 1.85×/1.74× and 1.76× over v2-L FP.

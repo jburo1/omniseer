@@ -1,0 +1,131 @@
+schema_version: 1
+run_id: "v2m_int8_scene_1"
+project: "omniseer"
+robot: "omniseer"
+sbc: "ROCK 5B+"
+started_at: "2026-09-01T00:32:22.438735+00:00"
+ended_at: "2026-09-01T00:33:13.022207+00:00"
+git_sha: "b90feb60e3a1a84c0a4d8d402a656d0b8bc42ef7"
+ros_distro: "kilted"
+model:
+  detector: "yolo-world-rknn"
+  family: "yolo-world"
+  variant: "v2m"
+  precision: "int8"
+  backend: "rknn"
+  vision_params_file: "/ros_ws/install/share/bringup/config/vision_bridge.real.paths.yaml"
+  detector_model_path: "/runs/model_artifacts/yolo_world_v2_m_i8.rknn"
+  clip_model_path: "/omniseer/vision/testdata/text_embeddings/clip_text_fp16.rknn"
+  clip_vocab_path: "/omniseer/vision/testdata/text_embeddings/clip_vocab.bpe"
+classes_path: "/runs/v2m_int8_scene_1/classes.txt"
+classes:
+  - "person"
+  - "chair"
+  - "book"
+launch:
+  command: "run real --profile operator --record-run v2m_int8_scene_1 --record-out /runs/v2m_int8_scene_1 --record-overwrite --record-system-interval-sec 1.0 --record-experiment-config Autonomy:\\ frame\\ and\\ capture\\ target --record-runtime-backend robot_runtime_container --record-container-image-ref ghcr.io/jburo1/omniseer-robot-runtime:robot-verified --record-container-image-digest ghcr.io/jburo1/omniseer-robot-runtime@sha256:1280cc86229b5acb6f30ad43629da687f1b816ed380b634ab8110729755562c5 --record-container-image-id sha256:1280cc86229b5acb6f30ad43629da687f1b816ed380b634ab8110729755562c5 --record-classes person\\,chair\\,book --record-video --record-rosbag --record-experiment-parameter stage=manual-operator --record-experiment-parameter preview.encoder=rockchip --record-experiment-parameter postprocess.score_threshold=0.25 --record-experiment-parameter postprocess.nms_iou_threshold=0.45 --record-experiment-parameter postprocess.max_detections=100 bringup experiment_overwrite:=true gateway_preview_encoder:=rockchip classes_path:=/runs/v2m_int8_scene_1/classes.txt detector_model_path:=/runs/model_artifacts/yolo_world_v2_m_i8.rknn experiment_model_family:=yolo-world experiment_model_variant:=v2m experiment_model_precision:=int8 experiment_model_backend:=rknn postprocess_score_threshold:=0.25 postprocess_nms_iou_threshold:=0.45 postprocess_max_detections:=100 start_autonomy:=true autonomy_target_class:=person autonomy_run_dir:=/runs/v2m_int8_scene_1 autonomy_bbox_area_min_ratio:=0.26 autonomy_approach_stop_area_ratio:=0.325 autonomy_bbox_area_max_ratio:=0.35 autonomy_forward_speed_m_s:=0.05 autonomy_reverse_speed_m_s:=0.04 autonomy_stable_framed_frames:=10 autonomy_success_miss_tolerance_updates:=2 autonomy_proximity_stop_m:=0.30 autonomy_capture_timeout_sec:=2.0 autonomy_min_target_confidence:=0.50 autonomy_max_target_center_jump_ratio:=0.20 evidence_interval_sec:=0.25"
+  profile: "operator"
+  mode: "bringup"
+  args:
+    - "start_nav:=false"
+    - "start_slam:=false"
+    - "start_rf2o:=false"
+    - "start_gateway:=true"
+    - "start_vision:=true"
+    - "wait_for_boundary_topics:=false"
+    - "vision_params_file:=vision_bridge.real.paths.yaml"
+    - "detector_model_path:=__from_config__"
+    - "clip_model_path:=__from_config__"
+    - "clip_vocab_path:=__from_config__"
+    - "classes_path:=__from_config__"
+    - "experiment_overwrite:=true"
+    - "gateway_preview_encoder:=rockchip"
+    - "classes_path:=/runs/v2m_int8_scene_1/classes.txt"
+    - "detector_model_path:=/runs/model_artifacts/yolo_world_v2_m_i8.rknn"
+    - "experiment_model_family:=yolo-world"
+    - "experiment_model_variant:=v2m"
+    - "experiment_model_precision:=int8"
+    - "experiment_model_backend:=rknn"
+    - "postprocess_score_threshold:=0.25"
+    - "postprocess_nms_iou_threshold:=0.45"
+    - "postprocess_max_detections:=100"
+    - "start_autonomy:=true"
+    - "autonomy_target_class:=person"
+    - "autonomy_run_dir:=/runs/v2m_int8_scene_1"
+    - "autonomy_bbox_area_min_ratio:=0.26"
+    - "autonomy_approach_stop_area_ratio:=0.325"
+    - "autonomy_bbox_area_max_ratio:=0.35"
+    - "autonomy_forward_speed_m_s:=0.05"
+    - "autonomy_reverse_speed_m_s:=0.04"
+    - "autonomy_stable_framed_frames:=10"
+    - "autonomy_success_miss_tolerance_updates:=2"
+    - "autonomy_proximity_stop_m:=0.30"
+    - "autonomy_capture_timeout_sec:=2.0"
+    - "autonomy_min_target_confidence:=0.50"
+    - "autonomy_max_target_center_jump_ratio:=0.20"
+    - "evidence_interval_sec:=0.25"
+container:
+  runtime_backend: "robot_runtime_container"
+  image_ref: "ghcr.io/jburo1/omniseer-robot-runtime:robot-verified"
+  image_digest: "ghcr.io/jburo1/omniseer-robot-runtime@sha256:1280cc86229b5acb6f30ad43629da687f1b816ed380b634ab8110729755562c5"
+  image_id: "sha256:1280cc86229b5acb6f30ad43629da687f1b816ed380b634ab8110729755562c5"
+experiment:
+  config: "Autonomy: frame and capture target"
+  parameters:
+    postprocess.max_detections: "100"
+    postprocess.nms_iou_threshold: "0.45"
+    postprocess.score_threshold: "0.25"
+    preview.encoder: "rockchip"
+    stage: "manual-operator"
+comparison:
+  comparison_id: null
+  trial: null
+  workload_id: null
+provenance:
+  detector_model:
+    path: "/runs/model_artifacts/yolo_world_v2_m_i8.rknn"
+    available: true
+    sha256: "9e730880af5ab64e57320f0659c63b9cca31f5a64a3e7598ef645a5ce24a1b73"
+    size_bytes: 32347779
+    bundle_copy: ""
+  clip_model:
+    path: "/omniseer/vision/testdata/text_embeddings/clip_text_fp16.rknn"
+    available: true
+    sha256: "af2336695d3c32df9d022b453b6e05fb72e80b3ec529903d214b9c78879da484"
+    size_bytes: 129536946
+    bundle_copy: ""
+  vocabulary:
+    path: "/omniseer/vision/testdata/text_embeddings/clip_vocab.bpe"
+    available: true
+    sha256: "9fd691f7c8039210e0fced15865466c65820d09b63988b0174bfe25de299051a"
+    size_bytes: 524619
+    bundle_copy: "provenance/vocabulary.bpe"
+    copy_status: "copied"
+  classes:
+    path: "/runs/v2m_int8_scene_1/classes.txt"
+    available: true
+    sha256: "b0b9ea19d97efde5f2fca482b922cc1db3adf6fc32b8ee722e76b2b73837ebe8"
+    size_bytes: 18
+    bundle_copy: "provenance/classes.txt"
+    copy_status: "copied"
+  vision_config:
+    path: "/ros_ws/install/share/bringup/config/vision_bridge.real.paths.yaml"
+    available: true
+    sha256: "3c07c70efecd6f0ae8da6e8b048ab4a3f0d8f31ef1fb05e95c6ff8c95cfddf3a"
+    size_bytes: 974
+    bundle_copy: "provenance/vision_config.yaml"
+    copy_status: "copied"
+  experiment_config:
+    value: "Autonomy: frame and capture target"
+    kind: "identifier"
+  resolved_vision_config:
+    path: "/runs/v2m_int8_scene_1/provenance/resolved_vision_config.yaml"
+    available: true
+    sha256: "f5b5378e730e9d31b941b3cb65d8dafa66fc17ea8b75bf5609ebdb0a4f69e72a"
+    size_bytes: 601
+    bundle_copy: "provenance/resolved_vision_config.yaml"
+    copy_status: "emitted_by_vision_bridge"
+topics:
+  detections: "/yolo/detections"
+  perf: "/vision/perf"
+notes: ""
