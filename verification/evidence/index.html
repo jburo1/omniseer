@@ -1432,7 +1432,15 @@ named run, report, video, annotated frame, or measurement.</p>
 <td>Tracked 2×3 replay, provenance, six JSONLs, visibility annotations, report, and physical-run summary</td>
 <td>Target-hardware-derived source and a developer checkout</td>
 <td>Yes</td>
-<td>One scene and vocabulary only; not mAP, bounding-box recall, timing, or autonomy evidence. Complete RunBundles and source stream remain local-only</td>
+<td>One scene and vocabulary only; not mAP, bounding-box recall, timing, or autonomy evidence</td>
+</tr>
+<tr>
+<td><a href="https://github.com/jburo1/omniseer/tree/master/studies/autonomy/v2m_int8_target_acquisition">v2-M INT8 target acquisition RunBundle</a></td>
+<td>One ROCK 5B+ execution completed bounded visual target acquisition and framing</td>
+<td>Complete <code>v2m_int8_scene_1</code> RunBundle: manifest, autonomy trace, detections, telemetry, evidence frames, video, rosbag, provenance, and static report</td>
+<td>ROCK 5B+ physical robot</td>
+<td>Yes</td>
+<td>One successful representative run; not a benchmark, statistical result, navigation-based search, global exploration, learned control, or general detector-accuracy claim</td>
 </tr>
 <tr>
 <td>RunBundle tooling</td>
@@ -1455,8 +1463,8 @@ named run, report, video, annotated frame, or measurement.</p>
 <td>The codebase contains bounded visual target acquisition and framing behavior</td>
 <td><code>ros_ws/src/omniseer_autonomy/</code>, <code>scripts/omni run autonomy</code>, controller/node tests, and RunBundle <code>autonomy.jsonl</code> support</td>
 <td>Source tree and local/target runtime when launched</td>
-<td>Yes for source; no linked execution artifact here</td>
-<td><code>autonomy.jsonl</code> support does not itself prove an autonomy run occurred</td>
+<td>Yes for source; the named RunBundle above is target-hardware execution evidence</td>
+<td>Source support and one bounded execution do not establish broader autonomy behavior</td>
 </tr>
 </tbody>
 </table>
@@ -1531,8 +1539,12 @@ recomputable JSONL/visibility metrics, and a summary bound to six inspected
 physical-run manifests. It supports only the bounded detector-comparison claims
 made there. It does not publish a complete RunBundle, raw source stream,
 target-hardware timing measurement, or autonomy-execution record.</p>
-<p>The complete ignored local bundle remains operationally useful, but is not public
-review evidence beyond the explicitly tracked derivatives and hashes.</p>
+<p>The <a href="https://github.com/jburo1/omniseer/tree/master/studies/autonomy/v2m_int8_target_acquisition">v2-M INT8 target-acquisition RunBundle</a>
+is public target-hardware evidence for one bounded autonomy execution. It retains
+the original manifest, autonomy trace, detections, performance/system/pipeline
+telemetry, evidence frames, media, rosbag, provenance, and static report. It does
+not turn the detector comparison into autonomy evidence, or establish claims beyond
+that single run.</p>
 <h2 id="runbundle-evidence-format">RunBundle Evidence Format<a class="headerlink" href="#runbundle-evidence-format" title="Permanent link">&para;</a></h2>
 <p>RunBundles are the implemented evidence format for robot runs. A bundle is a
 directory, normally under <code>runs/&lt;run_id&gt;</code> on the robot or under an imported runs
@@ -1667,7 +1679,7 @@ observed results, inspection status, and limitations.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 11, 2026 19:36:25 UTC">September 11, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 11, 2026 20:49:08 UTC">September 11, 2026</span>
   </span>
 
     
