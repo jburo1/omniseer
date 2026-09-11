@@ -13,6 +13,7 @@ exclude: |
     ros_ws/src/.*/models/|
     ros_ws/src/.*/meshes/|
     studies/detector_comparison/scan_final_recal/evidence/replay_jsonl/|
+    studies/autonomy/v2m_int8_target_acquisition/run/video/source\.ts$|
     .*\.dae$| .*\.obj$| .*\.mtl$| .*\.sdf$| .*\.world$| .*\.pgm$
   )
 
