@@ -36,6 +36,7 @@ named run, report, video, annotated frame, or measurement.
 | Local simulation smoke check | The shared simulation bringup exposes asserted boundary topics | `scripts/omni test smoke-sim` | Developer checkout with ROS/Gazebo dependencies | No | Simulation-only; does not prove real sensor, actuator, or target-hardware timing behavior |
 | Local portable vision check | Hardware-independent native vision components preserve their contracts | `scripts/omni test vision` | Developer checkout with portable native build dependencies | No | Does not exercise V4L2 camera capture, RGA preprocessing, RKNN inference, or NPU latency |
 | Local firmware compile | Firmware sources compile outside CI | `scripts/omni build firmware` | Developer checkout with PlatformIO | No | Compile-only; no board flash or physical IO validation |
+| [Six-model detector comparison](detector-comparison.md) | A repaired, controlled 360° replay exposes detector presence/visibility differences, with supporting context from six independently recorded physical ROCK 5B+ runs | Tracked 2×3 replay, provenance, six JSONLs, visibility annotations, report, and physical-run summary | Target-hardware-derived source and a developer checkout | Yes | One scene and vocabulary only; not mAP, bounding-box recall, timing, or autonomy evidence. Complete RunBundles and source stream remain local-only |
 | RunBundle tooling | The implemented recorder, inspection, retrieval, annotation, and report code can create and review structured run evidence | `omniseer_experiments` tests in `scripts/omni test ros`; `scripts/omni runs inspect`, `annotate`, and `report` | Source tree and local runs | Partly: source and tests are public; individual local runs are not public unless linked | Tool support does not imply that autonomy, perception accuracy, or target hardware has been executed in a public run |
 | Native target runtime implementation | The codebase contains the V4L2/RGA/RKNN perception path and ROS bridge integration | `vision/`, `ros_ws/src/omniseer_vision_bridge/`, launch/config files, and portable tests for hardware-independent pieces | Source tree and target runtime code | Yes for source; no linked execution artifact here | Implementation-backed capability only unless tied to a target-hardware run or measurement |
 | Bounded autonomy implementation | The codebase contains bounded visual target acquisition and framing behavior | `ros_ws/src/omniseer_autonomy/`, `scripts/omni run autonomy`, controller/node tests, and RunBundle `autonomy.jsonl` support | Source tree and local/target runtime when launched | Yes for source; no linked execution artifact here | `autonomy.jsonl` support does not itself prove an autonomy run occurred |
@@ -79,13 +80,15 @@ from this page.
 
 ## Target-Hardware Evidence
 
-No public target-hardware RunBundle, static report, annotated frame, video, or
-measurement is linked from this repository state. Target-hardware claims in this
-catalog are therefore limited to implementation-backed capability unless a named
-public artifact is listed in the inventory.
+The [scan_final_recal detector comparison](detector-comparison.md) is public,
+target-hardware-derived evidence: it includes a controlled replay video,
+recomputable JSONL/visibility metrics, and a summary bound to six inspected
+physical-run manifests. It supports only the bounded detector-comparison claims
+made there. It does not publish a complete RunBundle, raw source stream,
+target-hardware timing measurement, or autonomy-execution record.
 
-Non-public local target-hardware artifacts can still be operationally useful, but
-they are not presented here as public review evidence.
+The complete ignored local bundle remains operationally useful, but is not public
+review evidence beyond the explicitly tracked derivatives and hashes.
 
 ## RunBundle Evidence Format
 

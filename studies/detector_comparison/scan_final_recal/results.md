@@ -1,46 +1,30 @@
-# Scan final recalibration: detector comparison results
+# Results: recalibrated 360° detector comparison
 
-This study compares six YOLO-World v2 RKNN configurations: v2-S FP, v2-S
-INT8, v2-M FP, v2-M INT8, v2-L FP, and v2-L Hybrid. Immutable RunBundle IDs
-are recorded in [runs.yaml](runs.yaml).
+The six saved replay streams each contain 1,222 records for inclusive source
+frames 0–1221. Metrics below were independently recomputed from those JSONLs
+and [visibility annotations](visibility.txt).
 
-## Method
+| Configuration | Visible-frame detections | Rate | Absent dog frames | Absent cat frames |
+| --- | ---: | ---: | ---: | ---: |
+| v2-S FP | 2,126 / 5,679 | 37.4% | 34 | 0 |
+| v2-S INT8 | 1,853 / 5,679 | 32.6% | 6 | 0 |
+| v2-M FP | 2,367 / 5,679 | 41.7% | 45 | 0 |
+| v2-M INT8 | 2,055 / 5,679 | 36.2% | 23 | 0 |
+| v2-L FP | 2,363 / 5,679 | 41.6% | 33 | 0 |
+| v2-L Hybrid | 1,440 / 5,679 | 25.4% | 0 | 0 |
 
-The completed controlled replay uses the reference bundle's immutable 1,222
-frame 360-degree source scene. It applies the same corrected source frame,
-class vocabulary, score threshold (0.25), NMS IoU threshold (0.45), and
-maximum detections (100) to each detector; only detector configuration
-changes. The six physical trial bundles provide the end-to-end trial context,
-while the replay makes the visual comparison frame-aligned. Its completed
-`latest_task` comparison video and report remain in the reference RunBundle;
-they were not regenerated for this record.
+Every configuration detected `person` on all 293 / 293 annotated visible
+frames. The 5,679 denominator is the inclusive total over 19 in-vocabulary
+class-interval sets. `laptop`, `computer monitor`, and `sofa` were excluded
+because they were outside the comparison vocabulary; they were not treated as
+negative evidence.
 
-## Visibility metrics
+v2-M FP led the aggregate rate by a narrow margin over v2-L FP. Both FP
+configurations exceeded their corresponding INT8 configurations in this fixed
+scene. The no-absent-dog result for v2-L Hybrid must be read together with its
+lowest aggregate visible-frame rate, not as a general precision claim.
 
-The current `visibility.txt` supplies 5,679 inclusive visible-frame
-annotations, exactly matching the 1,222-frame replay's 0–1221 index domain.
-The aggregate detection rates were 37.4% (v2-S FP), 32.6% (v2-S INT8), 41.7%
-(v2-M FP), 36.2% (v2-M INT8), 41.6% (v2-L FP), and 25.4% (v2-L Hybrid). All
-configurations detected the annotated person on all 293 visible frames. The
-report also records explicit-absence false detections:
-the absent `dog` was emitted on 34, 6, 45, 23, 33, and 0 frames respectively;
-the absent `cat` was never emitted.
-
-## Observations
-
-- v2-M FP had the highest aggregate visible-frame rate (41.7%), narrowly
-  ahead of v2-L FP (41.6%); both exceeded their INT8 counterparts.
-- v2-L FP was notably stronger for bottle (80.5%), book (31.9%), scissors
-  (94.3%), and tripod (100.0%), but nearly missed shoe (1.1%) and was weaker
-  on subwoofer (32.8%).
-- The v2-S configurations were strongest on shoe (100.0% each); v2-S INT8
-  also led beer mug (73.1%), while v2-S FP led subwoofer (98.7%).
-- v2-L Hybrid had the lowest aggregate rate (25.4%) and missed several
-  annotated classes that other configurations detected, though it produced no
-  absent-dog detections.
-
-These are scene-presence/visibility results from one controlled scene, not
-mAP, bounding-box recall, or a measure of general detector accuracy. They do
-not establish performance on other scenes, object instances, viewpoints,
-lighting conditions, or vocabularies. Labels absent from the selected
-comparison vocabulary were excluded rather than inferred.
+These results measure class presence against manual visibility ranges in one
+scene. They are not mAP, object-localization or bounding-box recall, a calibrated
+precision/recall evaluation, latency benchmarking, or evidence of detector
+accuracy in other scenes, viewpoints, lighting, instances, or vocabularies.

@@ -20,6 +20,7 @@ navigation-based object search or room-scale semantic exploration.
 | --- | --- |
 | Understand the system | [System Architecture](architecture/overview.md) |
 | Inspect implementation-backed evidence | [Verification Evidence](verification/evidence.md) |
+| Inspect target-hardware-derived detector evidence | [Detector Comparison](verification/detector-comparison.md) |
 | Understand edge perception | [Edge Perception and Offboard Review](perception/edge-to-cloud.md) and [Vision Pipeline](perception/vision-pipeline.md) |
 | Operate or review a run | [Operator Run Workflow](operations/operator-run-workflow.md) and [Scripts Front Door](operations/scripts-frontdoor.md) |
 | Inspect verification and CI | [CI/CD Overview](verification/ci-cd.md) |
@@ -31,7 +32,8 @@ simulation smoke boundaries, portable vision tests, and hardware-independent
 runtime packaging. Target-hardware behavior requires the ROCK 5B+, RKNN/RGA SDKs,
 camera, sensors, Teensy, micro-ROS transport, and robot runtime.
 
-The current evidence catalog does not link a public target-hardware RunBundle,
-static report, annotated frame, video, or measurement. Implementation-backed
-capabilities should not be read as public execution evidence unless a named
-artifact is listed in [Verification Evidence](verification/evidence.md).
+The catalog links a public, target-hardware-derived controlled detector replay
+and recomputable presence/visibility metrics in [Detector Comparison](verification/detector-comparison.md).
+It does not publish a complete RunBundle, target-hardware timing measurement, or
+autonomy-execution evidence. Implementation-backed capabilities should not be
+read as public execution evidence beyond their named artifacts.

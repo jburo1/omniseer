@@ -55,3 +55,4 @@ nav:
     - Preview Streaming: gateway/preview-streaming.md
   - Verification:
     - CI/CD Overview: verification/ci-cd.md
+    - Detector Comparison: verification/detector-comparison.md

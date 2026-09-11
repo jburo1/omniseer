@@ -1,0 +1,10 @@
+# Compact public-safe summary. Raw manifests remain in the ignored imported bundle.
+schema_version: 1
+evidence_role: "Supporting context from six independent physical ROCK 5B+ runs; not frame-aligned controlled replay evidence."
+runs:
+  - {configuration: "v2-S FP", run_id: "v2s_fp_scene_1", model: {family: "yolo-world", variant: "v2s", precision: "fp", backend: "rknn"}, manifest_sha256: "ee0a8c01b0e69db3ed9b39214265771103b86411a1782d4436e3f4b482a94fe3"}
+  - {configuration: "v2-S INT8", run_id: "v2s_int8_scene_1", model: {family: "yolo-world", variant: "v2s", precision: "int8", backend: "rknn"}, manifest_sha256: "2a852808b7258531d814b1d681235f037cafe5db302fb0eb49948bfc2dd240cb"}
+  - {configuration: "v2-M FP", run_id: "v2m_fp_scene_1", model: {family: "yolo-world", variant: "v2m", precision: "fp", backend: "rknn"}, manifest_sha256: "7efa50b96a3d9f760bb4463731c43ddfb3cb306fc5b2e24ca38090c158083314"}
+  - {configuration: "v2-M INT8", run_id: "v2m_int8_scene_1", model: {family: "yolo-world", variant: "v2m", precision: "int8", backend: "rknn"}, manifest_sha256: "cefd0a0e11d3c31709c907e39cafe574ef3019e1c34356dbb9d3f3e078564936"}
+  - {configuration: "v2-L FP", run_id: "v2l_fp_scene_1", model: {family: "yolo-world", variant: "v2l", precision: "fp", backend: "rknn"}, manifest_sha256: "d90e3323a0ef55e6971879b917f15d44ee970ae354a7c2263e3116b3603e73bc"}
+  - {configuration: "v2-L Hybrid", run_id: "v2l_hybrid_scene_1", model: {family: "yolo-world", variant: "v2l", precision: "hybrid", backend: "rknn"}, manifest_sha256: "24af1efc1af494c02f0116337c1ba25bb3110c85b946dd834cf4c4c5cfc145db"}

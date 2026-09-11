@@ -1,0 +1,19 @@
+{
+  "schema_version": 2,
+  "comparison_name": "latest_task",
+  "source": {"path": "video/source.ts", "sha256": "9cede604070b3bbdbcb31f6040a84c9637f4894522b480a46b6faf7fdca40058"},
+  "repair": {"id": "rockchip_preview_circular_wrap_v1", "recorded_order": "[original x=1272..1279][original x=0..1271]", "width": 1280, "height": 720, "rotate_left_px": 8},
+  "classes": ["person", "chair", "book", "bottle", "shoe", "hammer", "glass", "cup", "mug", "subwoofer", "speaker", "jar", "plant", "cellphone", "beer mug", "scissors", "bag", "toothbrush", "handbag", "garbage can", "window", "desk", "table", "door", "potted plant", "tripod", "dog", "cat", "giraffe"],
+  "postprocess": {"score_threshold": 0.250000, "nms_iou_threshold": 0.450000, "max_detections": 100},
+  "models": [
+    {"label": "v2-S FP", "artifact_name": "yolo_world_v2_s_fp.rknn", "path": "/omniseer/runs/model_artifacts/yolo_world_v2_s_fp.rknn", "sha256": "ec2d8c01897d8766e38ad7a8e3716ba97e7440164c1ae276eb46af993906b2e3"},
+    {"label": "v2-S INT8", "artifact_name": "yolo_world_v2_s_i8.rknn", "path": "/omniseer/runs/model_artifacts/yolo_world_v2_s_i8.rknn", "sha256": "b4324de83f40882ded97f23772a9f58d1f126d12bbac06d106864b359a9a8a90"},
+    {"label": "v2-M FP", "artifact_name": "yolo_world_v2_m_fp.rknn", "path": "/omniseer/runs/model_artifacts/yolo_world_v2_m_fp.rknn", "sha256": "6a28568f912b2633e19a1cbf96a5d550f9ea73bd4d72c51af10a7eb7b0d34b9e"},
+    {"label": "v2-M INT8", "artifact_name": "yolo_world_v2_m_i8.rknn", "path": "/omniseer/runs/model_artifacts/yolo_world_v2_m_i8.rknn", "sha256": "9e730880af5ab64e57320f0659c63b9cca31f5a64a3e7598ef645a5ce24a1b73"},
+    {"label": "v2-L FP", "artifact_name": "yolo_world_v2_l_fp.rknn", "path": "/omniseer/runs/model_artifacts/yolo_world_v2_l_fp.rknn", "sha256": "b6112550be6a4b2a019619053a3015914f99a5ba7216c078115a6dfbdef75df3"},
+    {"label": "v2-L Hybrid", "artifact_name": "yolo_world_v2_l_hybrid_td01_clspreds0_mm_inputs_fp16.rknn", "path": "/omniseer/runs/model_artifacts/yolo_world_v2_l_hybrid_td01_clspreds0_mm_inputs_fp16.rknn", "sha256": "df72d337ad03a7b90c5a96f2b44495fd25f5747094019b038b2823d5133d398e"}
+  ],
+  "detection_jsonl": ["video/comparison/latest_task/v2s_fp.jsonl", "video/comparison/latest_task/v2s_int8.jsonl", "video/comparison/latest_task/v2m_fp.jsonl", "video/comparison/latest_task/v2m_int8.jsonl", "video/comparison/latest_task/v2l_fp.jsonl", "video/comparison/latest_task/v2l_hybrid.jsonl"],
+  "output": {"path": "video/comparison/latest_task/comparison.mp4", "sha256": "a7626e43c1fe9dcc5ce7efafcb847cfb50064c0d9bb87b716871e63ef468b045", "fps": 30.000000, "source_frames_rendered": 1222, "timing_policy": "one output frame per decoded source frame at source FPS; offline processing duration does not change presentation elapsed time"},
+  "git_sha": "unknown"
+}

@@ -12,6 +12,7 @@ exclude: |
     sim/models/|
     ros_ws/src/.*/models/|
     ros_ws/src/.*/meshes/|
+    studies/detector_comparison/scan_final_recal/evidence/replay_jsonl/|
     .*\.dae$| .*\.obj$| .*\.mtl$| .*\.sdf$| .*\.world$| .*\.pgm$
   )
 

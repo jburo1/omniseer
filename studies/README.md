@@ -9,3 +9,8 @@ in ignored `runs/`. Generated model and build outputs belong in ignored
 `artifacts/`. Conclusions and explanatory material belong in `docs/`.
 Experiment and reproducer programs belong in `tools/` or the owning source
 subsystem.
+
+## Canonical detector comparison
+
+[scan_final_recal](detector_comparison/scan_final_recal/README.md) is the
+canonical six-model YOLO-World comparison on a recalibrated 360° scene.
