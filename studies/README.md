@@ -11,12 +11,14 @@ build outputs belong in ignored `artifacts/`. Conclusions and explanatory
 material belong in `docs/`. Experiment and reproducer programs belong in
 `tools/` or the owning source subsystem.
 
-## Canonical autonomy evidence
+## Canonical studies
 
-[v2m_int8_target_acquisition](autonomy/v2m_int8_target_acquisition/README.md)
-is one complete, publicly inspectable ROCK 5B+ bounded-autonomy RunBundle.
+- [v2m_int8_target_acquisition](autonomy/v2m_int8_target_acquisition/README.md):
+  one complete, publicly inspectable ROCK 5B+ bounded target-acquisition
+  RunBundle.
 
-## Canonical detector comparison
+- [scan_final_recal](detector_comparison/scan_final_recal/README.md): canonical
+  six-detector controlled comparison with six independent physical runs.
 
-[scan_final_recal](detector_comparison/scan_final_recal/README.md) is the
-canonical six-model YOLO-World comparison on a recalibrated 360° scene.
+- [yolo_world_v2l_int8](quantization/yolo_world_v2l_int8/README.md): v2-L INT8
+  quantization failure investigation and TD01 mixed-precision mitigation.

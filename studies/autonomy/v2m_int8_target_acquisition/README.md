@@ -1,33 +1,57 @@
-# v2-M INT8 bounded target acquisition on ROCK 5B+
+# v2-M INT8 target acquisition on ROCK 5B+
 
-This study retains the original `v2m_int8_scene_1` RunBundle from one real ROCK
-5B+ physical execution. It is a representative successful deployment, not a
-benchmark aggregate. The deployed detector was YOLO-World v2-M INT8 using RKNN.
-The same physical trial is one of the six independent runs summarized in the
-[detector comparison](../../detector_comparison/scan_final_recal/README.md).
+**One complete, successful physical-robot execution.** On a ROCK 5B+,
+YOLO-World v2-M INT8 ran through RKNN while the bounded controller scanned for
+`person`, acquired the target, centered and framed it, then completed with
+reason `framed`.
 
-The bounded autonomy controller scanned for `person`, acquired and centered the
-target, framed it, and captured terminal evidence. It succeeded with reason
-`framed` at 51.1 s (first detection 24.5 s), with no target-loss episodes. Mean
-consumer throughput was 10.04 FPS; inference p50/p95 were 96.22/106.47 ms; and
-source-age p95 was 139.42 ms.
+[![Terminal `person` detection and framing capture](run/evidence/annotated/capture_frame_2924.jpg)](run/evidence/annotated/capture_frame_2924.jpg)
 
-The unmodified bundle is under [`run/`](run/). Start with
-[`run/manifest.yaml`](run/manifest.yaml), [`run/autonomy.jsonl`](run/autonomy.jsonl),
-[`run/summary.json`](run/summary.json), and the existing
-[`run/report/index.html`](run/report/index.html). Raw detections, performance,
-system, and native pipeline telemetry are beside them; terminal evidence is in
-[`run/evidence/`](run/evidence/); video, rosbag, and copied provenance are retained
-in their original subdirectories. [`checksums.sha256`](checksums.sha256) inventories
-every tracked bundle artifact.
+*The existing terminal evidence capture: frame 2924, recorded with reason
+`target_framed`. The controller's corresponding terminal event is in the
+[autonomy trace](run/autonomy.jsonl).*
 
-Manifest provenance: Git SHA
-`b90feb60e3a1a84c0a4d8d402a656d0b8bc42ef7`; runtime container
-`ghcr.io/jburo1/omniseer-robot-runtime@sha256:1280cc86229b5acb6f30ad43629da687f1b816ed380b634ab8110729755562c5`.
+## Headline results
 
-This run establishes one bounded perception-to-acquisition/framing completion on
-the recorded robot configuration. It does not establish mAP, general detector
-accuracy, statistical significance, navigation-based semantic search, global
-exploration, or learned control. See the
-[six-model detector comparison](../../detector_comparison/scan_final_recal/README.md)
-for the broader controlled replay and six-trial context.
+| Outcome | Measurement |
+| --- | --- |
+| Target acquisition | First `person` detection at **24.5 s**; completed at **51.1 s** with `framed` |
+| Tracking continuity | **0 target-loss episodes** |
+| On-robot throughput | Mean consumer throughput: **10.04 FPS** |
+| RKNN inference | p50/p95: **96.22 / 106.47 ms** |
+| Freshness | Source-age p95: **139.42 ms** |
+
+## Inspect the run
+
+The unmodified [`run/`](run/) directory is the complete `v2m_int8_scene_1`
+RunBundle. Useful starting points:
+
+- [Manifest and provenance](run/manifest.yaml) — ROCK 5B+, model/backend,
+  launch configuration, Git SHA, runtime image digest, and copied inputs.
+- [Autonomy trace](run/autonomy.jsonl) — scan, acquisition/framing, terminal
+  `framed` result, and target-loss counters.
+- [Summary](run/summary.json) and [static report](run/report/index.html) —
+  compact measurements and a review surface derived from the bundle.
+- [Performance telemetry](run/perf.jsonl), [native pipeline telemetry](run/pipeline_telemetry.jsonl),
+  and [system telemetry](run/system.jsonl) — timing, throughput, freshness, and
+  recorded system context.
+- [Evidence index](run/evidence/evidence.jsonl) and [captured frames](run/evidence/frames/) —
+  raw visual evidence; [annotated frames](run/evidence/annotated/) are review
+  copies.
+- [Overlay video](run/video/overlay.mp4), [source video](run/video/source.mp4),
+  [rosbag](run/rosbag/), and [artifact checksums](checksums.sha256).
+
+## Scope and provenance
+
+This is a representative successful deployment, not a benchmark aggregate. The
+recorded model is YOLO-World v2-M INT8 with RKNN; its configuration, model hash,
+classes, launch parameters, Git SHA
+`b90feb60e3a1a84c0a4d8d402a656d0b8bc42ef7`, and runtime container digest are
+preserved in the [manifest](run/manifest.yaml). The outcome and times above come
+from the [autonomy trace](run/autonomy.jsonl); performance values come from the
+[summary](run/summary.json) and telemetry.
+
+One run does not establish mAP, general detector accuracy, statistical
+significance, navigation-based semantic search, global exploration, or learned
+control. For broader controlled replay and six independent physical-run context,
+see the [six-detector study](../../detector_comparison/scan_final_recal/README.md).
