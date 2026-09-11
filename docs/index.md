@@ -1,43 +1,58 @@
+---
+description: "Physical edge-AI robotics on RK3588: open-vocabulary neural perception, bounded target acquisition, and reproducible evidence from real robot runs."
+---
+
 # Omniseer
 
-Omniseer is an edge-to-cloud ROS 2 robotics platform that runs open-vocabulary
-perception on a ROCK 5B+ mobile robot, performs bounded visual target acquisition
-and framing, and records reproducible evidence from real robot runs.
+**Physical edge-AI robotics for open-vocabulary perception, bounded behavior, and reproducible evidence.** Omniseer runs a native V4L2/RGA/RKNN perception path on a ROCK 5B+ (RK3588), connects detections to deliberately bounded target acquisition and framing, and preserves the artifacts needed to review what occurred on the robot. ROS 2 carries the runtime contracts; the engineering focus is the edge-to-physical-system boundary.
 
-The current autonomy behavior performs an in-place bounded visual scan for a
-configured target class, acquires a stable detection, centers it horizontally,
-uses small bounded distance adjustments to frame it, blocks forward motion at the
-configured proximity threshold, and records terminal evidence. It is not
-navigation-based object search or room-scale semantic exploration.
+The implemented behavior is intentionally narrow: scan for a configured class, acquire a stable detection, center it, make bounded framing adjustments, and stop at a configured proximity limit. It is not navigation-based object search, room-scale exploration, or a claim of general autonomy.
 
-<div style="max-height: 620px; overflow: auto; margin: 0 auto 1.5rem;">
-  <object data="assets/diagrams/explorer/system-explorer.svg" type="image/svg+xml" aria-label="Omniseer system explorer" width="1237" height="1133" style="display: block; width: 100%; max-width: 1000px; height: auto; margin: 0 auto;"></object>
+<div class="grid cards" markdown>
+
+-   :material-robot-industrial-outline: **Target acquisition on the physical robot**
+
+    ---
+
+    A public v2-M INT8 RunBundle records first detection at **24.5 s**, terminal `framed` success at **51.1 s**, **10.04 FPS** mean consumer throughput, **96.22 ms** RKNN inference p50, and **zero target-loss episodes**.
+
+    [:octicons-arrow-right-24: Review the run](verification/target-acquisition.md)
+
+-   :material-chart-timeline-variant-shimmer: **Six-detector deployment trade-off**
+
+    ---
+
+    In one controlled scene, v2-M FP led coverage at **41.7%**. Across six independent physical case studies, v2-S INT8 reached the highest observed throughput at **16.54 FPS**; v2-M INT8 was the strongest observed coverage/throughput compromise for this scene.
+
+    [:octicons-arrow-right-24: Compare detectors](verification/detector-comparison.md)
+
+-   :material-alert-decagram-outline: **INT8 failure localized, not hidden**
+
+    ---
+
+    Recalibrated v2-L INT8 retained **0 of 1,301** FP detections in the final 300-frame RK3588 evaluation. TD01 mixed precision recovered **60.6%**, locating the failure in the classification/projection path without presenting the hybrid as production-ready.
+
+    [:octicons-arrow-right-24: Read the failure analysis](verification/int8-quantization-failure.md)
+
 </div>
 
-## Start Here
+## System at a glance
 
-| Reviewer goal | Start with |
-| --- | --- |
-| Understand the system | [System Architecture](architecture/overview.md) |
-| Inspect implementation-backed evidence | [Verification Evidence](verification/evidence.md) |
-| Inspect public target-acquisition evidence | [v2-M INT8 Target Acquisition RunBundle](https://github.com/jburo1/omniseer/tree/master/studies/autonomy/v2m_int8_target_acquisition) |
-| Inspect target-hardware-derived detector evidence | [Detector Comparison](verification/detector-comparison.md) |
-| Inspect the INT8 failure investigation | [v2-L INT8 Quantization Study](https://github.com/jburo1/omniseer/tree/master/studies/quantization/yolo_world_v2l_int8) |
-| Understand edge perception | [Edge Perception and Offboard Review](perception/edge-to-cloud.md) and [Vision Pipeline](perception/vision-pipeline.md) |
-| Operate or review a run | [Operator Run Workflow](operations/operator-run-workflow.md) and [Scripts Front Door](operations/scripts-frontdoor.md) |
-| Inspect verification and CI | [CI/CD Overview](verification/ci-cd.md) |
+```text
+Camera -> V4L2 / RGA / RKNN inference -> normalized detections -> bounded acquisition + framing
+                                        |                              |
+                                        +-> performance telemetry       +-> terminal evidence
+                                                                         |
+                                                            RunBundle -> offboard review
+```
 
-## Evidence Boundary
+The mission-critical path stays on the robot: camera capture, preprocessing, RKNN inference, post-processing, command arbitration, robot I/O, and bounded behavior. Operator dashboards, preview streaming, reports, and analysis remain optional diagnostic or review tooling.
 
-GitHub CI verifies portable software, documentation, firmware compilation,
-simulation smoke boundaries, portable vision tests, and hardware-independent
-runtime packaging. Target-hardware behavior requires the ROCK 5B+, RKNN/RGA SDKs,
-camera, sensors, Teensy, micro-ROS transport, and robot runtime.
+[Explore the system architecture](architecture/overview.md){ .md-button .md-button--primary }
+[Browse the engineering documentation](perception/edge-to-cloud.md){ .md-button }
 
-The catalog links a public, target-hardware-derived controlled detector replay
-and recomputable presence/visibility metrics in [Detector Comparison](verification/detector-comparison.md).
-That comparison is not itself a public autonomy RunBundle or target-hardware timing
-benchmark. The separate [v2-M INT8 target-acquisition study](https://github.com/jburo1/omniseer/tree/master/studies/autonomy/v2m_int8_target_acquisition)
-contains one complete successful physical-run RunBundle and bounded autonomy-execution
-evidence. Implementation-backed capabilities should not be read as public execution
-evidence beyond their named artifacts.
+## Results with evidence boundaries
+
+The three studies above are deliberately different kinds of evidence: one complete public physical RunBundle, one fixed-source controlled replay plus six independent physical-run summaries, and one frozen-frame quantization investigation. They support their named claims—not general detector accuracy, replicated benchmarks, or broad autonomy assertions.
+
+For the artifact inventory, public-versus-local distinction, CI scope, and reproducibility limits, see [Verification Evidence](verification/evidence.md). The source studies retain the detailed methodology, provenance, and limitations.

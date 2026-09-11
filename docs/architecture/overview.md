@@ -1,8 +1,9 @@
 # System Architecture
 
-This page is the top-level technical map of Omniseer. It describes the implemented
-robot runtime, operator tooling, diagnostic gateway, firmware boundary, and local
-experiment-review path.
+This page is the top-level technical map of Omniseer: a physical edge-AI robotics
+system that connects open-vocabulary neural perception, bounded robot behavior,
+and reviewable experiment evidence. ROS 2 is the implementation backbone for the
+runtime contracts; it is not the system's primary claim.
 
 ## System Loop
 

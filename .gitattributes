@@ -1,6 +1,7 @@
 *.stl filter=lfs diff=lfs merge=lfs -text
 *.kicad_pcb filter=lfs diff=lfs merge=lfs -text
 *.png filter=lfs diff=lfs merge=lfs -text
+docs/assets/brand/social-preview.png -filter -diff -merge -text
 *.jpg filter=lfs diff=lfs merge=lfs -text
 studies/detector_comparison/scan_final_recal/evidence/controlled_replay_poster.jpg -filter -diff -merge -text
 *.mp4 filter=lfs diff=lfs merge=lfs -text

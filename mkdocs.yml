@@ -1,5 +1,5 @@
 site_name: Omniseer
-site_description: Edge-to-cloud ROS 2 robot for open-vocabulary perception and reproducible edge-AI experiments
+site_description: Physical edge-AI robotics for open-vocabulary perception, bounded behavior, and reproducible evidence
 site_url: https://jburo1.github.io/omniseer/
 repo_url: https://github.com/jburo1/omniseer
 repo_name: jburo1/omniseer
@@ -20,9 +20,15 @@ theme:
 extra:
   social_image: assets/brand/social-preview.png
 markdown_extensions:
+  - attr_list
+  - md_in_html
+  - meta
   - toc:
       permalink: true
   - admonition
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - pymdownx.highlight
   - pymdownx.superfences
 extra_javascript:
@@ -32,29 +38,29 @@ plugins:
   - git-revision-date-localized
 nav:
   - Home: index.md
-  - Project:
+  - Results:
+    - Target Acquisition: verification/target-acquisition.md
+    - Detector Comparison: verification/detector-comparison.md
+    - INT8 Quantization Failure Analysis: verification/int8-quantization-failure.md
+  - System:
     - System Architecture: architecture/overview.md
     - Edge Perception and Offboard Review: perception/edge-to-cloud.md
+    - Vision Pipeline: perception/vision-pipeline.md
     - Hardware:
       - Electrical System: hardware/electrical-system.md
       - Bill of Materials: hardware/bill-of-materials.md
-    - Verification Evidence: verification/evidence.md
-  - Operate:
+  - Engineering Docs:
     - Scripts Front Door: operations/scripts-frontdoor.md
     - Operator Run Workflow: operations/operator-run-workflow.md
     - Robot Runtime Container: robot-runtime/robot-runtime-container.md
-  - Subsystems:
     - ROS Packages and Sim/Real Boundary: robot-runtime/ros-packages.md
     - Firmware & Robot I/O: firmware/overview.md
-    - Vision Pipeline: perception/vision-pipeline.md
     - YOLO-World v2 Model Deployment: perception/yolo-world-model-deployment.md
     - INT8 Quantization Investigation: perception/int8-quantization-investigation.md
     - Vision Telemetry: perception/vision-telemetry.md
     - Robot Gateway: gateway/robot-gateway.md
     - Gateway API: gateway/gateway-api.md
     - Preview Streaming: gateway/preview-streaming.md
-  - Verification:
-    - Target Acquisition RunBundle: https://github.com/jburo1/omniseer/tree/master/studies/autonomy/v2m_int8_target_acquisition
+  - Evidence & Reproducibility:
+    - Verification Evidence: verification/evidence.md
     - CI/CD Overview: verification/ci-cd.md
-    - Detector Comparison: verification/detector-comparison.md
-    - INT8 Quantization Study: https://github.com/jburo1/omniseer/tree/master/studies/quantization/yolo_world_v2l_int8
