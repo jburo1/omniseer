@@ -476,7 +476,7 @@ scripts/omni runs comparison-report runs/reference_scene \
   --trial runs/v2l_fp_scene \
   --trial runs/v2l_hybrid_scene \
   --comparison task \
-  --objects studies/detector_comparison/scan_recal/visibility.txt
+  --objects studies/detector_comparison/scan_final_recal/visibility.txt
 scripts/omni build vision
 scripts/omni runs compare runs/demo_001 --max-frames 120
 scripts/omni runs compare runs/demo_001 --render-replay --name default --max-frames 120

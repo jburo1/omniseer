@@ -1,5 +1,0 @@
-schema_version: 2
-study_id: "scan_recal"
-status: "superseded"
-superseded_by: "../scan_final_recal/README.md"
-remaining_artifact: "evidence/scene_1_v2l_int8_vs_hybrid_1x2.mp4"

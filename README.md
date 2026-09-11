@@ -73,7 +73,7 @@ claims can be reviewed against recorded artifacts.
 | Evidence | What it supports | Public boundary |
 | --- | --- | --- |
 | GitHub Actions CI | Portable ROS package checks, Gazebo smoke boundary topics, portable vision tests, firmware compile, docs build, and hardware-independent runtime packaging | CI does not prove camera, RKNN/RGA, LiDAR, Teensy, or physical robot execution |
-| [Six-model detector comparison](studies/detector_comparison/scan_final_recal/README.md) | Controlled target-hardware-derived replay and supporting six physical-run context | One-scene presence/visibility study; not mAP, latency, or general detector accuracy |
+| [Six-model detector comparison](studies/detector_comparison/scan_final_recal/README.md) | v2-M FP led controlled coverage; v2-S INT8 led physical-run throughput; all six physical trials completed successfully | One-scene presence/visibility study plus six independent end-to-end case studies; not mAP, a replicated benchmark, or general detector accuracy |
 | RunBundle format and tooling | Reproducible run manifests, detections, performance telemetry, system telemetry, evidence frames, annotations, and static report generation | Tool support does not imply a public autonomy run |
 | Implementation-backed target runtime | V4L2 capture, RGA preprocessing, RKNN inference, ROS bridge integration, and bounded autonomy source paths | Source and tests are public; target-hardware execution claims require named public artifacts |
 
@@ -130,5 +130,3 @@ target-hardware execution.
   SDK availability.
 - The public detector comparison is a bounded perception study, not a public
   autonomy run, full RunBundle, or target-hardware timing measurement.
-- No strong real robot photograph, public run video, or public report screenshot
-  is currently committed, so the README avoids placeholder media.

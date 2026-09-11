@@ -1,8 +1,6 @@
-# SHA-256 inventory. runs/imported paths are intentionally ignored local evidence.
-9cede604070b3bbdbcb31f6040a84c9637f4894522b480a46b6faf7fdca40058  runs/imported/scan_final_recal/video/source.ts
+# SHA-256 inventory of tracked public evidence. All paths verify in a public clone.
 a7626e43c1fe9dcc5ce7efafcb847cfb50064c0d9bb87b716871e63ef468b045  evidence/controlled_replay_2x3.mp4
 7c5c161b1de390b5234025fd073eedcdfb7856aca128b5b63f2fc3005b43ce9b  evidence/controlled_replay_poster.jpg
-a7626e43c1fe9dcc5ce7efafcb847cfb50064c0d9bb87b716871e63ef468b045  runs/imported/scan_final_recal/video/comparison/latest_task/comparison.mp4
 dc300780c3b1acb8ce0d4d75a0ef51fd081bf4de79ae30167d2589185205a300  evidence/physical_trials_grid_2x3.mp4
 ead31f234016b5ae5e1861f564a3669270e395b85d696dfc8c79a88af720a707  evidence/replay_provenance.json
 f08dd030e560e5f2963ffef0a6ad36733f5fdfd1b9a86087bfc30190e68b555a  evidence/replay_jsonl/v2l_fp.jsonl
