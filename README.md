@@ -3,43 +3,49 @@
 [![CI](https://github.com/jburo1/omniseer/actions/workflows/ci.yml/badge.svg)](https://github.com/jburo1/omniseer/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/github/deployments/jburo1/omniseer/github-pages?label=Docs)](https://jburo1.github.io/omniseer/)
 
-Omniseer is an edge-to-cloud ROS 2 robotics platform that runs open-vocabulary
-perception on a ROCK 5B+ mobile robot, performs bounded visual target acquisition
-and framing, and records reproducible evidence from real robot runs.
+<b>Physical edge AI for open-vocabulary perception and autonomous target acquisition on RK3588.</b>
+
+Omniseer is a holonomic 4WD robot for developing and evaluating neural perception under real hardware constraints. It runs open-vocabulary YOLO-World on a ROCK 5B+ NPU through a native C++ V4L2 → RGA → RKNN pipeline, feeds detections into bounded visual autonomy, and records complete physical runs with model provenance, latency, telemetry, detections, video, and control traces. It is controlled through a operator application running on a remote machine, which parameterizes, launches, and synchronizes experiments  between the onboard SBC and remote computer.
+
+The project spans the deployment loop from model conversion and quantization → hardware-accelerated inference → ROS 2 integration/Gazebo simulation → physical autonomy → profiling, controlled experiments, and failure analysis.
 
 <p align="center">
   <img src="docs/assets/evidence/robot-hero.webp" width="800" alt="Omniseer physical mobile robot with LiDAR and mecanum drive" />
 </p>
 
-[Documentation](https://jburo1.github.io/omniseer/) |
-[Architecture](docs/architecture/overview.md) |
-[Verification Evidence](docs/verification/evidence.md) |
-[Target Acquisition RunBundle](studies/autonomy/v2l_fp_target_acquisition/README.md) |
-[Detector Comparison](studies/detector_comparison/scan_final_recal/README.md) |
-[INT8 Quantization Study](studies/quantization/yolo_world_v2l_int8/README.md) |
-[Operator Workflow](docs/operations/operator-run-workflow.md)
+<table align="center">
+  <tr>
+    <td><img src="assets/images/omniseer_profile.jpg" width="260" alt="Omniseer profile view" /></td>
+    <td><img src="assets/images/top_down_90.jpg" width="260" alt="Omniseer top-down view rotated 90 degrees" /></td>
+    <td><img src="assets/images/omniseer_wireframe.jpg" width="260" alt="Omniseer wireframe" /></td>
+  </tr>
+</table>
+
 
 ## What the Robot Does
 
-Given a named target class, the autonomy mode performs a bounded visual target
-acquisition and framing behavior:
+An operator specifies a target such as person, backpack, or another open-vocabulary class. Omniseer then executes a simple closed-loop perception-and-control behavior on the physical robot:
 
-```text
-named target
-  -> bounded visual scan
-  -> stable target acquisition
-  -> horizontal centering
-  -> bounded distance adjustment
-  -> proximity safety stop
-  -> evidence capture and RunBundle report
+```
+specify target
+    ↓
+scan the environment
+    ↓
+acquire a stable neural detection
+    ↓
+center the target in the camera
+    ↓
+adjust distance to reach the desired framing
+    ↓
+stop safely
+    ↓
+record image
+    ↓
+preserve the run as reproducible evidence
+    ↓
+synchronize data to remote machine
 ```
 
-The robot scans in place for a configured target class, acquires a stable
-detection, centers the target horizontally using yaw, and uses small bounded
-forward or reverse motion to bring the target into the configured visual framing
-range. Forward motion is blocked when the proximity range crosses the configured
-threshold. This is not navigation-based object search, room-scale semantic
-exploration, global planning, or learned end-to-end control.
 
 ## System at a Glance
 
@@ -138,25 +144,3 @@ claims can be reviewed against recorded artifacts.
 5. [CI/CD Overview](docs/verification/ci-cd.md) and
    [Scripts Front Door](docs/operations/scripts-frontdoor.md) for supported
    verification commands and automation limits.
-
-## Reproduction and Operational Boundary
-
-Portable checks cover documentation, Python/package tests, portable vision
-components, firmware compilation, Gazebo smoke topics, and hardware-independent
-runtime packaging through `scripts/omni` and GitHub Actions.
-
-ROS and simulation are required for graph-level launch and smoke verification.
-The full perception and robot behavior path requires the ROCK 5B+, RKNN/RGA SDKs,
-camera, LiDAR/range data, Teensy firmware, micro-ROS transport, sensors, and the
-physical robot. GitHub CI is intentionally portable and does not prove
-target-hardware execution.
-
-## Limitations
-
-- Autonomy is a bounded visual scan and framing behavior, not room-scale
-  navigation-based search or semantic exploration.
-- Hardware-specific inference requires the target ROCK 5B+ platform and RKNN/RGA
-  SDK availability.
-- The detector comparison is a bounded perception study; it is not itself a
-  public autonomy RunBundle or target-hardware timing measurement. The separate
-  target-acquisition study provides one public bounded-autonomy RunBundle.
