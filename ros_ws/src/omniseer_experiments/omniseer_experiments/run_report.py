@@ -92,6 +92,21 @@ class _TargetLossEpisode:
     recovered: bool
 
 
+@dataclass(frozen=True)
+class _StateInterval:
+    state: str
+    start_time_sec: float
+    end_time_sec: float
+    samples: int
+
+
+@dataclass(frozen=True)
+class _ProgressionFrame:
+    label: str
+    item: _EvidenceItem
+    featured: bool = False
+
+
 def write_run_report(run_dir: Path, *, overwrite: bool = False) -> ReportSummary:
     inspection = inspect_run(run_dir)
     manifest = _read_manifest(run_dir / "manifest.yaml")
@@ -238,6 +253,7 @@ def _render_report(
             autonomy=autonomy,
             detections=detections,
             configured_classes=inspection.configured_classes,
+            duration_sec=experiment_duration_sec,
         ),
         _performance_section(
             inspection=inspection,
@@ -317,18 +333,20 @@ def _run_overview_section(
             _format_duration(_as_float(first_success.get("time_sec")) if first_success else None),
         ),
         (
-            "Final centering error" if terminal_state != "failed" else "Last valid centering error",
-            _format_optional_float(_last_numeric_field(autonomy, "normalized_error")),
+            "Final centering error (absolute)"
+            if terminal_state != "failed"
+            else "Last valid centering error (absolute)",
+            _format_optional_float_abs(_last_numeric_field(autonomy, "normalized_error")),
         ),
         (
             "Final target area" if terminal_state != "failed" else "Last valid target area",
-            _format_optional_float(_last_numeric_field(autonomy, "bbox_area_ratio")),
+            _format_area_percentage(_last_numeric_field(autonomy, "bbox_area_ratio")),
         ),
         ("Target-loss episodes", str(len(_target_loss_episodes(autonomy)))),
         ("Mean consumer FPS", _format_optional_float(_mean_field(perf, "consumer_fps"))),
         ("Inference p95", _format_optional_ms(_p95_field(perf, "last_infer_ms"))),
         (
-            "Source-age p95",
+            "Observation age at consumer end p95",
             _format_optional_ms(source_age_p95_ns / 1_000_000.0 if source_age_p95_ns is not None else None),
         ),
     ]
@@ -344,6 +362,7 @@ def _behavior_section(
     autonomy: Sequence[dict[str, Any]],
     detections: Sequence[dict[str, Any]],
     configured_classes: Sequence[str],
+    duration_sec: float,
 ) -> _ReportSection | str:
     """Render only the behavior evidence needed to explain the run outcome."""
 
@@ -356,16 +375,22 @@ def _behavior_section(
                     autonomy,
                     confidence_threshold=_autonomy_parameter_value(manifest, "min_target_confidence"),
                 ),
-                _autonomy_state_timeline(autonomy),
+                _autonomy_state_timeline(autonomy, duration_sec=duration_sec),
                 _line_chart(
-                    "Target Confidence and Centering Error",
-                    (
-                        _autonomy_target_confidence_series(autonomy),
-                        _autonomy_series(autonomy, "normalized_error", name="centering error"),
-                    ),
-                    "confidence / normalized error",
+                    "Target Confidence",
+                    (_autonomy_target_confidence_series(autonomy),),
+                    "confidence (0 to 1)",
                     zero_floor=True,
+                    y_min_override=0.0,
+                    y_max_override=1.0,
                 ),
+                _line_chart(
+                    "Signed Centering Error",
+                    (_autonomy_series(autonomy, "normalized_error", name="signed centering error"),),
+                    "normalized error",
+                ),
+                '<p class="table-note">Direction is retained here; summaries use absolute error '
+                "when direction is not relevant.</p>",
                 _autonomy_target_loss_table(autonomy),
             ]
         )
@@ -486,6 +511,7 @@ def _performance_section(
     if latency_rows:
         body_parts.append(
             "<h3>Latency Summary</h3>"
+            + _latency_breakdown(perf)
             + _table(["Metric", "p50 ms", "p95 ms"], [row[:3] for row in latency_rows])
             + _collapsed_maxima("Latency maxima", latency_rows, unit="ms")
         )
@@ -512,7 +538,7 @@ def _latency_summary_rows(perf: Sequence[dict[str, Any]], pipeline: Sequence[dic
         ("Postprocess", perf, "last_postprocess_ms", 1.0),
         ("Publish", perf, "last_publish_ms", 1.0),
         ("Consumer total", perf, "last_consumer_total_ms", 1.0),
-        ("Source age at consumer end", pipeline, "source_age_end_ns", 1 / 1_000_000.0),
+        ("Observation age at consumer end", pipeline, "source_age_end_ns", 1 / 1_000_000.0),
     ]
     rows = []
     for label, records, field_name, scale in fields:
@@ -560,16 +586,71 @@ def _latency_chart(records: Sequence[dict[str, Any]], *, experiment_start_ns: in
     )
 
 
+def _latency_breakdown(records: Sequence[dict[str, Any]]) -> str:
+    """Show the recorded p95 stage timings as a compact relative contribution bar."""
+
+    stages = (
+        ("Preprocess", "last_preprocess_ms", "#4c78a8"),
+        ("Inference", "last_infer_ms", "#d16b32"),
+        ("Postprocess", "last_postprocess_ms", "#59a14f"),
+        ("Publish", "last_publish_ms", "#8c6bb1"),
+    )
+    values = [(label, _p95_field(records, field_name), color) for label, field_name, color in stages]
+    values = [(label, value, color) for label, value, color in values if value is not None]
+    if not values:
+        return ""
+    total = sum(value for _, value, _ in values)
+    if total <= 0.0:
+        total = 1.0
+    segments = "".join(
+        f'<span class="latency-segment" style="width: {value / total * 100.0:.2f}%; background: {color}" '
+        f'title="{_attr(f"{label}: {_format_float(value)} ms p95")}"></span>'
+        for label, value, color in values
+    )
+    legend = "".join(
+        '<span class="chart-legend-item">'
+        f'<span class="chart-swatch" style="background: {color}"></span>{_esc(label)} '
+        f"{_esc(_format_float(value))} ms p95</span>"
+        for label, value, color in values
+    )
+    return (
+        '<div class="latency-breakdown" aria-label="Latency breakdown by stage">'
+        "<p><strong>Latency breakdown</strong><span>p95 stage timings</span></p>"
+        f'<div class="latency-stack">{segments}</div>'
+        f'<div class="chart-legend">{legend}</div>'
+        '<p class="table-note">Stage p95 values are shown individually and are not summed as a consumer-total p95.</p>'
+        "</div>"
+    )
+
+
 def _supersession_summary(records: Sequence[dict[str, Any]]) -> str:
     ratio = _supersession_ratio(records)
     if ratio is None and not records:
         return ""
-    return "<h3>Latest-frame Supersession</h3>" + _key_value_table(
-        [
-            ("Frames superseded before inference", str(_superseded_frames(records))),
-            ("Supersession ratio", _format_percentage(ratio)),
-            ("Interpretation", "Normal latest-frame behavior; not an error."),
-        ]
+    producer_fps = _mean_field(records, "producer_fps")
+    consumer_fps = _mean_field(records, "consumer_fps")
+    superseded = _superseded_frames(records)
+    return (
+        "<h3>Latest-Frame Scheduling</h3>"
+        + (
+            '<div class="scheduling-flow" aria-label="Latest-frame scheduling flow">'
+            f"<span><strong>{_esc(_format_optional_fps(producer_fps))}</strong>producer</span>"
+            '<b aria-hidden="true">→</b>'
+            f"<span><strong>{_esc(_format_optional_fps(consumer_fps))}</strong>consumer / inference</span>"
+            '<b aria-hidden="true">→</b>'
+            f"<span><strong>{superseded}</strong>intermediate frames superseded</span>"
+            "</div>"
+        )
+        + _key_value_table(
+            [
+                ("Frames superseded before inference", str(superseded)),
+                ("Supersession ratio", _format_percentage(ratio)),
+                (
+                    "Freshness policy",
+                    "Keep the newest available frame for inference; superseded intermediate frames are intentional.",
+                ),
+            ]
+        )
     )
 
 
@@ -595,12 +676,35 @@ def _compact_system_summary(records: Sequence[dict[str, Any]]) -> str:
     throttled = [thermal.get("throttled") for record in records if isinstance((thermal := record.get("thermal")), dict)]
     if not rows and not throttled:
         return ""
-    throttle_summary = _count_display(throttled) if throttled else "-"
+    throttle_summary = _thermal_throttling_summary(throttled)
     return (
         "<h3>System Summary</h3>"
         + _key_value_table([("Thermal throttling", throttle_summary)])
         + (_table(["Metric", "p50", "p95", "Unit"], [[*row[:3], row[4]] for row in rows]) if rows else "")
         + _collapsed_maxima("System maxima", rows, unit_column=4)
+        + _thermal_throttling_details(throttled)
+    )
+
+
+def _thermal_throttling_summary(values: Sequence[object]) -> str:
+    boolean_values = [value for value in values if isinstance(value, bool)]
+    if not boolean_values:
+        return "Unavailable"
+    return _count_display(boolean_values)
+
+
+def _thermal_throttling_details(values: Sequence[object]) -> str:
+    if not values:
+        return ""
+    return (
+        '<details class="nested-details"><summary>Thermal throttling diagnostic</summary>'
+        + _key_value_table(
+            [
+                ("Thermal samples", str(len(values))),
+                ("Recorded throttling states", _count_display(values)),
+            ]
+        )
+        + "</details>"
     )
 
 
@@ -788,7 +892,7 @@ def _evidence_provenance_section(
 ) -> _ReportSection:
     target_class = _last_autonomy_target_class(autonomy) or _launch_arg_value(manifest, "autonomy_target_class")
     provenance_rows = [
-        ("Git SHA", _display(_manifest_string(manifest, "git_sha"))),
+        ("Git SHA", _display(_abbreviate_identifier(_manifest_string(manifest, "git_sha")))),
         ("SBC", _display(_manifest_string(manifest, "sbc"))),
         ("Experiment config", _display(_manifest_nested_string(manifest, "experiment", "config"))),
         (
@@ -819,10 +923,11 @@ def _evidence_provenance_section(
         )
     return _section(
         "Evidence & Provenance",
-        _evidence_gallery(evidence_items)
+        _evidence_gallery(evidence_items, autonomy=autonomy, target_class=target_class)
         + "<h3>Provenance</h3>"
         + _key_value_table(provenance_rows)
         + _model_provenance_details(manifest)
+        + _full_provenance_identifiers(manifest)
         + artifacts,
         open_by_default=True,
     )
@@ -868,7 +973,7 @@ def _video_section(run_dir: Path, report_dir: Path) -> str:
         f'src="{_attr(href)}"></video><p><a href="{_attr(href)}">'
         "Open detection overlay</a></p>"
     )
-    return _section("Video", "".join(parts), open_by_default=True)
+    return _section("Video", "".join(parts))
 
 
 def _configuration_section(manifest: dict[str, Any]) -> str:
@@ -1575,23 +1680,23 @@ def _errors_section(inspection: RunInspection, *, perf: Sequence[dict[str, Any]]
     return _section("Errors And Drops", body, open_by_default=has_errors_or_drops)
 
 
-def _evidence_gallery(items: Sequence[_EvidenceItem], *, representative_count: int = 4) -> str:
+def _evidence_gallery(
+    items: Sequence[_EvidenceItem],
+    *,
+    autonomy: Sequence[dict[str, Any]],
+    target_class: str,
+) -> str:
     if not items:
         return "<p>No evidence images recorded.</p>"
 
-    final_target_capture = _final_target_capture(items)
-    featured_target_capture = ""
-    if final_target_capture is not None:
-        featured_target_capture = (
-            "<h3>Final Centered Target</h3>"
-            "<p>Captured after the target-centering action completed.</p>"
-            f'<div class="evidence-grid">{_evidence_cards((final_target_capture,))}</div>'
-        )
-    representative = ""
-    representative_items = _representative_evidence_items(items, representative_count)
-    if representative_items:
-        representative = (
-            f'<h3>Representative Frames</h3><div class="evidence-grid">{_evidence_cards(representative_items)}</div>'
+    progression = _run_progression_frames(items, autonomy=autonomy, target_class=target_class)
+    progression_html = ""
+    if progression:
+        progression_html = (
+            "<h3>Run Progression</h3>"
+            "<p>Frames are selected from recorded evidence and autonomy timing; stages without recorded "
+            "support are omitted.</p>"
+            f'<div class="evidence-grid progression-grid">{_progression_cards(progression)}</div>'
         )
     full_gallery = (
         f'<details class="nested-details"><summary>All captured frames ({len(items)})</summary>'
@@ -1600,10 +1705,7 @@ def _evidence_gallery(items: Sequence[_EvidenceItem], *, representative_count: i
     )
     return (
         "<p>Annotated images are derived review artifacts. Clean frames are the canonical captured evidence; "
-        "boxes are projected back into source image coordinates.</p>"
-        + featured_target_capture
-        + representative
-        + full_gallery
+        "boxes are projected back into source image coordinates.</p>" + progression_html + full_gallery
     )
 
 
@@ -1616,16 +1718,80 @@ def _final_target_capture(items: Sequence[_EvidenceItem]) -> _EvidenceItem | Non
     return None
 
 
-def _representative_evidence_items(
-    items: Sequence[_EvidenceItem], representative_count: int
-) -> tuple[_EvidenceItem, ...]:
-    """Return review-worthy frames, excluding a separately featured target capture."""
+def _run_progression_frames(
+    items: Sequence[_EvidenceItem],
+    *,
+    autonomy: Sequence[dict[str, Any]],
+    target_class: str,
+) -> tuple[_ProgressionFrame, ...]:
+    """Select evidence that narrates a recorded run without inferring missing events."""
 
-    if representative_count <= 0:
+    ordered = sorted(items, key=lambda item: item.relative_time_sec if item.relative_time_sec is not None else math.inf)
+    if not ordered:
         return ()
-    action_captures = [item for item in items if item.is_action_capture and not item.is_target_capture]
-    detection_captures = [item for item in items if item.detection_count > 0 and item not in action_captures]
-    return tuple((action_captures + detection_captures)[:representative_count])
+
+    selected: list[_ProgressionFrame] = [_ProgressionFrame("Opening environment", ordered[0])]
+    selected_items = {ordered[0]}
+    normalized_target = target_class.strip().lower()
+    target_items = [item for item in ordered if normalized_target and _evidence_item_has_class(item, normalized_target)]
+    first_target = next((item for item in target_items if item not in selected_items), None)
+    if first_target is not None:
+        selected.append(_ProgressionFrame("First recorded target detection", first_target))
+        selected_items.add(first_target)
+
+    intervals = _autonomy_state_intervals(autonomy, duration_sec=None)
+    center_or_frame = next(
+        (
+            item
+            for item in target_items
+            if item not in selected_items and _state_at_time(intervals, item.relative_time_sec) in {"center", "frame"}
+        ),
+        None,
+    )
+    if center_or_frame is not None:
+        state = _state_at_time(intervals, center_or_frame.relative_time_sec)
+        selected.append(_ProgressionFrame(f"Recorded {state} evidence", center_or_frame))
+        selected_items.add(center_or_frame)
+
+    final_target_capture = _final_target_capture(ordered)
+    if final_target_capture is not None and final_target_capture not in selected_items:
+        selected.append(_ProgressionFrame("Final Centered Target", final_target_capture, featured=True))
+    elif final_target_capture is not None:
+        selected = [
+            _ProgressionFrame("Final Centered Target", frame.item, featured=True)
+            if frame.item == final_target_capture
+            else frame
+            for frame in selected
+        ]
+    return tuple(selected)
+
+
+def _evidence_item_has_class(item: _EvidenceItem, class_name: str) -> bool:
+    return any(label.lower() == class_name or label.lower().startswith(f"{class_name} ") for label in item.labels)
+
+
+def _progression_cards(frames: Sequence[_ProgressionFrame]) -> str:
+    cards = []
+    for frame in frames:
+        item = frame.item
+        classes = "evidence-card featured-evidence-card" if frame.featured else "evidence-card"
+        label_text = _join_or_dash(item.labels)
+        source_note = "annotated" if item.uses_annotation else "clean frame"
+        cards.append(
+            f'<article class="{classes}">'
+            f'<a href="{_attr(item.image_href)}"><img src="{_attr(item.image_href)}" alt="frame {item.frame_id}"></a>'
+            "<div>"
+            f"<strong>{_esc(frame.label)} · Frame {_esc(item.frame_id)}</strong>"
+            f"<span>Sequence {_esc(item.sequence)} &middot; {_esc(item.capture_reason)} "
+            f"&middot; {_esc(source_note)}</span>"
+            f"<span>t+{_esc(item.relative_time)} &middot; detections {item.detection_count} "
+            f"&middot; top score {_esc(item.top_score)}</span>"
+            f"<span>{_esc(label_text)}</span>"
+            f'<a href="{_attr(item.source_href)}">Open clean frame</a>'
+            "</div>"
+            "</article>"
+        )
+    return "".join(cards)
 
 
 def _evidence_cards(items: Sequence[_EvidenceItem]) -> str:
@@ -1896,7 +2062,37 @@ def _runtime_provenance_rows(manifest: dict[str, Any]) -> list[tuple[str, str]]:
         ("Runtime image digest", _manifest_nested_string(manifest, "container", "image_digest")),
         ("Runtime image ID", _manifest_nested_string(manifest, "container", "image_id")),
     )
-    return [(label, value) for label, value in values if value]
+    return [(label, _abbreviate_identifier(value)) for label, value in values if value]
+
+
+def _full_provenance_identifiers(manifest: dict[str, Any]) -> str:
+    """Keep complete copyable identifiers available after compacting the overview."""
+
+    rows = [
+        ("Git SHA", _manifest_string(manifest, "git_sha")),
+        ("Runtime image digest", _manifest_nested_string(manifest, "container", "image_digest")),
+        ("Runtime image ID", _manifest_nested_string(manifest, "container", "image_id")),
+        ("Detector model SHA256", _model_sha256(manifest, "detector_model")),
+        ("CLIP model SHA256", _model_sha256(manifest, "clip_model")),
+    ]
+    rows = [(label, value) for label, value in rows if value and value != "Unavailable"]
+    if not rows:
+        return ""
+    return (
+        '<details class="nested-details"><summary>Full provenance identifiers</summary>'
+        + _key_value_table(rows)
+        + "</details>"
+    )
+
+
+def _abbreviate_identifier(value: str) -> str:
+    if "sha256:" in value:
+        prefix, digest = value.rsplit("sha256:", maxsplit=1)
+        if len(digest) > 16:
+            return f"{prefix}sha256:{digest[:8]}…{digest[-7:]}"
+    if len(value) > 16 and all(char in "0123456789abcdef" for char in value.lower()):
+        return f"{value[:8]}…{value[-7:]}"
+    return value
 
 
 def _model_provenance_details(manifest: dict[str, Any]) -> str:
@@ -2169,8 +2365,12 @@ def _autonomy_command_summary(records: Sequence[dict[str, Any]]) -> str:
     return "<h3>Command Summary</h3>" + _key_value_table(rows)
 
 
-def _autonomy_state_timeline(records: Sequence[dict[str, Any]]) -> str:
-    segments: list[tuple[str, float | None, float | None, int]] = []
+def _autonomy_state_intervals(
+    records: Sequence[dict[str, Any]], *, duration_sec: float | None
+) -> tuple[_StateInterval, ...]:
+    """Collapse state samples into observed intervals, ending at the run duration when known."""
+
+    segments: list[tuple[str, float, float | None, int]] = []
     current_state = ""
     start_time: float | None = None
     last_time: float | None = None
@@ -2180,8 +2380,10 @@ def _autonomy_state_timeline(records: Sequence[dict[str, Any]]) -> str:
         if not isinstance(state, str) or not state:
             continue
         time_sec = _as_float(record.get("time_sec"))
-        if state != current_state and current_state:
-            segments.append((current_state, start_time, last_time, samples))
+        if time_sec is None:
+            continue
+        if state != current_state and current_state and start_time is not None:
+            segments.append((current_state, start_time, time_sec, samples))
             start_time = time_sec
             samples = 0
         elif not current_state:
@@ -2189,22 +2391,68 @@ def _autonomy_state_timeline(records: Sequence[dict[str, Any]]) -> str:
         current_state = state
         last_time = time_sec
         samples += 1
-    if current_state:
-        segments.append((current_state, start_time, last_time, samples))
-    if not segments:
-        return ""
+    if current_state and start_time is not None:
+        final_end = duration_sec if duration_sec is not None else last_time
+        if final_end is None:
+            final_end = start_time
+        segments.append((current_state, start_time, max(start_time, final_end), samples))
+    return tuple(
+        _StateInterval(state, start, max(start, end if end is not None else start), count)
+        for state, start, end, count in segments
+    )
 
+
+def _state_at_time(intervals: Sequence[_StateInterval], time_sec: float | None) -> str:
+    if time_sec is None:
+        return ""
+    for interval in intervals:
+        if interval.start_time_sec <= time_sec <= interval.end_time_sec:
+            return interval.state
+    return ""
+
+
+def _autonomy_state_timeline(records: Sequence[dict[str, Any]], *, duration_sec: float) -> str:
+    intervals = _autonomy_state_intervals(records, duration_sec=duration_sec)
+    if not intervals:
+        return ""
+    timeline_end = max(duration_sec, max(interval.end_time_sec for interval in intervals))
+    if timeline_end <= 0.0:
+        timeline_end = 1.0
+    colors = ("#4c78a8", "#f58518", "#54a24b", "#b279a2", "#e45756", "#72b7b2")
+    bars = []
+    for index, interval in enumerate(intervals):
+        left = _clamp(interval.start_time_sec / timeline_end * 100.0, 0.0, 100.0)
+        width = _clamp((interval.end_time_sec - interval.start_time_sec) / timeline_end * 100.0, 0.7, 100.0 - left)
+        tooltip = (
+            f"{interval.state}: {_format_duration(interval.start_time_sec)} "
+            f"to {_format_duration(interval.end_time_sec)}"
+        )
+        bars.append(
+            f'<span class="state-interval" style="left: {left:.3f}%; width: {width:.3f}%; '
+            f'background: {colors[index % len(colors)]}" '
+            f'title="{_attr(tooltip)}">{_esc(interval.state)}</span>'
+        )
     rows = [
         [
-            state,
-            _format_duration(start),
-            _format_duration(end),
-            _format_duration(_duration_between(start, end)),
-            str(count),
+            interval.state,
+            _format_duration(interval.start_time_sec),
+            _format_duration(interval.end_time_sec),
+            _format_duration(interval.end_time_sec - interval.start_time_sec),
+            str(interval.samples),
         ]
-        for state, start, end, count in segments
+        for interval in intervals
     ]
-    return "<h3>State Timeline</h3>" + _table(["State", "Start", "End", "Duration", "Samples"], rows)
+    return (
+        "<h3>State Timeline</h3>"
+        '<div class="state-timeline" role="img" '
+        f'aria-label="Autonomy state intervals across {_attr(_format_duration(timeline_end))}">'
+        f'<div class="state-track">{"".join(bars)}</div>'
+        f'<div class="state-axis"><span>0s</span><span>{_esc(_format_duration(timeline_end))}</span></div>'
+        "</div>"
+        '<details class="nested-details"><summary>State transition details</summary>'
+        + _table(["State", "Start", "End", "Duration", "Samples"], rows)
+        + "</details>"
+    )
 
 
 def _autonomy_phase_timing_rows(records: Sequence[dict[str, Any]]) -> list[tuple[str, str]]:
@@ -2624,6 +2872,8 @@ def _line_chart(
     *,
     zero_floor: bool = False,
     robust_y: bool = False,
+    y_min_override: float | None = None,
+    y_max_override: float | None = None,
 ) -> str:
     chart_series = tuple(_ChartSeries(item.name, _finite_points(item.points), item.unit) for item in series)
     chart_series = tuple(item for item in chart_series if len(item.points) >= 2)
@@ -2658,7 +2908,14 @@ def _line_chart(
         if p95 > 0.0 and y_max > p95 * 3.0:
             y_max = p95 * 1.2
             clipped_y_max = True
-    if zero_floor and y_min >= 0.0:
+    if y_min_override is not None:
+        y_min = y_min_override
+    if y_max_override is not None:
+        y_max = y_max_override
+    if y_min_override is not None or y_max_override is not None:
+        if y_min == y_max:
+            y_max = y_min + 1.0
+    elif zero_floor and y_min >= 0.0:
         y_min = 0.0
         y_max = _nice_tick_upper(y_max, ticks=4)
     elif y_min == y_max:
@@ -3015,6 +3272,18 @@ def _format_optional_float(value: float | None) -> str:
     return "-" if value is None else _format_float(value)
 
 
+def _format_optional_float_abs(value: float | None) -> str:
+    return "-" if value is None else _format_float(abs(value))
+
+
+def _format_area_percentage(value: float | None) -> str:
+    return _format_percentage(value)
+
+
+def _format_optional_fps(value: float | None) -> str:
+    return "-" if value is None else f"{_format_float(value)} fps"
+
+
 def _format_duration(value: float | None) -> str:
     if value is None:
         return "-"
@@ -3158,14 +3427,14 @@ def _css() -> str:
     return """
 :root { color-scheme: light; font-family: Arial, sans-serif; background: #f6f7f9; color: #1f2933; }
 body { margin: 0; }
-main { max-width: 1120px; margin: 0 auto; padding: 28px 20px 48px; }
-h1 { margin: 0 0 22px; font-size: 28px; font-weight: 700; }
+main { max-width: 1120px; margin: 0 auto; padding: 32px 20px 56px; }
+h1 { margin: 0 0 26px; font-size: 28px; font-weight: 700; }
 h2 { margin: 0; font-size: 19px; font-weight: 700; }
 h3 { margin: 16px 0 8px; font-size: 15px; font-weight: 700; color: #3d4a5c; }
 h2 + h3 { margin-top: 0; }
 details {
   scroll-margin-top: 16px;
-  margin: 0 0 18px;
+  margin: 0 0 22px;
   background: #ffffff;
   border: 1px solid #d8dee6;
   border-radius: 6px;
@@ -3181,7 +3450,7 @@ summary {
 summary::before { content: ">"; color: #526173; font-size: 13px; }
 details[open] summary { border-bottom: 1px solid #e6eaf0; }
 details[open] summary::before { content: "v"; }
-.section-body { padding: 16px; overflow-x: auto; }
+.section-body { padding: 18px; overflow-x: auto; }
 .toc { margin: 0 0 18px; padding: 14px 16px; background: #ffffff; border: 1px solid #d8dee6; border-radius: 6px; }
 .toc h2 { margin-bottom: 10px; }
 .toc-status { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
@@ -3237,6 +3506,58 @@ ul { padding-left: 20px; }
 .chart-legend-item { display: inline-flex; align-items: center; gap: 6px; }
 .chart-swatch { width: 10px; height: 10px; border-radius: 2px; }
 .chart-note { color: #6b7280; font-style: italic; }
+.nested-details { margin-top: 12px; margin-bottom: 0; background: #fbfcfe; }
+.nested-details summary { padding: 10px 12px; font-size: 13px; }
+.latency-breakdown {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid #e1e6ee;
+  border-radius: 6px;
+  background: #fbfcfe;
+}
+.latency-breakdown p { display: flex; justify-content: space-between; gap: 10px; color: #526173; font-size: 13px; }
+.latency-breakdown p strong { color: #3d4a5c; }
+.latency-stack {
+  display: flex;
+  height: 16px;
+  overflow: hidden;
+  margin-top: 8px;
+  border-radius: 4px;
+  background: #e6eaf0;
+}
+.latency-segment { min-width: 2px; }
+.scheduling-flow { display: flex; align-items: stretch; gap: 8px; margin: 0 0 12px; font-size: 13px; }
+.scheduling-flow span {
+  display: grid;
+  flex: 1;
+  gap: 3px;
+  padding: 9px;
+  border: 1px solid #d8dee6;
+  border-radius: 5px;
+  background: #fbfcfe;
+  color: #526173;
+}
+.scheduling-flow strong { color: #1f2933; font-size: 14px; }
+.scheduling-flow b { align-self: center; color: #778397; font-size: 18px; }
+.state-timeline { margin: 0 0 12px; padding: 12px; border: 1px solid #e1e6ee; border-radius: 6px; background: #fbfcfe; }
+.state-track { position: relative; height: 30px; overflow: hidden; border-radius: 4px; background: #e6eaf0; }
+.state-interval {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  min-width: 1px;
+  padding: 0 6px;
+  overflow: hidden;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  box-sizing: border-box;
+  border-right: 1px solid rgba(255,255,255,.8);
+}
+.state-axis { display: flex; justify-content: space-between; margin-top: 5px; color: #526173; font-size: 12px; }
 .evidence-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
 p + .evidence-grid { margin-top: 12px; }
 .evidence-card { border: 1px solid #d8dee6; border-radius: 6px; overflow: hidden; background: #fbfcfe; }
@@ -3244,4 +3565,12 @@ p + .evidence-grid { margin-top: 12px; }
 .evidence-card div { display: grid; gap: 5px; padding: 10px; font-size: 13px; }
 .evidence-card span { color: #526173; }
 .evidence-card a { color: #185abc; }
+.progression-grid { margin-top: 12px; }
+.featured-evidence-card { border: 2px solid #137333; box-shadow: 0 2px 8px rgba(19, 115, 51, .15); }
+.featured-evidence-card div strong { color: #137333; font-size: 15px; }
+@media (max-width: 620px) {
+  .scheduling-flow { gap: 4px; }
+  .scheduling-flow span { padding: 7px; font-size: 11px; }
+  .scheduling-flow strong { font-size: 12px; }
+}
 """.strip()

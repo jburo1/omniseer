@@ -211,7 +211,7 @@ class RunReportTests(unittest.TestCase):
             self.assertIn("<th>Duration</th><td>65.0s</td>", output)
             self.assertIn("<th>Time to first detection</th><td>0.4s</td>", output)
             self.assertIn("<th>Time to success</th><td>1.6s</td>", output)
-            self.assertIn("<th>Source-age p95</th><td>13.00 ms</td>", output)
+            self.assertIn("<th>Observation age at consumer end p95</th><td>13.00 ms</td>", output)
             self.assertIn("<th>Mean consumer FPS</th><td>19.00</td>", output)
             self.assertNotIn("Consumer FPS p95</th>", output)
             self.assertIn("<td>Consumer FPS</td><td>19.00</td><td>19.00</td><td>19.00</td>", output)
@@ -225,13 +225,21 @@ class RunReportTests(unittest.TestCase):
             self.assertIn("<th>Runtime backend</th><td>robot_runtime_container</td>", output)
             self.assertIn("<th>Runtime image ID</th><td>sha256:local-image-id</td>", output)
             self.assertIn("State Timeline", output)
-            self.assertIn("Target Confidence and Centering Error", output)
+            self.assertIn("State transition details", output)
+            self.assertIn('aria-label="Autonomy state intervals across 65.0s"', output)
+            self.assertIn("lock: 0.4s to 1.0s", output)
+            self.assertIn("Target Confidence", output)
+            self.assertIn("Signed Centering Error", output)
             self.assertIn("Target Loss Episodes", output)
             self.assertIn("Detections by Class", output)
             self.assertIn("Latency Summary", output)
+            self.assertIn("Latency breakdown", output)
             self.assertIn("Latency Over Time", output)
-            self.assertIn("Latest-frame Supersession", output)
+            self.assertIn("Latest-Frame Scheduling", output)
+            self.assertIn("producer</span>", output)
+            self.assertIn("intermediate frames superseded", output)
             self.assertIn("System Summary", output)
+            self.assertIn("Thermal throttling diagnostic", output)
             self.assertIn("All RunBundle artifacts", output)
 
     def test_omits_verbose_sections_and_zero_issue_section(self) -> None:
@@ -295,8 +303,8 @@ class RunReportTests(unittest.TestCase):
             self.assertIn('class="outcome-banner outcome-failed"', output)
             self.assertIn("Outcome: <strong>failed</strong>", output)
             self.assertIn("<th>Failure reason</th><td>target_timeout</td>", output)
-            self.assertIn("<th>Last valid centering error</th><td>0.02</td>", output)
-            self.assertIn("<th>Last valid target area</th><td>0.12</td>", output)
+            self.assertIn("<th>Last valid centering error (absolute)</th><td>0.02</td>", output)
+            self.assertIn("<th>Last valid target area</th><td>12.0%</td>", output)
             self.assertNotIn("<th>Final centering error</th>", output)
 
     def test_collapses_complete_evidence_gallery_and_captured_artifacts_while_showing_representative_frames(
@@ -312,7 +320,7 @@ class RunReportTests(unittest.TestCase):
             self.assertNotIn('<details class="nested-details" open><summary>All captured frames', output)
             self.assertIn("<summary>Captured frame files (26)</summary>", output)
             self.assertNotIn('<details class="nested-details" open><summary>Captured frame files', output)
-            self.assertEqual(output.count('class="evidence-card"'), 17)
+            self.assertEqual(output.count('class="evidence-card"'), 14)
             gallery = output.split("<summary>All captured frames (13)</summary>", maxsplit=1)[1].split(
                 "</details><h3>Provenance</h3>", maxsplit=1
             )[0]
@@ -324,35 +332,36 @@ class RunReportTests(unittest.TestCase):
             self.assertNotIn("evidence/frames/frame_0.jpg", artifact_list)
             self.assertNotIn("evidence/annotated/frame_0.jpg", artifact_list)
 
-    def test_features_final_centered_target_capture_separately_from_representative_frames(self) -> None:
+    def test_selects_metadata_supported_run_progression_and_features_final_target(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             run_dir = Path(tmp) / "demo_001"
             _write_completed_bundle(run_dir)
+            _write_autonomy(run_dir)
             _write_evidence(run_dir, count=5)
             evidence_path = run_dir / "evidence" / "evidence.jsonl"
             records = [json.loads(line) for line in evidence_path.read_text(encoding="utf-8").splitlines()]
             for record in records:
                 record["detections"] = []
+            base_capture_ns = int(STARTED_AT.timestamp() * 1_000_000_000)
+            for record, offset_sec in zip(records, (0.0, 0.5, 1.2, 1.6, 2.0), strict=True):
+                record["capture_ts_real_ns"] = base_capture_ns + int(offset_sec * 1_000_000_000)
             records[1]["detections"] = [{"class_name": "chair", "score": 0.91}]
+            records[2]["detections"] = [{"class_name": "chair", "score": 0.92}]
             records[3]["capture_reason"] = "target_framed"
             records[3]["target_capture"] = {"target_class": "chair"}
+            records[3]["detections"] = [{"class_name": "chair", "score": 0.93}]
             evidence_path.write_text("\n".join(json.dumps(record) for record in records) + "\n", encoding="utf-8")
 
             output = write_run_report(run_dir).output_path.read_text(encoding="utf-8")
-            featured_target = output.split("<h3>Final Centered Target</h3>", maxsplit=1)[1].split(
-                "<h3>Representative Frames</h3>", maxsplit=1
-            )[0]
-            self.assertIn("Captured after the target-centering action completed.", featured_target)
-            self.assertIn("Frame 3", featured_target)
-            self.assertIn('href="../evidence/frames/frame_3.jpg"', featured_target)
-            representative = output.split("<h3>Representative Frames</h3>", maxsplit=1)[1].split(
+            progression = output.split("<h3>Run Progression</h3>", maxsplit=1)[1].split(
                 "<summary>All captured frames", maxsplit=1
             )[0]
-            self.assertIn("Frame 1", representative)
-            self.assertNotIn("Frame 3", representative)
-            self.assertNotIn("Frame 0", representative)
-            self.assertNotIn("Frame 2", representative)
-            self.assertNotIn("Frame 4", representative)
+            self.assertIn("Opening environment · Frame 0", progression)
+            self.assertIn("First recorded target detection · Frame 1", progression)
+            self.assertIn("Recorded center evidence · Frame 2", progression)
+            self.assertIn("Final Centered Target · Frame 3", progression)
+            self.assertIn('class="evidence-card featured-evidence-card"', progression)
+            self.assertNotIn("Frame 4", progression)
 
     def test_uses_corrected_source_video_presentation_derivative(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -365,7 +374,8 @@ class RunReportTests(unittest.TestCase):
             (video_dir / "overlay.mp4").write_bytes(b"mp4")
 
             output = write_run_report(run_dir).output_path.read_text(encoding="utf-8")
-            self.assertIn('<details id="video" open>', output)
+            self.assertIn('<details id="video">', output)
+            self.assertNotIn('<details id="video" open>', output)
             self.assertIn("video/overlay.mp4", output)
             self.assertIn("video/source.corrected.mp4", output)
             self.assertIn("Corrected source video", output)
@@ -397,6 +407,31 @@ class RunReportTests(unittest.TestCase):
             self.assertIn("process-6", output)
             self.assertNotIn("process-1</td>", output)
             self.assertIn("not total machine utilization", output)
+
+    def test_uses_human_readable_thermal_unavailable_and_preserves_full_identifiers(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "demo_001"
+            _write_completed_bundle(run_dir)
+            manifest_path = run_dir / "manifest.yaml"
+            manifest_path.write_text(
+                manifest_path.read_text(encoding="utf-8").replace(
+                    'git_sha: "abc123"', 'git_sha: "0123456789abcdef0123456789abcdef01234567"'
+                ),
+                encoding="utf-8",
+            )
+            system_path = run_dir / "system.jsonl"
+            record = json.loads(system_path.read_text(encoding="utf-8"))
+            record["thermal"]["throttled"] = None
+            system_path.write_text(json.dumps(record) + "\n", encoding="utf-8")
+
+            output = write_run_report(run_dir).output_path.read_text(encoding="utf-8")
+            self.assertIn("<th>Thermal throttling</th><td>Unavailable</td>", output)
+            self.assertIn("<summary>Thermal throttling diagnostic</summary>", output)
+            self.assertIn("<th>Recorded throttling states</th><td>unavailable=1</td>", output)
+            self.assertIn("<th>Git SHA</th><td>01234567…1234567</td>", output)
+            self.assertIn("<summary>Full provenance identifiers</summary>", output)
+            self.assertIn("0123456789abcdef0123456789abcdef01234567", output)
+            self.assertIn("ghcr.io/acme/omniseer@sha256:0123456789abcdef", output)
 
     def test_requires_overwrite_and_cli_reports_output(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
