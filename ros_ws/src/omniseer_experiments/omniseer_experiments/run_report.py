@@ -389,8 +389,6 @@ def _behavior_section(
                     (_autonomy_series(autonomy, "normalized_error", name="signed centering error"),),
                     "normalized error",
                 ),
-                '<p class="table-note">Direction is retained here; summaries use absolute error '
-                "when direction is not relevant.</p>",
                 _autonomy_target_loss_table(autonomy),
             ]
         )
@@ -618,7 +616,6 @@ def _latency_breakdown(records: Sequence[dict[str, Any]]) -> str:
         "<p><strong>Latency breakdown</strong><span>p95 stage timings</span></p>"
         f'<div class="latency-stack">{segments}</div>'
         f'<div class="chart-legend">{legend}</div>'
-        '<p class="table-note">Stage p95 values are shown individually and are not summed as a consumer-total p95.</p>'
         "</div>"
     )
 
@@ -1694,8 +1691,6 @@ def _evidence_gallery(
     if progression:
         progression_html = (
             "<h3>Run Progression</h3>"
-            "<p>Frames are selected from recorded evidence and autonomy timing; stages without recorded "
-            "support are omitted.</p>"
             f'<div class="evidence-grid progression-grid">{_progression_cards(progression)}</div>'
         )
     full_gallery = (
@@ -1703,10 +1698,7 @@ def _evidence_gallery(
         f'<div class="evidence-grid">{_evidence_cards(items)}</div>'
         "</details>"
     )
-    return (
-        "<p>Annotated images are derived review artifacts. Clean frames are the canonical captured evidence; "
-        "boxes are projected back into source image coordinates.</p>" + progression_html + full_gallery
-    )
+    return progression_html + full_gallery
 
 
 def _final_target_capture(items: Sequence[_EvidenceItem]) -> _EvidenceItem | None:
