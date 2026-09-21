@@ -62,18 +62,18 @@ int main(int argc, char** argv)
     const double fps = video.get(cv::CAP_PROP_FPS);
 
     omniseer::vision::OfflineDetector   detector({
-          .detector_model_path = config.detector_model_path,
-          .class_list_path     = config.class_list_path,
-          .clip_model_path     = config.clip_model_path,
-          .clip_vocab_path     = config.clip_vocab_path,
-          .pad_token           = config.pad_token,
-          .warmup_runs         = config.warmup_runs,
-          .score_threshold     = config.score_threshold,
-          .nms_iou_threshold   = config.nms_iou_threshold,
-          .max_detections      = config.max_detections,
-          .source_width        = source_w,
-          .source_height       = source_h,
-          .debug_rknn          = config.debug_rknn,
+        .detector_model_path = config.detector_model_path,
+        .class_list_path     = config.class_list_path,
+        .clip_model_path     = config.clip_model_path,
+        .clip_vocab_path     = config.clip_vocab_path,
+        .pad_token           = config.pad_token,
+        .warmup_runs         = config.warmup_runs,
+        .score_threshold     = config.score_threshold,
+        .nms_iou_threshold   = config.nms_iou_threshold,
+        .max_detections      = config.max_detections,
+        .source_width        = source_w,
+        .source_height       = source_h,
+        .debug_rknn          = config.debug_rknn,
     });
     omniseer::vision::ReplayJsonlWriter jsonl(config.output_path, detector.class_names());
 
