@@ -293,7 +293,7 @@
   <span class="md-ellipsis">
     
   
-    Results
+    Experiments
   
 
     
@@ -309,7 +309,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Results
+    Experiments
   
 
           </label>
@@ -329,7 +329,7 @@
   <span class="md-ellipsis">
     
   
-    Target Acquisition
+    v2-L FP Target Acquisition
   
 
     
@@ -357,7 +357,7 @@
   <span class="md-ellipsis">
     
   
-    Detector Comparison
+    Six-Model Detector Comparison
   
 
     
@@ -385,7 +385,7 @@
   <span class="md-ellipsis">
     
   
-    INT8 Quantization Failure Analysis
+    v2-L INT8 Quantization Failure Analysis
   
 
     
@@ -1483,7 +1483,7 @@ named run, report, video, annotated frame, or measurement.</p>
 <td>Compile-only; no board flash or physical IO validation</td>
 </tr>
 <tr>
-<td><a href="../detector-comparison/">Six-model detector comparison</a></td>
+<td><a href="../detector-comparison/">Six-Model Detector Comparison</a></td>
 <td>A repaired, controlled 360° replay exposes detector presence/visibility differences, with supporting context from six independently recorded physical ROCK 5B+ runs</td>
 <td>Tracked 2×3 replay, provenance, six JSONLs, visibility annotations, report, and physical-run summary</td>
 <td>Target-hardware-derived source and a developer checkout</td>
@@ -1491,7 +1491,7 @@ named run, report, video, annotated frame, or measurement.</p>
 <td>One scene and vocabulary only; not mAP, bounding-box recall, timing, or autonomy evidence</td>
 </tr>
 <tr>
-<td><a href="../target-acquisition/">v2-L FP target acquisition</a></td>
+<td><a href="../target-acquisition/">v2-L FP Target Acquisition</a></td>
 <td>One ROCK 5B+ execution completed bounded visual target acquisition and framing</td>
 <td>Complete <code>v2l_fp_scene_1</code> RunBundle: manifest, autonomy trace, detections, telemetry, evidence frames, video, rosbag, provenance, and static report</td>
 <td>ROCK 5B+ physical robot</td>
@@ -1499,7 +1499,7 @@ named run, report, video, annotated frame, or measurement.</p>
 <td>One successful representative run; not a benchmark, statistical result, navigation-based search, global exploration, learned control, or general detector-accuracy claim</td>
 </tr>
 <tr>
-<td><a href="../int8-quantization-failure/">v2-L INT8 quantization failure analysis</a></td>
+<td><a href="../int8-quantization-failure/">v2-L INT8 Quantization Failure Analysis</a></td>
 <td>A fixed RK3588 evaluation observed recalibrated INT8 collapse and partial mixed-precision recovery</td>
 <td>300-frame summary, retained replay, provenance, projection-context metrics, and evidence inventory</td>
 <td>RK3588 target hardware</td>
@@ -1597,13 +1597,13 @@ micro-ROS transport, robot actuation, or public RunBundle recording.</p>
 are not public evidence unless the run output is published as an artifact and linked
 from this page.</p>
 <h2 id="target-hardware-evidence">Target-Hardware Evidence<a class="headerlink" href="#target-hardware-evidence" title="Permanent link">&para;</a></h2>
-<p>The <a href="../detector-comparison/">scan_final_recal detector comparison</a> is public,
+<p>The <a href="../detector-comparison/">Six-Model Detector Comparison</a> is public,
 target-hardware-derived evidence: it includes a controlled replay video,
 recomputable JSONL/visibility metrics, and a summary bound to six inspected
 physical-run manifests. It supports only the bounded detector-comparison claims
 made there. It does not publish a complete RunBundle, raw source stream,
 target-hardware timing measurement, or autonomy-execution record.</p>
-<p>The <a href="../target-acquisition/">v2-L FP target-acquisition RunBundle</a>
+<p>The <a href="../target-acquisition/">v2-L FP Target Acquisition</a>
 is public target-hardware evidence for one bounded autonomy execution. It retains
 the original manifest, autonomy trace, detections, performance/system/pipeline
 telemetry, evidence frames, media, rosbag, provenance, and static report. It does
@@ -1743,7 +1743,7 @@ observed results, inspection status, and limitations.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 11, 2026 23:05:17 UTC">September 11, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 28, 2026 22:04:53 UTC">September 28, 2026</span>
   </span>
 
     

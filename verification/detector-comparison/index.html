@@ -27,7 +27,7 @@
     
     
       
-        <title>Detector Comparison - Omniseer</title>
+        <title>Six-Model Detector Comparison - Omniseer</title>
       
     
     
@@ -67,13 +67,13 @@
   
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Omniseer">
-  <meta property="og:title" content="Detector Comparison - Omniseer">
+  <meta property="og:title" content="Six-Model Detector Comparison - Omniseer">
   <meta property="og:description" content="Six YOLO-World configurations on a repaired 360° scene: controlled presence/visibility coverage plus independent ROCK 5B+ physical-run summaries.">
   <meta property="og:url" content="https://jburo1.github.io/omniseer/verification/detector-comparison/">
   <meta property="og:image" content="https://jburo1.github.io/omniseer/assets/brand/social-preview.png">
   <meta property="og:image:type" content="image/png">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Detector Comparison - Omniseer">
+  <meta name="twitter:title" content="Six-Model Detector Comparison - Omniseer">
   <meta name="twitter:description" content="Six YOLO-World configurations on a repaired 360° scene: controlled presence/visibility coverage plus independent ROCK 5B+ physical-run summaries.">
   <meta name="twitter:image" content="https://jburo1.github.io/omniseer/assets/brand/social-preview.png">
 
@@ -94,7 +94,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#detector-comparison" class="md-skip">
+        <a href="#six-model-detector-comparison" class="md-skip">
           Skip to content
         </a>
       
@@ -129,7 +129,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Detector Comparison
+              Six-Model Detector Comparison
             
           </span>
         </div>
@@ -295,7 +295,7 @@
   <span class="md-ellipsis">
     
   
-    Results
+    Experiments
   
 
     
@@ -311,7 +311,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Results
+    Experiments
   
 
           </label>
@@ -331,7 +331,7 @@
   <span class="md-ellipsis">
     
   
-    Target Acquisition
+    v2-L FP Target Acquisition
   
 
     
@@ -368,7 +368,7 @@
   <span class="md-ellipsis">
     
   
-    Detector Comparison
+    Six-Model Detector Comparison
   
 
     
@@ -386,7 +386,7 @@
   <span class="md-ellipsis">
     
   
-    Detector Comparison
+    Six-Model Detector Comparison
   
 
     
@@ -423,10 +423,82 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#independent-physical-runs" class="md-nav__link">
+  <a href="#method-experimental-setup" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Independent physical runs
+        Method / experimental setup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Results
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#controlled-presencevisibility-replay" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Controlled presence/visibility replay
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#independent-physical-run-summaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Independent physical-run summaries
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#engineering-interpretation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Engineering interpretation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#evidence-and-reproducibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evidence and reproducibility
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Limitations
       
     </span>
   </a>
@@ -456,7 +528,7 @@
   <span class="md-ellipsis">
     
   
-    INT8 Quantization Failure Analysis
+    v2-L INT8 Quantization Failure Analysis
   
 
     
@@ -1236,10 +1308,82 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#independent-physical-runs" class="md-nav__link">
+  <a href="#method-experimental-setup" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Independent physical runs
+        Method / experimental setup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Results
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#controlled-presencevisibility-replay" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Controlled presence/visibility replay
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#independent-physical-run-summaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Independent physical-run summaries
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#engineering-interpretation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Engineering interpretation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#evidence-and-reproducibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evidence and reproducibility
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Limitations
       
     </span>
   </a>
@@ -1266,29 +1410,96 @@
   
 
 
-<h1 id="detector-comparison">Detector Comparison<a class="headerlink" href="#detector-comparison" title="Permanent link">&para;</a></h1>
+<h1 id="six-model-detector-comparison">Six-Model Detector Comparison<a class="headerlink" href="#six-model-detector-comparison" title="Permanent link">&para;</a></h1>
 <h2 id="engineering-question">Engineering question<a class="headerlink" href="#engineering-question" title="Permanent link">&para;</a></h2>
 <p>With one repaired, frame-aligned 360° source scene, how do the six final
 YOLO-World RKNN detector configurations differ when vocabulary and
 post-processing are held fixed—and how do their independent physical
 case-study summaries inform deployment trade-offs?</p>
+<h2 id="method-experimental-setup">Method / experimental setup<a class="headerlink" href="#method-experimental-setup" title="Permanent link">&para;</a></h2>
+<p>The controlled replay sends exactly the same 1,222 repaired source frames
+(inclusive frames 0–1221) through each configuration: v2-S FP, v2-S INT8,
+v2-M FP, v2-M INT8, v2-L FP, and v2-L Hybrid. It holds source repair, class
+vocabulary, score threshold (0.25), NMS IoU threshold (0.45), and maximum
+detections (100) fixed; detector configuration is the only intended variable.
+Manual visibility annotations define 19 in-vocabulary class-interval sets and
+the 5,679 visible-frame denominator. <code>laptop</code>, <code>computer monitor</code>, and <code>sofa</code>
+were outside the comparison vocabulary and were excluded rather than counted
+as negative evidence.</p>
+<p>The physical-run grid is a separate 2-row × 3-column presentation of six
+independent ROCK 5B+ runs. Panels begin at their own run start and the grid
+ends at the shortest overlay, so it is supporting end-to-end case-study
+evidence, not a frame-aligned replay or a latency benchmark.</p>
 <video controls preload="metadata" poster="../assets/evidence/detector-comparison-poster.webp" width="100%">
   <source src="https://media.githubusercontent.com/media/jburo1/omniseer/master/studies/detector_comparison/scan_final_recal/evidence/controlled_replay_2x3.mp4" type="video/mp4" />
-  Your browser cannot play this video. <a href="https://github.com/jburo1/omniseer/blob/master/studies/detector_comparison/scan_final_recal/evidence/controlled_replay_2x3.mp4">Open the controlled replay video on GitHub</a>.
+  Your browser cannot play this video. <a href="https://github.com/jburo1/omniseer/blob/master/studies/detector_comparison/scan_final_recal/evidence/controlled_replay_2x3.mp4">Open the controlled replay media</a>.
 </video>
 
-<p><em>Controlled replay of the same repaired source frames through all six detector
-configurations. The full study publishes provenance, JSONLs, visibility
-annotations, a comparison report, and independent physical-run summaries.</em></p>
-<p>The controlled replay is a 3-row × 2-column layout, pairing FP with INT8 or
-Hybrid by model size. It holds the repaired source frames, vocabulary, and
-post-processing fixed while changing only the detector configuration. Its leading
-visible-frame result is v2-M FP at 2,367 / 5,679 (41.7%), narrowly ahead of v2-L
-FP at 41.6%. This is one-scene presence/visibility evidence, not mAP,
-bounding-box recall, latency evidence, or general detector accuracy.</p>
-<h2 id="independent-physical-runs">Independent physical runs<a class="headerlink" href="#independent-physical-runs" title="Permanent link">&para;</a></h2>
-<p>The physical presentation grid is a 2-row × 3-column display of independent
-runs; its panels do not start together and it is not a controlled replay.</p>
+<p><em>The controlled replay is a 3-row × 2-column layout pairing FP with INT8 or
+Hybrid by model size. It is target-hardware-derived evidence from the same
+repaired source frames for every configuration.</em></p>
+<h2 id="results">Results<a class="headerlink" href="#results" title="Permanent link">&para;</a></h2>
+<h3 id="controlled-presencevisibility-replay">Controlled presence/visibility replay<a class="headerlink" href="#controlled-presencevisibility-replay" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Configuration</th>
+<th style="text-align: right;">Visible-frame detections</th>
+<th style="text-align: right;">Rate</th>
+<th style="text-align: right;">Absent dog frames</th>
+<th style="text-align: right;">Absent cat frames</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>v2-S FP</td>
+<td style="text-align: right;">2,126 / 5,679</td>
+<td style="text-align: right;">37.4%</td>
+<td style="text-align: right;">34</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td>v2-S INT8</td>
+<td style="text-align: right;">1,853 / 5,679</td>
+<td style="text-align: right;">32.6%</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td>v2-M FP</td>
+<td style="text-align: right;">2,367 / 5,679</td>
+<td style="text-align: right;">41.7%</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td>v2-M INT8</td>
+<td style="text-align: right;">2,055 / 5,679</td>
+<td style="text-align: right;">36.2%</td>
+<td style="text-align: right;">23</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td>v2-L FP</td>
+<td style="text-align: right;">2,363 / 5,679</td>
+<td style="text-align: right;">41.6%</td>
+<td style="text-align: right;">33</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td>v2-L Hybrid</td>
+<td style="text-align: right;">1,440 / 5,679</td>
+<td style="text-align: right;">25.4%</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+</tr>
+</tbody>
+</table>
+<p>Every configuration detected <code>person</code> on all 293 / 293 annotated visible
+frames. v2-M FP led aggregate visible-frame coverage by a narrow margin over
+v2-L FP. The zero absent-dog count for v2-L Hybrid must be read alongside its
+lowest aggregate visible-frame rate; it is not a general precision claim.</p>
+<h3 id="independent-physical-run-summaries">Independent physical-run summaries<a class="headerlink" href="#independent-physical-run-summaries" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
@@ -1296,9 +1507,11 @@ runs; its panels do not start together and it is not a controlled replay.</p>
 <th>Outcome</th>
 <th style="text-align: right;">First detection</th>
 <th style="text-align: right;">Success</th>
+<th style="text-align: right;">Target loss</th>
 <th style="text-align: right;">Mean consumer FPS</th>
-<th style="text-align: right;">Inference p50</th>
-<th style="text-align: right;">Inference p95</th>
+<th style="text-align: right;">Inference p50 / p95</th>
+<th style="text-align: right;">Source-age p95</th>
+<th style="text-align: right;">Memory-used p95</th>
 </tr>
 </thead>
 <tbody>
@@ -1307,81 +1520,106 @@ runs; its panels do not start together and it is not a controlled replay.</p>
 <td>success</td>
 <td style="text-align: right;">24.6 s</td>
 <td style="text-align: right;">53.4 s</td>
+<td style="text-align: right;">0</td>
 <td style="text-align: right;">7.90</td>
-<td style="text-align: right;">117.28 ms</td>
-<td style="text-align: right;">153.95 ms</td>
+<td style="text-align: right;">117.28 / 153.95 ms</td>
+<td style="text-align: right;">181.50 ms</td>
+<td style="text-align: right;">2955.47 MB</td>
 </tr>
 <tr>
 <td>v2-S INT8</td>
 <td>success</td>
 <td style="text-align: right;">24.6 s</td>
 <td style="text-align: right;">50.5 s</td>
+<td style="text-align: right;">0</td>
 <td style="text-align: right;">16.54</td>
-<td style="text-align: right;">59.19 ms</td>
-<td style="text-align: right;">60.76 ms</td>
+<td style="text-align: right;">59.19 / 60.76 ms</td>
+<td style="text-align: right;">95.48 ms</td>
+<td style="text-align: right;">2959.68 MB</td>
 </tr>
 <tr>
 <td>v2-M FP</td>
 <td>success</td>
 <td style="text-align: right;">25.2 s</td>
 <td style="text-align: right;">53.9 s</td>
+<td style="text-align: right;">0</td>
 <td style="text-align: right;">4.37</td>
-<td style="text-align: right;">225.12 ms</td>
-<td style="text-align: right;">251.43 ms</td>
+<td style="text-align: right;">225.12 / 251.43 ms</td>
+<td style="text-align: right;">282.81 ms</td>
+<td style="text-align: right;">3349.19 MB</td>
 </tr>
 <tr>
 <td>v2-M INT8</td>
 <td>success</td>
 <td style="text-align: right;">24.5 s</td>
 <td style="text-align: right;">51.1 s</td>
+<td style="text-align: right;">0</td>
 <td style="text-align: right;">10.04</td>
-<td style="text-align: right;">96.22 ms</td>
-<td style="text-align: right;">106.47 ms</td>
+<td style="text-align: right;">96.22 / 106.47 ms</td>
+<td style="text-align: right;">139.42 ms</td>
+<td style="text-align: right;">2999.90 MB</td>
 </tr>
 <tr>
 <td>v2-L FP</td>
 <td>success</td>
 <td style="text-align: right;">25.4 s</td>
 <td style="text-align: right;">56.1 s</td>
+<td style="text-align: right;">0</td>
 <td style="text-align: right;">2.64</td>
-<td style="text-align: right;">380.25 ms</td>
-<td style="text-align: right;">400.98 ms</td>
+<td style="text-align: right;">380.25 / 400.98 ms</td>
+<td style="text-align: right;">438.76 ms</td>
+<td style="text-align: right;">3306.73 MB</td>
 </tr>
 <tr>
 <td>v2-L Hybrid</td>
 <td>success</td>
 <td style="text-align: right;">24.9 s</td>
 <td style="text-align: right;">57.8 s</td>
+<td style="text-align: right;">0</td>
 <td style="text-align: right;">4.65</td>
-<td style="text-align: right;">205.55 ms</td>
-<td style="text-align: right;">229.90 ms</td>
+<td style="text-align: right;">205.55 / 229.90 ms</td>
+<td style="text-align: right;">262.32 ms</td>
+<td style="text-align: right;">4157.62 MB</td>
 </tr>
 </tbody>
 </table>
-<p>v2-S INT8 has the highest author-reported throughput among the six physical
-case-study summaries. The v2-L FP RunBundle is publicly inspectable; the
-other four physical RunBundles remain local, so their timing values and derived
-ratios cannot be independently recomputed from the public repository. Against
-their FP counterparts, v2-S INT8 improves inference p50/p95 by 1.98×/2.53× and
-throughput by 2.09×; v2-M INT8 by 2.34×/2.36× and 2.30×; and v2-L Hybrid by
-1.85×/1.74× and 1.76×. v2-M INT8 is therefore the strongest observed
-coverage/throughput compromise for this scene. v2-L Hybrid is
-faster than v2-L FP, but has lower
-controlled coverage and higher observed memory use. All six trials succeeded
-without target loss; their 50.5–57.8 s success times vary far less than their
-59.19–380.25 ms inference p50 values, suggesting scan/control timing is also
-material in this bounded trial.</p>
-<p>These are one independent physical run per configuration, not replicated
-benchmark estimates or proof of causal model differences. Detection coverage
-comes from fixed-source replay; runtime behavior comes from the independent
-trials. The retained thermal throttle field is unavailable, so no-throttling is
-not established by this evidence.</p>
-<p>The tracked comparison video is target-hardware-derived public evidence. The
+<p>All six trials completed without target loss. The retained throttle field was
+unavailable for every trial, so this evidence does not establish that thermal
+throttling was absent.</p>
+<h2 id="engineering-interpretation">Engineering interpretation<a class="headerlink" href="#engineering-interpretation" title="Permanent link">&para;</a></h2>
+<p>v2-M FP has the highest controlled coverage, while v2-S INT8 has the highest
+author-reported throughput among the physical summaries. v2-M INT8 is the
+strongest observed coverage/throughput compromise for this scene: 36.2%
+controlled coverage and 10.04 FPS in its independent run. Relative to their
+FP counterparts, v2-S INT8 improves inference p50/p95 by 1.98×/2.53× and
+throughput by 2.09×; v2-M INT8 by 2.34×/2.36× and 2.30×; v2-L Hybrid by
+1.85×/1.74× and 1.76×. v2-L Hybrid is faster than v2-L FP but has lower
+controlled coverage and the highest observed memory use.</p>
+<p>Success times span 50.5–57.8 s, much less than the 59.19–380.25 ms inference
+p50 range, which suggests scan/control timing is also material in this bounded
+trial. The ratios describe independent end-to-end measurements; they do not
+establish causal model differences.</p>
+<h2 id="evidence-and-reproducibility">Evidence and reproducibility<a class="headerlink" href="#evidence-and-reproducibility" title="Permanent link">&para;</a></h2>
+<p>The tracked replay provenance, six replay JSONLs, visibility annotations, and
+comparison report make the controlled metrics independently recomputable.
+Rerendering the video additionally requires the retained source stream. The
 complete RunBundles, source transport stream, and raw physical manifests remain
-ignored local evidence. JSONLs plus visibility annotations are sufficient to
-recompute controlled metrics; rerendering the video also requires the retained
-source stream.</p>
-<p><a class="md-button md-button--primary" href="https://github.com/jburo1/omniseer/tree/master/studies/detector_comparison/scan_final_recal">Open the full detector-comparison study and reproducibility artifacts on GitHub</a></p>
+ignored local evidence. Apart from the public v2-L FP RunBundle, the physical
+timing values and derived ratios are author-reported summaries from retained
+local bundles and cannot be independently recomputed from the public
+repository.</p>
+<p>For raw-artifact inspection, use the repository's <a href="https://github.com/jburo1/omniseer/blob/master/studies/detector_comparison/scan_final_recal/evidence/replay_provenance.json">replay provenance</a>,
+<a href="https://github.com/jburo1/omniseer/tree/master/studies/detector_comparison/scan_final_recal/evidence/replay_jsonl">replay JSONLs</a>,
+<a href="https://github.com/jburo1/omniseer/blob/master/studies/detector_comparison/scan_final_recal/visibility.txt">visibility annotations</a>,
+and <a href="https://github.com/jburo1/omniseer/blob/master/studies/detector_comparison/scan_final_recal/physical_runs.yaml">physical-run summary</a>.</p>
+<h2 id="limitations">Limitations<a class="headerlink" href="#limitations" title="Permanent link">&para;</a></h2>
+<p>This is one-scene presence/visibility evidence, not mAP, bounding-box recall,
+or general detector accuracy. Controlled replay is not latency benchmarking;
+the physical results are one unreplicated run per configuration and cannot
+establish statistical significance or causal performance differences. Detection
+coverage comes from fixed-source replay, while runtime behavior comes from the
+independent trials; physical-run detections must not be used as controlled
+accuracy comparisons.</p>
 
 
 
@@ -1402,7 +1640,7 @@ source stream.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 11, 2026 23:05:17 UTC">September 11, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 28, 2026 22:04:53 UTC">September 28, 2026</span>
   </span>
 
     

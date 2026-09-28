@@ -94,7 +94,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#yolo-world-v2-int8-quantization-investigation" class="md-skip">
+        <a href="#yolo-world-v2-int8-quantization-technical-appendix" class="md-skip">
           Skip to content
         </a>
       
@@ -293,7 +293,7 @@
   <span class="md-ellipsis">
     
   
-    Results
+    Experiments
   
 
     
@@ -309,7 +309,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Results
+    Experiments
   
 
           </label>
@@ -329,7 +329,7 @@
   <span class="md-ellipsis">
     
   
-    Target Acquisition
+    v2-L FP Target Acquisition
   
 
     
@@ -357,7 +357,7 @@
   <span class="md-ellipsis">
     
   
-    Detector Comparison
+    Six-Model Detector Comparison
   
 
     
@@ -385,7 +385,7 @@
   <span class="md-ellipsis">
     
   
-    INT8 Quantization Failure Analysis
+    v2-L INT8 Quantization Failure Analysis
   
 
     
@@ -939,10 +939,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#conclusions" class="md-nav__link">
+  <a href="#supporting-technical-conclusions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Conclusions
+        Supporting technical conclusions
       
     </span>
   </a>
@@ -950,10 +950,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#final-representative-rk3588-evaluation" class="md-nav__link">
+  <a href="#supporting-final-rk3588-evaluation-detail" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Final representative RK3588 evaluation
+        Supporting final RK3588 evaluation detail
       
     </span>
   </a>
@@ -961,10 +961,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#final-engineering-decision" class="md-nav__link">
+  <a href="#decision-context" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Final engineering decision
+        Decision context
       
     </span>
   </a>
@@ -1269,10 +1269,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#conclusions" class="md-nav__link">
+  <a href="#supporting-technical-conclusions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Conclusions
+        Supporting technical conclusions
       
     </span>
   </a>
@@ -1280,10 +1280,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#final-representative-rk3588-evaluation" class="md-nav__link">
+  <a href="#supporting-final-rk3588-evaluation-detail" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Final representative RK3588 evaluation
+        Supporting final RK3588 evaluation detail
       
     </span>
   </a>
@@ -1291,10 +1291,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#final-engineering-decision" class="md-nav__link">
+  <a href="#decision-context" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Final engineering decision
+        Decision context
       
     </span>
   </a>
@@ -1354,13 +1354,19 @@
   
 
 
-<h1 id="yolo-world-v2-int8-quantization-investigation">YOLO-World v2 INT8 Quantization Investigation<a class="headerlink" href="#yolo-world-v2-int8-quantization-investigation" title="Permanent link">&para;</a></h1>
-<p>This record preserves the conclusions of the 2026-08-29--31 RKNN
-quantization investigation. Raw Toolkit simulator snapshots are intentionally
-ignored under <code>artifacts/quant_analysis/</code>; the compact final RK3588 evaluation
-evidence is retained in the v2-L INT8 study and indexed in
+<h1 id="yolo-world-v2-int8-quantization-technical-appendix">YOLO-World v2 INT8 Quantization Technical Appendix<a class="headerlink" href="#yolo-world-v2-int8-quantization-technical-appendix" title="Permanent link">&para;</a></h1>
+<p>This is a supporting technical appendix to the canonical
+<a href="../../verification/int8-quantization-failure/">v2-L INT8 Quantization Failure Analysis</a>.
+Read that page for the engineering question, final results, interpretation,
+decision, evidence boundaries, and limitations. This appendix preserves the
+2026-08-29--31 RKNN conversion contract, layer-level diagnostics, host-analysis
+procedure, and hashes behind that canonical narrative; it does not define a
+second experiment conclusion.</p>
+<p>Raw Toolkit simulator snapshots are intentionally ignored under
+<code>artifacts/quant_analysis/</code>; compact final RK3588 evaluation evidence is
+retained in the v2-L INT8 study and indexed in
 <code>studies/quantization/yolo_world_v2l_int8/evidence/EVIDENCE_INDEX.md</code>.</p>
-<h2 id="conclusions">Conclusions<a class="headerlink" href="#conclusions" title="Permanent link">&para;</a></h2>
+<h2 id="supporting-technical-conclusions">Supporting technical conclusions<a class="headerlink" href="#supporting-technical-conclusions" title="Permanent link">&para;</a></h2>
 <ul>
 <li>v2-L recalibrated INT8 has a classification collapse before YOLO
   postprocessing. The final RK3588 replay produced zero detections on all 300
@@ -1381,7 +1387,7 @@ evidence is retained in the v2-L INT8 study and indexed in
   it retained 789 of 1,301 FP detections (60.6%) and had severe
   class-specific degradation.</li>
 </ul>
-<h2 id="final-representative-rk3588-evaluation">Final representative RK3588 evaluation<a class="headerlink" href="#final-representative-rk3588-evaluation" title="Permanent link">&para;</a></h2>
+<h2 id="supporting-final-rk3588-evaluation-detail">Supporting final RK3588 evaluation detail<a class="headerlink" href="#supporting-final-rk3588-evaluation-detail" title="Permanent link">&para;</a></h2>
 <p>The canonical final evidence is
 <code>studies/quantization/yolo_world_v2l_int8/evidence/final_multiframe_rk3588/results/</code>, indexed with
 hashes and file-retention guidance in
@@ -1439,18 +1445,15 @@ JSONL serialization. It is <strong>not</strong> isolated RKNN inference latency.
 FP-relative degradation remained for handbag (2/48, 4.2%), bag (4/59, 6.8%),
 cellphone (0/5), book (18/73, 24.7%), subwoofer (7/27, 25.9%), and desk
 (37/124, 29.8%). These values are neither ground-truth precision nor recall.</p>
-<h2 id="final-engineering-decision">Final engineering decision<a class="headerlink" href="#final-engineering-decision" title="Permanent link">&para;</a></h2>
-<ul>
-<li>v2-L FP remains the quality reference.</li>
-<li>Recalibrated v2-L INT8 is unsuitable.</li>
-<li>TD01 is an experimental/diagnostic mixed-precision mitigation, not a
-  validated production replacement.</li>
-<li>The proprietary Toolkit2/backend root cause remains unresolved.</li>
-<li>The root-cause investigation is closed. Future work should reopen it only
-  when a vendor bug report or a production-quality v2-L mixed-precision
-  deployment is specifically required; TD01's 60.6% retention alone is not a
-  reason to reopen it.</li>
-</ul>
+<h2 id="decision-context">Decision context<a class="headerlink" href="#decision-context" title="Permanent link">&para;</a></h2>
+<p>The canonical decision is recorded in the
+<a href="../../verification/int8-quantization-failure/">v2-L INT8 Quantization Failure Analysis</a>:
+v2-L FP remains the quality reference; recalibrated v2-L INT8 is unsuitable;
+and TD01 is an experimental diagnostic mitigation, not a validated production
+replacement. The proprietary Toolkit2/backend root cause remains unresolved.
+Future work should reopen the root-cause investigation only for a vendor bug
+report or a production-quality v2-L mixed-precision deployment; TD01's 60.6%
+retention alone is not a reason to reopen it.</p>
 <h2 id="reproducible-host-analysis">Reproducible host analysis<a class="headerlink" href="#reproducible-host-analysis" title="Permanent link">&para;</a></h2>
 <p>Build the pinned host model-builder image and run any variant:</p>
 <div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>model<span class="w"> </span>image
@@ -1552,7 +1555,7 @@ recreate the investigation are retained elsewhere.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 1, 2026 04:10:10 UTC">September 1, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 28, 2026 22:04:53 UTC">September 28, 2026</span>
   </span>
 
     
