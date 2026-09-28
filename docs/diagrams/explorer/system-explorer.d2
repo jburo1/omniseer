@@ -43,6 +43,18 @@ robot: {
   }
 }
 
+development_pc: {
+  label: "Development PC"
+  class: boundary
+
+  rknn_model_build: {
+    label: "RKNN model build"
+    class: laptop
+    tooltip: "Dedicated host-side environment: YOLO-World .pth -> ONNX -> RK3588 .rknn, including calibration and quantization."
+    link: "../../../perception/yolo-world-model-deployment/"
+  }
+}
+
 workstation: {
   label: "Workstation"
   class: boundary
@@ -74,6 +86,12 @@ workstation: {
 
 workstation.laptop <-> robot.runtime: "commands / telemetry" {
   class: command_edge
+}
+
+# Offline model deployment path
+
+development_pc.rknn_model_build -> robot.runtime: "deploy RK3588 .rknn model artifact" {
+  class: offline_edge
 }
 
 robot.runtime <-> robot.firmware: "control / feedback" {

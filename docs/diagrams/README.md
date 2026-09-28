@@ -14,8 +14,11 @@ should answer:
 > What are the major parts of Omniseer, where do they run, and how do they
 > communicate?
 
-It should not expose ROS topic names, containers, device paths, CI infrastructure,
-or implementation-level details.
+It should not expose ROS topic names, device paths, CI infrastructure, or
+implementation-level details. Container details should generally remain excluded;
+the host-side RKNN model-build environment is the exception because it is a
+meaningful execution and deployment boundary. Label it architecturally (for
+example, `RKNN model build`), not with Docker internals.
 
 ## Source And Artifact Mapping
 
@@ -63,17 +66,23 @@ and validates internal links embedded in built SVG diagrams.
 
 | Node | Meaning at this level | Initial destination |
 | --- | --- | --- |
-| Operator | Human initiating runs and reviewing results. | `../../../operations/operator-run-workflow/` |
-| Laptop tooling | Off-robot control, diagnostics, preview, retrieval, and report workflow. | `../../../operations/operator-run-workflow/` |
-| Robot mission runtime | Native perception plus ROS 2 autonomy, recording, and integration. | `../../../architecture/overview/` |
+| Development PC | Off-robot development boundary that prepares deployed model artifacts. | `../../../perception/yolo-world-model-deployment/` |
+| RKNN model build | Host-side YOLO-World export, calibration/quantization, and RKNN compilation. | `../../../perception/yolo-world-model-deployment/` |
+| Operator application | Off-robot control, diagnostics, preview, retrieval, and report workflow. | `../../../operations/operator-run-workflow/` |
+| Robot runtime | Native perception plus ROS 2 autonomy, recording, and integration. | `../../../architecture/overview/` |
 | Firmware | Teensy-owned low-level motor and sensor integration over micro-ROS. | `../../../architecture/overview/` |
 | Physical hardware | Electrical and physical sensors, actuators, compute, and power system. | `../../../architecture/overview/` |
 | RunBundle | Durable robot-run evidence artifact. | `../../../verification/evidence/` |
 | Static report | Human-readable derived review artifact. | `../../../verification/evidence/` |
 
-Use "Robot mission runtime" at the top level rather than "ROS 2 mission runtime"
+Use "Robot runtime" at the top level rather than "ROS 2 mission runtime"
 because the mission software includes native V4L2/RGA/RKNN perception as well as
 ROS 2 integration.
+
+The development-PC-to-robot edge represents offline deployment of the compiled
+RK3588 `.rknn` model artifact. It must not imply a live dependency during robot
+inference or autonomy. Keep it visually and semantically separate from the
+operator application's live commands, telemetry, and evidence workflow.
 
 ## Visual Vocabulary
 

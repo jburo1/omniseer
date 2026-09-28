@@ -27,7 +27,7 @@ An operator application on a remote machine parameterizes, launches, and synchro
 
 An operator specifies an open-vocabulary target such as `person` or `backpack`. The robot scans, acquires a stable neural detection, centers it, adjusts distance to reach the requested framing, stops at a configured proximity limit, and preserves the run as reproducible evidence.
 
-<video src="assets/omni_video.mp4" controls playsinline aria-label="Omniseer target-acquisition demonstration"></video>
+https://github.com/user-attachments/assets/9afa632c-9b78-4978-9c06-8714d285d1c0
 
 ## Experiments
 
@@ -60,18 +60,9 @@ An operator specifies an open-vocabulary target such as `person` or `backpack`. 
 
 ## System at a Glance
 
-```text
-camera
-  -> V4L2 capture
-  -> RGA preprocessing
-  -> RKNN YOLO-World inference
-  -> typed ROS 2 detections and telemetry
-  -> bounded target acquisition and framing
-  -> RunBundle evidence
-  -> laptop inspection and static report
-```
+<a href="docs/architecture/overview.md"><img src="docs/assets/diagrams/explorer/system-explorer.svg" alt="Omniseer system architecture: development PC, operator workstation, RK3588 robot runtime, firmware, hardware, and experiment evidence flow" width="100%"></a>
 
-The mission-critical path stays on the robot: native C++ owns capture, preprocessing, inference, post-processing, and telemetry; ROS 2 carries typed detection, performance, command, odometry, sensor, and battery contracts; Teensy firmware and micro-ROS own low-level I/O. The operator gateway, preview stream, reports, and offboard inspection are diagnostic or review tooling, not dependencies of mission-critical perception or control. The robot runtime is packaged and verified as a containerized target runtime.
+RKNN model construction happens offline on the development PC; the deployed model runs entirely onboard. The mission-critical path stays on the robot: native C++ owns capture, preprocessing, inference, post-processing, and telemetry; ROS 2 carries typed detection, performance, command, odometry, sensor, and battery contracts; Teensy firmware and micro-ROS own low-level I/O. The operator gateway, preview stream, reports, and offboard inspection are diagnostic or review tooling, not dependencies of mission-critical perception or control. The robot runtime is packaged and verified as a containerized target runtime.
 
 ## Representative Engineering Evidence
 

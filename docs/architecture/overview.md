@@ -42,9 +42,18 @@ collection, hardware operation, and reproducible validation.
 
 ## Runtime Boundaries
 
+### Development PC / Model-Build Environment
+
+The development PC is an offline build environment, not part of the
+mission-critical runtime dependency chain. It exports YOLO-World models and
+compiles them into RK3588 `.rknn` artifacts for deployment to the robot. The
+detailed, host-side workflow remains in
+[YOLO-World v2 Model Deployment](../perception/yolo-world-model-deployment.md).
+
 ### Robot SBC
 
-The ROCK 5B+ hosts the mission-critical runtime:
+The ROCK 5B+ consumes the deployed `.rknn` artifact and hosts the
+mission-critical runtime:
 
 - V4L2 camera capture from the Rockchip ISP
 - RGA preprocessing into fixed model input buffers
@@ -67,7 +76,8 @@ Real and simulated producers converge on the normalized boundary topics document
 
 ### Operator Laptop
 
-The laptop supports:
+The operator laptop controls runs, receives diagnostics and preview, retrieves
+RunBundles, and performs evidence review and reporting. It supports:
 
 - gRPC status and preview control
 - SRT preview receive and decode
