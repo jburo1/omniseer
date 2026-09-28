@@ -12,11 +12,11 @@ The implemented behavior is intentionally narrow: scan for a configured class, a
   <img src="assets/evidence/robot-hero.webp" alt="Omniseer physical mobile robot with LiDAR and mecanum drive" width="960" />
 </p>
 
-## Evidence-backed studies
+## Experiments
 
 <div class="grid cards" markdown>
 
--   :material-robot-industrial-outline: **Target acquisition on the physical robot**
+-   :material-robot-industrial-outline: **v2-L FP Target Acquisition**
 
     ---
 
@@ -26,7 +26,7 @@ The implemented behavior is intentionally narrow: scan for a configured class, a
 
     [:octicons-arrow-right-24: Review the run](verification/target-acquisition.md)
 
--   :material-chart-timeline-variant-shimmer: **Six-detector deployment trade-off**
+-   :material-chart-timeline-variant-shimmer: **Six-Model Detector Comparison**
 
     ---
 
@@ -36,7 +36,7 @@ The implemented behavior is intentionally narrow: scan for a configured class, a
 
     [:octicons-arrow-right-24: Compare detectors](verification/detector-comparison.md)
 
--   :material-alert-decagram-outline: **INT8 failure localized, not hidden**
+-   :material-alert-decagram-outline: **v2-L INT8 Quantization Failure Analysis**
 
     ---
 
@@ -61,8 +61,8 @@ The mission-critical path stays on the robot: camera capture, preprocessing, RKN
 [Explore the system architecture](architecture/overview.md){ .md-button .md-button--primary }
 [Browse the engineering documentation](perception/edge-to-cloud.md){ .md-button }
 
-## Results with evidence boundaries
+## Experiment evidence boundaries
 
-The three studies above are deliberately different kinds of evidence: one complete public physical RunBundle, one fixed-source controlled replay plus six independent physical-run summaries, and one frozen-frame quantization investigation. They support their named claims—not general detector accuracy, replicated benchmarks, or broad autonomy assertions.
+The three experiments above are deliberately different kinds of evidence: one complete public physical RunBundle, one fixed-source controlled replay plus six independent physical-run summaries, and one frozen-frame quantization investigation. They support their named claims—not general detector accuracy, replicated benchmarks, or broad autonomy assertions.
 
-For the artifact inventory, public-versus-local distinction, CI scope, and reproducibility limits, see [Verification Evidence](verification/evidence.md). The source studies retain the detailed methodology, provenance, and limitations.
+These experiment pages are the authoritative narratives for their questions, methods, results, interpretations, and limitations. Repository study directories store the supporting evidence and reproducibility artifacts: RunBundles, manifests, JSONLs, provenance, checksums, and source material. For the artifact inventory, public-versus-local distinction, CI scope, and reproducibility limits, see [Verification Evidence](verification/evidence.md).

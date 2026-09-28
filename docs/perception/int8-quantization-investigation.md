@@ -1,12 +1,19 @@
-# YOLO-World v2 INT8 Quantization Investigation
+# YOLO-World v2 INT8 Quantization Technical Appendix
 
-This record preserves the conclusions of the 2026-08-29--31 RKNN
-quantization investigation. Raw Toolkit simulator snapshots are intentionally
-ignored under `artifacts/quant_analysis/`; the compact final RK3588 evaluation
-evidence is retained in the v2-L INT8 study and indexed in
+This is a supporting technical appendix to the canonical
+[v2-L INT8 Quantization Failure Analysis](../verification/int8-quantization-failure.md).
+Read that page for the engineering question, final results, interpretation,
+decision, evidence boundaries, and limitations. This appendix preserves the
+2026-08-29--31 RKNN conversion contract, layer-level diagnostics, host-analysis
+procedure, and hashes behind that canonical narrative; it does not define a
+second experiment conclusion.
+
+Raw Toolkit simulator snapshots are intentionally ignored under
+`artifacts/quant_analysis/`; compact final RK3588 evaluation evidence is
+retained in the v2-L INT8 study and indexed in
 `studies/quantization/yolo_world_v2l_int8/evidence/EVIDENCE_INDEX.md`.
 
-## Conclusions
+## Supporting technical conclusions
 
 - v2-L recalibrated INT8 has a classification collapse before YOLO
   postprocessing. The final RK3588 replay produced zero detections on all 300
@@ -27,7 +34,7 @@ evidence is retained in the v2-L INT8 study and indexed in
   it retained 789 of 1,301 FP detections (60.6%) and had severe
   class-specific degradation.
 
-## Final representative RK3588 evaluation
+## Supporting final RK3588 evaluation detail
 
 The canonical final evidence is
 `studies/quantization/yolo_world_v2l_int8/evidence/final_multiframe_rk3588/results/`, indexed with
@@ -58,17 +65,16 @@ FP-relative degradation remained for handbag (2/48, 4.2%), bag (4/59, 6.8%),
 cellphone (0/5), book (18/73, 24.7%), subwoofer (7/27, 25.9%), and desk
 (37/124, 29.8%). These values are neither ground-truth precision nor recall.
 
-## Final engineering decision
+## Decision context
 
-- v2-L FP remains the quality reference.
-- Recalibrated v2-L INT8 is unsuitable.
-- TD01 is an experimental/diagnostic mixed-precision mitigation, not a
-  validated production replacement.
-- The proprietary Toolkit2/backend root cause remains unresolved.
-- The root-cause investigation is closed. Future work should reopen it only
-  when a vendor bug report or a production-quality v2-L mixed-precision
-  deployment is specifically required; TD01's 60.6% retention alone is not a
-  reason to reopen it.
+The canonical decision is recorded in the
+[v2-L INT8 Quantization Failure Analysis](../verification/int8-quantization-failure.md):
+v2-L FP remains the quality reference; recalibrated v2-L INT8 is unsuitable;
+and TD01 is an experimental diagnostic mitigation, not a validated production
+replacement. The proprietary Toolkit2/backend root cause remains unresolved.
+Future work should reopen the root-cause investigation only for a vendor bug
+report or a production-quality v2-L mixed-precision deployment; TD01's 60.6%
+retention alone is not a reason to reopen it.
 
 ## Reproducible host analysis
 

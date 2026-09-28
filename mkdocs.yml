@@ -40,10 +40,10 @@ plugins:
   - git-revision-date-localized
 nav:
   - Home: index.md
-  - Results:
-    - Target Acquisition: verification/target-acquisition.md
-    - Detector Comparison: verification/detector-comparison.md
-    - INT8 Quantization Failure Analysis: verification/int8-quantization-failure.md
+  - Experiments:
+    - v2-L FP Target Acquisition: verification/target-acquisition.md
+    - Six-Model Detector Comparison: verification/detector-comparison.md
+    - v2-L INT8 Quantization Failure Analysis: verification/int8-quantization-failure.md
   - System:
     - System Architecture: architecture/overview.md
     - Edge Perception and Offboard Review: perception/edge-to-cloud.md

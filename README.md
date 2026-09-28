@@ -9,7 +9,7 @@ Omniseer is a holonomic 4WD robot for developing and evaluating neural perceptio
 
 An operator application on a remote machine parameterizes, launches, and synchronizes experiments between the onboard SBC and laptop. The project spans model conversion and quantization, hardware-accelerated inference, ROS 2 and Gazebo integration, physical target acquisition, profiling, controlled experiments, and failure analysis.
 
-[Documentation](https://jburo1.github.io/omniseer/) · [Architecture](https://jburo1.github.io/omniseer/architecture/overview/) · [Physical target-acquisition RunBundle](https://jburo1.github.io/omniseer/verification/target-acquisition/) · [Six-model detector comparison](https://jburo1.github.io/omniseer/verification/detector-comparison/) · [INT8 quantization study](https://jburo1.github.io/omniseer/verification/int8-quantization-failure/)
+[Documentation](https://jburo1.github.io/omniseer/) · [Architecture](https://jburo1.github.io/omniseer/architecture/overview/) · [v2-L FP Target Acquisition](https://jburo1.github.io/omniseer/verification/target-acquisition/) · [Six-Model Detector Comparison](https://jburo1.github.io/omniseer/verification/detector-comparison/) · [v2-L INT8 Quantization Failure Analysis](https://jburo1.github.io/omniseer/verification/int8-quantization-failure/)
 
 <p align="center">
   <img src="docs/assets/evidence/robot-hero.webp" width="800" alt="Omniseer physical mobile robot with LiDAR and mecanum drive" />
@@ -37,21 +37,21 @@ https://github.com/user-attachments/assets/9afa632c-9b78-4978-9c06-8714d285d1c0
       <a href="https://jburo1.github.io/omniseer/verification/target-acquisition/">
         <img src="docs/assets/evidence/target-acquisition-v2l-fp-terminal.webp" alt="Terminal person detection from the v2-L FP target-acquisition RunBundle" width="300" />
       </a><br />
-      <a href="https://jburo1.github.io/omniseer/verification/target-acquisition/">v2-L FP target acquisition</a><br />
+      <a href="https://jburo1.github.io/omniseer/verification/target-acquisition/">v2-L FP Target Acquisition</a><br />
       Report generated from a successful run's data.
     </td>
     <td width="33%" align="center" valign="top">
       <a href="https://jburo1.github.io/omniseer/verification/detector-comparison/">
         <img src="docs/assets/evidence/detector-comparison-poster.webp" alt="Six-panel controlled replay of YOLO-World detector configurations" width="300" />
       </a><br />
-      <a href="https://jburo1.github.io/omniseer/verification/detector-comparison/">Six-model detector comparison</a><br />
+      <a href="https://jburo1.github.io/omniseer/verification/detector-comparison/">Six-Model Detector Comparison</a><br />
       A fixed-scene replay compares six YOLO-World RKNN configurations with the same vocabulary and post-processing; separate physical runs show their deployment throughput trade-offs.
     </td>
     <td width="33%" align="center" valign="top">
       <a href="https://jburo1.github.io/omniseer/verification/int8-quantization-failure/">
         <img src="docs/assets/evidence/v2l-int8-quantization-comparison.webp" alt="Side-by-side replay: recalibrated v2-L INT8 has no detections, while the TD01 mixed-precision hybrid detects a desk, potted plant, and subwoofer" width="300" />
       </a><br />
-      <a href="https://jburo1.github.io/omniseer/verification/int8-quantization-failure/">v2-L INT8 quantization study</a><br />
+      <a href="https://jburo1.github.io/omniseer/verification/int8-quantization-failure/">v2-L INT8 Quantization Failure Analysis</a><br />
       An RK3588 failure investigation asks whether v2-L INT8 preserves FP detection behavior, documenting its collapse and TD01 mixed precision's partial diagnostic recovery.
     </td>
   </tr>
@@ -69,7 +69,7 @@ RKNN model construction happens offline on the development PC; the deployed mode
 | Evidence | What it supports | Public boundary |
 | --- | --- | --- |
 | GitHub Actions CI | Portable ROS package checks, Gazebo smoke topics, portable vision tests, firmware compilation, docs build, and hardware-independent runtime packaging | Does not prove camera, RKNN/RGA, LiDAR, Teensy, or physical-robot execution |
-| The three flagship studies above | Named physical-run, controlled replay, and target-hardware quantization claims | Their study-specific limitations apply; none is mAP, a replicated benchmark, or a general autonomy result |
+| The three flagship experiments above | Named physical-run, controlled replay, and target-hardware quantization claims | Their experiment-specific limitations apply; none is mAP, a replicated benchmark, or a general autonomy result |
 | RunBundle tooling and target-runtime source | Reproducible manifests, telemetry, evidence frames, static reports, and the implemented V4L2/RGA/RKNN-to-ROS path | Tooling and source alone do not prove a particular target-hardware run |
 
 ## Engineering Contributions
