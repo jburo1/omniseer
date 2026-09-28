@@ -12,6 +12,12 @@ hardware replay. TD01, a targeted mixed-precision hybrid, was useful for
 localizing and partially recovering the failure, but it was not
 FP-equivalent and is **not a validated production replacement**.
 
+[![Side-by-side RK3588 replay: no detections from recalibrated INT8 at left; TD01 hybrid detections at right](../../../docs/assets/evidence/v2l-int8-quantization-comparison.webp)](evidence/scan_final_v2l_int8_vs_hybrid.mp4)
+
+*Representative still extracted at 00:00:05 from the retained INT8-versus-TD01
+replay. It illustrates the diagnostic partial recovery only; it is not a
+ground-truth accuracy comparison.*
+
 ## Final 300-frame RK3588 result
 
 The canonical evaluation replays 300 frozen representative frames through the

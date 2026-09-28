@@ -27,9 +27,9 @@ An operator application on a remote machine parameterizes, launches, and synchro
 
 An operator specifies an open-vocabulary target such as `person` or `backpack`. The robot scans, acquires a stable neural detection, centers it, adjusts distance to reach the requested framing, stops at a configured proximity limit, and preserves the run as reproducible evidence.
 
-<video src="assets/omni_video.mp4" controls muted playsinline aria-label="Omniseer target-acquisition demonstration"></video>
+<video src="assets/omni_video.mp4" controls playsinline aria-label="Omniseer target-acquisition demonstration"></video>
 
-## Evidence at a Glance
+## Experiments
 
 <table>
   <tr>
@@ -45,11 +45,14 @@ An operator specifies an open-vocabulary target such as `person` or `backpack`. 
         <img src="docs/assets/evidence/detector-comparison-poster.webp" alt="Six-panel controlled replay of YOLO-World detector configurations" width="300" />
       </a><br />
       <a href="studies/detector_comparison/scan_final_recal/README.md">Six-model detector comparison</a><br />
-      v2-M FP: <strong>41.7%</strong> controlled visible-frame coverage. v2-S INT8: <strong>16.54 FPS</strong>, author-reported from its independent physical run.
+      A fixed-scene replay compares six YOLO-World RKNN configurations with the same vocabulary and post-processing; separate physical runs show their deployment throughput trade-offs.
     </td>
     <td width="33%" align="center" valign="top">
-      <a href="studies/quantization/yolo_world_v2l_int8/README.md">v2-L INT8 quantization study</a><br /><br />
-      Recalibrated INT8: <strong>0 / 1,301</strong> FP-relative detections. TD01 hybrid: <strong>789 / 1,301 (60.6%)</strong> in the final 300-frame RK3588 replay.
+      <a href="studies/quantization/yolo_world_v2l_int8/README.md">
+        <img src="docs/assets/evidence/v2l-int8-quantization-comparison.webp" alt="Side-by-side replay: recalibrated v2-L INT8 has no detections, while the TD01 mixed-precision hybrid detects a desk, potted plant, and subwoofer" width="300" />
+      </a><br />
+      <a href="studies/quantization/yolo_world_v2l_int8/README.md">v2-L INT8 quantization study</a><br />
+      An RK3588 failure investigation asks whether v2-L INT8 preserves FP detection behavior, documenting its collapse and TD01 mixed precision's partial diagnostic recovery.
     </td>
   </tr>
 </table>

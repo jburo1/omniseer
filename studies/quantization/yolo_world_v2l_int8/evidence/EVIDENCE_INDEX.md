@@ -6,6 +6,15 @@ experiment record. Paths are repository-relative. Generated model and host
 artifact directories remain ignored; the compact Git-retained evidence is in
 this study's `evidence/` directory.
 
+## Derived presentation still
+
+`docs/assets/evidence/v2l-int8-quantization-comparison.webp` is a document
+asset extracted at 00:00:05 from `scan_final_v2l_int8_vs_hybrid.mp4`, scaled to
+1280 × 360 for the README and study page. Its SHA-256 is
+`4d77365eaedaeeabace65b6a08959fccf170caa38a3d28c7cdeec581c57d17c9`.
+It is a representative view of the recalibrated-INT8-versus-TD01 replay, not
+additional experiment evidence or a ground-truth comparison.
+
 ## Canonical detector artifacts
 
 | Evidence | Canonical path | SHA-256 / provenance |
