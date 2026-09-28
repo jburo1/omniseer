@@ -142,8 +142,8 @@ TEST(VisionPipelineIntegration, ProducesAndConsumesFramesWithShortClassList)
 
   TestSink                           sink{};
   omniseer::vision::RknnRunner       runner({
-            .model_path  = yolo_model,
-            .warmup_runs = 0,
+      .model_path  = yolo_model,
+      .warmup_runs = 0,
   });
   omniseer::vision::ConsumerPipeline consumer(pool, runner, nullptr, &sink);
   ASSERT_NO_THROW(consumer.preflight({
