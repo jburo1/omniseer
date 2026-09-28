@@ -30,6 +30,18 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install D2
+        shell: bash
+        run: |
+          set -eux
+          curl -fsSL -o /tmp/d2.tar.gz \
+            "https://github.com/terrastruct/d2/releases/download/v0.7.1/d2-v0.7.1-linux-amd64.tar.gz"
+          mkdir -p /tmp/d2
+          tar -xzf /tmp/d2.tar.gz -C /tmp/d2 --strip-components=1
+          sudo make -sC /tmp/d2 install PREFIX=/usr/local
+          d2 --version
+          rm -rf /tmp/d2 /tmp/d2.tar.gz
+
       - name: Build docs
         shell: bash
         run: |
