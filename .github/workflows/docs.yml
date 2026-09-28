@@ -1,9 +1,11 @@
 name: docs
 
 on:
+  workflow_dispatch:
   push:
     branches: [master]
     paths:
+      - ".github/workflows/docs.yml"
       - "docs/**"
       - "mkdocs.yml"
       - "scripts/docs/**"
