@@ -46,23 +46,24 @@ nav:
     - v2-L INT8 Quantization Failure Analysis: verification/int8-quantization-failure.md
   - System:
     - System Architecture: architecture/overview.md
-    - Edge Perception and Offboard Review: perception/edge-to-cloud.md
-    - Vision Pipeline: perception/vision-pipeline.md
-    - Hardware:
+    - Development:
+      - Simulation / Sim-Real Boundary: robot-runtime/ros-packages.md
+      - YOLO-World Model Deployment: perception/yolo-world-model-deployment.md
+    - Robot Runtime:
+      - Edge AI / On-Robot Runtime: perception/edge-to-cloud.md
+      - Vision Pipeline: perception/vision-pipeline.md
+      - Vision Telemetry: perception/vision-telemetry.md
+      - Robot Runtime Container: robot-runtime/robot-runtime-container.md
+    - Firmware & Hardware:
+      - Firmware & Robot I/O: firmware/overview.md
       - Electrical System: hardware/electrical-system.md
       - Bill of Materials: hardware/bill-of-materials.md
-  - Engineering Docs:
+    - Operator & Evidence:
+      - Operator Run Workflow: operations/operator-run-workflow.md
+      - Robot Gateway: gateway/robot-gateway.md
+      - Gateway API: gateway/gateway-api.md
+      - Preview Streaming: gateway/preview-streaming.md
+      - Verification Evidence: verification/evidence.md
+  - Engineering:
     - Scripts Front Door: operations/scripts-frontdoor.md
-    - Operator Run Workflow: operations/operator-run-workflow.md
-    - Robot Runtime Container: robot-runtime/robot-runtime-container.md
-    - ROS Packages and Sim/Real Boundary: robot-runtime/ros-packages.md
-    - Firmware & Robot I/O: firmware/overview.md
-    - YOLO-World v2 Model Deployment: perception/yolo-world-model-deployment.md
-    - INT8 Quantization Investigation: perception/int8-quantization-investigation.md
-    - Vision Telemetry: perception/vision-telemetry.md
-    - Robot Gateway: gateway/robot-gateway.md
-    - Gateway API: gateway/gateway-api.md
-    - Preview Streaming: gateway/preview-streaming.md
-  - Evidence & Reproducibility:
-    - Verification Evidence: verification/evidence.md
     - CI/CD Overview: verification/ci-cd.md

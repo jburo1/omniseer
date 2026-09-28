@@ -65,7 +65,7 @@ Example link targets:
 
 ```d2
 link: "../../../verification/evidence/"
-link: "../../../architecture/overview/"
+link: "../../../perception/edge-to-cloud/"
 link: "../../../firmware/overview/"
 link: "../../../hardware/electrical-system/"
 link: "../../../operations/operator-run-workflow/"

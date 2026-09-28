@@ -59,7 +59,7 @@ Camera -> V4L2 / RGA / RKNN inference -> normalized detections -> bounded acquis
 The mission-critical path stays on the robot: camera capture, preprocessing, RKNN inference, post-processing, command arbitration, robot I/O, and bounded behavior. Operator dashboards, preview streaming, reports, and analysis remain optional diagnostic or review tooling.
 
 [Explore the system architecture](architecture/overview.md){ .md-button .md-button--primary }
-[Browse the engineering documentation](perception/edge-to-cloud.md){ .md-button }
+[Browse the system documentation](perception/edge-to-cloud.md){ .md-button }
 
 ## Experiment evidence boundaries
 
