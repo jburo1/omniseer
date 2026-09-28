@@ -30,7 +30,7 @@ RunBundle. Useful starting points:
   launch configuration, Git SHA, runtime image digest, and copied inputs.
 - [Autonomy trace](run/autonomy.jsonl) — scan, acquisition/framing, terminal
   `framed` result, and target-loss counters.
-- [Summary](run/summary.json) and [static report](run/report/index.html) —
+- [Summary](run/summary.json) and [current static report](run/report-updated/index.html) —
   compact measurements and a review surface derived from the bundle.
 - [Performance telemetry](run/perf.jsonl), [native pipeline telemetry](run/pipeline_telemetry.jsonl),
   and [system telemetry](run/system.jsonl) — timing, throughput, freshness, and
@@ -49,7 +49,7 @@ classes, launch parameters, Git SHA
 `b90feb60e3a1a84c0a4d8d402a656d0b8bc42ef7`, and runtime container digest are
 preserved in the [manifest](run/manifest.yaml). The outcome and times above come
 from the [autonomy trace](run/autonomy.jsonl); performance values come from the
-[summary](run/summary.json), [static report](run/report/index.html), and telemetry.
+[summary](run/summary.json), [current static report](run/report-updated/index.html), and telemetry.
 
 One run does not establish mAP, general detector accuracy, statistical
 significance, navigation-based semantic search, global exploration, or learned
