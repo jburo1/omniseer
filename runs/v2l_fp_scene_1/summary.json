@@ -1,0 +1,324 @@
+{
+  "confidence_by_class": {
+    "book": {
+      "max": 0.92333984375,
+      "mean": 0.6344949473505435,
+      "min": 0.266845703125,
+      "p50": 0.63427734375,
+      "p95": 0.90185546875,
+      "samples": 46
+    },
+    "chair": {
+      "max": 0.966796875,
+      "mean": 0.5133228144369835,
+      "min": 0.251953125,
+      "p50": 0.39990234375,
+      "p95": 0.9541015625,
+      "samples": 121
+    },
+    "person": {
+      "max": 0.97314453125,
+      "mean": 0.9019144917582418,
+      "min": 0.260498046875,
+      "p50": 0.96142578125,
+      "p95": 0.970703125,
+      "samples": 91
+    }
+  },
+  "detections_by_class": {
+    "book": 46,
+    "chair": 121,
+    "person": 91
+  },
+  "dropped_records": {},
+  "duration_sec": 55.685331,
+  "errors": {
+    "capture_fatal": 0,
+    "capture_retryable": 0,
+    "infer": 0,
+    "no_writable_buffer": 0,
+    "preprocess": 0
+  },
+  "message_counts": {
+    "detections": 141,
+    "perf": 107,
+    "system": 54
+  },
+  "perf": {
+    "consumed_count": 141,
+    "consumed_ratio": 0.04389788293897883,
+    "consumer_fps": {
+      "max": 4.000467777252197,
+      "mean": 2.6355080693681665,
+      "min": 1.9991298913955688,
+      "p50": 2.00002384185791,
+      "p95": 4.000275611877441,
+      "samples": 107
+    },
+    "consumer_fps_mean": 2.6355080693681665,
+    "infer_ms_mean": 376.9150975307572,
+    "infer_ms_p95": 400.9775695800781,
+    "last_consumer_total_ms": {
+      "max": 422.94464111328125,
+      "mean": 379.2164469210901,
+      "min": 355.6927490234375,
+      "p50": 381.8334045410156,
+      "p95": 402.34930419921875,
+      "samples": 107
+    },
+    "last_infer_ms": {
+      "max": 419.0846862792969,
+      "mean": 376.9150975307572,
+      "min": 354.25830078125,
+      "p50": 380.2510986328125,
+      "p95": 400.9775695800781,
+      "samples": 107
+    },
+    "last_postprocess_ms": {
+      "max": 1.7663569450378418,
+      "mean": 0.9185194648871912,
+      "min": 0.45150598883628845,
+      "p50": 0.550091028213501,
+      "p95": 1.4134349822998047,
+      "samples": 107
+    },
+    "last_preprocess_ms": {
+      "max": 1.1471409797668457,
+      "mean": 1.033056074213759,
+      "min": 0.9412209987640381,
+      "p50": 1.0456390380859375,
+      "p95": 1.1203060150146484,
+      "samples": 107
+    },
+    "last_producer_total_ms": {
+      "max": 1.2573920488357544,
+      "mean": 1.09991128923737,
+      "min": 0.9794300198554993,
+      "p50": 1.1310980319976807,
+      "p95": 1.2150989770889282,
+      "samples": 107
+    },
+    "last_publish_ms": {
+      "max": 2.1907360553741455,
+      "mean": 1.3725631209177391,
+      "min": 0.887844979763031,
+      "p50": 1.0631389617919922,
+      "p95": 1.9716919660568237,
+      "samples": 107
+    },
+    "produced_count": 3212,
+    "producer_fps": {
+      "max": 60.00931930541992,
+      "mean": 59.99966366491585,
+      "min": 59.97389602661133,
+      "p50": 59.999900817871094,
+      "p95": 60.00507354736328,
+      "samples": 107
+    },
+    "producer_fps_mean": 59.99966366491585
+  },
+  "run_id": "v2l_fp_scene_1",
+  "schema_version": 1,
+  "system": {
+    "cpu_percent": {
+      "max": 51.732377538829155,
+      "mean": 36.736146893669485,
+      "min": 32.12045169385195,
+      "p50": 35.679611650485434,
+      "p95": 43.270440251572325,
+      "samples": 53
+    },
+    "memory_available_mb": {
+      "max": 12815.23046875,
+      "mean": 12658.898654513889,
+      "min": 12553.8515625,
+      "p50": 12657.98046875,
+      "p95": 12660.92578125,
+      "samples": 54
+    },
+    "memory_used_mb": {
+      "max": 3407.4609375,
+      "mean": 3302.4138454861113,
+      "min": 3146.08203125,
+      "p50": 3303.14453125,
+      "p95": 3306.73046875,
+      "samples": 54
+    },
+    "process_cpu": [
+      {
+        "cmdline": "",
+        "cpu_seconds": 53.59999999999999,
+        "max_cores": 1.0160017699688806,
+        "mean_cores": 0.9625515200762655,
+        "name": "ksoftirqd/0",
+        "pid": 13,
+        "rss_mb": null,
+        "start_time_ticks": 0
+      },
+      {
+        "cmdline": "/home/user/.vscode-server/extensions/ms-vscode.cpptools-1.33.8-linux-arm64/bin/cpptools",
+        "cpu_seconds": 40.85000000000001,
+        "max_cores": 0.8689101754265157,
+        "mean_cores": 0.733586373043199,
+        "name": "cpptools",
+        "pid": 7926,
+        "rss_mb": {
+          "max": 267.96484375,
+          "mean": 266.10672169811323,
+          "min": 265.125,
+          "p50": 265.55859375,
+          "p95": 267.890625,
+          "samples": 53
+        },
+        "start_time_ticks": 12493
+      },
+      {
+        "cmdline": "robot_diag_preview_recorder --timing-path /runs/v2l_fp_scene_1/video/timing.json --pipeline v4l2src device=/dev/video11 do-timestamp=true ! video/x-raw,format=NV12,width=1280,height=720,framerate=30/1 ! queue leaky=downstream max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! mpph264enc bps=2500000 gop=30 header-mode=each-idr ! h264parse config-interval=-1 ! identity name=timing_probe ! tee name=encoded encoded. ! queue ! mpegtsmux alignment=7 ! filesink location=/runs/v2l_fp_scene_1/video/source.ts encoded. ! queue ! mpegtsmux alignment=7 ! srtsink mode=listener localaddress=0.0.0.0 localport=7100 wait-for-connection=false latency=125",
+        "cpu_seconds": 15.829999999999998,
+        "max_cores": 0.3324178535868653,
+        "mean_cores": 0.2842759433359568,
+        "name": "robot_diag_prev",
+        "pid": 15280,
+        "rss_mb": {
+          "max": 23.125,
+          "mean": 23.1048054245283,
+          "min": 22.4375,
+          "p50": 23.125,
+          "p95": 23.125,
+          "samples": 53
+        },
+        "start_time_ticks": 95700
+      },
+      {
+        "cmdline": "/ros_ws/install/lib/omniseer_vision_bridge/vision_bridge_node --ros-args --log-level info --ros-args -r __node:=vision_bridge --params-file /tmp/launch_params_s7six3j6 --params-file /tmp/launch_params_tb_8cahh",
+        "cpu_seconds": 10.97,
+        "max_cores": 0.39577766706703704,
+        "mean_cores": 0.19699981670217603,
+        "name": "vision_bridge_n",
+        "pid": 15069,
+        "rss_mb": {
+          "max": 211.35546875,
+          "mean": 208.35008844339623,
+          "min": 56.38671875,
+          "p50": 211.35546875,
+          "p95": 211.35546875,
+          "samples": 53
+        },
+        "start_time_ticks": 95624
+      },
+      {
+        "cmdline": "/vscode/vscode-server/bin/linux-arm64/110a328ea54b42367b803ec53ee0bf52ef26b419/node --dns-result-order=ipv4first /vscode/vscode-server/bin/linux-arm64/110a328ea54b42367b803ec53ee0bf52ef26b419/out/bootstrap-fork --type=extensionHost --transformURIs --useHostProxy=false",
+        "cpu_seconds": 9.470000000000002,
+        "max_cores": 0.43010128978236045,
+        "mean_cores": 0.17006274058063878,
+        "name": "MainThread",
+        "pid": 6821,
+        "rss_mb": {
+          "max": 859.390625,
+          "mean": 858.5437794811321,
+          "min": 858.49609375,
+          "p50": 858.515625,
+          "p95": 858.51953125,
+          "samples": 53
+        },
+        "start_time_ticks": 10932
+      },
+      {
+        "cmdline": "/opt/ros/kilted/lib/robot_localization/ekf_node --ros-args --log-level info --ros-args -r __node:=ekf_filter --params-file /tmp/launch_params_ggm1r3hc --params-file /tmp/launch_params_zpduqlsv",
+        "cpu_seconds": 4.269999999999997,
+        "max_cores": 0.1507724445969665,
+        "mean_cores": 0.07668087669264276,
+        "name": "ekf_node",
+        "pid": 15077,
+        "rss_mb": {
+          "max": 38.3125,
+          "mean": 38.308372641509436,
+          "min": 38.09375,
+          "p50": 38.3125,
+          "p95": 38.3125,
+          "samples": 53
+        },
+        "start_time_ticks": 95628
+      },
+      {
+        "cmdline": "/usr/bin/python3 /opt/ros/kilted/bin/ros2 bag record --output /runs/v2l_fp_scene_1/rosbag /yolo/detections /vision/perf /imu /encoder_counts /scan /mecanum_drive_controller/odometry /mecanum_drive_controller/reference /cmd_vel_autonomy /cmd_vel_keyboard /tf /tf_static",
+        "cpu_seconds": 4.01,
+        "max_cores": 0.13677588371761246,
+        "mean_cores": 0.07201178349824301,
+        "name": "ros2",
+        "pid": 15071,
+        "rss_mb": {
+          "max": 77.2734375,
+          "mean": 77.12345224056604,
+          "min": 73.29296875,
+          "p50": 77.2734375,
+          "p95": 77.2734375,
+          "samples": 53
+        },
+        "start_time_ticks": 95624
+      },
+      {
+        "cmdline": "/ros_ws/install/lib/micro_ros_agent/micro_ros_agent serial --dev /dev/serial/by-id/usb-Teensyduino_USB_Serial_16634450-if00 -b 115200 --ros-args --log-level info --ros-args",
+        "cpu_seconds": 3.5099999999999985,
+        "max_cores": 0.20522235864056818,
+        "mean_cores": 0.06303275812439722,
+        "name": "micro_ros_agent",
+        "pid": 15199,
+        "rss_mb": {
+          "max": 28.09765625,
+          "mean": 28.073923938679247,
+          "min": 27.25,
+          "p50": 28.09765625,
+          "p95": 28.09765625,
+          "samples": 53
+        },
+        "start_time_ticks": 95646
+      },
+      {
+        "cmdline": "/usr/bin/python3 /ros_ws/install/lib/omniseer_experiments/record_run --run-id v2l_fp_scene_1 --out /runs/v2l_fp_scene_1 --classes person,chair,book --vision-params-file /ros_ws/install/share/bringup/config/vision_bridge.real.paths.yaml --model-family yolo-world --model-variant v2l --model-precision fp --model-backend rknn --detector-model-path /runs/model_artifacts/yolo_world_v2_l_fp.rknn --clip-model-path __from_config__ --clip-vocab-path __from_config__ --classes-path /runs/v2l_fp_scene_1/classes.txt --notes  --container-image-ref ghcr.io/jburo1/omniseer-robot-runtime:robot-verified --container-image-digest ghcr.io/jburo1/omniseer-robot-runtime@sha256:1280cc86229b5acb6f30ad43629da687f1b816ed380b634ab8110729755562c5 --container-image-id sha256:1280cc86229b5acb6f30ad43629da687f1b816ed380b634ab8110729755562c5 --launch-command run real --profile operator --record-run v2l_fp_scene_1 --record-out /runs/v2l_fp_scene_1 --record-overwrite --record-system-interval-sec 1.0 --record-experiment-config Autonomy:\\ frame\\ and\\ capture\\ target --record-runtime-backend robot_runtime_container --record-container-image-ref ghcr.io/jburo1/omniseer-robot-runtime:robot-verified --record-container-image-digest ghcr.io/jburo1/omniseer-robot-runtime@sha256:1280cc86229b5acb6f30ad43629da687f1b816ed380b634ab8110729755562c5 --record-container-image-id sha256:1280cc86229b5acb6f30ad43629da687f1b816ed380b634ab8110729755562c5 --record-classes person\\,chair\\,book --record-video --record-rosbag --record-experiment-parameter stage=manual-operator --record-experiment-parameter preview.encoder=rockchip --record-experiment-parameter postprocess.score_threshold=0.25 --record-experiment-parameter postprocess.nms_iou_threshold=0.45 --record-experiment-parameter postprocess.max_detections=100 bringup experiment_overwrite:=true gateway_preview_encoder:=rockchip classes_path:=/runs/v2l_fp_scene_1/classes.txt detector_model_path:=/runs/model_artifacts/yolo_world_v2_l_fp.rknn experiment_model_family:=yolo-world experiment_model_variant:=v2l experiment_model_precision:=fp experiment_model_backend:=rknn postprocess_score_threshold:=0.25 postprocess_nms_iou_threshold:=0.45 postprocess_max_detections:=100 start_autonomy:=true autonomy_target_class:=person autonomy_run_dir:=/runs/v2l_fp_scene_1 autonomy_bbox_area_min_ratio:=0.26 autonomy_approach_stop_area_ratio:=0.325 autonomy_bbox_area_max_ratio:=0.35 autonomy_forward_speed_m_s:=0.05 autonomy_reverse_speed_m_s:=0.04 autonomy_stable_framed_frames:=10 autonomy_success_miss_tolerance_updates:=2 autonomy_proximity_stop_m:=0.30 autonomy_capture_timeout_sec:=2.0 autonomy_min_target_confidence:=0.50 autonomy_max_target_center_jump_ratio:=0.20 evidence_interval_sec:=0.25 --launch-profile operator --launch-mode bringup --launch-args start_nav:=false start_slam:=false start_rf2o:=false start_gateway:=true start_vision:=true wait_for_boundary_topics:=false vision_params_file:=vision_bridge.real.paths.yaml detector_model_path:=__from_config__ clip_model_path:=__from_config__ clip_vocab_path:=__from_config__ classes_path:=__from_config__ experiment_overwrite:=true gateway_preview_encoder:=rockchip classes_path:=/runs/v2l_fp_scene_1/classes.txt detector_model_path:=/runs/model_artifacts/yolo_world_v2_l_fp.rknn experiment_model_family:=yolo-world experiment_model_variant:=v2l experiment_model_precision:=fp experiment_model_backend:=rknn postprocess_score_threshold:=0.25 postprocess_nms_iou_threshold:=0.45 postprocess_max_detections:=100 start_autonomy:=true autonomy_target_class:=person autonomy_run_dir:=/runs/v2l_fp_scene_1 autonomy_bbox_area_min_ratio:=0.26 autonomy_approach_stop_area_ratio:=0.325 autonomy_bbox_area_max_ratio:=0.35 autonomy_forward_speed_m_s:=0.05 autonomy_reverse_speed_m_s:=0.04 autonomy_stable_framed_frames:=10 autonomy_success_miss_tolerance_updates:=2 autonomy_proximity_stop_m:=0.30 autonomy_capture_timeout_sec:=2.0 autonomy_min_target_confidence:=0.50 autonomy_max_target_center_jump_ratio:=0.20 evidence_interval_sec:=0.25 --runtime-backend robot_runtime_container --experiment-config Autonomy: frame and capture target --experiment-parameters stage=manual-operator,preview.encoder=rockchip,postprocess.score_threshold=0.25,postprocess.nms_iou_threshold=0.45,postprocess.max_detections=100 --comparison-id  --trial  --workload-id  --resolved-vision-config-path /runs/v2l_fp_scene_1/provenance/resolved_vision_config.yaml --system-interval-sec 1.0 --overwrite true --queue-size 256 --flush-interval-sec 1.0 --ros-args --log-level info --ros-args -r __node:=perception_run_recorder",
+        "cpu_seconds": 2.2700000000000005,
+        "max_cores": 0.09685509207648435,
+        "mean_cores": 0.04076477519725977,
+        "name": "record_run",
+        "pid": 15070,
+        "rss_mb": {
+          "max": 74.109375,
+          "mean": 73.93941627358491,
+          "min": 73.6015625,
+          "p50": 73.8515625,
+          "p95": 74.109375,
+          "samples": 53
+        },
+        "start_time_ticks": 95624
+      },
+      {
+        "cmdline": "/ros_ws/install/lib/robot_io_adapters/encoder_counts_to_odometry --ros-args --log-level info --ros-args -r __node:=encoder_counts_to_odometry --params-file /tmp/launch_params_mnupgsl6",
+        "cpu_seconds": 1.8000000000000012,
+        "max_cores": 0.07817994614878788,
+        "mean_cores": 0.032324491345844766,
+        "name": "encoder_counts_",
+        "pid": 15068,
+        "rss_mb": {
+          "max": 29.8515625,
+          "mean": 29.84094929245283,
+          "min": 29.5703125,
+          "p50": 29.8515625,
+          "p95": 29.8515625,
+          "samples": 53
+        },
+        "start_time_ticks": 95624
+      }
+    ],
+    "soc_temp_c": {
+      "first": 52.692,
+      "last": 52.692,
+      "max": 52.692,
+      "mean": 51.93992592592593,
+      "min": 50.846,
+      "p50": 51.769,
+      "p95": 52.692,
+      "samples": 54
+    },
+    "throttled_any": null
+  }
+}
