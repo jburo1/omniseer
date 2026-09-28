@@ -17,8 +17,6 @@ The public `v2l_fp_scene_1` RunBundle records one successful physical-robot exec
   Your browser cannot play this video. <a href="https://github.com/jburo1/omniseer/blob/master/studies/autonomy/v2l_fp_target_acquisition/run/video/overlay.mp4">Open the target-acquisition overlay video on GitHub</a>.
 </video>
 
-*The RunBundle's overlay video records the reviewed execution. Its poster is the terminal capture from frame 3184; the matching `target_framed` event is retained in the public autonomy trace.*
-
 | Measurement | Observed value |
 | --- | ---: |
 | First `person` detection | **25.4 s** |
@@ -32,7 +30,7 @@ The public `v2l_fp_scene_1` RunBundle records one successful physical-robot exec
 
 This artifact demonstrates one end-to-end execution of bounded target acquisition and framing on the stated hardware and model configuration. The full RunBundle preserves the configuration, provenance, autonomy trace, detections, timing telemetry, evidence frames, media, rosbag, and derived report needed to inspect that execution.
 
-[Open the complete study and RunBundle on GitHub](https://github.com/jburo1/omniseer/tree/master/studies/autonomy/v2l_fp_target_acquisition){ .md-button .md-button--primary }
+[Open the RunBundle report](https://jburo1.github.io/omniseer/runs/v2l_fp_scene_1/report/){ .md-button .md-button--primary }
 
 ## Limitations
 

@@ -66,8 +66,9 @@ and validates internal links embedded in built SVG diagrams.
 
 | Node | Meaning at this level | Initial destination |
 | --- | --- | --- |
-| Development PC | Off-robot development boundary that prepares deployed model artifacts. | `../../../perception/yolo-world-model-deployment/` |
+| PC | Off-robot development boundary that prepares deployed model artifacts. | `../../../perception/yolo-world-model-deployment/` |
 | RKNN model build | Host-side YOLO-World export, calibration/quantization, and RKNN compilation. | `../../../perception/yolo-world-model-deployment/` |
+| Simulation | Development-time Gazebo simulation for bringup composition and ROS contract validation. | `../../../robot-runtime/ros-packages/` |
 | Operator application | Off-robot control, diagnostics, preview, retrieval, and report workflow. | `../../../operations/operator-run-workflow/` |
 | Robot runtime | Native perception plus ROS 2 autonomy, recording, and integration. | `../../../architecture/overview/` |
 | Firmware | Teensy-owned low-level motor and sensor integration over micro-ROS. | `../../../architecture/overview/` |
@@ -91,7 +92,7 @@ Node classes:
 ```text
 boundary        Runtime or location boundary.
 operator        Human actor.
-laptop          Off-robot operator tooling.
+laptop          Off-robot host-side tooling.
 robot_runtime   Mission software on robot compute.
 firmware        MCU control boundary.
 hardware        Physical and electrical system.

@@ -44,8 +44,16 @@ robot: {
 }
 
 development_pc: {
-  label: "Development PC"
+  label: "PC"
   class: boundary
+  direction: down
+
+  simulation: {
+    label: "Simulation"
+    class: laptop
+    tooltip: "Development-time Gazebo simulation for bringup composition and ROS contract validation."
+    link: "../../../robot-runtime/ros-packages/"
+  }
 
   rknn_model_build: {
     label: "RKNN model build"
@@ -53,10 +61,15 @@ development_pc: {
     tooltip: "Dedicated host-side environment: YOLO-World .pth -> ONNX -> RK3588 .rknn, including calibration and quantization."
     link: "../../../perception/yolo-world-model-deployment/"
   }
+
+  # Layout-only relation: simulation is not a runtime or model-build dependency.
+  simulation -> rknn_model_build: {
+    style.opacity: 0
+  }
 }
 
 workstation: {
-  label: "Workstation"
+  label: "Laptop"
   class: boundary
 
   laptop: {

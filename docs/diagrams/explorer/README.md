@@ -17,7 +17,8 @@ direction: down
 The first explorer should show only the navigational architecture root:
 
 ```text
-Development PC
+PC
+Simulation
 RKNN model build
 Operator application
 Robot boundary

@@ -7,6 +7,7 @@ on:
       - "docs/**"
       - "mkdocs.yml"
       - "scripts/docs/**"
+      - "studies/autonomy/v2l_fp_target_acquisition/run/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -38,6 +39,8 @@ jobs:
             mkdocs-material \
             mkdocs-git-revision-date-localized-plugin
           mkdocs build --strict
+          mkdir -p site/runs/v2l_fp_scene_1
+          cp -a studies/autonomy/v2l_fp_target_acquisition/run/. site/runs/v2l_fp_scene_1/
 
       - name: Configure git
         shell: bash
