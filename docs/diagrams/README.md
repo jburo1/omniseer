@@ -66,13 +66,13 @@ and validates internal links embedded in built SVG diagrams.
 
 | Node | Meaning at this level | Initial destination |
 | --- | --- | --- |
-| PC | Off-robot development boundary that prepares deployed model artifacts. | `../../../perception/yolo-world-model-deployment/` |
+| PC | Non-clickable off-robot development container for the Simulation and RKNN model build nodes. | — |
 | RKNN model build | Host-side YOLO-World export, calibration/quantization, and RKNN compilation. | `../../../perception/yolo-world-model-deployment/` |
 | Simulation | Development-time Gazebo simulation for bringup composition and ROS contract validation. | `../../../robot-runtime/ros-packages/` |
 | Operator application | Off-robot control, diagnostics, preview, retrieval, and report workflow. | `../../../operations/operator-run-workflow/` |
 | Robot runtime | Native perception plus ROS 2 autonomy, recording, and integration. | `../../../architecture/overview/` |
-| Firmware | Teensy-owned low-level motor and sensor integration over micro-ROS. | `../../../architecture/overview/` |
-| Physical hardware | Electrical and physical sensors, actuators, compute, and power system. | `../../../architecture/overview/` |
+| Firmware | Teensy-owned low-level motor and sensor integration over micro-ROS. | `../../../firmware/overview/` |
+| Physical hardware | Electrical and physical sensors, actuators, compute, and power system. | `../../../hardware/electrical-system/` |
 | RunBundle | Durable robot-run evidence artifact. | `../../../verification/evidence/` |
 | Static report | Human-readable derived review artifact. | `../../../verification/evidence/` |
 

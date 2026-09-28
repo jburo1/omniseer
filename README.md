@@ -81,8 +81,8 @@ RKNN model construction happens offline on the development PC; the deployed mode
 
 ## Repository Inspection Path
 
-- [System Architecture](docs/architecture/overview.md) — robot, operator, firmware, runtime, and evidence boundaries.
-- [Verification Evidence](docs/verification/evidence.md) — CI scope, target-hardware artifacts, and reproducibility limits.
-- [Edge Perception and Offboard Review](docs/perception/edge-to-cloud.md) and [Vision Pipeline](docs/perception/vision-pipeline.md) — native perception and review path.
-- [Operator Run Workflow](docs/operations/operator-run-workflow.md) — run, stop, retrieve, inspect, and report flow.
-- [CI/CD Overview](docs/verification/ci-cd.md) and [Scripts Front Door](docs/operations/scripts-frontdoor.md) — supported checks and automation limits.
+- [System Architecture](https://jburo1.github.io/omniseer/architecture/overview/) — robot, operator, firmware, runtime, and evidence boundaries.
+- [Verification Evidence](https://jburo1.github.io/omniseer/verification/evidence/) — CI scope, target-hardware artifacts, and reproducibility limits.
+- [Edge Perception and Offboard Review](https://jburo1.github.io/omniseer/perception/edge-to-cloud/) and [Vision Pipeline](https://jburo1.github.io/omniseer/perception/vision-pipeline/) — native perception and review path.
+- [Operator Run Workflow](https://jburo1.github.io/omniseer/operations/operator-run-workflow/) — run, stop, retrieve, inspect, and report flow.
+- [CI/CD Overview](https://jburo1.github.io/omniseer/verification/ci-cd/) and [Scripts Front Door](https://jburo1.github.io/omniseer/operations/scripts-frontdoor/) — supported checks and automation limits.

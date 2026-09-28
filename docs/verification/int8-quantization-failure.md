@@ -23,7 +23,9 @@ The canonical evaluation replays 300 frozen representative frames through the ex
   Your browser cannot play this video. <a href="https://github.com/jburo1/omniseer/blob/master/studies/quantization/yolo_world_v2l_int8/evidence/scan_final_v2l_int8_vs_hybrid.mp4">Open the INT8-versus-TD01 replay on GitHub</a>.
 </video>
 
-*Canonical RK3588 replay of recalibrated INT8 versus the TD01 mixed-precision diagnostic. No separate representative still was retained for this study.*
+![Derived presentation still from the canonical INT8-versus-TD01 replay](../assets/evidence/v2l-int8-quantization-comparison.webp)
+
+*Canonical RK3588 replay of recalibrated INT8 versus the TD01 mixed-precision diagnostic. The retained derived presentation still above is taken from that replay; it is not new experimental evidence or a ground-truth comparison.*
 
 ## Engineering conclusion
 

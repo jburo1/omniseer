@@ -29,6 +29,10 @@ RunBundle
 Static report
 ```
 
+`PC` is a non-clickable development container. Its `Simulation` and `RKNN model
+build` child nodes are independently clickable; the latter links to the model
+deployment documentation.
+
 Keep labels at the top level generic:
 
 ```text
@@ -62,6 +66,8 @@ Example link targets:
 ```d2
 link: "../../../verification/evidence/"
 link: "../../../architecture/overview/"
+link: "../../../firmware/overview/"
+link: "../../../hardware/electrical-system/"
 link: "../../../operations/operator-run-workflow/"
 ```
 
