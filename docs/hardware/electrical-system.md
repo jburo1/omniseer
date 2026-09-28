@@ -7,7 +7,7 @@ robot's power distribution and physical embedded interfaces.
 ## Electrical Schematic
 
 <object
-  data="../assets/hardware/robot_electrical.svg"
+  data="../../assets/hardware/robot_electrical.svg"
   type="image/svg+xml"
   aria-label="Omniseer electrical schematic"
   width="100%"

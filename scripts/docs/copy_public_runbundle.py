@@ -81,6 +81,7 @@ def validate_no_lfs_media(destination):
     if pointers:
         formatted_paths = ", ".join(str(path) for path in pointers)
         raise RuntimeError(f"Git LFS pointers would be published as media: {formatted_paths}")
+    print("info: checked published media for Git LFS pointers")
 
 
 def on_post_build(config, **kwargs):

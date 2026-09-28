@@ -541,7 +541,9 @@ scripts/omni docs diagrams [--check]
 scripts/omni docs check-diagram-links [--site-dir site]
 ```
 
-`docs build` runs the strict local documentation build. `docs diagrams` renders
+`docs build` is the authoritative strict documentation verification command: it
+checks generated HTML links and assets, built SVG-internal links, and published
+media for Git LFS pointers after MkDocs builds the site. `docs diagrams` renders
 D2 sources under `docs/diagrams/` into tracked SVG assets under
 `docs/assets/diagrams/`; `--check` verifies freshness. `docs check-diagram-links`
 verifies embedded diagram links, defaulting to `site` unless `--site-dir` is

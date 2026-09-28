@@ -119,14 +119,16 @@ watchdog behavior.
 
 ## `docs`
 
-The docs workflow installs the MkDocs dependencies and runs:
+The docs workflow installs the MkDocs dependencies and runs the repository's
+authoritative documentation verification command:
 
 ```bash
-mkdocs build --strict
+scripts/omni docs build
 ```
 
-This catches navigation, Markdown, and plugin-level documentation build failures.
-After the strict build passes, it deploys the site to `gh-pages` with:
+This runs MkDocs strict mode plus generated HTML-link, SVG-internal-link, and
+published-media validation. After the build passes, it deploys the site to
+`gh-pages` with:
 
 ```bash
 mkdocs gh-deploy --clean --force --verbose

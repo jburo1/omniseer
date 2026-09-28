@@ -4,9 +4,12 @@ site_url: https://jburo1.github.io/omniseer/
 repo_url: https://github.com/jburo1/omniseer
 repo_name: jburo1/omniseer
 exclude_docs: |
+  img/**
   diagrams/README.md
   diagrams/explorer/README.md
   diagrams/**/*.d2
+not_in_nav: |
+  perception/int8-quantization-investigation.md
 theme:
   name: material
   custom_dir: docs/overrides

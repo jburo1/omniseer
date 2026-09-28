@@ -38,7 +38,7 @@ jobs:
           python3 -m pip install \
             mkdocs-material \
             mkdocs-git-revision-date-localized-plugin
-          mkdocs build --strict
+          scripts/omni docs build
 
       - name: Configure git
         shell: bash

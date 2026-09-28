@@ -14,7 +14,7 @@ Usage:
   scripts/omni docs build
 
 Exports the hardware BOM, checks diagram assets, builds MkDocs with strict mode
-enabled, and validates built diagram links.
+enabled, and validates generated-site links and built diagram links.
 EOF
   exit 0
 fi
@@ -30,6 +30,9 @@ omni_info "Checking diagram SVG assets before docs build"
 
 omni_info "Building documentation site with mkdocs --strict --clean"
 mkdocs build --strict --clean "$@"
+
+omni_info "Checking local links and assets in generated HTML pages"
+"${script_dir}/check_site_links.py" --site-dir site
 
 omni_info "Checking built SVG diagram links"
 "${script_dir}/check_diagram_links.py" --site-dir site
