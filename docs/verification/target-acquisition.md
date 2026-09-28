@@ -24,8 +24,8 @@ rosbag. The manifest is the authoritative provenance record for this run.
 ## Results
 
 <video controls preload="metadata" poster="../../assets/evidence/target-acquisition-v2l-fp-terminal.webp" width="100%">
-  <source src="../../runs/v2l_fp_scene_1/video/overlay.mp4" type="video/mp4" />
-  Your browser cannot play this video. <a href="../../runs/v2l_fp_scene_1/video/overlay.mp4">Open the target-acquisition overlay video</a>.
+  <source src="https://media.githubusercontent.com/media/jburo1/omniseer/master/studies/autonomy/v2l_fp_target_acquisition/run/video/overlay.mp4" type="video/mp4" />
+  Your browser cannot play this video. <a href="https://media.githubusercontent.com/media/jburo1/omniseer/master/studies/autonomy/v2l_fp_target_acquisition/run/video/overlay.mp4">Open the target-acquisition overlay video</a>.
 </video>
 
 The controller detected `person`, completed framing, and stopped with terminal
@@ -54,7 +54,7 @@ summaries, see [Six-Model Detector Comparison](detector-comparison.md).
 The complete RunBundle is available in this documentation site. Start with the
 <a href="../../runs/v2l_fp_scene_1/report/">static run report</a> and follow
 its links to the manifest, autonomy trace, summaries, telemetry, evidence
-frames, overlay and source video, rosbag, and checksums. The terminal capture and its
+frames, overlay and source video, rosbag, and <a href="../../runs/v2l_fp_scene_1/checksums.sha256">checksums</a>. The terminal capture and its
 `target_framed` event can be cross-checked against the evidence index and
 `autonomy.jsonl` in that bundle.
 
