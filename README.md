@@ -83,6 +83,6 @@ RKNN model construction happens offline on the development PC; the deployed mode
 
 - [System Architecture](https://jburo1.github.io/omniseer/architecture/overview/) — robot, operator, firmware, runtime, and evidence boundaries.
 - [Verification Evidence](https://jburo1.github.io/omniseer/verification/evidence/) — CI scope, target-hardware artifacts, and reproducibility limits.
-- [Edge Perception and Offboard Review](https://jburo1.github.io/omniseer/perception/edge-to-cloud/) and [Vision Pipeline](https://jburo1.github.io/omniseer/perception/vision-pipeline/) — native perception and review path.
+- [Edge AI / On-Robot Runtime](https://jburo1.github.io/omniseer/perception/edge-to-cloud/) and [Vision Pipeline](https://jburo1.github.io/omniseer/perception/vision-pipeline/) — native perception and review path.
 - [Operator Run Workflow](https://jburo1.github.io/omniseer/operations/operator-run-workflow/) — run, stop, retrieve, inspect, and report flow.
 - [CI/CD Overview](https://jburo1.github.io/omniseer/verification/ci-cd/) and [Scripts Front Door](https://jburo1.github.io/omniseer/operations/scripts-frontdoor/) — supported checks and automation limits.

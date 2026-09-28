@@ -64,11 +64,11 @@ docs/assets/diagrams/explorer/system-explorer.svg
 Example link targets:
 
 ```d2
-link: "../../../verification/evidence/"
-link: "../../../perception/edge-to-cloud/"
+link: "../../../verification/evidence/#runbundle-evidence-format"
+link: "../../../perception/edge-to-cloud/#runtime-flow"
 link: "../../../firmware/overview/"
 link: "../../../hardware/electrical-system/"
-link: "../../../operations/operator-run-workflow/"
+link: "../../../operations/operator-run-workflow/#artifact-sequence"
 ```
 
 Render target:
