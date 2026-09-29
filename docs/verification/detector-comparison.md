@@ -4,56 +4,49 @@ description: "Six YOLO-World configurations on a repaired 360° scene: controlle
 
 # Six-Model Detector Comparison
 
-## Engineering question
+## Engineering questions
 
-With one repaired, frame-aligned 360° source scene, how do the six final
+With one frame-aligned 360° source scene, how do the six final
 YOLO-World RKNN detector configurations differ when vocabulary and
-post-processing are held fixed—and how do their independent physical
+post-processing are held fixed? How do their independent physical
 case-study summaries inform deployment trade-offs?
 
 ## Method / experimental setup
 
-The controlled replay sends exactly the same 1,222 repaired source frames
-(inclusive frames 0–1221) through each configuration: v2-S FP, v2-S INT8,
-v2-M FP, v2-M INT8, v2-L FP, and v2-L Hybrid. It holds source repair, class
-vocabulary, score threshold (0.25), NMS IoU threshold (0.45), and maximum
-detections (100) fixed; detector configuration is the only intended variable.
-Manual visibility annotations define 19 in-vocabulary class-interval sets and
-the 5,679 visible-frame denominator. `laptop`, `computer monitor`, and `sofa`
-were outside the comparison vocabulary and were excluded rather than counted
-as negative evidence.
-
-The physical-run grid is a separate 2-row × 3-column presentation of six
-independent ROCK 5B+ runs. Panels begin at their own run start and the grid
-ends at the shortest overlay, so it is supporting end-to-end case-study
-evidence, not a frame-aligned replay or a latency benchmark.
+The controlled replay sends exactly the same 1,222 source frames through each model configuration: v2-S FP, v2-S INT8,
+v2-M FP, v2-M INT8, v2-L FP, and v2-L Hybrid. It holds class
+vocabulary, score threshold (0.25) and NMS IoU threshold (0.45) fixed. Detector configuration is the only variable which was varied.
+Manual visibility annotations of the source video define 19 in-vocabulary class-interval sets which were used as a benchmark to evaluate detection quality across models.
 
 <video controls preload="metadata" poster="../assets/evidence/detector-comparison-poster.webp" width="100%">
   <source src="https://media.githubusercontent.com/media/jburo1/omniseer/master/studies/detector_comparison/scan_final_recal/evidence/controlled_replay_2x3.mp4" type="video/mp4" />
   Your browser cannot play this video. <a href="https://github.com/jburo1/omniseer/blob/master/studies/detector_comparison/scan_final_recal/evidence/controlled_replay_2x3.mp4">Open the controlled replay media</a>.
 </video>
 
-*The controlled replay is a 3-row × 2-column layout pairing FP with INT8 or
-Hybrid by model size. It is target-hardware-derived evidence from the same
-repaired source frames for every configuration.*
+We additionally gathered  per model run evidence within the same scene to evaluate runtime performance across detector configuration.
+
+<video controls preload="metadata" width="100%">
+  <source src="https://media.githubusercontent.com/media/jburo1/omniseer/master/studies/detector_comparison/scan_final_recal/evidence/physical_trials_grid_2x3.mp4" type="video/mp4" />
+  Your browser cannot play this video. <a href="https://github.com/jburo1/omniseer/blob/master/studies/detector_comparison/scan_final_recal/evidence/physical_trials_grid_2x3.mp4">Open the physical-trials grid media</a>.
+</video>
+
 
 ## Results
 
 ### Controlled presence/visibility replay
 
-| Configuration | Visible-frame detections | Rate | Absent dog frames | Absent cat frames |
-| --- | ---: | ---: | ---: | ---: |
-| v2-S FP | 2,126 / 5,679 | 37.4% | 34 | 0 |
-| v2-S INT8 | 1,853 / 5,679 | 32.6% | 6 | 0 |
-| v2-M FP | 2,367 / 5,679 | 41.7% | 45 | 0 |
-| v2-M INT8 | 2,055 / 5,679 | 36.2% | 23 | 0 |
-| v2-L FP | 2,363 / 5,679 | 41.6% | 33 | 0 |
-| v2-L Hybrid | 1,440 / 5,679 | 25.4% | 0 | 0 |
+| Configuration | Visible-frame detections | Rate |
+| --- | ---: | ---: |
+| v2-S FP | 2,126 / 5,679 | 37.4% |
+| v2-S INT8 | 1,853 / 5,679 | 32.6% |
+| v2-M FP | 2,367 / 5,679 | 41.7% |
+| v2-M INT8 | 2,055 / 5,679 | 36.2% |
+| v2-L FP | 2,363 / 5,679 | 41.6% |
+| v2-L Hybrid | 1,440 / 5,679 | 25.4% |
 
 Every configuration detected `person` on all 293 / 293 annotated visible
 frames. v2-M FP led aggregate visible-frame coverage by a narrow margin over
-v2-L FP. The zero absent-dog count for v2-L Hybrid must be read alongside its
-lowest aggregate visible-frame rate; it is not a general precision claim.
+v2-L FP.
 
 ### Independent physical-run summaries
 
@@ -66,9 +59,7 @@ lowest aggregate visible-frame rate; it is not a general precision claim.
 | v2-L FP | success | 25.4 s | 56.1 s | 0 | 2.64 | 380.25 / 400.98 ms | 438.76 ms | 3306.73 MB |
 | v2-L Hybrid | success | 24.9 s | 57.8 s | 0 | 4.65 | 205.55 / 229.90 ms | 262.32 ms | 4157.62 MB |
 
-All six trials completed without target loss. The retained throttle field was
-unavailable for every trial, so this evidence does not establish that thermal
-throttling was absent.
+All six trials completed without target loss.
 
 ## Engineering interpretation
 

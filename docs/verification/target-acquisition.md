@@ -12,14 +12,13 @@ target-acquisition and framing behavior?
 
 ## Method / experimental setup
 
-This is one physical-robot case study, recorded as the public
-`v2l_fp_scene_1` RunBundle. The recorded model is YOLO-World v2-L FP with the
-RKNN backend. The bounded controller was configured to find `person`: it
+This is one physical-robot case study, with evidence captured in a
+<a href="../../runs/v2l_fp_scene_1/report/">RunBundle</a>. The recorded model is YOLO-World v2-L FP16. The robot was placed in an environment which contained an object which the detector had been verified to detect in similar conditions a priori. The controller was configured to find `person`: it
 scanned, acquired a stable detection, centered and framed it, then stopped at
-the terminal condition `framed`. The bundle records the model/backend and
+the terminal success condition `framed`. The bundle records the model/backend and
 launch configuration, Git revision, runtime image digest, copied inputs,
 autonomy trace, detections, timing telemetry, visual evidence, media, and
-rosbag. The manifest is the authoritative provenance record for this run.
+rosbag.
 
 ## Results
 
@@ -28,8 +27,6 @@ rosbag. The manifest is the authoritative provenance record for this run.
   Your browser cannot play this video. <a href="https://media.githubusercontent.com/media/jburo1/omniseer/master/studies/autonomy/v2l_fp_target_acquisition/run/video/overlay.mp4">Open the target-acquisition overlay video</a>.
 </video>
 
-The controller detected `person`, completed framing, and stopped with terminal
-reason `framed`.
 
 | Measurement | Observed value |
 | --- | ---: |
@@ -44,22 +41,15 @@ reason `framed`.
 
 This artifact demonstrates one end-to-end execution of bounded target
 acquisition and framing on the stated hardware and model configuration. It
-establishes that the recorded execution completed reviewably; it does not turn
-one success into a performance benchmark or a general perception claim. For
+establishes that the recorded execution completed reviewably. For
 fixed-source detector coverage and six independent physical case-study
 summaries, see [Six-Model Detector Comparison](detector-comparison.md).
 
 ## Evidence and reproducibility
 
-The complete RunBundle is available in this documentation site. Start with the
-<a href="../../runs/v2l_fp_scene_1/report/">static run report</a> and follow
-its links to the manifest, autonomy trace, summaries, telemetry, evidence
-frames, overlay and source video, rosbag, and <a href="../../runs/v2l_fp_scene_1/checksums.sha256">checksums</a>. The terminal capture and its
-`target_framed` event can be cross-checked against the evidence index and
+The complete RunBundle is available <a href="../../runs/v2l_fp_scene_1/report/">here</a>. It includes links to the manifest, autonomy trace, summaries, telemetry, evidence
+frames, overlay video, rosbag, and <a href="../../runs/v2l_fp_scene_1/checksums.sha256">checksums</a>. The terminal capture and its `target_framed` event can be cross-checked against the evidence index and
 `autonomy.jsonl` in that bundle.
-
-The repository copy of the [raw RunBundle directory](https://github.com/jburo1/omniseer/tree/master/studies/autonomy/v2l_fp_target_acquisition/run)
-is a secondary artifact-inspection path, not a separate study narrative.
 
 ## Limitations
 
