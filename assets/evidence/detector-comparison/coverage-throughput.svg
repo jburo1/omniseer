@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="470" viewBox="0 0 960 470" role="img" aria-labelledby="title desc">
+  <title id="title">Controlled coverage versus physical-run throughput</title>
+  <desc id="desc">Scatter plot that combines controlled replay visible class-frame coverage on the x axis with mean consumer FPS from independent physical runs on the y axis.</desc>
+  <rect width="100%" height="100%" fill="white"/>
+  <style>text { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; } .muted { fill: #58616f; } .small { font-size: 13px; } .label { font-size: 14px; } .value { font-size: 14px; font-weight: 650; }</style>
+<text x="32" y="35" font-size="21" font-weight="700">Coverage versus physical-run throughput</text>
+<text x="32" y="57" class="muted small">Axes combine separate evidence streams: controlled replay coverage and one physical-run FPS</text>
+<line x1="136.8" y1="90" x2="136.8" y2="386" stroke="#d8dde6"/>
+<text x="136.8" y="426" text-anchor="middle" class="muted small">25%</text>
+<line x1="346.1" y1="90" x2="346.1" y2="386" stroke="#d8dde6"/>
+<text x="346.1" y="426" text-anchor="middle" class="muted small">30%</text>
+<line x1="555.3" y1="90" x2="555.3" y2="386" stroke="#d8dde6"/>
+<text x="555.3" y="426" text-anchor="middle" class="muted small">35%</text>
+<line x1="764.5" y1="90" x2="764.5" y2="386" stroke="#d8dde6"/>
+<text x="764.5" y="426" text-anchor="middle" class="muted small">40%</text>
+<line x1="95" y1="386.0" x2="890" y2="386.0" stroke="#d8dde6"/>
+<text x="83" y="391.0" text-anchor="end" class="muted small">0</text>
+<line x1="95" y1="320.2" x2="890" y2="320.2" stroke="#d8dde6"/>
+<text x="83" y="325.2" text-anchor="end" class="muted small">4</text>
+<line x1="95" y1="254.4" x2="890" y2="254.4" stroke="#d8dde6"/>
+<text x="83" y="259.4" text-anchor="end" class="muted small">8</text>
+<line x1="95" y1="188.7" x2="890" y2="188.7" stroke="#d8dde6"/>
+<text x="83" y="193.7" text-anchor="end" class="muted small">12</text>
+<line x1="95" y1="122.9" x2="890" y2="122.9" stroke="#d8dde6"/>
+<text x="83" y="127.9" text-anchor="end" class="muted small">16</text>
+<line x1="95" y1="386" x2="890" y2="386" stroke="#20242b"/>
+<line x1="95" y1="90" x2="95" y2="386" stroke="#20242b"/>
+<text x="95" y="80" class="label">Physical-run mean consumer FPS</text>
+<text x="492.5" y="456" text-anchor="middle" class="label">Controlled visible class-frame coverage</text>
+<circle cx="657.2" cy="256.1" r="7" fill="#4057a5" stroke="white" stroke-width="2"/>
+<text x="667.2" y="246.1" text-anchor="start" class="value">v2-S FP</text>
+<circle cx="456.1" cy="114.0" r="7" fill="#216b4f" stroke="white" stroke-width="2"/>
+<text x="446.1" y="101.0" text-anchor="end" class="value">v2-S INT8</text>
+<circle cx="834.8" cy="314.1" r="7" fill="#216b4f" stroke="white" stroke-width="2"/>
+<text x="844.8" y="334.1" text-anchor="start" class="value">v2-M FP</text>
+<circle cx="604.9" cy="220.9" r="7" fill="#a76416" stroke="white" stroke-width="2"/>
+<text x="614.9" y="210.9" text-anchor="start" class="value">v2-M INT8</text>
+<circle cx="831.8" cy="342.6" r="7" fill="#4057a5" stroke="white" stroke-width="2"/>
+<text x="823.8" y="361.6" text-anchor="end" class="value">v2-L FP</text>
+<circle cx="151.8" cy="309.5" r="7" fill="#4057a5" stroke="white" stroke-width="2"/>
+<text x="143.8" y="299.5" text-anchor="end" class="value">v2-L Hybrid</text>
+</svg>
