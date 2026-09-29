@@ -10,10 +10,13 @@ from omniseer_experiments.record_run import (
     AsyncBundleWriter,
     SystemTelemetryThread,
     battery_state_to_snapshot,
+    canonicalize_ros_graph,
+    capture_ros_graph_safely,
     detection_array_to_record,
     options_from_args,
     perf_summary_to_record,
     unavailable_lipo_battery_snapshot,
+    wait_for_stable_ros_graph,
 )
 
 
@@ -82,6 +85,51 @@ class _FakeSampler:
     def sample(self) -> dict:
         self.count += 1
         return _system_record(recv_ts_ns=self.count)
+
+
+class _GraphEndpoint:
+    def __init__(self, name: str, namespace: str, topic_type: str, qos_profile=None) -> None:
+        self.node_name = name
+        self.node_namespace = namespace
+        self.topic_type = topic_type
+        self.qos_profile = SimpleNamespace(**qos_profile) if isinstance(qos_profile, dict) else qos_profile
+
+
+class _GraphNode:
+    def __init__(self, graph: dict | None = None, error: Exception | None = None) -> None:
+        self._graph = graph or {"nodes": [], "topics": []}
+        self._error = error
+
+    def get_node_names_and_namespaces(self):
+        self._raise_if_needed()
+        return [(item["name"], item["namespace"]) for item in self._graph["nodes"]]
+
+    def get_topic_names_and_types(self):
+        self._raise_if_needed()
+        return [(item["name"], item["types"]) for item in self._graph["topics"]]
+
+    def get_publishers_info_by_topic(self, topic_name: str):
+        return self._endpoints(topic_name, "publishers")
+
+    def get_subscriptions_info_by_topic(self, topic_name: str):
+        return self._endpoints(topic_name, "subscribers")
+
+    def _endpoints(self, topic_name: str, kind: str):
+        self._raise_if_needed()
+        topic = next(item for item in self._graph["topics"] if item["name"] == topic_name)
+        return [
+            _GraphEndpoint(
+                endpoint["node_name"],
+                endpoint["node_namespace"],
+                endpoint["topic_type"],
+                endpoint.get("qos"),
+            )
+            for endpoint in topic[kind]
+        ]
+
+    def _raise_if_needed(self) -> None:
+        if self._error is not None:
+            raise self._error
 
 
 class RecordRunConversionTests(unittest.TestCase):
@@ -347,6 +395,144 @@ class RecordRunConversionTests(unittest.TestCase):
         self.assertEqual(options.container_image_digest, "sha256:envdigest")
         self.assertEqual(options.experiment_config, "experiments/env.yaml")
         self.assertEqual(options.experiment_parameters, {"profile": "operator", "stage": "smoke"})
+
+
+class RosGraphCaptureTests(unittest.TestCase):
+    def test_canonicalizes_and_serializes_graph_deterministically(self) -> None:
+        graph = {
+            "nodes": [{"name": "z", "namespace": "/b"}, {"name": "a", "namespace": "/a"}],
+            "topics": [
+                {
+                    "name": "/z",
+                    "types": ["pkg/msg/B", "pkg/msg/A"],
+                    "publishers": [
+                        {"node_name": "z", "node_namespace": "/b", "topic_type": "pkg/msg/A", "qos": {"depth": 1}},
+                        {"node_name": "a", "node_namespace": "/a", "topic_type": "pkg/msg/A", "qos": {"depth": 2}},
+                    ],
+                    "subscribers": [],
+                }
+            ],
+        }
+        reordered = {
+            "nodes": list(reversed(graph["nodes"])),
+            "topics": [
+                {
+                    **graph["topics"][0],
+                    "types": list(reversed(graph["topics"][0]["types"])),
+                    "publishers": list(reversed(graph["topics"][0]["publishers"])),
+                }
+            ],
+        }
+
+        canonical = canonicalize_ros_graph(graph)
+
+        self.assertEqual(canonical, canonicalize_ros_graph(reordered))
+        self.assertEqual(
+            json.dumps(canonical, indent=2, sort_keys=True, allow_nan=False),
+            json.dumps(canonicalize_ros_graph(reordered), indent=2, sort_keys=True, allow_nan=False),
+        )
+        self.assertEqual(canonical["nodes"][0], {"name": "a", "namespace": "/a"})
+        self.assertEqual(canonical["topics"][0]["types"], ["pkg/msg/A", "pkg/msg/B"])
+
+    def test_waits_for_consecutive_identical_graph_observations(self) -> None:
+        first = {"nodes": [], "topics": [{"name": "/a", "types": ["pkg/msg/A"]}]}
+        stable = {"nodes": [], "topics": [{"name": "/b", "types": ["pkg/msg/B"]}]}
+        observations = iter([first, stable, stable])
+
+        snapshot = wait_for_stable_ros_graph(
+            lambda: next(observations),
+            timeout_sec=1.0,
+            interval_sec=0.01,
+            monotonic=lambda: 0.0,
+            sleeper=lambda _duration: None,
+        )
+
+        self.assertTrue(snapshot["capture"]["stability_reached"])
+        self.assertFalse(snapshot["capture"]["timeout_used"])
+        self.assertEqual(snapshot["capture"]["observations"], 3)
+        self.assertEqual(snapshot["topics"][0]["name"], "/b")
+
+    def test_uses_latest_graph_when_stability_times_out(self) -> None:
+        observations = iter(
+            [
+                {"nodes": [], "topics": [{"name": "/a", "types": ["pkg/msg/A"]}]},
+                {"nodes": [], "topics": [{"name": "/b", "types": ["pkg/msg/B"]}]},
+            ]
+        )
+        monotonic_values = iter([0.0, 0.5, 1.0])
+
+        snapshot = wait_for_stable_ros_graph(
+            lambda: next(observations),
+            timeout_sec=1.0,
+            interval_sec=0.1,
+            monotonic=lambda: next(monotonic_values),
+            sleeper=lambda _duration: None,
+        )
+
+        self.assertFalse(snapshot["capture"]["stability_reached"])
+        self.assertTrue(snapshot["capture"]["timeout_used"])
+        self.assertEqual(snapshot["capture"]["observations"], 2)
+        self.assertEqual(snapshot["topics"][0]["name"], "/b")
+
+    def test_writes_one_snapshot_at_the_required_path(self) -> None:
+        graph = {
+            "nodes": [{"name": "recorder", "namespace": "/"}],
+            "topics": [
+                {
+                    "name": "/detections",
+                    "types": ["yolo_msgs/msg/DetectionArray"],
+                    "publishers": [],
+                    "subscribers": [
+                        {
+                            "node_name": "recorder",
+                            "node_namespace": "/",
+                            "topic_type": "yolo_msgs/msg/DetectionArray",
+                            "qos": {"reliability": "RELIABLE"},
+                        }
+                    ],
+                }
+            ],
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "demo_001"
+            bundle = RunBundleWriter(RunBundleConfig(run_id="demo_001", out_dir=run_dir, git_sha="abc123"))
+            try:
+                self.assertTrue(
+                    capture_ros_graph_safely(
+                        node=_GraphNode(graph),
+                        bundle=bundle,
+                        warning=lambda _message: self.fail("graph capture should not warn"),
+                        timeout_sec=0.1,
+                        interval_sec=0.001,
+                    )
+                )
+                snapshot_path = run_dir / "ros_graph" / "topology.json"
+                self.assertTrue(snapshot_path.is_file())
+                self.assertEqual(len(list((run_dir / "ros_graph").glob("topology.json"))), 1)
+                snapshot = json.loads(snapshot_path.read_text(encoding="utf-8"))
+                self.assertEqual(snapshot["topics"][0]["subscribers"][0]["qos"], {"reliability": "RELIABLE"})
+            finally:
+                bundle.close()
+
+    def test_graph_capture_failure_only_warns(self) -> None:
+        warnings = []
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "demo_001"
+            bundle = RunBundleWriter(RunBundleConfig(run_id="demo_001", out_dir=run_dir, git_sha="abc123"))
+            try:
+                result = capture_ros_graph_safely(
+                    node=_GraphNode(error=RuntimeError("graph unavailable")),
+                    bundle=bundle,
+                    warning=warnings.append,
+                    timeout_sec=0.1,
+                    interval_sec=0.001,
+                )
+                self.assertFalse(result)
+                self.assertEqual(len(warnings), 1)
+                self.assertIn("graph unavailable", warnings[0])
+                self.assertFalse((run_dir / "ros_graph" / "topology.json").exists())
+            finally:
+                bundle.close()
 
 
 class AsyncBundleWriterTests(unittest.TestCase):

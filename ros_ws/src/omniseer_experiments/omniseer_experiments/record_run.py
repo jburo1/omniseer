@@ -12,6 +12,7 @@ import threading
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -38,6 +39,9 @@ from omniseer_msgs.msg import VisionPerfSummary
 
 DEFAULT_QUEUE_SIZE = 256
 DEFAULT_SYSTEM_SAMPLE_INTERVAL_SEC = 1.0
+DEFAULT_GRAPH_CAPTURE_TIMEOUT_SEC = 5.0
+DEFAULT_GRAPH_CAPTURE_INTERVAL_SEC = 0.25
+DEFAULT_GRAPH_STABLE_OBSERVATIONS = 2
 USE_CONFIG_SENTINEL = "__from_config__"
 
 
@@ -198,6 +202,26 @@ class SystemTelemetryThread:
             self._stop_requested.wait(self._interval_sec)
 
 
+class RosGraphCaptureThread:
+    """Capture one stable ROS graph snapshot without blocking recorder callbacks."""
+
+    def __init__(self, *, node: Node, bundle: RunBundleWriter) -> None:
+        self._node = node
+        self._bundle = bundle
+        self._thread = threading.Thread(target=self._run, name="omniseer_ros_graph_capture", daemon=True)
+        self._thread.start()
+
+    def join(self) -> None:
+        self._thread.join()
+
+    def _run(self) -> None:
+        capture_ros_graph_safely(
+            node=self._node,
+            bundle=self._bundle,
+            warning=self._node.get_logger().warning,
+        )
+
+
 class PerceptionRunRecorder(Node):
     """Record perception detections and performance telemetry into a run bundle."""
 
@@ -262,6 +286,7 @@ class PerceptionRunRecorder(Node):
         self.create_subscription(DetectionArray, options.detections_topic, self._on_detections, qos)
         self.create_subscription(VisionPerfSummary, options.perf_topic, self._on_perf, qos)
         self.create_subscription(BatteryState, options.battery_topic, self._on_battery, qos)
+        self._ros_graph_capture = RosGraphCaptureThread(node=self, bundle=bundle)
 
         self.get_logger().info(f"recording perception run bundle: run_id={options.run_id} out_dir={options.out_dir}")
 
@@ -270,6 +295,7 @@ class PerceptionRunRecorder(Node):
             return self._writer.bundle.summary_from_disk()
         self._closed = True
         self._system_telemetry.stop()
+        self._ros_graph_capture.join()
         summary = self._writer.close()
         self.get_logger().info(f"finalized perception run bundle: out_dir={self._options.out_dir}")
         return summary
@@ -296,6 +322,208 @@ class PerceptionRunRecorder(Node):
             if self._latest_lipo_battery is None:
                 return {"lipo_battery": unavailable_lipo_battery_snapshot(self._options.battery_topic)}
             return {"lipo_battery": dict(self._latest_lipo_battery)}
+
+
+def capture_ros_graph_safely(
+    *,
+    node: Node,
+    bundle: RunBundleWriter,
+    warning: Callable[[str], None],
+    timeout_sec: float = DEFAULT_GRAPH_CAPTURE_TIMEOUT_SEC,
+    interval_sec: float = DEFAULT_GRAPH_CAPTURE_INTERVAL_SEC,
+    stable_observations: int = DEFAULT_GRAPH_STABLE_OBSERVATIONS,
+) -> bool:
+    """Persist one graph snapshot, keeping graph capture strictly best-effort."""
+
+    try:
+        snapshot = wait_for_stable_ros_graph(
+            lambda: discover_ros_graph(node),
+            timeout_sec=timeout_sec,
+            interval_sec=interval_sec,
+            stable_observations=stable_observations,
+        )
+        bundle.write_ros_graph_snapshot(snapshot)
+    except Exception as exc:  # ROS graph inspection must not affect a robot run.
+        warning(f"unable to capture ROS graph snapshot: {exc}")
+        return False
+    return True
+
+
+def wait_for_stable_ros_graph(
+    observe: Callable[[], dict[str, Any]],
+    *,
+    timeout_sec: float,
+    interval_sec: float,
+    stable_observations: int = DEFAULT_GRAPH_STABLE_OBSERVATIONS,
+    monotonic: Callable[[], float] = time.monotonic,
+    sleeper: Callable[[float], None] = time.sleep,
+    now: Callable[[], datetime] = lambda: datetime.now(timezone.utc),
+) -> dict[str, Any]:
+    """Return the final graph after identical canonical observations or timeout."""
+
+    if timeout_sec < 0.0:
+        raise ValueError("timeout_sec must be >= 0")
+    if interval_sec <= 0.0:
+        raise ValueError("interval_sec must be > 0")
+    if stable_observations < 2:
+        raise ValueError("stable_observations must be >= 2")
+
+    deadline = monotonic() + timeout_sec
+    previous: dict[str, Any] | None = None
+    latest: dict[str, Any] | None = None
+    observations = 0
+    identical_observations = 0
+
+    while True:
+        latest = canonicalize_ros_graph(observe())
+        observations += 1
+        if latest == previous:
+            identical_observations += 1
+        else:
+            identical_observations = 1
+            previous = latest
+
+        if identical_observations >= stable_observations:
+            return _with_graph_capture_metadata(
+                latest,
+                captured_at=now(),
+                stability_reached=True,
+                timeout_used=False,
+                observations=observations,
+                stable_observations_required=stable_observations,
+            )
+
+        remaining_sec = deadline - monotonic()
+        if remaining_sec <= 0.0:
+            return _with_graph_capture_metadata(
+                latest,
+                captured_at=now(),
+                stability_reached=False,
+                timeout_used=True,
+                observations=observations,
+                stable_observations_required=stable_observations,
+            )
+        sleeper(min(interval_sec, remaining_sec))
+
+
+def discover_ros_graph(node: Node) -> dict[str, Any]:
+    """Read the recorder's ROS graph using rclpy graph APIs only."""
+
+    nodes = [
+        {"name": node_name, "namespace": namespace} for node_name, namespace in node.get_node_names_and_namespaces()
+    ]
+    topics = []
+    for topic_name, topic_types in node.get_topic_names_and_types():
+        topics.append(
+            {
+                "name": topic_name,
+                "types": list(topic_types),
+                "publishers": [
+                    _endpoint_to_dict(endpoint) for endpoint in node.get_publishers_info_by_topic(topic_name)
+                ],
+                "subscribers": [
+                    _endpoint_to_dict(endpoint) for endpoint in node.get_subscriptions_info_by_topic(topic_name)
+                ],
+            }
+        )
+    return canonicalize_ros_graph({"nodes": nodes, "topics": topics})
+
+
+def canonicalize_ros_graph(graph: dict[str, Any]) -> dict[str, Any]:
+    """Normalize graph API output to deterministic, machine-readable JSON data."""
+
+    nodes = [{"name": str(item["name"]), "namespace": str(item["namespace"])} for item in graph.get("nodes", [])]
+    topics = []
+    for item in graph.get("topics", []):
+        topic = {
+            "name": str(item["name"]),
+            "types": sorted({str(topic_type) for topic_type in item.get("types", [])}),
+            "publishers": _canonical_endpoints(item.get("publishers", [])),
+            "subscribers": _canonical_endpoints(item.get("subscribers", [])),
+        }
+        topics.append(topic)
+    return {
+        "nodes": sorted(nodes, key=lambda item: (item["namespace"], item["name"])),
+        "topics": sorted(topics, key=lambda item: item["name"]),
+    }
+
+
+def _with_graph_capture_metadata(
+    graph: dict[str, Any],
+    *,
+    captured_at: datetime,
+    stability_reached: bool,
+    timeout_used: bool,
+    observations: int,
+    stable_observations_required: int,
+) -> dict[str, Any]:
+    return {
+        "schema_version": 1,
+        "capture": {
+            "captured_at": captured_at.astimezone(timezone.utc).isoformat(),
+            "stability_reached": stability_reached,
+            "timeout_used": timeout_used,
+            "observations": observations,
+            "stable_observations_required": stable_observations_required,
+        },
+        **graph,
+    }
+
+
+def _endpoint_to_dict(endpoint: Any) -> dict[str, Any]:
+    result = {
+        "node_name": str(endpoint.node_name),
+        "node_namespace": str(endpoint.node_namespace),
+        "topic_type": str(endpoint.topic_type),
+    }
+    qos_profile = getattr(endpoint, "qos_profile", None)
+    if qos_profile is not None:
+        result["qos"] = _qos_profile_to_dict(qos_profile)
+    return result
+
+
+def _canonical_endpoints(endpoints: Any) -> list[dict[str, Any]]:
+    canonical = []
+    for endpoint in endpoints:
+        item = {
+            "node_name": str(endpoint["node_name"]),
+            "node_namespace": str(endpoint["node_namespace"]),
+            "topic_type": str(endpoint["topic_type"]),
+        }
+        if "qos" in endpoint:
+            item["qos"] = _canonical_qos(endpoint["qos"])
+        canonical.append(item)
+    return sorted(
+        canonical,
+        key=lambda item: json.dumps(item, sort_keys=True, separators=(",", ":"), allow_nan=False),
+    )
+
+
+def _qos_profile_to_dict(qos_profile: Any) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for name in ("history", "depth", "reliability", "durability", "liveliness", "avoid_ros_namespace_conventions"):
+        if hasattr(qos_profile, name):
+            result[name] = _qos_value(getattr(qos_profile, name))
+    for name in ("deadline", "lifespan", "liveliness_lease_duration"):
+        if hasattr(qos_profile, name):
+            value = getattr(qos_profile, name)
+            result[f"{name}_ns"] = int(value.nanoseconds) if hasattr(value, "nanoseconds") else _qos_value(value)
+    return result
+
+
+def _canonical_qos(qos: Any) -> Any:
+    if isinstance(qos, dict):
+        return {str(key): _canonical_qos(value) for key, value in sorted(qos.items())}
+    if isinstance(qos, list):
+        return [_canonical_qos(value) for value in qos]
+    return _qos_value(qos)
+
+
+def _qos_value(value: Any) -> Any:
+    if isinstance(value, (str, int, float, bool)) or value is None:
+        return value
+    name = getattr(value, "name", None)
+    return str(name) if name is not None else str(value)
 
 
 def detection_array_to_record(message: DetectionArray, *, topic: str = DEFAULT_DETECTIONS_TOPIC) -> dict[str, Any]:
