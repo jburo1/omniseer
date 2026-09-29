@@ -1,41 +1,44 @@
 ---
-description: "Six YOLO-World configurations on a repaired 360° scene: controlled presence/visibility coverage plus independent ROCK 5B+ physical-run summaries."
+description: "Six YOLO-World configurations: controlled class-frame coverage and separate ROCK 5B+ physical-run observations."
 ---
 
 # Six-Model Detector Comparison
 
-## Engineering questions
+## Experimental design
 
-With one frame-aligned 360° source scene, how do the six final
-YOLO-World RKNN detector configurations differ when vocabulary and
-post-processing are held fixed? How do their independent physical
-case-study summaries inform deployment trade-offs?
+This report keeps two evidence sources separate.
 
-## Method / experimental setup
+| Evidence source | Design | What it supports |
+| --- | --- | --- |
+| **Controlled replay** | Each configuration consumes the same 1,222 source frames. Vocabulary, score threshold (0.25), NMS IoU threshold (0.45), and post-processing are fixed. | A controlled, frame-aligned presence/visibility comparison in this scene. |
+| **Physical trials** | One independent closed-loop ROCK 5B+ run per model. | Runtime and system observations from six case studies. |
 
-The controlled replay sends exactly the same 1,222 source frames through each model configuration: v2-S FP, v2-S INT8,
-v2-M FP, v2-M INT8, v2-L FP, and v2-L Hybrid. It holds class
-vocabulary, score threshold (0.25) and NMS IoU threshold (0.45) fixed. Detector configuration is the only variable which was varied.
-Manual visibility annotations of the source video define 19 in-vocabulary class-interval sets which were used as a benchmark to evaluate detection quality across models.
+The controlled metric is **visible class-frame coverage**. A *class-frame
+opportunity* is one frame in which a manually annotated class is visible. The
+19 inclusive class-interval sets sum to **5,679 class-frame opportunities**. Multiple classes can be visible in one source frame, so
+the same 1,222 unique source frames legitimately create 5,679 opportunities.
+
+## Key findings
+
+- **v2-M FP** has the highest controlled coverage: **2,367 / 5,679 class-frame opportunities (41.7%)**.
+- **v2-S INT8** has the highest observed physical-run throughput: **16.54 FPS**.
+- **v2-M INT8** is the observed middle-ground configuration: **36.2%** controlled coverage and **10.04 FPS** in its independent physical run.
+- **All six physical trials completed with zero target-loss episodes.**
+
+## Visual comparison
+
+### Controlled replay
 
 <video controls preload="metadata" poster="../assets/evidence/detector-comparison-poster.webp" width="100%">
   <source src="https://media.githubusercontent.com/media/jburo1/omniseer/master/studies/detector_comparison/scan_final_recal/evidence/controlled_replay_2x3.mp4" type="video/mp4" />
-  Your browser cannot play this video. <a href="https://github.com/jburo1/omniseer/blob/master/studies/detector_comparison/scan_final_recal/evidence/controlled_replay_2x3.mp4">Open the controlled replay media</a>.
+  Your browser cannot play this video. <a href="https://github.com/jburo1/omniseer/blob/master/studies/detector_comparison/scan_final_recal/evidence/controlled_replay_2x3.mp4">Open the controlled replay video</a>.
 </video>
 
-We additionally gathered  per model run evidence within the same scene to evaluate runtime performance across detector configuration.
+*Controlled replay video: a frame-aligned view of the same source sequence for every configuration. It provides qualitative context for the controlled coverage metrics.*
 
-<video controls preload="metadata" width="100%">
-  <source src="https://media.githubusercontent.com/media/jburo1/omniseer/master/studies/detector_comparison/scan_final_recal/evidence/physical_trials_grid_2x3.mp4" type="video/mp4" />
-  Your browser cannot play this video. <a href="https://github.com/jburo1/omniseer/blob/master/studies/detector_comparison/scan_final_recal/evidence/physical_trials_grid_2x3.mp4">Open the physical-trials grid media</a>.
-</video>
+![Bar chart: controlled visible class-frame coverage by configuration](../assets/evidence/detector-comparison/controlled-coverage.svg)
 
-
-## Results
-
-### Controlled presence/visibility replay
-
-| Configuration | Visible-frame detections | Rate |
+| Configuration | Detected / class-frame opportunities | Coverage |
 | --- | ---: | ---: |
 | v2-S FP | 2,126 / 5,679 | 37.4% |
 | v2-S INT8 | 1,853 / 5,679 | 32.6% |
@@ -44,61 +47,82 @@ We additionally gathered  per model run evidence within the same scene to evalua
 | v2-L FP | 2,363 / 5,679 | 41.6% |
 | v2-L Hybrid | 1,440 / 5,679 | 25.4% |
 
-Every configuration detected `person` on all 293 / 293 annotated visible
-frames. v2-M FP led aggregate visible-frame coverage by a narrow margin over
-v2-L FP.
+Every configuration detected `person` on all 293 annotated visible frames.
 
-### Independent physical-run summaries
+### Independent physical trials
 
-| Configuration | Outcome | First detection | Success | Target loss | Mean consumer FPS | Inference p50 / p95 | Source-age p95 | Memory-used p95 |
-| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| v2-S FP | success | 24.6 s | 53.4 s | 0 | 7.90 | 117.28 / 153.95 ms | 181.50 ms | 2955.47 MB |
-| v2-S INT8 | success | 24.6 s | 50.5 s | 0 | 16.54 | 59.19 / 60.76 ms | 95.48 ms | 2959.68 MB |
-| v2-M FP | success | 25.2 s | 53.9 s | 0 | 4.37 | 225.12 / 251.43 ms | 282.81 ms | 3349.19 MB |
-| v2-M INT8 | success | 24.5 s | 51.1 s | 0 | 10.04 | 96.22 / 106.47 ms | 139.42 ms | 2999.90 MB |
-| v2-L FP | success | 25.4 s | 56.1 s | 0 | 2.64 | 380.25 / 400.98 ms | 438.76 ms | 3306.73 MB |
-| v2-L Hybrid | success | 24.9 s | 57.8 s | 0 | 4.65 | 205.55 / 229.90 ms | 262.32 ms | 4157.62 MB |
+<video controls preload="metadata" poster="../assets/evidence/detector-comparison-physical-poster.webp" width="100%">
+  <source src="https://media.githubusercontent.com/media/jburo1/omniseer/master/studies/detector_comparison/scan_final_recal/evidence/physical_trials_grid_2x3.mp4" type="video/mp4" />
+  Your browser cannot play this video. <a href="https://github.com/jburo1/omniseer/blob/master/studies/detector_comparison/scan_final_recal/evidence/physical_trials_grid_2x3.mp4">Open the physical-trials grid video</a>.
+</video>
 
-All six trials completed without target loss.
+*Physical-trials grid: one independent closed-loop run per configuration.*
+
+All six physical trials completed successfully with zero target-loss episodes.
+
+| Configuration | Mean consumer FPS | Inference p50 / p95 | Source-age p95 | Memory-used p95 |
+| --- | ---: | ---: | ---: | ---: |
+| v2-S FP | 7.90 | 117.28 / 153.95 ms | 181.50 ms | 2955.47 MB |
+| v2-S INT8 | 16.54 | 59.19 / 60.76 ms | 95.48 ms | 2959.68 MB |
+| v2-M FP | 4.37 | 225.12 / 251.43 ms | 282.81 ms | 3349.19 MB |
+| v2-M INT8 | 10.04 | 96.22 / 106.47 ms | 139.42 ms | 2999.90 MB |
+| v2-L FP | 2.64 | 380.25 / 400.98 ms | 438.76 ms | 3306.73 MB |
+| v2-L Hybrid | 4.65 | 205.55 / 229.90 ms | 262.32 ms | 4157.62 MB |
+
+![Two-panel chart: physical-run throughput and inference p50/p95](../assets/evidence/detector-comparison/physical-runtime.svg)
+
+### Combined view, with evidence boundary preserved
+
+![Scatter plot: controlled coverage versus independent physical-run throughput](../assets/evidence/detector-comparison/coverage-throughput.svg)
+
+The scatter plot is a deployment-trade-off view, its
+x-axis comes from controlled replay while its y-axis comes from one independent
+physical run per configuration.
+
+![Heatmap: per-class controlled visible-frame coverage](../assets/evidence/detector-comparison/per-class-coverage.svg)
+
+The heatmap makes the class-level variation visible.
 
 ## Engineering interpretation
 
-v2-M FP has the highest controlled coverage, while v2-S INT8 has the highest
-author-reported throughput among the physical summaries. v2-M INT8 is the
-strongest observed coverage/throughput compromise for this scene: 36.2%
-controlled coverage and 10.04 FPS in its independent run. Relative to their
-FP counterparts, v2-S INT8 improves inference p50/p95 by 1.98×/2.53× and
-throughput by 2.09×; v2-M INT8 by 2.34×/2.36× and 2.30×; v2-L Hybrid by
-1.85×/1.74× and 1.76×. v2-L Hybrid is faster than v2-L FP but has lower
-controlled coverage and the highest observed memory use.
+v2-M FP narrowly leads v2-L FP in this controlled scene (41.7% versus 41.6%).
+For the separate physical case studies, v2-S INT8 has the highest observed
+throughput, while v2-M INT8 provides the strongest observed coverage/throughput
+middle ground. Relative to their FP counterparts, v2-S INT8 improves inference
+p50/p95 by 1.98×/2.53× and throughput by 2.09×; v2-M INT8 by 2.34×/2.36× and
+2.30×; v2-L Hybrid by 1.85×/1.74× and 1.76×. v2-L Hybrid is faster than v2-L
+FP but has lower controlled coverage and the highest observed memory use.
 
 Success times span 50.5–57.8 s, much less than the 59.19–380.25 ms inference
-p50 range, which suggests scan/control timing is also material in this bounded
-trial. The ratios describe independent end-to-end measurements; they do not
-establish causal model differences.
+p50 range. That is consistent with scan/control timing also mattering in this
+bounded trial.
 
-## Evidence and reproducibility
+## Reproducibility and data quality
 
-The tracked replay provenance, six replay JSONLs, visibility annotations, and
-comparison report make the controlled metrics independently recomputable.
-Rerendering the video additionally requires the retained source stream. The
-complete RunBundles, source transport stream, and raw physical manifests remain
-ignored local evidence. Apart from the public v2-L FP RunBundle, the physical
-timing values and derived ratios are author-reported summaries from retained
-local bundles and cannot be independently recomputed from the public
-repository.
-
-For raw-artifact inspection, use the repository's [replay provenance](https://github.com/jburo1/omniseer/blob/master/studies/detector_comparison/scan_final_recal/evidence/replay_provenance.json),
-[replay JSONLs](https://github.com/jburo1/omniseer/tree/master/studies/detector_comparison/scan_final_recal/evidence/replay_jsonl),
+The charts are generated by
+[`render_docs_assets.py`](https://github.com/jburo1/omniseer/blob/master/studies/detector_comparison/scan_final_recal/evidence/render_docs_assets.py)
+from tracked replay JSONLs, [replay provenance](https://github.com/jburo1/omniseer/blob/master/studies/detector_comparison/scan_final_recal/evidence/replay_provenance.json),
 [visibility annotations](https://github.com/jburo1/omniseer/blob/master/studies/detector_comparison/scan_final_recal/visibility.txt),
-and [physical-run summary](https://github.com/jburo1/omniseer/blob/master/studies/detector_comparison/scan_final_recal/physical_runs.yaml).
+and the tracked [physical-run summary table](https://github.com/jburo1/omniseer/blob/master/studies/detector_comparison/scan_final_recal/results.md).
+It also creates the physical-run video poster directly from the tracked grid
+video. Regenerate them with:
+
+```bash
+python3 studies/detector_comparison/scan_final_recal/evidence/render_docs_assets.py
+```
+
+The retained [comparison report](https://github.com/jburo1/omniseer/blob/master/studies/detector_comparison/scan_final_recal/evidence/comparison_report.html),
+[replay JSONLs](https://github.com/jburo1/omniseer/tree/master/studies/detector_comparison/scan_final_recal/evidence/replay_jsonl),
+[physical-run summary](https://github.com/jburo1/omniseer/blob/master/studies/detector_comparison/scan_final_recal/physical_runs.yaml),
+and checksums remain available for detailed provenance. Rerendering the replay
+video also requires the retained source stream. Apart from the public v2-L FP
+RunBundle, physical timing values are summaries checked against retained local
+bundles and are not independently recomputable from a public clone.
 
 ## Limitations
 
 This is one-scene presence/visibility evidence, not mAP, bounding-box recall,
-or general detector accuracy. Controlled replay is not latency benchmarking;
-the physical results are one unreplicated run per configuration and cannot
-establish statistical significance or causal performance differences. Detection
-coverage comes from fixed-source replay, while runtime behavior comes from the
-independent trials; physical-run detections must not be used as controlled
-accuracy comparisons.
+or general detector accuracy. Controlled replay is not latency benchmarking.
+The physical trials are unreplicated case studies and
+cannot establish statistical significance or causal performance differences.
+Physical-run detections must not be treated as controlled accuracy comparisons.
