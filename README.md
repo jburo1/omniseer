@@ -7,9 +7,7 @@
 
 Omniseer is a holonomic 4WD robot for developing and evaluating neural perception under hardware constraints. A native C++ V4L2 → RGA → RKNN pipeline runs open-vocabulary YOLO-World on a ROCK 5B+ NPU, feeds detections into bounded visual autonomy, and records physical runs with model provenance, latency, telemetry, detections, video, and control traces.
 
-An operator application on a remote machine parameterizes, launches, and synchronizes experiments between the onboard SBC and laptop. The project spans model conversion and quantization, hardware-accelerated inference, ROS 2 and Gazebo integration, physical target acquisition, profiling, controlled experiments, and failure analysis.
-
-[Documentation](https://jburo1.github.io/omniseer/) · [Architecture](https://jburo1.github.io/omniseer/architecture/overview/) · [v2-L FP Target Acquisition](https://jburo1.github.io/omniseer/verification/target-acquisition/) · [Six-Model Detector Comparison](https://jburo1.github.io/omniseer/verification/detector-comparison/) · [v2-L INT8 Quantization Failure Analysis](https://jburo1.github.io/omniseer/verification/int8-quantization-failure/)
+An operator application on a remote machine parameterizes, launches, and synchronizes experiments between the onboard SBC and laptop. The project spans model conversion and quantization, hardware-accelerated inference, computation, and video encoding, ROS 2 and Gazebo integration, physical target acquisition, profiling, controlled experiments, and failure analysis.
 
 <p align="center">
   <img src="docs/assets/evidence/robot-hero.webp" width="800" alt="Omniseer physical mobile robot with LiDAR and mecanum drive" />
@@ -62,27 +60,24 @@ https://github.com/user-attachments/assets/9afa632c-9b78-4978-9c06-8714d285d1c0
 
 <a href="https://jburo1.github.io/omniseer/architecture/overview/"><img src="docs/assets/diagrams/explorer/system-explorer.svg" alt="Omniseer system architecture: PC, operator laptop, RK3588 robot runtime, firmware, hardware, and experiment evidence flow" width="100%"></a>
 
-RKNN model construction happens offline on the development PC; the deployed model runs entirely onboard. The mission-critical path stays on the robot: native C++ owns capture, preprocessing, inference, post-processing, and telemetry; ROS 2 carries typed detection, performance, command, odometry, sensor, and battery contracts; Teensy firmware and micro-ROS own low-level I/O. The operator gateway, preview stream, reports, and offboard inspection are diagnostic or review tooling, not dependencies of mission-critical perception or control. The robot runtime is packaged and verified as a containerized target runtime.
+RKNN model construction happens offline on the development PC in a containerized environment. A Gazebo simulation was used to prototype and validate robot behaviour before hardware deployment.
 
-## Representative Engineering Evidence
+On the robot, native C++ owns capture, preprocessing, inference, post-processing, and telemetry. ROS 2 carries typed detection, performance, command, odometry, sensor, and battery contracts.
 
-| Evidence | What it supports | Public boundary |
-| --- | --- | --- |
-| GitHub Actions CI | Portable ROS package checks, Gazebo smoke topics, portable vision tests, firmware compilation, docs build, and hardware-independent runtime packaging | Does not prove camera, RKNN/RGA, LiDAR, Teensy, or physical-robot execution |
-| The three flagship experiments above | Named physical-run, controlled replay, and target-hardware quantization claims | Their experiment-specific limitations apply; none is mAP, a replicated benchmark, or a general autonomy result |
-| RunBundle tooling and target-runtime source | Reproducible manifests, telemetry, evidence frames, static reports, and the implemented V4L2/RGA/RKNN-to-ROS path | Tooling and source alone do not prove a particular target-hardware run |
+Teensy firmware and micro-ROS own low-level I/O.
 
-## Engineering Contributions
+The operator gateway, preview stream, reports, and offboard inspection are diagnostic or review tooling, and are side carriaged so as to not interfere with the robot's hot path.
 
-- Native RK3588 perception and inference pipeline: V4L2 capture, RGA preprocessing, RKNN execution, post-processing, and detailed telemetry on the robot SBC.
-- Bounded perception-to-control autonomy for target acquisition and framing, with command arbitration and a proximity stop.
-- Reproducible RunBundle and evidence workflow that preserves configuration, telemetry, detections, media, annotations, and static reports for offboard review.
-- Explicit simulation, real-hardware, and runtime-verification boundaries that keep portable checks distinct from target-hardware evidence.
+The robot runtime is packaged and verified as a containerized target runtime.
 
-## Repository Inspection Path
+For more details, check out the [documentation](https://jburo1.github.io/omniseer/).
 
-- [System Architecture](https://jburo1.github.io/omniseer/architecture/overview/) — robot, operator, firmware, runtime, and evidence boundaries.
-- [Verification Evidence](https://jburo1.github.io/omniseer/verification/evidence/) — CI scope, target-hardware artifacts, and reproducibility limits.
-- [Edge AI / On-Robot Runtime](https://jburo1.github.io/omniseer/perception/edge-to-cloud/) and [Vision Pipeline](https://jburo1.github.io/omniseer/perception/vision-pipeline/) — native perception and review path.
-- [Operator Run Workflow](https://jburo1.github.io/omniseer/operations/operator-run-workflow/) — run, stop, retrieve, inspect, and report flow.
-- [CI/CD Overview](https://jburo1.github.io/omniseer/verification/ci-cd/) and [Scripts Front Door](https://jburo1.github.io/omniseer/operations/scripts-frontdoor/) — supported checks and automation limits.
+
+## Key Engineering Work
+
+- **Native RK3588 perception pipeline** — C++ V4L2 capture, RGA preprocessing, RKNN inference, YOLO-World post-processing, and runtime telemetry on the robot SBC.
+- **Hardware-aware model deployment** — converted, quantized, and evaluated YOLO-World variants on RK3588, including controlled FP/INT8 comparisons and mixed-precision failure analysis.
+- **Perception-to-control autonomy** — bounded target acquisition and framing driven by neural detections, with command arbitration and proximity safety constraints.
+- **Reproducible experiment infrastructure** — RunBundles preserve model provenance, configuration, detections, timing, telemetry, control traces, media, and generated reports for offline analysis.
+
+Detailed architecture, implementation, verification boundaries, and experiment methodology are available in the [project documentation](https://jburo1.github.io/omniseer/).
