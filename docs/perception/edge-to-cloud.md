@@ -1,4 +1,4 @@
-# Edge AI / On-Robot Runtime
+# Runtime Overview
 
 ## Purpose
 
@@ -96,12 +96,12 @@ A reviewer can:
 Execution claims should be supported by measured output, captured evidence, and a
 documented hardware/software configuration.
 
-A complete camera-input-to-report example will be added here when a public run is
-available.
+A complete camera-input-to-report example is available in the
+[v2-L FP Target Acquisition](../verification/target-acquisition.md) RunBundle.
 
 ## Related Documentation
 
-- [System Architecture](../architecture/overview.md)
+- [Documentation home](../index.md)
 - [Verification Evidence](../verification/evidence.md)
 - [Vision Pipeline](vision-pipeline.md)
 - [Vision Telemetry](vision-telemetry.md)
