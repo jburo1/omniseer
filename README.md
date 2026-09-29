@@ -7,7 +7,7 @@
 
 Omniseer is a holonomic 4WD robot for developing and evaluating neural perception under hardware constraints. A native C++ V4L2 → RGA → RKNN pipeline runs open-vocabulary YOLO-World on a ROCK 5B+ NPU, feeds detections into bounded visual autonomy, and records physical runs with model provenance, latency, telemetry, detections, video, and control traces.
 
-An operator application on a remote machine parameterizes, launches, and synchronizes experiments between the onboard SBC and laptop. The project spans model conversion and quantization, hardware-accelerated inference, computation, and video encoding, ROS 2 and Gazebo integration, physical target acquisition, profiling, controlled experiments, and failure analysis.
+An operator application on a remote machine parameterizes, launches, and synchronizes experiments between the onboard SBC and laptop. The project spans model conversion and quantization, hardware-accelerated inference, image processing and video encoding, ROS 2 and Gazebo integration, physical target acquisition, profiling, controlled experiments, and failure analysis.
 
 <p align="center">
   <img src="docs/assets/evidence/robot-hero.webp" width="800" alt="Omniseer physical mobile robot with LiDAR and mecanum drive" />
@@ -43,14 +43,14 @@ https://github.com/user-attachments/assets/9afa632c-9b78-4978-9c06-8714d285d1c0
         <img src="docs/assets/evidence/detector-comparison-poster.webp" alt="Six-panel controlled replay of YOLO-World detector configurations" width="300" />
       </a><br />
       <a href="https://jburo1.github.io/omniseer/verification/detector-comparison/">Six-Model Detector Comparison</a><br />
-      A fixed-scene replay compares six YOLO-World RKNN configurations with the same vocabulary and post-processing; separate physical runs show their deployment throughput trade-offs.
+      A fixed-scene replay compares six YOLO-World RKNN configurations. Separate physical runs show their deployment trade-offs.
     </td>
     <td width="33%" align="center" valign="top">
       <a href="https://jburo1.github.io/omniseer/verification/int8-quantization-failure/">
         <img src="docs/assets/evidence/v2l-int8-quantization-comparison.webp" alt="Side-by-side replay: recalibrated v2-L INT8 has no detections, while the TD01 mixed-precision hybrid detects a desk, potted plant, and subwoofer" width="300" />
       </a><br />
       <a href="https://jburo1.github.io/omniseer/verification/int8-quantization-failure/">v2-L INT8 Quantization Failure Analysis</a><br />
-      An RK3588 failure investigation asks whether v2-L INT8 preserves FP detection behavior, documenting its collapse and TD01 mixed precision's partial diagnostic recovery.
+      INT8 quantization caused the v2-L detector to collapse relative to FP16. Mixed precision surgery then partially recover the failure.
     </td>
   </tr>
 </table>
@@ -60,17 +60,13 @@ https://github.com/user-attachments/assets/9afa632c-9b78-4978-9c06-8714d285d1c0
 
 <a href="https://jburo1.github.io/omniseer/architecture/overview/"><img src="docs/assets/diagrams/explorer/system-explorer.svg" alt="Omniseer system architecture: PC, operator laptop, RK3588 robot runtime, firmware, hardware, and experiment evidence flow" width="100%"></a>
 
-RKNN model construction happens offline on the development PC in a containerized environment. A Gazebo simulation was used to prototype and validate robot behaviour before hardware deployment.
+RKNN model construction happens offline on the development PC in a containerized environment. Simulation in Gazebo was used to prototype and validate key perception, navigation, and robot behavior before deploying the ROS 2 stack to physical hardware.
 
-On the robot, native C++ owns capture, preprocessing, inference, post-processing, and telemetry. ROS 2 carries typed detection, performance, command, odometry, sensor, and battery contracts.
-
-Teensy firmware and micro-ROS own low-level I/O.
+On the robot, native C++ owns capture, preprocessing, inference, post-processing, and telemetry. ROS 2 carries typed detection, performance, command, odometry, sensor, and battery contracts.Teensy firmware and micro-ROS own low-level I/O.
 
 The operator gateway, preview stream, reports, and offboard inspection are diagnostic or review tooling, and are side carriaged so as to not interfere with the robot's hot path.
 
 The robot runtime is packaged and verified as a containerized target runtime.
-
-For more details, check out the [documentation](https://jburo1.github.io/omniseer/).
 
 
 ## Key Engineering Work
@@ -80,4 +76,4 @@ For more details, check out the [documentation](https://jburo1.github.io/omnisee
 - **Perception-to-control autonomy** — bounded target acquisition and framing driven by neural detections, with command arbitration and proximity safety constraints.
 - **Reproducible experiment infrastructure** — RunBundles preserve model provenance, configuration, detections, timing, telemetry, control traces, media, and generated reports for offline analysis.
 
-Detailed architecture, implementation, verification boundaries, and experiment methodology are available in the [project documentation](https://jburo1.github.io/omniseer/).
+More information can be found in the [project documentation](https://jburo1.github.io/omniseer/).
