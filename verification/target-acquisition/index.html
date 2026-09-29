@@ -1443,22 +1443,19 @@
 support a complete, reviewable execution of Omniseer's bounded visual
 target-acquisition and framing behavior?</p>
 <h2 id="method-experimental-setup">Method / experimental setup<a class="headerlink" href="#method-experimental-setup" title="Permanent link">&para;</a></h2>
-<p>This is one physical-robot case study, recorded as the public
-<code>v2l_fp_scene_1</code> RunBundle. The recorded model is YOLO-World v2-L FP with the
-RKNN backend. The bounded controller was configured to find <code>person</code>: it
+<p>This is one physical-robot case study, with evidence captured in a
+<a href="../../runs/v2l_fp_scene_1/report/">RunBundle</a>. The recorded model is YOLO-World v2-L FP16. The robot was placed in an environment which contained an object which the detector had been verified to detect in similar conditions a priori. The controller was configured to find <code>person</code>: it
 scanned, acquired a stable detection, centered and framed it, then stopped at
-the terminal condition <code>framed</code>. The bundle records the model/backend and
+the terminal success condition <code>framed</code>. The bundle records the model/backend and
 launch configuration, Git revision, runtime image digest, copied inputs,
 autonomy trace, detections, timing telemetry, visual evidence, media, and
-rosbag. The manifest is the authoritative provenance record for this run.</p>
+rosbag.</p>
 <h2 id="results">Results<a class="headerlink" href="#results" title="Permanent link">&para;</a></h2>
 <video controls preload="metadata" poster="../../assets/evidence/target-acquisition-v2l-fp-terminal.webp" width="100%">
   <source src="https://media.githubusercontent.com/media/jburo1/omniseer/master/studies/autonomy/v2l_fp_target_acquisition/run/video/overlay.mp4" type="video/mp4" />
   Your browser cannot play this video. <a href="https://media.githubusercontent.com/media/jburo1/omniseer/master/studies/autonomy/v2l_fp_target_acquisition/run/video/overlay.mp4">Open the target-acquisition overlay video</a>.
 </video>
 
-<p>The controller detected <code>person</code>, completed framing, and stopped with terminal
-reason <code>framed</code>.</p>
 <table>
 <thead>
 <tr>
@@ -1496,19 +1493,13 @@ reason <code>framed</code>.</p>
 <h2 id="engineering-interpretation">Engineering interpretation<a class="headerlink" href="#engineering-interpretation" title="Permanent link">&para;</a></h2>
 <p>This artifact demonstrates one end-to-end execution of bounded target
 acquisition and framing on the stated hardware and model configuration. It
-establishes that the recorded execution completed reviewably; it does not turn
-one success into a performance benchmark or a general perception claim. For
+establishes that the recorded execution completed reviewably. For
 fixed-source detector coverage and six independent physical case-study
 summaries, see <a href="../detector-comparison/">Six-Model Detector Comparison</a>.</p>
 <h2 id="evidence-and-reproducibility">Evidence and reproducibility<a class="headerlink" href="#evidence-and-reproducibility" title="Permanent link">&para;</a></h2>
-<p>The complete RunBundle is available in this documentation site. Start with the
-<a href="../../runs/v2l_fp_scene_1/report/">static run report</a> and follow
-its links to the manifest, autonomy trace, summaries, telemetry, evidence
-frames, overlay and source video, rosbag, and <a href="../../runs/v2l_fp_scene_1/checksums.sha256">checksums</a>. The terminal capture and its
-<code>target_framed</code> event can be cross-checked against the evidence index and
+<p>The complete RunBundle is available <a href="../../runs/v2l_fp_scene_1/report/">here</a>. It includes links to the manifest, autonomy trace, summaries, telemetry, evidence
+frames, overlay video, rosbag, and <a href="../../runs/v2l_fp_scene_1/checksums.sha256">checksums</a>. The terminal capture and its <code>target_framed</code> event can be cross-checked against the evidence index and
 <code>autonomy.jsonl</code> in that bundle.</p>
-<p>The repository copy of the <a href="https://github.com/jburo1/omniseer/tree/master/studies/autonomy/v2l_fp_target_acquisition/run">raw RunBundle directory</a>
-is a secondary artifact-inspection path, not a separate study narrative.</p>
 <h2 id="limitations">Limitations<a class="headerlink" href="#limitations" title="Permanent link">&para;</a></h2>
 <p>This is one representative successful run, not a benchmark aggregate or a
 claim of statistical significance, general detector accuracy, navigation-based
@@ -1533,7 +1524,7 @@ search, global exploration, or learned control.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 28, 2026 22:21:57 UTC">September 28, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 29, 2026 17:43:27 UTC">September 29, 2026</span>
   </span>
 
     

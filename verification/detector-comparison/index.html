@@ -412,10 +412,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#engineering-question" class="md-nav__link">
+  <a href="#engineering-questions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Engineering question
+        Engineering questions
       
     </span>
   </a>
@@ -1380,10 +1380,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#engineering-question" class="md-nav__link">
+  <a href="#engineering-questions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Engineering question
+        Engineering questions
       
     </span>
   </a>
@@ -1494,33 +1494,27 @@
 
 
 <h1 id="six-model-detector-comparison">Six-Model Detector Comparison<a class="headerlink" href="#six-model-detector-comparison" title="Permanent link">&para;</a></h1>
-<h2 id="engineering-question">Engineering question<a class="headerlink" href="#engineering-question" title="Permanent link">&para;</a></h2>
-<p>With one repaired, frame-aligned 360° source scene, how do the six final
+<h2 id="engineering-questions">Engineering questions<a class="headerlink" href="#engineering-questions" title="Permanent link">&para;</a></h2>
+<p>With one frame-aligned 360° source scene, how do the six final
 YOLO-World RKNN detector configurations differ when vocabulary and
-post-processing are held fixed—and how do their independent physical
+post-processing are held fixed? How do their independent physical
 case-study summaries inform deployment trade-offs?</p>
 <h2 id="method-experimental-setup">Method / experimental setup<a class="headerlink" href="#method-experimental-setup" title="Permanent link">&para;</a></h2>
-<p>The controlled replay sends exactly the same 1,222 repaired source frames
-(inclusive frames 0–1221) through each configuration: v2-S FP, v2-S INT8,
-v2-M FP, v2-M INT8, v2-L FP, and v2-L Hybrid. It holds source repair, class
-vocabulary, score threshold (0.25), NMS IoU threshold (0.45), and maximum
-detections (100) fixed; detector configuration is the only intended variable.
-Manual visibility annotations define 19 in-vocabulary class-interval sets and
-the 5,679 visible-frame denominator. <code>laptop</code>, <code>computer monitor</code>, and <code>sofa</code>
-were outside the comparison vocabulary and were excluded rather than counted
-as negative evidence.</p>
-<p>The physical-run grid is a separate 2-row × 3-column presentation of six
-independent ROCK 5B+ runs. Panels begin at their own run start and the grid
-ends at the shortest overlay, so it is supporting end-to-end case-study
-evidence, not a frame-aligned replay or a latency benchmark.</p>
+<p>The controlled replay sends exactly the same 1,222 source frames through each model configuration: v2-S FP, v2-S INT8,
+v2-M FP, v2-M INT8, v2-L FP, and v2-L Hybrid. It holds class
+vocabulary, score threshold (0.25) and NMS IoU threshold (0.45) fixed. Detector configuration is the only variable which was varied.
+Manual visibility annotations of the source video define 19 in-vocabulary class-interval sets which were used as a benchmark to evaluate detection quality across models.</p>
 <video controls preload="metadata" poster="../assets/evidence/detector-comparison-poster.webp" width="100%">
   <source src="https://media.githubusercontent.com/media/jburo1/omniseer/master/studies/detector_comparison/scan_final_recal/evidence/controlled_replay_2x3.mp4" type="video/mp4" />
   Your browser cannot play this video. <a href="https://github.com/jburo1/omniseer/blob/master/studies/detector_comparison/scan_final_recal/evidence/controlled_replay_2x3.mp4">Open the controlled replay media</a>.
 </video>
 
-<p><em>The controlled replay is a 3-row × 2-column layout pairing FP with INT8 or
-Hybrid by model size. It is target-hardware-derived evidence from the same
-repaired source frames for every configuration.</em></p>
+<p>We additionally gathered  per model run evidence within the same scene to evaluate runtime performance across detector configuration.</p>
+<video controls preload="metadata" width="100%">
+  <source src="https://media.githubusercontent.com/media/jburo1/omniseer/master/studies/detector_comparison/scan_final_recal/evidence/physical_trials_grid_2x3.mp4" type="video/mp4" />
+  Your browser cannot play this video. <a href="https://github.com/jburo1/omniseer/blob/master/studies/detector_comparison/scan_final_recal/evidence/physical_trials_grid_2x3.mp4">Open the physical-trials grid media</a>.
+</video>
+
 <h2 id="results">Results<a class="headerlink" href="#results" title="Permanent link">&para;</a></h2>
 <h3 id="controlled-presencevisibility-replay">Controlled presence/visibility replay<a class="headerlink" href="#controlled-presencevisibility-replay" title="Permanent link">&para;</a></h3>
 <table>
@@ -1529,8 +1523,6 @@ repaired source frames for every configuration.</em></p>
 <th>Configuration</th>
 <th style="text-align: right;">Visible-frame detections</th>
 <th style="text-align: right;">Rate</th>
-<th style="text-align: right;">Absent dog frames</th>
-<th style="text-align: right;">Absent cat frames</th>
 </tr>
 </thead>
 <tbody>
@@ -1538,50 +1530,37 @@ repaired source frames for every configuration.</em></p>
 <td>v2-S FP</td>
 <td style="text-align: right;">2,126 / 5,679</td>
 <td style="text-align: right;">37.4%</td>
-<td style="text-align: right;">34</td>
-<td style="text-align: right;">0</td>
 </tr>
 <tr>
 <td>v2-S INT8</td>
 <td style="text-align: right;">1,853 / 5,679</td>
 <td style="text-align: right;">32.6%</td>
-<td style="text-align: right;">6</td>
-<td style="text-align: right;">0</td>
 </tr>
 <tr>
 <td>v2-M FP</td>
 <td style="text-align: right;">2,367 / 5,679</td>
 <td style="text-align: right;">41.7%</td>
-<td style="text-align: right;">45</td>
-<td style="text-align: right;">0</td>
 </tr>
 <tr>
 <td>v2-M INT8</td>
 <td style="text-align: right;">2,055 / 5,679</td>
 <td style="text-align: right;">36.2%</td>
-<td style="text-align: right;">23</td>
-<td style="text-align: right;">0</td>
 </tr>
 <tr>
 <td>v2-L FP</td>
 <td style="text-align: right;">2,363 / 5,679</td>
 <td style="text-align: right;">41.6%</td>
-<td style="text-align: right;">33</td>
-<td style="text-align: right;">0</td>
 </tr>
 <tr>
 <td>v2-L Hybrid</td>
 <td style="text-align: right;">1,440 / 5,679</td>
 <td style="text-align: right;">25.4%</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
 </tr>
 </tbody>
 </table>
 <p>Every configuration detected <code>person</code> on all 293 / 293 annotated visible
 frames. v2-M FP led aggregate visible-frame coverage by a narrow margin over
-v2-L FP. The zero absent-dog count for v2-L Hybrid must be read alongside its
-lowest aggregate visible-frame rate; it is not a general precision claim.</p>
+v2-L FP.</p>
 <h3 id="independent-physical-run-summaries">Independent physical-run summaries<a class="headerlink" href="#independent-physical-run-summaries" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -1666,9 +1645,7 @@ lowest aggregate visible-frame rate; it is not a general precision claim.</p>
 </tr>
 </tbody>
 </table>
-<p>All six trials completed without target loss. The retained throttle field was
-unavailable for every trial, so this evidence does not establish that thermal
-throttling was absent.</p>
+<p>All six trials completed without target loss.</p>
 <h2 id="engineering-interpretation">Engineering interpretation<a class="headerlink" href="#engineering-interpretation" title="Permanent link">&para;</a></h2>
 <p>v2-M FP has the highest controlled coverage, while v2-S INT8 has the highest
 author-reported throughput among the physical summaries. v2-M INT8 is the
@@ -1723,7 +1700,7 @@ accuracy comparisons.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 28, 2026 22:04:53 UTC">September 28, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 29, 2026 17:43:27 UTC">September 29, 2026</span>
   </span>
 
     
