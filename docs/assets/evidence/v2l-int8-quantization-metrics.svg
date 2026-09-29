@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="510" viewBox="0 0 1000 510" role="img" aria-labelledby="title desc">
+  <title id="title">v2-L quantization replay comparison</title>
+  <desc id="desc">FP-relative detection retention is 100 percent for FP, zero percent for recalibrated INT8, and 60.6 percent for TD01. End-to-end whole-process replay throughput is 2.526, 5.115, and 3.996 FPS respectively.</desc>
+  <style>
+    .title { font-family: Arial, sans-serif; font-size: 24px; font-weight: 700; fill: #1f2937; }
+    .subtitle { font-family: Arial, sans-serif; font-size: 17px; font-weight: 600; fill: #374151; }
+    .label { font-family: Arial, sans-serif; font-size: 15px; fill: #374151; }
+    .value { font-family: Arial, sans-serif; font-size: 15px; font-weight: 700; fill: #111827; }
+    .note { font-family: Arial, sans-serif; font-size: 13px; fill: #4b5563; }
+    .axis { stroke: #9ca3af; stroke-width: 1; }
+    .track { fill: #e5e7eb; }
+    .fp { fill: #2563eb; }
+    .int8 { fill: #dc2626; }
+    .td01 { fill: #0f766e; }
+  </style>
+  <rect width="1000" height="510" fill="#ffffff"/>
+  <text x="40" y="42" class="title">Fixed 300-frame RK3588 replay</text>
+  <text x="40" y="72" class="subtitle">FP-relative detection retention</text>
+  <text x="410" y="97" class="note">0%</text>
+  <text x="760" y="97" class="note">100%</text>
+  <line x1="410" y1="103" x2="810" y2="103" class="axis"/>
+  <text x="40" y="132" class="label">v2-L FP</text>
+  <rect x="410" y="114" width="400" height="26" rx="4" class="track"/>
+  <rect x="410" y="114" width="400" height="26" rx="4" class="fp"/>
+  <text x="825" y="133" class="value">1,301 / 1,301 · 100.0%</text>
+  <text x="40" y="177" class="label">Recalibrated INT8</text>
+  <rect x="410" y="159" width="400" height="26" rx="4" class="track"/>
+  <rect x="410" y="159" width="6" height="26" rx="3" class="int8"/>
+  <text x="825" y="178" class="value">0 / 1,301 · 0.0%</text>
+  <text x="40" y="222" class="label">TD01 mixed precision</text>
+  <rect x="410" y="204" width="400" height="26" rx="4" class="track"/>
+  <rect x="410" y="204" width="242.4" height="26" rx="4" class="td01"/>
+  <text x="825" y="223" class="value">789 / 1,301 · 60.6%</text>
+  <line x1="40" y1="262" x2="960" y2="262" class="axis"/>
+  <text x="40" y="300" class="subtitle">Whole-process replay throughput (end-to-end FPS)</text>
+  <text x="410" y="325" class="note">0</text>
+  <text x="747" y="325" class="note">5.115 FPS maximum</text>
+  <line x1="410" y1="331" x2="810" y2="331" class="axis"/>
+  <text x="40" y="360" class="label">v2-L FP</text>
+  <rect x="410" y="342" width="400" height="26" rx="4" class="track"/>
+  <rect x="410" y="342" width="197.5" height="26" rx="4" class="fp"/>
+  <text x="825" y="361" class="value">2.526 FPS</text>
+  <text x="40" y="405" class="label">Recalibrated INT8</text>
+  <rect x="410" y="387" width="400" height="26" rx="4" class="track"/>
+  <rect x="410" y="387" width="400" height="26" rx="4" class="int8"/>
+  <text x="825" y="406" class="value">5.115 FPS</text>
+  <text x="40" y="450" class="label">TD01 mixed precision</text>
+  <rect x="410" y="432" width="400" height="26" rx="4" class="track"/>
+  <rect x="410" y="432" width="312.5" height="26" rx="4" class="td01"/>
+  <text x="825" y="451" class="value">3.996 FPS</text>
+  <text x="40" y="490" class="note">Throughput includes initialization, decode, preprocessing, inference, postprocessing, and JSONL serialization; it is not isolated inference latency.</text>
+</svg>

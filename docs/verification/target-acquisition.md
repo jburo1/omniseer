@@ -48,11 +48,10 @@ summaries, see [Six-Model Detector Comparison](detector-comparison.md).
 ## Evidence and reproducibility
 
 The complete RunBundle is available <a href="../../runs/v2l_fp_scene_1/report/">here</a>. It includes links to the manifest, autonomy trace, summaries, telemetry, evidence
-frames, overlay video, rosbag, and <a href="../../runs/v2l_fp_scene_1/checksums.sha256">checksums</a>. The terminal capture and its `target_framed` event can be cross-checked against the evidence index and
+frames, overlay video, rosbag, and checksums. The terminal capture and its `target_framed` event can be cross-checked against the evidence index and
 `autonomy.jsonl` in that bundle.
 
 ## Limitations
 
 This is one representative successful run, not a benchmark aggregate or a
-claim of statistical significance, general detector accuracy, navigation-based
-search, global exploration, or learned control.
+claim of statistical significance.
