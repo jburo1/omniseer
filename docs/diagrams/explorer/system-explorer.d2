@@ -103,7 +103,7 @@ workstation.laptop <-> robot.runtime: "commands / telemetry" {
 
 # Offline model deployment path
 
-development_pc.rknn_model_build -> robot.runtime: "deploy RK3588 .rknn model artifact" {
+development_pc.rknn_model_build -> robot.runtime: "deploy .rknn model" {
   class: offline_edge
 }
 
