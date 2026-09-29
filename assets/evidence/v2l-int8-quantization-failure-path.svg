@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="460" viewBox="0 0 1100 460" role="img" aria-labelledby="title desc">
+  <title id="title">INT8 failure-localization progression</title>
+  <desc id="desc">The investigation progresses from full INT8 collapse through classifier path implication, a healthy isolated exMatMul control, a constant-output projection-context reproducer, targeted mixed precision, and partial detector recovery.</desc>
+  <style>
+    .title { font-family: Arial, sans-serif; font-size: 23px; font-weight: 700; fill: #1f2937; }
+    .heading { font-family: Arial, sans-serif; font-size: 16px; font-weight: 700; fill: #1f2937; }
+    .body { font-family: Arial, sans-serif; font-size: 14px; fill: #374151; }
+    .arrow { stroke: #475569; stroke-width: 2.5; fill: none; marker-end: url(#arrowhead); }
+  </style>
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#475569"/>
+    </marker>
+  </defs>
+  <rect width="1100" height="460" fill="#ffffff"/>
+  <text x="40" y="38" class="title">Failure-localization progression on RK3588</text>
+  <rect x="40" y="75" width="285" height="105" rx="10" fill="#fee2e2" stroke="#64748b" stroke-width="1.5"/>
+  <text x="62" y="106" class="heading">1. Full INT8 collapse</text>
+  <text x="62" y="133" class="body">0 / 1,301 FP-reference</text>
+  <text x="62" y="154" class="body">detections retained</text>
+  <rect x="407" y="75" width="285" height="105" rx="10" fill="#e0e7ff" stroke="#64748b" stroke-width="1.5"/>
+  <text x="429" y="106" class="heading">2. Classifier path implicated</text>
+  <text x="429" y="133" class="body">Failure occurs before YOLO</text>
+  <text x="429" y="154" class="body">postprocessing</text>
+  <rect x="774" y="75" width="285" height="105" rx="10" fill="#dcfce7" stroke="#64748b" stroke-width="1.5"/>
+  <text x="796" y="106" class="heading">3. Isolated exMatMul healthy</text>
+  <text x="796" y="133" class="body">Narrow control does not</text>
+  <text x="796" y="154" class="body">reproduce the failure</text>
+  <path d="M325 127 H407" class="arrow"/>
+  <path d="M692 127 H774" class="arrow"/>
+  <path d="M916 180 V220 H550 V250" class="arrow"/>
+  <rect x="407" y="250" width="285" height="120" rx="10" fill="#fef3c7" stroke="#64748b" stroke-width="1.5"/>
+  <text x="429" y="281" class="heading">4. Projection context reproduces</text>
+  <text x="429" y="308" class="body">Expanded projection/exMatMul</text>
+  <text x="429" y="329" class="body">context: exactly constant output</text>
+  <text x="429" y="350" class="body">in failed hybrid arrangement</text>
+  <rect x="774" y="250" width="285" height="120" rx="10" fill="#e0e7ff" stroke="#64748b" stroke-width="1.5"/>
+  <text x="796" y="281" class="heading">5. Targeted mixed precision</text>
+  <text x="796" y="308" class="body">TD01 tests the implicated</text>
+  <text x="796" y="329" class="body">precision arrangement</text>
+  <rect x="40" y="250" width="285" height="120" rx="10" fill="#ccfbf1" stroke="#64748b" stroke-width="1.5"/>
+  <text x="62" y="281" class="heading">6. Partial detector recovery</text>
+  <text x="62" y="308" class="body">789 / 1,301 retained</text>
+  <text x="62" y="329" class="body">(60.6%); not FP-equivalent</text>
+  <path d="M692 310 H774" class="arrow"/>
+  <path d="M917 370 V395 H325 V310" class="arrow"/>
+  <text x="40" y="415" class="body">Conclusion: the required classifier projection context is implicated; the exact RKNN Toolkit2/backend cause remains unresolved.</text>
+</svg>
