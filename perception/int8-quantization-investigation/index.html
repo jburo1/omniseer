@@ -1407,9 +1407,10 @@ retained in the v2-L INT8 study and indexed in
   failed hybrid layout, while its FP16 and healthy-hybrid controls remained
   non-constant. This distinguishes the required projection context from an
   isolated matrix multiply alone.</li>
-<li>The final TD01 result is a useful experimental/diagnostic mixed-precision
+<li>The final v2-L TD01 mixed-precision result is a useful experimental/diagnostic
   mitigation, but is not FP-equivalent or a validated production replacement:
-  it retained 789 of 1,301 FP detections (60.6%) and had severe
+  it produced 1,030 total detections, of which 789 matched 1,301 v2-L
+  FP-reference detections (60.6% retention), and had severe
   class-specific degradation.</li>
 </ul>
 <h2 id="supporting-final-rk3588-evaluation-detail">Supporting final RK3588 evaluation detail<a class="headerlink" href="#supporting-final-rk3588-evaluation-detail" title="Permanent link">&para;</a></h2>
@@ -1452,7 +1453,7 @@ accepted greedily.</p>
 <td style="text-align: right;">58.653 s / 5.115 fps</td>
 </tr>
 <tr>
-<td>v2-L TD01 base hybrid</td>
+<td>v2-L TD01 mixed-precision</td>
 <td style="text-align: right;">295</td>
 <td style="text-align: right;">1,030</td>
 <td style="text-align: right;">789 / 1,301</td>
@@ -1474,7 +1475,7 @@ cellphone (0/5), book (18/73, 24.7%), subwoofer (7/27, 25.9%), and desk
 <p>The canonical decision is recorded in the
 <a href="../../verification/int8-quantization-failure/">v2-L INT8 Quantization Failure Analysis</a>:
 v2-L FP remains the quality reference; recalibrated v2-L INT8 is unsuitable;
-and TD01 is an experimental diagnostic mitigation, not a validated production
+and v2-L TD01 mixed-precision is an experimental diagnostic mitigation, not a validated production
 replacement. The proprietary Toolkit2/backend root cause remains unresolved.
 Future work should reopen the root-cause investigation only for a vendor bug
 report or a production-quality v2-L mixed-precision deployment; TD01's 60.6%
@@ -1580,7 +1581,7 @@ recreate the investigation are retained elsewhere.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 28, 2026 22:04:53 UTC">September 28, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 30, 2026 02:37:09 UTC">September 30, 2026</span>
   </span>
 
     
