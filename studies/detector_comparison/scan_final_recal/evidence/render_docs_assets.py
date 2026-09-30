@@ -38,8 +38,17 @@ MODELS = OrderedDict(
         ("v2-M FP", "v2m_fp.jsonl"),
         ("v2-M INT8", "v2m_int8.jsonl"),
         ("v2-L FP", "v2l_fp.jsonl"),
-        ("v2-L Hybrid", "v2l_hybrid.jsonl"),
+        ("v2-L classifier-path localization probe", "v2l_hybrid.jsonl"),
     )
+)
+
+PHYSICAL_CONFIGURATIONS = (
+    "v2-S FP",
+    "v2-S INT8",
+    "v2-M FP",
+    "v2-M INT8",
+    "v2-L FP",
+    "v2-L hybrid (artifact identity unproven)",
 )
 
 INK = "#20242b"
@@ -148,7 +157,7 @@ def physical_metrics() -> OrderedDict[str, tuple[float, float, float]]:
         if outcome != "success" or target_loss != "0":
             raise ValueError(f"physical summary is not an all-success/no-loss run: {line}")
         rows[model] = (float(fps), float(p50.removesuffix(" ms")), float(p95.removesuffix(" ms")))
-    if list(rows) != list(MODELS):
+    if list(rows) != list(PHYSICAL_CONFIGURATIONS):
         raise ValueError(f"physical summary models differ from replay models: {list(rows)}")
     return rows
 
@@ -283,9 +292,8 @@ def render_scatter(
         "v2-M FP": (10, 20),
         "v2-M INT8": (10, -10),
         "v2-L FP": (-8, 19),
-        "v2-L Hybrid": (-8, -10),
     }
-    for model, hits in totals.items():
+    for model, hits in list(totals.items())[:5]:
         rate = hits / opportunities * 100
         fps = physical[model][0]
         x = left + (rate - x_min) / (x_max - x_min) * plot_width
@@ -384,7 +392,7 @@ def main() -> None:
         "v2-M FP": 2367,
         "v2-M INT8": 2055,
         "v2-L FP": 2363,
-        "v2-L Hybrid": 1440,
+        "v2-L classifier-path localization probe": 1440,
     }
     if opportunities != 5679 or totals != expected:
         raise ValueError(f"controlled metrics no longer match retained report: {opportunities=}, {totals=}")

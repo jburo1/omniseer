@@ -11,11 +11,11 @@ The six saved replay streams each contain 1,222 records for inclusive source fra
 | v2-M FP | 2,367 / 5,679 | 41.7% | 45 | 0 |
 | v2-M INT8 | 2,055 / 5,679 | 36.2% | 23 | 0 |
 | v2-L FP | 2,363 / 5,679 | 41.6% | 33 | 0 |
-| v2-L Hybrid | 1,440 / 5,679 | 25.4% | 0 | 0 |
+| v2-L classifier-path localization probe | 1,440 / 5,679 | 25.4% | 0 | 0 |
 
 Every configuration detected `person` on all 293 / 293 annotated visible frames. The 5,679 denominator is the inclusive total over 19 in-vocabulary class-interval sets. `laptop`, `computer monitor`, and `sofa` were excluded because they were outside the comparison vocabulary; they were not treated as negative evidence.
 
-v2-M FP led the aggregate rate by a narrow margin over v2-L FP. Both FP configurations exceeded their corresponding INT8 configurations in this fixed scene. The no-absent-dog result for v2-L Hybrid must be read together with its lowest aggregate visible-frame rate, not as a general precision claim.
+v2-M FP led the aggregate rate by a narrow margin over v2-L FP. Both FP configurations exceeded their corresponding INT8 configurations in this fixed scene. The no-absent-dog result for the v2-L classifier-path localization probe must be read together with its lowest aggregate visible-frame rate, not as a general precision claim. This probe is not v2-L TD01 mixed-precision.
 
 ## Independent physical runs
 
@@ -28,9 +28,9 @@ Each row is one independent physical ROCK 5B+ run. The values were checked again
 | v2-M FP | success | 25.2 s | 53.9 s | 0 | 4.37 | 225.12 ms | 251.43 ms | 282.81 ms | 46.12% | 3349.19 MB | 52.69 C | not recorded (signal unavailable) |
 | v2-M INT8 | success | 24.5 s | 51.1 s | 0 | 10.04 | 96.22 ms | 106.47 ms | 139.42 ms | 31.94% | 2999.90 MB | 49.00 C | not recorded (signal unavailable) |
 | v2-L FP | success | 25.4 s | 56.1 s | 0 | 2.64 | 380.25 ms | 400.98 ms | 438.76 ms | 43.27% | 3306.73 MB | 52.69 C | not recorded (signal unavailable) |
-| v2-L Hybrid | success | 24.9 s | 57.8 s | 0 | 4.65 | 205.55 ms | 229.90 ms | 262.32 ms | 45.50% | 4157.62 MB | 50.85 C | not recorded (signal unavailable) |
+| v2-L hybrid (artifact identity unproven) | success | 24.9 s | 57.8 s | 0 | 4.65 | 205.55 ms | 229.90 ms | 262.32 ms | 45.50% | 4157.62 MB | 50.85 C | not recorded (signal unavailable) |
 
-Compared with each FP counterpart, v2-S INT8 is 1.98× faster at inference p50, 2.53× faster at p95, and 2.09× higher in throughput; v2-M INT8 is 2.34×/2.36×/2.30×; and v2-L Hybrid is 1.85×/1.74×/1.76×. The ratios describe these independent end-to-end runs, not controlled replay timing.
+Compared with each FP counterpart, v2-S INT8 is 1.98× faster at inference p50, 2.53× faster at p95, and 2.09× higher in throughput; v2-M INT8 is 2.34×/2.36×/2.30×. The v2-L physical-run artifact is unproven, so no v2-L FP comparison is attributed to a named hybrid artifact. The ratios describe these independent end-to-end runs, not controlled replay timing.
 
 Time to success spans 50.5–57.8 s while inference p50 spans 59.19–380.25 ms, consistent with scan/control timing being a material component of this bounded trial. All six runs succeeded without target loss. Their missing throttle signal means the table does not establish that thermal throttling was absent.
 

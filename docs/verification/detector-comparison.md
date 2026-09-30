@@ -11,7 +11,18 @@ This report keeps two evidence sources separate.
 | Evidence source | Design | What it supports |
 | --- | --- | --- |
 | **Controlled replay** | Each configuration consumes the same 1,222 source frames. Vocabulary, score threshold (0.25), NMS IoU threshold (0.45), and post-processing are fixed. | A controlled, frame-aligned presence/visibility comparison in this scene. |
-| **Physical trials** | One independent closed-loop ROCK 5B+ run per model. | Runtime and system observations from six case studies. |
+| **Physical trials** | One independent closed-loop robot run per recorded configuration label. | Runtime and system observations from six case studies. |
+
+The controlled-replay v2-L diagnostic configuration is the **v2-L
+classifier-path localization probe**,
+`yolo_world_v2_l_hybrid_td01_clspreds0_mm_inputs_fp16.rknn`
+(`df72d337ad03a7b90c5a96f2b44495fd25f5747094019b038b2823d5133d398e`). It
+is distinct from the quantization investigation's v2-L TD01 mixed-precision
+mitigation (`yolo_world_v2_l_hybrid_td01.rknn`,
+`20e43523ab4221fd755553030dbc58943f457839d5583b1f2f29954489c2ef92`). The
+retained physical-run summary does not prove the exact RKNN artifact or hash
+for `v2l_hybrid_scene_1`; its v2-L hybrid label is therefore not treated as
+either controlled-replay artifact.
 
 The controlled metric is **visible class-frame coverage**. A *class-frame
 opportunity* is one frame in which a manually annotated class is visible. The
@@ -45,7 +56,7 @@ the same 1,222 unique source frames legitimately create 5,679 opportunities.
 | v2-M FP | 2,367 / 5,679 | 41.7% |
 | v2-M INT8 | 2,055 / 5,679 | 36.2% |
 | v2-L FP | 2,363 / 5,679 | 41.6% |
-| v2-L Hybrid | 1,440 / 5,679 | 25.4% |
+| v2-L classifier-path localization probe | 1,440 / 5,679 | 25.4% |
 
 Every configuration detected `person` on all 293 annotated visible frames.
 
@@ -67,7 +78,7 @@ All six physical trials completed successfully with zero target-loss episodes.
 | v2-M FP | 4.37 | 225.12 / 251.43 ms | 282.81 ms | 3349.19 MB |
 | v2-M INT8 | 10.04 | 96.22 / 106.47 ms | 139.42 ms | 2999.90 MB |
 | v2-L FP | 2.64 | 380.25 / 400.98 ms | 438.76 ms | 3306.73 MB |
-| v2-L Hybrid | 4.65 | 205.55 / 229.90 ms | 262.32 ms | 4157.62 MB |
+| v2-L hybrid (artifact identity unproven) | 4.65 | 205.55 / 229.90 ms | 262.32 ms | 4157.62 MB |
 
 ![Two-panel chart: physical-run throughput and inference p50/p95](../assets/evidence/detector-comparison/physical-runtime.svg)
 
@@ -75,9 +86,11 @@ All six physical trials completed successfully with zero target-loss episodes.
 
 ![Scatter plot: controlled coverage versus independent physical-run throughput](../assets/evidence/detector-comparison/coverage-throughput.svg)
 
-The scatter plot is a deployment-trade-off view, its
-x-axis comes from controlled replay while its y-axis comes from one independent
-physical run per configuration.
+The scatter plot is a deployment-trade-off view, its x-axis comes from
+controlled replay while its y-axis comes from one independent physical run per
+recorded configuration label. In particular, its v2-L point must not be read
+as a model-paired comparison: the controlled probe and the physical-run
+artifact have different/unknown identities.
 
 ![Heatmap: per-class controlled visible-frame coverage](../assets/evidence/detector-comparison/per-class-coverage.svg)
 
@@ -90,8 +103,11 @@ For the separate physical case studies, v2-S INT8 has the highest observed
 throughput, while v2-M INT8 provides the strongest observed coverage/throughput
 middle ground. Relative to their FP counterparts, v2-S INT8 improves inference
 p50/p95 by 1.98×/2.53× and throughput by 2.09×; v2-M INT8 by 2.34×/2.36× and
-2.30×; v2-L Hybrid by 1.85×/1.74× and 1.76×. v2-L Hybrid is faster than v2-L
-FP but has lower controlled coverage and the highest observed memory use.
+2.30×. The v2-L classifier-path localization probe has lower controlled
+coverage than v2-L FP. The separately labeled v2-L hybrid physical run is
+faster than v2-L FP and has the highest observed memory use, but its exact
+artifact is unproven, so it cannot be attributed to the probe or to v2-L TD01
+mixed-precision.
 
 Success times span 50.5–57.8 s, much less than the 59.19–380.25 ms inference
 p50 range. That is consistent with scan/control timing also mattering in this

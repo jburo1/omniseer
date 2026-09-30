@@ -37,6 +37,4 @@
 <text x="614.9" y="210.9" text-anchor="start" class="value">v2-M INT8</text>
 <circle cx="831.8" cy="342.6" r="7" fill="#4057a5" stroke="white" stroke-width="2"/>
 <text x="823.8" y="361.6" text-anchor="end" class="value">v2-L FP</text>
-<circle cx="151.8" cy="309.5" r="7" fill="#4057a5" stroke="white" stroke-width="2"/>
-<text x="143.8" y="299.5" text-anchor="end" class="value">v2-L Hybrid</text>
 </svg>
