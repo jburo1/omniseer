@@ -13,7 +13,7 @@ target-acquisition and framing behavior?
 ## Method / experimental setup
 
 This is one physical-robot case study, with evidence captured in a
-<a href="../../runs/v2l_fp_scene_1/report/">RunBundle</a>. The recorded model is YOLO-World v2-L FP16. The robot was placed in an environment which contained an object which the detector had been verified to detect in similar conditions a priori. The controller was configured to find `person`: it
+<a href="../../runs/v2l_fp_scene_1/report/">RunBundle</a>. The recorded model is YOLO-World v2-L FP. The robot was placed in an environment which contained an object which the detector had been verified to detect in similar conditions a priori. The controller was configured to find `person`: it
 scanned, acquired a stable detection, centered and framed it, then stopped at
 the terminal success condition `framed`. The bundle records the model/backend and
 launch configuration, Git revision, runtime image digest, copied inputs,
