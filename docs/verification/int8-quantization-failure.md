@@ -5,12 +5,13 @@ description: "RK3588 case study: recalibrated YOLO-World v2-L INT8 retained no F
 # v2-L INT8 Quantization Failure Analysis
 
 On the fixed 300-frame RK3588 replay, recalibrated and quantized v2-L INT8 retained
-**0 of 1,301 v2-L FP-reference detections**. We created a mixed-precision hybrid model, TD01, which retained
-**789 of 1,301 (60.6%)**. The failure localizes to the classifier projection context on RK3588, but the exact RKNN Toolkit2/backend cause remains unresolved, and the RKNN compiler is proprietary.
+**0 of 1,301 v2-L FP-reference detections**. The diagnostic mitigation, **v2-L TD01 mixed-precision**, produced
+**1,030 total detections**, of which **789** matched v2-L FP-reference detections:
+**789 / 1,301 (60.6%)** retention. The failure localizes to the classifier projection context on RK3588, but the exact RKNN Toolkit2/backend cause remains unresolved, and the RKNN compiler is proprietary.
 
 ## The contrast that motivated the investigation
 
-When run through frames corresponding to a reference scene, the quantized v2-L model's performance collapses completely, as shown in the left pane in the video below. The right pane shows our somewhat repaired TD01 model on the same reference scene.
+When run through the full 1,222-frame source sequence, the quantized v2-L model's performance collapses completely, as shown in the left pane in the video below. The right pane shows v2-L TD01 mixed-precision on that same sequence. This video is qualitative context; the quantitative evaluation below uses a deterministic 300-frame subset of the same source sequence.
 
 <video controls preload="metadata" width="100%">
   <source src="https://media.githubusercontent.com/media/jburo1/omniseer/master/studies/quantization/yolo_world_v2l_int8/evidence/scan_final_v2l_int8_vs_hybrid.mp4" type="video/mp4" />
@@ -20,9 +21,9 @@ When run through frames corresponding to a reference scene, the quantized v2-L m
 
 ## What was evaluated
 
-The canonical evaluation replays 300 frozen representative frames through the
+The canonical quantitative evaluation replays a deterministic 300-frame subset of the same 1,222-frame source sequence through the
 existing `vision_replay` detector path on RK3588, with score
-threshold 0.25, and NMS IoU threshold 0.45. We ran the same frames through v2-L FP, v2-L INT8, and our reconstructed hybrid precision model TD01.
+threshold 0.25, and NMS IoU threshold 0.45. We ran the same frames through v2-L FP, v2-L recalibrated INT8, and v2-L TD01 mixed-precision.
 
 ## Results
 
@@ -35,13 +36,13 @@ threshold 0.25, and NMS IoU threshold 0.45. We ran the same frames through v2-L 
 | --- | ---: | ---: | ---: | ---: |
 | v2-L FP | 300 | 1,301 | baseline (1,301 / 1,301) | 2.526 FPS |
 | v2-L recalibrated INT8 | 0 | 0 | **0 / 1,301 (0.0%)** | 5.115 FPS |
-| v2-L TD01 mixed precision | 295 | 789 | **789 / 1,301 (60.6%)** | 3.996 FPS |
+| v2-L TD01 mixed-precision | 295 | 1,030 | **789 / 1,301 (60.6%)** | 3.996 FPS |
 
 The higher INT8 replay throughput does not offset its detector collapse.
 
 ### Class-specific recovery
 
-TD01 recovered some classes strongly while leaving others severely degraded.
+v2-L TD01 mixed-precision recovered some classes strongly while leaving others severely degraded.
 These are FP-relative agreement measures, not ground-truth precision or recall.
 
 | Strongest TD01 retention | Retained | Weakest TD01 retention | Retained |
@@ -65,7 +66,7 @@ controls remained non-constant. This localizes the failure to the required
 classifier projection context rather than an isolated matrix multiply. It does
 not identify the exact proprietary Toolkit2/backend mechanism.
 
-Conceptually, TD01 is a targeted hybrid precision layout: it retains FP16 at
+Conceptually, v2-L TD01 mixed-precision is a targeted hybrid precision layout: it retains FP16 at
 the 80x80 classifier projection and text operand around the MatMul boundary,
 in addition to the validated FP16 classifier outputs, while the rest remains
 quantized. It was used to test the implicated precision arrangement, not to
@@ -74,8 +75,8 @@ records the layer-level conversion details.
 
 ### Engineering decision
 
-Recalibrated v2-L INT8 is unsuitable: it collapsed before post-processing
-in the final replay. TD01 is diagnostic evidence of partial recovery and
+v2-L recalibrated INT8 is unsuitable: it collapsed before post-processing
+in the final replay. v2-L TD01 mixed-precision is diagnostic evidence of partial recovery and
 localization, not an FP-equivalent or validated production replacement.
 **v2-L FP remains the quality reference.**
 
@@ -98,7 +99,10 @@ and [evidence inventory](https://github.com/jburo1/omniseer/blob/master/studies/
 
 ## Limitations
 
-This is a fixed 300-frame RK3588 comparison with recorded models, thresholds,
-and replay path. It is not ground-truth precision or recall, broad deployment
-validation, isolated latency measurement, or proof of a proprietary
-Toolkit2/backend root cause.
+FP is a behavioral reference, not ground truth. FP-relative matching is
+class-aware, IoU >= 0.50, and deterministic one-to-one matching. Reported FPS
+is whole-process replay throughput, not isolated inference latency. This is a
+fixed 300-frame RK3588 comparison with recorded models, thresholds, and replay
+path; it is not broad deployment validation or proof of a proprietary
+Toolkit2/backend root cause. Exact reruns require the non-retained source
+transport stream and PNG inputs identified by the retained hashes and manifest.

@@ -8,7 +8,8 @@
   established in-memory `rockchip_preview_circular_wrap_v1` correction.
 - Left model: `runs/model_artifacts/yolo_world_v2_l_i8_recal.rknn`
   (`337012ef7690c39dbbbb0fc73ce4396a5c9ff2411032cca47fb012b66045faef`).
-- Right model: `runs/model_artifacts/yolo_world_v2_l_hybrid_td01.rknn`
+- Right model: v2-L TD01 mixed-precision,
+  `runs/model_artifacts/yolo_world_v2_l_hybrid_td01.rknn`
   (`20e43523ab4221fd755553030dbc58943f457839d5583b1f2f29954489c2ef92`).
 - Classes: `config/classes/task.txt`; score threshold `0.25`, NMS IoU `0.45`,
   maximum detections `100`.

@@ -29,9 +29,10 @@ retained in the v2-L INT8 study and indexed in
   failed hybrid layout, while its FP16 and healthy-hybrid controls remained
   non-constant. This distinguishes the required projection context from an
   isolated matrix multiply alone.
-- The final TD01 result is a useful experimental/diagnostic mixed-precision
+- The final v2-L TD01 mixed-precision result is a useful experimental/diagnostic
   mitigation, but is not FP-equivalent or a validated production replacement:
-  it retained 789 of 1,301 FP detections (60.6%) and had severe
+  it produced 1,030 total detections, of which 789 matched 1,301 v2-L
+  FP-reference detections (60.6% retention), and had severe
   class-specific degradation.
 
 ## Supporting final RK3588 evaluation detail
@@ -52,7 +53,7 @@ accepted greedily.
 | --- | ---: | ---: | ---: | ---: | ---: |
 | v2-L FP | 300 | 1,301 | — | — | 118.751 s / 2.526 fps |
 | v2-L recalibrated INT8 | 0 | 0 | 0 / 1,301 | 0.0% | 58.653 s / 5.115 fps |
-| v2-L TD01 base hybrid | 295 | 1,030 | 789 / 1,301 | 60.6% | 75.084 s / 3.996 fps |
+| v2-L TD01 mixed-precision | 295 | 1,030 | 789 / 1,301 | 60.6% | 75.084 s / 3.996 fps |
 
 The timing column is whole-process replay time: model/text initialization,
 PNG decode, CPU letterbox preprocessing, RKNN inference, postprocessing, and
@@ -70,7 +71,7 @@ cellphone (0/5), book (18/73, 24.7%), subwoofer (7/27, 25.9%), and desk
 The canonical decision is recorded in the
 [v2-L INT8 Quantization Failure Analysis](../verification/int8-quantization-failure.md):
 v2-L FP remains the quality reference; recalibrated v2-L INT8 is unsuitable;
-and TD01 is an experimental diagnostic mitigation, not a validated production
+and v2-L TD01 mixed-precision is an experimental diagnostic mitigation, not a validated production
 replacement. The proprietary Toolkit2/backend root cause remains unresolved.
 Future work should reopen the root-cause investigation only for a vendor bug
 report or a production-quality v2-L mixed-precision deployment; TD01's 60.6%

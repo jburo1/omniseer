@@ -47,10 +47,10 @@ https://github.com/user-attachments/assets/9afa632c-9b78-4978-9c06-8714d285d1c0
     </td>
     <td width="33%" align="center" valign="top">
       <a href="https://jburo1.github.io/omniseer/verification/int8-quantization-failure/">
-        <img src="docs/assets/evidence/v2l-int8-quantization-comparison.webp" alt="Side-by-side replay: recalibrated v2-L INT8 has no detections, while the TD01 mixed-precision hybrid detects a desk, potted plant, and subwoofer" width="300" />
+        <img src="docs/assets/evidence/v2l-int8-quantization-comparison.webp" alt="Side-by-side full-source replay: v2-L recalibrated INT8 has no detections, while v2-L TD01 mixed-precision detects a desk, potted plant, and subwoofer" width="300" />
       </a><br />
       <a href="https://jburo1.github.io/omniseer/verification/int8-quantization-failure/">v2-L INT8 Quantization Failure Analysis</a><br />
-      INT8 quantization caused the v2-L detector to collapse relative to FP16. Mixed precision surgery then partially recover the failure.
+      v2-L recalibrated INT8 collapsed relative to v2-L FP. v2-L TD01 mixed-precision then partially recovered behavior as a diagnostic mitigation.
     </td>
   </tr>
 </table>

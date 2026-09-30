@@ -24,16 +24,17 @@ additional experiment evidence or a ground-truth comparison.
 | Original v2-L INT8 | `artifacts/models/yolo_world_v2_l_i8.rknn` | `3b8dbbbf02952cc9c83b9287c54fdde7a7f5d923d22605594ddbac27284b87a8` |
 | Recalibrated v2-L INT8 failure | `artifacts/models/yolo_world_v2_l_i8_recal.rknn` | `337012ef7690c39dbbbb0fc73ce4396a5c9ff2411032cca47fb012b66045faef` |
 | Original TD0 hybrid | `runs/model_artifacts/yolo_world_v2_l_hybrid.rknn` plus `_config/` | `6a590575f5de60ecdca4a5b01346932eab05aa6b3479f876b53b3c4bf51fd2f5` |
-| TD01 base hybrid (diagnostic mitigation) | `runs/model_artifacts/yolo_world_v2_l_hybrid_td01.rknn` plus `_config/` | `20e43523ab4221fd755553030dbc58943f457839d5583b1f2f29954489c2ef92` |
+| v2-L TD01 mixed-precision (diagnostic mitigation) | `runs/model_artifacts/yolo_world_v2_l_hybrid_td01.rknn` plus `_config/` | `20e43523ab4221fd755553030dbc58943f457839d5583b1f2f29954489c2ef92` |
 | Full-neck hybrid | `runs/model_artifacts/yolo_world_v2_l_hybrid_neck.rknn` plus `_config/` | `fa197bed3d9e0a70bf0803b0139bf3350c4efbef895f03d44b2000a618905439` |
 
-TD01 is a diagnostic mixed-precision mitigation, not an FP-equivalent or
+v2-L TD01 mixed-precision is a diagnostic mitigation, not an FP-equivalent or
 production-validated replacement. Keep its `.rknn` and all three generated
 step-1 files (`.model`, `.data`, `.quantization.cfg`) together. The
 `yolo_world_v2_l_hybrid_td01_clspreds0_mm_inputs_fp16.rknn` artifact (model
 `df72d337ad03a7b90c5a96f2b44495fd25f5747094019b038b2823d5133d398e`; config
 `d9f93c95d849307c86bf5f48705ff31002b81ff779aa2693d8b8e5badcbdc365`) is a
-failed classifier-path localization probe, not a mitigation or deployment
+classifier-path localization probe used by the retained six-model controlled
+replay. It is not v2-L TD01 mixed-precision, a mitigation, or a deployment
 candidate.
 
 ## Classification-path localization evidence
@@ -99,7 +100,7 @@ evidence; their hashes, recorded in `metrics.json`, are:
 intact copy of the Radxa one-frame evidence directory. It contains the corrected single-frame AVI and
 frame hashes, plus paired `.log` and `.jsonl` output for FP, recalibrated INT8,
 TD0, TD01, full-neck, the TD01 output control, and each classifier-path bisect.
-The TD01 base hybrid is the mitigation in this one-frame collection.  The
+v2-L TD01 mixed-precision artifact is the mitigation in this one-frame collection. The
 `v2l_hybrid_td01_clspreds0_mm_inputs_fp16.{log,jsonl}` pair is a
 classifier-path localization probe, not mitigation evidence.  The local copy
 was byte-compared with the board after transfer.
@@ -131,7 +132,7 @@ deterministic one-to-one pairs.
 | --- | ---: | ---: | ---: | ---: | ---: |
 | v2-L FP | 300 | 1,301 | — | — | 118.751 s / 2.526 fps |
 | v2-L recalibrated INT8 | 0 | 0 | 0 / 1,301 | 0.0% | 58.653 s / 5.115 fps |
-| v2-L TD01 base hybrid | 295 | 1,030 | 789 / 1,301 | 60.6% | 75.084 s / 3.996 fps |
+| v2-L TD01 mixed-precision | 295 | 1,030 | 789 / 1,301 | 60.6% | 75.084 s / 3.996 fps |
 
 These are whole-process replay measurements, including initialization, PNG
 decode, CPU letterbox preprocessing, RKNN inference, postprocessing, and

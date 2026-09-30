@@ -128,7 +128,7 @@
       }
     },
     "v2l_td01": {
-      "display_name": "v2-L TD01 base hybrid",
+      "display_name": "v2-L TD01 mixed-precision",
       "model_path": "runs/model_artifacts/yolo_world_v2_l_hybrid_td01.rknn",
       "raw_path": "raw/v2l_td01_replay.jsonl",
       "wall_time_path": "raw/v2l_td01.wall_time.txt",
