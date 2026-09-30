@@ -478,6 +478,28 @@ class RunBundleWriterTests(unittest.TestCase):
             finally:
                 writer.close()
 
+    def test_precreated_ros_graph_directory_does_not_change_bundle_behavior(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "precreated"
+            run_dir.mkdir()
+            ros_graph_dir = run_dir / "ros_graph"
+            ros_graph_dir.mkdir()
+            (ros_graph_dir / "topology.json").write_text('{"existing":true}\n', encoding="utf-8")
+            (run_dir / "rosbag").mkdir()
+
+            writer = RunBundleWriter(_config(run_dir), started_at=STARTED_AT)
+            try:
+                writer.write_detection_record(_detection_record())
+                summary = writer.finalize(ended_at=ENDED_AT)
+                self.assertEqual(summary["message_counts"]["detections"], 1)
+                self.assertEqual(
+                    (ros_graph_dir / "topology.json").read_text(encoding="utf-8"),
+                    '{"existing":true}\n',
+                )
+                self.assertTrue((run_dir / "rosbag").is_dir())
+            finally:
+                writer.close()
+
     def test_overwrite_preserves_only_precreated_native_artifacts(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             run_dir = Path(tmp) / "precreated"

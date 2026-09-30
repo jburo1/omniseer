@@ -275,6 +275,7 @@ class RunBundleWriter:
         self._prepare_run_dir()
         self.evidence_dir.mkdir(exist_ok=True)
         self.provenance_dir.mkdir(exist_ok=True)
+        self.ros_graph_dir.mkdir(exist_ok=True)
         self._provenance = self._build_provenance_manifest()
         self._write_manifest()
         self._detections_handle = self.detections_path.open("a", encoding="utf-8")
@@ -325,6 +326,14 @@ class RunBundleWriter:
     def provenance_dir(self) -> Path:
         return self.run_dir / "provenance"
 
+    @property
+    def ros_graph_dir(self) -> Path:
+        return self.run_dir / "ros_graph"
+
+    @property
+    def ros_graph_topology_path(self) -> Path:
+        return self.ros_graph_dir / "topology.json"
+
     def write_detection_record(self, record: dict[str, Any]) -> None:
         self._write_jsonl(self._detections_handle, record)
         self.summary.add_detection_record(record)
@@ -336,6 +345,14 @@ class RunBundleWriter:
     def write_system_record(self, record: dict[str, Any]) -> None:
         self._write_jsonl(self._system_handle, record)
         self.summary.add_system_record(record)
+
+    def write_ros_graph_snapshot(self, snapshot: dict[str, Any]) -> None:
+        """Persist the recorder-owned, single ROS graph snapshot deterministically."""
+
+        self.ros_graph_topology_path.write_text(
+            json.dumps(snapshot, indent=2, sort_keys=True, allow_nan=False) + "\n",
+            encoding="utf-8",
+        )
 
     def record_drop(self, stream: str, count: int = 1) -> None:
         self.summary.record_drop(stream, count)
@@ -409,6 +426,7 @@ class RunBundleWriter:
             "evidence",
             "logs",
             "provenance",
+            "ros_graph",
             "video",
             "rosbag",
         }
@@ -426,6 +444,8 @@ class RunBundleWriter:
             if child.name == "logs" and not child.is_dir():
                 return False
             if child.name == "provenance" and not child.is_dir():
+                return False
+            if child.name == "ros_graph" and not child.is_dir():
                 return False
             if child.name == "video" and not child.is_dir():
                 return False

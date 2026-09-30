@@ -188,7 +188,7 @@ failure, the autonomy node stops commanding motion, completes terminal logging
 and capture handling, and exits cleanly; real launch then shuts down so the
 recorder can finalize the run bundle without an operator Stop Run.
 
-The bounded autonomy run type is summarized in [System Architecture](../architecture/overview.md). It performs an in-place visual target-acquisition and framing loop for a configured class, records `autonomy.jsonl`, and stops once it reaches a terminal success or failure state.
+The bounded autonomy run type is summarized in the [Runtime Overview](../perception/edge-to-cloud.md). It performs an in-place visual target-acquisition and framing loop for a configured class, records `autonomy.jsonl`, and stops once it reaches a terminal success or failure state.
 
 The node publishes `TwistStamped` commands to `/cmd_vel_autonomy`, relies on
 `twist_mux` arbitration, and records terminal state into the bundle for the HTML

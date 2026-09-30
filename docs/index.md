@@ -2,67 +2,16 @@
 description: "Physical edge-AI robotics on RK3588: open-vocabulary neural perception, bounded target acquisition, and reproducible evidence from real robot runs."
 ---
 
-# Omniseer
+# Omniseer Documentation
 
-**Physical edge-AI robotics for open-vocabulary perception, bounded behavior, and reproducible evidence.** Omniseer runs a native V4L2/RGA/RKNN perception path on a ROCK 5B+ (RK3588), connects detections to deliberately bounded target acquisition and framing, and preserves the artifacts needed to review what occurred on the robot. ROS 2 carries the runtime contracts; the engineering focus is the edge-to-physical-system boundary.
-
-The implemented behavior is intentionally narrow: scan for a configured class, acquire a stable detection, center it, make bounded framing adjustments, and stop at a configured proximity limit. It is not navigation-based object search, room-scale exploration, or a claim of general autonomy.
+Technical documentation for Omniseer's perception, robot runtime, operator tooling, hardware, and recorded experiment evidence.
 
 <p align="center">
   <img src="assets/evidence/robot-hero.webp" alt="Omniseer physical mobile robot with LiDAR and mecanum drive" width="960" />
 </p>
 
-## Experiments
+## Explore the System
 
-<div class="grid cards" markdown>
+<object data="assets/diagrams/explorer/system-explorer.svg" type="image/svg+xml" aria-label="Omniseer system explorer" width="100%"></object>
 
--   :material-robot-industrial-outline: **v2-L FP Target Acquisition**
-
-    ---
-
-    ![Terminal person detection from the reviewed v2-L FP RunBundle](assets/evidence/target-acquisition-v2l-fp-terminal.webp)
-
-    A public v2-L FP RunBundle records first detection at **25.4 s**, terminal `framed` success at **56.1 s**, **2.64 FPS** mean consumer throughput, **380.25 ms** RKNN inference p50, and **zero target-loss episodes**.
-
-    [:octicons-arrow-right-24: Review the run](verification/target-acquisition.md)
-
--   :material-chart-timeline-variant-shimmer: **Six-Model Detector Comparison**
-
-    ---
-
-    ![Six-panel controlled replay poster](assets/evidence/detector-comparison-poster.webp)
-
-    In one controlled scene, v2-M FP led coverage at **41.7%**. Across six independent physical case studies, v2-S INT8 reached the highest observed throughput at **16.54 FPS**; v2-M INT8 was the strongest observed coverage/throughput compromise for this scene.
-
-    [:octicons-arrow-right-24: Compare detectors](verification/detector-comparison.md)
-
--   :material-alert-decagram-outline: **v2-L INT8 Quantization Failure Analysis**
-
-    ---
-
-    Recalibrated v2-L INT8 retained **0 of 1,301** FP detections in the final 300-frame RK3588 evaluation. TD01 mixed precision recovered **60.6%**, locating the failure in the classification/projection path without presenting the hybrid as production-ready.
-
-    [:octicons-arrow-right-24: Read the failure analysis](verification/int8-quantization-failure.md)
-
-</div>
-
-## System at a glance
-
-```text
-Camera -> V4L2 / RGA / RKNN inference -> normalized detections -> bounded acquisition + framing
-                                        |                              |
-                                        +-> performance telemetry       +-> terminal evidence
-                                                                         |
-                                                            RunBundle -> offboard review
-```
-
-The mission-critical path stays on the robot: camera capture, preprocessing, RKNN inference, post-processing, command arbitration, robot I/O, and bounded behavior. Operator dashboards, preview streaming, reports, and analysis remain optional diagnostic or review tooling.
-
-[Explore the system architecture](architecture/overview.md){ .md-button .md-button--primary }
-[Browse Edge AI / On-Robot Runtime](perception/edge-to-cloud.md){ .md-button }
-
-## Experiment evidence boundaries
-
-The three experiments above are deliberately different kinds of evidence: one complete public physical RunBundle, one fixed-source controlled replay plus six independent physical-run summaries, and one frozen-frame quantization investigation. They support their named claims—not general detector accuracy, replicated benchmarks, or broad autonomy assertions.
-
-These experiment pages are the authoritative narratives for their questions, methods, results, interpretations, and limitations. Repository study directories store the supporting evidence and reproducibility artifacts: RunBundles, manifests, JSONLs, provenance, checksums, and source material. For the artifact inventory, public-versus-local distinction, CI scope, and reproducibility limits, see [Verification Evidence](verification/evidence.md).
+Select a component in the diagram to open its detailed documentation.

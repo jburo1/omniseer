@@ -225,87 +225,36 @@ These checks do not prove live camera, RGA, RKNN, ROCK 5B+, or full runtime
 container behavior unless they are run in an environment with the corresponding
 hardware, SDKs, devices, and ROS graph.
 
-## Offline Detector Replay
+## Diagnostic and Evaluation Tools
 
-`vision_replay` is a target-side, sequential detector replay tool. It decodes one MP4,
-CPU-letterboxes each source frame into the existing 640×640 RGB DMA-backed input pool,
-then uses the normal `ConsumerPipeline`, `RknnRunner`, and YOLO-World postprocess path.
-It writes exactly one canonical JSONL record for every decoded frame, including frames
-with no detections. `frame_index` is the replay identity; the JSONL contains no wall-clock
-or inference-latency fields.
+The following tools are deliberately outside the camera/ROS production runtime;
+they reuse selected production components to make their results comparable to
+the deployed detector.
 
-This is an offline validation tool and is not part of the camera/ROS production runtime.
-
-## Raw RKNN Output Probe
-
-The robot runtime image also contains `/usr/local/bin/vision_rknn_probe` for controlled
-host-versus-RK3588 output parity checks. It runs one still image through the production
-CPU letterbox, YOLO-World text-embedding preparation, and `RknnRunner`, then stops before
-YOLO decoding and NMS. It writes portable raw `output_<index>.bin` files plus
-`metadata.json` (RKNN shape/type/quantization and dequantized statistics) to the selected
-directory.
-
-```bash
-vision_rknn_probe \
-  --detector-model /models/yolo_world.rknn \
-  --image /data/frame.png \
-  --classes /data/classes.txt \
-  --clip-model /models/clip_text.rknn \
-  --clip-vocab /models/clip_vocab.bpe \
-  --output-dir /data/rknn-probe
-```
-
-Use repeated `--class <name>` instead of `--classes` when a temporary class list is more
-convenient. This diagnostic tool is separate from `vision_replay` and is not a production
-inference path.
-
-## RunBundle Six-Model Comparison
-
-`scripts/omni runs compare <run_dir>` is the ROCK 5B+ devcontainer offline comparison
-workflow. It uses `<repo>/runs/model_artifacts` for model artifacts and
-`<run_dir>/classes.txt` by default; `--model-dir` and `--classes` remain available for
-nonstandard debugging cases. `--name` selects a conservative named output directory and defaults
-to `default`. Paths are interpreted exactly in the filesystem namespace of the shell running the
-command. It decodes the immutable raw
-`video/source.ts` once, reverses the known 1280x720 Rockchip preview circular wrap
-in memory (recorded `[x=1272..1279][x=0..1271]` becomes normal pixel order), and
-passes that same corrected BGR frame serially to resident v2-S FP, v2-S INT8, v2-M
-FP, v2-M INT8, v2-L FP, and v2-L TD01 mixed-precision `OfflineDetector`
-instances. The v2-L TD01 mixed-precision selector choice (currently labeled
-`v2-L Hybrid` in the implementation) uses the canonical
-`yolo_world_v2_l_hybrid_td01.rknn` artifact. This current selection must not
-be used to identify the retained `latest_task` six-model replay: its provenance records the separate
-`yolo_world_v2_l_hybrid_td01_clspreds0_mm_inputs_fp16.rknn` classifier-path
-localization probe. Each instance uses the existing CPU
-letterbox, `RknnRunner`, `ConsumerPipeline`, embeddings, and YOLO postprocess path.
-
-For every decoded source frame, the comparator persists each model result with the existing replay
-JSONL schema (`frame_index`, source presentation `timestamp_sec`, and detections), then draws those
-same production source-pixel results before producing a
-labeled 3x2 H.264/yuv420p MP4 at the source FPS, with v2-S and v2-M FP/INT8 rows and a v2-L FP/Hybrid row. Offline inference duration does not
-control output elapsed time. It writes only under `video/comparison/<name>/`:
-`comparison.mp4`, `provenance.json`, `v2s_fp.jsonl`, `v2s_int8.jsonl`, `v2m_fp.jsonl`,
-`v2m_int8.jsonl`, `v2l_fp.jsonl`, and `v2l_hybrid.jsonl`. The raw source, original detections, and
-RunBundle manifest remain unchanged.
-
-From the ROCK 5B+ devcontainer:
-
-```bash
-cd /omniseer
-scripts/omni build vision
-
-scripts/omni runs compare runs/reference_scene \
-  --name task \
-  --classes config/classes/task.txt
-
-scripts/omni runs compare runs/reference_scene \
-  --name coco80 \
-  --classes config/classes/coco80.txt
-```
-
-`config/classes/coco80.txt` is deliberately not split or batched. If the selected compiled model
-does not have capacity for all 80 classes, the existing text-embedding preparation validation fails
-the comparison before rendering.
+- `vision_replay` is a target-side sequential video replay tool. It
+  CPU-letterboxes decoded frames into the existing DMA-backed input pool and
+  uses `ConsumerPipeline`, `RknnRunner`, and YOLO-World postprocessing to write
+  one canonical detection record per frame. It is used by the recorded
+  [INT8 quantization investigation](int8-quantization-investigation.md), not by
+  live capture or ROS publication.
+- `vision_rknn_probe` is a controlled host-versus-RK3588 parity diagnostic. It
+  shares the production CPU letterbox, text-embedding preparation, and
+  `RknnRunner`, then stops before decoding and NMS to persist raw RKNN outputs
+  and metadata. The deployed model and compilation boundary are documented in
+  [YOLO-World v2 Model Deployment](yolo-world-model-deployment.md).
+- `scripts/omni runs compare` performs the ROCK 5B+ devcontainer's offline
+  six-model RunBundle comparison. It processes one immutable source sequence
+  through the same CPU letterbox, runner, consumer, embedding, and postprocess
+  path, and writes only derived comparison artifacts. Its command contract is
+  in the [Developer CLI](../operations/scripts-frontdoor.md#runs); its
+  experiment results and evidence boundary are in the
+  [Six-Model Detector Comparison](../verification/detector-comparison.md). Its
+  current v2-L TD01 mixed-precision selector (currently labeled `v2-L Hybrid`
+  in the implementation) uses `yolo_world_v2_l_hybrid_td01.rknn`. That must
+  not be conflated with the retained `latest_task` replay, whose provenance
+  identifies the separate
+  `yolo_world_v2_l_hybrid_td01_clspreds0_mm_inputs_fp16.rknn` classifier-path
+  localization probe.
 
 ## Primary Implementation Files
 

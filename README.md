@@ -58,7 +58,7 @@ https://github.com/user-attachments/assets/9afa632c-9b78-4978-9c06-8714d285d1c0
 
 ## System at a Glance
 
-<a href="https://jburo1.github.io/omniseer/architecture/overview/"><img src="docs/assets/diagrams/explorer/system-explorer.svg" alt="Omniseer system architecture: PC, operator laptop, RK3588 robot runtime, firmware, hardware, and experiment evidence flow" width="100%"></a>
+<a href="https://jburo1.github.io/omniseer/"><img src="docs/assets/diagrams/explorer/system-explorer.svg" alt="Omniseer system architecture: PC, operator laptop, RK3588 robot runtime, firmware, hardware, and experiment evidence flow" width="100%"></a>
 
 RKNN model construction happens offline on the development PC in a containerized environment. Simulation in Gazebo was used to prototype and validate key perception, navigation, and robot behavior before deploying the ROS 2 stack to physical hardware.
 
