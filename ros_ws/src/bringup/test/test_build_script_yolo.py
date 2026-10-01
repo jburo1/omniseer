@@ -20,7 +20,10 @@ class BuildScriptYoloTests(unittest.TestCase):
             setup_path.write_text("# test setup\n", encoding="utf-8")
 
             colcon_stub = bin_dir / "colcon"
-            colcon_stub.write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
+            colcon_stub.write_text(
+                '#!/usr/bin/env bash\nprintf \'%s\\n\' "$@" >"${COLCON_ARGS_PATH}"\n',
+                encoding="utf-8",
+            )
             colcon_stub.chmod(0o755)
 
             venv_python = venv_bin / "python"
@@ -30,11 +33,7 @@ class BuildScriptYoloTests(unittest.TestCase):
                         "#!/usr/bin/env bash",
                         'if [[ "$1" == "-m" && "$2" == "colcon" && "$3" == "--help" ]]; then exit 0; fi',
                         'if [[ "$1" == "-c" ]]; then exit 0; fi',
-                        'if [[ "$1" == "-m" && "$2" == "colcon" ]]; then',
-                        "  shift 2",
-                        f'  printf "%s\\n" "$@" >"{colcon_args_path}"',
-                        "  exit 0",
-                        "fi",
+                        'if [[ "$1" == "-m" && "$2" == "colcon" ]]; then exit 97; fi',
                         "exit 1",
                     ]
                 )
@@ -47,6 +46,7 @@ class BuildScriptYoloTests(unittest.TestCase):
             env["PATH"] = f"{bin_dir}{os.pathsep}{env['PATH']}"
             env["OMNISEER_ROS_SETUP"] = str(setup_path)
             env["VIRTUAL_ENV"] = str(tmp_path / "venv")
+            env["COLCON_ARGS_PATH"] = str(colcon_args_path)
 
             subprocess.run(
                 [str(repo_root / "scripts" / "omni"), "build", "ros", "--with-yolo"],
