@@ -22,7 +22,7 @@ Command groups:
 | `model` | Export and compile host-side YOLO-World v2-S/v2-M/v2-L RKNN artifacts. |
 | `test` | Run targeted local verification checks. |
 | `run` | Launch sim, real robot profiles, autonomy, monitor, and teleop surfaces. |
-| `runs` | Inspect, annotate, report, build videos, list, and retrieve RunBundles. |
+| `runs` | Inspect, render topology, annotate, report, build videos, list, and retrieve RunBundles. |
 | `check` | Passively verify an already running graph. |
 | `doctor` | Report local environment and dependency state. |
 | `flash` | Run hardware flashing helpers. |
@@ -394,6 +394,7 @@ Inspects local RunBundles and retrieves robot-side RunBundles.
 scripts/omni runs inspect <run_dir> [--json] [--require-complete]
 scripts/omni runs annotate <run_dir> [--overwrite]
 scripts/omni runs report <run_dir> [--overwrite]
+scripts/omni runs topology <topology.json> <output.svg>
 scripts/omni runs comparison-report <reference_run> --trial <run_dir> --trial <run_dir> --trial <run_dir> --trial <run_dir> [--comparison <name>] [--truth <path>] [--overwrite]
 scripts/omni runs video <run_dir>
 scripts/omni runs compare <run_dir> [--name <comparison-name>] [--model-dir <dir>] [--classes <path>] [comparison options]
@@ -423,6 +424,45 @@ directories. `annotate` creates derived annotated evidence without modifying
 canonical evidence frames. `report` annotates missing evidence first, then
 writes `report/index.html`. `list` and `pull` use SSH and validate pulled
 bundles locally.
+
+`topology` renders a captured `ros_graph/topology.json` to the requested SVG
+with Graphviz `dot`, and writes an inspectable sibling `.dot` file. It leaves
+the captured JSON unchanged and filters only the renderer view's documented
+ROS plumbing.
+
+For bounded target acquisition, generate a fresh graph from the next real run
+and validate it against the implemented runtime path before publishing it:
+
+```text
+vision_bridge
+    -> /yolo/detections
+    -> target_centering_node
+    -> /cmd_vel_autonomy
+    -> twist_mux
+    -> /mecanum_drive_controller/reference
+    -> omniseer_teensy
+
+omniseer_teensy /encoder_counts
+    -> encoder_counts_to_odometry
+    -> /mecanum_drive_controller/odometry
+    -> ekf_filter
+    -> /odometry/filtered
+    -> target_centering_node
+
+omniseer_teensy /imu
+    -> ekf_filter
+
+omniseer_teensy /range
+    -> target_centering_node
+```
+
+This is a source-derived validation reference, not a template for adding
+missing endpoints to a captured topology. `perception_run_recorder` is
+experiment evidence infrastructure; `rosbag2_recorder` may appear when rosbag
+recording is enabled; and `robot_diag_control_cpp` is operator/gateway support,
+not the bounded-autonomy controller. LiDAR may be launched by the real profile,
+but it is outside bounded target acquisition when SLAM, Nav2, and RF2O are
+disabled.
 
 `comparison-report` combines exactly six physical RunBundles (one for each canonical
 v2-S/v2-M/v2-L FP/INT8 configuration) with one named controlled replay from the reference
@@ -467,6 +507,8 @@ Examples:
 scripts/omni runs list
 scripts/omni runs pull demo_001
 scripts/omni runs inspect runs/imported/demo_001
+scripts/omni runs topology runs/<new_run_id>/ros_graph/topology.json \
+  runs/<new_run_id>/ros_graph/topology.svg
 scripts/omni runs report runs/imported/demo_001
 scripts/omni runs comparison-report runs/reference_scene \
   --trial runs/v2s_fp_scene \

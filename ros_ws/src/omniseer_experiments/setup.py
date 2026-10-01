@@ -26,6 +26,7 @@ setup(
             "retrieve_runs = omniseer_experiments.run_retrieval:main",
             "build_run_video = omniseer_experiments.run_video:main",
             "comparison_report = omniseer_experiments.comparison_report:comparison_report_main",
+            "render_topology = omniseer_experiments.topology_render:topology_render_main",
         ],
     },
 )
