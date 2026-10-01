@@ -11,7 +11,7 @@ The ROCK 5B+ runs ROS 2 bringup, command arbitration, odometry conversion,
 perception, autonomy, and operator tooling. It does not directly drive motor or
 sensor hardware. This boundary keeps hardware timing and failure handling close to
 the devices while presenting ROS interfaces to the higher-level runtime. See
-[ROS Packages and Sim/Real Boundary](../robot-runtime/ros-packages.md) for the
+[ROS / Sim-Real Interfaces](../robot-runtime/ros-packages.md) for the
 shared simulation and real-hardware contracts.
 
 ## System Boundary

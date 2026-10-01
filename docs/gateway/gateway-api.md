@@ -27,7 +27,9 @@ The C++ server implementation contains:
 - a ROS-backed node that feeds `/vision/perf`, filtered odometry, detections,
   and battery state into the store
 - a platform sampler for compute, Wi-Fi, LiPo, and onboard battery diagnostics
-- a parameter-driven preview subprocess manager behind `SetPreviewMode`
+- a parameter-driven preview subprocess manager behind `SetPreviewMode`; it
+  selects either software `x264enc` or Rockchip `mpph264enc`, with
+  real-hardware bringup defaulting to the Rockchip encoder
 - a bounded teleop manager behind `SetTeleopEnabled` and `SendTeleopCommand`
 
 The Python host tools currently exercise the same contract through:

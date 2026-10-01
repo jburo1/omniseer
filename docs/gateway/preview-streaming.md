@@ -52,8 +52,8 @@ Transport/runtime checks completed on the target SBC:
 - GStreamer SRT plugins are installed
 - local `mainpath -> x264 -> MPEG-TS -> SRT -> decode` loopback has been
   validated
-- the C++ gateway launches the `x264 -> MPEG-TS -> SRT` path as its built-in
-  preview worker
+- the C++ gateway can launch the selectable `x264 -> MPEG-TS -> SRT` preview
+  worker path
 - packaged Python host tools request preview over gRPC and consume the SRT
   stream
 

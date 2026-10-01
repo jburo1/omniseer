@@ -1,4 +1,4 @@
-# ROS Packages and Sim/Real Boundary
+# ROS / Sim-Real Interfaces
 
 ## Purpose
 

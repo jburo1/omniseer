@@ -23,7 +23,9 @@ The current process contains:
 - a gateway-owned preview subprocess manager
 - a bounded teleop manager
 - a built-in GStreamer preview worker command using
-  `/dev/video11 -> x264 -> MPEG-TS -> SRT`
+  `/dev/video11 -> selected H.264 encoder -> MPEG-TS -> SRT`; real-hardware
+  bringup selects the Rockchip `mpph264enc` encoder, while software `x264enc`
+  remains selectable
 
 The packaged laptop-side tools are implemented in `robot_diag_control`:
 
@@ -109,7 +111,8 @@ onboard battery sources, an active ROS graph, or physical robot command paths.
 
 ## Limitations
 
-- Preview video uses the current software x264/MPEG-TS/SRT path.
+- Real-hardware bringup uses the Rockchip `mpph264enc`/MPEG-TS/SRT path;
+  software `x264enc` remains a selectable fallback and comparison path.
 - The gateway API does not publish stream endpoint metadata.
 - The gRPC service is synchronous and unary.
 - Streaming RPCs and multi-client semantics are not implemented.

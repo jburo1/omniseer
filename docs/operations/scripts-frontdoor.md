@@ -1,4 +1,4 @@
-# Scripts Front Door
+# Developer CLI
 
 `scripts/omni` is the supported human-facing entrypoint for common Omniseer
 setup, build, model deployment, verification, run, runtime-container, RunBundle,
