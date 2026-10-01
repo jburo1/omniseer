@@ -69,7 +69,7 @@ The operator gateway, preview stream, reports, and offboard inspection are diagn
 The robot runtime is packaged and verified in a container.
 
 
-## Key Engineering Work
+## Engineering highlights
 
 - **Native RK3588 perception pipeline** — C++ V4L2 capture, RGA preprocessing, RKNN inference, YOLO-World post-processing, and runtime telemetry on the robot SBC.
 - **Hardware-aware model deployment** — converted, quantized, and evaluated YOLO-World variants on RK3588, including controlled FP/INT8 comparisons and mixed-precision failure analysis.
