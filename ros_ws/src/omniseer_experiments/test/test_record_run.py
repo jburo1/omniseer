@@ -443,6 +443,7 @@ class RosGraphCaptureTests(unittest.TestCase):
             lambda: next(observations),
             timeout_sec=1.0,
             interval_sec=0.01,
+            settle_sec=0.0,
             monotonic=lambda: 0.0,
             sleeper=lambda _duration: None,
         )
@@ -465,6 +466,7 @@ class RosGraphCaptureTests(unittest.TestCase):
             lambda: next(observations),
             timeout_sec=1.0,
             interval_sec=0.1,
+            settle_sec=0.0,
             monotonic=lambda: next(monotonic_values),
             sleeper=lambda _duration: None,
         )
@@ -473,6 +475,52 @@ class RosGraphCaptureTests(unittest.TestCase):
         self.assertTrue(snapshot["capture"]["timeout_used"])
         self.assertEqual(snapshot["capture"]["observations"], 2)
         self.assertEqual(snapshot["topics"][0]["name"], "/b")
+
+    def test_settling_avoids_accepting_an_early_partial_graph(self) -> None:
+        partial = {"nodes": [{"name": "perception_run_recorder", "namespace": "/"}], "topics": []}
+        complete = {
+            "nodes": [
+                {"name": "perception_run_recorder", "namespace": "/"},
+                {"name": "target_centering_node", "namespace": "/"},
+            ],
+            "topics": [
+                {
+                    "name": "/cmd_vel_autonomy",
+                    "types": ["geometry_msgs/msg/TwistStamped"],
+                    "publishers": [
+                        {
+                            "node_name": "target_centering_node",
+                            "node_namespace": "/",
+                            "topic_type": "geometry_msgs/msg/TwistStamped",
+                        }
+                    ],
+                    "subscribers": [],
+                }
+            ],
+        }
+        node_only = {"nodes": complete["nodes"], "topics": []}
+
+        def capture_with_settle(settle_sec: float) -> dict:
+            observations = iter([partial, partial, partial, node_only, complete, complete, complete])
+            times = iter([0.0, 0.0, 0.25, 0.50, 1.00, 1.25, 2.00, 2.25])
+            return wait_for_stable_ros_graph(
+                lambda: next(observations),
+                timeout_sec=5.0,
+                interval_sec=0.25,
+                settle_sec=settle_sec,
+                monotonic=lambda: next(times),
+                sleeper=lambda _duration: None,
+            )
+
+        old_behavior = capture_with_settle(0.0)
+        snapshot = capture_with_settle(2.0)
+
+        self.assertEqual(old_behavior["nodes"], partial["nodes"])
+        self.assertEqual(snapshot["nodes"], complete["nodes"])
+        self.assertEqual(snapshot["topics"], canonicalize_ros_graph(complete)["topics"])
+        self.assertEqual(snapshot["capture"]["observations"], 7)
+        self.assertEqual(snapshot["capture"]["settle_sec"], 2.0)
+        self.assertTrue(snapshot["capture"]["stability_reached"])
 
     def test_writes_one_snapshot_at_the_required_path(self) -> None:
         graph = {

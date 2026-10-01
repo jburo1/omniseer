@@ -42,6 +42,7 @@ DEFAULT_SYSTEM_SAMPLE_INTERVAL_SEC = 1.0
 DEFAULT_GRAPH_CAPTURE_TIMEOUT_SEC = 5.0
 DEFAULT_GRAPH_CAPTURE_INTERVAL_SEC = 0.25
 DEFAULT_GRAPH_STABLE_OBSERVATIONS = 2
+DEFAULT_GRAPH_SETTLE_SEC = 2.0
 USE_CONFIG_SENTINEL = "__from_config__"
 
 
@@ -332,6 +333,7 @@ def capture_ros_graph_safely(
     timeout_sec: float = DEFAULT_GRAPH_CAPTURE_TIMEOUT_SEC,
     interval_sec: float = DEFAULT_GRAPH_CAPTURE_INTERVAL_SEC,
     stable_observations: int = DEFAULT_GRAPH_STABLE_OBSERVATIONS,
+    settle_sec: float = DEFAULT_GRAPH_SETTLE_SEC,
 ) -> bool:
     """Persist one graph snapshot, keeping graph capture strictly best-effort."""
 
@@ -341,6 +343,7 @@ def capture_ros_graph_safely(
             timeout_sec=timeout_sec,
             interval_sec=interval_sec,
             stable_observations=stable_observations,
+            settle_sec=settle_sec,
         )
         bundle.write_ros_graph_snapshot(snapshot)
     except Exception as exc:  # ROS graph inspection must not affect a robot run.
@@ -355,11 +358,12 @@ def wait_for_stable_ros_graph(
     timeout_sec: float,
     interval_sec: float,
     stable_observations: int = DEFAULT_GRAPH_STABLE_OBSERVATIONS,
+    settle_sec: float = DEFAULT_GRAPH_SETTLE_SEC,
     monotonic: Callable[[], float] = time.monotonic,
     sleeper: Callable[[float], None] = time.sleep,
     now: Callable[[], datetime] = lambda: datetime.now(timezone.utc),
 ) -> dict[str, Any]:
-    """Return the final graph after identical canonical observations or timeout."""
+    """Return the post-settle stable graph, or the latest graph on timeout."""
 
     if timeout_sec < 0.0:
         raise ValueError("timeout_sec must be >= 0")
@@ -367,33 +371,48 @@ def wait_for_stable_ros_graph(
         raise ValueError("interval_sec must be > 0")
     if stable_observations < 2:
         raise ValueError("stable_observations must be >= 2")
+    if settle_sec < 0.0:
+        raise ValueError("settle_sec must be >= 0")
 
-    deadline = monotonic() + timeout_sec
+    started_at = monotonic()
+    deadline = started_at + timeout_sec
+    settle_deadline = started_at + settle_sec
     previous: dict[str, Any] | None = None
     latest: dict[str, Any] | None = None
     observations = 0
     identical_observations = 0
+    settled = settle_sec == 0.0
 
     while True:
         latest = canonicalize_ros_graph(observe())
         observations += 1
-        if latest == previous:
-            identical_observations += 1
-        else:
-            identical_observations = 1
-            previous = latest
+        observed_at = monotonic()
+        if not settled and observed_at >= settle_deadline:
+            # Graphs sampled while DDS participants are still joining may be
+            # identical but incomplete. Start stability counting only now.
+            settled = True
+            previous = None
+            identical_observations = 0
 
-        if identical_observations >= stable_observations:
-            return _with_graph_capture_metadata(
-                latest,
-                captured_at=now(),
-                stability_reached=True,
-                timeout_used=False,
-                observations=observations,
-                stable_observations_required=stable_observations,
-            )
+        if settled:
+            if latest == previous:
+                identical_observations += 1
+            else:
+                identical_observations = 1
+                previous = latest
 
-        remaining_sec = deadline - monotonic()
+            if identical_observations >= stable_observations:
+                return _with_graph_capture_metadata(
+                    latest,
+                    captured_at=now(),
+                    stability_reached=True,
+                    timeout_used=False,
+                    observations=observations,
+                    stable_observations_required=stable_observations,
+                    settle_sec=settle_sec,
+                )
+
+        remaining_sec = deadline - observed_at
         if remaining_sec <= 0.0:
             return _with_graph_capture_metadata(
                 latest,
@@ -402,6 +421,7 @@ def wait_for_stable_ros_graph(
                 timeout_used=True,
                 observations=observations,
                 stable_observations_required=stable_observations,
+                settle_sec=settle_sec,
             )
         sleeper(min(interval_sec, remaining_sec))
 
@@ -456,6 +476,7 @@ def _with_graph_capture_metadata(
     timeout_used: bool,
     observations: int,
     stable_observations_required: int,
+    settle_sec: float,
 ) -> dict[str, Any]:
     return {
         "schema_version": 1,
@@ -465,6 +486,7 @@ def _with_graph_capture_metadata(
             "timeout_used": timeout_used,
             "observations": observations,
             "stable_observations_required": stable_observations_required,
+            "settle_sec": settle_sec,
         },
         **graph,
     }
