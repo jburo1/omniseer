@@ -3,7 +3,7 @@
 [![CI](https://github.com/jburo1/omniseer/actions/workflows/ci.yml/badge.svg)](https://github.com/jburo1/omniseer/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/github/deployments/jburo1/omniseer/github-pages?label=Docs)](https://jburo1.github.io/omniseer/)
 
-<b>Physical edge AI for open-vocabulary perception and target acquisition on RK3588.</b>
+<b>Physical edge AI for open-vocabulary perception and target acquisition on an RK3588-equipped SBC.</b>
 
 Omniseer is a holonomic 4WD robot for developing and evaluating neural perception on constrained hardware. A native C++ V4L2 → RGA → RKNN pipeline runs open-vocabulary YOLO-World on a ROCK 5B+ NPU, uses detections for target acquisition, and records physical runs with model provenance, latency, telemetry, detections, video, and control traces.
 
@@ -60,20 +60,12 @@ https://github.com/user-attachments/assets/9afa632c-9b78-4978-9c06-8714d285d1c0
 
 <a href="https://jburo1.github.io/omniseer/"><img src="docs/assets/diagrams/explorer/system-explorer.svg" alt="Omniseer system architecture: PC, operator laptop, RK3588 robot runtime, firmware, hardware, and experiment evidence flow" width="100%"></a>
 
-RKNN model construction happens offline on the development PC in a containerized environment. Simulation in Gazebo was used to prototype and validate key perception, navigation, and robot behavior before deploying the ROS 2 stack to physical hardware.
 
-On the robot, native C++ handles capture, preprocessing, inference, post-processing, and telemetry. ROS 2 carries typed detection, performance, command, odometry, sensor, and battery contracts. Teensy firmware and micro-ROS handle low-level I/O.
+On the development PC, RKNN model construction happens offline in a containerized environment. Simulation in Gazebo was used to prototype and validate key perception, navigation, and robot behavior before deploying the ROS 2 stack to physical hardware.
 
-The operator gateway, preview stream, reports, and offboard inspection are diagnostic or review tools that run outside the robot's critical perception-control path.
+On the robot, native C++ handles capture, preprocessing, inference, post-processing, and telemetry. ROS 2 carries typed detection, performance, command, odometry, sensor, and battery contracts. Teensy firmware and micro-ROS handle low-level I/O. The robot runtime is packaged and verified in a container.
 
-The robot runtime is packaged and verified in a container.
+On the laptop, the operator gateway, preview stream, reports, and offboard inspection are diagnostic or review tools that run outside the robot's critical perception-control path.
 
-
-## Engineering highlights
-
-- **Native RK3588 perception pipeline** — C++ V4L2 capture, RGA preprocessing, RKNN inference, YOLO-World post-processing, and runtime telemetry on the robot SBC.
-- **Hardware-aware model deployment** — converted, quantized, and evaluated YOLO-World variants on RK3588, including controlled FP/INT8 comparisons and mixed-precision failure analysis.
-- **Perception-to-control behavior** — target acquisition and framing driven by neural detections, with command arbitration and proximity safety constraints.
-- **Reproducible experiment infrastructure** — RunBundles record model provenance, configuration, detections, timing, telemetry, control traces, media, and generated reports for offline analysis.
 
 See the [project documentation](https://jburo1.github.io/omniseer/) for more detail.
