@@ -6,10 +6,11 @@ description: "Optional SRT preview streaming from the robot SBC to operator lapt
 
 _Status: Rockchip H.264/SRT path implemented; software x264 remains selectable._
 
-This page is the current implementation reference for the optional preview
-export path from the robot SBC to the operator laptop. The robot gateway owns
-this bounded, on-demand export path; it is an operator diagnostic surface, not
-a dependency of perception, command arbitration, or robot behavior.
+Preview streaming is the optional, on-demand video export path from the robot
+SBC to operator laptop tools. The robot gateway starts and stops this bounded
+SRT path through its control API so operators can inspect live perception
+context. It is a diagnostic surface, not a dependency of perception, command
+arbitration, or robot behavior.
 
 ## Implementation
 

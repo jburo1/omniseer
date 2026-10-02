@@ -4,9 +4,12 @@ description: "Inspectable checks, evidence formats, and verification boundaries 
 
 # Verification Evidence
 
-This page ties Omniseer claims to inspectable checks, local verification commands,
-and implemented evidence formats. It is an evidence catalog: each record states
-what it supports, where it runs, whether it is public, and what it does not prove.
+Verification evidence is the reviewable record that connects Omniseer claims to
+the checks, run artifacts, and environments that support them. It turns
+operator-collected RunBundles and other implementation or execution results into
+bounded engineering claims, rather than treating a live observation as proof.
+This catalog records what each item supports, where it runs, whether it is
+public, and what it does not prove.
 
 ## Evidence Model
 

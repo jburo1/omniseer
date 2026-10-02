@@ -4,11 +4,11 @@ description: "Operator-facing gateway that exposes bounded status, preview, over
 
 # Robot Gateway
 
-This page is the implementation reference for the optional operator-facing
-gateway between the robot's internal ROS 2 graph and external operator laptop
-tools. The gateway owns the narrow external boundary for status, preview
-control, overlays, and bounded teleoperation while keeping the ROS graph
-private and outside the mission-critical control path.
+The robot gateway is the optional operator-facing boundary between the robot's
+private ROS 2 graph and laptop tools. It provides bounded status, preview
+control, overlays, and teleoperation without exposing the ROS graph or entering
+the mission-critical control path. It exists to support supervised operation
+and diagnosis through a small, controlled external interface.
 
 ## Implementation
 

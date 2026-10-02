@@ -6,10 +6,12 @@ description: "Laptop-side operator workflow for configuring, starting, monitorin
 
 ## Purpose
 
-This reference describes the implemented laptop-side operator-monitor workflow
-for remote perception runs. The GUI collects operator input and displays state;
-the run modules own command building, process control, artifact handling, and
-validation. The operator monitor:
+The operator workflow is the laptop-side path for configuring, starting,
+monitoring, and reviewing a remote perception run. It connects operator actions
+to the robot-side run tooling while keeping command construction, process
+control, and artifact handling outside the GUI. It exists to make a completed
+run retrievable and reviewable as evidence rather than only observable live.
+The operator monitor supports this by:
 
 - reads operator run settings from the Tk form
 - starts a robot-side run over SSH

@@ -4,11 +4,11 @@ description: "Unary gRPC control and status API between Omniseer operator tools 
 
 # Gateway API
 
-This page defines the current external control/status API between operator
-laptop tools and the robot gateway. It owns the locked unary gRPC/protobuf
-contract for bounded gateway operations and normalized status; preview video
-remains outside that API on SRT and is documented separately in [Preview
-streaming](preview-streaming.md).
+The Gateway API is the locked unary gRPC/protobuf contract through which
+operator laptop tools use the robot gateway. It carries bounded control requests
+and normalized status, preserving the gateway as the sole external boundary to
+the private ROS 2 graph. Preview video remains outside this API on SRT and is
+documented separately in [Preview streaming](preview-streaming.md).
 
 ## Implementation
 
