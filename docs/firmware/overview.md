@@ -1,3 +1,7 @@
+---
+description: "Teensy firmware responsibilities, hardware I/O boundaries, and stale-command handling for the Omniseer robot."
+---
+
 # Firmware & Robot I/O
 
 ## Purpose

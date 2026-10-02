@@ -1,3 +1,7 @@
+---
+description: "Optional SRT preview streaming from the robot SBC to operator laptop tools through the robot gateway."
+---
+
 # Preview Streaming
 
 _Status: Rockchip H.264/SRT path implemented; software x264 remains selectable._
@@ -5,7 +9,7 @@ _Status: Rockchip H.264/SRT path implemented; software x264 remains selectable._
 This page is the current implementation reference for the optional operator
 preview export path from the robot SBC to the operator laptop.
 
-## Current implementation
+## Implementation
 
 The preview path is managed by the `robot_diag_control_cpp` gateway process. It
 is off by default and runs as a gateway-owned worker process only after an
@@ -66,7 +70,7 @@ The gateway `preview_encoder` parameter has two explicit values:
 Real-hardware bringup defaults `gateway_preview_encoder` to `rockchip`.
 The gateway does not fall back when the selected encoder fails to start.
 
-## Current contract
+## Contract
 
 Preview control is part of the gateway gRPC API:
 

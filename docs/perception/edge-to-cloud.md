@@ -1,3 +1,7 @@
+---
+description: "On-robot runtime and offboard review flow for real-hardware Omniseer experiments on ROCK 5B+."
+---
+
 # Runtime Overview
 
 Omniseer runs a real-hardware experiment on a ROCK 5B+ while preserving the

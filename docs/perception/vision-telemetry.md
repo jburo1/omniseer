@@ -1,3 +1,7 @@
+---
+description: "Schema and runtime behavior for native vision telemetry, JSONL export, rolling statistics, and offline analysis."
+---
+
 # Vision Telemetry Contract
 
 This page defines the current telemetry contract _schema version '3'_ for the native vision pipeline.

@@ -1,3 +1,7 @@
+---
+description: "Omniseer power distribution and physical embedded interfaces for the ROCK 5B+, Teensy, motors, and sensors."
+---
+
 # Electrical System
 
 The ROCK 5B+ provides high-level compute, ROS 2, perception, and autonomy. The

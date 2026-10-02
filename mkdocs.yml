@@ -66,4 +66,4 @@ nav:
     - Bill of Materials: hardware/bill-of-materials.md
   - Engineering:
     - Developer CLI: operations/scripts-frontdoor.md
-    - CI/CD: verification/ci-cd.md
+    - CI/CD Overview: verification/ci-cd.md

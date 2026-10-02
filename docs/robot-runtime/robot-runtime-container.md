@@ -1,3 +1,7 @@
+---
+description: "Container packaging, verification, and lifecycle guidance for the supported real-hardware Omniseer ROS runtime."
+---
+
 # Robot Runtime Container
 
 The robot runtime container packages the supported real-hardware ROS workspace into

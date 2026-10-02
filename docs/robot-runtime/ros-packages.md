@@ -1,3 +1,7 @@
+---
+description: "Normalized ROS contracts and provider boundaries shared between Gazebo simulation and the physical Omniseer robot."
+---
+
 # ROS / Sim-Real Interfaces
 
 ## Purpose
@@ -12,7 +16,7 @@ Simulation validates launch composition and the ROS contracts it exercises. It
 does not validate physical sensor behavior, firmware timing, micro-ROS
 transport, camera acceleration, calibration, or robot motion.
 
-## Current Boundary Contract
+## Boundary Contract
 
 `twist_mux` publishes the stamped command contract used by both providers. The
 simulated `mecanum_drive_controller` and the Teensy firmware both consume

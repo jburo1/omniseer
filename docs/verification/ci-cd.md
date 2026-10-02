@@ -1,9 +1,13 @@
+---
+description: "Omniseer GitHub Actions workflows, trigger paths, checks, and the verification boundaries they do not cover."
+---
+
 # CI/CD Overview
 
 This page documents the automation currently implemented in Omniseer, when it
 runs, and what it does not prove.
 
-## Current Automation
+## Automation
 
 GitHub Actions is split into four small workflows with built-in path filters:
 

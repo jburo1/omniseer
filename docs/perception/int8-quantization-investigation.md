@@ -1,3 +1,7 @@
+---
+description: "Supporting RKNN conversion, diagnostics, host-analysis procedure, and hashes for the YOLO-World v2-L INT8 investigation."
+---
+
 # YOLO-World v2 INT8 Quantization Technical Appendix
 
 This is a supporting technical appendix to the canonical

@@ -1,3 +1,7 @@
+---
+description: "Unary gRPC control and status API between Omniseer operator tools and the robot gateway."
+---
+
 # Gateway API
 
 _Status: locked unary v1 API implemented_
@@ -6,7 +10,7 @@ This page is the current control/status API reference for communication between
 the operator laptop tools and the robot gateway. Preview video uses SRT and is
 documented separately in [Preview streaming](preview-streaming.md).
 
-## Current implementation
+## Implementation
 
 The implemented API uses:
 
@@ -40,7 +44,7 @@ The Python host tools currently exercise the same contract through:
 - a monitor shell
 - a Tk monitor GUI
 
-## Current contract
+## Contract
 
 The service contract is `omniseer.gateway.v1.RobotGateway`:
 

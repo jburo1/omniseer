@@ -1,3 +1,7 @@
+---
+description: "Laptop-side operator workflow for configuring, starting, monitoring, and validating Omniseer perception runs."
+---
+
 # Operator Run Workflow
 
 This document explains the implemented operator monitor run workflow. The GUI

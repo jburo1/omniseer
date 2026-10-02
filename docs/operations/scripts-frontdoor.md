@@ -1,3 +1,7 @@
+---
+description: "Reference for the scripts/omni command surface used to set up, build, run, verify, and maintain Omniseer."
+---
+
 # Developer CLI
 
 `scripts/omni` is the supported human-facing entrypoint for common Omniseer

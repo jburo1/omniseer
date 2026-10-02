@@ -1,3 +1,7 @@
+---
+description: "Inspectable checks, evidence formats, and verification boundaries supporting Omniseer engineering claims."
+---
+
 # Verification Evidence
 
 This page ties Omniseer claims to inspectable checks, local verification commands,

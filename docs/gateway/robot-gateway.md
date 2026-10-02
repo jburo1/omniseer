@@ -1,9 +1,13 @@
+---
+description: "Operator-facing gateway that exposes bounded status, preview, overlay, and teleoperation interfaces to the robot."
+---
+
 # Robot Gateway
 
 This page is the implementation reference for the operator-facing gateway between
 the robot's internal ROS 2 graph and the external operator laptop tools.
 
-## Current implementation
+## Implementation
 
 The gateway is implemented by `robot_diag_control_cpp` inside the `robot-core`
 runtime. It keeps the internal ROS 2 graph private and exposes a narrow external
@@ -46,7 +50,7 @@ The implemented process model is deliberately small:
 - one bounded teleop manager
 - one expected operator client at a time
 
-## Current contract
+## Contract
 
 The gateway contract is the `omniseer.gateway.v1.RobotGateway` protobuf service
 defined in
