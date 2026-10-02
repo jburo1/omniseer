@@ -7,9 +7,6 @@ native RKNN vision path:
 YOLO-World v2-S, v2-M, or v2-L `.pth` -> ONNX (images + texts) -> RK3588 `.rknn`
 ```
 
-It does not add training, export, ONNX, or RKNN Toolkit dependencies to
-`docker/runtime/Dockerfile`. The checked-in runtime model remains unchanged.
-
 ## Pinned builder
 
 Build the dedicated host-side image once from the checkout:
@@ -20,8 +17,8 @@ scripts/omni model image
 
 The image pins:
 
-- `airockchip/YOLO-World` commit
-  `b8b0fe9beffa9564306a798f6e443c9fe88057af` (the Rockchip RKNN exporter);
+- The Rockchip RKNN exporter: `airockchip/YOLO-World` commit
+  `b8b0fe9beffa9564306a798f6e443c9fe88057af`;
 - `airockchip/rknn-toolkit2` v2.1.0 commit
   `deaba85fc437a28db0b0c29f27d8929f4c5816a1`, including
   `rknn_toolkit2-2.1.0+708089d1` for CPython 3.8;
@@ -29,10 +26,6 @@ The image pins:
   `c2b7d00714b4e5d21266ab3003f3ca687ba0d57b` conversion contract:
   `images=[1,3,640,640]` and `texts=[1,80,512]` for `rk3588`.
 
-Docker is run against the host daemon. When invoked in a devcontainer the
-wrapper derives the host repository bind path; set
-`OMNISEER_MODEL_HOST_REPO_ROOT=/host/path/to/omniseer` if that mount cannot be
-detected.
 
 ## Layer-wise accuracy analysis
 
@@ -63,9 +56,6 @@ scripts/omni model assets
 This uses `curl` with immutable Hugging Face revisions for
 `wondervictor/YOLO-World` (`4340b03f4f59f46279a6581bbb818e0f77765d4d`) and
 `openai/clip-vit-base-patch32` (`3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268`).
-Existing non-empty files are retained, downloads use `.part` files until
-complete, and every required asset is validated before the command reports
-success. `models/` remains ignored.
 
 The only variant-specific mapping is:
 
@@ -133,8 +123,7 @@ and rejects any model not having exactly the native runtime interface:
 
 The default results are `artifacts/models/yolo_world_v2_s.onnx`,
 `artifacts/models/yolo_world_v2_m.onnx`, and
-`artifacts/models/yolo_world_v2_l.onnx`, respectively. `--variant` defaults to
-`v2s` for backward compatibility.
+`artifacts/models/yolo_world_v2_l.onnx`, respectively.
 
 ## Compile RKNN
 
