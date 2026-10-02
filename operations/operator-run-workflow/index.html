@@ -837,10 +837,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#operator-modules" class="md-nav__link">
+  <a href="#implementation-context" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Operator Modules
+        Implementation context
       
     </span>
   </a>
@@ -848,28 +848,40 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#run-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run workflow
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Run workflow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#start-sequence" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Start Sequence
+        Start sequence
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#stop-sequence" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Stop Sequence
+        Stop sequence
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#artifact-sequence" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -877,6 +889,11 @@
       
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1338,10 +1355,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#operator-modules" class="md-nav__link">
+  <a href="#implementation-context" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Operator Modules
+        Implementation context
       
     </span>
   </a>
@@ -1349,28 +1366,40 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#run-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run workflow
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Run workflow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#start-sequence" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Start Sequence
+        Start sequence
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#stop-sequence" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Stop Sequence
+        Stop sequence
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#artifact-sequence" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1378,6 +1407,11 @@
       
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1446,11 +1480,11 @@
 
 
 <h1 id="operator-run-workflow">Operator Run Workflow<a class="headerlink" href="#operator-run-workflow" title="Permanent link">&para;</a></h1>
-<p>This document explains the implemented operator monitor run workflow. The GUI
-collects operator input and displays state; small run modules own command
-building, process control, artifact handling, and validation.</p>
 <h2 id="purpose">Purpose<a class="headerlink" href="#purpose" title="Permanent link">&para;</a></h2>
-<p>The operator monitor is the laptop-side interface for remote perception runs. It:</p>
+<p>This reference describes the implemented laptop-side operator-monitor workflow
+for remote perception runs. The GUI collects operator input and displays state;
+the run modules own command building, process control, artifact handling, and
+validation. The operator monitor:</p>
 <ul>
 <li>reads operator run settings from the Tk form</li>
 <li>starts a robot-side run over SSH</li>
@@ -1463,7 +1497,7 @@ building, process control, artifact handling, and validation.</p>
 <p>The monitor remains laptop-side tooling. Robot behavior belongs to <code>robot-core</code>
 and the robot-side <code>scripts/omni runtime record</code> / <code>scripts/omni run real</code>
 surfaces.</p>
-<h2 id="operator-modules">Operator Modules<a class="headerlink" href="#operator-modules" title="Permanent link">&para;</a></h2>
+<h2 id="implementation-context">Implementation context<a class="headerlink" href="#implementation-context" title="Permanent link">&para;</a></h2>
 <p>Python modules under <code>ros_ws/src/robot_diag_control/robot_diag_control</code>:</p>
 <table>
 <thead>
@@ -1513,7 +1547,8 @@ surfaces.</p>
 </table>
 <p>This split keeps command construction, process lifecycle, and artifact handling
 separate from Tk widgets.</p>
-<h2 id="start-sequence">Start Sequence<a class="headerlink" href="#start-sequence" title="Permanent link">&para;</a></h2>
+<h2 id="run-workflow">Run workflow<a class="headerlink" href="#run-workflow" title="Permanent link">&para;</a></h2>
+<h3 id="start-sequence">Start sequence<a class="headerlink" href="#start-sequence" title="Permanent link">&para;</a></h3>
 <ol>
 <li><code>monitor_gui.py</code> collects current form values.</li>
 <li><code>run_settings.resolve_run_form(...)</code> returns:</li>
@@ -1532,7 +1567,7 @@ separate from Tk widgets.</p>
 <li><code>run_lifecycle.start_remote_run_process(...)</code> starts the local SSH process.</li>
 <li>The GUI starts the remote log reader and polls for completion.</li>
 </ol>
-<h2 id="stop-sequence">Stop Sequence<a class="headerlink" href="#stop-sequence" title="Permanent link">&para;</a></h2>
+<h3 id="stop-sequence">Stop sequence<a class="headerlink" href="#stop-sequence" title="Permanent link">&para;</a></h3>
 <ol>
 <li>The GUI calls <code>RunManager.request_stop(...)</code>.</li>
 <li><code>run_lifecycle.request_remote_run_stop(...)</code> writes Ctrl-C to the SSH process
@@ -1555,7 +1590,7 @@ separate from Tk widgets.</p>
    - nonzero exit -&gt; <code>FAILED</code></p>
 <p>The important invariant is that a graceful stop is preferred because the recorder
 needs it to write final metadata such as <code>manifest.yaml</code> and <code>summary.json</code>.</p>
-<h2 id="artifact-sequence">Artifact Sequence<a class="headerlink" href="#artifact-sequence" title="Permanent link">&para;</a></h2>
+<h3 id="artifact-sequence">Artifact Sequence<a class="headerlink" href="#artifact-sequence" title="Permanent link">&para;</a></h3>
 <p>The GUI's <strong>Retrieve &amp; Open Report</strong> action:</p>
 <ol>
 <li>calls <code>retrieve_run_artifacts(...)</code>.</li>
@@ -1707,7 +1742,7 @@ hardware run evidence.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="October 2, 2026 21:55:23 UTC">October 2, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="October 2, 2026 22:04:21 UTC">October 2, 2026</span>
   </span>
 
     
