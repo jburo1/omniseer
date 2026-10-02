@@ -1,6 +1,6 @@
 # Bill of Materials
 
-Costs are approximate CAD purchase costs. The downloadable spreadsheet is the authoritative BOM; this page is generated from it.
+This generated page is Omniseer's hardware cost reference. The downloadable spreadsheet owns the authoritative BOM; this page provides its reviewable documentation view. Costs are approximate CAD purchase costs.
 
 | Category | Item | Unit price ($) |
 | --- | --- | ---: |
