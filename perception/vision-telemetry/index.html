@@ -1402,8 +1402,7 @@
 
 
 <h1 id="vision-telemetry-contract">Vision Telemetry Contract<a class="headerlink" href="#vision-telemetry-contract" title="Permanent link">&para;</a></h1>
-<p><em>Status: implemented; native JSONL schema version <code>3</code></em></p>
-<p>This page defines the current telemetry contract for the native vision pipeline.
+<p>This page defines the current telemetry contract <em>schema version '3'</em> for the native vision pipeline.
 The contract covers producer and consumer runtime samples, rolling in-process
 statistics, JSONL export, and offline analysis. Telemetry is optional for native
 harness runs, but the ROS bridge always keeps rolling telemetry active for live
@@ -1443,7 +1442,7 @@ tick skips stage timers and sample emission.</p>
 </tr>
 <tr>
 <td><code>frame_id</code></td>
-<td>Producer-assigned frame correlation ID, or <code>null</code> before one exists.</td>
+<td>Producer-assigned frame correlation ID.</td>
 </tr>
 <tr>
 <td><code>tick_id</code></td>
@@ -1451,7 +1450,7 @@ tick skips stage timers and sample emission.</p>
 </tr>
 <tr>
 <td><code>sequence</code></td>
-<td>Source capture sequence, or <code>null</code> before one exists.</td>
+<td>Source capture sequence.</td>
 </tr>
 <tr>
 <td><code>event_ts_real_ns</code></td>
@@ -1642,8 +1641,6 @@ The default capacity is <code>512</code> samples per source and can be overridde
 free queues, and flushes after writing. When no records are available, it sleeps for
 5 ms before checking again. On destruction, the sink asks the worker to stop, drains
 ready samples, flushes, joins, and closes the file.</p>
-<p>Drop counters are currently internal to <code>JsonlTelemetry</code>; they are not exported in
-the JSONL schema.</p>
 <h2 id="timestamp-semantics">Timestamp Semantics<a class="headerlink" href="#timestamp-semantics" title="Permanent link">&para;</a></h2>
 <p>Durations and correlation timestamps use different clock domains:</p>
 <table>
@@ -1859,7 +1856,7 @@ end-to-end robot runtime timing.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 6, 2026 04:01:06 UTC">August 6, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="October 2, 2026 21:21:04 UTC">October 2, 2026</span>
   </span>
 
     
