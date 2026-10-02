@@ -6,8 +6,6 @@ description: "Six YOLO-World configurations: controlled class-frame coverage and
 
 ## Experimental design
 
-This report keeps two evidence sources separate.
-
 | Evidence source | Design | What it supports |
 | --- | --- | --- |
 | **Controlled replay** | Each configuration consumes the same 1,222 source frames. Vocabulary, score threshold (0.25), NMS IoU threshold (0.45), and post-processing are fixed. | A controlled, frame-aligned presence/visibility comparison in this scene. |
