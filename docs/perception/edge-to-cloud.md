@@ -4,10 +4,11 @@ description: "On-robot runtime and offboard review flow for real-hardware Omnise
 
 # Runtime Overview
 
-Omniseer runs a real-hardware experiment on a ROCK 5B+ while preserving the
-artifacts needed to inspect that run offboard. The robot-side runtime combines
-native perception, the ROS 2 graph, bounded behavior, hardware I/O, and
-recording; laptop tools remain outside the motion-critical path.
+This page describes how an Omniseer real-hardware experiment runs on a ROCK
+5B+ and preserves artifacts for offboard inspection. It defines the boundary
+between the robot-side runtime—native perception, the ROS 2 graph, bounded
+behavior, hardware I/O, and recording—and laptop-side review tools, which
+remain outside the motion-critical path.
 
 ## End-to-End Runtime Flow
 

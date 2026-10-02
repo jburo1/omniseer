@@ -4,10 +4,10 @@ description: "Omniseer GitHub Actions workflows, trigger paths, checks, and the 
 
 # CI/CD Overview
 
-This page documents the automation currently implemented in Omniseer, when it
-runs, and what it does not prove.
+This reference documents the automation currently implemented in Omniseer, its
+triggers and checks, and what those checks do not prove.
 
-## Automation
+## Workflow scope and triggers
 
 GitHub Actions is split into four small workflows with built-in path filters:
 
@@ -157,7 +157,7 @@ verified local image to `robot-verified-g<full-commit-sha>`, optional
 `--release-tag <tag>`, and moving `robot-verified`, then records release metadata
 under `.omniseer/runtime/`.
 
-## Local Equivalents
+## Local verification equivalents
 
 Use focused repository commands for local checks:
 

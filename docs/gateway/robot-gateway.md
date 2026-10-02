@@ -4,8 +4,11 @@ description: "Operator-facing gateway that exposes bounded status, preview, over
 
 # Robot Gateway
 
-This page is the implementation reference for the operator-facing gateway between
-the robot's internal ROS 2 graph and the external operator laptop tools.
+This page is the implementation reference for the optional operator-facing
+gateway between the robot's internal ROS 2 graph and external operator laptop
+tools. The gateway owns the narrow external boundary for status, preview
+control, overlays, and bounded teleoperation while keeping the ROS graph
+private and outside the mission-critical control path.
 
 ## Implementation
 
@@ -95,7 +98,7 @@ The gateway intentionally does not provide:
 RunBundle recording and review are owned by launch profiles and
 `scripts/omni runs`, outside the gRPC API.
 
-## Verification
+## Verification Boundary
 
 Supported local verification:
 

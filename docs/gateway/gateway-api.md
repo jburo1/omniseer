@@ -6,9 +6,11 @@ description: "Unary gRPC control and status API between Omniseer operator tools 
 
 _Status: locked unary v1 API implemented_
 
-This page is the current control/status API reference for communication between
-the operator laptop tools and the robot gateway. Preview video uses SRT and is
-documented separately in [Preview streaming](preview-streaming.md).
+This page defines the current external control/status API between operator
+laptop tools and the robot gateway. It owns the locked unary gRPC/protobuf
+contract for bounded gateway operations and normalized status; preview video
+remains outside that API on SRT and is documented separately in [Preview
+streaming](preview-streaming.md).
 
 ## Implementation
 
@@ -170,7 +172,7 @@ The API boundary excludes:
 - browser-specific signaling flows
 - RunBundle recording and review
 
-## Verification
+## Verification Boundary
 
 Supported local verification:
 

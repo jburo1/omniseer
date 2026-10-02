@@ -4,9 +4,10 @@ description: "Omniseer power distribution and physical embedded interfaces for t
 
 # Electrical System
 
-The ROCK 5B+ provides high-level compute, ROS 2, perception, and autonomy. The
-Teensy 4.1 provides low-level motor and sensor I/O. This schematic documents the
-robot's power distribution and physical embedded interfaces.
+This page documents Omniseer's robot power distribution and physical embedded
+interfaces. The ROCK 5B+ provides high-level compute, ROS 2, perception, and
+autonomy, while the Teensy 4.1 owns low-level motor and sensor I/O. The
+schematic is the electrical boundary between those compute and I/O roles.
 
 ## Electrical Schematic
 

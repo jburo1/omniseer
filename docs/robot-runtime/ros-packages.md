@@ -7,10 +7,10 @@ description: "Normalized ROS contracts and provider boundaries shared between Ga
 ## Purpose
 
 This page is the current reference for the ROS boundary between Gazebo
-simulation and the physical robot. The boundary is the set of normalized ROS
-contracts consumed by localization, mapping, navigation, autonomy, and
-operator tooling. Provider-specific transport, sensor, and compute details
-remain below it.
+simulation and the physical robot. It owns the normalized ROS contracts used
+by localization, mapping, navigation, autonomy, and operator tooling;
+provider-specific transport, sensor, and compute details remain below that
+boundary.
 
 Simulation validates launch composition and the ROS contracts it exercises. It
 does not validate physical sensor behavior, firmware timing, micro-ROS

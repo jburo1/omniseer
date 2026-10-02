@@ -4,6 +4,8 @@ description: "Container packaging, verification, and lifecycle guidance for the 
 
 # Robot Runtime Container
 
+## Purpose and scope
+
 The robot runtime container packages the supported real-hardware ROS workspace into
 an image that starts through the same `scripts/omni run real` surface used on the
 host. The robot-side image carries the real operator profile, native RKNN vision

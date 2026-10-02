@@ -4,13 +4,12 @@ description: "Laptop-side operator workflow for configuring, starting, monitorin
 
 # Operator Run Workflow
 
-This document explains the implemented operator monitor run workflow. The GUI
-collects operator input and displays state; small run modules own command
-building, process control, artifact handling, and validation.
-
 ## Purpose
 
-The operator monitor is the laptop-side interface for remote perception runs. It:
+This reference describes the implemented laptop-side operator-monitor workflow
+for remote perception runs. The GUI collects operator input and displays state;
+the run modules own command building, process control, artifact handling, and
+validation. The operator monitor:
 
 - reads operator run settings from the Tk form
 - starts a robot-side run over SSH
@@ -24,7 +23,7 @@ The monitor remains laptop-side tooling. Robot behavior belongs to `robot-core`
 and the robot-side `scripts/omni runtime record` / `scripts/omni run real`
 surfaces.
 
-## Operator Modules
+## Implementation context
 
 Python modules under `ros_ws/src/robot_diag_control/robot_diag_control`:
 
@@ -41,7 +40,9 @@ Python modules under `ros_ws/src/robot_diag_control/robot_diag_control`:
 This split keeps command construction, process lifecycle, and artifact handling
 separate from Tk widgets.
 
-## Start Sequence
+## Run workflow
+
+### Start sequence
 
 1. `monitor_gui.py` collects current form values.
 2. `run_settings.resolve_run_form(...)` returns:
@@ -60,7 +61,7 @@ separate from Tk widgets.
 6. `run_lifecycle.start_remote_run_process(...)` starts the local SSH process.
 7. The GUI starts the remote log reader and polls for completion.
 
-## Stop Sequence
+### Stop sequence
 
 1. The GUI calls `RunManager.request_stop(...)`.
 2. `run_lifecycle.request_remote_run_stop(...)` writes Ctrl-C to the SSH process
@@ -87,7 +88,7 @@ separate from Tk widgets.
 The important invariant is that a graceful stop is preferred because the recorder
 needs it to write final metadata such as `manifest.yaml` and `summary.json`.
 
-## Artifact Sequence
+### Artifact Sequence
 
 The GUI's **Retrieve & Open Report** action:
 

@@ -1,13 +1,18 @@
 # YOLO-World v2 Model Deployment
 
+## Purpose and scope
+
 This host-only workflow produces the detector model consumed by Omniseer's
 native RKNN vision path:
 
 ```text
 YOLO-World v2-S, v2-M, or v2-L `.pth` -> ONNX (images + texts) -> RK3588 `.rknn`
 ```
+The included tooling provides automated download of pinned models from Hugging Face, alongside model building and evaluation hooks.
 
-## Pinned builder
+## Prerequisites
+
+### Pinned builder
 
 Build the dedicated host-side image once from the checkout:
 
@@ -27,25 +32,7 @@ The image pins:
   `images=[1,3,640,640]` and `texts=[1,80,512]` for `rk3588`.
 
 
-## Layer-wise accuracy analysis
-
-The opt-in analysis entrypoint runs the Toolkit2 host simulator. It does not
-use ADB, a connected RK3588, or a `target` argument. Select the model variant
-explicitly (v2-M remains the historical default):
-
-```bash
-scripts/omni model analyze --variant v2m
-```
-
-The analysis rebuilds the selected ONNX model as INT8 with the existing
-representative calibration data, using the runtime vocabulary `person`, `bus`,
-and 78 `nothing` padding rows. The raw Toolkit report and snapshots (including
-the generated `[1,80,512]` float32 text input) are kept only in the ignored
-`artifacts/quant_analysis/v2<s|m|l>/` directory. See the
-[INT8 quantization investigation](int8-quantization-investigation.md) for the
-recorded findings and reproducibility details.
-
-## Local inputs
+### Local inputs
 
 Download the pinned, ignored source assets once from a fresh checkout:
 
@@ -221,3 +208,24 @@ remove the exact generated artifact intentionally before rebuilding.
 The commands fail before compilation for a missing checkpoint, local CLIP
 snapshot, calibration asset, or incompatible ONNX contract, and fail after the
 tools run if a generated artifact is missing or empty.
+
+## Verification and limitations
+
+### Layer-wise accuracy analysis
+
+The opt-in analysis entrypoint runs the Toolkit2 host simulator. It does not
+use ADB, a connected RK3588, or a `target` argument. Select the model variant
+explicitly (v2-M remains the historical default):
+
+```bash
+scripts/omni model analyze --variant v2m
+```
+
+The analysis rebuilds the selected ONNX model as INT8 with the existing
+representative calibration data, using the runtime vocabulary `person`, `bus`,
+and 78 `nothing` padding rows. The raw Toolkit report and snapshots (including
+the generated `[1,80,512]` float32 text input) are kept only in the ignored
+`artifacts/quant_analysis/v2<s|m|l>/` directory. See the
+[INT8 quantization investigation](int8-quantization-investigation.md) for the
+recorded findings and reproducibility details. This host-simulator analysis is
+not target-hardware deployment verification.

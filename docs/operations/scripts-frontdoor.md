@@ -4,9 +4,11 @@ description: "Reference for the scripts/omni command surface used to set up, bui
 
 # Developer CLI
 
-`scripts/omni` is the supported human-facing entrypoint for common Omniseer
-setup, build, model deployment, verification, run, runtime-container, RunBundle,
-docs, flashing, environment, and cleanup tasks.
+`scripts/omni` is the supported human-facing command reference for common
+Omniseer setup, build, model deployment, verification, run, runtime-container,
+RunBundle, docs, flashing, environment, and cleanup tasks. It describes the
+available command surface; each command group states its applicable environment
+and verification boundary.
 
 ```bash
 scripts/omni <command> [subcommand] [args...]
