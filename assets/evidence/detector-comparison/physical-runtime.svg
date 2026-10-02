@@ -31,7 +31,7 @@
 <text x="140.0" y="300.7" text-anchor="end" class="label">v2-L FP</text>
 <rect x="152.0" y="282.7" width="51.1" height="25" rx="3" fill="#4057a5"/>
 <text x="211.1" y="300.7" class="value">2.64</text>
-<text x="140.0" y="343.8" text-anchor="end" class="label">v2-L hybrid (artifact identity unproven)</text>
+<text x="140.0" y="343.8" text-anchor="end" class="label">v2-L TD01 mixed-precision</text>
 <rect x="152.0" y="325.8" width="90.0" height="25" rx="3" fill="#4057a5"/>
 <text x="250.0" y="343.8" class="value">4.65</text>
 <text x="556.5" y="81" class="value">RKNN inference p50 / p95 (ms)</text>

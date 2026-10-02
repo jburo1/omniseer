@@ -30,7 +30,7 @@
 <text x="146" y="248.0" text-anchor="end" class="label">v2-L FP</text>
 <rect x="160" y="228.0" width="675.0" height="28" rx="3" fill="#4057a5"/>
 <text x="844.0" y="248.0" class="value">41.6%</text>
-<text x="146" y="285.5" text-anchor="end" class="label">v2-L classifier-path localization probe</text>
-<rect x="160" y="265.5" width="411.3" height="28" rx="3" fill="#4057a5"/>
-<text x="580.3" y="285.5" class="value">25.4%</text>
+<text x="146" y="285.5" text-anchor="end" class="label">v2-L TD01 mixed-precision</text>
+<rect x="160" y="265.5" width="557.3" height="28" rx="3" fill="#4057a5"/>
+<text x="726.3" y="285.5" class="value">34.4%</text>
 </svg>

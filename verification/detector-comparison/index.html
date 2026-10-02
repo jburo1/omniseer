@@ -1480,16 +1480,6 @@
 </tr>
 </tbody>
 </table>
-<p>The controlled-replay v2-L diagnostic configuration is the <strong>v2-L
-classifier-path localization probe</strong>,
-<code>yolo_world_v2_l_hybrid_td01_clspreds0_mm_inputs_fp16.rknn</code>
-(<code>df72d337ad03a7b90c5a96f2b44495fd25f5747094019b038b2823d5133d398e</code>). It
-is distinct from the quantization investigation's v2-L TD01 mixed-precision
-mitigation (<code>yolo_world_v2_l_hybrid_td01.rknn</code>,
-<code>20e43523ab4221fd755553030dbc58943f457839d5583b1f2f29954489c2ef92</code>). The
-retained physical-run summary does not prove the exact RKNN artifact or hash
-for <code>v2l_hybrid_scene_1</code>; its v2-L hybrid label is therefore not treated as
-either controlled-replay artifact.</p>
 <p>The controlled metric is <strong>visible class-frame coverage</strong>. A <em>class-frame
 opportunity</em> is one frame in which a manually annotated class is visible. The
 19 inclusive class-interval sets sum to <strong>5,679 class-frame opportunities</strong>. Multiple classes can be visible in one source frame, so
@@ -1545,9 +1535,9 @@ the same 1,222 unique source frames legitimately create 5,679 opportunities.</p>
 <td style="text-align: right;">41.6%</td>
 </tr>
 <tr>
-<td>v2-L classifier-path localization probe</td>
-<td style="text-align: right;">1,440 / 5,679</td>
-<td style="text-align: right;">25.4%</td>
+<td>v2-L TD01 mixed-precision</td>
+<td style="text-align: right;">1,951 / 5,679</td>
+<td style="text-align: right;">34.4%</td>
 </tr>
 </tbody>
 </table>
@@ -1607,7 +1597,7 @@ the same 1,222 unique source frames legitimately create 5,679 opportunities.</p>
 <td style="text-align: right;">3306.73 MB</td>
 </tr>
 <tr>
-<td>v2-L hybrid (artifact identity unproven)</td>
+<td>v2-L TD01 mixed-precision</td>
 <td style="text-align: right;">4.65</td>
 <td style="text-align: right;">205.55 / 229.90 ms</td>
 <td style="text-align: right;">262.32 ms</td>
@@ -1620,9 +1610,8 @@ the same 1,222 unique source frames legitimately create 5,679 opportunities.</p>
 <p><img alt="Scatter plot: controlled coverage versus independent physical-run throughput" src="../../assets/evidence/detector-comparison/coverage-throughput.svg" /></p>
 <p>The scatter plot is a deployment-trade-off view, its x-axis comes from
 controlled replay while its y-axis comes from one independent physical run per
-recorded configuration label. In particular, its v2-L point must not be read
-as a model-paired comparison: the controlled probe and the physical-run
-artifact have different/unknown identities.</p>
+recorded configuration label. Its v2-L TD01 point pairs controlled coverage
+with the physical run that used the same RKNN artifact.</p>
 <p><img alt="Heatmap: per-class controlled visible-frame coverage" src="../../assets/evidence/detector-comparison/per-class-coverage.svg" /></p>
 <p>The heatmap makes the class-level variation visible.</p>
 <h2 id="engineering-interpretation">Engineering interpretation<a class="headerlink" href="#engineering-interpretation" title="Permanent link">&para;</a></h2>
@@ -1631,11 +1620,9 @@ For the separate physical case studies, v2-S INT8 has the highest observed
 throughput, while v2-M INT8 provides the strongest observed coverage/throughput
 middle ground. Relative to their FP counterparts, v2-S INT8 improves inference
 p50/p95 by 1.98×/2.53× and throughput by 2.09×; v2-M INT8 by 2.34×/2.36× and
-2.30×. The v2-L classifier-path localization probe has lower controlled
-coverage than v2-L FP. The separately labeled v2-L hybrid physical run is
-faster than v2-L FP and has the highest observed memory use, but its exact
-artifact is unproven, so it cannot be attributed to the probe or to v2-L TD01
-mixed-precision.</p>
+2.30×. v2-L TD01 mixed-precision has lower controlled coverage than v2-L FP;
+its paired physical run is faster than v2-L FP and has the highest observed
+memory use.</p>
 <p>Success times span 50.5–57.8 s, much less than the 59.19–380.25 ms inference
 p50 range. That is consistent with scan/control timing also mattering in this
 bounded trial.</p>
@@ -1645,8 +1632,8 @@ bounded trial.</p>
 from tracked replay JSONLs, <a href="https://github.com/jburo1/omniseer/blob/master/studies/detector_comparison/scan_final_recal/evidence/replay_provenance.json">replay provenance</a>,
 <a href="https://github.com/jburo1/omniseer/blob/master/studies/detector_comparison/scan_final_recal/visibility.txt">visibility annotations</a>,
 and the tracked <a href="https://github.com/jburo1/omniseer/blob/master/studies/detector_comparison/scan_final_recal/results.md">physical-run summary table</a>.
-It also creates the physical-run video poster directly from the tracked grid
-video. Regenerate them with:</p>
+It also creates the controlled-replay and physical-run video posters directly
+from their tracked videos. Regenerate them with:</p>
 <div class="highlight"><pre><span></span><code>python3<span class="w"> </span>studies/detector_comparison/scan_final_recal/evidence/render_docs_assets.py
 </code></pre></div>
 <p>The retained <a href="https://github.com/jburo1/omniseer/blob/master/studies/detector_comparison/scan_final_recal/evidence/comparison_report.html">comparison report</a>,
@@ -1682,7 +1669,7 @@ Physical-run detections must not be treated as controlled accuracy comparisons.<
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="October 2, 2026 02:57:15 UTC">October 2, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="October 2, 2026 04:31:15 UTC">October 2, 2026</span>
   </span>
 
     

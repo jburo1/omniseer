@@ -10,7 +10,7 @@
 <text x="534.7" y="76" text-anchor="middle" class="small">v2-M FP</text>
 <text x="673.3" y="76" text-anchor="middle" class="small">v2-M INT8</text>
 <text x="812.0" y="76" text-anchor="middle" class="small">v2-L FP</text>
-<text x="950.7" y="76" text-anchor="middle" class="small">v2-L classifier-path localization probe</text>
+<text x="950.7" y="76" text-anchor="middle" class="small">v2-L TD01 mixed-precision</text>
 <text x="178" y="111.6" text-anchor="end" fill="#20242b" class="label">chair</text>
 <rect x="188.0" y="90.0" width="136.7" height="29.8" fill="rgb(167, 187, 192)"/>
 <text x="257.3" y="111.6" text-anchor="middle" fill="#20242b" class="small">41%</text>
@@ -35,8 +35,8 @@
 <text x="673.3" y="143.4" text-anchor="middle" fill="#20242b" class="small">1%</text>
 <rect x="742.7" y="121.8" width="136.7" height="29.8" fill="rgb(179, 199, 204)"/>
 <text x="812.0" y="143.4" text-anchor="middle" fill="#20242b" class="small">32%</text>
-<rect x="881.3" y="121.8" width="136.7" height="29.8" fill="rgb(207, 227, 232)"/>
-<text x="950.7" y="143.4" text-anchor="middle" fill="#20242b" class="small">10%</text>
+<rect x="881.3" y="121.8" width="136.7" height="29.8" fill="rgb(206, 226, 231)"/>
+<text x="950.7" y="143.4" text-anchor="middle" fill="#20242b" class="small">11%</text>
 <text x="178" y="175.2" text-anchor="end" fill="#20242b" class="label">jar</text>
 <rect x="188.0" y="153.6" width="136.7" height="29.8" fill="rgb(147, 167, 172)"/>
 <text x="257.3" y="175.2" text-anchor="middle" fill="white" class="small">57%</text>
@@ -61,8 +61,8 @@
 <text x="673.3" y="206.9" text-anchor="middle" fill="#20242b" class="small">8%</text>
 <rect x="742.7" y="185.3" width="136.7" height="29.8" fill="rgb(116, 136, 141)"/>
 <text x="812.0" y="206.9" text-anchor="middle" fill="white" class="small">81%</text>
-<rect x="881.3" y="185.3" width="136.7" height="29.8" fill="rgb(169, 189, 194)"/>
-<text x="950.7" y="206.9" text-anchor="middle" fill="#20242b" class="small">39%</text>
+<rect x="881.3" y="185.3" width="136.7" height="29.8" fill="rgb(113, 133, 138)"/>
+<text x="950.7" y="206.9" text-anchor="middle" fill="white" class="small">83%</text>
 <text x="178" y="238.7" text-anchor="end" fill="#20242b" class="label">cellphone</text>
 <rect x="188.0" y="217.1" width="136.7" height="29.8" fill="rgb(221, 241, 246)"/>
 <text x="257.3" y="238.7" text-anchor="middle" fill="#20242b" class="small">0%</text>
@@ -139,8 +139,8 @@
 <text x="673.3" y="397.6" text-anchor="middle" fill="white" class="small">100%</text>
 <rect x="742.7" y="376.0" width="136.7" height="29.8" fill="rgb(100, 120, 125)"/>
 <text x="812.0" y="397.6" text-anchor="middle" fill="white" class="small">92%</text>
-<rect x="881.3" y="376.0" width="136.7" height="29.8" fill="rgb(221, 241, 246)"/>
-<text x="950.7" y="397.6" text-anchor="middle" fill="#20242b" class="small">0%</text>
+<rect x="881.3" y="376.0" width="136.7" height="29.8" fill="rgb(118, 138, 143)"/>
+<text x="950.7" y="397.6" text-anchor="middle" fill="white" class="small">79%</text>
 <text x="178" y="429.4" text-anchor="end" fill="#20242b" class="label">glass</text>
 <rect x="188.0" y="407.8" width="136.7" height="29.8" fill="rgb(221, 241, 246)"/>
 <text x="257.3" y="429.4" text-anchor="middle" fill="#20242b" class="small">0%</text>
@@ -230,8 +230,8 @@
 <text x="673.3" y="620.1" text-anchor="middle" fill="white" class="small">98%</text>
 <rect x="742.7" y="598.4" width="136.7" height="29.8" fill="rgb(219, 239, 244)"/>
 <text x="812.0" y="620.1" text-anchor="middle" fill="#20242b" class="small">1%</text>
-<rect x="881.3" y="598.4" width="136.7" height="29.8" fill="rgb(221, 241, 246)"/>
-<text x="950.7" y="620.1" text-anchor="middle" fill="#20242b" class="small">0%</text>
+<rect x="881.3" y="598.4" width="136.7" height="29.8" fill="rgb(112, 132, 137)"/>
+<text x="950.7" y="620.1" text-anchor="middle" fill="white" class="small">84%</text>
 <text x="178" y="651.8" text-anchor="end" fill="#20242b" class="label">garbage can</text>
 <rect x="188.0" y="630.2" width="136.7" height="29.8" fill="rgb(94, 114, 120)"/>
 <text x="257.3" y="651.8" text-anchor="middle" fill="white" class="small">97%</text>
