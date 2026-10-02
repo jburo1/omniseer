@@ -440,24 +440,41 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#the-contrast-that-motivated-the-investigation" class="md-nav__link">
+  <a href="#question-and-design" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The contrast that motivated the investigation
+        Question and design
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Question and design">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#qualitative-contrast" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Qualitative contrast
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#what-was-evaluated" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#quantitative-evaluation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What was evaluated
+        Quantitative evaluation
       
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -474,10 +491,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#detector-level-result" class="md-nav__link">
+  <a href="#detector-level-results" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Detector-level result
+        Detector-level results
       
     </span>
   </a>
@@ -505,6 +522,23 @@
   </a>
   
 </li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interpretation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interpretation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Interpretation">
+      <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#engineering-decision" class="md-nav__link">
@@ -1285,7 +1319,7 @@
   <span class="md-ellipsis">
     
   
-    CI/CD
+    CI/CD Overview
   
 
     
@@ -1333,24 +1367,41 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#the-contrast-that-motivated-the-investigation" class="md-nav__link">
+  <a href="#question-and-design" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The contrast that motivated the investigation
+        Question and design
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Question and design">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#qualitative-contrast" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Qualitative contrast
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#what-was-evaluated" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#quantitative-evaluation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What was evaluated
+        Quantitative evaluation
       
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1367,10 +1418,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#detector-level-result" class="md-nav__link">
+  <a href="#detector-level-results" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Detector-level result
+        Detector-level results
       
     </span>
   </a>
@@ -1398,6 +1449,23 @@
   </a>
   
 </li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interpretation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interpretation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Interpretation">
+      <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#engineering-decision" class="md-nav__link">
@@ -1458,23 +1526,26 @@
 
 
 <h1 id="v2-l-int8-quantization-failure-analysis">v2-L INT8 Quantization Failure Analysis<a class="headerlink" href="#v2-l-int8-quantization-failure-analysis" title="Permanent link">&para;</a></h1>
-<p>On the fixed 300-frame RK3588 replay, recalibrated and quantized v2-L INT8 retained
-<strong>0 of 1,301 v2-L FP-reference detections</strong>. The diagnostic mitigation, <strong>v2-L TD01 mixed-precision</strong>, produced
-<strong>1,030 total detections</strong>, of which <strong>789</strong> matched v2-L FP-reference detections:
-<strong>789 / 1,301 (60.6%)</strong> retention. The failure localizes to the classifier projection context on RK3588, but the exact RKNN Toolkit2/backend cause remains unresolved, and the RKNN compiler is proprietary.</p>
-<h2 id="the-contrast-that-motivated-the-investigation">The contrast that motivated the investigation<a class="headerlink" href="#the-contrast-that-motivated-the-investigation" title="Permanent link">&para;</a></h2>
+<h2 id="question-and-design">Question and design<a class="headerlink" href="#question-and-design" title="Permanent link">&para;</a></h2>
+<p>Does recalibrated v2-L INT8 retain v2-L FP-reference detections on RK3588,
+and can targeted mixed precision localize the observed failure?</p>
+<h3 id="qualitative-contrast">Qualitative contrast<a class="headerlink" href="#qualitative-contrast" title="Permanent link">&para;</a></h3>
 <p>When run through the full 1,222-frame source sequence, the quantized v2-L model's performance collapses completely, as shown in the left pane in the video below. The right pane shows v2-L TD01 mixed-precision on that same sequence. This video is qualitative context; the quantitative evaluation below uses a deterministic 300-frame subset of the same source sequence.</p>
 <video controls preload="metadata" width="100%">
   <source src="https://media.githubusercontent.com/media/jburo1/omniseer/master/studies/quantization/yolo_world_v2l_int8/evidence/scan_final_v2l_int8_vs_hybrid.mp4" type="video/mp4" />
   Your browser cannot play this video. <a href="https://github.com/jburo1/omniseer/blob/master/studies/quantization/yolo_world_v2l_int8/evidence/scan_final_v2l_int8_vs_hybrid.mp4">Open the INT8-versus-TD01 replay media</a>.
 </video>
 
-<h2 id="what-was-evaluated">What was evaluated<a class="headerlink" href="#what-was-evaluated" title="Permanent link">&para;</a></h2>
+<h3 id="quantitative-evaluation">Quantitative evaluation<a class="headerlink" href="#quantitative-evaluation" title="Permanent link">&para;</a></h3>
 <p>The canonical quantitative evaluation replays a deterministic 300-frame subset of the same 1,222-frame source sequence through the
 existing <code>vision_replay</code> detector path on RK3588, with score
 threshold 0.25, and NMS IoU threshold 0.45. We ran the same frames through v2-L FP, v2-L recalibrated INT8, and v2-L TD01 mixed-precision.</p>
 <h2 id="results">Results<a class="headerlink" href="#results" title="Permanent link">&para;</a></h2>
-<h3 id="detector-level-result">Detector-level result<a class="headerlink" href="#detector-level-result" title="Permanent link">&para;</a></h3>
+<p>On the fixed 300-frame RK3588 replay, recalibrated and quantized v2-L INT8 retained
+<strong>0 of 1,301 v2-L FP-reference detections</strong>. The diagnostic mitigation, <strong>v2-L TD01 mixed-precision</strong>, produced
+<strong>1,030 total detections</strong>, of which <strong>789</strong> matched v2-L FP-reference detections:
+<strong>789 / 1,301 (60.6%)</strong> retention. The failure localizes to the classifier projection context on RK3588, but the exact RKNN Toolkit2/backend cause remains unresolved, and the RKNN compiler is proprietary.</p>
+<h3 id="detector-level-results">Detector-level results<a class="headerlink" href="#detector-level-results" title="Permanent link">&para;</a></h3>
 <p><img alt="Comparison of FP-relative detection retention and whole-process replay throughput for FP, recalibrated INT8, and TD01" src="../../assets/evidence/v2l-int8-quantization-metrics.svg" /></p>
 <table>
 <thead>
@@ -1577,6 +1648,7 @@ in addition to the validated FP16 classifier outputs, while the rest remains
 quantized. It was used to test the implicated precision arrangement, not to
 recreate FP behavior. The <a href="../../perception/int8-quantization-investigation/">technical appendix</a>
 records the layer-level conversion details.</p>
+<h2 id="interpretation">Interpretation<a class="headerlink" href="#interpretation" title="Permanent link">&para;</a></h2>
 <h3 id="engineering-decision">Engineering decision<a class="headerlink" href="#engineering-decision" title="Permanent link">&para;</a></h3>
 <p>v2-L recalibrated INT8 is unsuitable: it collapsed before post-processing
 in the final replay. v2-L TD01 mixed-precision is diagnostic evidence of partial recovery and
@@ -1622,7 +1694,7 @@ transport stream and PNG inputs identified by the retained hashes and manifest.<
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 30, 2026 02:37:09 UTC">September 30, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="October 2, 2026 21:55:29 UTC">October 2, 2026</span>
   </span>
 
     

@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Physical edge-AI robotics for open-vocabulary perception, bounded behavior, and reproducible evidence">
+        <meta name="description" content="Unary gRPC control and status API between Omniseer operator tools and the robot gateway.">
       
       
       
@@ -68,13 +68,13 @@
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Omniseer">
   <meta property="og:title" content="Gateway API - Omniseer">
-  <meta property="og:description" content="Physical edge-AI robotics for open-vocabulary perception, bounded behavior, and reproducible evidence">
+  <meta property="og:description" content="Unary gRPC control and status API between Omniseer operator tools and the robot gateway.">
   <meta property="og:url" content="https://jburo1.github.io/omniseer/gateway/gateway-api/">
   <meta property="og:image" content="https://jburo1.github.io/omniseer/assets/brand/social-preview.png">
   <meta property="og:image:type" content="image/png">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Gateway API - Omniseer">
-  <meta name="twitter:description" content="Physical edge-AI robotics for open-vocabulary perception, bounded behavior, and reproducible evidence">
+  <meta name="twitter:description" content="Unary gRPC control and status API between Omniseer operator tools and the robot gateway.">
   <meta name="twitter:image" content="https://jburo1.github.io/omniseer/assets/brand/social-preview.png">
 
   </head>
@@ -882,10 +882,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#current-implementation" class="md-nav__link">
+  <a href="#implementation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current implementation
+        Implementation
       
     </span>
   </a>
@@ -893,10 +893,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#current-contract" class="md-nav__link">
+  <a href="#contract" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current contract
+        Contract
       
     </span>
   </a>
@@ -1224,7 +1224,7 @@
   <span class="md-ellipsis">
     
   
-    CI/CD
+    CI/CD Overview
   
 
     
@@ -1272,10 +1272,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#current-implementation" class="md-nav__link">
+  <a href="#implementation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current implementation
+        Implementation
       
     </span>
   </a>
@@ -1283,10 +1283,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#current-contract" class="md-nav__link">
+  <a href="#contract" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current contract
+        Contract
       
     </span>
   </a>
@@ -1340,7 +1340,7 @@
 <p>This page is the current control/status API reference for communication between
 the operator laptop tools and the robot gateway. Preview video uses SRT and is
 documented separately in <a href="../preview-streaming/">Preview streaming</a>.</p>
-<h2 id="current-implementation">Current implementation<a class="headerlink" href="#current-implementation" title="Permanent link">&para;</a></h2>
+<h2 id="implementation">Implementation<a class="headerlink" href="#implementation" title="Permanent link">&para;</a></h2>
 <p>The implemented API uses:</p>
 <ul>
 <li>gRPC for control and state</li>
@@ -1372,7 +1372,7 @@ code is linked into <code>robot_diag_control_cpp</code>.</p>
 <li>a monitor shell</li>
 <li>a Tk monitor GUI</li>
 </ul>
-<h2 id="current-contract">Current contract<a class="headerlink" href="#current-contract" title="Permanent link">&para;</a></h2>
+<h2 id="contract">Contract<a class="headerlink" href="#contract" title="Permanent link">&para;</a></h2>
 <p>The service contract is <code>omniseer.gateway.v1.RobotGateway</code>:</p>
 <div class="highlight"><pre><span></span><code><span class="kd">service</span><span class="w"> </span><span class="n">RobotGateway</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="k">rpc</span><span class="w"> </span><span class="n">GetSystemStatus</span><span class="p">(</span><span class="n">GetSystemStatusRequest</span><span class="p">)</span><span class="w"> </span><span class="k">returns</span><span class="w"> </span><span class="p">(</span><span class="n">SystemStatus</span><span class="p">);</span>
@@ -1538,7 +1538,7 @@ locally against the live C++ gateway and software x264/SRT preview worker.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="October 1, 2026 19:34:07 UTC">October 1, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="October 2, 2026 21:55:23 UTC">October 2, 2026</span>
   </span>
 
     

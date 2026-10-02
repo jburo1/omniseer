@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Physical edge-AI robotics for open-vocabulary perception, bounded behavior, and reproducible evidence">
+        <meta name="description" content="Operator-facing gateway that exposes bounded status, preview, overlay, and teleoperation interfaces to the robot.">
       
       
       
@@ -68,13 +68,13 @@
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Omniseer">
   <meta property="og:title" content="Robot Gateway - Omniseer">
-  <meta property="og:description" content="Physical edge-AI robotics for open-vocabulary perception, bounded behavior, and reproducible evidence">
+  <meta property="og:description" content="Operator-facing gateway that exposes bounded status, preview, overlay, and teleoperation interfaces to the robot.">
   <meta property="og:url" content="https://jburo1.github.io/omniseer/gateway/robot-gateway/">
   <meta property="og:image" content="https://jburo1.github.io/omniseer/assets/brand/social-preview.png">
   <meta property="og:image:type" content="image/png">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Robot Gateway - Omniseer">
-  <meta name="twitter:description" content="Physical edge-AI robotics for open-vocabulary perception, bounded behavior, and reproducible evidence">
+  <meta name="twitter:description" content="Operator-facing gateway that exposes bounded status, preview, overlay, and teleoperation interfaces to the robot.">
   <meta name="twitter:image" content="https://jburo1.github.io/omniseer/assets/brand/social-preview.png">
 
   </head>
@@ -854,10 +854,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#current-implementation" class="md-nav__link">
+  <a href="#implementation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current implementation
+        Implementation
       
     </span>
   </a>
@@ -865,10 +865,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#current-contract" class="md-nav__link">
+  <a href="#contract" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current contract
+        Contract
       
     </span>
   </a>
@@ -1224,7 +1224,7 @@
   <span class="md-ellipsis">
     
   
-    CI/CD
+    CI/CD Overview
   
 
     
@@ -1272,10 +1272,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#current-implementation" class="md-nav__link">
+  <a href="#implementation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current implementation
+        Implementation
       
     </span>
   </a>
@@ -1283,10 +1283,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#current-contract" class="md-nav__link">
+  <a href="#contract" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current contract
+        Contract
       
     </span>
   </a>
@@ -1338,7 +1338,7 @@
 <h1 id="robot-gateway">Robot Gateway<a class="headerlink" href="#robot-gateway" title="Permanent link">&para;</a></h1>
 <p>This page is the implementation reference for the operator-facing gateway between
 the robot's internal ROS 2 graph and the external operator laptop tools.</p>
-<h2 id="current-implementation">Current implementation<a class="headerlink" href="#current-implementation" title="Permanent link">&para;</a></h2>
+<h2 id="implementation">Implementation<a class="headerlink" href="#implementation" title="Permanent link">&para;</a></h2>
 <p>The gateway is implemented by <code>robot_diag_control_cpp</code> inside the <code>robot-core</code>
 runtime. It keeps the internal ROS 2 graph private and exposes a narrow external
 gRPC boundary for optional operator status, preview control, overlays, and
@@ -1379,7 +1379,7 @@ bounded teleop.</p>
 <li>one bounded teleop manager</li>
 <li>one expected operator client at a time</li>
 </ul>
-<h2 id="current-contract">Current contract<a class="headerlink" href="#current-contract" title="Permanent link">&para;</a></h2>
+<h2 id="contract">Contract<a class="headerlink" href="#contract" title="Permanent link">&para;</a></h2>
 <p>The gateway contract is the <code>omniseer.gateway.v1.RobotGateway</code> protobuf service
 defined in
 <code>ros_ws/src/robot_diag_control/robot_diag_control/api/robot_gateway.proto</code>.</p>
@@ -1469,7 +1469,7 @@ onboard battery sources, an active ROS graph, or physical robot command paths.</
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="October 1, 2026 19:34:07 UTC">October 1, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="October 2, 2026 21:55:23 UTC">October 2, 2026</span>
   </span>
 
     
