@@ -1676,10 +1676,6 @@ ready samples, flushes, joins, and closes the file.</p>
 </table>
 <p>Do not compute stage durations by subtracting realtime fields. The emitted
 monotonic durations are the authoritative timing measurements.</p>
-<p><code>frame_id</code> is assigned by the producer at <code>publish_ready</code>, stored in the image
-buffer metadata, and propagated into consumer telemetry. It is the primary
-correlation key for joining producer and consumer records for the same processed
-frame.</p>
 <h2 id="status-and-duration-fields">Status And Duration Fields<a class="headerlink" href="#status-and-duration-fields" title="Permanent link">&para;</a></h2>
 <p>Status fields are stable strings derived from bounded native enums:</p>
 <table>
@@ -1796,10 +1792,6 @@ integers when the backing timestamp field is available to the JSON writer, and
   failure;</li>
 <li>telemetry samples may be missing after queue overflow or sink failure.</li>
 </ul>
-<p>The native harness only enables telemetry when <code>--telemetry-jsonl &lt;path&gt;</code> is
-provided. The ROS bridge always uses <code>RollingTelemetryStats</code>; when
-<code>telemetry.pipeline_jsonl_path</code> is set, it also creates <code>JsonlTelemetry</code> and fans
-samples out through <code>CompositeTelemetry</code>.</p>
 <h2 id="analysis-tools">Analysis Tools<a class="headerlink" href="#analysis-tools" title="Permanent link">&para;</a></h2>
 <p>Use <code>vision/tools/analyze_telemetry.py</code> for offline JSONL summaries and
 run-to-run comparisons.</p>
@@ -1856,7 +1848,7 @@ end-to-end robot runtime timing.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="October 2, 2026 21:21:04 UTC">October 2, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="October 2, 2026 21:46:12 UTC">October 2, 2026</span>
   </span>
 
     
