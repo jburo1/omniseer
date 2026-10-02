@@ -1,8 +1,6 @@
 # Vision Telemetry Contract
 
-_Status: implemented; native JSONL schema version `3`_
-
-This page defines the current telemetry contract for the native vision pipeline.
+This page defines the current telemetry contract _schema version '3'_ for the native vision pipeline.
 The contract covers producer and consumer runtime samples, rolling in-process
 statistics, JSONL export, and offline analysis. Telemetry is optional for native
 harness runs, but the ROS bridge always keeps rolling telemetry active for live
@@ -36,9 +34,9 @@ JSONL export writes one JSON object per line. All JSONL records include:
 |---|---|
 | `schema_version` | Native telemetry schema version. Current value is `3`. |
 | `source` | `producer` or `consumer`. |
-| `frame_id` | Producer-assigned frame correlation ID, or `null` before one exists. |
+| `frame_id` | Producer-assigned frame correlation ID. |
 | `tick_id` | Per-thread monotonic telemetry tick ID. Producer and consumer tick ID spaces are independent. |
-| `sequence` | Source capture sequence, or `null` before one exists. |
+| `sequence` | Source capture sequence. |
 | `event_ts_real_ns` | Realtime event timestamp in nanoseconds. For frame-backed records, this is the capture timestamp propagated from the source frame. |
 | `stage_mask` | Bitmask of stages that completed for this sample. |
 | `dur_ns` | Object containing per-stage durations plus `total`, all in nanoseconds. |
@@ -124,9 +122,6 @@ The telemetry worker thread drains ready samples, writes JSONL, returns slots to
 free queues, and flushes after writing. When no records are available, it sleeps for
 5 ms before checking again. On destruction, the sink asks the worker to stop, drains
 ready samples, flushes, joins, and closes the file.
-
-Drop counters are currently internal to `JsonlTelemetry`; they are not exported in
-the JSONL schema.
 
 ## Timestamp Semantics
 

@@ -1,23 +1,14 @@
 # Vision Pipeline
 
-_Status: implemented; portable checks cover the software contract, while V4L2,
-RGA, RKNN, camera, and full ROS graph behavior require target hardware or the
-runtime container._
-
-## Purpose and Scope
-
 The vision pipeline converts camera frames into canonical object detections for
 Omniseer's perception experiments and bounded target-centering behavior. It is
-optimized for robot state freshness: when inference is slower than capture, the
+optimized for robot state freshness and not throughput: when inference is slower than capture, the
 consumer processes the newest preprocessed frame available instead of draining an
 old queue.
 
-This page is the reference for the native C++ pipeline and its ROS bridge
-adapter. It covers camera capture, RGA preprocessing, DMA-BUF-backed model input
+This page is the reference for the native C++ pipeline and its ROS bridge adapter, which allows its integration into the larger ROS2 application. It covers camera capture, RGA preprocessing, DMA-BUF-backed model input
 buffers, RKNN inference, YOLO-World post-processing, detection publication,
-preview/evidence hooks, telemetry, and failure behavior. It does not describe
-autonomy policy, operator dashboards, cloud-side report generation, or model
-training. Related telemetry field details live in
+preview/evidence hooks, telemetry, and failure behavior. Related telemetry field details live in
 [Vision Telemetry](vision-telemetry.md).
 
 ## End-to-End Data Path
@@ -51,11 +42,10 @@ The pipeline avoids full-frame CPU copies across the capture, preprocess, and
 inference handoff by sharing file-descriptor-backed DMA buffers with the hardware
 blocks that support them. `DmaHeapAllocator::allocate(int, int, PixelFormat)`
 creates the application-owned model input buffers, and `DmabufAllocation` keeps
-the backing file descriptor lifetime tied to the pool slot metadata.
+the backing file descriptor lifetime tied to the pool slot metadata. This "zero-copy" behaviour is desireable to keep the CPU free for other processing tasks.
 
-The consumer publishes detections as `DetectionsFrame`, whose bounding boxes are
-in source-image pixel coordinates. The ROS bridge converts those frames to
-`yolo_msgs::msg::DetectionArray` on `/yolo/detections`, publishes rolling
+The consumer publishes detections as `DetectionsFrame`, which the ROS bridge then converts to
+`yolo_msgs::msg::DetectionArray.` `/yolo/detections`, publishes rolling
 performance summaries on `/vision/perf`, and exposes `/vision/capture_frame` for
 evidence capture when an `EvidenceFrameSink` is configured.
 
@@ -89,7 +79,7 @@ pipelines use `acquire_write_lease()` and `acquire_read_lease()` so early exits
 preserve ownership automatically. Lower-level tests and adapters may use the
 manual API when they need direct stage accounting, but each successful
 `acquire_write(int&)` must end in `publish_ready(int)` or `cancel_write(int)`,
-and each successful `acquire_read(int&)` must end in `publish_release(int)`.
+and each successful `acquire_read(int&)` must end in `publish_release(int)`. We prefer RAII use here to conform to C++'s memory model
 
 ## Pipeline Stages
 
@@ -113,9 +103,9 @@ and `RgaPreprocess::preflight()` validates descriptors with a smoke pass.
 the source-to-model remap. `RknnRunner::preflight()` loads the RKNN model,
 pre-binds image pool slots and static text embeddings, allocates output storage,
 and runs warmup passes. `ConsumerPipeline::preflight()` validates text embedding
-metadata, model output layout, active class count, and remap geometry.
+metadata, model output layout, active class count, and remap geometry. This separation of concerns allows us to establish that the pipeline is primed before starting to feed it.
 
-## Latest-Wins Behavior
+## Latest-Wins Behavior (freshness constraint)
 
 `ImageBufferPool` maintains one atomic ready slot, `ready_idx`, plus a
 single-producer/single-consumer free ring. `publish_ready(int)` exchanges the
@@ -199,6 +189,8 @@ No failure path should bypass buffer ownership obligations. RAII leases are used
 in the implemented producer and consumer paths so camera slots and pool slots are
 returned when early exits occur.
 
+Since the detections are essential for the autonomous behaviour, we decided not to add other recovery mechanisms.
+
 ## Verification Boundary
 
 Use the narrowest check that matches the change. Portable native pipeline changes
@@ -220,10 +212,6 @@ Documentation-only changes are covered by:
 ```bash
 scripts/omni docs build
 ```
-
-These checks do not prove live camera, RGA, RKNN, ROCK 5B+, or full runtime
-container behavior unless they are run in an environment with the corresponding
-hardware, SDKs, devices, and ROS graph.
 
 ## Diagnostic and Evaluation Tools
 
@@ -248,13 +236,7 @@ the deployed detector.
   path, and writes only derived comparison artifacts. Its command contract is
   in the [Developer CLI](../operations/scripts-frontdoor.md#runs); its
   experiment results and evidence boundary are in the
-  [Six-Model Detector Comparison](../verification/detector-comparison.md). Its
-  current v2-L TD01 mixed-precision selector (currently labeled `v2-L Hybrid`
-  in the implementation) uses `yolo_world_v2_l_hybrid_td01.rknn`. That must
-  not be conflated with the retained `latest_task` replay, whose provenance
-  identifies the separate
-  `yolo_world_v2_l_hybrid_td01_clspreds0_mm_inputs_fp16.rknn` classifier-path
-  localization probe.
+  [Six-Model Detector Comparison](../verification/detector-comparison.md).
 
 ## Primary Implementation Files
 
