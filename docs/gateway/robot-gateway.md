@@ -67,9 +67,7 @@ Implemented unary RPCs:
 - `SendTeleopCommand`
 - `GetOverlaySnapshot`
 
-The external contract exposes robot operations and normalized status, not ROS
-resource names. ROS topics, services, actions, and message types remain internal
-to the gateway process.
+The external contract exposes robot operations and normalized status.
 
 The gateway owns these current responsibilities:
 
@@ -94,9 +92,6 @@ The gateway intentionally does not provide:
 - browser-native preview delivery
 - remote internet-facing access
 - mission-critical command arbitration
-
-RunBundle recording and review are owned by launch profiles and
-`scripts/omni runs`, outside the gRPC API.
 
 ## Verification Boundary
 

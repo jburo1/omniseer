@@ -19,23 +19,19 @@ validation. The operator monitor:
 - builds recorded videos when the retrieved bundle contains `video/source.ts`
 - generates and opens the local HTML report
 
-The monitor remains laptop-side tooling. Robot behavior belongs to `robot-core`
-and the robot-side `scripts/omni runtime record` / `scripts/omni run real`
-surfaces.
-
 ## Implementation context
 
 Python modules under `ros_ws/src/robot_diag_control/robot_diag_control`:
 
-| Module | Owns | Should not own |
-| --- | --- | --- |
-| `monitor_gui.py` | Tk widgets, callbacks, timers, log display, button state application | SSH command construction, subprocess result interpretation, run artifact parsing |
-| `run_settings.py` | Converting GUI form values into `RobotConnection`, `RunConfig`, and artifact context | Tk widgets or side effects beyond value normalization |
-| `run_commands.py` | Stable command/path builders for remote start, stop, pull, and report | Subprocess execution or GUI state |
-| `run_preparation.py` | Remote run directory creation and class-file upload before launch | Long-lived run process lifecycle |
-| `run_lifecycle.py` | Process wrappers, process state checks, stop signal mechanics, run-control availability | Robot-specific SSH command construction |
-| `run_manager.py` | Start/stop orchestration, runtime-stop fallback, completion interpretation | Tk widgets or artifact report generation |
-| `run_artifacts.py` | Pulling run bundles, generating reports, artifact paths, artifact result messages | Tk widgets or robot process lifecycle |
+| Module | Owns |
+| --- | --- |
+| `monitor_gui.py` | Tk widgets, callbacks, timers, log display, button state application |
+| `run_settings.py` | Converting GUI form values into `RobotConnection`, `RunConfig`, and artifact context |
+| `run_commands.py` | Stable command/path builders for remote start, stop, pull, and report |
+| `run_preparation.py` | Remote run directory creation and class-file upload before launch |
+| `run_lifecycle.py` | Process wrappers, process state checks, stop signal mechanics, run-control availability |
+| `run_manager.py` | Start/stop orchestration, runtime-stop fallback, completion interpretation |
+| `run_artifacts.py` | Pulling run bundles, generating reports, artifact paths, artifact result messages |
 
 This split keeps command construction, process lifecycle, and artifact handling
 separate from Tk widgets.
@@ -99,10 +95,6 @@ The GUI's **Retrieve & Open Report** action:
 4. regenerates the report with `generate_run_report(...)`.
 5. opens `runs/imported/<run_id>/report/index.html` when present.
 
-Artifact operations are local laptop actions after the robot run has completed.
-They stay separate from robot process lifecycle and do not change robot-side
-behavior.
-
 ## Perception Scan
 
 `Perception: 360° environment scan` is a bounded environment capture used to
@@ -114,14 +106,6 @@ wrapped-yaw revolution, commands zero velocity, and exits so the normal
 RunBundle recorder finalizes the bundle. Odometry that never arrives or becomes
 stale ends the scan cleanly without continuing motion.
 
-This capture is intentionally independent of the existing
-`scripts/omni runs compare ...` and comparison-report workflow: the resulting
-`video/source.ts` is consumed unchanged by that offline 3×2 detector
-comparison.
-
-The scan intentionally does not start native vision. Its gateway health check
-therefore requires fresh odometry but does not wait for `/vision/perf`; this
-keeps the video-only capture independent of RKNN inference.
 
 ## Detector Selection and Tuning
 
@@ -132,8 +116,7 @@ FP choices, the recalibrated INT8 choices, and the v2-L TD01 mixed-precision
 choice (currently rendered by the selector as `YOLO-World v2-L Hybrid`). The
 recalibrated choices use the canonical `yolo_world_v2_{s,m,l}_i8.rknn` artifact
 names. The v2-L TD01 mixed-precision choice uses the canonical
-`yolo_world_v2_l_hybrid_td01.rknn` artifact; classifier-path diagnostic hybrid
-artifacts are not runtime model choices in the operator controls.
+`yolo_world_v2_l_hybrid_td01.rknn` artifact.
 An explicit choice uses the staged artifact for that run; `Runtime default`
 continues to use the detector configured by the runtime image or config. The
 selector does not upload or discover model files.
@@ -193,7 +176,7 @@ failure, the autonomy node stops commanding motion, completes terminal logging
 and capture handling, and exits cleanly; real launch then shuts down so the
 recorder can finalize the run bundle without an operator Stop Run.
 
-The bounded autonomy run type is summarized in the [Runtime Overview](../perception/edge-to-cloud.md). It performs an in-place visual target-acquisition and framing loop for a configured class, records `autonomy.jsonl`, and stops once it reaches a terminal success or failure state.
+The bounded autonomy run type is summarized in the [Runtime Overview](../perception/runtime-overview.md). It performs an in-place visual target-acquisition and framing loop for a configured class, records `autonomy.jsonl`, and stops once it reaches a terminal success or failure state.
 
 The node publishes `TwistStamped` commands to `/cmd_vel_autonomy`, relies on
 `twist_mux` arbitration, and records terminal state into the bundle for the HTML
@@ -242,6 +225,4 @@ This check requires live encoder, wheel-odometry, LiDAR, vision, and detection
 messages; healthy gateway status; and zero vision errors. It also starts and
 stops preview, runs a short headless overlay viewer smoke when laptop-side
 dependencies are available, enables teleop, sends only a zero command, verifies
-that the stamped controller reference receives it, and disables teleop. This is
-an acceptance check for the operator profile, not a substitute for recorded
-hardware run evidence.
+that the stamped controller reference receives it, and disables teleop.

@@ -4,7 +4,7 @@ description: "Container packaging, verification, and lifecycle guidance for the 
 
 # Robot Runtime Container
 
-## Purpose and scope
+This page gives a detailed explanation of the robot runtime container, including how to build and run it. This is the application entrypoint.
 
 The robot runtime container packages the supported real-hardware ROS workspace into
 an image that starts through the same `scripts/omni run real` surface used on the
@@ -254,8 +254,3 @@ source-built micro-ROS Agent dependencies, and broad ROS runtime dependencies
 pulled in by Kilted packages. Some large
 development-labeled packages still arrive transitively through runtime package
 dependencies rather than from the explicit builder stage.
-
-Do not remove runtime packages only to shrink the image. First measure image
-history and package ownership, then remove a dependency only when the robot
-runtime verification path still passes and the removed package is not part of the
-operator, hardware IO, native vision, gateway, or recording surface.

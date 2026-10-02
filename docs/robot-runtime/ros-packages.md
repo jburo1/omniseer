@@ -6,11 +6,9 @@ description: "Normalized ROS contracts and provider boundaries shared between Ga
 
 ## Purpose
 
-This page is the current reference for the ROS boundary between Gazebo
+This page is the reference for the ROS boundary between Gazebo
 simulation and the physical robot. It owns the normalized ROS contracts used
-by localization, mapping, navigation, autonomy, and operator tooling;
-provider-specific transport, sensor, and compute details remain below that
-boundary.
+by localization, mapping, navigation, autonomy, and operator tooling.
 
 Simulation validates launch composition and the ROS contracts it exercises. It
 does not validate physical sensor behavior, firmware timing, micro-ROS
@@ -20,8 +18,7 @@ transport, camera acceleration, calibration, or robot motion.
 
 `twist_mux` publishes the stamped command contract used by both providers. The
 simulated `mecanum_drive_controller` and the Teensy firmware both consume
-`/mecanum_drive_controller/reference`; the controller-shaped topic name is
-therefore part of the current public boundary.
+`/mecanum_drive_controller/reference`.
 
 The common graph consumes wheel odometry, IMU, and scan data through the same
 topic names. `robot_io_adapters` derives real wheel odometry from the raw
@@ -40,16 +37,6 @@ encoder-count topic so that both paths expose
 | `/battery` | `sensor_msgs/msg/BatteryState` | No producer | Teensy micro-ROS publisher | Optional gateway and run recording; absent in simulation. |
 | `/vision/capture_frame` | `omniseer_msgs/srv/CaptureFrame` | No provider | `omniseer_vision_bridge` | Optional target-centering evidence capture. This is a real-vision capability, not a sim/real-parity contract. |
 
-`/encoder_counts` (`omniseer_msgs/msg/WheelEncoderCounts`) is intentionally
-below the common boundary. It is a real-only firmware output consumed by the
-odometry adapter, not a topic required by simulation consumers. The message
-contains a timestamp and front-left, front-right, rear-left, and rear-right
-counts.
-
-Raw camera input is also provider-local: Gazebo publishes
-`/front_camera/image` through `ros_gz_image`, while the native vision runtime
-captures from its configured V4L2 device. The shared perception output is
-`/yolo/detections`.
 
 ## Simulation Producers
 
@@ -114,11 +101,6 @@ starts the common graph. It starts a baseline `twist_mux` while that wait runs,
 so teleoperation remains available. The check is a launch precondition, not
 hardware acceptance evidence.
 
-The currently shared description launch uses
-`omniseer_description/urdf/xacro/omniseer.urdf.xacro`. That xacro still embeds
-Gazebo sensors, Gazebo friction, and `gz_ros2_control`; it is shared as a
-launch file, not yet a simulation-free robot-description artifact.
-
 ## Adapter Responsibilities
 
 `robot_io_adapters` contains compute-bearing conversions only:
@@ -131,9 +113,6 @@ launch file, not yet a simulation-free robot-description artifact.
   `sensor_msgs/msg/Range`. Simulation uses it to expose `/range` from the
   Gazebo sonar scan.
 
-The package does not provide name-only relays. Simulation and firmware publish
-the aligned command, IMU, and range names directly.
-
 ## Remaining Parity Gaps
 
 - The shared xacro contains Gazebo-only sensors, plugins, and control blocks.
@@ -144,7 +123,7 @@ the aligned command, IMU, and range names directly.
 - The simulation EKF configuration fuses wheel odometry, RF2O odometry, and
   IMU; the real default configuration fuses wheel odometry and IMU only.
   Real RF2O may still be launched, but it is not an input to the real-default
-  EKF configuration.
+  EKF configuration. Integrating this into the EKF is future work.
 - The smoke test checks topic existence and type only. It does not assert the
   command topic, `/range`, perception topics, frame IDs, timestamps, rates,
   stale-data behavior, control timeouts, or simulated/real sensor fidelity.

@@ -4,8 +4,6 @@ description: "Unary gRPC control and status API between Omniseer operator tools 
 
 # Gateway API
 
-_Status: locked unary v1 API implemented_
-
 This page defines the current external control/status API between operator
 laptop tools and the robot gateway. It owns the locked unary gRPC/protobuf
 contract for bounded gateway operations and normalized status; preview video

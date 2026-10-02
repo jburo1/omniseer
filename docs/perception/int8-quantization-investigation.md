@@ -4,18 +4,12 @@ description: "Supporting RKNN conversion, diagnostics, host-analysis procedure, 
 
 # YOLO-World v2 INT8 Quantization Technical Appendix
 
-This is a supporting technical appendix to the canonical
+This is a supporting technical appendix to the
 [v2-L INT8 Quantization Failure Analysis](../verification/int8-quantization-failure.md).
 Read that page for the engineering question, final results, interpretation,
 decision, evidence boundaries, and limitations. This appendix preserves the
 2026-08-29--31 RKNN conversion contract, layer-level diagnostics, host-analysis
-procedure, and hashes behind that canonical narrative; it does not define a
-second experiment conclusion.
-
-Raw Toolkit simulator snapshots are intentionally ignored under
-`artifacts/quant_analysis/`; compact final RK3588 evaluation evidence is
-retained in the v2-L INT8 study and indexed in
-`studies/quantization/yolo_world_v2l_int8/evidence/EVIDENCE_INDEX.md`.
+procedure and hashes.
 
 ## Supporting technical conclusions
 
@@ -115,35 +109,3 @@ the representative dataset.
 | Quantization | Toolkit `build(do_quantization=True)` using `models/source/yolo_world/calibration/dataset.txt` |
 | Calibration set | 100 robot frames plus one generated fixed-shape CLIP text input per dataset entry |
 | Postprocess thresholds for controlled runtime comparisons | score `0.25`; NMS IoU `0.45` |
-
-The exact local input hashes recorded during the investigation were:
-
-```text
-yolo_world_v2_s.onnx  0b5f46756f56fbaba1178413fb5bc0db2660353adc821dd0744161c9cba2bf41
-yolo_world_v2_m.onnx  f3aeb4c93001d9faef04de68f573693238322030b0a2c1b0e0228bb460f31326
-yolo_world_v2_l.onnx  b7d5cd79a887ff6d78d711a3676acba427545e28383de363913b5ecd63e6649a
-dataset.txt           4d55fef03384759c8753f83bbaed24714687c13b6a17f43a62db3ec0c1a0120d
-calibration_text_outp.npy
-                      9cfb78cef21252785897d52519c91af583a7a7117e4fd541716563b360698d8e
-bus.jpg               33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c
-```
-
-The v2-S, v2-M, and v2-L ONNX artifacts above had sizes 51,067,624,
-113,524,529, and 187,339,766 bytes, respectively. Regenerate and record new
-hashes whenever the exporter, source checkpoint, calibration dataset, CLIP
-snapshot, or controlled input changes.
-
-## Raw traces and retained final evidence
-
-The investigation's raw Toolkit output remains intentionally excluded from
-version control. Do not delete experimental artifacts as part of this
-investigation closeout. The final 300-frame result bundle is distinct compact
-evidence and is retained as described in the evidence index; the frozen source
-and PNG frames remain reproducible local inputs rather than Git content.
-
-Earlier host-generated snapshot directories are candidates for later cleanup
-only after the evidence review. The broad
-`artifacts/quant_analysis/v2l/` directory remains generated local output;
-the Git-retained evidence index and final result bundle are under `studies/`.
-Model artifacts, calibration inputs, source changes, and findings required to
-recreate the investigation are retained elsewhere.

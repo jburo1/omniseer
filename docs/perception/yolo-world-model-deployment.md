@@ -8,7 +8,7 @@ native RKNN vision path:
 ```text
 YOLO-World v2-S, v2-M, or v2-L `.pth` -> ONNX (images + texts) -> RK3588 `.rknn`
 ```
-The included tooling provides automated download of pinned models from Hugging Face, alongside model building and evaluation hooks.
+The included tooling provides automated download of pinned models from Hugging Face, alongside model building and evaluation scripts.
 
 ## Prerequisites
 
