@@ -28,8 +28,7 @@ operator laptop
 Real-hardware bringup starts the configured camera, LiDAR, Teensy micro-ROS
 connection, native vision bridge, and shared ROS 2 graph. Native perception
 uses the ROCK 5B+ acceleration path to publish canonical detections and vision
-performance summaries. It is a real-hardware provider; the simulation path has
-different lower-level producers while consuming aligned ROS contracts.
+performance summaries.
 
 ROS 2 carries the normalized sensor, odometry, perception, and command
 interfaces between these components. `twist_mux` arbitrates stamped motion

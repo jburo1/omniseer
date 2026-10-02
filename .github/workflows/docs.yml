@@ -51,7 +51,8 @@ jobs:
           python3 -m pip install --upgrade pip
           python3 -m pip install \
             mkdocs-material \
-            mkdocs-git-revision-date-localized-plugin
+            mkdocs-git-revision-date-localized-plugin \
+            mkdocs-redirects
           scripts/omni docs build
 
       - name: Configure git

@@ -39,6 +39,9 @@ hooks:
 plugins:
   - search
   - git-revision-date-localized
+  - redirects:
+      redirect_maps:
+        perception/edge-to-cloud.md: perception/runtime-overview.md
 nav:
   - Home: index.md
   - Experiments:
@@ -51,7 +54,7 @@ nav:
     - YOLO-World Model Deployment: perception/yolo-world-model-deployment.md
     - INT8 Quantization Technical Appendix: perception/int8-quantization-investigation.md
   - Robot Runtime:
-    - Runtime Overview: perception/edge-to-cloud.md
+    - Runtime Overview: perception/runtime-overview.md
     - ROS / Sim-Real Interfaces: robot-runtime/ros-packages.md
     - Runtime Container: robot-runtime/robot-runtime-container.md
   - Operator & Evidence:

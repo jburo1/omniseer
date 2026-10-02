@@ -65,7 +65,7 @@ Example link targets:
 
 ```d2
 link: "../../../verification/evidence/#runbundle-evidence-format"
-link: "../../../perception/edge-to-cloud/#runtime-flow"
+link: "../../../perception/runtime-overview/#runtime-flow"
 link: "../../../firmware/overview/"
 link: "../../../hardware/electrical-system/"
 link: "../../../operations/operator-run-workflow/#artifact-sequence"

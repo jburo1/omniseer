@@ -70,7 +70,7 @@ and validates internal links embedded in built SVG diagrams.
 | RKNN model build | Host-side YOLO-World export, calibration/quantization, and RKNN compilation. | `../../../perception/yolo-world-model-deployment/` |
 | Simulation | Development-time Gazebo simulation for bringup composition and ROS contract validation. | `../../../robot-runtime/ros-packages/` |
 | Operator application | Off-robot control, diagnostics, preview, retrieval, and report workflow. | `../../../operations/operator-run-workflow/` |
-| Robot runtime | Native perception plus ROS 2 autonomy, recording, and integration. | `../../../perception/edge-to-cloud/#runtime-flow` |
+| Robot runtime | Native perception plus ROS 2 autonomy, recording, and integration. | `../../../perception/runtime-overview/#runtime-flow` |
 | Firmware | Teensy-owned low-level motor and sensor integration over micro-ROS. | `../../../firmware/overview/` |
 | Physical hardware | Electrical and physical sensors, actuators, compute, and power system. | `../../../hardware/electrical-system/` |
 | RunBundle | Durable robot-run evidence artifact. | `../../../verification/evidence/#runbundle-evidence-format` |
@@ -133,7 +133,7 @@ built-site-relative paths such as:
 
 ```text
 ../../../verification/evidence/#runbundle-evidence-format
-../../../perception/edge-to-cloud/#runtime-flow
+../../../perception/runtime-overview/#runtime-flow
 ../../../operations/operator-run-workflow/#artifact-sequence
 ```
 
