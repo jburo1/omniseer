@@ -4,12 +4,12 @@ description: "RK3588 case study: recalibrated YOLO-World v2-L INT8 retained no F
 
 # v2-L INT8 Quantization Failure Analysis
 
-On the fixed 300-frame RK3588 replay, recalibrated and quantized v2-L INT8 retained
-**0 of 1,301 v2-L FP-reference detections**. The diagnostic mitigation, **v2-L TD01 mixed-precision**, produced
-**1,030 total detections**, of which **789** matched v2-L FP-reference detections:
-**789 / 1,301 (60.6%)** retention. The failure localizes to the classifier projection context on RK3588, but the exact RKNN Toolkit2/backend cause remains unresolved, and the RKNN compiler is proprietary.
+## Question and design
 
-## The contrast that motivated the investigation
+Does recalibrated v2-L INT8 retain v2-L FP-reference detections on RK3588,
+and can targeted mixed precision localize the observed failure?
+
+### Qualitative contrast
 
 When run through the full 1,222-frame source sequence, the quantized v2-L model's performance collapses completely, as shown in the left pane in the video below. The right pane shows v2-L TD01 mixed-precision on that same sequence. This video is qualitative context; the quantitative evaluation below uses a deterministic 300-frame subset of the same source sequence.
 
@@ -19,7 +19,7 @@ When run through the full 1,222-frame source sequence, the quantized v2-L model'
 </video>
 
 
-## What was evaluated
+### Quantitative evaluation
 
 The canonical quantitative evaluation replays a deterministic 300-frame subset of the same 1,222-frame source sequence through the
 existing `vision_replay` detector path on RK3588, with score
@@ -27,7 +27,12 @@ threshold 0.25, and NMS IoU threshold 0.45. We ran the same frames through v2-L 
 
 ## Results
 
-### Detector-level result
+On the fixed 300-frame RK3588 replay, recalibrated and quantized v2-L INT8 retained
+**0 of 1,301 v2-L FP-reference detections**. The diagnostic mitigation, **v2-L TD01 mixed-precision**, produced
+**1,030 total detections**, of which **789** matched v2-L FP-reference detections:
+**789 / 1,301 (60.6%)** retention. The failure localizes to the classifier projection context on RK3588, but the exact RKNN Toolkit2/backend cause remains unresolved, and the RKNN compiler is proprietary.
+
+### Detector-level results
 
 ![Comparison of FP-relative detection retention and whole-process replay throughput for FP, recalibrated INT8, and TD01](../assets/evidence/v2l-int8-quantization-metrics.svg)
 
@@ -72,6 +77,8 @@ in addition to the validated FP16 classifier outputs, while the rest remains
 quantized. It was used to test the implicated precision arrangement, not to
 recreate FP behavior. The [technical appendix](../perception/int8-quantization-investigation.md)
 records the layer-level conversion details.
+
+## Interpretation
 
 ### Engineering decision
 

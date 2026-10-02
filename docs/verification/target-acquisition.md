@@ -4,13 +4,11 @@ description: "One public ROCK 5B+ v2-L FP target-acquisition RunBundle: bounded 
 
 # v2-L FP Target Acquisition
 
-## Engineering question
+## Question and design
 
 Can open-vocabulary YOLO-World v2-L FP running through RKNN on a ROCK 5B+
 support a complete, reviewable execution of Omniseer's bounded visual
 target-acquisition and framing behavior?
-
-## Method / experimental setup
 
 This is one physical-robot case study, with evidence captured in a
 <a href="../../runs/v2l_fp_scene_1/report/">RunBundle</a>. The recorded model is YOLO-World v2-L FP. The robot was placed in an environment which contained an object which the detector had been verified to detect in similar conditions a priori. The controller was configured to find `person`: it
@@ -37,7 +35,7 @@ rosbag.
 | RKNN inference p50 / p95 | **380.25 / 400.98 ms** |
 | Source-age p95 | **438.76 ms** |
 
-## Engineering interpretation
+## Interpretation
 
 This artifact demonstrates one end-to-end execution of bounded target
 acquisition and framing on the stated hardware and model configuration. It
