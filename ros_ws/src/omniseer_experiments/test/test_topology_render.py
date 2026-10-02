@@ -4,7 +4,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from omniseer_experiments.topology_render import render_topology, topology_to_dot
+from omniseer_experiments.topology_render import (
+    bounded_autonomy_topology_to_dot,
+    render_topology,
+    topology_to_dot,
+)
 
 
 class TopologyRenderTests(unittest.TestCase):
@@ -109,3 +113,54 @@ class TopologyRenderTests(unittest.TestCase):
             self.assertTrue(dot_path.is_file())
             self.assertTrue(output_path.is_file())
             self.assertIn("<svg", output_path.read_text(encoding="utf-8"))
+
+    def test_bounded_autonomy_projection_retains_only_observed_path_endpoints(self) -> None:
+        topology = {
+            "nodes": [{"name": "omniseer_teensy", "namespace": "/"}],
+            "topics": [
+                {
+                    "name": "/yolo/detections",
+                    "publishers": [{"node_name": "vision_bridge", "node_namespace": "/"}],
+                    "subscribers": [
+                        {"node_name": "target_centering_node", "node_namespace": "/"},
+                        {"node_name": "perception_run_recorder", "node_namespace": "/"},
+                    ],
+                },
+                {
+                    "name": "/cmd_vel_autonomy",
+                    "publishers": [{"node_name": "target_centering_node", "node_namespace": "/"}],
+                    "subscribers": [{"node_name": "twist_mux", "node_namespace": "/"}],
+                },
+                {
+                    "name": "/encoder_counts",
+                    "publishers": [],
+                    "subscribers": [{"node_name": "encoder_counts_to_odometry", "node_namespace": "/"}],
+                },
+                {
+                    "name": "/scan",
+                    "publishers": [{"node_name": "rplidar_composition", "node_namespace": "/"}],
+                    "subscribers": [{"node_name": "rosbag2_recorder", "node_namespace": "/"}],
+                },
+            ],
+        }
+
+        dot = bounded_autonomy_topology_to_dot(topology)
+
+        for group in (
+            "Hardware / I/O",
+            "Perception",
+            "State Estimation",
+            "Autonomy / Control",
+            "Run Evidence",
+        ):
+            self.assertIn(f'label="{group}"', dot)
+        self.assertIn('label="/vision_bridge"', dot)
+        self.assertIn('label="/target_centering_node"', dot)
+        self.assertIn('label="/encoder_counts"', dot)
+        self.assertIn('label="/encoder_counts_to_odometry"', dot)
+        self.assertIn("style=dashed", dot)
+        self.assertIn("style=dotted", dot)
+        self.assertIn('label="/omniseer_teensy"', dot)
+        self.assertNotIn("robot_diag_control_cpp", dot)
+        self.assertNotIn("rplidar_composition", dot)
+        self.assertNotIn('label="/scan"', dot)
