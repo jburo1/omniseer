@@ -137,11 +137,6 @@ Durations and correlation timestamps use different clock domains:
 Do not compute stage durations by subtracting realtime fields. The emitted
 monotonic durations are the authoritative timing measurements.
 
-`frame_id` is assigned by the producer at `publish_ready`, stored in the image
-buffer metadata, and propagated into consumer telemetry. It is the primary
-correlation key for joining producer and consumer records for the same processed
-frame.
-
 ## Status And Duration Fields
 
 Status fields are stable strings derived from bounded native enums:
@@ -195,11 +190,6 @@ Telemetry is fail-open:
 - producer and consumer pipeline loops continue running after telemetry sink
   failure;
 - telemetry samples may be missing after queue overflow or sink failure.
-
-The native harness only enables telemetry when `--telemetry-jsonl <path>` is
-provided. The ROS bridge always uses `RollingTelemetryStats`; when
-`telemetry.pipeline_jsonl_path` is set, it also creates `JsonlTelemetry` and fans
-samples out through `CompositeTelemetry`.
 
 ## Analysis Tools
 
