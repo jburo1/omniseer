@@ -48,7 +48,7 @@ MODEL_SPECS = (
     _ModelSpec("v2-M FP", "v2m_fp.jsonl", "m", "fp"),
     _ModelSpec("v2-M INT8", "v2m_int8.jsonl", "m", "int8"),
     _ModelSpec("v2-L FP", "v2l_fp.jsonl", "l", "fp"),
-    _ModelSpec("v2-L Hybrid", "v2l_hybrid.jsonl", "l", "hybrid"),
+    _ModelSpec("v2-L TD01 mixed-precision", "v2l_hybrid.jsonl", "l", "hybrid"),
 )
 
 

@@ -20,12 +20,16 @@ case-study evidence and is not frame aligned.
 - [Replay provenance](evidence/replay_provenance.json), six
   [replay JSONLs](evidence/replay_jsonl/), [visibility annotations](visibility.txt),
   and [comparison report](evidence/comparison_report.html) for recomputing the
-  controlled metrics; [results.md](results.md) retains the detailed result
-  table.
+  controlled metrics. The controlled v2-L stream is TD01 mixed-precision and
+  matches the physical v2-L RKNN artifact; [results.md](results.md) retains the
+  detailed result table.
 - [Physical-run presentation grid](evidence/physical_trials_grid_2x3.mp4) and
   public-safe [physical-run summary](physical_runs.yaml), including local
   manifest hashes, shared hardware, Git revision, container digest, and
-  completion status. Except for the public v2-L FP RunBundle,
+  completion status. The recovered `v2l_hybrid_scene_1` manifest identifies
+  its detector as `yolo_world_v2_l_hybrid_td01.rknn`
+  (`20e43523ab4221fd755553030dbc58943f457839d5583b1f2f29954489c2ef92`).
+  Except for the public v2-L FP RunBundle,
   [`v2l_fp_scene_1`](../../autonomy/v2l_fp_target_acquisition/README.md), the
   physical RunBundles and raw manifests remain retained local evidence; their
   reported runtime summaries are not independently recomputable from a public

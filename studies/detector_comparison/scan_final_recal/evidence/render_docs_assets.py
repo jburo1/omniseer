@@ -30,6 +30,8 @@ JSONL_DIR = STUDY_DIR / "evidence/replay_jsonl"
 RESULTS_PATH = STUDY_DIR / "results.md"
 PHYSICAL_GRID_PATH = STUDY_DIR / "evidence/physical_trials_grid_2x3.mp4"
 PHYSICAL_POSTER_PATH = REPO_ROOT / "docs/assets/evidence/detector-comparison-physical-poster.webp"
+CONTROLLED_REPLAY_PATH = STUDY_DIR / "evidence/controlled_replay_2x3.mp4"
+CONTROLLED_POSTER_PATH = STUDY_DIR / "evidence/controlled_replay_poster.jpg"
 
 MODELS = OrderedDict(
     (
@@ -38,7 +40,7 @@ MODELS = OrderedDict(
         ("v2-M FP", "v2m_fp.jsonl"),
         ("v2-M INT8", "v2m_int8.jsonl"),
         ("v2-L FP", "v2l_fp.jsonl"),
-        ("v2-L classifier-path localization probe", "v2l_hybrid.jsonl"),
+        ("v2-L TD01 mixed-precision", "v2l_hybrid.jsonl"),
     )
 )
 
@@ -48,7 +50,7 @@ PHYSICAL_CONFIGURATIONS = (
     "v2-M FP",
     "v2-M INT8",
     "v2-L FP",
-    "v2-L hybrid (artifact identity unproven)",
+    "v2-L TD01 mixed-precision",
 )
 
 INK = "#20242b"
@@ -292,8 +294,9 @@ def render_scatter(
         "v2-M FP": (10, 20),
         "v2-M INT8": (10, -10),
         "v2-L FP": (-8, 19),
+        "v2-L TD01 mixed-precision": (-10, -12),
     }
-    for model, hits in list(totals.items())[:5]:
+    for model, hits in totals.items():
         rate = hits / opportunities * 100
         fps = physical[model][0]
         x = left + (rate - x_min) / (x_max - x_min) * plot_width
@@ -381,6 +384,30 @@ def render_physical_poster() -> None:
     )
 
 
+def render_controlled_poster() -> None:
+    subprocess.run(
+        [
+            "ffmpeg",
+            "-y",
+            "-ss",
+            "00:00:20",
+            "-i",
+            str(CONTROLLED_REPLAY_PATH),
+            "-frames:v",
+            "1",
+            "-vf",
+            "scale=1280:-2",
+            "-q:v",
+            "2",
+            str(CONTROLLED_POSTER_PATH),
+        ],
+        check=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+
+
 def main() -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     totals, per_model, annotations = controlled_metrics()
@@ -392,7 +419,7 @@ def main() -> None:
         "v2-M FP": 2367,
         "v2-M INT8": 2055,
         "v2-L FP": 2363,
-        "v2-L classifier-path localization probe": 1440,
+        "v2-L TD01 mixed-precision": 1951,
     }
     if opportunities != 5679 or totals != expected:
         raise ValueError(f"controlled metrics no longer match retained report: {opportunities=}, {totals=}")
@@ -400,6 +427,7 @@ def main() -> None:
     render_runtime(physical)
     render_scatter(totals, physical, opportunities)
     render_heatmap(per_model, annotations)
+    render_controlled_poster()
     render_physical_poster()
 
 

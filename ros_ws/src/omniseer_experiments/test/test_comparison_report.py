@@ -146,7 +146,7 @@ def test_canonical_model_specs_cover_six_s_m_l_final_configurations() -> None:
         ("v2-M FP", "v2m_fp.jsonl"),
         ("v2-M INT8", "v2m_int8.jsonl"),
         ("v2-L FP", "v2l_fp.jsonl"),
-        ("v2-L Hybrid", "v2l_hybrid.jsonl"),
+        ("v2-L TD01 mixed-precision", "v2l_hybrid.jsonl"),
     ]
 
 

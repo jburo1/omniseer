@@ -408,7 +408,7 @@ int main(int argc, char** argv)
                   omniseer::vision::ComparisonModelSpec>{{"v2-L INT8",
                                                           "yolo_world_v2_l_i8_recal.rknn",
                                                           "v2l_int8_recal.jsonl"},
-                                                         {"v2-L Hybrid",
+                                                         {"v2-L TD01 mixed-precision",
                                                           "yolo_world_v2_l_hybrid_td01.rknn",
                                                           "v2l_hybrid_td01.jsonl"}}
             : std::vector<omniseer::vision::ComparisonModelSpec>(
