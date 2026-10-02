@@ -6,33 +6,35 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Physical edge-AI robotics on RK3588: open-vocabulary neural perception, bounded target acquisition, and reproducible evidence from real robot runs.">
+        <meta name="description" content="On-robot runtime and offboard review flow for real-hardware Omniseer experiments on ROCK 5B+.">
       
       
       
-        <link rel="canonical" href="https://jburo1.github.io/omniseer/">
+        <link rel="canonical" href="https://jburo1.github.io/omniseer/perception/runtime-overview/">
       
       
+        <link rel="prev" href="../int8-quantization-investigation/">
       
-        <link rel="next" href="verification/target-acquisition/">
+      
+        <link rel="next" href="../../robot-runtime/ros-packages/">
       
       
         
       
       
-      <link rel="icon" href="assets/brand/favicon.svg">
+      <link rel="icon" href="../../assets/brand/favicon.svg">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
-        <title>Omniseer</title>
+        <title>Runtime Overview - Omniseer</title>
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
-        <link rel="stylesheet" href="assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -51,7 +53,7 @@
       
     
     
-    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -65,14 +67,14 @@
   
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Omniseer">
-  <meta property="og:title" content="Home - Omniseer">
-  <meta property="og:description" content="Physical edge-AI robotics on RK3588: open-vocabulary neural perception, bounded target acquisition, and reproducible evidence from real robot runs.">
-  <meta property="og:url" content="https://jburo1.github.io/omniseer/">
+  <meta property="og:title" content="Runtime Overview - Omniseer">
+  <meta property="og:description" content="On-robot runtime and offboard review flow for real-hardware Omniseer experiments on ROCK 5B+.">
+  <meta property="og:url" content="https://jburo1.github.io/omniseer/perception/runtime-overview/">
   <meta property="og:image" content="https://jburo1.github.io/omniseer/assets/brand/social-preview.png">
   <meta property="og:image:type" content="image/png">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Home - Omniseer">
-  <meta name="twitter:description" content="Physical edge-AI robotics on RK3588: open-vocabulary neural perception, bounded target acquisition, and reproducible evidence from real robot runs.">
+  <meta name="twitter:title" content="Runtime Overview - Omniseer">
+  <meta name="twitter:description" content="On-robot runtime and offboard review flow for real-hardware Omniseer experiments on ROCK 5B+.">
   <meta name="twitter:image" content="https://jburo1.github.io/omniseer/assets/brand/social-preview.png">
 
   </head>
@@ -92,7 +94,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#omniseer-documentation" class="md-skip">
+        <a href="#runtime-overview" class="md-skip">
           Skip to content
         </a>
       
@@ -108,9 +110,9 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="." title="Omniseer" class="md-header__button md-logo" aria-label="Omniseer" data-md-component="logo">
+    <a href="../.." title="Omniseer" class="md-header__button md-logo" aria-label="Omniseer" data-md-component="logo">
       
-  <img src="assets/brand/logo.svg" alt="logo">
+  <img src="../../assets/brand/logo.svg" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -127,7 +129,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Home
+              Runtime Overview
             
           </span>
         </div>
@@ -217,9 +219,9 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="." title="Omniseer" class="md-nav__button md-logo" aria-label="Omniseer" data-md-component="logo">
+    <a href="../.." title="Omniseer" class="md-nav__button md-logo" aria-label="Omniseer" data-md-component="logo">
       
-  <img src="assets/brand/logo.svg" alt="logo">
+  <img src="../../assets/brand/logo.svg" alt="logo">
 
     </a>
     Omniseer
@@ -243,37 +245,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Home
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="." class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
         
   
   
@@ -289,37 +264,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#explore-the-system" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Explore the System
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -378,7 +322,7 @@
   
   
     <li class="md-nav__item">
-      <a href="verification/target-acquisition/" class="md-nav__link">
+      <a href="../../verification/target-acquisition/" class="md-nav__link">
         
   
   
@@ -406,7 +350,7 @@
   
   
     <li class="md-nav__item">
-      <a href="verification/detector-comparison/" class="md-nav__link">
+      <a href="../../verification/detector-comparison/" class="md-nav__link">
         
   
   
@@ -434,7 +378,7 @@
   
   
     <li class="md-nav__item">
-      <a href="verification/int8-quantization-failure/" class="md-nav__link">
+      <a href="../../verification/int8-quantization-failure/" class="md-nav__link">
         
   
   
@@ -516,7 +460,7 @@
   
   
     <li class="md-nav__item">
-      <a href="perception/vision-pipeline/" class="md-nav__link">
+      <a href="../vision-pipeline/" class="md-nav__link">
         
   
   
@@ -544,7 +488,7 @@
   
   
     <li class="md-nav__item">
-      <a href="perception/vision-telemetry/" class="md-nav__link">
+      <a href="../vision-telemetry/" class="md-nav__link">
         
   
   
@@ -572,7 +516,7 @@
   
   
     <li class="md-nav__item">
-      <a href="perception/yolo-world-model-deployment/" class="md-nav__link">
+      <a href="../yolo-world-model-deployment/" class="md-nav__link">
         
   
   
@@ -600,7 +544,7 @@
   
   
     <li class="md-nav__item">
-      <a href="perception/int8-quantization-investigation/" class="md-nav__link">
+      <a href="../int8-quantization-investigation/" class="md-nav__link">
         
   
   
@@ -632,18 +576,20 @@
       
   
   
+    
   
   
+  
     
     
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
           <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
@@ -664,7 +610,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
@@ -679,10 +625,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="perception/runtime-overview/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runtime Overview
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -698,6 +671,59 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#end-to-end-runtime-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        End-to-End Runtime Flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robot-side-runtime" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Robot-Side Runtime
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#detailed-references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detailed References
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -710,7 +736,7 @@
   
   
     <li class="md-nav__item">
-      <a href="robot-runtime/ros-packages/" class="md-nav__link">
+      <a href="../../robot-runtime/ros-packages/" class="md-nav__link">
         
   
   
@@ -738,7 +764,7 @@
   
   
     <li class="md-nav__item">
-      <a href="robot-runtime/robot-runtime-container/" class="md-nav__link">
+      <a href="../../robot-runtime/robot-runtime-container/" class="md-nav__link">
         
   
   
@@ -820,7 +846,7 @@
   
   
     <li class="md-nav__item">
-      <a href="operations/operator-run-workflow/" class="md-nav__link">
+      <a href="../../operations/operator-run-workflow/" class="md-nav__link">
         
   
   
@@ -848,7 +874,7 @@
   
   
     <li class="md-nav__item">
-      <a href="gateway/robot-gateway/" class="md-nav__link">
+      <a href="../../gateway/robot-gateway/" class="md-nav__link">
         
   
   
@@ -876,7 +902,7 @@
   
   
     <li class="md-nav__item">
-      <a href="gateway/gateway-api/" class="md-nav__link">
+      <a href="../../gateway/gateway-api/" class="md-nav__link">
         
   
   
@@ -904,7 +930,7 @@
   
   
     <li class="md-nav__item">
-      <a href="gateway/preview-streaming/" class="md-nav__link">
+      <a href="../../gateway/preview-streaming/" class="md-nav__link">
         
   
   
@@ -932,7 +958,7 @@
   
   
     <li class="md-nav__item">
-      <a href="verification/evidence/" class="md-nav__link">
+      <a href="../../verification/evidence/" class="md-nav__link">
         
   
   
@@ -1014,7 +1040,7 @@
   
   
     <li class="md-nav__item">
-      <a href="firmware/overview/" class="md-nav__link">
+      <a href="../../firmware/overview/" class="md-nav__link">
         
   
   
@@ -1042,7 +1068,7 @@
   
   
     <li class="md-nav__item">
-      <a href="hardware/electrical-system/" class="md-nav__link">
+      <a href="../../hardware/electrical-system/" class="md-nav__link">
         
   
   
@@ -1070,7 +1096,7 @@
   
   
     <li class="md-nav__item">
-      <a href="hardware/bill-of-materials/" class="md-nav__link">
+      <a href="../../hardware/bill-of-materials/" class="md-nav__link">
         
   
   
@@ -1152,7 +1178,7 @@
   
   
     <li class="md-nav__item">
-      <a href="operations/scripts-frontdoor/" class="md-nav__link">
+      <a href="../../operations/scripts-frontdoor/" class="md-nav__link">
         
   
   
@@ -1180,7 +1206,7 @@
   
   
     <li class="md-nav__item">
-      <a href="verification/ci-cd/" class="md-nav__link">
+      <a href="../../verification/ci-cd/" class="md-nav__link">
         
   
   
@@ -1235,10 +1261,32 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#explore-the-system" class="md-nav__link">
+  <a href="#end-to-end-runtime-flow" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Explore the System
+        End-to-End Runtime Flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#robot-side-runtime" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Robot-Side Runtime
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#detailed-references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detailed References
       
     </span>
   </a>
@@ -1265,16 +1313,61 @@
   
 
 
-<h1 id="omniseer-documentation">Omniseer Documentation<a class="headerlink" href="#omniseer-documentation" title="Permanent link">&para;</a></h1>
-<p>Technical documentation for Omniseer's perception, robot runtime, operator tooling, hardware, and recorded experiment evidence.</p>
-<p align="center">
-  <img src="assets/evidence/robot-hero.webp" alt="Omniseer physical mobile robot with LiDAR and mecanum drive" width="960" />
-</p>
-
-<h2 id="explore-the-system">Explore the System<a class="headerlink" href="#explore-the-system" title="Permanent link">&para;</a></h2>
-<object data="assets/diagrams/explorer/system-explorer.svg" type="image/svg+xml" aria-label="Omniseer system explorer" width="100%"></object>
-
-<p>Select a component in the diagram to open its detailed documentation.</p>
+<h1 id="runtime-overview">Runtime Overview<a class="headerlink" href="#runtime-overview" title="Permanent link">&para;</a></h1>
+<p>This page describes how an Omniseer real-hardware experiment runs on a ROCK
+5B+ and preserves artifacts for offboard inspection. It defines the boundary
+between the robot-side runtime—native perception, the ROS 2 graph, bounded
+behavior, hardware I/O, and recording—and laptop-side review tools, which
+remain outside the motion-critical path.</p>
+<h2 id="end-to-end-runtime-flow">End-to-End Runtime Flow<a class="headerlink" href="#end-to-end-runtime-flow" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>operator laptop
+  -&gt; starts real-hardware bringup on the ROCK 5B+
+  -&gt; real I/O + micro-ROS agent + camera/LiDAR bring up the ROS 2 graph
+  -&gt; native V4L2/RGA/RKNN vision publishes detections and vision performance
+  -&gt; ROS consumers, twist_mux command arbitration, and optional bounded autonomy
+  -&gt; Teensy firmware receives the stamped command and owns motor safety/I/O
+  -&gt; RunBundle recorder preserves run data and evidence
+  -&gt; laptop retrieves the completed bundle for annotation, report, and review
+</code></pre></div>
+<h2 id="robot-side-runtime">Robot-Side Runtime<a class="headerlink" href="#robot-side-runtime" title="Permanent link">&para;</a></h2>
+<p>Real-hardware bringup starts the configured camera, LiDAR, Teensy micro-ROS
+connection, native vision bridge, and shared ROS 2 graph. Native perception
+uses the ROCK 5B+ acceleration path to publish canonical detections and vision
+performance summaries.</p>
+<p>ROS 2 carries the normalized sensor, odometry, perception, and command
+interfaces between these components. <code>twist_mux</code> arbitrates stamped motion
+commands before the Teensy boundary. Optional target acquisition and framing
+are bounded ROS consumers of those interfaces; they do not replace firmware
+command handling, timeout behavior, or motor safety.</p>
+<p>The Teensy firmware owns motor control, mecanum kinematics, encoder, IMU, and
+sonar acquisition, and publishes its real-I/O data through micro-ROS. The
+robot gateway is an optional operator-facing boundary: it exposes normalized
+status, preview control, overlays, and bounded teleoperation without exposing
+the internal ROS graph. Preview and review tooling are diagnostic surfaces, not
+dependencies of perception, arbitration, or firmware control.</p>
+<p>When recording is enabled, the RunBundle recorder captures the configured ROS
+and native evidence streams, launch context, and derived summaries. A completed
+bundle can then be retrieved to the laptop, annotated, and rendered as a static
+report without modifying its raw evidence.</p>
+<h2 id="detailed-references">Detailed References<a class="headerlink" href="#detailed-references" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../vision-pipeline/">Vision Pipeline</a> — native real-time C++ capture,
+  preprocessing, inference, publication, and failure behavior.</li>
+<li><a href="../vision-telemetry/">Vision Telemetry</a> — native telemetry records and timing
+  semantics.</li>
+<li><a href="../../robot-runtime/ros-packages/">ROS / Sim-Real Interfaces</a> — launch
+  composition, topics, providers, and command boundary.</li>
+<li><a href="../../robot-runtime/robot-runtime-container/">Robot Runtime Container</a> —
+  packaged runtime lifecycle and verification.</li>
+<li><a href="../../operations/operator-run-workflow/">Operator Run Workflow</a> — laptop-side
+  start, stop, retrieval, and report workflow.</li>
+<li><a href="../../gateway/robot-gateway/">Robot Gateway</a> — external gRPC status, preview,
+  and teleoperation boundary.</li>
+<li><a href="../../firmware/overview/">Firmware &amp; Robot I/O</a> — Teensy and micro-ROS
+  responsibilities, safety behavior, and interfaces.</li>
+<li><a href="../../verification/evidence/">Verification Evidence</a> — RunBundle semantics and
+  the evidence required for target-hardware claims.</li>
+</ul>
 
 
 
@@ -1295,7 +1388,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 29, 2026 22:04:55 UTC">September 29, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="October 2, 2026 22:04:21 UTC">October 2, 2026</span>
   </span>
 
     
@@ -1345,12 +1438,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["navigation.instant"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
-        <script src="assets/js/collapse-sidebar.js"></script>
+        <script src="../../assets/js/collapse-sidebar.js"></script>
       
     
   </body>

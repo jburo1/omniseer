@@ -626,7 +626,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../perception/edge-to-cloud/" class="md-nav__link">
+      <a href="../../perception/runtime-overview/" class="md-nav__link">
         
   
   
@@ -1494,9 +1494,6 @@ validation. The operator monitor:</p>
 <li>builds recorded videos when the retrieved bundle contains <code>video/source.ts</code></li>
 <li>generates and opens the local HTML report</li>
 </ul>
-<p>The monitor remains laptop-side tooling. Robot behavior belongs to <code>robot-core</code>
-and the robot-side <code>scripts/omni runtime record</code> / <code>scripts/omni run real</code>
-surfaces.</p>
 <h2 id="implementation-context">Implementation context<a class="headerlink" href="#implementation-context" title="Permanent link">&para;</a></h2>
 <p>Python modules under <code>ros_ws/src/robot_diag_control/robot_diag_control</code>:</p>
 <table>
@@ -1504,44 +1501,36 @@ surfaces.</p>
 <tr>
 <th>Module</th>
 <th>Owns</th>
-<th>Should not own</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><code>monitor_gui.py</code></td>
 <td>Tk widgets, callbacks, timers, log display, button state application</td>
-<td>SSH command construction, subprocess result interpretation, run artifact parsing</td>
 </tr>
 <tr>
 <td><code>run_settings.py</code></td>
 <td>Converting GUI form values into <code>RobotConnection</code>, <code>RunConfig</code>, and artifact context</td>
-<td>Tk widgets or side effects beyond value normalization</td>
 </tr>
 <tr>
 <td><code>run_commands.py</code></td>
 <td>Stable command/path builders for remote start, stop, pull, and report</td>
-<td>Subprocess execution or GUI state</td>
 </tr>
 <tr>
 <td><code>run_preparation.py</code></td>
 <td>Remote run directory creation and class-file upload before launch</td>
-<td>Long-lived run process lifecycle</td>
 </tr>
 <tr>
 <td><code>run_lifecycle.py</code></td>
 <td>Process wrappers, process state checks, stop signal mechanics, run-control availability</td>
-<td>Robot-specific SSH command construction</td>
 </tr>
 <tr>
 <td><code>run_manager.py</code></td>
 <td>Start/stop orchestration, runtime-stop fallback, completion interpretation</td>
-<td>Tk widgets or artifact report generation</td>
 </tr>
 <tr>
 <td><code>run_artifacts.py</code></td>
 <td>Pulling run bundles, generating reports, artifact paths, artifact result messages</td>
-<td>Tk widgets or robot process lifecycle</td>
 </tr>
 </tbody>
 </table>
@@ -1600,9 +1589,6 @@ needs it to write final metadata such as <code>manifest.yaml</code> and <code>su
 <li>regenerates the report with <code>generate_run_report(...)</code>.</li>
 <li>opens <code>runs/imported/&lt;run_id&gt;/report/index.html</code> when present.</li>
 </ol>
-<p>Artifact operations are local laptop actions after the robot run has completed.
-They stay separate from robot process lifecycle and do not change robot-side
-behavior.</p>
 <h2 id="perception-scan">Perception Scan<a class="headerlink" href="#perception-scan" title="Permanent link">&para;</a></h2>
 <p><code>Perception: 360° environment scan</code> is a bounded environment capture used to
 generate a controlled reference <code>video/source.ts</code> for offline detector
@@ -1612,13 +1598,6 @@ default). The scan completes only after <code>/odometry/filtered</code> reports 
 wrapped-yaw revolution, commands zero velocity, and exits so the normal
 RunBundle recorder finalizes the bundle. Odometry that never arrives or becomes
 stale ends the scan cleanly without continuing motion.</p>
-<p>This capture is intentionally independent of the existing
-<code>scripts/omni runs compare ...</code> and comparison-report workflow: the resulting
-<code>video/source.ts</code> is consumed unchanged by that offline 3×2 detector
-comparison.</p>
-<p>The scan intentionally does not start native vision. Its gateway health check
-therefore requires fresh odometry but does not wait for <code>/vision/perf</code>; this
-keeps the video-only capture independent of RKNN inference.</p>
 <h2 id="detector-selection-and-tuning">Detector Selection and Tuning<a class="headerlink" href="#detector-selection-and-tuning" title="Permanent link">&para;</a></h2>
 <p>Before selecting an external detector model for autonomy, copy its generated
 RKNN artifact to the robot repository's <code>runs/model_artifacts/</code> directory. The
@@ -1627,8 +1606,7 @@ FP choices, the recalibrated INT8 choices, and the v2-L TD01 mixed-precision
 choice (currently rendered by the selector as <code>YOLO-World v2-L Hybrid</code>). The
 recalibrated choices use the canonical <code>yolo_world_v2_{s,m,l}_i8.rknn</code> artifact
 names. The v2-L TD01 mixed-precision choice uses the canonical
-<code>yolo_world_v2_l_hybrid_td01.rknn</code> artifact; classifier-path diagnostic hybrid
-artifacts are not runtime model choices in the operator controls.
+<code>yolo_world_v2_l_hybrid_td01.rknn</code> artifact.
 An explicit choice uses the staged artifact for that run; <code>Runtime default</code>
 continues to use the detector configured by the runtime image or config. The
 selector does not upload or discover model files.</p>
@@ -1677,7 +1655,7 @@ the full class list to native vision and run metadata, and write
 failure, the autonomy node stops commanding motion, completes terminal logging
 and capture handling, and exits cleanly; real launch then shuts down so the
 recorder can finalize the run bundle without an operator Stop Run.</p>
-<p>The bounded autonomy run type is summarized in the <a href="../../perception/edge-to-cloud/">Runtime Overview</a>. It performs an in-place visual target-acquisition and framing loop for a configured class, records <code>autonomy.jsonl</code>, and stops once it reaches a terminal success or failure state.</p>
+<p>The bounded autonomy run type is summarized in the <a href="../../perception/runtime-overview/">Runtime Overview</a>. It performs an in-place visual target-acquisition and framing loop for a configured class, records <code>autonomy.jsonl</code>, and stops once it reaches a terminal success or failure state.</p>
 <p>The node publishes <code>TwistStamped</code> commands to <code>/cmd_vel_autonomy</code>, relies on
 <code>twist_mux</code> arbitration, and records terminal state into the bundle for the HTML
 report. During scan, the target-centering node subscribes to <code>/odometry/filtered</code>
@@ -1719,9 +1697,7 @@ existing graph:</p>
 messages; healthy gateway status; and zero vision errors. It also starts and
 stops preview, runs a short headless overlay viewer smoke when laptop-side
 dependencies are available, enables teleop, sends only a zero command, verifies
-that the stamped controller reference receives it, and disables teleop. This is
-an acceptance check for the operator profile, not a substitute for recorded
-hardware run evidence.</p>
+that the stamped controller reference receives it, and disables teleop.</p>
 
 
 
@@ -1742,7 +1718,7 @@ hardware run evidence.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="October 2, 2026 22:04:21 UTC">October 2, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="October 2, 2026 23:11:01 UTC">October 2, 2026</span>
   </span>
 
     
