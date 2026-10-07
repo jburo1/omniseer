@@ -169,20 +169,31 @@ class RealLaunchStructureTests(unittest.TestCase):
         self.assertIn("--output", command_text)
         self.assertIn("experiment_out_dir", command_text)
         self.assertIn("rosbag", command_text)
-        for topic in (
-            "/yolo/detections",
-            "/vision/perf",
-            "/imu",
-            "/encoder_counts",
-            "/scan",
-            "/mecanum_drive_controller/odometry",
-            "/mecanum_drive_controller/reference",
-            "/cmd_vel_autonomy",
-            "/cmd_vel_keyboard",
-            "/tf",
-            "/tf_static",
-        ):
-            self.assertIn(topic, command_text)
+        recorded_topics = tuple(
+            _flatten_launch_value(argument)
+            for argument in rosbag_process.cmd
+            if _flatten_launch_value(argument).startswith("/")
+        )
+        self.assertEqual(
+            recorded_topics,
+            (
+                "/yolo/detections",
+                "/vision/perf",
+                "/imu",
+                "/encoder_counts",
+                "/scan",
+                "/range",
+                "/mecanum_drive_controller/odometry",
+                "/odometry/filtered",
+                "/mecanum_drive_controller/reference",
+                "/cmd_vel_nav",
+                "/cmd_vel_autonomy",
+                "/cmd_vel_keyboard",
+                "/diagnostics",
+                "/tf",
+                "/tf_static",
+            ),
+        )
         launch_source = (Path(__file__).resolve().parents[1] / "launch" / "real.launch.py").read_text(encoding="utf-8")
         self.assertIn('condition=IfCondition(config["start_rosbag_recording"])', launch_source)
 
