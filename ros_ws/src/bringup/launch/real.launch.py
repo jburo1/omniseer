@@ -332,6 +332,7 @@ def _build_real_bringup_actions(*, pkg_bringup, config):
             "/cmd_vel_nav",
             "/cmd_vel_autonomy",
             "/cmd_vel_keyboard",
+            "/commissioning/phase",
             "/diagnostics",
             "/tf",
             "/tf_static",

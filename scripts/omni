@@ -85,6 +85,7 @@ Usage:
   scripts/omni run sim [--yolo] [launch args...]
   scripts/omni run real [--profile <name>] [recording flags] [--mode <mode>] [mode] [launch args...]
   scripts/omni run autonomy --classes <classes> [autonomy args...] [-- launch args...]
+  scripts/omni run commissioning [--dry-run]
   scripts/omni run monitor [monitor args...]
   scripts/omni run teleop
 
@@ -295,6 +296,9 @@ EOF
         ;;
       autonomy)
         exec "${script_dir}/run/autonomy.sh" "$@"
+        ;;
+      commissioning)
+        exec "${script_dir}/run/commissioning.sh" "$@"
         ;;
       monitor)
         exec "${script_dir}/run/monitor.sh" "$@"

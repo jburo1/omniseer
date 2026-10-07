@@ -8,7 +8,9 @@
   <license>Apache-2.0</license>
 
   <depend>rclpy</depend>
+  <depend>geometry_msgs</depend>
   <depend>omniseer_msgs</depend>
+  <depend>std_msgs</depend>
   <depend>yolo_msgs</depend>
 
   <test_depend>ament_copyright</test_depend>

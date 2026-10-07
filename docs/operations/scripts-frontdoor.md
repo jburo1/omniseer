@@ -243,6 +243,7 @@ generated interfaces changed.
 scripts/omni run sim [--yolo] [--yolo-device <device>] [--yolo-model <path>] [launch args...]
 scripts/omni run real [--profile <name>] [recording flags] [--mode <mode>] [mode] [launch args...]
 scripts/omni run autonomy --classes <classes> [options] [-- launch args...]
+scripts/omni run commissioning [--dry-run]
 scripts/omni run monitor [monitor args...]
 scripts/omni run teleop
 ```
@@ -336,6 +337,24 @@ scripts/omni run real verify
 scripts/omni run real --record-run demo_001
 scripts/omni run real --profile perception --record-run demo_001
 ```
+
+### `run commissioning`
+
+Runs the one-shot physical-motion commissioning sequence from
+`omniseer_experiments`. It publishes stamped commands only to
+`/cmd_vel_autonomy`, so the existing `twist_mux` and Teensy command path
+remain in control. It does not start real bringup or recording; start a
+recorded real launch first.
+
+```bash
+scripts/omni run commissioning --dry-run
+scripts/omni run commissioning
+```
+
+The default 59-second sequence publishes at 20 Hz, contains one nonzero axis
+per motion phase, and finishes with additional zero commands. It marks the
+active phase on `/commissioning/phase`; recorded real rosbags include that
+topic in the existing allowlist.
 
 ### `run autonomy`
 

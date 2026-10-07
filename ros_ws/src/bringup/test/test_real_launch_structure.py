@@ -214,6 +214,7 @@ class RealLaunchStructureTests(unittest.TestCase):
                 "/cmd_vel_nav",
                 "/cmd_vel_autonomy",
                 "/cmd_vel_keyboard",
+                "/commissioning/phase",
                 "/diagnostics",
                 "/tf",
                 "/tf_static",
