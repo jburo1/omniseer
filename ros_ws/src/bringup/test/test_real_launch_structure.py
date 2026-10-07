@@ -2,6 +2,7 @@ import importlib.util
 import unittest
 from pathlib import Path
 
+import yaml
 from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription, RegisterEventHandler
 from launch_ros.actions import Node
 
@@ -37,6 +38,30 @@ def _walk_entities(entities):
 
 
 class RealLaunchStructureTests(unittest.TestCase):
+    def test_real_ekf_uses_commissioning_baseline_fusion(self) -> None:
+        real_launch = _load_launch_module("real.launch.py")
+        defaults = dict(real_launch._REAL_ARGUMENT_DEFAULTS)
+        self.assertEqual(defaults["ekf_params_file"], "ekf_fusion_real.yaml")
+
+        config_path = Path(__file__).resolve().parents[1] / "config" / defaults["ekf_params_file"]
+        parameters = yaml.safe_load(config_path.read_text(encoding="utf-8"))["ekf_filter"]["ros__parameters"]
+
+        self.assertTrue(parameters["two_d_mode"])
+        self.assertEqual(parameters["odom_frame"], "odom")
+        self.assertEqual(parameters["world_frame"], "odom")
+        self.assertEqual(parameters["base_link_frame"], "base_link")
+        self.assertTrue(parameters["publish_tf"])
+        self.assertEqual(parameters["odom0"], "/mecanum_drive_controller/odometry")
+        self.assertEqual(
+            parameters["odom0_config"],
+            [False, False, False, False, False, False, True, True, False, False, False, False, False, False, False],
+        )
+        self.assertEqual(parameters["imu0"], "/imu")
+        self.assertEqual(
+            parameters["imu0_config"],
+            [False, False, False, False, False, False, False, False, False, False, False, True, False, False, False],
+        )
+
     def test_real_launch_runs_pre_launch_cleanup_before_bringup(self) -> None:
         module = _load_launch_module("real.launch.py")
         launch_description = module.generate_launch_description()
