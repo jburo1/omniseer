@@ -1,4 +1,5 @@
 import importlib.util
+import math
 import unittest
 from pathlib import Path
 
@@ -38,6 +39,56 @@ def _walk_entities(entities):
 
 
 class RealLaunchStructureTests(unittest.TestCase):
+    def test_real_ekf_covariances_are_positive_15_element_diagonals(self) -> None:
+        config_path = Path(__file__).resolve().parents[1] / "config" / "ekf_fusion_real.yaml"
+        parameters = yaml.safe_load(config_path.read_text(encoding="utf-8"))["ekf_filter"]["ros__parameters"]
+
+        self.assertEqual(
+            parameters["initial_estimate_covariance"],
+            [
+                4.0e-4,
+                4.0e-4,
+                1.0e-6,
+                1.0e-6,
+                1.0e-6,
+                1.2e-3,
+                2.5e-3,
+                2.5e-3,
+                1.0e-6,
+                1.0e-6,
+                1.0e-6,
+                4.0e-4,
+                1.0e-2,
+                1.0e-2,
+                1.0e-6,
+            ],
+        )
+        self.assertEqual(
+            parameters["process_noise_covariance"],
+            [
+                1.0e-6,
+                1.0e-6,
+                1.0e-6,
+                1.0e-6,
+                1.0e-6,
+                1.0e-6,
+                0.02,
+                0.02,
+                1.0e-6,
+                1.0e-6,
+                1.0e-6,
+                0.001,
+                1.0e-3,
+                1.0e-3,
+                1.0e-6,
+            ],
+        )
+
+        for name in ("initial_estimate_covariance", "process_noise_covariance"):
+            covariance = parameters[name]
+            self.assertEqual(len(covariance), 15, name)
+            self.assertTrue(all(math.isfinite(value) and value > 0.0 for value in covariance), name)
+
     def test_real_ekf_uses_commissioning_baseline_fusion(self) -> None:
         real_launch = _load_launch_module("real.launch.py")
         defaults = dict(real_launch._REAL_ARGUMENT_DEFAULTS)
@@ -121,16 +172,16 @@ class RealLaunchStructureTests(unittest.TestCase):
             (
                 entity
                 for entity in _walk_entities(launch_description.entities)
-                if isinstance(entity, ExecuteProcess) and "ros2 topic echo --once" in _flatten_launch_value(entity.cmd)
+                if isinstance(entity, ExecuteProcess) and "wait_for_topics.py" in _flatten_launch_value(entity.cmd)
             ),
             None,
         )
         self.assertIsNotNone(wait_action, "expected a boundary-topic wait process")
 
         cmd_text = _flatten_launch_value(wait_action.cmd)
-        self.assertIn("ros2 topic echo --once", cmd_text)
+        self.assertIn("wait_for_topics.py", cmd_text)
         self.assertIn("/encoder_counts", cmd_text)
-        self.assertNotIn("ros2 topic list", cmd_text)
+        self.assertIn("/imu", cmd_text)
 
     def test_real_launch_includes_optional_experiment_recorder(self) -> None:
         module = _load_launch_module("real.launch.py")

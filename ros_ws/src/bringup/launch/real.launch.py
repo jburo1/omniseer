@@ -455,25 +455,14 @@ def _build_real_bringup_actions(*, pkg_bringup, config):
 
     wait_boundary_topics = ExecuteProcess(
         cmd=[
-            "bash",
-            "-lc",
-            (
-                "set -euo pipefail\n"
-                'timeout_sec="$1"\n'
-                "check_topic() {\n"
-                '  local topic="$1"\n'
-                '  if ! timeout "${timeout_sec}" ros2 topic echo --once "${topic}" >/dev/null 2>&1; then\n'
-                '    echo "Timed out waiting for first message on ${topic}" >&2\n'
-                "    exit 1\n"
-                "  fi\n"
-                "}\n"
-                "check_topic /imu\n"
-                "check_topic /encoder_counts\n"
-                "check_topic /scan\n"
-                "check_topic /mecanum_drive_controller/odometry\n"
-            ),
-            "bash",
+            "python3",
+            PathJoinSubstitution([pkg_bringup, "scripts", "wait_for_topics.py"]),
+            "--timeout-sec",
             config["boundary_topics_timeout_sec"],
+            "/imu",
+            "/encoder_counts",
+            "/scan",
+            "/mecanum_drive_controller/odometry",
         ],
         name="wait_real_boundary_topics",
         condition=IfCondition(config["wait_for_boundary_topics"]),

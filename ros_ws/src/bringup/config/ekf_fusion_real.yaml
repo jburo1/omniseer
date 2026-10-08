@@ -36,25 +36,31 @@ ekf_filter:
         false, false, true,
         false, false, false ]
 
-    process_noise_covariance: [0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                               0.0, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                               0.0, 0.0, 0.06, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                               0.0, 0.0, 0.0, 0.03, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                               0.0, 0.0, 0.0, 0.0, 0.03, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                               0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                               0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                               0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                               0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.04, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                               0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0,
-                               0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.01, 0.0, 0.0, 0.0, 0.0,
-                               0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0,
-                               0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.01, 0.0, 0.0,
-                               0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.01, 0.0,
-                               0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.015]
+    # Kilted robot_localization accepts a 15-element diagonal in state order:
+    # x, y, z [m^2]; roll, pitch, yaw [rad^2]; vx, vy, vz [(m/s)^2];
+    # vroll, vpitch, vyaw [(rad/s)^2]; ax, ay, az [(m/s^2)^2].
+    #
+    # Each EKF prediction adds this process covariance. x/y and yaw permit
+    # 1 mm and 0.057 deg RMS unmodelled change per 20 Hz prediction; vx/vy
+    # and vyaw use conservative commissioning-v2 experimental allowances.
+    # These are model error/slip allowances, not calibrated ground truth or
+    # sensor measurements.
+    # The constrained 2D states retain small positive variances so the
+    # covariance remains well-conditioned.
+    process_noise_covariance:
+      [ 1.0e-6, 1.0e-6, 1.0e-6,
+        1.0e-6, 1.0e-6, 1.0e-6,
+        0.02, 0.02, 1.0e-6,
+        1.0e-6, 1.0e-6, 0.001,
+        1.0e-3, 1.0e-3, 1.0e-6 ]
 
+    # The robot is placed at the local odom origin before startup. Use a
+    # 2 cm RMS placement uncertainty, 2 deg RMS initial heading uncertainty,
+    # and stationary-but-not-exactly-known initial velocity/rate. This is a
+    # prior, not a claim about encoder or IMU measurement noise.
     initial_estimate_covariance:
-      [ 1e3, 1e3, 1e-9,
-        1e-9, 1e-9, 1e2,
-        10.0, 10.0, 1e-9,
-        1e-9, 1e-9, 10.0,
-        1.0, 1.0, 1e-9 ]
+      [ 4.0e-4, 4.0e-4, 1.0e-6,
+        1.0e-6, 1.0e-6, 1.2e-3,
+        2.5e-3, 2.5e-3, 1.0e-6,
+        1.0e-6, 1.0e-6, 4.0e-4,
+        1.0e-2, 1.0e-2, 1.0e-6 ]
