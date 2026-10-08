@@ -1,18 +1,20 @@
 import unittest
 from contextlib import redirect_stdout
 from io import StringIO
+from types import ModuleType
+from unittest.mock import patch
 
+from omniseer_experiments.commissioning_motion import main
 from omniseer_experiments.commissioning_sequence import (
     DEFAULT_PHASES,
     MAX_ABS_VX_M_S,
-    MotionCommand,
     CommissioningPhase,
+    MotionCommand,
     execute_sequence,
     phase_markers,
     total_duration_sec,
     validate_phase,
 )
-from omniseer_experiments.commissioning_motion import main
 
 
 class _FakeClock:
@@ -101,3 +103,54 @@ class CommissioningSequenceTests(unittest.TestCase):
             self.assertEqual(main(["--dry-run"]), 0)
         self.assertIn("settle_initial", output.getvalue())
         self.assertIn("Total duration: 59.0 s", output.getvalue())
+
+    def test_ctrl_c_keeps_ros_context_alive_for_terminal_zero_commands(self) -> None:
+        class FakeLogger:
+            def warning(self, _message: str) -> None:
+                pass
+
+            def info(self, _message: str) -> None:
+                pass
+
+        class FakeRunner:
+            instance: "FakeRunner | None" = None
+
+            def __init__(self) -> None:
+                self.destroyed = False
+                FakeRunner.instance = self
+
+            def get_logger(self) -> FakeLogger:
+                return FakeLogger()
+
+            def run(self) -> bool:
+                raise KeyboardInterrupt
+
+            def destroy_node(self) -> None:
+                self.destroyed = True
+
+        fake_rclpy = ModuleType("rclpy")
+        fake_rclpy.init_calls = []
+        fake_rclpy.shutdown_calls = 0
+        fake_rclpy.init = lambda **kwargs: fake_rclpy.init_calls.append(kwargs)
+        fake_rclpy.ok = lambda: True
+        fake_rclpy.shutdown = lambda: setattr(fake_rclpy, "shutdown_calls", fake_rclpy.shutdown_calls + 1)
+        fake_signals = ModuleType("rclpy.signals")
+        fake_signals.SignalHandlerOptions = type("SignalHandlerOptions", (), {"NO": object()})
+        fake_runner_module = ModuleType("omniseer_experiments.commissioning_runner")
+        fake_runner_module.CommissioningMotionRunner = FakeRunner
+
+        with patch.dict(
+            "sys.modules",
+            {
+                "rclpy": fake_rclpy,
+                "rclpy.signals": fake_signals,
+                "omniseer_experiments.commissioning_runner": fake_runner_module,
+            },
+        ):
+            self.assertEqual(main([]), 130)
+
+        self.assertEqual(
+            fake_rclpy.init_calls, [{"args": None, "signal_handler_options": fake_signals.SignalHandlerOptions.NO}]
+        )
+        self.assertEqual(fake_rclpy.shutdown_calls, 1)
+        self.assertTrue(FakeRunner.instance.destroyed)

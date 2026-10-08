@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Callable, Sequence
+from typing import Callable
 
 COMMAND_RATE_HZ = 20.0
 MAX_ABS_VX_M_S = 0.08
@@ -126,9 +127,9 @@ def execute_sequence(
             try:
                 publish_phase("terminal_zero")
                 publish_command(ZERO_COMMAND)
-            except Exception:  # noqa: BLE001 - terminal safety is best effort
+            except Exception:
                 pass
             try:
                 sleep(period_sec)
-            except Exception:  # noqa: BLE001 - preserve the original failure
+            except Exception:
                 pass

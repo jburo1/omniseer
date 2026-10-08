@@ -13,6 +13,7 @@ from omniseer_experiments.commissioning_sequence import (
     total_duration_sec,
 )
 
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run the one-shot real-hardware commissioning motion sequence.")
     parser.add_argument(
@@ -42,10 +43,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 0
 
     import rclpy
+    from rclpy.signals import SignalHandlerOptions
 
     from omniseer_experiments.commissioning_runner import CommissioningMotionRunner
 
-    rclpy.init(args=None)
+    # Keep Ctrl-C as Python's KeyboardInterrupt until execute_sequence has sent
+    # its bounded terminal-zero sequence.  The default rclpy SIGINT handler
+    # shuts down the context first, making those safety publishes impossible.
+    rclpy.init(args=None, signal_handler_options=SignalHandlerOptions.NO)
     runner = CommissioningMotionRunner()
     try:
         runner.get_logger().warning(
@@ -60,7 +65,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     except KeyboardInterrupt:
         runner.get_logger().warning("commissioning sequence interrupted by Ctrl-C; terminal zero commands requested")
         return 130
-    except Exception as exc:  # noqa: BLE001 - report after execute_sequence safety finally
+    except Exception as exc:
         runner.get_logger().error(f"commissioning sequence failed: {exc}")
         return 1
     finally:
