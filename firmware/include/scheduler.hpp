@@ -41,7 +41,11 @@ public:
         continue;
       if (static_cast<int32_t>(now - t.next_run_us) >= 0)
       {
-        t.next_run_us += t.period_us;
+        // The signed comparison above is wrap-safe while a deadline is less than
+        // half the uint32_t timer range away.  Move to the first deadline after
+        // now so a blocked task is run once rather than replaying missed periods.
+        const uint32_t lateness_us = now - t.next_run_us;
+        t.next_run_us = now + (t.period_us - (lateness_us % t.period_us));
         t.fn();
       }
     }
