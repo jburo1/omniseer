@@ -44,6 +44,13 @@ jobs:
           set -eux
           scripts/omni build firmware
 
+      - name: Test firmware source contracts
+        shell: bash
+        run: |
+          set -eux
+          python3 -m pip install pytest==7.4.4
+          python3 -m pytest -q tests/test_firmware_imu_covariance.py
+
       - name: Upload firmware build outputs
         if: always()
         uses: actions/upload-artifact@v4

@@ -11,6 +11,10 @@ static MicroRosNode* g_micro_ros_node_instance = nullptr;
 namespace
 {
 
+  // First-pass engineering assumption for BNO055 gyro-z noise, not a completed sensor calibration.
+  // The real-hardware EKF currently fuses only angular velocity about z.
+  constexpr double IMU_GYRO_Z_VARIANCE_RAD2_PER_S2 = 1e-4;
+
   inline bool rcl_check(rcl_ret_t rc, const char* where)
   {
     if (rc != RCL_RET_OK && g_micro_ros_node_instance)
@@ -426,6 +430,7 @@ void MicroRosNode::_init_messaging()
   std_msgs__msg__String__init(&_debug_msg);
 
   rosidl_runtime_c__String__assign(&_imu_msg.header.frame_id, "imu_link");
+  _imu_msg.angular_velocity_covariance[8] = IMU_GYRO_Z_VARIANCE_RAD2_PER_S2;
   rosidl_runtime_c__String__assign(&_sonar_msg.header.frame_id, "sonar_link");
   rosidl_runtime_c__String__assign(&_battery_msg.header.frame_id,
                                    "base_link");
