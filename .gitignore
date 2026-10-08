@@ -109,6 +109,9 @@ docs/software/project_journey.md
 # --- Backups ---
 *.bak
 
+# --- Root-local archives ---
+/*.zip
+
 # --- ROS bag/log artifacts ---
 *.db3
 *.mcap
