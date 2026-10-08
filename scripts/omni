@@ -56,6 +56,7 @@ Examples:
   scripts/omni runs topology runs/imported/demo_001/ros_graph/topology.json runs/imported/demo_001/ros_graph/topology.svg
   scripts/omni runs annotate runs/imported/demo_001
   scripts/omni runs report runs/imported/demo_001
+  scripts/omni runs commissioning runs/imported/commissioning_001
   scripts/omni runs video runs/imported/demo_001
   scripts/omni runs compare runs/demo_001
   scripts/omni runs local-list --root runs
@@ -122,6 +123,7 @@ Usage:
   scripts/omni runs inspect <run_dir> [--json] [--require-complete]
   scripts/omni runs annotate <run_dir> [--overwrite]
   scripts/omni runs report <run_dir> [--overwrite]   # also annotates evidence
+  scripts/omni runs commissioning <run_dir> [--overwrite]
   scripts/omni runs topology <topology.json> <output.svg>
   scripts/omni runs comparison-report <reference_run> --trial <run_dir> --trial <run_dir> --trial <run_dir> --trial <run_dir> [--comparison <name>] [--truth <path>|--objects <path>] [--overwrite]
   scripts/omni runs video <run_dir>
@@ -337,6 +339,10 @@ EOF
       report)
         omni_source_ros_workspace
         exec ros2 run omniseer_experiments report_run "$@"
+        ;;
+      commissioning)
+        omni_source_ros_workspace
+        exec ros2 run omniseer_experiments analyze_commissioning "$@"
         ;;
       topology)
         omni_source_ros_workspace

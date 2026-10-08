@@ -356,6 +356,19 @@ per motion phase, and finishes with additional zero commands. It marks the
 active phase on `/commissioning/phase`; recorded real rosbags include that
 topic in the existing allowlist.
 
+### `runs commissioning`
+
+Generates derived, offline diagnostics for a completed commissioning RunBundle.
+It reads the bag but never publishes ROS commands or changes raw evidence.
+
+```bash
+scripts/omni runs commissioning runs/<run_id>
+```
+
+The analyzer writes `analysis/commissioning/summary.json`, `summary.md`, and
+SVG time-series/trajectory plots below the RunBundle. Use `--overwrite` only to
+replace that derived analysis directory.
+
 ### `run autonomy`
 
 Starts the real `operator` profile with bounded target-centering autonomy

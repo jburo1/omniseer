@@ -252,6 +252,32 @@ def test_omni_runs_report_dispatches_to_report_run(tmp_path: Path) -> None:
     assert result.stdout == "ros2 run omniseer_experiments report_run runs/imported/demo_001 --overwrite\n"
 
 
+def test_omni_runs_commissioning_dispatches_to_offline_analyzer(tmp_path: Path) -> None:
+    setup_file = tmp_path / "setup.bash"
+    ros2 = tmp_path / "ros2"
+    _write_fake_setup(setup_file)
+    _write_fake_ros2(ros2)
+    env = os.environ.copy()
+    env["PATH"] = f"{tmp_path}:{env['PATH']}"
+    env["OMNISEER_ROS_SETUP"] = str(setup_file)
+    env["OMNISEER_WS_SETUP"] = str(setup_file)
+
+    result = subprocess.run(
+        ["scripts/omni", "runs", "commissioning", "runs/imported/commissioning_001", "--overwrite"],
+        cwd=REPO_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert (
+        result.stdout
+        == "ros2 run omniseer_experiments analyze_commissioning runs/imported/commissioning_001 --overwrite\n"
+    )
+
+
 def test_omni_runs_comparison_report_dispatches_to_console_entry_point(tmp_path: Path) -> None:
     setup_file = tmp_path / "setup.bash"
     ros2 = tmp_path / "ros2"
