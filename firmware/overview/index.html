@@ -1557,10 +1557,15 @@ contract is documented on the <a href="../../robot-runtime/ros-packages/">ROS bo
 <p>To build and upload to a connected Teensy using the repository's headless helper:</p>
 <div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span>flash<span class="w"> </span>teensy
 </code></pre></div>
-<p>The wrapper resolves PlatformIO dependencies, applies the repository's
-micro-ROS PlatformIO compatibility patch, and uploads with the configured
-<code>teensy-cli</code> protocol. The flash helper can fall back to <code>teensy_loader_cli</code>
-when the PlatformIO upload fails and the built HEX file is available.</p>
+<p>The wrapper uses the already-installed PlatformIO and micro-ROS Python
+dependencies, applies the repository's micro-ROS PlatformIO compatibility
+patch, compiles the <code>teensy41</code> firmware, and then uploads that newly built HEX
+directly with <code>teensy_loader_cli</code>. The loader uses its soft-reboot and wait
+options when supported, and retries a failed write once while the board remains
+in the bootloader. Each wait is bounded (30 seconds by default, configurable
+with <code>TEENSY_LOADER_WAIT_SECONDS</code>) so an unavailable bootloader cannot hang the
+workflow indefinitely. Missing prerequisites fail with setup guidance rather
+than being installed by the flash command or the micro-ROS build hook.</p>
 <h2 id="failure-and-safety-behavior">Failure and Safety Behavior<a class="headerlink" href="#failure-and-safety-behavior" title="Permanent link">&para;</a></h2>
 <p>The motion controller substitutes a zero velocity command when no command has
 arrived for one second; the 100 Hz motor task then writes the resulting zero
@@ -1604,7 +1609,7 @@ and <a href="../../verification/evidence/">Verification Evidence</a>.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="October 2, 2026 21:55:23 UTC">October 2, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="October 8, 2026 02:19:24 UTC">October 8, 2026</span>
   </span>
 
     
