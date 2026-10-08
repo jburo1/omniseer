@@ -102,10 +102,15 @@ To build and upload to a connected Teensy using the repository's headless helper
 scripts/omni flash teensy
 ```
 
-The wrapper resolves PlatformIO dependencies, applies the repository's
-micro-ROS PlatformIO compatibility patch, and uploads with the configured
-`teensy-cli` protocol. The flash helper can fall back to `teensy_loader_cli`
-when the PlatformIO upload fails and the built HEX file is available.
+The wrapper uses the already-installed PlatformIO and micro-ROS Python
+dependencies, applies the repository's micro-ROS PlatformIO compatibility
+patch, compiles the `teensy41` firmware, and then uploads that newly built HEX
+directly with `teensy_loader_cli`. The loader uses its soft-reboot and wait
+options when supported, and retries a failed write once while the board remains
+in the bootloader. Each wait is bounded (30 seconds by default, configurable
+with `TEENSY_LOADER_WAIT_SECONDS`) so an unavailable bootloader cannot hang the
+workflow indefinitely. Missing prerequisites fail with setup guidance rather
+than being installed by the flash command or the micro-ROS build hook.
 
 ## Failure and Safety Behavior
 
