@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 import time
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
@@ -17,6 +18,16 @@ DEFAULT_PROC_NET_WIRELESS = Path("/proc/net/wireless")
 DEFAULT_PROC_ROOT = Path("/proc")
 DEFAULT_SYS_ROOT = Path("/sys")
 DEFAULT_THERMAL_ROOT = Path("/sys/class/thermal")
+DEFAULT_DEBUGFS_ROOT = Path("/sys/kernel/debug")
+NPU_DEVFREQ_NAME = "fdab0000.npu"
+NPU_COMPATIBLE = "rockchip,rk3588-rknpu"
+NPU_CORE_KEYS = ("core0", "core1", "core2")
+
+# The vendor rknpu debugfs implementation writes, for RK3588:
+# ``NPU load:  Core0:  0%, Core1:  0%, Core2:  0%,``.  Keep the parser
+# tolerant of spacing while requiring the labels and percent units so an
+# unrelated or changed debugfs payload is never reported as utilization.
+_RKNPU_LOAD_PATTERN = re.compile(r"\bCore([0-2])\s*:\s*([0-9]+)\s*%")
 
 TimeNs = Callable[[], int]
 MonotonicSeconds = Callable[[], float]
@@ -198,7 +209,7 @@ def default_temperature_paths(root: Path = DEFAULT_THERMAL_ROOT) -> tuple[Path, 
 def read_first_line(path: Path) -> str | None:
     try:
         return path.read_text(encoding="utf-8").splitlines()[0].strip()
-    except (IndexError, OSError):
+    except (IndexError, OSError, UnicodeError):
         return None
 
 
@@ -348,6 +359,86 @@ def _unavailable_battery_snapshot() -> dict[str, Any]:
     }
 
 
+def parse_rknpu_load(text: str) -> dict[str, float | None]:
+    """Parse the RK3588 rknpu debugfs load report without inventing values."""
+
+    utilization: dict[str, float | None] = {key: None for key in NPU_CORE_KEYS}
+    for core, raw_percent in _RKNPU_LOAD_PATTERN.findall(text):
+        percent = int(raw_percent)
+        if 0 <= percent <= 100:
+            utilization[f"core{core}"] = float(percent)
+    return utilization
+
+
+def _read_npu_compatible(path: Path) -> tuple[str, ...]:
+    """Read a device-tree compatible property, which is NUL-separated bytes."""
+
+    try:
+        return tuple(item.decode("utf-8") for item in path.read_bytes().split(b"\0") if item)
+    except (OSError, UnicodeError):
+        return ()
+
+
+def find_rk3588_npu_devfreq_dir(root: Path) -> Path | None:
+    """Locate the NPU devfreq directory, validating the RK3588 device identity."""
+
+    try:
+        entries = tuple(sorted(root.iterdir()))
+    except OSError:
+        return None
+    for entry in entries:
+        if read_first_line(entry / "name") == NPU_DEVFREQ_NAME:
+            return entry
+        if NPU_COMPATIBLE in _read_npu_compatible(entry / "device/of_node/compatible"):
+            return entry
+    return None
+
+
+def unavailable_npu_snapshot() -> dict[str, Any]:
+    """Return the stable NPU record shape for systems without RK3588 telemetry."""
+
+    return {
+        "available": False,
+        "utilization_percent": {key: None for key in NPU_CORE_KEYS},
+        "frequency_hz": None,
+        "governor": None,
+    }
+
+
+def read_rk3588_npu_snapshot(
+    *,
+    debugfs_root: Path = DEFAULT_DEBUGFS_ROOT,
+    devfreq_root: Path = DEFAULT_SYS_ROOT / "class/devfreq",
+) -> dict[str, Any]:
+    """Read hardware-global RK3588 NPU metrics from optional kernel interfaces.
+
+    Utilization comes from the vendor driver's debugfs ``rknpu/load`` report.
+    Frequency and governor come from the matching devfreq directory.  Each
+    source is independent: a container may expose sysfs while hiding debugfs.
+    """
+
+    snapshot = unavailable_npu_snapshot()
+    try:
+        load_text = (debugfs_root / "rknpu/load").read_text(encoding="utf-8")
+    except (OSError, UnicodeError):
+        load_text = None
+    if load_text is not None:
+        snapshot["utilization_percent"] = parse_rknpu_load(load_text)
+
+    devfreq_dir = find_rk3588_npu_devfreq_dir(devfreq_root)
+    if devfreq_dir is not None:
+        frequency_hz = read_int(devfreq_dir / "cur_freq")
+        # A negative frequency is malformed.  Zero is preserved if the driver
+        # exposes it, rather than being mistaken for an unavailable reading.
+        snapshot["frequency_hz"] = frequency_hz if frequency_hz is None or frequency_hz >= 0 else None
+        governor = read_first_line(devfreq_dir / "governor")
+        snapshot["governor"] = governor if governor and re.fullmatch(r"[A-Za-z0-9_.-]+", governor) else None
+
+    values = (*snapshot["utilization_percent"].values(), snapshot["frequency_hz"], snapshot["governor"])
+    snapshot["available"] = any(value is not None for value in values)
+    return snapshot
+
+
 class SystemTelemetrySampler:
     """Sample host resource state without owning any output files."""
 
@@ -359,6 +450,8 @@ class SystemTelemetrySampler:
         proc_net_wireless_path: Path = DEFAULT_PROC_NET_WIRELESS,
         proc_root: Path = DEFAULT_PROC_ROOT,
         sys_root: Path = DEFAULT_SYS_ROOT,
+        debugfs_root: Path | None = None,
+        devfreq_root: Path | None = None,
         temperature_paths: Sequence[Path] | None = None,
         time_ns: TimeNs = time.time_ns,
         monotonic: MonotonicSeconds = time.monotonic,
@@ -368,6 +461,8 @@ class SystemTelemetrySampler:
         self._proc_net_wireless_path = proc_net_wireless_path
         self._proc_root = proc_root
         self._sys_root = sys_root
+        self._debugfs_root = debugfs_root or sys_root / "kernel/debug"
+        self._devfreq_root = devfreq_root or sys_root / "class/devfreq"
         self._temperature_paths = tuple(temperature_paths) if temperature_paths is not None else None
         self._time_ns = time_ns
         self._monotonic = monotonic
@@ -407,6 +502,10 @@ class SystemTelemetrySampler:
             ),
             onboard_battery=read_onboard_battery_snapshot(self._sys_root),
             process_cpu=process_cpu,
+            npu=read_rk3588_npu_snapshot(
+                debugfs_root=self._debugfs_root,
+                devfreq_root=self._devfreq_root,
+            ),
         )
 
     def _read_process_cpu(self) -> list[dict[str, object]]:
@@ -474,14 +573,18 @@ __all__ = [
     "SystemTelemetrySampler",
     "cpu_percent",
     "default_temperature_paths",
+    "find_rk3588_npu_devfreq_dir",
     "parse_proc_meminfo",
     "parse_proc_pid_stat",
     "parse_proc_pid_status_rss_mb",
     "parse_proc_stat_cpu",
+    "parse_rknpu_load",
     "read_network_snapshot",
     "read_onboard_battery_snapshot",
+    "read_rk3588_npu_snapshot",
     "read_temperature_c",
     "read_thermal_snapshot",
     "read_wireless_stats",
     "select_wireless_interface",
+    "unavailable_npu_snapshot",
 ]

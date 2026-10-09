@@ -282,6 +282,8 @@ def test_runtime_run_uses_robot_container_flags_and_provenance(tmp_path: Path) -
     assert "--ipc=host" in log
     assert "/dev:/dev" in log
     assert "/run/udev:/run/udev:ro" in log
+    assert "/sys/class/devfreq:/sys/class/devfreq:ro" in log
+    assert "/sys/kernel/debug:/sys/kernel/debug:ro" in log
     assert f"{env['OMNISEER_RUNTIME_RUNS_HOST_ROOT']}:/runs" in log
     assert "OMNISEER_CONTAINER_IMAGE_REF=ghcr.io/jburo1/omniseer-robot-runtime:runtime-test" in log
     assert (

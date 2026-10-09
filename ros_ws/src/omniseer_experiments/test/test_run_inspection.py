@@ -310,6 +310,20 @@ class RunInspectionTests(unittest.TestCase):
         self.assertEqual(inspection.message_counts, {"detections": 1, "perf": 1, "system": 1})
         self.assertEqual(inspection.issues, ())
 
+    def test_legacy_system_record_without_npu_remains_readable(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "demo_001"
+            _write_completed_bundle(run_dir, include_system=True)
+            legacy_record = _system_record()
+            legacy_record.pop("npu")
+            (run_dir / "system.jsonl").write_text(json.dumps(legacy_record) + "\n", encoding="utf-8")
+
+            inspection = inspect_run(run_dir)
+
+        self.assertEqual(inspection.state, STATE_COMPLETE)
+        self.assertEqual(inspection.message_counts, {"detections": 1, "perf": 1, "system": 1})
+        self.assertEqual(inspection.issues, ())
+
     def test_valid_pipeline_telemetry_jsonl_is_optional(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             run_dir = Path(tmp) / "demo_001"

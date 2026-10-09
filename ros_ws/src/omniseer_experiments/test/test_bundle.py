@@ -654,6 +654,19 @@ class SummaryAccumulatorTests(unittest.TestCase):
         self.assertEqual(result["system"]["soc_temp_c"]["last"], 70.0)
         self.assertTrue(result["system"]["throttled_any"])
 
+    def test_system_record_includes_explicit_unavailable_npu_shape_by_default(self) -> None:
+        record = _system_record()
+
+        self.assertEqual(
+            record["npu"],
+            {
+                "available": False,
+                "utilization_percent": {"core0": None, "core1": None, "core2": None},
+                "frequency_hz": None,
+                "governor": None,
+            },
+        )
+
     def test_throttled_any_is_false_when_available_without_throttling(self) -> None:
         summary = SummaryAccumulator("demo_001")
         summary.add_system_record({"thermal": {"throttled": False}})

@@ -11,8 +11,10 @@ from omniseer_experiments.system_telemetry import (
     parse_proc_pid_stat,
     parse_proc_pid_status_rss_mb,
     parse_proc_stat_cpu,
+    parse_rknpu_load,
     read_network_snapshot,
     read_onboard_battery_snapshot,
+    read_rk3588_npu_snapshot,
     read_temperature_c,
     read_thermal_snapshot,
 )
@@ -175,6 +177,82 @@ class SystemTelemetryTests(unittest.TestCase):
     def test_temperature_missing_falls_back_to_none(self) -> None:
         self.assertIsNone(read_temperature_c([Path("/missing/temperature")]))
 
+    def test_rknpu_load_parses_each_rk3588_core(self) -> None:
+        self.assertEqual(
+            parse_rknpu_load("NPU load:  Core0:  0%, Core1: 42%, Core2: 100%,\n"),
+            {"core0": 0.0, "core1": 42.0, "core2": 100.0},
+        )
+
+    def test_rk3588_npu_snapshot_reads_debugfs_and_validated_devfreq(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            debugfs_root = root / "debug"
+            devfreq_root = root / "sys/class/devfreq"
+            (debugfs_root / "rknpu").mkdir(parents=True)
+            (debugfs_root / "rknpu/load").write_text(
+                "NPU load:  Core0:  7%, Core1: 42%, Core2: 100%,\n", encoding="utf-8"
+            )
+            npu = devfreq_root / "unrelated-directory"
+            npu.mkdir(parents=True)
+            (npu / "name").write_text("fdab0000.npu\n", encoding="utf-8")
+            (npu / "cur_freq").write_text("1000000000\n", encoding="utf-8")
+            (npu / "governor").write_text("rknpu_ondemand\n", encoding="utf-8")
+
+            snapshot = read_rk3588_npu_snapshot(debugfs_root=debugfs_root, devfreq_root=devfreq_root)
+
+        self.assertEqual(
+            snapshot,
+            {
+                "available": True,
+                "utilization_percent": {"core0": 7.0, "core1": 42.0, "core2": 100.0},
+                "frequency_hz": 1_000_000_000,
+                "governor": "rknpu_ondemand",
+            },
+        )
+
+    def test_rk3588_npu_snapshot_uses_device_tree_identity_when_devfreq_name_varies(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            devfreq_root = root / "sys/class/devfreq"
+            npu = devfreq_root / "platform-device"
+            compatible = npu / "device/of_node/compatible"
+            compatible.parent.mkdir(parents=True)
+            compatible.write_bytes(b"rockchip,rk3588-rknpu\0")
+            (npu / "cur_freq").write_text("800000000\n", encoding="utf-8")
+            (npu / "governor").write_text("userspace\n", encoding="utf-8")
+
+            snapshot = read_rk3588_npu_snapshot(debugfs_root=root / "missing", devfreq_root=devfreq_root)
+
+        self.assertTrue(snapshot["available"])
+        self.assertEqual(snapshot["frequency_hz"], 800_000_000)
+        self.assertEqual(snapshot["governor"], "userspace")
+        self.assertEqual(snapshot["utilization_percent"], {"core0": None, "core1": None, "core2": None})
+
+    def test_rk3588_npu_snapshot_keeps_missing_and_malformed_values_unavailable(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            debugfs_root = root / "debug"
+            devfreq_root = root / "sys/class/devfreq"
+            (debugfs_root / "rknpu").mkdir(parents=True)
+            (debugfs_root / "rknpu/load").write_text("Core0: 101%, Core1: nope\n", encoding="utf-8")
+            npu = devfreq_root / "fdab0000.npu"
+            npu.mkdir(parents=True)
+            (npu / "name").write_text("fdab0000.npu\n", encoding="utf-8")
+            (npu / "cur_freq").write_text("not-a-frequency\n", encoding="utf-8")
+            (npu / "governor").write_text("bad governor value\n", encoding="utf-8")
+
+            snapshot = read_rk3588_npu_snapshot(debugfs_root=debugfs_root, devfreq_root=devfreq_root)
+
+        self.assertEqual(
+            snapshot,
+            {
+                "available": False,
+                "utilization_percent": {"core0": None, "core1": None, "core2": None},
+                "frequency_hz": None,
+                "governor": None,
+            },
+        )
+
     def test_sampler_returns_minimum_record_shape(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -203,6 +281,15 @@ class SystemTelemetryTests(unittest.TestCase):
             (sys_root / "class/thermal/thermal_zone0").mkdir(parents=True)
             (sys_root / "class/thermal/thermal_zone0/temp").write_text("43000\n", encoding="utf-8")
             (sys_root / "class/thermal/thermal_zone0/type").write_text("soc-thermal\n", encoding="utf-8")
+            (sys_root / "kernel/debug/rknpu").mkdir(parents=True)
+            (sys_root / "kernel/debug/rknpu/load").write_text(
+                "NPU load:  Core0:  7%, Core1: 42%, Core2: 100%,\n", encoding="utf-8"
+            )
+            npu_devfreq = sys_root / "class/devfreq/ignored-entry"
+            npu_devfreq.mkdir(parents=True)
+            (npu_devfreq / "name").write_text("fdab0000.npu\n", encoding="utf-8")
+            (npu_devfreq / "cur_freq").write_text("1000000000\n", encoding="utf-8")
+            (npu_devfreq / "governor").write_text("rknpu_ondemand\n", encoding="utf-8")
             temperature.write_text("42000\n", encoding="utf-8")
             sampler = SystemTelemetrySampler(
                 proc_stat_path=proc_stat,
@@ -230,6 +317,15 @@ class SystemTelemetryTests(unittest.TestCase):
         self.assertEqual(record["onboard_battery"]["voltage"], 8.3)
         self.assertEqual(record["onboard_battery"]["percentage"], 71.0)
         self.assertEqual(record["process_cpu"], [])
+        self.assertEqual(
+            record["npu"],
+            {
+                "available": True,
+                "utilization_percent": {"core0": 7.0, "core1": 42.0, "core2": 100.0},
+                "frequency_hz": 1_000_000_000,
+                "governor": "rknpu_ondemand",
+            },
+        )
 
     def test_platform_snapshot_helpers_return_unavailable_shapes(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

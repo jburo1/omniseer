@@ -118,7 +118,7 @@ Common bundle files:
 | `detections.jsonl` | Yes for perception bundles | Typed `/yolo/detections` records, classes, scores, boxes, frame IDs, and timestamps | Perception outputs and class/score summaries |
 | `perf.jsonl` | Yes for perception bundles | `/vision/perf` records, producer/consumer rates, stage timing summaries, source age, processed counts, and error counters | Performance and health claims from ROS vision summaries |
 | `summary.json` | Expected after finalization | Final duration, message counts, detections by class, confidence summaries, performance summaries, errors, and dropped-record counts | Compact run status and inspection index |
-| `system.jsonl` | Optional | Low-rate CPU, sampled per-process CPU attribution, memory, thermal, network, onboard battery, and `/battery` LiPo snapshots when sources are available | Resource and system-state context |
+| `system.jsonl` | Optional | Low-rate CPU, sampled per-process CPU attribution, memory, thermal, network, onboard battery, `/battery` LiPo snapshots, and hardware-global RK3588 NPU utilization/frequency/governor snapshots when kernel interfaces are available | Resource and system-state context |
 | `pipeline_telemetry.jsonl` | Optional | Native producer/consumer stage telemetry when pipeline JSONL telemetry is enabled | Detailed native timing, freshness, and stage-status analysis |
 | `autonomy.jsonl` | Optional | Target-centering events when autonomy is launched and records events | Autonomy execution traces; absence must not be read as success or failure unless the manifest shows autonomy was requested |
 | `evidence/evidence.jsonl` | Optional | Metadata for captured evidence frames, including frame IDs, capture reasons, timing, and target metadata | Connects visual evidence to run context |
@@ -127,6 +127,15 @@ Common bundle files:
 | `provenance/` | Optional | Small copied inputs such as vocabulary, class list, vision config, and experiment config when available and size-limited; real recorded runs add bridge-emitted `resolved_vision_config.yaml` | Reproducibility context; model binaries are hashed but not copied by default. The resolved artifact captures effective bridge settings after defaults and launch overrides. |
 | `logs/bringup.log` | Optional | ROS launch stdout/stderr for recorded runs | Startup, shutdown, and runtime diagnostics |
 | `report/index.html` | Derived optional | Static report generated from the raw bundle, annotated evidence, summaries, charts, issues, and artifact links | Human-readable review artifact; raw JSONL and manifest remain the primary evidence |
+
+When a recorder has the required RK3588 kernel interfaces, every new
+`system.jsonl` record includes an `npu` object with `available`,
+`utilization_percent` (`core0`, `core1`, and `core2`), `frequency_hz`, and
+`governor`. An unavailable interface or malformed read is represented by
+`null` for that measurement. NPU readings are host-wide observations and must
+be interpreted with the RunBundle's existing model and workload provenance;
+they do not attribute usage to one model when multiple RKNN contexts run.
+Older RunBundles do not contain this additive object and remain valid.
 
 Conclusions normally require multiple files together. For example, a perception
 claim should pair `manifest.yaml` with `detections.jsonl` and `perf.jsonl`; a

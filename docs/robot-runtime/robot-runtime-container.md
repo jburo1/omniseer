@@ -128,6 +128,16 @@ image digest, launch command/profile/arguments, experiment config, experiment
 parameters, the final centered-target capture when autonomy records one, and
 the latest platform snapshots from `manifest.yaml` and `system.jsonl`.
 
+For recorded RK3588 runs, the runtime wrapper also mounts the host devfreq and
+debugfs trees read-only. The recorder samples the hardware-global NPU state at
+the existing system-telemetry interval: per-core utilization from
+`/sys/kernel/debug/rknpu/load`, and frequency and governor from the RK3588 NPU
+devfreq device. These metrics describe all NPU workloads together; they are not
+attributed to a single model. If debugfs is disabled, unmounted, inaccessible,
+or its output is not recognized, the corresponding JSON values are `null` rather
+than zero. This adds read-only telemetry access only; it does not add or change
+the runtime's existing privilege mode.
+
 Use the portable image only for launch and entrypoint checks; it defaults to
 `start_vision:=false` and is not a full robot runtime.
 

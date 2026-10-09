@@ -291,6 +291,8 @@ runtime_common_docker_args() {
     "--ipc=host" \
     "-v" "/dev:/dev" \
     "-v" "/run/udev:/run/udev:ro" \
+    "-v" "/sys/class/devfreq:/sys/class/devfreq:ro" \
+    "-v" "/sys/kernel/debug:/sys/kernel/debug:ro" \
     "-v" "${runs_bind_root}:/runs" \
     "-e" "OMNISEER_CONTAINER_IMAGE_REF=${image_ref}" \
     "-e" "OMNISEER_CONTAINER_IMAGE_DIGEST=${image_digest}"

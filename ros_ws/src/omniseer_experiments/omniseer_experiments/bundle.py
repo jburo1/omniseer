@@ -681,6 +681,7 @@ def make_system_record(
     onboard_battery: dict[str, Any] | None = None,
     lipo_battery: dict[str, Any] | None = None,
     process_cpu: list[dict[str, object]] | None = None,
+    npu: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     record: dict[str, Any] = {
         "schema_version": SCHEMA_VERSION,
@@ -690,6 +691,14 @@ def make_system_record(
         "memory_used_mb": memory_used_mb,
         "memory_available_mb": memory_available_mb,
         "soc_temp_c": soc_temp_c,
+        "npu": npu
+        if npu is not None
+        else {
+            "available": False,
+            "utilization_percent": {"core0": None, "core1": None, "core2": None},
+            "frequency_hz": None,
+            "governor": None,
+        },
     }
     if thermal is not None:
         record["thermal"] = thermal
