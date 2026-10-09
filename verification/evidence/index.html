@@ -1680,7 +1680,7 @@ contain only the streams that were enabled and available for that run.</p>
 <tr>
 <td><code>system.jsonl</code></td>
 <td>Optional</td>
-<td>Low-rate CPU, sampled per-process CPU attribution, memory, thermal, network, onboard battery, and <code>/battery</code> LiPo snapshots when sources are available</td>
+<td>Low-rate CPU, sampled per-process CPU attribution, memory, thermal, network, onboard battery, <code>/battery</code> LiPo snapshots, and hardware-global RK3588 NPU utilization/frequency/governor snapshots when kernel interfaces are available</td>
 <td>Resource and system-state context</td>
 </tr>
 <tr>
@@ -1733,6 +1733,14 @@ contain only the streams that were enabled and available for that run.</p>
 </tr>
 </tbody>
 </table>
+<p>When a recorder has the required RK3588 kernel interfaces, every new
+<code>system.jsonl</code> record includes an <code>npu</code> object with <code>available</code>,
+<code>utilization_percent</code> (<code>core0</code>, <code>core1</code>, and <code>core2</code>), <code>frequency_hz</code>, and
+<code>governor</code>. An unavailable interface or malformed read is represented by
+<code>null</code> for that measurement. NPU readings are host-wide observations and must
+be interpreted with the RunBundle's existing model and workload provenance;
+they do not attribute usage to one model when multiple RKNN contexts run.
+Older RunBundles do not contain this additive object and remain valid.</p>
 <p>Conclusions normally require multiple files together. For example, a perception
 claim should pair <code>manifest.yaml</code> with <code>detections.jsonl</code> and <code>perf.jsonl</code>; a
 native timing claim should include <code>pipeline_telemetry.jsonl</code> and the launch/config
@@ -1771,7 +1779,7 @@ observed results, inspection status, and limitations.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="October 2, 2026 23:29:05 UTC">October 2, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="October 9, 2026 20:01:38 UTC">October 9, 2026</span>
   </span>
 
     
