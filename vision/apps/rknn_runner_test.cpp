@@ -250,6 +250,36 @@ namespace
   };
 } // namespace
 
+TEST(RknnCoreMaskTest, ParsesSupportedMasks)
+{
+  using omniseer::vision::parse_rknn_core_mask;
+  using omniseer::vision::RknnCoreMask;
+
+  EXPECT_EQ(parse_rknn_core_mask("auto"), RknnCoreMask::Auto);
+  EXPECT_EQ(parse_rknn_core_mask("core0"), RknnCoreMask::Core0);
+  EXPECT_EQ(parse_rknn_core_mask("core1"), RknnCoreMask::Core1);
+  EXPECT_EQ(parse_rknn_core_mask("core2"), RknnCoreMask::Core2);
+  EXPECT_EQ(parse_rknn_core_mask("core0_1"), RknnCoreMask::Core0_1);
+  EXPECT_EQ(parse_rknn_core_mask("core0_2"), RknnCoreMask::Core0_2);
+  EXPECT_EQ(parse_rknn_core_mask("core1_2"), RknnCoreMask::Core1_2);
+  EXPECT_EQ(parse_rknn_core_mask("core0_1_2"), RknnCoreMask::Core0_1_2);
+}
+
+TEST(RknnCoreMaskTest, RejectsUnsupportedMask)
+{
+  try
+  {
+    (void) omniseer::vision::parse_rknn_core_mask("core3");
+    FAIL() << "expected invalid core mask to throw";
+  }
+  catch (const std::invalid_argument& error)
+  {
+    EXPECT_STREQ(error.what(),
+                 "runner.core_mask must be one of auto, core0, core1, core2, core0_1, core0_2, "
+                 "core1_2, core0_1_2; got \"core3\"");
+  }
+}
+
 TEST_F(RknnRunnerSmokeTest, PreflightArmsRunner)
 {
   omniseer::vision::RknnRunnerConfig cfg{};

@@ -44,6 +44,7 @@ TEST(ResolvedVisionConfigTest, WritesResolvedComparisonSettings)
   config.class_list_path      = "/models/classes.txt";
   config.pad_token            = "nothing";
   config.runner_warmup_runs   = 3;
+  config.runner_core_mask     = "core0";
   config.score_threshold      = 0.35;
   config.nms_iou_threshold    = 0.55;
   config.max_detections       = 42;
@@ -65,6 +66,7 @@ TEST(ResolvedVisionConfigTest, WritesResolvedComparisonSettings)
   EXPECT_NE(content.find("clip_vocab_path: \"/models/vocab.bpe\""), std::string::npos);
   EXPECT_NE(content.find("pad_token: \"nothing\""), std::string::npos);
   EXPECT_NE(content.find("warmup_runs: 3"), std::string::npos);
+  EXPECT_NE(content.find("core_mask: \"core0\""), std::string::npos);
   EXPECT_NE(content.find("score_threshold: 0.35"), std::string::npos);
   EXPECT_NE(content.find("nms_iou_threshold: 0.55"), std::string::npos);
   EXPECT_NE(content.find("max_detections: 42"), std::string::npos);

@@ -380,6 +380,7 @@ class RealLaunchStructureTests(unittest.TestCase):
         }
         self.assertIn("pipeline_telemetry_path", declared_names)
         self.assertIn("resolved_vision_config_path", declared_names)
+        self.assertIn("runner_core_mask", declared_names)
 
         include_text = "".join(
             str(getattr(entity, "launch_arguments", ""))
@@ -393,6 +394,7 @@ class RealLaunchStructureTests(unittest.TestCase):
         self.assertIn("evidence_jpeg_quality", include_text)
         self.assertIn("evidence_storage_budget_mb", include_text)
         self.assertIn("evidence_min_free_mb", include_text)
+        self.assertIn("runner_core_mask", include_text)
 
     def test_real_vision_launch_exposes_pipeline_telemetry_path(self) -> None:
         module = _load_launch_module("real_vision.launch.py")
@@ -405,6 +407,7 @@ class RealLaunchStructureTests(unittest.TestCase):
         }
         self.assertIn("pipeline_telemetry_path", declared_names)
         self.assertIn("resolved_vision_config_path", declared_names)
+        self.assertIn("runner_core_mask", declared_names)
         self.assertIn("evidence_dir", declared_names)
         self.assertIn("evidence_interval_sec", declared_names)
         self.assertIn("evidence_jpeg_quality", declared_names)

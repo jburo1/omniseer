@@ -20,6 +20,9 @@ namespace omniseer::vision
 {
   namespace
   {
+    constexpr const char* kCoreMaskValues =
+        "auto, core0, core1, core2, core0_1, core0_2, core1_2, core0_1_2";
+
     std::vector<uint8_t> read_model_file(const std::string& path)
     {
       std::ifstream ifs(path, std::ios::binary | std::ios::ate);
@@ -143,6 +146,29 @@ namespace omniseer::vision
       }
     }
   } // namespace
+
+  RknnCoreMask parse_rknn_core_mask(const std::string& value)
+  {
+    if (value == "auto")
+      return RknnCoreMask::Auto;
+    if (value == "core0")
+      return RknnCoreMask::Core0;
+    if (value == "core1")
+      return RknnCoreMask::Core1;
+    if (value == "core2")
+      return RknnCoreMask::Core2;
+    if (value == "core0_1")
+      return RknnCoreMask::Core0_1;
+    if (value == "core0_2")
+      return RknnCoreMask::Core0_2;
+    if (value == "core1_2")
+      return RknnCoreMask::Core1_2;
+    if (value == "core0_1_2")
+      return RknnCoreMask::Core0_1_2;
+
+    throw std::invalid_argument("runner.core_mask must be one of " + std::string(kCoreMaskValues) +
+                                "; got \"" + value + "\"");
+  }
 
   RknnRunner::RknnRunner(RknnRunnerConfig cfg) : _cfg(std::move(cfg)) {}
 
@@ -274,12 +300,21 @@ namespace omniseer::vision
     if (_cfg.model_path.empty())
       throw std::invalid_argument("RknnRunner::preflight: model_path is empty");
 
+    const RknnCoreMask   core_mask  = parse_rknn_core_mask(_cfg.core_mask);
     std::vector<uint8_t> model_data = read_model_file(_cfg.model_path);
 
     const int rc =
         rknn_init(&_ctx, model_data.data(), static_cast<uint32_t>(model_data.size()), 0, nullptr);
     if (rc != RKNN_SUCC)
       throw make_rknn_error("rknn_init", rc);
+
+    const int core_mask_rc =
+        rknn_set_core_mask(_ctx, static_cast<rknn_core_mask>(static_cast<uint32_t>(core_mask)));
+    if (core_mask_rc != RKNN_SUCC)
+    {
+      throw std::runtime_error("rknn_set_core_mask(" + _cfg.core_mask +
+                               ") failed, code=" + std::to_string(core_mask_rc));
+    }
   }
 
   void RknnRunner::_query_model_io()

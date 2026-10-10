@@ -249,6 +249,8 @@ namespace omniseer_vision_bridge
                                      cfg.producer_preflight_capture_wait_ms);
       cfg.runner_warmup_runs =
           declare_parameter<int64_t>("runner.warmup_runs", cfg.runner_warmup_runs);
+      cfg.runner_core_mask =
+          declare_parameter<std::string>("runner.core_mask", cfg.runner_core_mask);
 
       cfg.score_threshold =
           declare_parameter<double>("postprocess.score_threshold", cfg.score_threshold);
@@ -292,6 +294,7 @@ namespace omniseer_vision_bridge
               << " classes.pad_token=" << quote_or_placeholder(cfg.pad_token)
               << " producer.preflight_capture_wait_ms=" << cfg.producer_preflight_capture_wait_ms
               << " runner.warmup_runs=" << cfg.runner_warmup_runs
+              << " runner.core_mask=" << quote_or_placeholder(cfg.runner_core_mask)
               << " postprocess.score_threshold=" << cfg.score_threshold
               << " postprocess.nms_iou_threshold=" << cfg.nms_iou_threshold
               << " postprocess.max_detections=" << cfg.max_detections

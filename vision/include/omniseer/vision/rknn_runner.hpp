@@ -14,6 +14,22 @@ namespace omniseer::vision
 {
   class ImageBufferPool;
 
+  /** @brief RKNN NPU-core scheduling masks accepted by the detector runtime. */
+  enum class RknnCoreMask : uint32_t
+  {
+    Auto      = 0,
+    Core0     = 1,
+    Core1     = 2,
+    Core2     = 4,
+    Core0_1   = 3,
+    Core0_2   = 5,
+    Core1_2   = 6,
+    Core0_1_2 = 7,
+  };
+
+  /** @brief Convert a supported @c runner.core_mask value to its RKNN mask. */
+  RknnCoreMask parse_rknn_core_mask(const std::string& value);
+
   /**
    * @brief Configuration for RKNN runtime initialization and warmup.
    */
@@ -23,6 +39,9 @@ namespace omniseer::vision
     std::string model_path{};
     /// @brief Number of warmup inferences to run during preflight.
     uint32_t warmup_runs{2};
+    /// @brief RKNN NPU-core scheduling mode: auto, core0, core1, core2, core0_1, core0_2,
+    /// core1_2, or core0_1_2.
+    std::string core_mask{"auto"};
     /// @brief Print RKNN input/output tensor metadata at preflight.
     bool debug_tensor_metadata{false};
     /// @brief Print raw and dequantized output statistics for the first inference only.

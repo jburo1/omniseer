@@ -32,8 +32,9 @@ namespace omniseer_vision_bridge
     std::string class_list_path{};
     std::string pad_token{"nothing"};
 
-    int64_t producer_preflight_capture_wait_ms{200};
-    int64_t runner_warmup_runs{0};
+    int64_t     producer_preflight_capture_wait_ms{200};
+    int64_t     runner_warmup_runs{0};
+    std::string runner_core_mask{"auto"};
 
     double  score_threshold{0.25};
     double  nms_iou_threshold{0.45};

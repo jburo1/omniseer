@@ -170,6 +170,16 @@ durations, completed `ConsumerStageMask` bits, errno, and status codes.
 optional `telemetry.pipeline_jsonl_path`; `CompositeTelemetry` fans samples out
 to both when configured.
 
+## RKNN Core Selection
+
+`runner.core_mask` selects the RKNN NPU cores used by the detector. Its default,
+`auto`, leaves scheduling to the RKNN runtime. Explicit values are `core0`,
+`core1`, `core2`, `core0_1`, `core0_2`, `core1_2`, and `core0_1_2`; for example,
+set `runner.core_mask: core0` to pin YOLO-World to Core 0 during a controlled
+experiment. The bridge applies the selected mask during RKNN context startup and
+fails startup if the value is invalid or the runtime does not support it. The
+effective value is recorded in `provenance/resolved_vision_config.yaml`.
+
 ## Failure Behavior
 
 Startup validation is fail-fast. Configuration errors, missing model or class

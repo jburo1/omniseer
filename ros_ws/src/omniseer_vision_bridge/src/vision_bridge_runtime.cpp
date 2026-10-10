@@ -181,7 +181,8 @@ namespace omniseer_vision_bridge
         runner_config.model_path = config.detector_model_path;
         runner_config.warmup_runs =
             checked_non_negative_u32(config.runner_warmup_runs, "runner.warmup_runs");
-        runner = std::make_unique<omniseer::vision::RknnRunner>(runner_config);
+        runner_config.core_mask = config.runner_core_mask;
+        runner                  = std::make_unique<omniseer::vision::RknnRunner>(runner_config);
 
         omniseer::vision::ConsumerPipelineConfig consumer_config{};
         consumer_config.score_threshold =
@@ -343,6 +344,7 @@ namespace omniseer_vision_bridge
       (void) checked_u32(config.producer_preflight_capture_wait_ms,
                          "producer.preflight_capture_wait_ms");
       (void) checked_non_negative_u32(config.runner_warmup_runs, "runner.warmup_runs");
+      (void) omniseer::vision::parse_rknn_core_mask(config.runner_core_mask);
       (void) checked_u32(config.max_detections, "postprocess.max_detections");
       (void) checked_unit_float(config.score_threshold, "postprocess.score_threshold");
       (void) checked_unit_float(config.nms_iou_threshold, "postprocess.nms_iou_threshold");

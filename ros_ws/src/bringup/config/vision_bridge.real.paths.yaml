@@ -19,6 +19,7 @@ vision_bridge:
 
     producer.preflight_capture_wait_ms: 200
     runner.warmup_runs: 0
+    runner.core_mask: auto
 
     postprocess.score_threshold: 0.25
     postprocess.nms_iou_threshold: 0.45

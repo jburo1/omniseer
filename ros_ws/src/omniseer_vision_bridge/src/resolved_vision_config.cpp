@@ -94,6 +94,7 @@ namespace omniseer_vision_bridge
            << "  pad_token: " << yaml_string(config.pad_token) << "\n"
            << "runner:\n"
            << "  warmup_runs: " << config.runner_warmup_runs << "\n"
+           << "  core_mask: " << yaml_string(config.runner_core_mask) << "\n"
            << "postprocess:\n"
            << "  score_threshold: " << config.score_threshold << "\n"
            << "  nms_iou_threshold: " << config.nms_iou_threshold << "\n"
