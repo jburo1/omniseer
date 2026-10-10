@@ -2,7 +2,12 @@ import subprocess
 import unittest
 from pathlib import Path
 
-from robot_diag_control.run_commands import RUN_BACKEND_RUNTIME, RobotConnection, RunConfig
+from robot_diag_control.run_commands import (
+    RUN_BACKEND_RUNTIME,
+    RUN_TYPE_STATIONARY_PROFILING,
+    RobotConnection,
+    RunConfig,
+)
 from robot_diag_control.run_lifecycle import RemoteRunProcess, RunPhase
 from robot_diag_control.run_manager import RunManager
 
@@ -55,6 +60,24 @@ class RunManagerTests(unittest.TestCase):
         self.assertEqual(events, ["create remote run directory", "before start", "start /repo"])
         self.assertEqual(result.command[0:3], ["ssh", "-tt", "radxa@10.0.0.2"])
         self.assertIsNotNone(result.remote_run)
+
+    def test_start_marks_stationary_profile_for_expected_timeout_completion(self):
+        manager = RunManager(
+            repo_root=Path("/repo"),
+            command_runner=lambda _command, _action: None,
+            process_starter=lambda _command, _cwd: RemoteRunProcess(_FakeProcess()),  # type: ignore[arg-type]
+        )
+
+        result = manager.start(
+            connection=_connection(),
+            run_config=RunConfig(
+                run_id="profile_001",
+                backend=RUN_BACKEND_RUNTIME,
+                run_type=RUN_TYPE_STATIONARY_PROFILING,
+            ),
+        )
+
+        self.assertTrue(result.remote_run.timeout_completion_expected)
 
     def test_start_does_not_launch_process_when_preparation_fails(self):
         events: list[str] = []
@@ -170,6 +193,22 @@ class RunManagerTests(unittest.TestCase):
         self.assertEqual(completion.phase, RunPhase.STOPPED)
         self.assertEqual(completion.state_message, "")
         self.assertEqual(completion.log_message, "remote run exited with code 0: operator_001")
+
+    def test_completion_reports_stopped_when_stationary_timeout_delivers_sigint(self):
+        manager = RunManager(repo_root=Path("/repo"))
+        remote_run = RemoteRunProcess(  # type: ignore[arg-type]
+            _FakeProcess(exit_code=130), timeout_completion_expected=True
+        )
+
+        completion = manager.completion(remote_run, run_id="profile_001")
+
+        self.assertIsNotNone(completion)
+        assert completion is not None
+        self.assertEqual(completion.phase, RunPhase.STOPPED)
+        self.assertEqual(
+            completion.log_message,
+            "stationary profiling duration elapsed; remote run shut down: profile_001",
+        )
 
     def test_completion_reports_failed_when_process_exits_nonzero(self):
         manager = RunManager(repo_root=Path("/repo"))

@@ -97,15 +97,16 @@ def _perf_record(*, received_ns: int = 200, produced: int = 10, consumed: int = 
     )
 
 
-def _system_record(*, process_cpu: list[dict] | None = None) -> dict:
+def _system_record(*, process_cpu: list[dict] | None = None, npu: dict | None = None, received_ns: int = 300) -> dict:
     return make_system_record(
-        recv_ts_ns=300,
+        recv_ts_ns=received_ns,
         cpu_percent=38.2,
         memory_used_mb=812.0,
         memory_available_mb=7200.0,
         soc_temp_c=61.4,
         thermal={"available": True, "soc_temp_c": 61.4, "throttled": False, "zones": []},
         process_cpu=process_cpu,
+        npu=npu,
     )
 
 
@@ -193,6 +194,72 @@ def _write_evidence(run_dir: Path, *, count: int = 1) -> None:
 
 
 class RunReportTests(unittest.TestCase):
+    def test_renders_npu_statistics_and_time_series(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "demo_001"
+            writer = RunBundleWriter(_config(run_dir), started_at=STARTED_AT)
+            writer.write_perf_record(_perf_record())
+            writer.write_system_record(
+                _system_record(
+                    received_ns=int(STARTED_AT.timestamp() * 1_000_000_000),
+                    npu={
+                        "available": True,
+                        "utilization_percent": {"core0": 10.0, "core1": 20.0, "core2": 30.0},
+                        "frequency_hz": 800_000_000,
+                        "governor": "rknpu_ondemand",
+                    },
+                )
+            )
+            writer.write_system_record(
+                _system_record(
+                    received_ns=int(STARTED_AT.timestamp() * 1_000_000_000) + 1_000_000_000,
+                    npu={
+                        "available": True,
+                        "utilization_percent": {"core0": 30.0, "core1": 40.0, "core2": 50.0},
+                        "frequency_hz": 1_000_000_000,
+                        "governor": "rknpu_ondemand",
+                    },
+                )
+            )
+            writer.finalize(ended_at=ENDED_AT)
+            manifest_path = run_dir / "manifest.yaml"
+            manifest_path.write_text(
+                manifest_path.read_text(encoding="utf-8").replace(
+                    'profile: "operator"', 'profile: "operator"\n    runner.core_mask: "core0"'
+                ),
+                encoding="utf-8",
+            )
+
+            output = write_run_report(run_dir).output_path.read_text(encoding="utf-8")
+
+            self.assertIn("NPU Performance", output)
+            self.assertIn("Configured RKNN core mask</th><td>core0", output)
+            self.assertIn("Core 0</td><td>2</td><td>20.00</td><td>30.00</td><td>%", output)
+            self.assertIn("2</td><td>900.00</td><td>800.00</td><td>1000.00</td><td>MHz", output)
+            self.assertIn("rknpu_ondemand=2", output)
+            self.assertIn("NPU Core Utilization Over Time", output)
+            self.assertIn("NPU Frequency Over Time", output)
+            self.assertIn('aria-label="NPU Core Utilization Over Time"', output)
+            self.assertIn(">100</text>", output)
+
+    def test_renders_missing_and_legacy_npu_telemetry_as_unavailable(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "demo_001"
+            _write_completed_bundle(run_dir)
+            system_path = run_dir / "system.jsonl"
+            legacy_record = json.loads(system_path.read_text(encoding="utf-8"))
+            legacy_record.pop("npu")
+            system_path.write_text(json.dumps(legacy_record) + "\n", encoding="utf-8")
+
+            output = write_run_report(run_dir).output_path.read_text(encoding="utf-8")
+
+            self.assertIn("NPU Performance", output)
+            self.assertIn("Configured RKNN core mask</th><td>Unavailable", output)
+            self.assertIn("NPU telemetry</th><td>Unavailable", output)
+            self.assertIn("Core 0</td><td>0</td><td>Unavailable</td><td>Unavailable", output)
+            self.assertNotIn("NPU Core Utilization Over Time", output)
+            self.assertNotIn("NPU Frequency Over Time", output)
+
     def test_renders_concise_decision_focused_sections(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             run_dir = Path(tmp) / "demo_001"

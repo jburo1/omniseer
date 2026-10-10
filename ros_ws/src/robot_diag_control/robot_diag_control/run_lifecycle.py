@@ -58,6 +58,7 @@ def run_control_availability(state: RunState) -> RunControlAvailability:
 class RemoteRunProcess:
     process: subprocess.Popen[str]
     stop_requested: bool = False
+    timeout_completion_expected: bool = False
 
 
 def start_remote_run_process(command: list[str], *, cwd: Path) -> RemoteRunProcess:

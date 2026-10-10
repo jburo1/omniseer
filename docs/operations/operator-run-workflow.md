@@ -177,6 +177,10 @@ The selected experiment label, model provenance, `runner.core_mask`, duration,
 classes, and postprocessing values are recorded in the existing experiment
 configuration and parameter fields of the RunBundle manifest.
 
+When the configured duration elapses, the timeout sends SIGINT so the recorder
+can finalize the RunBundle; the operator monitor presents this expected bounded
+completion as **Stopped**, rather than a failed run.
+
 ## Autonomy Run Type
 
 The monitor can launch the bounded perception scan or the bounded autonomy run

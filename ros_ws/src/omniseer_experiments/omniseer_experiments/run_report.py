@@ -257,6 +257,7 @@ def _render_report(
         ),
         _performance_section(
             inspection=inspection,
+            manifest=manifest,
             perf=perf,
             pipeline=pipeline,
             system=system,
@@ -493,6 +494,7 @@ def _class_detection_summary(records: Sequence[dict[str, Any]], *, configured_cl
 def _performance_section(
     *,
     inspection: RunInspection,
+    manifest: dict[str, Any],
     perf: Sequence[dict[str, Any]],
     pipeline: Sequence[dict[str, Any]],
     system: Sequence[dict[str, Any]],
@@ -518,6 +520,7 @@ def _performance_section(
     system_summary = _compact_system_summary(system)
     if system_summary:
         body_parts.append(system_summary)
+    body_parts.append(_npu_performance_summary(manifest, system, experiment_start_ns=experiment_start_ns))
     cpu_consumers = _compact_cpu_consumers(system, duration_sec=duration_sec)
     if cpu_consumers:
         body_parts.append(cpu_consumers)
@@ -526,7 +529,7 @@ def _performance_section(
         body_parts.append(runtime_errors)
     if not body_parts:
         body_parts.append("<p>No performance telemetry recorded.</p>")
-    return _section("Performance", "".join(body_parts), open_by_default=True)
+    return _section("Performance", "".join(part for part in body_parts if part), open_by_default=True)
 
 
 def _latency_summary_rows(perf: Sequence[dict[str, Any]], pipeline: Sequence[dict[str, Any]]) -> list[list[str]]:
@@ -681,6 +684,125 @@ def _compact_system_summary(records: Sequence[dict[str, Any]]) -> str:
         + _collapsed_maxima("System maxima", rows, unit_column=4)
         + _thermal_throttling_details(throttled)
     )
+
+
+def _npu_performance_summary(
+    manifest: dict[str, Any], records: Sequence[dict[str, Any]], *, experiment_start_ns: int | None
+) -> str:
+    """Render optional host-wide RK3588 NPU telemetry without filling missing readings."""
+
+    parameters = _manifest_nested_dict(manifest, "experiment", "parameters")
+    configured_mask = parameters.get("runner.core_mask")
+    configured_mask_text = configured_mask if isinstance(configured_mask, str) and configured_mask else "Unavailable"
+    npu_records = [record.get("npu") for record in records if isinstance(record.get("npu"), dict)]
+
+    utilization_rows = []
+    for core in ("core0", "core1", "core2"):
+        values = [
+            value
+            for npu in npu_records
+            if isinstance(npu, dict)
+            for utilization in (npu.get("utilization_percent"),)
+            if isinstance(utilization, dict)
+            for value in (_as_float(utilization.get(core)),)
+            if value is not None
+        ]
+        utilization_rows.append(
+            [
+                f"Core {core[-1]}",
+                str(len(values)),
+                _format_float(statistics.fmean(values)) if values else "Unavailable",
+                _format_float(_percentile(values, 95)) if values else "Unavailable",
+                "%",
+            ]
+        )
+
+    frequencies_mhz = [
+        value / 1_000_000.0
+        for npu in npu_records
+        if isinstance(npu, dict)
+        for value in (_as_float(npu.get("frequency_hz")),)
+        if value is not None
+    ]
+    governors = [
+        governor
+        for npu in npu_records
+        if isinstance(npu, dict)
+        for governor in (npu.get("governor"),)
+        if isinstance(governor, str) and governor
+    ]
+    unavailable_records = sum(1 for npu in npu_records if isinstance(npu, dict) and not bool(npu.get("available")))
+    frequency_row = [
+        str(len(frequencies_mhz)),
+        _format_float(statistics.fmean(frequencies_mhz)) if frequencies_mhz else "Unavailable",
+        _format_float(min(frequencies_mhz)) if frequencies_mhz else "Unavailable",
+        _format_float(max(frequencies_mhz)) if frequencies_mhz else "Unavailable",
+        "MHz",
+    ]
+    availability = "Unavailable"
+    if npu_records:
+        availability = f"{len(npu_records)} snapshots"
+        if unavailable_records:
+            availability += f"; {unavailable_records} unavailable"
+    body = (
+        "<h3>NPU Performance</h3>"
+        + _key_value_table(
+            [
+                ("Configured RKNN core mask", configured_mask_text),
+                ("NPU telemetry", availability),
+                ("Governor", _count_display(governors) if governors else "Unavailable"),
+            ]
+        )
+        + _table(["Core", "Valid samples", "Mean", "p95", "Unit"], utilization_rows)
+        + "<h4>NPU Frequency</h4>"
+        + _table(["Valid samples", "Mean", "Minimum", "Maximum", "Unit"], [frequency_row])
+        + _npu_charts(records, experiment_start_ns=experiment_start_ns)
+        + "<p>NPU readings are host-wide observations; unavailable samples are excluded from statistics and charts.</p>"
+    )
+    return body
+
+
+def _npu_charts(records: Sequence[dict[str, Any]], *, experiment_start_ns: int | None) -> str:
+    base_ts = experiment_start_ns or _first_valid_timestamp(records, ("recv_ts_ns",))
+    utilization_chart = _line_chart(
+        "NPU Core Utilization Over Time",
+        tuple(_npu_utilization_series(records, core, base_ts_ns=base_ts) for core in ("core0", "core1", "core2")),
+        "%",
+        y_min_override=0.0,
+        y_max_override=100.0,
+    )
+    frequency_chart = _line_chart(
+        "NPU Frequency Over Time",
+        (
+            _series_from_nested_records(
+                records,
+                "npu",
+                "frequency_hz",
+                name="NPU frequency",
+                unit="MHz",
+                scale=1 / 1_000_000.0,
+                base_ts_ns=base_ts,
+            ),
+        ),
+        "MHz",
+        zero_floor=True,
+    )
+    return utilization_chart + frequency_chart
+
+
+def _npu_utilization_series(records: Sequence[dict[str, Any]], core: str, *, base_ts_ns: int | None) -> _ChartSeries:
+    if base_ts_ns is None:
+        return _ChartSeries(f"{core} utilization", (), "%")
+    points = []
+    for record in records:
+        timestamp = _timestamp_from_fields(record, ("recv_ts_ns",))
+        npu = record.get("npu")
+        utilization = npu.get("utilization_percent") if isinstance(npu, dict) else None
+        value = _as_float(utilization.get(core)) if isinstance(utilization, dict) else None
+        if timestamp is None or value is None:
+            continue
+        points.append(((timestamp - base_ts_ns) / 1_000_000_000.0, value))
+    return _ChartSeries(f"{core} utilization", _finite_points(points), "%")
 
 
 def _thermal_throttling_summary(values: Sequence[object]) -> str:
@@ -2840,6 +2962,7 @@ def _series_from_nested_records(
     *,
     name: str,
     unit: str = "",
+    scale: float = 1.0,
     base_ts_ns: int | None = None,
 ) -> _ChartSeries:
     if base_ts_ns is None:
@@ -2853,7 +2976,7 @@ def _series_from_nested_records(
         value = _as_float(parent.get(value_field)) if isinstance(parent, dict) else None
         if timestamp is None or value is None:
             continue
-        points.append(((timestamp - base_ts_ns) / 1_000_000_000.0, value))
+        points.append(((timestamp - base_ts_ns) / 1_000_000_000.0, value * scale))
     return _ChartSeries(name, _finite_points(points), unit)
 
 

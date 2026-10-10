@@ -6,7 +6,12 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
-from robot_diag_control.run_commands import RobotConnection, RunConfig, build_remote_runtime_stop_command
+from robot_diag_control.run_commands import (
+    RUN_TYPE_STATIONARY_PROFILING,
+    RobotConnection,
+    RunConfig,
+    build_remote_runtime_stop_command,
+)
 from robot_diag_control.run_lifecycle import (
     RemoteRunProcess,
     RunPhase,
@@ -115,6 +120,7 @@ class RunManager:
         if before_process_start is not None:
             before_process_start(command)
         remote_run = self._process_starter(command, self._repo_root)
+        remote_run.timeout_completion_expected = run_config.run_type == RUN_TYPE_STATIONARY_PROFILING
         return RunStartResult(command=command, remote_run=remote_run)
 
     def request_stop(self, remote_run: RemoteRunProcess | None) -> RunStopResult:
@@ -140,12 +146,18 @@ class RunManager:
                 exit_code=exit_code,
                 log_message=f"remote run stopped: {run_id}",
             )
-        if exit_code == 0:
+        if exit_code == 0 or (
+            remote_run is not None and remote_run.timeout_completion_expected and exit_code in {124, 130}
+        ):
             return RunCompletion(
                 phase=RunPhase.STOPPED,
                 run_id=run_id,
                 exit_code=exit_code,
-                log_message=f"remote run exited with code {exit_code}: {run_id}",
+                log_message=(
+                    f"stationary profiling duration elapsed; remote run shut down: {run_id}"
+                    if remote_run is not None and remote_run.timeout_completion_expected and exit_code in {124, 130}
+                    else f"remote run exited with code {exit_code}: {run_id}"
+                ),
             )
         return RunCompletion(
             phase=RunPhase.FAILED,
