@@ -13,6 +13,7 @@ from robot_diag_control.run_commands import (
     RUN_TYPE_AUTONOMY_CENTER,
     RUN_TYPE_LABELS,
     RUN_TYPE_PERCEPTION,
+    RUN_TYPE_STATIONARY_PROFILING,
 )
 from robot_diag_control.run_settings import (
     DEFAULT_DEVCONTAINER_EXEC_TEMPLATE,
@@ -29,6 +30,7 @@ from robot_diag_control.run_settings import (
     selected_preview_encoder,
     selected_run_backend,
     selected_run_type,
+    selected_runner_core_mask,
 )
 
 
@@ -100,6 +102,39 @@ class RunSettingsTests(unittest.TestCase):
         for label, artifact in expected.items():
             self.assertEqual(DETECTOR_MODEL_CHOICES[label].artifact_filename, artifact)
             self.assertEqual(selected_detector_model(label).artifact_filename, artifact)
+
+    def test_selected_runner_core_mask_accepts_native_values_and_rejects_unknown(self):
+        self.assertEqual(selected_runner_core_mask(" core0_1_2 "), "core0_1_2")
+        self.assertEqual(selected_runner_core_mask(""), "auto")
+        with self.assertRaisesRegex(ValueError, "runner core mask"):
+            selected_runner_core_mask("core3")
+
+    def test_stationary_profiling_shares_detector_settings_and_validates_duration(self):
+        selection = resolve_run_form(
+            _values(
+                run_type_label=RUN_TYPE_LABELS[RUN_TYPE_STATIONARY_PROFILING],
+                detector_model_label="YOLO-World v2-S INT8 (recalibrated)",
+                runner_core_mask="core0_1",
+                stationary_duration_sec="30.5",
+            ),
+            repo_root=Path("/repo"),
+            default_run_id=lambda: "operator_default",
+        )
+        config = selection.run_config
+        self.assertEqual(config.classes, ("person", "cup"))
+        self.assertEqual(config.detector_model_artifact, "yolo_world_v2_s_i8.rknn")
+        self.assertEqual(config.runner_core_mask, "core0_1")
+        self.assertEqual(config.stationary_duration_sec, "30.5")
+        self.assertEqual(config.detector_score_threshold, "0.31")
+        self.assertFalse(config.record_video)
+        self.assertFalse(config.record_rosbag)
+
+        with self.assertRaisesRegex(ValueError, "stationary profiling duration"):
+            resolve_run_form(
+                _values(run_type_label=RUN_TYPE_LABELS[RUN_TYPE_STATIONARY_PROFILING], stationary_duration_sec="0"),
+                repo_root=Path("/repo"),
+                default_run_id=lambda: "operator_default",
+            )
 
     def test_normalized_remote_paths_use_defaults_and_strip_trailing_slashes(self):
         self.assertEqual(normalized_remote_repo_root(""), DEFAULT_REMOTE_REPO_ROOT)

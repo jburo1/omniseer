@@ -5,6 +5,7 @@ from pathlib import Path
 from robot_diag_control.run_commands import (
     RUN_BACKEND_RUNTIME,
     RUN_TYPE_AUTONOMY_CENTER,
+    RUN_TYPE_STATIONARY_PROFILING,
     RobotConnection,
     RunConfig,
 )
@@ -67,6 +68,26 @@ class RunPreparationTests(unittest.TestCase):
         self.assertEqual([action for action, _command in calls], ["create remote run directory", "upload classes"])
         self.assertEqual(calls[1][1][0], "scp")
         self.assertIn("classes_path:=/runs/operator_001/classes.txt", start_command[3])
+
+    def test_prepare_stationary_profiling_uploads_classes_and_preserves_no_motion_launch_args(self):
+        calls: list[tuple[str, list[str]]] = []
+
+        start_command = prepare_remote_run(
+            connection=_connection(),
+            run_config=RunConfig(
+                run_id="operator_001",
+                backend=RUN_BACKEND_RUNTIME,
+                classes=("person",),
+                run_type=RUN_TYPE_STATIONARY_PROFILING,
+            ),
+            cwd=Path("/repo"),
+            command_runner=lambda command, action: calls.append((action, command)),
+        )
+
+        self.assertEqual([action for action, _command in calls], ["create remote run directory", "upload classes"])
+        self.assertIn("classes_path:=/runs/operator_001/classes.txt", start_command[3])
+        self.assertIn("start_autonomy:=false", start_command[3])
+        self.assertIn("start_perception_scan:=false", start_command[3])
 
     def test_run_command_checked_reports_subprocess_failure_detail(self):
         with self.assertRaisesRegex(OSError, "test action failed: bad"):

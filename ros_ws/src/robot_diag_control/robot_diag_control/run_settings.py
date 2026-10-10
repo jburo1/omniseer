@@ -15,6 +15,8 @@ from robot_diag_control.run_commands import (
     RUN_TYPE_AUTONOMY_CENTER,
     RUN_TYPE_LABELS,
     RUN_TYPE_PERCEPTION,
+    RUN_TYPE_STATIONARY_PROFILING,
+    RUNNER_CORE_MASK_CHOICES,
     RUNTIME_DEFAULT_MODEL_LABEL,
     DetectorModelChoice,
     RobotConnection,
@@ -58,6 +60,8 @@ class RunFormValues:
     detector_nms_iou_threshold: str = "0.45"
     detector_max_detections: str = "100"
     detector_model_label: str = RUNTIME_DEFAULT_MODEL_LABEL
+    runner_core_mask: str = "auto"
+    stationary_duration_sec: str = "120"
     preview_encoder_label: str = "Rockchip hardware"
     record_video: bool = False
     record_rosbag: bool = False
@@ -101,6 +105,13 @@ def selected_detector_model(selected_label: str) -> DetectorModelChoice | None:
         return DETECTOR_MODEL_CHOICES[selected_label]
     except KeyError as exc:
         raise ValueError(f"unsupported detector model: {selected_label}") from exc
+
+
+def selected_runner_core_mask(value: str) -> str:
+    normalized = value.strip() or "auto"
+    if normalized not in RUNNER_CORE_MASK_CHOICES:
+        raise ValueError(f"runner core mask must be one of {', '.join(RUNNER_CORE_MASK_CHOICES)}")
+    return normalized
 
 
 def normalized_remote_repo_root(value: str) -> str:
@@ -223,13 +234,14 @@ def resolve_run_form(
         remote_runs_root=remote_runs_root,
     )
     is_autonomy_run = run_type == RUN_TYPE_AUTONOMY_CENTER
+    uses_detector = run_type in {RUN_TYPE_AUTONOMY_CENTER, RUN_TYPE_STATIONARY_PROFILING}
     autonomy_bbox_area_min_ratio = values.autonomy_bbox_area_min_ratio.strip() or "0.08"
     autonomy_bbox_area_max_ratio = values.autonomy_bbox_area_max_ratio.strip() or "0.35"
-    detector_model = selected_detector_model(values.detector_model_label) if is_autonomy_run else None
+    detector_model = selected_detector_model(values.detector_model_label) if uses_detector else None
     run_config = RunConfig(
         run_id=run_id,
         backend=selected_run_backend(values.backend_label),
-        classes=tuple(parse_run_classes(values.classes_text)) if is_autonomy_run else (),
+        classes=tuple(parse_run_classes(values.classes_text)) if uses_detector else (),
         notes=values.notes.strip(),
         runtime_tag=values.runtime_tag.strip() or DEFAULT_RUNTIME_TAG,
         devcontainer_exec_template=values.devcontainer_exec_template.strip() or DEFAULT_DEVCONTAINER_EXEC_TEMPLATE,
@@ -290,7 +302,7 @@ def resolve_run_form(
                 name="score threshold",
                 default="0.25",
             )
-            if is_autonomy_run
+            if uses_detector
             else "0.25"
         ),
         detector_nms_iou_threshold=(
@@ -299,7 +311,7 @@ def resolve_run_form(
                 name="NMS IoU",
                 default="0.45",
             )
-            if is_autonomy_run
+            if uses_detector
             else "0.45"
         ),
         detector_max_detections=(
@@ -308,8 +320,18 @@ def resolve_run_form(
                 name="max detections",
                 default="100",
             )
-            if is_autonomy_run
+            if uses_detector
             else "100"
+        ),
+        runner_core_mask=selected_runner_core_mask(values.runner_core_mask) if uses_detector else "auto",
+        stationary_duration_sec=(
+            validated_positive_float(
+                values.stationary_duration_sec,
+                name="stationary profiling duration",
+                default="120",
+            )
+            if run_type == RUN_TYPE_STATIONARY_PROFILING
+            else "120"
         ),
         detector_model_artifact=detector_model.artifact_filename if detector_model else "",
         experiment_model_family=detector_model.family if detector_model else "",

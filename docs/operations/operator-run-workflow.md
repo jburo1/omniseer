@@ -111,7 +111,7 @@ stale ends the scan cleanly without continuing motion.
 
 ## Detector Selection and Tuning
 
-Before selecting an external detector model for autonomy, copy its generated
+Before selecting an external detector model for autonomy or stationary profiling, copy its generated
 RKNN artifact to the robot repository's `runs/model_artifacts/` directory. The
 normal Experiment controls expose `Runtime default`, YOLO-World v2-S/v2-M/v2-L
 FP choices, the recalibrated INT8 choices, and the v2-L TD01 mixed-precision
@@ -123,13 +123,18 @@ An explicit choice uses the staged artifact for that run; `Runtime default`
 continues to use the detector configured by the runtime image or config. The
 selector does not upload or discover model files.
 
-For autonomy, the collapsed **Advanced Experiment Overrides** section exposes
-detector controls that operators can adjust between runs without changing
-hardware or model assumptions:
+For detector-backed experiments, the monitor exposes a shared class list, model
+selector, postprocessing controls, and **NPU core mask** selector. The core-mask
+values exactly match `runner.core_mask` (`auto`, each individual core, each
+two-core combination, and `core0_1_2`); it defaults to `auto`. The shared
+detector controls map to:
 
 - `Score Threshold` -> `postprocess.score_threshold`
 - `NMS IoU` -> `postprocess.nms_iou_threshold`
 - `Max Detections` -> `postprocess.max_detections`
+
+The collapsed **Advanced Experiment Overrides** section contains only
+autonomy-specific framing and safety settings.
 
 The command builder passes these as launch arguments and also records them as
 experiment parameters in the run manifest. Operator-started runs also record the
@@ -139,7 +144,7 @@ label even when no external experiment config file is used. Model paths, camera
 device, capture size, model input size, class padding, and runner warmup remain
 launch/config-file controls.
 
-The perception scan always records video. For autonomy, select **Record video**
+The perception scan always records video. For autonomy and profiling, select **Record video**
 before starting the run; it remains off by default. **Retrieve & Open Report** preserves `video/source.mp4`
 as a stream-copy remux of raw `video/source.ts`, then creates the repaired
 presentation derivative `video/source.corrected.mp4` and the approximate
@@ -157,6 +162,20 @@ run_id/
     metadata.yaml
     ...
 ```
+
+## Stationary Perception Profiling
+
+`Stationary Perception Profiling` runs native detector inference for a bounded
+duration (120 seconds by default) without autonomous motion. It uses the same
+remote execution, recorder, graceful SIGINT shutdown, and RunBundle workflow as
+other operator runs, on either the runtime container or devcontainer backend.
+The command explicitly sets `start_autonomy:=false`, `start_perception_scan:=false`,
+and `start_nav:=false`; it therefore cannot start the command-producing autonomy,
+scan, or navigation nodes. Video and rosbag remain opt-in.
+
+The selected experiment label, model provenance, `runner.core_mask`, duration,
+classes, and postprocessing values are recorded in the existing experiment
+configuration and parameter fields of the RunBundle manifest.
 
 ## Autonomy Run Type
 

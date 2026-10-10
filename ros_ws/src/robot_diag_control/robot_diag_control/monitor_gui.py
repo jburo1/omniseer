@@ -54,6 +54,8 @@ from robot_diag_control.run_commands import (
     RUN_TYPE_AUTONOMY_CENTER,
     RUN_TYPE_LABELS,
     RUN_TYPE_PERCEPTION,
+    RUN_TYPE_STATIONARY_PROFILING,
+    RUNNER_CORE_MASK_CHOICES,
     RUNTIME_DEFAULT_MODEL_LABEL,
     RobotConnection,
     RunConfig,
@@ -435,6 +437,8 @@ class RobotMonitorGui:
         self._detector_score_threshold_var = tk.StringVar(value="0.25")
         self._detector_nms_iou_threshold_var = tk.StringVar(value="0.45")
         self._detector_max_detections_var = tk.StringVar(value="100")
+        self._runner_core_mask_var = tk.StringVar(value="auto")
+        self._stationary_duration_sec_var = tk.StringVar(value="120")
         self._run_notes_text: Any | None = None
         self._run_experiment_frames: dict[str, Any] = {}
         self._mode_var = tk.StringVar(value=self._format_run_mode(self._run_state))
@@ -647,28 +651,13 @@ class RobotMonitorGui:
         )
         self._run_experiment_frames[RUN_TYPE_PERCEPTION] = perception_frame
 
+        profiling_frame = ttk.Frame(experiment_fields)
+        self._add_labeled_entry(profiling_frame, "Duration seconds", self._stationary_duration_sec_var, 0, 0, width=8)
+        self._build_detector_controls(profiling_frame, row=1)
+        self._run_experiment_frames[RUN_TYPE_STATIONARY_PROFILING] = profiling_frame
+
         autonomy_frame = ttk.Frame(experiment_fields)
-        self._add_labeled_entry(autonomy_frame, "Class List", self._run_classes_var, 0, 0)
-        ttk.Label(autonomy_frame, text="Preview encoder").grid(row=0, column=2, sticky=tk.W, pady=(8, 0))
-        ttk.Combobox(
-            autonomy_frame,
-            textvariable=self._preview_encoder_var,
-            values=tuple(PREVIEW_ENCODER_LABELS.values()),
-            state="readonly",
-        ).grid(row=0, column=3, sticky=tk.EW, padx=(8, 0), pady=(8, 0))
-        ttk.Label(autonomy_frame, text="Detector model").grid(row=1, column=0, sticky=tk.W, pady=(8, 0))
-        ttk.Combobox(
-            autonomy_frame,
-            textvariable=self._detector_model_var,
-            values=tuple(DETECTOR_MODEL_CHOICES),
-            state="readonly",
-        ).grid(row=1, column=1, columnspan=3, sticky=tk.EW, padx=(8, 0), pady=(8, 0))
-        ttk.Checkbutton(autonomy_frame, text="Record video", variable=self._record_video_var).grid(
-            row=2, column=2, sticky=tk.W, pady=(8, 0)
-        )
-        ttk.Checkbutton(autonomy_frame, text="Record rosbag", variable=self._record_rosbag_var).grid(
-            row=2, column=3, sticky=tk.W, pady=(8, 0)
-        )
+        self._build_detector_controls(autonomy_frame, row=0)
 
         overrides_section = CollapsibleSection(
             autonomy_frame,
@@ -677,15 +666,11 @@ class RobotMonitorGui:
             expanded=False,
         )
         overrides_section.body.configure(padding=0)
-        overrides_section.grid(row=3, column=0, columnspan=4, sticky=tk.EW, pady=(8, 0))
+        overrides_section.grid(row=6, column=0, columnspan=4, sticky=tk.EW, pady=(8, 0))
         self._sections["advanced_experiment_overrides"] = overrides_section
         overrides = overrides_section.body
-        self._add_labeled_entry(overrides, "Score Threshold", self._detector_score_threshold_var, 0, 0, width=8)
-        self._add_labeled_entry(overrides, "NMS IoU", self._detector_nms_iou_threshold_var, 0, 2, width=8)
-        self._add_labeled_entry(overrides, "Max Detections", self._detector_max_detections_var, 1, 0, width=8)
-
         autonomy_parameters = ttk.Frame(overrides)
-        autonomy_parameters.grid(row=2, column=0, columnspan=4, sticky=tk.EW)
+        autonomy_parameters.grid(row=0, column=0, columnspan=4, sticky=tk.EW)
         self._add_labeled_entry(
             autonomy_parameters, "BBox Min Area", self._autonomy_bbox_area_min_ratio_var, 0, 0, width=8
         )
@@ -784,6 +769,34 @@ class RobotMonitorGui:
         )
         self._run_buttons["retrieve"].pack(fill=tk.X, pady=(18, 0))
 
+    def _build_detector_controls(self, parent: Any, *, row: int) -> None:
+        """Render the same detector controls for every detector-backed experiment."""
+        self._add_labeled_entry(parent, "Class List", self._run_classes_var, row, 0)
+        ttk.Label(parent, text="Preview encoder").grid(row=row, column=2, sticky=tk.W, pady=(8, 0))
+        ttk.Combobox(
+            parent,
+            textvariable=self._preview_encoder_var,
+            values=tuple(PREVIEW_ENCODER_LABELS.values()),
+            state="readonly",
+        ).grid(row=row, column=3, sticky=tk.EW, padx=(8, 0), pady=(8, 0))
+        ttk.Label(parent, text="Detector model").grid(row=row + 1, column=0, sticky=tk.W, pady=(8, 0))
+        ttk.Combobox(
+            parent, textvariable=self._detector_model_var, values=tuple(DETECTOR_MODEL_CHOICES), state="readonly"
+        ).grid(row=row + 1, column=1, columnspan=3, sticky=tk.EW, padx=(8, 0), pady=(8, 0))
+        ttk.Label(parent, text="NPU core mask").grid(row=row + 2, column=0, sticky=tk.W, pady=(8, 0))
+        ttk.Combobox(
+            parent, textvariable=self._runner_core_mask_var, values=RUNNER_CORE_MASK_CHOICES, state="readonly", width=12
+        ).grid(row=row + 2, column=1, sticky=tk.W, padx=(8, 0), pady=(8, 0))
+        ttk.Checkbutton(parent, text="Record video", variable=self._record_video_var).grid(
+            row=row + 2, column=2, sticky=tk.W, pady=(8, 0)
+        )
+        ttk.Checkbutton(parent, text="Record rosbag", variable=self._record_rosbag_var).grid(
+            row=row + 2, column=3, sticky=tk.W, pady=(8, 0)
+        )
+        self._add_labeled_entry(parent, "Score Threshold", self._detector_score_threshold_var, row + 3, 0, width=8)
+        self._add_labeled_entry(parent, "NMS IoU", self._detector_nms_iou_threshold_var, row + 3, 2, width=8)
+        self._add_labeled_entry(parent, "Max Detections", self._detector_max_detections_var, row + 4, 0, width=8)
+
     def _sync_run_experiment_fields(self) -> None:
         try:
             selected = selected_run_type(self._run_type_var.get())
@@ -866,6 +879,8 @@ class RobotMonitorGui:
             detector_nms_iou_threshold=self._detector_nms_iou_threshold_var.get(),
             detector_max_detections=self._detector_max_detections_var.get(),
             detector_model_label=self._detector_model_var.get(),
+            runner_core_mask=self._runner_core_mask_var.get(),
+            stationary_duration_sec=self._stationary_duration_sec_var.get(),
             preview_encoder_label=self._preview_encoder_var.get(),
             record_video=bool(self._record_video_var.get()),
             record_rosbag=bool(self._record_rosbag_var.get()),

@@ -21,9 +21,11 @@ DEFAULT_DEVCONTAINER_EXEC_TEMPLATE = (
 )
 RUN_TYPE_PERCEPTION = "perception_recording"
 RUN_TYPE_AUTONOMY_CENTER = "autonomy_center_first_class"
+RUN_TYPE_STATIONARY_PROFILING = "stationary_perception_profiling"
 RUN_TYPE_LABELS = {
     RUN_TYPE_PERCEPTION: "Perception: 360° environment scan",
     RUN_TYPE_AUTONOMY_CENTER: "Autonomy: frame and capture target",
+    RUN_TYPE_STATIONARY_PROFILING: "Stationary Perception Profiling",
 }
 PREVIEW_ENCODER_ROCKCHIP = "rockchip"
 PREVIEW_ENCODER_SOFTWARE = "software"
@@ -33,6 +35,16 @@ PREVIEW_ENCODER_LABELS = {
 }
 DEFAULT_RUNTIME_TAG = "robot-verified"
 RUNTIME_DEFAULT_MODEL_LABEL = "Runtime default"
+RUNNER_CORE_MASK_CHOICES = (
+    "auto",
+    "core0",
+    "core1",
+    "core2",
+    "core0_1",
+    "core0_2",
+    "core1_2",
+    "core0_1_2",
+)
 
 
 @dataclass(frozen=True)
@@ -90,6 +102,8 @@ class RunConfig:
     detector_score_threshold: str = "0.25"
     detector_nms_iou_threshold: str = "0.45"
     detector_max_detections: str = "100"
+    runner_core_mask: str = "auto"
+    stationary_duration_sec: str = "120"
     detector_model_artifact: str = ""
     experiment_model_family: str = ""
     experiment_model_variant: str = ""
@@ -227,7 +241,7 @@ def _build_runtime_record_inner_command(
     command.append(f"gateway_preview_encoder:={run_config.preview_encoder}")
     if classes:
         command.append(f"classes_path:={_runtime_container_class_list_path(run_id)}")
-    if run_config.run_type == RUN_TYPE_AUTONOMY_CENTER:
+    if run_config.run_type in {RUN_TYPE_AUTONOMY_CENTER, RUN_TYPE_STATIONARY_PROFILING}:
         command.extend(
             _model_launch_args(
                 run_config,
@@ -244,7 +258,7 @@ def _build_runtime_record_inner_command(
         )
     )
     command.extend(_autonomy_parameter_launch_args(run_config))
-    return command
+    return _profile_duration_command(command, run_config)
 
 
 def _build_devcontainer_record_inner_command(
@@ -286,7 +300,7 @@ def _build_devcontainer_record_inner_command(
     command.append(f"gateway_preview_encoder:={run_config.preview_encoder}")
     if classes:
         command.append(f"classes_path:={remote_class_list_path_for(container_repo_root, run_id)}")
-    if run_config.run_type == RUN_TYPE_AUTONOMY_CENTER:
+    if run_config.run_type in {RUN_TYPE_AUTONOMY_CENTER, RUN_TYPE_STATIONARY_PROFILING}:
         command.extend(
             _model_launch_args(
                 run_config,
@@ -297,13 +311,21 @@ def _build_devcontainer_record_inner_command(
     command.extend(_perception_scan_launch_args(run_config))
     command.extend(_autonomy_launch_args(classes=classes, run_type=run_config.run_type, run_dir=container_run_dir))
     command.extend(_autonomy_parameter_launch_args(run_config))
-    return command
+    return _profile_duration_command(command, run_config)
+
+
+def _profile_duration_command(command: list[str], run_config: RunConfig) -> list[str]:
+    """Bound profiling with SIGINT so the existing recorder can finalize evidence."""
+    if run_config.run_type != RUN_TYPE_STATIONARY_PROFILING:
+        return command
+    return ["timeout", "--preserve-status", "--signal=INT", f"{run_config.stationary_duration_sec}s", *command]
 
 
 def _detector_parameter_launch_args(run_config: RunConfig) -> list[str]:
     if run_config.run_type == RUN_TYPE_PERCEPTION:
         return []
     return [
+        f"runner_core_mask:={run_config.runner_core_mask}",
         f"postprocess_score_threshold:={run_config.detector_score_threshold}",
         f"postprocess_nms_iou_threshold:={run_config.detector_nms_iou_threshold}",
         f"postprocess_max_detections:={run_config.detector_max_detections}",
@@ -313,7 +335,7 @@ def _detector_parameter_launch_args(run_config: RunConfig) -> list[str]:
 def _detector_experiment_parameters(run_config: RunConfig) -> list[str]:
     if run_config.run_type == RUN_TYPE_PERCEPTION:
         return ["--record-experiment-parameter", f"preview.encoder={run_config.preview_encoder}"]
-    return [
+    parameters = [
         "--record-experiment-parameter",
         f"preview.encoder={run_config.preview_encoder}",
         "--record-experiment-parameter",
@@ -322,7 +344,14 @@ def _detector_experiment_parameters(run_config: RunConfig) -> list[str]:
         f"postprocess.nms_iou_threshold={run_config.detector_nms_iou_threshold}",
         "--record-experiment-parameter",
         f"postprocess.max_detections={run_config.detector_max_detections}",
+        "--record-experiment-parameter",
+        f"runner.core_mask={run_config.runner_core_mask}",
     ]
+    if run_config.run_type == RUN_TYPE_STATIONARY_PROFILING:
+        parameters.extend(
+            ["--record-experiment-parameter", f"profiling.duration_sec={run_config.stationary_duration_sec}"]
+        )
+    return parameters
 
 
 def _record_experiment_config_args(run_config: RunConfig) -> list[str]:
@@ -348,6 +377,9 @@ def _perception_scan_launch_args(run_config: RunConfig) -> list[str]:
 def _autonomy_launch_args(*, classes: Sequence[str], run_type: str, run_dir: str) -> list[str]:
     if run_type == RUN_TYPE_PERCEPTION:
         return []
+    if run_type == RUN_TYPE_STATIONARY_PROFILING:
+        # Make the no-motion contract explicit instead of relying on launch defaults.
+        return ["start_autonomy:=false", "start_perception_scan:=false", "start_nav:=false"]
     if run_type != RUN_TYPE_AUTONOMY_CENTER:
         raise ValueError(f"unsupported run type: {run_type}")
     if not classes:
@@ -361,7 +393,7 @@ def _autonomy_launch_args(*, classes: Sequence[str], run_type: str, run_dir: str
 
 
 def _autonomy_parameter_launch_args(run_config: RunConfig) -> list[str]:
-    if run_config.run_type == RUN_TYPE_PERCEPTION:
+    if run_config.run_type in {RUN_TYPE_PERCEPTION, RUN_TYPE_STATIONARY_PROFILING}:
         return []
     if run_config.run_type != RUN_TYPE_AUTONOMY_CENTER:
         raise ValueError(f"unsupported run type: {run_config.run_type}")

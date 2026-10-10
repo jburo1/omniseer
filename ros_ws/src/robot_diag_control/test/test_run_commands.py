@@ -8,6 +8,7 @@ from robot_diag_control.run_commands import (
     RUN_BACKEND_DEVCONTAINER,
     RUN_BACKEND_RUNTIME,
     RUN_TYPE_AUTONOMY_CENTER,
+    RUN_TYPE_STATIONARY_PROFILING,
     RobotConnection,
     RunConfig,
     build_pull_run_command,
@@ -210,6 +211,39 @@ class RunCommandsTests(unittest.TestCase):
                     run_type=RUN_TYPE_AUTONOMY_CENTER,
                 ),
             )
+
+    def test_stationary_profiling_is_bounded_and_cannot_start_motion(self):
+        for backend in (RUN_BACKEND_RUNTIME, RUN_BACKEND_DEVCONTAINER):
+            command = build_remote_start_command(
+                connection=_connection(),
+                run_config=RunConfig(
+                    run_id="operator_001",
+                    backend=backend,
+                    run_type=RUN_TYPE_STATIONARY_PROFILING,
+                    classes=("person", "cup"),
+                    detector_model_artifact="yolo_world_v2_s_i8.rknn",
+                    experiment_model_family="yolo-world",
+                    experiment_model_variant="v2s",
+                    experiment_model_precision="int8",
+                    experiment_model_backend="rknn",
+                    runner_core_mask="core0_1_2",
+                    stationary_duration_sec="120",
+                ),
+            )
+            rendered = command[3]
+            self.assertIn("timeout --preserve-status --signal=INT 120s", rendered)
+            self.assertIn("start_autonomy:=false", rendered)
+            self.assertIn("start_perception_scan:=false", rendered)
+            self.assertIn("start_nav:=false", rendered)
+            self.assertIn("runner_core_mask:=core0_1_2", rendered)
+            self.assertIn("profiling.duration_sec=120", rendered)
+            self.assertIn("runner.core_mask=core0_1_2", rendered)
+            self.assertIn("detector_model_path:=", rendered)
+            self.assertIn("--record-classes person,cup", rendered)
+            self.assertNotIn("start_autonomy:=true", rendered)
+            self.assertNotIn("start_perception_scan:=true", rendered)
+            self.assertNotIn("--record-video", rendered)
+            self.assertNotIn("--record-rosbag", rendered)
 
     def test_devcontainer_perception_scan_uses_container_visible_workspace_path(self):
         command = build_remote_start_command(
