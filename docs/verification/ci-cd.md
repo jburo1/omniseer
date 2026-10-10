@@ -13,7 +13,7 @@ GitHub Actions is split into four small workflows with built-in path filters:
 
 | Workflow | Triggered by | Purpose |
 | --- | --- | --- |
-| `ci` | `ros_ws/**`, `vision/**`, `tests/**`, `scripts/**`, `pyproject.toml`, `pytest.ini` | Normal portable software CI |
+| `ci` | `.github/workflows/ci.yml`, `ros_ws/**`, `vision/**`, `tests/**`, `scripts/**`, `pyproject.toml`, `pytest.ini` | Normal portable software CI |
 | `runtime` | `docker/runtime/**`, runtime scripts, `pyproject.toml`, `uv.lock`, ROS package manifests, or manual dispatch | Portable runtime container validation |
 | `firmware` | `firmware/**`, `uros_ws/**` | Compile-only firmware check |
 | `docs` | `docs/**`, `mkdocs.yml`, `scripts/docs/**` | Strict documentation build and `gh-pages` publish |
@@ -35,7 +35,7 @@ contain custom path-classification logic.
 
 Runs on Ubuntu 24.04:
 
-- existing pre-commit hooks over tracked files, including Ruff and Ruff format
+- existing pre-commit hooks over files changed in the pushed commit range, including Ruff and Ruff format
 - Shellcheck over tracked shell scripts
 
 ### `python-tests`

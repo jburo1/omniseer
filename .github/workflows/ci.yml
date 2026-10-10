@@ -4,6 +4,7 @@ on:
   push:
     branches: [master]
     paths:
+      - ".github/workflows/ci.yml"
       - "ros_ws/**"
       - "vision/**"
       - "tests/**"
@@ -25,6 +26,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
 
       - name: Install lint deps
         shell: bash
@@ -40,7 +43,15 @@ jobs:
         shell: bash
         run: |
           set -eux
-          /opt/lint-venv/bin/pre-commit run --all-files --show-diff-on-failure
+          before="${{ github.event.before }}"
+          after="${{ github.sha }}"
+          if ! git cat-file -e "${before}^{commit}" 2>/dev/null; then
+            before="${after}^"
+          fi
+          mapfile -t changed_files < <(git diff --name-only --diff-filter=ACMR "${before}" "${after}")
+          if ((${#changed_files[@]})); then
+            /opt/lint-venv/bin/pre-commit run --files "${changed_files[@]}" --show-diff-on-failure
+          fi
 
       - name: Shellcheck
         shell: bash
