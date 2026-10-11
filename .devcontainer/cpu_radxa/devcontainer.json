@@ -71,6 +71,6 @@
             }
         }
     },
-    "postCreateCommand": "bash -lc 'set -e; sed -i \"s/\\r$//\" .devcontainer/bootstrap.sh; chmod 755 .devcontainer/bootstrap.sh; .devcontainer/bootstrap.sh'",
+    "postCreateCommand": "bash -lc 'set -e; sed -i \"s/\\r$//\" .devcontainer/bootstrap.sh; chmod 755 .devcontainer/bootstrap.sh; .devcontainer/bootstrap.sh --with-micro-ros'",
     // "postStartCommand": "bash -lc '.devcontainer/bootstrap.sh'"
 }

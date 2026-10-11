@@ -84,6 +84,15 @@ Behavior:
 - `build runtime-container --target portable-runtime`: builds the
   hardware-independent container target.
 
+Devcontainer bootstrap uses this same ROS package selection: CPU x86 builds the
+portable set, GPU x86 also includes the YOLO simulation provider, and Radxa
+auto-includes the vision bridge when its SDKs are available. Bootstrap stops on
+dependency or build failures. The Radxa profile also builds `uros_ws`; laptop
+profiles skip it by default. For direct micro-ROS development on a laptop, run
+`.devcontainer/bootstrap.sh --with-micro-ros` (add `--with-yolo` for simulation
+detections). That optional build preserves the existing micro-ROS install layout
+and uses an isolated layout for a new install directory.
+
 Runtime-container build options:
 
 ```bash
