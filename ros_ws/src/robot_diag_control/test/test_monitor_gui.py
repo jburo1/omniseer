@@ -14,6 +14,7 @@ from robot_diag_control.monitor_gui import (
     RUN_TYPE_AUTONOMY_CENTER,
     RUN_TYPE_LABELS,
     RUN_TYPE_PERCEPTION,
+    RUN_TYPE_STATIONARY_PROFILING,
     RobotMonitorGui,
     _build_overlay_viewer_command,
     _build_parser,
@@ -436,6 +437,7 @@ class MonitorGuiTests(unittest.TestCase):
                     "advanced_experiment_overrides",
                     "teleop",
                     "run",
+                    "performance",
                     "status",
                     "log",
                 },
@@ -478,9 +480,14 @@ class MonitorGuiTests(unittest.TestCase):
                     "start",
                     "stop",
                     "retrieve",
+                    "performance_new_id",
+                    "performance_start",
+                    "performance_stop",
+                    "performance_retrieve",
                 },
             )
             self.assertEqual(gui._run_buttons["retrieve"].cget("text"), "Retrieve & Open Report")
+            self.assertEqual(gui._run_buttons["performance_start"].cget("text"), "Start Performance Run")
 
             texts = _widget_texts(root)
             self.assertTrue(any("Advanced Connection" in text for text in texts))
@@ -497,6 +504,37 @@ class MonitorGuiTests(unittest.TestCase):
                 "Open Overlay Video",
             ):
                 self.assertNotIn(removed_label, texts)
+        finally:
+            root.destroy()
+
+    @unittest.skipIf(tk is None, "tkinter is unavailable")
+    def test_gui_uses_dedicated_performance_tab_with_shared_run_state(self):
+        assert tk is not None
+        root = tk.Tk()
+        root.withdraw()
+        try:
+            gui = RobotMonitorGui(root, _build_parser().parse_args([]))
+
+            self.assertEqual(
+                [gui._control_notebook.tab(tab_id, "text") for tab_id in gui._control_notebook.tabs()],
+                ["Operation", "Performance"],
+            )
+            operation_text = _widget_texts(gui._control_notebook.nametowidget(gui._control_notebook.tabs()[0]))
+            performance_text = _widget_texts(gui._control_notebook.nametowidget(gui._control_notebook.tabs()[1]))
+            self.assertNotIn("Stationary Perception Profiling", operation_text)
+            self.assertIn("Detector model", performance_text)
+            self.assertIn("NPU core mask", performance_text)
+            self.assertIn("Class List", performance_text)
+            self.assertIn("maximum 120 seconds", " ".join(performance_text))
+
+            performance_config = gui._run_config(run_type=RUN_TYPE_STATIONARY_PROFILING)
+            self.assertEqual(performance_config.run_type, RUN_TYPE_STATIONARY_PROFILING)
+            self.assertEqual(performance_config.stationary_duration_sec, "120")
+
+            gui._set_run_state(RunPhase.RUNNING, run_id="performance_001")
+            self.assertEqual(str(gui._run_buttons["start"].cget("state")), "disabled")
+            self.assertEqual(str(gui._run_buttons["performance_start"].cget("state")), "disabled")
+            self.assertEqual(str(gui._run_buttons["performance_stop"].cget("state")), "normal")
         finally:
             root.destroy()
 

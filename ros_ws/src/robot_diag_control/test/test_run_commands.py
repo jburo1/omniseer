@@ -227,16 +227,29 @@ class RunCommandsTests(unittest.TestCase):
                     experiment_model_precision="int8",
                     experiment_model_backend="rknn",
                     runner_core_mask="core0_1_2",
-                    stationary_duration_sec="120",
+                    stationary_duration_sec="999",
                 ),
             )
             rendered = command[3]
             self.assertIn("timeout --preserve-status --signal=INT 120s", rendered)
+            self.assertIn("runner_warmup_runs:=3", rendered)
             self.assertIn("start_autonomy:=false", rendered)
             self.assertIn("start_perception_scan:=false", rendered)
+            self.assertIn("start_micro_ros_agent:=false", rendered)
+            self.assertIn("start_lidar:=false", rendered)
+            self.assertIn("start_slam:=false", rendered)
+            self.assertIn("start_rf2o:=false", rendered)
             self.assertIn("start_nav:=false", rendered)
+            self.assertIn("wait_for_boundary_topics:=false", rendered)
+            self.assertIn("start_gateway:=false", rendered)
             self.assertIn("runner_core_mask:=core0_1_2", rendered)
             self.assertIn("profiling.duration_sec=120", rendered)
+            self.assertIn("performance.warmup_runs=3", rendered)
+            self.assertIn("performance.workload_readiness=first_perf_summary_after_runner_warmup", rendered)
+            self.assertIn(
+                "performance.measurement_interval=first_perf_summary_after_runner_warmup_to_run_end",
+                rendered,
+            )
             self.assertIn("runner.core_mask=core0_1_2", rendered)
             self.assertIn("detector_model_path:=", rendered)
             self.assertIn("--record-classes person,cup", rendered)

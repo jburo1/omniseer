@@ -129,6 +129,16 @@ class RunSettingsTests(unittest.TestCase):
         self.assertFalse(config.record_video)
         self.assertFalse(config.record_rosbag)
 
+        bounded = resolve_run_form(
+            _values(
+                run_type_label=RUN_TYPE_LABELS[RUN_TYPE_STATIONARY_PROFILING],
+                stationary_duration_sec="999",
+            ),
+            repo_root=Path("/repo"),
+            default_run_id=lambda: "operator_default",
+        )
+        self.assertEqual(bounded.run_config.stationary_duration_sec, "120")
+
         with self.assertRaisesRegex(ValueError, "stationary profiling duration"):
             resolve_run_form(
                 _values(run_type_label=RUN_TYPE_LABELS[RUN_TYPE_STATIONARY_PROFILING], stationary_duration_sec="0"),

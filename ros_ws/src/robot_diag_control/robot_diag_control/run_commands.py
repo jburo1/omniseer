@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import shlex
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -22,6 +23,8 @@ DEFAULT_DEVCONTAINER_EXEC_TEMPLATE = (
 RUN_TYPE_PERCEPTION = "perception_recording"
 RUN_TYPE_AUTONOMY_CENTER = "autonomy_center_first_class"
 RUN_TYPE_STATIONARY_PROFILING = "stationary_perception_profiling"
+PERFORMANCE_MAX_DURATION_SEC = 120.0
+PERFORMANCE_WARMUP_RUNS = 3
 RUN_TYPE_LABELS = {
     RUN_TYPE_PERCEPTION: "Perception: 360° environment scan",
     RUN_TYPE_AUTONOMY_CENTER: "Autonomy: frame and capture target",
@@ -318,18 +321,38 @@ def _profile_duration_command(command: list[str], run_config: RunConfig) -> list
     """Bound profiling with SIGINT so the existing recorder can finalize evidence."""
     if run_config.run_type != RUN_TYPE_STATIONARY_PROFILING:
         return command
-    return ["timeout", "--preserve-status", "--signal=INT", f"{run_config.stationary_duration_sec}s", *command]
+    return [
+        "timeout",
+        "--preserve-status",
+        "--signal=INT",
+        f"{_performance_duration_sec(run_config)}s",
+        *command,
+    ]
+
+
+def _performance_duration_sec(run_config: RunConfig) -> str:
+    """Keep stationary performance runs within the total wall-clock budget."""
+    try:
+        requested = float(run_config.stationary_duration_sec)
+    except ValueError as exc:
+        raise ValueError("stationary profiling duration must be a positive number") from exc
+    if not math.isfinite(requested) or requested <= 0.0:
+        raise ValueError("stationary profiling duration must be a positive number")
+    return format(min(requested, PERFORMANCE_MAX_DURATION_SEC), ".12g")
 
 
 def _detector_parameter_launch_args(run_config: RunConfig) -> list[str]:
     if run_config.run_type == RUN_TYPE_PERCEPTION:
         return []
-    return [
+    args = [
         f"runner_core_mask:={run_config.runner_core_mask}",
         f"postprocess_score_threshold:={run_config.detector_score_threshold}",
         f"postprocess_nms_iou_threshold:={run_config.detector_nms_iou_threshold}",
         f"postprocess_max_detections:={run_config.detector_max_detections}",
     ]
+    if run_config.run_type == RUN_TYPE_STATIONARY_PROFILING:
+        args.append(f"runner_warmup_runs:={PERFORMANCE_WARMUP_RUNS}")
+    return args
 
 
 def _detector_experiment_parameters(run_config: RunConfig) -> list[str]:
@@ -349,7 +372,16 @@ def _detector_experiment_parameters(run_config: RunConfig) -> list[str]:
     ]
     if run_config.run_type == RUN_TYPE_STATIONARY_PROFILING:
         parameters.extend(
-            ["--record-experiment-parameter", f"profiling.duration_sec={run_config.stationary_duration_sec}"]
+            [
+                "--record-experiment-parameter",
+                f"profiling.duration_sec={_performance_duration_sec(run_config)}",
+                "--record-experiment-parameter",
+                f"performance.warmup_runs={PERFORMANCE_WARMUP_RUNS}",
+                "--record-experiment-parameter",
+                "performance.workload_readiness=first_perf_summary_after_runner_warmup",
+                "--record-experiment-parameter",
+                "performance.measurement_interval=first_perf_summary_after_runner_warmup_to_run_end",
+            ]
         )
     return parameters
 
@@ -378,8 +410,20 @@ def _autonomy_launch_args(*, classes: Sequence[str], run_type: str, run_dir: str
     if run_type == RUN_TYPE_PERCEPTION:
         return []
     if run_type == RUN_TYPE_STATIONARY_PROFILING:
-        # Make the no-motion contract explicit instead of relying on launch defaults.
-        return ["start_autonomy:=false", "start_perception_scan:=false", "start_nav:=false"]
+        # Keep the performance workload vision-only and make the no-motion
+        # contract explicit instead of relying on launch/profile defaults.
+        return [
+            "start_autonomy:=false",
+            "start_perception_scan:=false",
+            "start_micro_ros_agent:=false",
+            "require_teensy:=false",
+            "start_lidar:=false",
+            "start_slam:=false",
+            "start_rf2o:=false",
+            "start_nav:=false",
+            "wait_for_boundary_topics:=false",
+            "start_gateway:=false",
+        ]
     if run_type != RUN_TYPE_AUTONOMY_CENTER:
         raise ValueError(f"unsupported run type: {run_type}")
     if not classes:

@@ -47,6 +47,7 @@ from robot_diag_control.run_artifacts import (
 from robot_diag_control.run_commands import (
     DEFAULT_RUNTIME_TAG,
     DETECTOR_MODEL_CHOICES,
+    PERFORMANCE_MAX_DURATION_SEC,
     PREVIEW_ENCODER_LABELS,
     PREVIEW_ENCODER_ROCKCHIP,
     RUN_BACKEND_LABELS,
@@ -138,6 +139,7 @@ else:
 DEFAULT_ROBOT_HOST = "192.168.1.178"
 DEFAULT_ROBOT_USER = "radxa"
 RUN_STOP_GRACE_MS = 8000
+_OPERATION_RUN_TYPES = (RUN_TYPE_PERCEPTION, RUN_TYPE_AUTONOMY_CENTER)
 
 _AUTONOMY_EVENT_PATTERN = re.compile(r"\bevent=(?P<event>[a-z_]+)")
 _AUTONOMY_REASON_PATTERN = re.compile(r"\breason=(?P<reason>\S+)")
@@ -438,7 +440,6 @@ class RobotMonitorGui:
         self._detector_nms_iou_threshold_var = tk.StringVar(value="0.45")
         self._detector_max_detections_var = tk.StringVar(value="100")
         self._runner_core_mask_var = tk.StringVar(value="auto")
-        self._stationary_duration_sec_var = tk.StringVar(value="120")
         self._run_notes_text: Any | None = None
         self._run_experiment_frames: dict[str, Any] = {}
         self._mode_var = tk.StringVar(value=self._format_run_mode(self._run_state))
@@ -516,15 +517,28 @@ class RobotMonitorGui:
         body.add(control_column, weight=2)
         body.add(review_column, weight=3)
 
-        teleop_section = CollapsibleSection(control_column, "Teleop", padding=8, expanded=False)
+        self._control_notebook = ttk.Notebook(control_column)
+        operation_tab = ttk.Frame(self._control_notebook)
+        performance_tab = ttk.Frame(self._control_notebook)
+        self._control_notebook.add(operation_tab, text="Operation")
+        self._control_notebook.add(performance_tab, text="Performance")
+        self._control_notebook.select(operation_tab)
+        self._control_notebook.pack(fill=tk.BOTH, expand=True)
+
+        teleop_section = CollapsibleSection(operation_tab, "Teleop", padding=8, expanded=False)
         self._sections["teleop"] = teleop_section
         self._build_teleop_controls(teleop_section.body)
         teleop_section.pack(fill=tk.X)
 
-        run_section = CollapsibleSection(control_column, "Run", padding=8)
+        run_section = CollapsibleSection(operation_tab, "Run", padding=8)
         self._sections["run"] = run_section
         self._build_run_controls(run_section.body)
         run_section.pack(fill=tk.BOTH, expand=True, pady=(8, 0))
+
+        performance_section = CollapsibleSection(performance_tab, "Stationary Perception", padding=8)
+        self._sections["performance"] = performance_section
+        self._build_performance_controls(performance_section.body)
+        performance_section.pack(fill=tk.BOTH, expand=True)
 
         status_section = CollapsibleSection(review_column, "Operator Overview", padding=8)
         self._sections["status"] = status_section
@@ -627,7 +641,7 @@ class RobotMonitorGui:
         run_type_box = ttk.Combobox(
             experiment_holder,
             textvariable=self._run_type_var,
-            values=tuple(RUN_TYPE_LABELS.values()),
+            values=tuple(RUN_TYPE_LABELS[run_type] for run_type in _OPERATION_RUN_TYPES),
             state="readonly",
         )
         run_type_box.grid(row=0, column=1, columnspan=3, sticky=tk.EW, padx=(8, 0))
@@ -650,11 +664,6 @@ class RobotMonitorGui:
             width=8,
         )
         self._run_experiment_frames[RUN_TYPE_PERCEPTION] = perception_frame
-
-        profiling_frame = ttk.Frame(experiment_fields)
-        self._add_labeled_entry(profiling_frame, "Duration seconds", self._stationary_duration_sec_var, 0, 0, width=8)
-        self._build_detector_controls(profiling_frame, row=1)
-        self._run_experiment_frames[RUN_TYPE_STATIONARY_PROFILING] = profiling_frame
 
         autonomy_frame = ttk.Frame(experiment_fields)
         self._build_detector_controls(autonomy_frame, row=0)
@@ -769,6 +778,49 @@ class RobotMonitorGui:
         )
         self._run_buttons["retrieve"].pack(fill=tk.X, pady=(18, 0))
 
+    def _build_performance_controls(self, parent: Any) -> None:
+        form = ttk.Frame(parent)
+        form.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 14))
+
+        ttk.Label(
+            form,
+            text=(
+                f"Vision-only workload; maximum {format(PERFORMANCE_MAX_DURATION_SEC, '.12g')} seconds "
+                "including startup and warmup."
+            ),
+            wraplength=340,
+        ).grid(row=0, column=0, columnspan=4, sticky=tk.W)
+        ttk.Label(form, text="Backend").grid(row=1, column=0, sticky=tk.W, pady=(8, 0))
+        ttk.Combobox(
+            form,
+            textvariable=self._run_backend_var,
+            values=tuple(RUN_BACKEND_LABELS.values()),
+            state="readonly",
+        ).grid(row=1, column=1, columnspan=3, sticky=tk.EW, padx=(8, 0), pady=(8, 0))
+        self._build_detector_controls(form, row=2)
+        self._add_labeled_entry(form, "Run ID", self._run_id_var, 7, 0)
+        for column in range(4):
+            form.columnconfigure(column, weight=1 if column in {1, 3} else 0)
+
+        actions = ttk.Frame(parent)
+        actions.pack(side=tk.LEFT, fill=tk.Y)
+        self._run_buttons["performance_new_id"] = ttk.Button(actions, text="New ID", command=self.new_run_id)
+        self._run_buttons["performance_new_id"].pack(fill=tk.X)
+        self._run_buttons["performance_start"] = ttk.Button(
+            actions,
+            text="Start Performance Run",
+            command=lambda: self.start_run(run_type=RUN_TYPE_STATIONARY_PROFILING),
+        )
+        self._run_buttons["performance_start"].pack(fill=tk.X, pady=(8, 0))
+        self._run_buttons["performance_stop"] = ttk.Button(actions, text="Stop Run", command=self.stop_run)
+        self._run_buttons["performance_stop"].pack(fill=tk.X, pady=(8, 0))
+        self._run_buttons["performance_retrieve"] = ttk.Button(
+            actions,
+            text="Retrieve & Open Report",
+            command=self.retrieve_and_open_report,
+        )
+        self._run_buttons["performance_retrieve"].pack(fill=tk.X, pady=(18, 0))
+
     def _build_detector_controls(self, parent: Any, *, row: int) -> None:
         """Render the same detector controls for every detector-backed experiment."""
         self._add_labeled_entry(parent, "Class List", self._run_classes_var, row, 0)
@@ -848,7 +900,11 @@ class RobotMonitorGui:
     def _repo_root(self) -> Path:
         return Path(self._parsed.repo_root).expanduser().resolve()
 
-    def _run_form_values(self, run_id: str | None = None) -> RunFormValues:
+    def _run_form_values(
+        self,
+        run_id: str | None = None,
+        run_type_label: str | None = None,
+    ) -> RunFormValues:
         return RunFormValues(
             robot_host=self._connection_settings().host,
             ssh_user=self._ssh_user_var.get(),
@@ -857,7 +913,7 @@ class RobotMonitorGui:
             local_import_root=self._local_import_root_var.get(),
             run_id=run_id or self._run_id_var.get(),
             backend_label=self._run_backend_var.get(),
-            run_type_label=self._run_type_var.get(),
+            run_type_label=run_type_label or self._run_type_var.get(),
             classes_text=self._run_classes_var.get(),
             notes=self._run_notes(),
             runtime_tag=self._runtime_tag_var.get(),
@@ -880,15 +936,22 @@ class RobotMonitorGui:
             detector_max_detections=self._detector_max_detections_var.get(),
             detector_model_label=self._detector_model_var.get(),
             runner_core_mask=self._runner_core_mask_var.get(),
-            stationary_duration_sec=self._stationary_duration_sec_var.get(),
+            stationary_duration_sec=format(PERFORMANCE_MAX_DURATION_SEC, ".12g"),
             preview_encoder_label=self._preview_encoder_var.get(),
             record_video=bool(self._record_video_var.get()),
             record_rosbag=bool(self._record_rosbag_var.get()),
         )
 
-    def _run_form_selection(self, run_id: str | None = None) -> RunFormSelection:
+    def _run_form_selection(
+        self,
+        run_id: str | None = None,
+        run_type: str | None = None,
+    ) -> RunFormSelection:
         selection = resolve_run_form(
-            self._run_form_values(run_id=run_id),
+            self._run_form_values(
+                run_id=run_id,
+                run_type_label=RUN_TYPE_LABELS[run_type] if run_type is not None else None,
+            ),
             repo_root=self._repo_root(),
             default_run_id=_default_run_id,
         )
@@ -899,8 +962,8 @@ class RobotMonitorGui:
     def _robot_connection(self) -> RobotConnection:
         return self._run_form_selection().connection
 
-    def _run_config(self, run_id: str | None = None) -> RunConfig:
-        return self._run_form_selection(run_id=run_id).run_config
+    def _run_config(self, run_id: str | None = None, run_type: str | None = None) -> RunConfig:
+        return self._run_form_selection(run_id=run_id, run_type=run_type).run_config
 
     def _artifact_context(self) -> RunArtifactContext:
         return self._run_form_selection().artifact_context
@@ -1077,11 +1140,18 @@ class RobotMonitorGui:
             "start": availability.start,
             "stop": availability.stop,
             "retrieve": availability.retrieve,
+            "performance_new_id": availability.new_id,
+            "performance_start": availability.start,
+            "performance_stop": availability.stop,
+            "performance_retrieve": availability.retrieve,
         }
         if self._background_operation is not None:
             states["new_id"] = False
             states["start"] = False
             states["retrieve"] = False
+            states["performance_new_id"] = False
+            states["performance_start"] = False
+            states["performance_retrieve"] = False
         for name, enabled in states.items():
             button = self._run_buttons.get(name)
             if button is not None:
@@ -1141,7 +1211,7 @@ class RobotMonitorGui:
         self._run_id_var.set(_default_run_id())
         self._append_action("New run ID generated")
 
-    def start_run(self) -> None:
+    def start_run(self, *, run_type: str | None = None) -> None:
         self._append_action("Start Run requested")
         if remote_run_is_running(self._run_process):
             self._append_log("run already running", tag="activity_warning")
@@ -1149,7 +1219,7 @@ class RobotMonitorGui:
 
         try:
             connection = self._robot_connection()
-            run_config = self._run_config()
+            run_config = self._run_config(run_type=run_type)
         except ValueError as error:
             self._set_run_state(RunPhase.FAILED, message=str(error))
             self._append_error(f"failed to prepare run: {error}")

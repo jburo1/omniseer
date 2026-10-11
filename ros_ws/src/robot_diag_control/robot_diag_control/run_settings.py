@@ -10,6 +10,7 @@ from robot_diag_control.run_commands import (
     DEFAULT_DEVCONTAINER_EXEC_TEMPLATE,
     DEFAULT_RUNTIME_TAG,
     DETECTOR_MODEL_CHOICES,
+    PERFORMANCE_MAX_DURATION_SEC,
     PREVIEW_ENCODER_LABELS,
     RUN_BACKEND_LABELS,
     RUN_TYPE_AUTONOMY_CENTER,
@@ -165,6 +166,17 @@ def validated_positive_float(value: str, *, name: str, default: str) -> str:
     if not math.isfinite(parsed) or parsed <= 0.0:
         raise ValueError(f"{name} must be a positive number")
     return normalized
+
+
+def bounded_performance_duration(value: str) -> str:
+    duration = float(
+        validated_positive_float(
+            value,
+            name="stationary profiling duration",
+            default=format(PERFORMANCE_MAX_DURATION_SEC, ".12g"),
+        )
+    )
+    return format(min(duration, PERFORMANCE_MAX_DURATION_SEC), ".12g")
 
 
 def validated_nonnegative_int(value: str, *, name: str, default: str) -> str:
@@ -325,11 +337,7 @@ def resolve_run_form(
         ),
         runner_core_mask=selected_runner_core_mask(values.runner_core_mask) if uses_detector else "auto",
         stationary_duration_sec=(
-            validated_positive_float(
-                values.stationary_duration_sec,
-                name="stationary profiling duration",
-                default="120",
-            )
+            bounded_performance_duration(values.stationary_duration_sec)
             if run_type == RUN_TYPE_STATIONARY_PROFILING
             else "120"
         ),
