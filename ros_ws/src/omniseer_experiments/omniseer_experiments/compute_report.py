@@ -59,6 +59,8 @@ def write_compute_report(run_dir: Path, *, overwrite: bool = False) -> ComputeRe
     pipeline = _read_jsonl(run_dir / "pipeline_telemetry.jsonl", required=False)
     perf = _read_jsonl(run_dir / "perf.jsonl", required=False)
     system = _read_jsonl(run_dir / "system.jsonl", required=False)
+    start, end = _interval(manifest)
+    interval_issue = _interval_issue(manifest, start, end)
     issues = tuple(
         dict.fromkeys(
             [
@@ -66,14 +68,12 @@ def write_compute_report(run_dir: Path, *, overwrite: bool = False) -> ComputeRe
                 *pipeline.issues,
                 *perf.issues,
                 *system.issues,
+                *([interval_issue] if interval_issue else []),
             ]
         )
     )
     report_dir.mkdir(parents=True, exist_ok=True)
-    start, end = _interval(manifest)
-    measurement_pipeline = [
-        record for record in pipeline.records if record.get("source") == "consumer" and _in_interval(record, start, end)
-    ]
+    measurement_pipeline = [record for record in pipeline.records if _in_interval(record, start, end)]
     measurement_perf = _interval_records(perf.records, start, end)
     measurement_system = _interval_records(system.records, start, end)
     metrics = _metrics(manifest, inspection, measurement_pipeline, measurement_perf, measurement_system, issues)
@@ -114,21 +114,36 @@ def _interval(manifest: dict[str, Any]) -> tuple[int | None, int | None]:
 
 
 def _in_interval(record: dict[str, Any], start: int | None, end: int | None) -> bool:
+    if start is None or end is None or end <= start:
+        return False
     timestamp = record.get("consumer_end_ts_real_ns") or record.get("event_ts_real_ns")
     if not isinstance(timestamp, int):
         return False
-    return (start is None or timestamp >= start) and (end is None or timestamp <= end)
+    return start <= timestamp <= end
+
+
+def _interval_issue(manifest: dict[str, Any], start: int | None, end: int | None) -> str | None:
+    params = _manifest_nested_dict(manifest, "experiment", "parameters")
+    problems = []
+    for name, parsed in (("start", start), ("end", end)):
+        key = f"performance.measurement_interval_{name}_at"
+        if parsed is None:
+            reason = "missing" if params.get(key) in (None, "") else "invalid"
+            problems.append(f"{reason} {key}")
+    if start is not None and end is not None and end <= start:
+        problems.append("end must be later than start")
+    if problems:
+        return "measurement_interval_unavailable: " + "; ".join(problems)
+    return None
 
 
 def _interval_records(records: Sequence[dict[str, Any]], start: int | None, end: int | None) -> list[dict[str, Any]]:
-    if start is None and end is None:
-        return list(records)
+    if start is None or end is None or end <= start:
+        return []
     return [
         record
         for record in records
-        if isinstance(record.get("recv_ts_ns"), int)
-        and (start is None or record["recv_ts_ns"] >= start)
-        and (end is None or record["recv_ts_ns"] <= end)
+        if isinstance(record.get("recv_ts_ns"), int) and start <= record["recv_ts_ns"] <= end
     ]
 
 
@@ -168,7 +183,9 @@ def _metrics(
     issues: Sequence[str],
 ) -> dict[str, Any]:
     start, end = _interval(manifest)
+    interval_valid = _interval_issue(manifest, start, end) is None
     consumers = [record for record in pipeline if record.get("source") == "consumer"]
+    producers = [record for record in pipeline if record.get("source") == "producer"]
     params = _manifest_nested_dict(manifest, "experiment", "parameters")
     native = {
         name: _describe(_values(consumers, name, nested=True), scale=1 / 1_000_000.0)
@@ -205,13 +222,17 @@ def _metrics(
             }
         ],
         "pipeline": {
-            "measurement_consumer_frames": len(consumers),
+            "measurement_consumer_frames": len(consumers) if interval_valid else None,
             "throughput_fps": _describe(_values(perf, "consumer_fps")),
-            "preprocess_ms": native["acquire_read"],
+            "preprocess_ms": _describe(_values(producers, "preprocess", nested=True), scale=1 / 1_000_000.0),
             "postprocess_ms": native["postprocess"],
             "source_frame_age_ms": _describe(_values(consumers, "source_age_end_ns"), scale=1 / 1_000_000.0),
-            "superseded_frames": _delta(latest, "produced_count", "consumed_count"),
-            "errors": {"periodic_counters": errors, "native_non_ok_frames": native_errors},
+            "cumulative_produced_minus_consumed_frames": _delta(latest, "produced_count", "consumed_count"),
+            "counter_scope": "Cumulative since native telemetry startup, at the latest periodic sample in the measurement interval; not interval counts or a superseded-frame count.",
+            "errors": {
+                "periodic_counters": errors,
+                "native_non_ok_frames": native_errors if interval_valid else None,
+            },
         },
         "npu": npu,
         "system": {
@@ -225,6 +246,7 @@ def _metrics(
             "duration_sec": inspection.duration_sec,
             "measurement_interval_start_ns": start,
             "measurement_interval_end_ns": end,
+            "measurement_interval_status": "valid" if interval_valid else "unavailable",
             "completion_status": inspection.state,
             "issues": list(issues),
             "provenance_paths": ["manifest.yaml", "provenance"],
@@ -325,7 +347,13 @@ def _render(
             [
                 ("Completion status", experiment["completion_status"]),
                 ("Run duration", _format_duration(experiment["duration_sec"])),
-                ("Measurement frames", str(pipeline_metrics["measurement_consumer_frames"])),
+                ("Measurement interval", experiment["measurement_interval_status"]),
+                (
+                    "Measurement frames",
+                    str(pipeline_metrics["measurement_consumer_frames"])
+                    if pipeline_metrics["measurement_consumer_frames"] is not None
+                    else "Unavailable",
+                ),
                 ("Inference p95", _stat(inference, "p95", " ms")),
                 ("Observed change", experiment["observed_performance_change"]),
                 ("NPU attribution", "Host-wide telemetry only; no per-model utilization claim."),
@@ -370,16 +398,23 @@ def _render(
         _key_value_table(
             [
                 ("Consumer throughput", _stat(pipeline_metrics["throughput_fps"], "mean", " fps")),
+                ("Producer preprocess p95", _stat(pipeline_metrics["preprocess_ms"], "p95", " ms")),
                 ("Source-frame age p95", _stat(pipeline_metrics["source_frame_age_ms"], "p95", " ms")),
                 (
-                    "Frames superseded",
+                    "Cumulative produced minus consumed frames",
                     str(
-                        pipeline_metrics["superseded_frames"]
-                        if pipeline_metrics["superseded_frames"] is not None
+                        pipeline_metrics["cumulative_produced_minus_consumed_frames"]
+                        if pipeline_metrics["cumulative_produced_minus_consumed_frames"] is not None
                         else "Unavailable"
                     ),
                 ),
-                ("Native non-OK frames", str(pipeline_metrics["errors"]["native_non_ok_frames"])),
+                ("Periodic counter scope", pipeline_metrics["counter_scope"]),
+                (
+                    "Native non-OK frames",
+                    str(pipeline_metrics["errors"]["native_non_ok_frames"])
+                    if pipeline_metrics["errors"]["native_non_ok_frames"] is not None
+                    else "Unavailable",
+                ),
             ]
         )
         + latency_chart,

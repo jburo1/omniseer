@@ -228,6 +228,40 @@ plus the latest producer, preprocess, consumer, infer, postprocess, publish, and
 source-age timings. The native preview overlay and ROS bridge performance messages
 read snapshots from this rolling state.
 
+### Compute performance report measurement semantics
+
+The stationary compute report uses both manifest parameters
+`performance.measurement_interval_start_at` and
+`performance.measurement_interval_end_at`. Both must parse as timestamps, and the
+end must be later than the start. Missing, malformed, equal, or reversed boundaries
+produce an explicit `measurement_interval_unavailable` issue in the report and
+metrics. Interval metrics are unavailable in that case; the report does not fall
+back to the full run or a partially bounded interval.
+
+With valid boundaries, native consumer samples are selected by
+`consumer_end_ts_real_ns` (falling back to `event_ts_real_ns`), producer samples by
+`event_ts_real_ns`, and periodic performance/system samples by `recv_ts_ns`.
+Boundaries are inclusive. Producer timestamps are capture timestamps, so this
+selection describes samples associated with captures in the interval, rather than
+the exact time preprocessing completed.
+
+`pipeline.preprocess_ms` summarizes producer `dur_ns.preprocess` values in
+milliseconds. Null or absent durations are excluded; if no durations are
+available, preprocessing is unavailable. Consumer `dur_ns.acquire_read` measures
+buffer acquisition and remains a separate native consumer stage. Periodic
+`last_preprocess_ms` snapshots are not substituted for native per-sample latency.
+
+Periodic produced, consumed, and error counters accumulate since native telemetry
+startup. Selecting snapshots within the interval does not make these counters
+interval counts. The compute metrics field
+`pipeline.cumulative_produced_minus_consumed_frames` replaces the misleading
+`pipeline.superseded_frames` field and describes only the counter difference at
+the latest selected periodic snapshot. This difference is not an exact count of
+superseded frames. `pipeline.counter_scope` also applies to
+`pipeline.errors.periodic_counters`; native sample counts remain interval scoped.
+These are derived-report changes only; telemetry schemas and raw RunBundles are
+unchanged.
+
 ## Verification
 
 Use the smallest supported verification that covers the change:
