@@ -613,6 +613,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Analysis Tools">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#compute-performance-report-measurement-semantics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compute performance report measurement semantics
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1368,6 +1385,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Analysis Tools">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#compute-performance-report-measurement-semantics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compute performance report measurement semantics
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1814,6 +1848,35 @@ buffer-pressure, capture-error, preprocess-error, consumed, and infer-error coun
 plus the latest producer, preprocess, consumer, infer, postprocess, publish, and
 source-age timings. The native preview overlay and ROS bridge performance messages
 read snapshots from this rolling state.</p>
+<h3 id="compute-performance-report-measurement-semantics">Compute performance report measurement semantics<a class="headerlink" href="#compute-performance-report-measurement-semantics" title="Permanent link">&para;</a></h3>
+<p>The stationary compute report uses both manifest parameters
+<code>performance.measurement_interval_start_at</code> and
+<code>performance.measurement_interval_end_at</code>. Both must parse as timestamps, and the
+end must be later than the start. Missing, malformed, equal, or reversed boundaries
+produce an explicit <code>measurement_interval_unavailable</code> issue in the report and
+metrics. Interval metrics are unavailable in that case; the report does not fall
+back to the full run or a partially bounded interval.</p>
+<p>With valid boundaries, native consumer samples are selected by
+<code>consumer_end_ts_real_ns</code> (falling back to <code>event_ts_real_ns</code>), producer samples by
+<code>event_ts_real_ns</code>, and periodic performance/system samples by <code>recv_ts_ns</code>.
+Boundaries are inclusive. Producer timestamps are capture timestamps, so this
+selection describes samples associated with captures in the interval, rather than
+the exact time preprocessing completed.</p>
+<p><code>pipeline.preprocess_ms</code> summarizes producer <code>dur_ns.preprocess</code> values in
+milliseconds. Null or absent durations are excluded; if no durations are
+available, preprocessing is unavailable. Consumer <code>dur_ns.acquire_read</code> measures
+buffer acquisition and remains a separate native consumer stage. Periodic
+<code>last_preprocess_ms</code> snapshots are not substituted for native per-sample latency.</p>
+<p>Periodic produced, consumed, and error counters accumulate since native telemetry
+startup. Selecting snapshots within the interval does not make these counters
+interval counts. The compute metrics field
+<code>pipeline.cumulative_produced_minus_consumed_frames</code> replaces the misleading
+<code>pipeline.superseded_frames</code> field and describes only the counter difference at
+the latest selected periodic snapshot. This difference is not an exact count of
+superseded frames. <code>pipeline.counter_scope</code> also applies to
+<code>pipeline.errors.periodic_counters</code>; native sample counts remain interval scoped.
+These are derived-report changes only; telemetry schemas and raw RunBundles are
+unchanged.</p>
 <h2 id="verification">Verification<a class="headerlink" href="#verification" title="Permanent link">&para;</a></h2>
 <p>Use the smallest supported verification that covers the change:</p>
 <div class="highlight"><pre><span></span><code>scripts/omni<span class="w"> </span><span class="nb">test</span><span class="w"> </span>vision
@@ -1848,7 +1911,7 @@ end-to-end robot runtime timing.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="October 2, 2026 21:55:23 UTC">October 2, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="October 11, 2026 21:42:54 UTC">October 11, 2026</span>
   </span>
 
     
