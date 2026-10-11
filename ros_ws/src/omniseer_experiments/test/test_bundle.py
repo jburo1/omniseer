@@ -248,6 +248,26 @@ class RunBundleWriterTests(unittest.TestCase):
             finally:
                 writer.close()
 
+    def test_recorder_observed_experiment_metadata_is_written_at_finalize(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "runs" / "demo_001"
+            writer = RunBundleWriter(_config(run_dir), started_at=STARTED_AT)
+            try:
+                writer.set_experiment_parameter(
+                    "performance.measurement_interval_start_at",
+                    "2026-07-19T12:00:10+00:00",
+                )
+                writer.set_experiment_parameter(
+                    "performance.measurement_interval_sec",
+                    "50",
+                )
+                writer.finalize(ended_at=ENDED_AT)
+                manifest = (run_dir / "manifest.yaml").read_text(encoding="utf-8")
+                self.assertIn('performance.measurement_interval_start_at: "2026-07-19T12:00:10+00:00"', manifest)
+                self.assertIn('performance.measurement_interval_sec: "50"', manifest)
+            finally:
+                writer.close()
+
     def test_records_bridge_emitted_resolved_vision_config(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             run_dir = Path(tmp) / "runs" / "demo_001"

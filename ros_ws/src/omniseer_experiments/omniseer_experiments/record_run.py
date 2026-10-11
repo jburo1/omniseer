@@ -232,6 +232,7 @@ class PerceptionRunRecorder(Node):
         self._closed = False
         self._battery_lock = threading.Lock()
         self._latest_lipo_battery: dict[str, Any] | None = None
+        self._performance_measurement_started_at: datetime | None = None
 
         bundle = RunBundleWriter(
             RunBundleConfig(
@@ -272,6 +273,9 @@ class PerceptionRunRecorder(Node):
             queue_size=options.queue_size,
             flush_interval_sec=options.flush_interval_sec,
         )
+        self._performance_measurement_enabled = bool(
+            (options.experiment_parameters or {}).get("performance.workload_readiness")
+        )
         self._system_telemetry = SystemTelemetryThread(
             sampler=SystemTelemetrySampler(),
             writer=self._writer,
@@ -297,6 +301,16 @@ class PerceptionRunRecorder(Node):
         self._closed = True
         self._system_telemetry.stop()
         self._ros_graph_capture.join()
+        if self._performance_measurement_started_at is not None:
+            ended_at = datetime.now(timezone.utc)
+            self._writer.bundle.set_experiment_parameter(
+                "performance.measurement_interval_end_at",
+                ended_at.isoformat(),
+            )
+            self._writer.bundle.set_experiment_parameter(
+                "performance.measurement_interval_sec",
+                format((ended_at - self._performance_measurement_started_at).total_seconds(), ".12g"),
+            )
         summary = self._writer.close()
         self.get_logger().info(f"finalized perception run bundle: out_dir={self._options.out_dir}")
         return summary
@@ -309,6 +323,21 @@ class PerceptionRunRecorder(Node):
 
     def _on_perf(self, message: VisionPerfSummary) -> None:
         record = perf_summary_to_record(message, topic=self._options.perf_topic)
+        if (
+            self._performance_measurement_enabled
+            and self._performance_measurement_started_at is None
+            and int(message.consumed_count) > 0
+        ):
+            self._performance_measurement_started_at = datetime.now(timezone.utc)
+            self._writer.bundle.set_experiment_parameter(
+                "performance.workload_ready_at",
+                self._performance_measurement_started_at.isoformat(),
+            )
+            self._writer.bundle.set_experiment_parameter(
+                "performance.measurement_interval_start_at",
+                self._performance_measurement_started_at.isoformat(),
+            )
+            self.get_logger().info("performance workload ready; recording measurement interval")
         accepted = self._writer.submit("perf", record)
         if not accepted:
             self.get_logger().warning("dropped perf record because recorder queue is full")

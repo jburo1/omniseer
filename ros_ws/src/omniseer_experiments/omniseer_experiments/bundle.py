@@ -271,6 +271,7 @@ class RunBundleWriter:
         self.ended_at: datetime | None = None
         self.summary = SummaryAccumulator(config.run_id)
         self._closed = False
+        self._experiment_parameters = dict(config.experiment_parameters)
 
         self._prepare_run_dir()
         self.evidence_dir.mkdir(exist_ok=True)
@@ -356,6 +357,12 @@ class RunBundleWriter:
 
     def record_drop(self, stream: str, count: int = 1) -> None:
         self.summary.record_drop(stream, count)
+
+    def set_experiment_parameter(self, key: str, value: Any) -> None:
+        """Add recorder-observed metadata before finalizing the manifest."""
+        if self._closed:
+            raise RuntimeError("cannot update a finalized run bundle")
+        self._experiment_parameters[key] = value
 
     def finalize(self, *, ended_at: datetime | None = None) -> dict[str, Any]:
         if self._closed and self.summary_path.exists():
@@ -491,7 +498,7 @@ class RunBundleWriter:
             },
             "experiment": {
                 "config": self.config.experiment_config,
-                "parameters": dict(sorted(self.config.experiment_parameters.items())),
+                "parameters": dict(sorted(self._experiment_parameters.items())),
             },
             "comparison": {
                 "comparison_id": _optional_string(self.config.comparison_id),
