@@ -5,6 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
+from omniseer_experiments.compute_report import is_compute_performance_run
 from omniseer_experiments.run_inspection import STATE_COMPLETE, InspectionIssue, inspect_run
 from omniseer_experiments.run_retrieval import RsyncProgress, parse_rsync_progress_event
 
@@ -104,7 +105,9 @@ def imported_run_dir(context: RunArtifactContext, run_id: str) -> Path:
 
 
 def report_path(context: RunArtifactContext, run_id: str) -> Path:
-    return imported_run_dir(context, run_id) / "report" / "index.html"
+    run_dir = imported_run_dir(context, run_id)
+    report_name = "compute.html" if is_compute_performance_run(run_dir) else "index.html"
+    return run_dir / "report" / report_name
 
 
 def inspect_run_artifacts(
@@ -167,11 +170,15 @@ def build_report_command(
     run_id: str,
     overwrite: bool = True,
 ) -> list[str]:
-    return build_omni_report_command(
+    run_dir = imported_run_dir(context, run_id)
+    command = build_omni_report_command(
         repo_root=context.repo_root,
-        run_dir=imported_run_dir(context, run_id),
+        run_dir=run_dir,
         overwrite=overwrite,
     )
+    if is_compute_performance_run(run_dir):
+        command[2] = "compute-report"
+    return command
 
 
 def build_video_command(context: RunArtifactContext, *, run_id: str) -> list[str]:

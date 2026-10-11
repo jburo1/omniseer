@@ -23,6 +23,7 @@ setup(
             "list_runs = omniseer_experiments.run_inspection:list_runs_main",
             "record_run = omniseer_experiments.record_run:main",
             "report_run = omniseer_experiments.run_report:report_run_main",
+            "report_compute = omniseer_experiments.compute_report:compute_report_main",
             "retrieve_runs = omniseer_experiments.run_retrieval:main",
             "build_run_video = omniseer_experiments.run_video:main",
             "comparison_report = omniseer_experiments.comparison_report:comparison_report_main",

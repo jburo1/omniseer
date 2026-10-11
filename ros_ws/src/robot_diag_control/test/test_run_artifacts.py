@@ -133,6 +133,20 @@ class RunArtifactsTests(unittest.TestCase):
             ["/repo/scripts/omni", "runs", "report", "/repo/runs/imported/operator_001", "--overwrite"],
         )
 
+    def test_performance_bundle_uses_compute_report_path_and_command(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            context = _context_for_repo(Path(tmp))
+            run_dir = imported_run_dir(context, "operator_001")
+            run_dir.mkdir(parents=True)
+            (run_dir / "manifest.yaml").write_text(
+                'experiment:\n  config: "Stationary Perception Profiling"\n', encoding="utf-8"
+            )
+            command = build_report_command(context, run_id="operator_001")
+            path = report_path(context, "operator_001")
+
+        self.assertEqual(command[2], "compute-report")
+        self.assertEqual(path.name, "compute.html")
+
     def test_build_run_videos_requires_corrected_source_derivative(self):
         with tempfile.TemporaryDirectory() as tmp:
             context = _context_for_repo(Path(tmp))

@@ -340,6 +340,10 @@ EOF
         omni_source_ros_workspace
         exec ros2 run omniseer_experiments report_run "$@"
         ;;
+      compute-report)
+        omni_source_ros_workspace
+        exec ros2 run omniseer_experiments report_compute "$@"
+        ;;
       commissioning)
         omni_source_ros_workspace
         exec ros2 run omniseer_experiments analyze_commissioning "$@"
