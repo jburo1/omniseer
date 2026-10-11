@@ -12,9 +12,8 @@ ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 ARG D2_VERSION=v0.7.1
 
-ARG DEBIAN_FRONTEND=noninteractive=
-ENV LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 \
-    PYTHONUNBUFFERED=1 \
+ARG DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_NO_CACHE_DIR=1 \
     ROS_DISTRO=${ROS_DISTRO}
@@ -35,6 +34,8 @@ RUN apt-get update && \
     && echo "$USERNAME ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/$USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME \
     && locale-gen en_US.UTF-8
+
+ENV LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
 
 # Base deps, tools, GL
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -123,18 +124,19 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh && ~/.local/bin/uv --version
 # Install deps defined in pyproject (dev + perception) *into /opt/venv*.
 # Keep OpenCV on the Ubuntu package path: pip OpenCV wheels shadow python3-opencv
 # and do not provide the GStreamer video I/O backend needed by operator preview.
+# Torch is installed below from a target-specific PyTorch index. Exclude its
+# generic PyPI dependency closure here so CPU images do not download CUDA wheels.
 RUN bash -lc 'source /opt/venv/bin/activate && cd /tmp/app && \
   ~/.local/bin/uv export --frozen --extra dev --extra perception -o /tmp/req.txt && \
-  sed -i "/^opencv-python==/d;/^opencv-python-headless==/d" /tmp/req.txt && \
+  perl -0pi -e "s/^(?:opencv-python(?:-headless)?|torch|torchvision|torchaudio|triton|nvidia-[[:alnum:]-]+)==[^\\n]*(?:\\n[ \\t].*)*//mg" /tmp/req.txt && \
   ~/.local/bin/uv pip install -U pip && \
   ~/.local/bin/uv pip install --no-deps -r /tmp/req.txt && \
-  ~/.local/bin/uv pip uninstall opencv-python opencv-python-headless || true && \
   python -c '"'"'import cv2; print(cv2.__file__); gstreamer_lines = [line for line in cv2.getBuildInformation().splitlines() if "GStreamer" in line]; print(gstreamer_lines); assert gstreamer_lines and "YES" in gstreamer_lines[0], "OpenCV must come from python3-opencv with GStreamer enabled"'"'"''
 
 ARG TORCH_MODE=cpu   # cpu | cuda
-# PyTorch CUDA wheels (CUDA 12.8 channel)
+# Install target-specific PyTorch wheels; PyPI's Linux wheels pull CUDA runtime
+# packages even for the CPU development configuration.
 RUN bash -lc 'source /opt/venv/bin/activate && \
-  ~/.local/bin/uv pip uninstall -y torch torchvision torchaudio || true && \
   if [ "$TORCH_MODE" = "cuda" ]; then \
     echo "Installing CUDA wheels"; \
     ~/.local/bin/uv pip install \
@@ -143,7 +145,8 @@ RUN bash -lc 'source /opt/venv/bin/activate && \
   else \
     echo "Installing CPU wheels"; \
     ~/.local/bin/uv pip install \
-      torch torchvision torchaudio; \
+      --index-url https://download.pytorch.org/whl/cpu \
+      torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0; \
   fi'
 USER root
 
