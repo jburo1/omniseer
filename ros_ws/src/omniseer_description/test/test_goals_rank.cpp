@@ -64,7 +64,7 @@ namespace
   {
     double lo = std::numeric_limits<double>::infinity(),
            hi = -std::numeric_limits<double>::infinity();
-    void observe(double v)
+    void   observe(double v)
     {
       if (std::isfinite(v))
       {
