@@ -136,6 +136,11 @@ special Docker-network dependency.
 See [YOLO-World v2 Model Deployment](../perception/yolo-world-model-deployment.md)
 for the pinned builder, local inputs, artifacts, and calibration assets.
 
+The isolated YOLO11 workflow uses `scripts/omni model yolo11` with
+`assets`, `image`, `export`, and `compile` subcommands. See
+[YOLO11 model building](../perception/yolo11-model-building.md) for pinned
+versions, tensor contracts, provenance, and separate INT8 calibration.
+
 ## `runtime`
 
 Manages robot-local runtime container checkpoints and evidence runs.

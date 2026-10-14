@@ -52,6 +52,7 @@ nav:
     - Vision Pipeline: perception/vision-pipeline.md
     - Vision Telemetry: perception/vision-telemetry.md
     - YOLO-World Model Deployment: perception/yolo-world-model-deployment.md
+    - YOLO11 Model Building: perception/yolo11-model-building.md
     - INT8 Quantization Technical Appendix: perception/int8-quantization-investigation.md
   - Robot Runtime:
     - Runtime Overview: perception/runtime-overview.md

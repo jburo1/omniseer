@@ -47,6 +47,7 @@ model_select_variant() {
 model_usage() {
   cat <<'EOF'
 Usage:
+  scripts/omni model yolo11 <assets|image|export|compile> [options]
   scripts/omni model assets
   scripts/omni model calibration [--images-dir <dir>] [--classes <file>] [--clip-model <dir>] [--calibration-dir <dir>] [--image <name>]
   scripts/omni model image [--image <name>] [docker build args...]
@@ -622,6 +623,7 @@ model_main() {
   local subcommand="${1:-help}"
   if [[ $# -gt 0 ]]; then shift; fi
   case "${subcommand}" in
+    yolo11) source "${script_dir}/model-yolo11.sh"; model_yolo11_main "$@" ;;
     assets) model_assets "$@" ;;
     calibration) model_calibration "$@" ;;
     image) model_image "$@" ;;
