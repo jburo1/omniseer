@@ -70,4 +70,4 @@ On the laptop, the operator gateway, preview stream, reports, and offboard inspe
 
 See the [project documentation](https://jburo1.github.io/omniseer/) for more detail.
 
-I'm currently working on fine-tuning and deploying an image segmentation model onboard the NPU, NPU profiling, and validating EKF belief vs. ground truth robot motion.
+I'm currently working on fine-tuning and deploying a custom detector, NPU profiling, and validating EKF belief vs. ground truth robot motion.
