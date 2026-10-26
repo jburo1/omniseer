@@ -143,7 +143,7 @@ namespace omniseer_autonomy
               });
             }
             apply_output(_controller.update_detections(detections, elapsed_sec()),
-                                 rclcpp::Time(msg.header.stamp).nanoseconds());
+                         rclcpp::Time(msg.header.stamp).nanoseconds());
           });
       _odometry_subscription = create_subscription<nav_msgs::msg::Odometry>(
           odometry_topic, 10, [this](const nav_msgs::msg::Odometry& msg)
