@@ -6,7 +6,6 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-
 if __package__ in {None, ""}:
     module_path = Path(__file__).resolve().parents[1] / "bringup" / "wait_for_topics.py"
     import importlib.util

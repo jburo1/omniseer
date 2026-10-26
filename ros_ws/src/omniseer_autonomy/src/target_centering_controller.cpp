@@ -492,7 +492,7 @@ namespace omniseer_autonomy
     const auto area_ratio = bbox_area_ratio(target);
     const auto centered   = std::abs(error) <= _config.center_deadband;
     const auto framed     = _approach_holding && area_ratio >= _config.bbox_area_min_ratio &&
-                        area_ratio <= _config.bbox_area_max_ratio;
+                            area_ratio <= _config.bbox_area_max_ratio;
 
     if (centered && !_centered_at_sec.has_value())
     {

@@ -446,7 +446,7 @@ namespace omniseer_vision_bridge
       }
 
       const size_t row_bytes = static_cast<size_t>(image.size.w) * 3u;
-      const size_t needed    = static_cast<size_t>(plane.offset) +
+      const size_t needed = static_cast<size_t>(plane.offset) +
                             static_cast<size_t>(plane.stride) * static_cast<size_t>(image.size.h);
       if (needed > map_length)
       {
