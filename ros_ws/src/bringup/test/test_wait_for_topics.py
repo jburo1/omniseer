@@ -23,9 +23,7 @@ class WaitForTopicsTests(unittest.TestCase):
     def test_wait_retries_topic_discovery_until_a_message_arrives(self) -> None:
         outcomes = iter(
             [
-                subprocess.CompletedProcess(
-                    [], 1, stderr="Could not determine the type for the passed topic\n"
-                ),
+                subprocess.CompletedProcess([], 1, stderr="Could not determine the type for the passed topic\n"),
                 subprocess.CompletedProcess([], 0, stderr=""),
             ]
         )
@@ -44,9 +42,7 @@ class WaitForTopicsTests(unittest.TestCase):
 
     def test_wait_reports_the_last_ros_failure_after_deadline(self) -> None:
         now = iter([0.0, 0.0, 1.0])
-        failure = subprocess.CompletedProcess(
-            [], 1, stderr="Could not determine the type for the passed topic\n"
-        )
+        failure = subprocess.CompletedProcess([], 1, stderr="Could not determine the type for the passed topic\n")
 
         result = self._module.wait_for_topic(
             "/imu",
