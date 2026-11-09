@@ -63,7 +63,11 @@ def _pose_delta(samples: Sequence[dict[str, float]]) -> dict[str, float] | None:
     if len(samples) < 2:
         return None
     first, last = samples[0], samples[-1]
-    return {"x_m": last["x"] - first["x"], "y_m": last["y"] - first["y"], "yaw_rad": _angle_delta(last["yaw"], first["yaw"])}
+    return {
+        "x_m": last["x"] - first["x"],
+        "y_m": last["y"] - first["y"],
+        "yaw_rad": _angle_delta(last["yaw"], first["yaw"]),
+    }
 
 
 def _angle_delta(end: float, start: float) -> float:
@@ -87,7 +91,9 @@ def _inside(samples: Iterable[dict[str, float]], start: float, end: float) -> li
     return [sample for sample in samples if start <= sample["time"] < end]
 
 
-def _onset_settling(samples: Sequence[dict[str, float]], axis: str, target: float, start: float) -> dict[str, float | None] | None:
+def _onset_settling(
+    samples: Sequence[dict[str, float]], axis: str, target: float, start: float
+) -> dict[str, float | None] | None:
     """Return conservative 10%-onset and final-contiguous 20%-band settling.
 
     It intentionally reports ``null`` where the recorded sampling is too sparse
@@ -149,7 +155,9 @@ def analyze_samples(samples_by_topic: dict[str, list[dict[str, Any]]]) -> dict[s
         imu = _inside(samples_by_topic.get("/imu", []), start, end)
         encoders = _inside(samples_by_topic.get("/encoder_counts", []), start, end)
         command_stats = _stats(command)
-        command_mean = {axis: command_stats[axis]["mean"] for axis in AXES} if command_stats else {axis: 0.0 for axis in AXES}
+        command_mean = (
+            {axis: command_stats[axis]["mean"] for axis in AXES} if command_stats else {axis: 0.0 for axis in AXES}
+        )
         imu_stats = _stats(imu, ("wz",))
         phase_results.append(
             {
@@ -168,7 +176,9 @@ def analyze_samples(samples_by_topic: dict[str, list[dict[str, Any]]]) -> dict[s
                     "raw_wheel_odometry": _cross_axis(raw, command_mean),
                     "filtered_odometry": _cross_axis(filtered, command_mean),
                 },
-                "raw_odom_response_timing": _onset_settling(raw, _active_axis(command_mean), _active_target(command_mean), start),
+                "raw_odom_response_timing": _onset_settling(
+                    raw, _active_axis(command_mean), _active_target(command_mean), start
+                ),
                 "filtered_odom_response_timing": _onset_settling(
                     filtered, _active_axis(command_mean), _active_target(command_mean), start
                 ),
@@ -208,7 +218,9 @@ def _active_target(command: dict[str, float]) -> float:
 def _encoder_delta(samples: Sequence[dict[str, float]]) -> dict[str, float] | None:
     if len(samples) < 2:
         return None
-    return {axis: samples[-1][axis] - samples[0][axis] for axis in ("front_left", "front_right", "rear_left", "rear_right")}
+    return {
+        axis: samples[-1][axis] - samples[0][axis] for axis in ("front_left", "front_right", "rear_left", "rear_right")
+    }
 
 
 def _stationary_summary(
@@ -220,12 +232,14 @@ def _stationary_summary(
         if command and all(command[axis]["mean"] == 0.0 for axis in AXES):
             stationary.append(phase)
     intervals = [(phase["start_sec"], phase["end_sec"]) for phase in stationary]
+
     def collect(topic: str) -> list[dict[str, float]]:
         return [
             sample
             for sample in samples_by_topic.get(topic, [])
             if any(start <= sample["time"] < end for start, end in intervals)
         ]
+
     return {
         "phase_names": [phase["name"] for phase in stationary],
         "raw_wheel_odometry_velocity": _stats(collect("/mecanum_drive_controller/odometry")),
@@ -310,12 +324,29 @@ def _normalize_message(topic: str, message: Any, timestamp: float) -> dict[str, 
         return {**sample, "vx": _number(twist.linear.x), "vy": _number(twist.linear.y), "wz": _number(twist.angular.z)}
     if topic in {"/mecanum_drive_controller/odometry", "/odometry/filtered"}:
         twist, pose = message.twist.twist, message.pose.pose
-        yaw = math.atan2(2.0 * (pose.orientation.w * pose.orientation.z + pose.orientation.x * pose.orientation.y), 1.0 - 2.0 * (pose.orientation.y**2 + pose.orientation.z**2))
-        return {**sample, "vx": _number(twist.linear.x), "vy": _number(twist.linear.y), "wz": _number(twist.angular.z), "x": _number(pose.position.x), "y": _number(pose.position.y), "yaw": yaw}
+        yaw = math.atan2(
+            2.0 * (pose.orientation.w * pose.orientation.z + pose.orientation.x * pose.orientation.y),
+            1.0 - 2.0 * (pose.orientation.y**2 + pose.orientation.z**2),
+        )
+        return {
+            **sample,
+            "vx": _number(twist.linear.x),
+            "vy": _number(twist.linear.y),
+            "wz": _number(twist.angular.z),
+            "x": _number(pose.position.x),
+            "y": _number(pose.position.y),
+            "yaw": yaw,
+        }
     if topic == "/imu":
         return {**sample, "wz": _number(message.angular_velocity.z)}
     if topic == "/encoder_counts":
-        return {**sample, **{name: _number(getattr(message, name)) for name in ("front_left", "front_right", "rear_left", "rear_right")}}
+        return {
+            **sample,
+            **{
+                name: _number(getattr(message, name))
+                for name in ("front_left", "front_right", "rear_left", "rear_right")
+            },
+        }
     return None
 
 
@@ -335,10 +366,42 @@ def write_commissioning_analysis(run_dir: Path, *, overwrite: bool = False) -> P
 
 
 def _markdown(summary: dict[str, Any]) -> str:
-    lines = ["# Commissioning analysis", "", "Offline measurements from recorded rosbag timestamps. Commands, controller references, odometry, and IMU are not external physical ground truth.", "", "| Phase | Duration (s) | Command vx/vy/wz | Raw odom vx/vy/wz | Filtered vx/vy/wz |", "| --- | ---: | --- | --- | --- |"]
+    lines = [
+        "# Commissioning analysis",
+        "",
+        "Offline measurements from recorded rosbag timestamps. Commands, controller references, odometry, and IMU are not external physical ground truth.",
+        "",
+        "| Phase | Duration (s) | Command vx/vy/wz | Raw odom vx/vy/wz | Filtered vx/vy/wz |",
+        "| --- | ---: | --- | --- | --- |",
+    ]
     for phase in summary["phases"]:
-        lines.append("| {name} | {duration:.3f} | {command} | {raw} | {filtered} |".format(name=phase["name"], duration=phase["duration_sec"], command=_format_metric(phase["command"]), raw=_format_metric(phase["raw_wheel_odometry_velocity"]), filtered=_format_metric(phase["filtered_odometry_velocity"])))
-    lines.extend(["", "## Stationary bias/noise", "", "```json", json.dumps(summary["stationary"], indent=2, sort_keys=True), "```", "", "## Positive/negative raw-odometry symmetry", "", "```json", json.dumps(summary["positive_negative_symmetry"], indent=2, sort_keys=True), "```", "", "Plots: `vx.svg`, `vy.svg`, `wz.svg`, `trajectory_xy.svg`, and `yaw.svg`."])
+        lines.append(
+            "| {name} | {duration:.3f} | {command} | {raw} | {filtered} |".format(
+                name=phase["name"],
+                duration=phase["duration_sec"],
+                command=_format_metric(phase["command"]),
+                raw=_format_metric(phase["raw_wheel_odometry_velocity"]),
+                filtered=_format_metric(phase["filtered_odometry_velocity"]),
+            )
+        )
+    lines.extend(
+        [
+            "",
+            "## Stationary bias/noise",
+            "",
+            "```json",
+            json.dumps(summary["stationary"], indent=2, sort_keys=True),
+            "```",
+            "",
+            "## Positive/negative raw-odometry symmetry",
+            "",
+            "```json",
+            json.dumps(summary["positive_negative_symmetry"], indent=2, sort_keys=True),
+            "```",
+            "",
+            "Plots: `vx.svg`, `vy.svg`, `wz.svg`, `trajectory_xy.svg`, and `yaw.svg`.",
+        ]
+    )
     return "\n".join(lines) + "\n"
 
 
@@ -350,22 +413,73 @@ def _format_metric(metric: dict[str, Any] | None) -> str:
 
 def _write_plots(output_dir: Path, samples: dict[str, list[dict[str, Any]]], phases: Sequence[dict[str, Any]]) -> None:
     start = phases[0]["start_sec"]
-    _write_series_svg(output_dir / "vx.svg", "vx (m/s)", [("command", samples.get("/cmd_vel_autonomy", []), "vx"), ("reference", samples.get("/mecanum_drive_controller/reference", []), "vx"), ("raw odom", samples.get("/mecanum_drive_controller/odometry", []), "vx"), ("filtered odom", samples.get("/odometry/filtered", []), "vx")], phases, start)
-    _write_series_svg(output_dir / "vy.svg", "vy (m/s)", [("command", samples.get("/cmd_vel_autonomy", []), "vy"), ("reference", samples.get("/mecanum_drive_controller/reference", []), "vy"), ("raw odom", samples.get("/mecanum_drive_controller/odometry", []), "vy"), ("filtered odom", samples.get("/odometry/filtered", []), "vy")], phases, start)
-    _write_series_svg(output_dir / "wz.svg", "wz (rad/s)", [("command", samples.get("/cmd_vel_autonomy", []), "wz"), ("reference", samples.get("/mecanum_drive_controller/reference", []), "wz"), ("raw odom", samples.get("/mecanum_drive_controller/odometry", []), "wz"), ("IMU", samples.get("/imu", []), "wz"), ("filtered odom", samples.get("/odometry/filtered", []), "wz")], phases, start)
+    _write_series_svg(
+        output_dir / "vx.svg",
+        "vx (m/s)",
+        [
+            ("command", samples.get("/cmd_vel_autonomy", []), "vx"),
+            ("reference", samples.get("/mecanum_drive_controller/reference", []), "vx"),
+            ("raw odom", samples.get("/mecanum_drive_controller/odometry", []), "vx"),
+            ("filtered odom", samples.get("/odometry/filtered", []), "vx"),
+        ],
+        phases,
+        start,
+    )
+    _write_series_svg(
+        output_dir / "vy.svg",
+        "vy (m/s)",
+        [
+            ("command", samples.get("/cmd_vel_autonomy", []), "vy"),
+            ("reference", samples.get("/mecanum_drive_controller/reference", []), "vy"),
+            ("raw odom", samples.get("/mecanum_drive_controller/odometry", []), "vy"),
+            ("filtered odom", samples.get("/odometry/filtered", []), "vy"),
+        ],
+        phases,
+        start,
+    )
+    _write_series_svg(
+        output_dir / "wz.svg",
+        "wz (rad/s)",
+        [
+            ("command", samples.get("/cmd_vel_autonomy", []), "wz"),
+            ("reference", samples.get("/mecanum_drive_controller/reference", []), "wz"),
+            ("raw odom", samples.get("/mecanum_drive_controller/odometry", []), "wz"),
+            ("IMU", samples.get("/imu", []), "wz"),
+            ("filtered odom", samples.get("/odometry/filtered", []), "wz"),
+        ],
+        phases,
+        start,
+    )
     _write_xy_svg(output_dir / "trajectory_xy.svg", samples, "x (m)", "y (m)", "x", "y")
-    _write_series_svg(output_dir / "yaw.svg", "yaw (rad)", [("raw odom", samples.get("/mecanum_drive_controller/odometry", []), "yaw"), ("filtered odom", samples.get("/odometry/filtered", []), "yaw")], phases, start)
+    _write_series_svg(
+        output_dir / "yaw.svg",
+        "yaw (rad)",
+        [
+            ("raw odom", samples.get("/mecanum_drive_controller/odometry", []), "yaw"),
+            ("filtered odom", samples.get("/odometry/filtered", []), "yaw"),
+        ],
+        phases,
+        start,
+    )
 
 
-def _write_series_svg(path: Path, title: str, series: Sequence[tuple[str, Sequence[dict[str, Any]], str]], phases: Sequence[dict[str, Any]], start: float) -> None:
+def _write_series_svg(
+    path: Path,
+    title: str,
+    series: Sequence[tuple[str, Sequence[dict[str, Any]], str]],
+    phases: Sequence[dict[str, Any]],
+    start: float,
+) -> None:
     points = [(sample["time"] - start, sample[axis]) for _, samples, axis in series for sample in samples]
     xmax = max((point[0] for point in points), default=1.0) or 1.0
     values = [point[1] for point in points] or [0.0]
     ymin, ymax = min(values), max(values)
     margin = max((ymax - ymin) * 0.08, 1.0e-4)
     ymin, ymax = ymin - margin, ymax + margin
+
     def xy(point: tuple[float, float]) -> str:
         return f"{70 + 850 * point[0] / xmax:.2f},{450 - 390 * (point[1] - ymin) / (ymax - ymin):.2f}"
+
     colors = ("#1769aa", "#d05a00", "#228833", "#aa3377", "#6644aa")
     body = _svg_header(title)
     body += f'<text x="70" y="35" class="title">{html.escape(title)}</text><line x1="70" y1="450" x2="920" y2="450" class="axis"/><line x1="70" y1="60" x2="70" y2="450" class="axis"/>'
@@ -380,20 +494,35 @@ def _write_series_svg(path: Path, title: str, series: Sequence[tuple[str, Sequen
     path.write_text(body, encoding="utf-8")
 
 
-def _write_xy_svg(path: Path, samples: dict[str, list[dict[str, Any]]], x_label: str, y_label: str, x_axis: str, y_axis: str) -> None:
-    series = [("raw odom", samples.get("/mecanum_drive_controller/odometry", [])), ("filtered odom", samples.get("/odometry/filtered", []))]
+def _write_xy_svg(
+    path: Path, samples: dict[str, list[dict[str, Any]]], x_label: str, y_label: str, x_axis: str, y_axis: str
+) -> None:
+    series = [
+        ("raw odom", samples.get("/mecanum_drive_controller/odometry", [])),
+        ("filtered odom", samples.get("/odometry/filtered", [])),
+    ]
     points = [(sample[x_axis], sample[y_axis]) for _, samples in series for sample in samples] or [(0.0, 0.0)]
     xmin, xmax = min(x for x, _ in points), max(x for x, _ in points)
     ymin, ymax = min(y for _, y in points), max(y for _, y in points)
     xpad, ypad = max((xmax - xmin) * 0.08, 1.0e-4), max((ymax - ymin) * 0.08, 1.0e-4)
     xmin, xmax, ymin, ymax = xmin - xpad, xmax + xpad, ymin - ypad, ymax + ypad
-    body = _svg_header("raw vs filtered XY trajectory") + '<text x="70" y="35" class="title">raw vs filtered XY trajectory</text><line x1="70" y1="450" x2="920" y2="450" class="axis"/><line x1="70" y1="60" x2="70" y2="450" class="axis"/>'
+    body = (
+        _svg_header("raw vs filtered XY trajectory")
+        + '<text x="70" y="35" class="title">raw vs filtered XY trajectory</text><line x1="70" y1="450" x2="920" y2="450" class="axis"/><line x1="70" y1="60" x2="70" y2="450" class="axis"/>'
+    )
     for index, (name, values) in enumerate(series):
-        line = " ".join(f"{70 + 850 * (sample[x_axis] - xmin) / (xmax - xmin):.2f},{450 - 390 * (sample[y_axis] - ymin) / (ymax - ymin):.2f}" for sample in values)
+        line = " ".join(
+            f"{70 + 850 * (sample[x_axis] - xmin) / (xmax - xmin):.2f},{450 - 390 * (sample[y_axis] - ymin) / (ymax - ymin):.2f}"
+            for sample in values
+        )
         if line:
             color = ("#228833", "#aa3377")[index]
             body += f'<polyline points="{line}" fill="none" stroke="{color}" stroke-width="1.5"/><text x="{730 + index * 95}" y="25" fill="{color}" class="legend">{name}</text>'
-    path.write_text(body + f'<text x="450" y="490" class="label">{x_label}</text><text x="5" y="65" class="label">{y_label}</text></svg>', encoding="utf-8")
+    path.write_text(
+        body
+        + f'<text x="450" y="490" class="label">{x_label}</text><text x="5" y="65" class="label">{y_label}</text></svg>',
+        encoding="utf-8",
+    )
 
 
 def _svg_header(title: str) -> str:
@@ -401,7 +530,9 @@ def _svg_header(title: str) -> str:
 
 
 def main(argv: list[str] | None = None) -> None:
-    parser = argparse.ArgumentParser(description="Offline analyzer for commissioning RunBundle rosbags; writes derived output only.")
+    parser = argparse.ArgumentParser(
+        description="Offline analyzer for commissioning RunBundle rosbags; writes derived output only."
+    )
     parser.add_argument("run_dir", help="path to an existing commissioning RunBundle")
     parser.add_argument("--overwrite", action="store_true", help="replace only analysis/commissioning derived output")
     args = parser.parse_args(argv)

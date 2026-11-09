@@ -24,14 +24,14 @@ namespace
     {
       return false;
     }
-    const auto realtime_ns = static_cast<long long>(realtime.tv_sec) * 1'000'000'000LL +
-                             static_cast<long long>(realtime.tv_nsec);
+    const auto        realtime_ns    = static_cast<long long>(realtime.tv_sec) * 1'000'000'000LL +
+                                       static_cast<long long>(realtime.tv_nsec);
     const std::string temporary_path = path + ".tmp";
-    const std::string content        = "{\n  \"anchor_video_time_ns\": " +
+    const std::string content = "{\n  \"anchor_video_time_ns\": " +
                                 std::to_string(static_cast<unsigned long long>(video_pts)) +
                                 ",\n  \"anchor_robot_time_ns\": " + std::to_string(realtime_ns) +
                                 "\n}\n";
-    const int fd = open(temporary_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    const int         fd      = open(temporary_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (fd < 0)
     {
       return false;
