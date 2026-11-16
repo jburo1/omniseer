@@ -18,8 +18,8 @@ namespace omniseer::vision
     {
       for (int x = 0; x < kRockchipPreviewWrapRepairWidth; ++x)
       {
-        const size_t offset = static_cast<size_t>(y) * row_bytes +
-                              static_cast<size_t>(x) * kRockchipPreviewWrapRepairChannels;
+        const size_t offset  = static_cast<size_t>(y) * row_bytes +
+                               static_cast<size_t>(x) * kRockchipPreviewWrapRepairChannels;
         original[offset + 0] = static_cast<uint8_t>(x & 0xff);
         original[offset + 1] = static_cast<uint8_t>((x >> 8) + y);
         original[offset + 2] = static_cast<uint8_t>(y & 0xff);

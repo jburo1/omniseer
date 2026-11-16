@@ -28,7 +28,7 @@ namespace robot_diag_control_cpp
       std::vector<TeleopCommand> teleop_commands;
       PreviewProcessManager      preview_manager(store,
                                                  make_fixed_preview_command_factory(
-                                                PreviewProcessCommand{"/bin/sleep", {"30"}}),
+                                                     PreviewProcessCommand{"/bin/sleep", {"30"}}),
                                                  std::chrono::milliseconds(250));
       TeleopManager              teleop_manager(
           store, [&teleop_commands](const TeleopCommand& command)

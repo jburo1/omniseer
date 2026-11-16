@@ -7,8 +7,9 @@ import math
 import subprocess
 import sys
 import time
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Callable, Sequence
+from typing import Callable
 
 
 @dataclass(frozen=True)
@@ -69,8 +70,7 @@ def wait_for_topic(
         if remaining_sec <= 0.0:
             return ProbeResult(
                 False,
-                f"Timed out after {timeout_sec:.1f}s waiting for first message on {topic}: "
-                f"{last_result.reason}",
+                f"Timed out after {timeout_sec:.1f}s waiting for first message on {topic}: {last_result.reason}",
             )
 
         last_result = probe_topic(topic, remaining_sec, runner=runner)
@@ -81,8 +81,7 @@ def wait_for_topic(
         if remaining_sec <= 0.0:
             return ProbeResult(
                 False,
-                f"Timed out after {timeout_sec:.1f}s waiting for first message on {topic}: "
-                f"{last_result.reason}",
+                f"Timed out after {timeout_sec:.1f}s waiting for first message on {topic}: {last_result.reason}",
             )
         sleep(min(poll_interval_sec, remaining_sec))
 
