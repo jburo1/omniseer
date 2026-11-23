@@ -23,12 +23,36 @@ class CommissioningAnalysisTest(unittest.TestCase):
                 {"time": 1.0, "name": "forward"},
                 {"time": 2.0, "name": "settle_final"},
             ],
-            "/cmd_vel_autonomy": [_twist(0.5, 0.0, 0.0, 0.0), _twist(1.1, 0.1, 0.0, 0.0), _twist(1.8, 0.1, 0.0, 0.0), _twist(2.1, 0.0, 0.0, 0.0)],
+            "/cmd_vel_autonomy": [
+                _twist(0.5, 0.0, 0.0, 0.0),
+                _twist(1.1, 0.1, 0.0, 0.0),
+                _twist(1.8, 0.1, 0.0, 0.0),
+                _twist(2.1, 0.0, 0.0, 0.0),
+            ],
             "/mecanum_drive_controller/reference": [_twist(1.1, 0.1, 0.0, 0.0), _twist(1.8, 0.1, 0.0, 0.0)],
-            "/mecanum_drive_controller/odometry": [_odom(0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), _odom(1.1, 0.02, 0.01, 0.0, 0.01, 0.001, 0.0), _odom(1.5, 0.1, 0.01, 0.0, 0.05, 0.004, 0.0), _odom(1.8, 0.1, 0.01, 0.0, 0.08, 0.007, 0.0), _odom(2.1, 0.0, 0.0, 0.0, 0.08, 0.007, 0.0)],
-            "/odometry/filtered": [_odom(1.1, 0.01, 0.0, 0.0, 0.01, 0.0, 0.0), _odom(1.5, 0.08, 0.0, 0.0, 0.04, 0.0, 0.0), _odom(1.8, 0.09, 0.0, 0.0, 0.07, 0.0, 0.0), _odom(2.1, 0.0, 0.0, 0.0, 0.07, 0.0, 0.0)],
-            "/imu": [{"time": 0.5, "wz": 0.02}, {"time": 1.1, "wz": 0.01}, {"time": 1.8, "wz": 0.01}, {"time": 2.1, "wz": 0.02}],
-            "/encoder_counts": [{"time": 1.1, "front_left": 10, "front_right": 11, "rear_left": 10, "rear_right": 11}, {"time": 1.8, "front_left": 20, "front_right": 21, "rear_left": 20, "rear_right": 21}],
+            "/mecanum_drive_controller/odometry": [
+                _odom(0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+                _odom(1.1, 0.02, 0.01, 0.0, 0.01, 0.001, 0.0),
+                _odom(1.5, 0.1, 0.01, 0.0, 0.05, 0.004, 0.0),
+                _odom(1.8, 0.1, 0.01, 0.0, 0.08, 0.007, 0.0),
+                _odom(2.1, 0.0, 0.0, 0.0, 0.08, 0.007, 0.0),
+            ],
+            "/odometry/filtered": [
+                _odom(1.1, 0.01, 0.0, 0.0, 0.01, 0.0, 0.0),
+                _odom(1.5, 0.08, 0.0, 0.0, 0.04, 0.0, 0.0),
+                _odom(1.8, 0.09, 0.0, 0.0, 0.07, 0.0, 0.0),
+                _odom(2.1, 0.0, 0.0, 0.0, 0.07, 0.0, 0.0),
+            ],
+            "/imu": [
+                {"time": 0.5, "wz": 0.02},
+                {"time": 1.1, "wz": 0.01},
+                {"time": 1.8, "wz": 0.01},
+                {"time": 2.1, "wz": 0.02},
+            ],
+            "/encoder_counts": [
+                {"time": 1.1, "front_left": 10, "front_right": 11, "rear_left": 10, "rear_right": 11},
+                {"time": 1.8, "front_left": 20, "front_right": 21, "rear_left": 20, "rear_right": 21},
+            ],
         }
 
         summary = analyze_samples(samples)
@@ -38,9 +62,7 @@ class CommissioningAnalysisTest(unittest.TestCase):
         self.assertEqual(forward["name"], "forward")
         self.assertAlmostEqual(forward["duration_sec"], 1.0)
         self.assertAlmostEqual(forward["raw_wheel_odometry_velocity"]["vx"]["mean"], 0.07333333333333333)
-        self.assertAlmostEqual(
-            forward["cross_axis_response"]["raw_wheel_odometry"]["other_axes"]["vy"]["mean"], 0.01
-        )
+        self.assertAlmostEqual(forward["cross_axis_response"]["raw_wheel_odometry"]["other_axes"]["vy"]["mean"], 0.01)
         self.assertEqual(forward["encoder_count_change"]["front_left"], 10.0)
         self.assertAlmostEqual(forward["integrated_raw_odometry_pose_change"]["x_m"], 0.07)
         self.assertIn("no external position", summary["interpretation"]["odometry_and_imu"])
@@ -57,11 +79,15 @@ class CommissioningAnalysisTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory)
             _write_plots(output, samples, phases)
-            self.assertEqual({path.name for path in output.iterdir()}, {"vx.svg", "vy.svg", "wz.svg", "trajectory_xy.svg", "yaw.svg"})
+            self.assertEqual(
+                {path.name for path in output.iterdir()}, {"vx.svg", "vy.svg", "wz.svg", "trajectory_xy.svg", "yaw.svg"}
+            )
             self.assertIn("phase-label", (output / "vx.svg").read_text(encoding="utf-8"))
 
     def test_summary_is_json_serializable(self) -> None:
-        summary = analyze_samples({"/commissioning/phase": [{"time": 0.0, "name": "settle"}], "/cmd_vel_autonomy": [_twist(0.1, 0, 0, 0)]})
+        summary = analyze_samples(
+            {"/commissioning/phase": [{"time": 0.0, "name": "settle"}], "/cmd_vel_autonomy": [_twist(0.1, 0, 0, 0)]}
+        )
         self.assertIn("phase_count", json.loads(json.dumps(summary)))
 
     def test_selects_mcap_storage_from_rosbag_metadata(self) -> None:
